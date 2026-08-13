@@ -1,0 +1,119 @@
+## Dot product: hai công thức cho cùng một phép toán
+
+Dot product (tích vô hướng) nhận vào hai vector, trả về một **số** — không phải vector. Có hai công thức tính ra cùng một kết quả, và cả hai đều quan trọng như nhau: một công thức thuần đại số (dễ tính bằng code), một công thức hình học (cho biết công thức đó *nghĩa là gì*). Không như phép trừ ở bài trước, dot product giao hoán — đổi thứ tự hai vector không đổi kết quả — một điểm sẽ tương phản rõ với cross product ở nửa sau bài này.
+
+### Công thức đại số
+
+Nhân từng cặp thành phần tương ứng rồi cộng lại — ở 2D:
+
+$$
+\vec a \cdot \vec b = a_x b_x + a_y b_y
+$$
+
+và ở 3D, cộng thêm đúng một số hạng nữa:
+
+$$
+\vec a \cdot \vec b = a_x b_x + a_y b_y + a_z b_z
+$$
+
+Đây là phép tính bạn viết trong code — ba phép nhân, hai phép cộng ở 3D, không có gì bí ẩn. Ví dụ cụ thể: $\vec a = (2, 3)$ và $\vec b = (-1, 4)$ có $\vec a \cdot \vec b = (2)(-1) + (3)(4) = -2 + 12 = 10$. Viết thành hàm thuần:
+
+```ts
+function dot(a: Vec3, b: Vec3): number {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+```
+
+### Công thức hình học: liên hệ với góc
+
+Công thức thứ hai liên hệ dot product với độ dài hai vector và góc $\theta$ giữa chúng:
+
+$$
+\vec a \cdot \vec b = \|\vec a\|\,\|\vec b\|\cos\theta
+$$
+
+Hai công thức luôn cho ra cùng một số — đó là một định lý, không phải trùng hợp. Hệ quả quan trọng nhất: nếu $\vec a$ và $\vec b$ đã được **normalize** (độ dài bằng 1), công thức rút gọn còn $\vec a \cdot \vec b = \cos\theta$ — dot product của hai vector đơn vị chính là cosine góc giữa chúng, đọc trực tiếp ra được mà không cần gọi `Math.acos()` cho hầu hết mục đích thực dụng.
+
+Một hệ quả khác đáng nhớ: dot một vector với chính nó cho $\vec a \cdot \vec a = a_x^2 + a_y^2 = \|\vec a\|^2$ — vì $\theta = 0°$ nên $\cos\theta = 1$. Đây chính xác là đại lượng `lengthSq` từ bài trước, chỉ viết lại bằng dot product — một lý do nữa để hai công thức đại số và hình học của bài này thật sự đáng nhớ, chứ không phải hai công thức tách rời.
+
+## Dùng dot để kiểm tra góc và hướng đối diện
+
+Vì $\cos\theta$ đổi dấu tại $90°$, dấu của dot product giữa hai vector đã normalize cho ngay biết quan hệ góc mà không cần tính góc thật:
+
+- $\vec a \cdot \vec b > 0$: góc giữa chúng nhỏ hơn $90°$ — hai vector "cùng phía", đại khái cùng một hướng.
+- $\vec a \cdot \vec b = 0$: góc đúng $90°$ — hai vector **vuông góc**.
+- $\vec a \cdot \vec b < 0$: góc lớn hơn $90°$ — hai vector "đối diện nhau".
+
+Ứng dụng thẳng vào đồ hoạ: kiểm tra "mặt tam giác này có quay về phía camera không" bằng dot giữa pháp tuyến mặt và hướng nhìn; kiểm tra "bề mặt này có đang nhận sáng không" bằng dot giữa pháp tuyến và hướng tới nguồn sáng. Cả hai chỉ gọn lại thành một phép so sánh dấu — rẻ hơn nhiều so với tính góc thật rồi so sánh, vì không cần gọi hàm lượng giác ngược nào, chạy hàng triệu lần mỗi frame trên GPU mà không đáng lo về chi phí. Ví dụ: pháp tuyến $\hat n = (0, 0, 1)$ và hướng camera $\hat v = (0.2, 0, 0.9)$ (đã normalize) cho $\hat n \cdot \hat v = 0.9 > 0$ — mặt quay về phía camera, cần vẽ; nếu $\hat n$ đảo dấu thành $(0,0,-1)$, dot đổi thành $-0.9 < 0$ — mặt quay lưng, có thể bỏ qua không vẽ.
+
+## Phép chiếu: nhìn một vector "dưới góc" của vector khác
+
+Phép chiếu (projection) trả lời câu hỏi: "$\vec a$ đóng góp bao nhiêu theo đúng hướng $\vec b$?" — hình dung bằng cách thả một đường vuông góc từ mũi $\vec a$ xuống đường thẳng chứa $\vec b$, điểm rơi xuống chính là hình chiếu. Công thức:
+
+$$
+\text{proj}_{\vec b}\vec a = \frac{\vec a \cdot \vec b}{\|\vec b\|^2}\,\vec b
+$$
+
+Phân số $\dfrac{\vec a \cdot \vec b}{\|\vec b\|^2}$ là một số vô hướng — nhân nó với $\vec b$ kéo dài hoặc co ngắn $\vec b$ đúng bằng lượng cần thiết để chạm điểm rơi vuông góc. Nếu $\vec b$ đã normalize ($\|\vec b\| = 1$), mẫu số biến mất, công thức gọn còn $(\vec a \cdot \vec b)\vec b$. Ví dụ dễ hình dung: chiếu $\vec a = (4, 2)$ lên trục $X$ (tức $\vec b = (3, 0)$) chỉ đơn giản cho lại $(4, 0)$ — đúng bằng "cái bóng" của $\vec a$ đổ thẳng xuống trục $X$, bỏ hết thành phần theo trục $Y$. Phép chiếu là bước tính nằm trong hầu hết thuật toán va chạm (collision response: tách vận tốc thành phần "dọc theo pháp tuyến" và "dọc theo bề mặt") và trong quy trình Gram-Schmidt để trực giao hoá một hệ vector:
+
+```ts
+function project(a: Vec2, b: Vec2): Vec2 {
+  const t = dot(a, b) / dot(b, b);
+  return { x: t * b.x, y: t * b.y };
+}
+```
+
+## Cross product: dựng vector vuông góc với cả hai
+
+### Định nghĩa và quy tắc bàn tay phải
+
+Cross product (tích có hướng) chỉ định nghĩa cho vector 3D, và kết quả của nó là một **vector** — khác hẳn dot product:
+
+$$
+\vec a \times \vec b = \big(a_y b_z - a_z b_y,\ \ a_z b_x - a_x b_z,\ \ a_x b_y - a_y b_x\big)
+$$
+
+Vector kết quả vuông góc với cả $\vec a$ lẫn $\vec b$ — hướng cụ thể (lên hay xuống) xác định bằng **quy tắc bàn tay phải**: xoè bàn tay phải, các ngón cuộn từ $\vec a$ về $\vec b$ theo góc nhỏ hơn $180°$, ngón cái chỉ hướng $\vec a \times \vec b$. Đổi thứ tự hai vector đảo dấu kết quả: $\vec a \times \vec b = -(\vec b \times \vec a)$ — cross product **không giao hoán**, khác hẳn dot product.
+
+Ví dụ nền tảng nhất, đáng nhớ nằm lòng: trục $X$ cross trục $Y$ ra đúng trục $Z$ — $(1,0,0) \times (0,1,0) = (0,0,1)$. Thay hai số 0 và 1 bất kỳ vào công thức ở trên để tự kiểm tra là cách nhanh nhất để tin công thức, thay vì học thuộc lòng.
+
+### Độ lớn của cross = diện tích hình bình hành
+
+Độ lớn của vector kết quả liên hệ với góc $\theta$ giữa hai vector gốc:
+
+$$
+\|\vec a \times \vec b\| = \|\vec a\|\,\|\vec b\|\sin\theta
+$$
+
+Về hình học, đại lượng này đúng bằng diện tích hình bình hành dựng từ hai cạnh $\vec a$ và $\vec b$ — hai vector song song ($\theta = 0°$ hoặc $180°$) cho cross bằng vector 0, vì hình bình hành suy biến thành một đường thẳng, diện tích bằng 0.
+
+## Dựng pháp tuyến tam giác bằng cross product
+
+Ứng dụng phổ biến nhất của cross trong đồ hoạ: tính pháp tuyến của một tam giác từ ba đỉnh $A, B, C$. Lấy hai vector cạnh xuất phát từ cùng một đỉnh, cross chúng, rồi normalize kết quả:
+
+```ts
+function triangleNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {
+  const ab = sub(b, a);
+  const ac = sub(c, a);
+  const n = cross(ab, ac); // vuông góc với cả ab và ac
+  return normalize(n);
+}
+```
+
+Thứ tự đỉnh (winding order) quyết định pháp tuyến chỉ ra ngoài hay vào trong mesh — đây là lý do WebGL định nghĩa "mặt trước" của một tam giác dựa trên chiều ngược/thuận kim đồng hồ của ba đỉnh khi nhìn từ camera, và vì sao đảo nhầm hai đỉnh trong buffer làm cả mặt bị lộn pháp tuyến.
+
+Thử với số thật: tam giác $A=(0,0,0)$, $B=(1,0,0)$, $C=(0,1,0)$ nằm trong mặt phẳng $XY$. Hai cạnh từ $A$ là $\vec{AB} = (1,0,0)$ và $\vec{AC} = (0,1,0)$; cross đúng bằng ví dụ $X \times Y$ ở phần trên, cho pháp tuyến $(0,0,1)$ — chỉ thẳng ra khỏi mặt phẳng về phía người xem, đúng như kỳ vọng cho một tam giác đi ngược chiều kim đồng hồ.
+
+## Kết nối về sau: N·L trong lighting và cross trong backface culling
+
+Hai phép toán của bài này là xương sống của gần như mọi kỹ thuật shading. Lighting cơ bản nhất (Lambertian diffuse) tính độ sáng một điểm bằng đúng $\max(0, \hat N \cdot \hat L)$ — dot giữa pháp tuyến $\hat N$ và hướng tới nguồn sáng $\hat L$, cả hai đã normalize; giá trị càng gần 1 (hai vector gần như cùng hướng) bề mặt càng sáng, giá trị càng gần 0 bề mặt càng tối, và giá trị âm bị `max(0, ...)` chặn về 0 — bề mặt quay lưng hoàn toàn với ánh sáng không thể có độ sáng âm. Backface culling — kỹ thuật GPU bỏ qua không vẽ những tam giác quay lưng về camera để tiết kiệm fillrate — dùng chính dấu của pháp tuyến tam giác (dựng bằng cross ở trên) so với hướng nhìn: cùng một phép so sánh dấu vừa học ở phần trên, chỉ đổi vai trò của $\hat L$ thành hướng camera. Cả hai kỹ thuật sẽ quay lại chi tiết hơn ở Track 3 (Three.js) khi có `material` và `side` thật để cấu hình.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với dot và cross product:
+
+1. **Dùng dot của hai vector chưa normalize như thể nó là cosine.** Công thức $\vec a \cdot \vec b = \cos\theta$ chỉ đúng khi $\|\vec a\| = \|\vec b\| = 1$; quên normalize trước khi so sánh góc hoặc tính lighting cho ra giá trị sai lệch theo đúng tỉ lệ độ dài hai vector, không phải cosine thật.
+2. **Tưởng cross product tồn tại ở 2D giống hệt 3D.** Cross 2D không cho ra một vector — nó suy biến còn đúng một số vô hướng (chính là thành phần $z$ duy nhất của công thức 3D khi coi $a_z = b_z = 0$): $a_x b_y - a_y b_x$, dùng để biết $\vec b$ lệch trái hay phải so với $\vec a$. Viết code mong đợi một `Vec2` trả về từ "cross 2D" là hiểu sai định nghĩa.
+3. **Đổi thứ tự tham số cross mà không nhận ra pháp tuyến đã đảo dấu.** `cross(ab, ac)` và `cross(ac, ab)` cho hai vector ngược hướng nhau hoàn toàn — nhầm thứ tự khi dựng pháp tuyến tam giác làm mặt bị tối bất thường (pháp tuyến chỉ vào trong thay vì ra ngoài) hoặc bị backface culling loại bỏ nhầm.
+
+</Callout>

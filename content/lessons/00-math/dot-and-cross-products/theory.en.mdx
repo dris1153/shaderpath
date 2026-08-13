@@ -1,0 +1,119 @@
+## Dot Product: Two Formulas for the Same Operation
+
+The dot product takes two vectors and returns a **number** — not a vector. Two different formulas compute that same number, and both matter equally: one is purely algebraic (easy to compute in code), the other is geometric (tells you what that number actually *means*). Unlike subtraction from the previous lesson, the dot product commutes — swapping the operand order changes nothing — a point that will contrast sharply with the cross product later in this lesson.
+
+### The Algebraic Formula
+
+Multiply each pair of matching components and add the results — in 2D:
+
+$$
+\vec a \cdot \vec b = a_x b_x + a_y b_y
+$$
+
+and in 3D, add exactly one more term:
+
+$$
+\vec a \cdot \vec b = a_x b_x + a_y b_y + a_z b_z
+$$
+
+That's the computation you write in code — three multiplications and two additions in 3D, nothing mysterious about it. A concrete example: $\vec a = (2, 3)$ and $\vec b = (-1, 4)$ give $\vec a \cdot \vec b = (2)(-1) + (3)(4) = -2 + 12 = 10$. As a pure function:
+
+```ts
+function dot(a: Vec3, b: Vec3): number {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+```
+
+### The Geometric Formula: Tied to the Angle
+
+The second formula ties the dot product to the two vectors' lengths and the angle $\theta$ between them:
+
+$$
+\vec a \cdot \vec b = \|\vec a\|\,\|\vec b\|\cos\theta
+$$
+
+Both formulas always produce the same number — that's a theorem, not a coincidence. The most useful consequence: if $\vec a$ and $\vec b$ are already **normalized** (length 1), the formula collapses to $\vec a \cdot \vec b = \cos\theta$ — the dot product of two unit vectors is literally the cosine of the angle between them, readable directly without ever calling `Math.acos()` for most practical purposes.
+
+Another consequence worth keeping in mind: dotting a vector with itself gives $\vec a \cdot \vec a = a_x^2 + a_y^2 = \|\vec a\|^2$ — since $\theta = 0°$, $\cos\theta = 1$. That's exactly the `lengthSq` quantity from the previous lesson, just rewritten as a dot product — one more reason this lesson's algebraic and geometric formulas are worth internalizing as a single idea, not two unrelated facts.
+
+## Using the Dot Product to Test Angle and Facing
+
+Since $\cos\theta$ changes sign at $90°$, the sign of the dot product between two normalized vectors immediately tells you their angular relationship without computing the actual angle:
+
+- $\vec a \cdot \vec b > 0$: the angle between them is under $90°$ — the two vectors roughly point the "same way."
+- $\vec a \cdot \vec b = 0$: the angle is exactly $90°$ — the vectors are **perpendicular**.
+- $\vec a \cdot \vec b < 0$: the angle is over $90°$ — the two vectors point "opposite" one another.
+
+This drops straight into graphics: check "is this triangle facing the camera" with the dot between the face normal and the view direction; check "is this surface currently lit" with the dot between the normal and the direction toward the light. Both reduce to a single sign check — far cheaper than computing the real angle and comparing, since no inverse trig function is needed, and it can run millions of times per frame on the GPU without worrying about cost. Example: a normal $\hat n = (0, 0, 1)$ and a camera direction $\hat v = (0.2, 0, 0.9)$ (both normalized) give $\hat n \cdot \hat v = 0.9 > 0$ — the face points toward the camera, so it should be drawn; flip the normal to $(0,0,-1)$ and the dot becomes $-0.9 < 0$ — the face turns away and can be skipped.
+
+## Projection: Viewing One Vector Through Another's Direction
+
+Projection answers: "how much does $\vec a$ contribute along the exact direction of $\vec b$?" — picture dropping a perpendicular line from $\vec a$'s tip down onto the line $\vec b$ lies on; wherever it lands is the projection. The formula:
+
+$$
+\text{proj}_{\vec b}\vec a = \frac{\vec a \cdot \vec b}{\|\vec b\|^2}\,\vec b
+$$
+
+The fraction $\dfrac{\vec a \cdot \vec b}{\|\vec b\|^2}$ is a scalar — multiplying it by $\vec b$ stretches or shrinks $\vec b$ by exactly the amount needed to reach that perpendicular landing point. If $\vec b$ is already normalized ($\|\vec b\| = 1$), the denominator disappears and the formula shrinks to $(\vec a \cdot \vec b)\vec b$. An easy example to picture: projecting $\vec a = (4, 2)$ onto the $X$ axis (that is, $\vec b = (3, 0)$) simply gives back $(4, 0)$ — exactly $\vec a$'s "shadow" cast straight onto the $X$ axis, with the $Y$ component dropped entirely. Projection is the computation buried inside most collision response code (splitting velocity into a "along the normal" component and an "along the surface" component) and inside Gram-Schmidt for orthogonalizing a set of vectors:
+
+```ts
+function project(a: Vec2, b: Vec2): Vec2 {
+  const t = dot(a, b) / dot(b, b);
+  return { x: t * b.x, y: t * b.y };
+}
+```
+
+## Cross Product: Building a Vector Perpendicular to Both
+
+### Definition and the Right-Hand Rule
+
+The cross product is only defined for 3D vectors, and its result is a **vector** — a sharp contrast with the dot product:
+
+$$
+\vec a \times \vec b = \big(a_y b_z - a_z b_y,\ \ a_z b_x - a_x b_z,\ \ a_x b_y - a_y b_x\big)
+$$
+
+The resulting vector is perpendicular to both $\vec a$ and $\vec b$ — which specific direction (up or down) it points is settled by the **right-hand rule**: curl your right hand's fingers from $\vec a$ toward $\vec b$ through the angle smaller than $180°$, and the thumb points along $\vec a \times \vec b$. Swapping the operand order flips the sign of the result: $\vec a \times \vec b = -(\vec b \times \vec a)$ — the cross product is **not commutative**, unlike the dot product.
+
+The single most useful example to keep in memory: the $X$ axis crossed with the $Y$ axis gives exactly the $Z$ axis — $(1,0,0) \times (0,1,0) = (0,0,1)$. Plugging any pair of concrete numbers into the formula above and checking it by hand is a faster way to trust it than memorizing it.
+
+### The Cross Product's Magnitude Is a Parallelogram's Area
+
+The magnitude of the resulting vector ties back to the angle $\theta$ between the two original vectors:
+
+$$
+\|\vec a \times \vec b\| = \|\vec a\|\,\|\vec b\|\sin\theta
+$$
+
+Geometrically, this equals exactly the area of the parallelogram spanned by $\vec a$ and $\vec b$ as its two sides — parallel vectors ($\theta = 0°$ or $180°$) give a cross product of zero, since the parallelogram degenerates into a line with zero area.
+
+## Building a Triangle Normal With the Cross Product
+
+The most common use of the cross product in graphics: computing a triangle's normal from its three vertices $A, B, C$. Take two edge vectors starting from the same vertex, cross them, then normalize the result:
+
+```ts
+function triangleNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {
+  const ab = sub(b, a);
+  const ac = sub(c, a);
+  const n = cross(ab, ac); // perpendicular to both ab and ac
+  return normalize(n);
+}
+```
+
+Vertex order (winding order) decides whether the normal points out of the mesh or into it — this is why WebGL defines a triangle's "front face" by whether its three vertices wind clockwise or counter-clockwise as seen from the camera, and why swapping two vertices in a buffer by mistake flips the whole face's normal inside out.
+
+Worked with real numbers: a triangle $A=(0,0,0)$, $B=(1,0,0)$, $C=(0,1,0)$ sits in the $XY$ plane. The two edges from $A$ are $\vec{AB} = (1,0,0)$ and $\vec{AC} = (0,1,0)$; that's exactly the $X \times Y$ example from earlier, giving a normal of $(0,0,1)$ — pointing straight out of the plane toward the viewer, exactly as expected for a counter-clockwise-wound triangle.
+
+## Where This Leads: N·L in Lighting and Cross in Backface Culling
+
+These two operations are the backbone of nearly every shading technique you'll write later. The most basic form of lighting (Lambertian diffuse) computes a point's brightness as exactly $\max(0, \hat N \cdot \hat L)$ — the dot product between the normal $\hat N$ and the direction toward the light $\hat L$, both normalized; the closer that value is to 1 (the two vectors nearly aligned), the brighter the surface, the closer to 0 the darker, and any negative value gets clamped to 0 by `max(0, ...)` — a surface turned completely away from the light can't have negative brightness. Backface culling — the GPU technique of skipping triangles that face away from the camera to save fillrate — uses that same triangle-normal sign (built with cross, above) compared against the view direction: the exact same sign check from earlier, just with $\hat L$'s role swapped for the camera direction. Both techniques come back in much more concrete form in Track 3 (Three.js), once there's a real `material` and `side` setting to configure.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with dot and cross products:
+
+1. **Using the dot product of two un-normalized vectors as if it were a cosine.** The identity $\vec a \cdot \vec b = \cos\theta$ only holds when $\|\vec a\| = \|\vec b\| = 1$; forgetting to normalize before comparing angles or computing lighting produces a value skewed by the vectors' actual lengths, not a real cosine.
+2. **Assuming the cross product exists in 2D the same way it does in 3D.** A 2D cross product doesn't produce a vector — it degenerates into a single scalar (exactly the lone $z$ component of the 3D formula with $a_z = b_z = 0$): $a_x b_y - a_y b_x$, used to tell whether $\vec b$ leans left or right of $\vec a$. Writing code that expects a `Vec2` back from "2D cross" is a misunderstanding of the definition.
+3. **Swapping the cross product's operand order without noticing the normal flipped.** `cross(ab, ac)` and `cross(ac, ab)` produce two vectors pointing in exactly opposite directions — getting the order wrong while building a triangle normal makes a face look unexpectedly dark (normal pointing inward instead of outward) or get incorrectly discarded by backface culling.
+
+</Callout>

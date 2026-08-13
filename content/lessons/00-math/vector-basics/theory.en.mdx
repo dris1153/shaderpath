@@ -1,0 +1,83 @@
+## What a Vector Is: Arrows and Number Tuples
+
+A vector describes a **displacement**: how far, in which direction — it doesn't care where it starts. Drawn on paper, a vector is an arrow: the arrow's length is its magnitude, the arrow's direction is its direction. Two arrows of equal length pointing the same way are **the same vector**, even if drawn at two different spots on the page — the starting point simply isn't part of the definition. That's the single most important difference between a vector and a point: a point is a fixed location, a vector is a free displacement that can slide anywhere as long as its length and direction stay unchanged.
+
+In code, a vector is a tuple of numbers: $\vec v = (x, y)$ in 2D, $\vec v = (x, y, z)$ in 3D. Draw this vector with its tail at the origin $O$ and the arrowhead lands exactly on the point $(x, y)$ — so the tuple $(x, y)$ is simultaneously a point's coordinates and the components of the vector reaching that point from the origin. More generally, the vector from point $P$ to point $Q$ is computed by component-wise subtraction: $\vec{PQ} = Q - P$. Three concepts — a point, a position vector, and a pure displacement vector — all share the same `vec2`/`vec3` data type in nearly every graphics engine, GLSL included later on; telling which role is in play at any given spot is the foundational skill the rest of this lesson builds on.
+
+One special case worth flagging right away: the **zero vector** ($\vec 0 = (0,0)$) has zero length but no well-defined direction — an arrow of length zero doesn't "point" anywhere. This case comes back in the normalization section below, exactly the spot where it causes the most runtime bugs when working with vectors.
+
+## Adding and Subtracting Vectors: The Geometric Meaning
+
+Vector addition and subtraction aren't abstract operations — they have a concrete picture the moment you draw them out.
+
+### Addition: Tip-to-Tail
+
+Add two vectors component-wise: $\vec a + \vec b = (a_x + b_x,\ a_y + b_y)$. Geometrically: place $\vec b$'s tail at $\vec a$'s tip — the sum is the arrow running straight from $\vec a$'s tail to $\vec b$'s tip, called the **tip-to-tail** rule. Since vector addition commutes ($\vec a + \vec b = \vec b + \vec a$), drawing them in the opposite order ($\vec b$ first, $\vec a$ second) still lands on the same destination — the two drawings form two sides of a parallelogram, and the sum is exactly that parallelogram's diagonal. A concrete example: $\vec a = (3, 1)$ plus $\vec b = (-2, 4)$ gives $\vec a + \vec b = (1, 5)$ — draw $\vec a$ from the origin, then continue with $\vec b$ starting at $(3,1)$, and the final arrowhead lands exactly on $(1, 5)$.
+
+### Subtraction: The Vector From One Point to Another
+
+Subtraction is also component-wise: $\vec a - \vec b = (a_x - b_x,\ a_y - b_y)$. When $a$ and $b$ are two points (positions), $\vec a - \vec b$ is the vector running **from point $B$ to point $A$** — tail at $B$, tip touching $A$. This formula shows up constantly in games and graphics: to find "the direction from the enemy to the player," compute `player.position - enemy.position`, not the other way around — flipping the subtraction order makes an object turn its back and flee instead of closing in on its target.
+
+## Scalar Multiplication: Stretching and Flipping
+
+Multiplying a vector by a scalar $k$ just multiplies each component: $k\vec v = (kv_x, kv_y)$. Geometrically, this stretches the arrow along the exact same line it already lies on — no direction change if $k > 0$, a full $180°$ flip if $k < 0$, and no change at all if $k = 1$. $|k| > 1$ lengthens the arrow, $0 < |k| < 1$ shrinks it. Example: $\vec v = (4, -2)$ with $k = -1.5$ gives $k\vec v = (-6, 3)$ — one and a half times as long as the original, flipped $180°$. Addition, subtraction, and scaling all compile down to a few tiny pure functions:
+
+```ts
+interface Vec2 { x: number; y: number }
+
+function add(a: Vec2, b: Vec2): Vec2 {
+  return { x: a.x + b.x, y: a.y + b.y };
+}
+function sub(a: Vec2, b: Vec2): Vec2 {
+  return { x: a.x - b.x, y: a.y - b.y };
+}
+function scale(v: Vec2, k: number): Vec2 {
+  return { x: v.x * k, y: v.y * k };
+}
+```
+
+These three functions — nothing more — are the entire "engine" behind linear motion, positional interpolation, and most simple 2D physics.
+
+## Vector Length and the Pythagorean Theorem
+
+A 2D vector's magnitude is the hypotenuse of a right triangle whose legs are $x$ and $y$ — the Pythagorean theorem hands you the formula directly:
+
+$$
+\|\vec v\| = \sqrt{x^2 + y^2}
+$$
+
+In 3D, add one more perpendicular dimension: $\|\vec v\| = \sqrt{x^2 + y^2 + z^2}$. For example $\vec v = (3, 4)$ has $\|\vec v\| = \sqrt{9 + 16} = \sqrt{25} = 5$ — the triple $(3, 4, 5)$ is the classic Pythagorean triple. A performance trick worth remembering: if you only need to *compare* two vectors' lengths (which one is longer?), comparing squared length ($x^2+y^2$, usually called `lengthSq`) gives the identical answer without paying for a `sqrt()` call — noticeably more expensive than a multiply or add on both CPU and GPU, which is why graphics engines always ship both `length()` and `lengthSq()`.
+
+## Normalizing: Separating Direction From Magnitude
+
+Normalizing a vector means dividing it by its own length, producing a **unit vector** — same direction, but a length of exactly 1:
+
+$$
+\hat v = \frac{\vec v}{\|\vec v\|}
+$$
+
+The result $\hat v$ keeps all the direction information and discards all the magnitude information — useful whenever code only needs to know "which way," while "how far/how fast" gets decided somewhere else. A classic example: 2D movement input read straight off WASD as $(\pm1, \pm1)$. Pressing diagonally (W+D) gives the vector $(1, 1)$, with length $\sqrt{2} \approx 1.41$ — multiply that raw vector by a speed constant without normalizing first, and the character moves about 41% faster diagonally than moving straight, a classic movement bug in top-down 2D games. Normalizing the input before multiplying by speed ($\hat v \times \text{speed} \times \Delta t$) removes the bug entirely.
+
+## Three Roles of a Vector: Position, Direction, Velocity
+
+The same `(x, y, z)` data type carries different meaning depending on context: a **position** is a point's coordinates in space — it has absolute meaning, tied to the origin. A **direction** describes "which way," independent of where anything is — it's usually normalized to length 1, and it's meaningless to add an object's position onto it (a surface normal is the textbook example: translating an object must never translate its normals along with it). A **velocity** encodes both the direction of motion and the speed, right inside its own magnitude — a velocity vector twice as long means moving twice as fast in that same direction. Mixing up roles — normalizing a position vector, say, or adding a direction vector into another as if it were a position — is a source of silent, hard-to-debug bugs, because the compiler has no idea what a given `vec3` is "supposed" to represent.
+
+All three roles cooperate in the simplest possible game loop: each frame, the new position equals the old position plus velocity times elapsed time ($\Delta t$) — exactly the addition and scalar multiplication covered above, just with renamed variables:
+
+```ts
+player.position = add(player.position, scale(player.velocity, dt));
+```
+
+## Where This Leads: Vectors in Shaders and 3D
+
+From this lesson on, every vertex in a WebGL mesh carries at least three vectors: position (`position`), normal (`normal`), and view direction (computed at runtime) — along with exactly the add/subtract/scale/normalize operations just covered, just renamed from TypeScript to GLSL (`normalize()`, `length()`, and the `+`/`-`/`*` operators all work identically on `vec3`). The next lesson covers the dot and cross products — the two vector multiplications still missing — to answer "how many degrees apart are these two vectors" and "which vector is perpendicular to both," the direct foundation of lighting and surface normals.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with vectors:
+
+1. **Normalizing a zero-length vector.** Dividing by $\|\vec v\| = 0$ produces `Infinity` or `NaN`, and NaN propagates silently through every operation after it — an object simply vanishes from the screen with no error thrown anywhere. Always check `length` before dividing, or return a zero vector when the length is too small.
+2. **Subtracting in the wrong order when computing the direction between two points.** `targetPos - myPos` gives the direction *toward* the target; `myPos - targetPos` gives the opposite. Mixing these up makes a character face away, or a bullet fire backward — a silent bug, since the code still runs, just aiming the wrong way.
+3. **Adding a direction vector into a position as if the two were the same kind of thing.** Normals, velocities, and positions are all `vec3`, but adding the wrong pair (say, translating a normal by an object's position) breaks the operation's geometric meaning — this problem resurfaces much more explicitly in the homogeneous coordinates lesson, where the $w$ component formally separates points ($w=1$) from directions ($w=0$).
+
+</Callout>

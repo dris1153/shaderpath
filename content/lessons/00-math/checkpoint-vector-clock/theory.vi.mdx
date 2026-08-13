@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build đầu tiên của Track 0: không có lý thuyết mới, chỉ có một sản phẩm chạy được để chứng minh bạn thật sự nắm toạ độ, vector, cộng/trừ/scale và normalize — không chỉ đọc hiểu công thức mà còn dùng được chúng để dựng ra thứ gì đó nhìn thấy, chạy thật.
+
+## Yêu cầu
+
+Dựng một chiếc đồng hồ kim analog chạy đúng giờ hệ thống trên canvas 2D, không dùng thư viện ngoài. Mặt đồng hồ tròn với 12 vạch giờ đặt bằng $(\cos\theta, \sin\theta)$; ba kim giờ/phút/giây lấy góc từ `new Date()` và animate mượt bằng `requestAnimationFrame`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới — đọc kỹ yêu cầu ở đó trước khi bắt đầu.
+
+## Gợi ý cấu trúc
+
+Toàn bộ bài dựng quanh một hàm duy nhất: `hand(angle, length)`, trả về điểm cuối của một kim = tâm đồng hồ + vector đơn vị theo `angle`, scale theo `length`. Vạch giờ, kim giờ, kim phút, kim giây — cả bốn thứ đều chỉ là lời gọi khác nhau tới cùng một hàm này với góc và độ dài khác nhau.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — 12 vạch giờ đúng vị trí, kim giây quay tròn đúng 60 giây, kim giờ trôi mượt giữa hai số (không nhảy bậc), và toàn bộ chạy bằng `requestAnimationFrame` chứ không phải `setInterval`.

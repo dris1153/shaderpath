@@ -20,12 +20,26 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/00-math/cartesian-and-uv-space/theory.vi.mdx"),
     en: () => import("./lessons/00-math/cartesian-and-uv-space/theory.en.mdx"),
   },
+  "checkpoint-vector-clock": {
+    vi: () => import("./lessons/00-math/checkpoint-vector-clock/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/checkpoint-vector-clock/theory.en.mdx"),
+  },
+  "dot-and-cross-products": {
+    vi: () => import("./lessons/00-math/dot-and-cross-products/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/dot-and-cross-products/theory.en.mdx"),
+  },
+  "vector-basics": {
+    vi: () => import("./lessons/00-math/vector-basics/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/vector-basics/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
   Record<LessonSlug, ReferencesLoader>
 > = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/references"),
+  "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/references"),
+  "vector-basics": () => import("./lessons/00-math/vector-basics/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -35,10 +49,24 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"hệ-toạ-độ-descartes-từ-đường-số-đến-không-gian-3d","text":"Hệ toạ độ Descartes: từ đường số đến không gian 3D","depth":2},{"id":"quy-ước-trục-y-up-vs-z-up-và-tay-trái-hay-tay-phải","text":"Quy ước trục: Y-up vs Z-up, và tay trái hay tay phải","depth":2},{"id":"uv-space-là-gì-và-vì-sao-luôn-chạy-từ-0-đến-1","text":"UV space là gì, và vì sao luôn chạy từ 0 đến 1","depth":2},{"id":"ánh-xạ-pixel--uv-công-thức-và-pixel-center","text":"Ánh xạ pixel ↔ UV: công thức và pixel center","depth":2},{"id":"công-thức-ánh-xạ","text":"Công thức ánh xạ","depth":3},{"id":"vì-sao-phải-cộng-05","text":"Vì sao phải cộng 0.5","depth":3},{"id":"chuẩn-hoá-màn-hình-01-và-xem-trước--11-ndc","text":"Chuẩn hoá màn hình: [0,1] và xem trước [-1,1] (NDC)","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-texture-và-shader","text":"Nền tảng này dẫn tới đâu: texture và shader","depth":2}],
     en: [{"id":"cartesian-coordinates-from-the-number-line-to-3d-space","text":"Cartesian Coordinates: From the Number Line to 3D Space","depth":2},{"id":"axis-conventions-y-up-vs-z-up-left--or-right-handed","text":"Axis Conventions: Y-up vs Z-up, Left- or Right-handed","depth":2},{"id":"what-uv-space-is-and-why-it-always-runs-0-to-1","text":"What UV Space Is, and Why It Always Runs 0 to 1","depth":2},{"id":"mapping-pixels-to-uv-the-formula-and-the-pixel-center","text":"Mapping Pixels to UV: The Formula and the Pixel Center","depth":2},{"id":"the-mapping-formula","text":"The Mapping Formula","depth":3},{"id":"why-you-add-05","text":"Why You Add 0.5","depth":3},{"id":"normalizing-the-screen-01-and-a-preview-of--11-ndc","text":"Normalizing the Screen: [0,1] and a Preview of [-1,1] (NDC)","depth":2},{"id":"where-this-foundation-leads-textures-and-shaders","text":"Where This Foundation Leads: Textures and Shaders","depth":2}],
   },
+  "checkpoint-vector-clock": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "dot-and-cross-products": {
+    vi: [{"id":"dot-product-hai-công-thức-cho-cùng-một-phép-toán","text":"Dot product: hai công thức cho cùng một phép toán","depth":2},{"id":"công-thức-đại-số","text":"Công thức đại số","depth":3},{"id":"công-thức-hình-học-liên-hệ-với-góc","text":"Công thức hình học: liên hệ với góc","depth":3},{"id":"dùng-dot-để-kiểm-tra-góc-và-hướng-đối-diện","text":"Dùng dot để kiểm tra góc và hướng đối diện","depth":2},{"id":"phép-chiếu-nhìn-một-vector-dưới-góc-của-vector-khác","text":"Phép chiếu: nhìn một vector \"dưới góc\" của vector khác","depth":2},{"id":"cross-product-dựng-vector-vuông-góc-với-cả-hai","text":"Cross product: dựng vector vuông góc với cả hai","depth":2},{"id":"định-nghĩa-và-quy-tắc-bàn-tay-phải","text":"Định nghĩa và quy tắc bàn tay phải","depth":3},{"id":"độ-lớn-của-cross--diện-tích-hình-bình-hành","text":"Độ lớn của cross = diện tích hình bình hành","depth":3},{"id":"dựng-pháp-tuyến-tam-giác-bằng-cross-product","text":"Dựng pháp tuyến tam giác bằng cross product","depth":2},{"id":"kết-nối-về-sau-nl-trong-lighting-và-cross-trong-backface-culling","text":"Kết nối về sau: N·L trong lighting và cross trong backface culling","depth":2}],
+    en: [{"id":"dot-product-two-formulas-for-the-same-operation","text":"Dot Product: Two Formulas for the Same Operation","depth":2},{"id":"the-algebraic-formula","text":"The Algebraic Formula","depth":3},{"id":"the-geometric-formula-tied-to-the-angle","text":"The Geometric Formula: Tied to the Angle","depth":3},{"id":"using-the-dot-product-to-test-angle-and-facing","text":"Using the Dot Product to Test Angle and Facing","depth":2},{"id":"projection-viewing-one-vector-through-anothers-direction","text":"Projection: Viewing One Vector Through Another's Direction","depth":2},{"id":"cross-product-building-a-vector-perpendicular-to-both","text":"Cross Product: Building a Vector Perpendicular to Both","depth":2},{"id":"definition-and-the-right-hand-rule","text":"Definition and the Right-Hand Rule","depth":3},{"id":"the-cross-products-magnitude-is-a-parallelograms-area","text":"The Cross Product's Magnitude Is a Parallelogram's Area","depth":3},{"id":"building-a-triangle-normal-with-the-cross-product","text":"Building a Triangle Normal With the Cross Product","depth":2},{"id":"where-this-leads-nl-in-lighting-and-cross-in-backface-culling","text":"Where This Leads: N·L in Lighting and Cross in Backface Culling","depth":2}],
+  },
+  "vector-basics": {
+    vi: [{"id":"vector-là-gì-mũi-tên-và-bộ-số","text":"Vector là gì: mũi tên và bộ số","depth":2},{"id":"cộng-và-trừ-vector-ý-nghĩa-hình-học","text":"Cộng và trừ vector: ý nghĩa hình học","depth":2},{"id":"cộng-nối-đuôi-nhau-tip-to-tail","text":"Cộng: nối đuôi nhau (tip-to-tail)","depth":3},{"id":"trừ-vector-nối-từ-điểm-này-đến-điểm-kia","text":"Trừ: vector nối từ điểm này đến điểm kia","depth":3},{"id":"nhân-vô-hướng-co-giãn-và-đổi-chiều","text":"Nhân vô hướng: co giãn và đổi chiều","depth":2},{"id":"độ-dài-vector-và-định-lý-pythagoras","text":"Độ dài vector và định lý Pythagoras","depth":2},{"id":"normalize-tách-hướng-ra-khỏi-độ-lớn","text":"Normalize: tách hướng ra khỏi độ lớn","depth":2},{"id":"vector-đóng-ba-vai-vị-trí-hướng-vận-tốc","text":"Vector đóng ba vai: vị trí, hướng, vận tốc","depth":2},{"id":"kết-nối-về-sau-vector-trong-shader-và-3d","text":"Kết nối về sau: vector trong shader và 3D","depth":2}],
+    en: [{"id":"what-a-vector-is-arrows-and-number-tuples","text":"What a Vector Is: Arrows and Number Tuples","depth":2},{"id":"adding-and-subtracting-vectors-the-geometric-meaning","text":"Adding and Subtracting Vectors: The Geometric Meaning","depth":2},{"id":"addition-tip-to-tail","text":"Addition: Tip-to-Tail","depth":3},{"id":"subtraction-the-vector-from-one-point-to-another","text":"Subtraction: The Vector From One Point to Another","depth":3},{"id":"scalar-multiplication-stretching-and-flipping","text":"Scalar Multiplication: Stretching and Flipping","depth":2},{"id":"vector-length-and-the-pythagorean-theorem","text":"Vector Length and the Pythagorean Theorem","depth":2},{"id":"normalizing-separating-direction-from-magnitude","text":"Normalizing: Separating Direction From Magnitude","depth":2},{"id":"three-roles-of-a-vector-position-direction-velocity","text":"Three Roles of a Vector: Position, Direction, Velocity","depth":2},{"id":"where-this-leads-vectors-in-shaders-and-3d","text":"Where This Leads: Vectors in Shaders and 3D","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/demo"),
+  "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/demo"),
+  "vector-basics": () => import("./lessons/00-math/vector-basics/demo"),
   "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
 };
@@ -50,4 +78,6 @@ export const EXERCISES_REGISTRY: Partial<
 > = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/exercises"),
   "checkpoint-vector-clock": () => import("./lessons/00-math/checkpoint-vector-clock/exercises"),
+  "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/exercises"),
+  "vector-basics": () => import("./lessons/00-math/vector-basics/exercises"),
 };

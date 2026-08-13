@@ -1,0 +1,15 @@
+## Goal
+
+This is Track 0's first mini-build: no new theory, just a working artifact that proves you actually command coordinates, vectors, add/subtract/scale and normalize — not just recognizing the formulas, but using them to build something visible and running.
+
+## Requirements
+
+Build a working analog clock on a 2D canvas that tells real system time, no external libraries. A round face with 12 hour marks placed via $(\cos\theta, \sin\theta)$; hour/minute/second hands take their angles from `new Date()` and animate smoothly via `requestAnimationFrame`. Full details live in the Exercises section below — read the requirements there closely before starting.
+
+## Structure Hint
+
+Everything here is built around one function: `hand(angle, length)`, returning a hand's endpoint = clock center + a unit vector at `angle`, scaled by `length`. Hour marks, hour hand, minute hand, second hand — all four are just different calls to this same function with different angles and lengths.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — 12 hour marks in the right places, the second hand completing a full turn in exactly 60 seconds, the hour hand drifting smoothly between numerals (no stepping), and everything running on `requestAnimationFrame`, not `setInterval`.

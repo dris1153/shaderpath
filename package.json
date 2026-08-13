@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "gen:registry": "tsx scripts/gen-lesson-registry.ts",
+    "lint:content": "tsx scripts/lint-content.ts",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },

@@ -1,0 +1,83 @@
+## Vector là gì: mũi tên và bộ số
+
+Một vector mô tả **độ dời**: đi bao xa, theo hướng nào — không quan tâm xuất phát từ đâu. Vẽ trên giấy, vector là một mũi tên: độ dài mũi tên là độ lớn (magnitude), hướng mũi tên là hướng. Hai mũi tên dài bằng nhau, chỉ cùng một hướng, dù đặt ở hai vị trí khác nhau trên trang giấy, vẫn là **cùng một vector** — vị trí xuất phát không phải một phần của định nghĩa. Đây là khác biệt quan trọng nhất giữa vector và điểm: một điểm là một vị trí cố định, một vector là một độ dời tự do, có thể "trượt" đi đâu cũng được miễn giữ nguyên độ dài và hướng.
+
+Trong code, vector là một bộ số: $\vec v = (x, y)$ ở 2D, $\vec v = (x, y, z)$ ở 3D. Khi vẽ vector này với đuôi đặt tại gốc toạ độ $O$, mũi tên chạm đúng điểm $(x, y)$ — nên bộ số $(x, y)$ vừa là toạ độ của một điểm, vừa là thành phần của vector nối từ gốc đến điểm đó. Tổng quát hơn, vector nối từ điểm $P$ đến điểm $Q$ tính bằng phép trừ từng thành phần: $\vec{PQ} = Q - P$. Ba khái niệm — điểm, vector định vị (position vector) và vector độ dời thuần tuý — dùng chung một kiểu dữ liệu `vec2`/`vec3` trong hầu hết engine đồ hoạ, kể cả GLSL sau này; phân biệt được vai trò nào đang được dùng ở từng chỗ là kỹ năng nền tảng của toàn bộ phần còn lại của bài.
+
+Một trường hợp đặc biệt đáng chú ý ngay từ đầu: **vector 0** ($\vec 0 = (0,0)$) có độ dài bằng 0 nhưng không có hướng nào xác định — mũi tên độ dài 0 không "chỉ" về đâu cả. Trường hợp này quay lại ở phần normalize bên dưới, đúng chỗ hay sinh lỗi runtime nhất khi làm việc với vector.
+
+## Cộng và trừ vector: ý nghĩa hình học
+
+Cộng và trừ vector không phải phép toán trừu tượng — chúng có hình ảnh cụ thể ngay khi vẽ ra.
+
+### Cộng: nối đuôi nhau (tip-to-tail)
+
+Cộng hai vector theo thành phần: $\vec a + \vec b = (a_x + b_x,\ a_y + b_y)$. Hình học: đặt đuôi của $\vec b$ tại mũi của $\vec a$ — vector tổng là mũi tên đi thẳng từ đuôi $\vec a$ đến mũi $\vec b$, gọi là quy tắc **tip-to-tail**. Vì cộng vector giao hoán ($\vec a + \vec b = \vec b + \vec a$), đặt theo thứ tự ngược lại ($\vec b$ trước, $\vec a$ sau) vẫn cho cùng một điểm đến — hai cách vẽ tạo thành hai cạnh của một hình bình hành, và tổng chính là đường chéo của hình bình hành đó. Ví dụ cụ thể: $\vec a = (3, 1)$ cộng $\vec b = (-2, 4)$ cho $\vec a + \vec b = (1, 5)$ — vẽ $\vec a$ từ gốc, rồi nối tiếp $\vec b$ từ điểm $(3,1)$, mũi tên cuối cùng sẽ chạm đúng $(1, 5)$.
+
+### Trừ: vector nối từ điểm này đến điểm kia
+
+Trừ cũng theo thành phần: $\vec a - \vec b = (a_x - b_x,\ a_y - b_y)$. Khi $a$ và $b$ là hai điểm (vị trí), $\vec a - \vec b$ là vector đi **từ điểm $B$ đến điểm $A$** — tail đặt tại $B$, tip chạm $A$. Đây là công thức dùng liên tục trong game và đồ hoạ: muốn biết "hướng từ kẻ địch đến người chơi", tính `player.position - enemy.position`, không phải chiều ngược lại — nhầm thứ tự trừ khiến vật thể quay lưng bỏ chạy thay vì tiến tới mục tiêu.
+
+## Nhân vô hướng: co giãn và đổi chiều
+
+Nhân vector với một số vô hướng (scalar) $k$ chỉ nhân từng thành phần: $k\vec v = (kv_x, kv_y)$. Hình học, phép này co giãn mũi tên dọc theo đúng đường thẳng chứa nó — không đổi hướng nếu $k > 0$, đảo ngược $180°$ nếu $k < 0$, và giữ nguyên nếu $k = 1$. $|k| > 1$ kéo dài mũi tên, $0 < |k| < 1$ co ngắn nó lại. Ví dụ: $\vec v = (4, -2)$ với $k = -1.5$ cho $k\vec v = (-6, 3)$ — dài gấp rưỡi vector gốc, quay ngược $180°$. Ba phép cộng, trừ, nhân vô hướng viết thành hàm thuần rất ngắn:
+
+```ts
+interface Vec2 { x: number; y: number }
+
+function add(a: Vec2, b: Vec2): Vec2 {
+  return { x: a.x + b.x, y: a.y + b.y };
+}
+function sub(a: Vec2, b: Vec2): Vec2 {
+  return { x: a.x - b.x, y: a.y - b.y };
+}
+function scale(v: Vec2, k: number): Vec2 {
+  return { x: v.x * k, y: v.y * k };
+}
+```
+
+Ba hàm này — không hơn — là toàn bộ "động cơ" phía sau chuyển động tuyến tính, nội suy vị trí, và phần lớn vật lý 2D đơn giản.
+
+## Độ dài vector và định lý Pythagoras
+
+Độ lớn (length/magnitude) của một vector 2D là cạnh huyền của tam giác vuông có hai cạnh góc vuông $x$ và $y$ — định lý Pythagoras cho ngay công thức:
+
+$$
+\|\vec v\| = \sqrt{x^2 + y^2}
+$$
+
+Ở 3D, thêm một chiều vuông góc nữa: $\|\vec v\| = \sqrt{x^2 + y^2 + z^2}$. Ví dụ $\vec v = (3, 4)$ có $\|\vec v\| = \sqrt{9 + 16} = \sqrt{25} = 5$ — bộ ba $(3, 4, 5)$ chính là bộ số Pythagoras kinh điển. Một mẹo hiệu năng đáng nhớ: nếu chỉ cần *so sánh* độ dài hai vector (vector nào dài hơn?), so sánh bình phương độ dài ($x^2+y^2$, gọi là `lengthSq`) cho kết quả đúng y hệt mà không tốn phép `sqrt()` — vốn đắt hơn phép nhân/cộng đáng kể trên cả CPU lẫn GPU, và là lý do engine đồ hoạ luôn có sẵn cả `length()` lẫn `lengthSq()`.
+
+## Normalize: tách hướng ra khỏi độ lớn
+
+Normalize một vector nghĩa là chia nó cho chính độ dài của nó, tạo ra **vector đơn vị** — cùng hướng, nhưng độ dài đúng bằng 1:
+
+$$
+\hat v = \frac{\vec v}{\|\vec v\|}
+$$
+
+Kết quả $\hat v$ giữ nguyên thông tin hướng, bỏ hết thông tin độ lớn — hữu ích bất cứ khi nào code chỉ cần biết "đi hướng nào", còn "đi bao xa/bao nhanh" do chỗ khác quyết định. Ví dụ kinh điển: input di chuyển 2D lấy trực tiếp từ phím WASD dạng $(\pm1, \pm1)$. Đi chéo (nhấn W+D) cho vector $(1, 1)$, có độ dài $\sqrt{2} \approx 1.41$ — nếu nhân thẳng vector này với tốc độ mà quên normalize, nhân vật đi chéo nhanh hơn đi thẳng khoảng 41%, một lỗi di chuyển kinh điển trong game 2D góc nhìn từ trên xuống. Normalize input trước khi nhân tốc độ ($\hat v \times \text{speed} \times \Delta t$) loại bỏ hẳn lỗi này.
+
+## Vector đóng ba vai: vị trí, hướng, vận tốc
+
+Cùng một kiểu dữ liệu `(x, y, z)`, nhưng ý nghĩa phụ thuộc vào ngữ cảnh sử dụng: **vị trí** (position) là toạ độ một điểm trong không gian — có ý nghĩa tuyệt đối, gắn chặt với gốc toạ độ. **Hướng** (direction) mô tả "quay về đâu" mà không quan tâm đang ở đâu — thường được normalize về độ dài 1, và vô nghĩa khi cộng thêm vị trí của object vào nó (pháp tuyến bề mặt là ví dụ điển hình: dịch chuyển object không được làm pháp tuyến dịch theo). **Vận tốc** (velocity) mã hoá cả hướng chuyển động lẫn tốc độ ngay trong độ lớn của chính nó — vector vận tốc dài gấp đôi nghĩa là chuyển động nhanh gấp đôi theo đúng hướng đó. Nhầm vai trò — ví dụ normalize một vector vị trí, hay cộng một vector hướng vào một vector khác như thể nó là vị trí — là nguồn lỗi âm thầm khó debug, vì bản thân compiler không hề biết `vec3` này "nên" đóng vai trò gì.
+
+Ba vai trò này phối hợp với nhau ngay trong vòng lặp game đơn giản nhất: mỗi frame, vị trí mới bằng vị trí cũ cộng vận tốc nhân với thời gian trôi qua ($\Delta t$) — đúng là phép cộng và nhân vô hướng vừa học ở trên, chỉ đổi tên biến:
+
+```ts
+player.position = add(player.position, scale(player.velocity, dt));
+```
+
+## Kết nối về sau: vector trong shader và 3D
+
+Từ lesson này, mọi vertex trong một mesh WebGL đều mang theo ít nhất ba vector: vị trí (`position`), pháp tuyến (`normal`) và hướng nhìn (view direction, tính lúc runtime) — cùng các phép cộng/trừ/scale/normalize vừa học, chỉ đổi tên hàm từ TypeScript sang GLSL (`normalize()`, `length()`, toán tử `+`/`-`/`*` hoạt động y hệt trên `vec3`). Bài tiếp theo học dot và cross product — hai phép nhân vector còn thiếu — để trả lời "hai vector này lệch nhau bao nhiêu độ" và "vector nào vuông góc với cả hai", nền tảng trực tiếp của lighting và pháp tuyến mặt.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới làm việc với vector:
+
+1. **Normalize một vector độ dài 0.** Chia cho $\|\vec v\| = 0$ cho ra `Infinity` hoặc `NaN`, và NaN lan truyền âm thầm qua mọi phép toán sau đó — object biến mất khỏi màn hình mà không có lỗi nào được ném ra. Luôn kiểm tra `length` trước khi chia, hoặc trả về vector zero khi độ dài quá nhỏ.
+2. **Trừ ngược thứ tự khi tính hướng giữa hai điểm.** `targetPos - myPos` cho hướng *tới* target; `myPos - targetPos` cho hướng ngược lại. Nhầm hai cái này khiến nhân vật quay lưng, đạn bắn sai chiều — lỗi im lặng, code vẫn chạy, chỉ hướng sai.
+3. **Cộng một vector hướng vào vị trí như thể cả hai cùng loại.** Pháp tuyến, vận tốc và vị trí đều là `vec3`, nhưng cộng nhầm (ví dụ dịch chuyển pháp tuyến theo vị trí object) phá vỡ ý nghĩa hình học của phép toán — vấn đề này sẽ quay lại rõ ràng hơn ở bài toạ độ đồng nhất (homogeneous coordinates), nơi thành phần $w$ chính thức phân biệt điểm ($w=1$) và hướng ($w=0$).
+
+</Callout>
