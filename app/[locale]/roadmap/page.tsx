@@ -1,16 +1,18 @@
 import { getLocale, getTranslations } from "next-intl/server";
 import { TRACKS } from "@/content/curriculum";
 import type { Locale } from "@/content/types";
-import type { ProgressMap } from "@/lib/curriculum";
 import { overallCompletion } from "@/lib/curriculum";
+import { getProgressMap } from "@/lib/progress-read";
 import { TrackCard } from "@/components/roadmap/track-card";
+
+// Reads live progress from SQLite on every request
+export const dynamic = "force-dynamic";
 
 export default async function RoadmapPage() {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("roadmap");
 
-  // Phase 3 wires real progress rows; until then everything is not_started.
-  const progress: ProgressMap = {};
+  const progress = getProgressMap();
   const stats = overallCompletion(progress);
 
   return (

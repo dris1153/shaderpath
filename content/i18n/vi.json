@@ -9,7 +9,9 @@
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",
     "progressTitle": "Tiến độ học tập",
-    "empty": "Chưa có tiến độ — mở trang Lộ trình để bắt đầu."
+    "empty": "Chưa có tiến độ — mở trang Lộ trình để bắt đầu.",
+    "stats": "{completed}/{total} bài core · {hours} giờ đã học",
+    "continue": "Tiếp tục học"
   },
   "roadmap": {
     "title": "Lộ trình",
@@ -20,6 +22,34 @@
     "locked": "Chưa mở khoá",
     "difficulty": "Độ khó {level}/5",
     "minutes": "{minutes} phút"
+  },
+  "lesson": {
+    "backToTrack": "Về track",
+    "onThisPage": "Trong bài này",
+    "objectives": "Sau bài này bạn sẽ",
+    "references": "Tài liệu tham khảo",
+    "prev": "Bài trước",
+    "next": "Bài sau",
+    "markCompleteTitle": "Hoàn thành bài học?",
+    "confidenceLabel": "Mức tự tin (tuỳ chọn)",
+    "markComplete": "Đánh dấu hoàn thành",
+    "completed": "Đã hoàn thành",
+    "completedWithConfidence": "Đã hoàn thành · tự tin {confidence}/5",
+    "markedToast": "Đã lưu: bài học hoàn thành",
+    "contentComingSoonTitle": "Nội dung đang biên soạn",
+    "contentComingSoon": "Bài này đã có trong lộ trình nhưng nội dung sẽ được viết ở giai đoạn sau.",
+    "translationFallback": "Bài này chưa có bản dịch cho ngôn ngữ hiện tại — đang hiển thị bản gốc.",
+    "learnAnyway": "Bài này chưa mở khoá theo lộ trình — bạn vẫn có thể học trước nếu muốn.",
+    "openNav": "Mục lục track",
+    "openToc": "Trong bài"
+  },
+  "errors": {
+    "title": "Có lỗi xảy ra",
+    "description": "Không tải được nội dung. Thử lại nhé.",
+    "retry": "Thử lại",
+    "lessonNotFoundTitle": "Không tìm thấy bài học",
+    "lessonNotFoundDescription": "Slug không tồn tại trong lộ trình.",
+    "backToRoadmap": "Về trang Lộ trình"
   },
   "localeSwitcher": {
     "label": "Ngôn ngữ",

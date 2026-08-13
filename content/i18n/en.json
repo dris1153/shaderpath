@@ -9,7 +9,9 @@
   "dashboard": {
     "welcome": "Welcome to Shaderpath",
     "progressTitle": "Learning progress",
-    "empty": "No progress yet — open the Roadmap to get started."
+    "empty": "No progress yet — open the Roadmap to get started.",
+    "stats": "{completed}/{total} core lessons · {hours} hours studied",
+    "continue": "Continue learning"
   },
   "roadmap": {
     "title": "Roadmap",
@@ -20,6 +22,34 @@
     "locked": "Locked",
     "difficulty": "Difficulty {level}/5",
     "minutes": "{minutes} min"
+  },
+  "lesson": {
+    "backToTrack": "Back to track",
+    "onThisPage": "On this page",
+    "objectives": "After this lesson you will",
+    "references": "References",
+    "prev": "Previous",
+    "next": "Next",
+    "markCompleteTitle": "Finished this lesson?",
+    "confidenceLabel": "Confidence (optional)",
+    "markComplete": "Mark complete",
+    "completed": "Completed",
+    "completedWithConfidence": "Completed · confidence {confidence}/5",
+    "markedToast": "Saved: lesson completed",
+    "contentComingSoonTitle": "Content in progress",
+    "contentComingSoon": "This lesson is on the roadmap; its content arrives in a later phase.",
+    "translationFallback": "No translation for the current language yet — showing the original.",
+    "learnAnyway": "This lesson isn't unlocked on your path yet — you can still learn ahead.",
+    "openNav": "Track contents",
+    "openToc": "On this page"
+  },
+  "errors": {
+    "title": "Something went wrong",
+    "description": "The content failed to load. Please try again.",
+    "retry": "Retry",
+    "lessonNotFoundTitle": "Lesson not found",
+    "lessonNotFoundDescription": "That slug doesn't exist on the roadmap.",
+    "backToRoadmap": "Back to Roadmap"
   },
   "localeSwitcher": {
     "label": "Language",

@@ -1,5 +1,6 @@
 import { IconLock } from "@tabler/icons-react";
 import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import type { LessonMeta, Locale } from "@/content/types";
 import type { ProgressMap } from "@/lib/curriculum";
 import { isUnlocked } from "@/lib/curriculum";
@@ -16,9 +17,13 @@ export async function LessonRow({
 }) {
   const t = await getTranslations("roadmap");
   const unlocked = isUnlocked(lesson.slug, progress);
+  const completed = progress[lesson.slug] === "completed";
 
   return (
-    <div className="flex items-center justify-between gap-3 py-2">
+    <Link
+      href={`/lesson/${lesson.slug}`}
+      className="hover:bg-muted/50 flex items-center justify-between gap-3 rounded-md px-2 py-2"
+    >
       <div className="flex min-w-0 items-center gap-2">
         {!unlocked && (
           <IconLock
@@ -26,9 +31,18 @@ export async function LessonRow({
             aria-label={t("locked")}
           />
         )}
-        <span className={unlocked ? "truncate" : "text-muted-foreground truncate"}>
+        <span
+          className={
+            completed
+              ? "truncate"
+              : unlocked
+                ? "truncate"
+                : "text-muted-foreground truncate"
+          }
+        >
           {lesson.title[locale]}
         </span>
+        {completed && <Badge>✓</Badge>}
         {lesson.kind === "checkpoint" && (
           <Badge variant="secondary">{t("checkpoint")}</Badge>
         )}
@@ -40,6 +54,6 @@ export async function LessonRow({
         <span>{t("difficulty", { level: lesson.difficulty })}</span>
         <span>{t("minutes", { minutes: lesson.estimatedMinutes })}</span>
       </div>
-    </div>
+    </Link>
   );
 }

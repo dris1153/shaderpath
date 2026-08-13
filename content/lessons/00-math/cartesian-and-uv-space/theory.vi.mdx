@@ -1,0 +1,94 @@
+## Hệ toạ độ Descartes: từ đường số đến không gian 3D
+
+Toạ độ Descartes (theo tên René Descartes, người đưa đại số vào hình học từ thế kỷ 17) biến một điểm hình học thành một cặp, hoặc bộ ba, con số. Trong mặt phẳng 2D, bạn chọn gốc $O$ và hai trục vuông góc $x, y$; điểm $P(x, y)$ nghĩa là đi $x$ đơn vị dọc trục hoành, rồi $y$ đơn vị dọc trục tung. Quy ước vuông góc, chia đều đơn vị không phải chân lý bắt buộc — bạn có thể nghiêng trục hay đảo chiều dương — nhưng mọi công cụ đồ hoạ đều ngầm giả định nó, nên phá vỡ nó vô tình là lỗi phổ biến nhất khi mới học.
+
+Không gian 3D thêm trục $z$ vuông góc với hai trục còn lại; điểm $P(x, y, z)$ là giao ba mặt phẳng vuông góc dựng từ ba toạ độ đó. Ba trục thôi chưa đủ mô tả trọn vẹn một hệ toạ độ — còn cần biết trục nào "hướng lên" và chúng xoay theo chiều nào, chủ đề phần tiếp theo.
+
+## Quy ước trục: Y-up vs Z-up, và tay trái hay tay phải
+
+Toán học không quan tâm trục nào "hướng lên" — phần mềm đồ hoạ thì có, vì người dùng luôn có cảm nhận trực quan về "lên". Hai quy ước phổ biến nhất:
+
+- **Y-up**: trục $y$ chỉ lên trời, mặt đất là mặt phẳng $xz$. Three.js dùng mặc định — camera nhìn dọc trục $-z$, "lên" là $+y$. glTF, định dạng model 3D chuẩn cho web, cũng bắt buộc Y-up.
+- **Z-up**: trục $z$ chỉ lên trời, mặt đất là mặt phẳng $xy$. Blender dùng Z-up nội bộ (bộ export glTF của Blender tự xoay 90° quanh trục $x$ để đổi sang Y-up khi xuất file) — CAD và một số phần mềm kỹ thuật cũng quen Z-up vì khớp với bản vẽ 2D nhìn từ trên xuống.
+
+Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị lộn mặt.
+
+Ví dụ rõ nhất của đổi trục nằm ngay trên canvas 2D: Descartes có $y$ hướng lên, canvas 2D có gốc trên-trái với $y$ hướng xuống — vẽ một điểm Descartes lên canvas luôn cần đảo dấu $y$:
+
+```js
+// Điểm Descartes P(x, y) — gốc ở tâm, y hướng lên
+// → pixel trên canvas 2D — gốc trên-trái, y hướng xuống
+function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
+  return {
+    px: canvasWidth / 2 + x,
+    py: canvasHeight / 2 - y, // đảo dấu y
+  };
+}
+```
+
+## UV space là gì, và vì sao luôn chạy từ 0 đến 1
+
+UV space là hệ toạ độ 2D tham chiếu vị trí trên một bề mặt — thường là texture (ảnh) — độc lập với kích thước pixel thực tế của bề mặt đó. $u$ là trục ngang, $v$ trục dọc (đặt tên khác $x, y$ để không nhầm toạ độ 3D của vertex). Quy ước $u, v \in [0, 1]$: một góc texture luôn là $(0,0)$, góc đối diện luôn là $(1,1)$, dù ảnh gốc $16\times16$ hay $8192\times8192$ pixel.
+
+Lý do chọn $[0,1]$ rất thực dụng: shader sample texture bằng UV không cần biết texture có bao nhiêu pixel — đổi độ phân giải hay mip level không phải sửa dòng shader nào, vì toạ độ sample vẫn nằm trong $[0,1]$. Đây là lý do UV, không phải toạ độ pixel, là ngôn ngữ mọi vertex dùng để nói với GPU "lấy màu ở đâu trên texture".
+
+## Ánh xạ pixel ↔ UV: công thức và pixel center
+
+### Công thức ánh xạ
+
+Ảnh hoặc canvas rộng $W$, cao $H$ pixel; pixel tại cột $x$, hàng $y$ (đánh số từ 0, gốc trên-trái) ánh xạ sang UV bằng:
+
+$$
+u = \frac{x + 0.5}{W}, \qquad v = \frac{y + 0.5}{H}
+$$
+
+```js
+function pixelToUV(x, y, width, height) {
+  return {
+    u: (x + 0.5) / width,
+    v: (y + 0.5) / height,
+  };
+}
+
+// canvas 400x300: pixel đầu tiên và pixel cuối cùng
+pixelToUV(0, 0, 400, 300);     // ≈ { u: 0.00125, v: 0.00167 }
+pixelToUV(399, 299, 400, 300); // ≈ { u: 0.99875, v: 0.99833 }
+```
+
+### Vì sao phải cộng 0.5
+
+Một pixel không phải một điểm toán học — nó là ô vuông có diện tích, số nguyên $x$ chỉ đánh số ô, không phải vị trí tâm ô. Tâm hình học của pixel $x$ nằm ở $x + 0.5$, nên map thẳng $u = x/W$ đặt tâm pixel 0 tại $u = 0$ — sai, vì tâm thật cách mép trái nửa pixel. Cộng $0.5$ trước khi chia đảm bảo $[0, 1]$ chia đều thành $W$ ô, tâm mỗi ô đúng vị trí. Với ví dụ trên, để ý UV không bao giờ chạm đúng 0 hay 1 — pixel đầu dừng ở $u \approx 0.00125$, không phải $0$; đó là đúng, không phải làm tròn sai.
+
+## Chuẩn hoá màn hình: [0,1] và xem trước [-1,1] (NDC)
+
+UV $[0,1]$ tiện cho sample texture, nhưng $[-1, 1]$ tiện hơn cho hướng và vector, vì có tâm tại 0, đối xứng — dấu một con số thể hiện trực tiếp "trái/phải" hay "trước/sau" mà không cần trừ 0.5 mỗi lần dùng. Đây là không gian mà WebGL gọi **NDC** (Normalized Device Coordinates) — bài Model → View → Projection ở module sau sẽ nói kỹ, nhưng công thức chuyển từ UV sang NDC chỉ là scale-and-shift:
+
+$$
+x_{ndc} = 2u - 1, \qquad y_{ndc} = 1 - 2v
+$$
+
+Trục $y$ dùng $1 - 2v$ thay vì $2v - 1$ vì $v$ tăng xuống dưới (quy ước canvas/ảnh) trong khi $y_{ndc}$ tăng lên trên (quy ước NDC) — phép lật trục dọc bắt buộc mỗi khi dữ liệu đi từ "không gian ảnh" sang "không gian toán/NDC". Ứng dụng phổ biến nhất: chuyển toạ độ chuột (pixel, gốc trên-trái) sang NDC cho raycasting:
+
+```js
+// browser: gắn vào canvas.addEventListener("pointermove", (e) => mouseToNDC(e, canvas))
+function mouseToNDC(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const u = (event.clientX - rect.left) / rect.width;
+  const v = (event.clientY - rect.top) / rect.height;
+  return { x: 2 * u - 1, y: 1 - 2 * v };
+}
+```
+
+## Nền tảng này dẫn tới đâu: texture và shader
+
+Mọi thứ ở trên nghe thuần lý thuyết, nhưng là hai dòng đầu tiên bạn viết trong gần như mọi fragment shader: chuẩn hoá `gl_FragCoord` (toạ độ pixel) về UV, rồi map UV về $[-1,1]$ để vẽ hình đối xứng qua tâm. Track 1 dùng lại đúng công thức này để upload và sample texture; Track 2 (GLSL) mở đầu bằng đúng phép chuẩn hoá này để vẽ hình bằng distance field. Nắm chắc hai công thức này ngay bây giờ, khỏi phải dừng lại suy nghĩ về chúng suốt các track còn lại.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với pixel và UV:
+
+1. **Quên cộng 0.5 khi map pixel → UV.** Dùng `u = x / width` thay vì `u = (x + 0.5) / width` khiến cả lưới UV lệch nửa pixel — không rõ ở ảnh mượt, nhưng lộ ngay ở pattern lặp, lưới caro, hay text nhỏ bị mờ/lệch 1px.
+2. **Nhầm chiều Y giữa canvas 2D và Descartes/NDC.** Canvas 2D có $y$ tăng xuống; Descartes chuẩn và NDC có $y$ tăng lên. Copy công thức vẽ đồ thị toán vào canvas mà quên đảo dấu $y$ (hoặc quên $1 - 2v$ khi ra NDC) làm hình lật ngược theo trục dọc.
+3. **Nhầm gốc UV của ảnh với gốc UV của texture WebGL.** Ảnh bitmap (canvas, `<img>`, PNG/JPEG) luôn lưu hàng pixel đầu ở trên cùng ($v=0$ là trên). Texture WebGL/OpenGL cổ điển lại coi $v=0$ là **dưới cùng**. Upload thẳng ảnh vào texture mà không set `UNPACK_FLIP_Y_WEBGL` khiến texture hiện lộn ngược — lỗi kinh điển ngay bài texture đầu tiên ở Track 1.
+
+</Callout>

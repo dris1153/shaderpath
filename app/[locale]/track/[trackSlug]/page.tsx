@@ -3,8 +3,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TRACKS } from "@/content/curriculum";
 import type { Locale, TrackId } from "@/content/types";
-import type { ProgressMap } from "@/lib/curriculum";
 import { getModulesOfTrack, getTrack, trackCompletion } from "@/lib/curriculum";
+import { getProgressMap } from "@/lib/progress-read";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Progress } from "@/components/ui/progress";
 import { ModuleAccordion } from "@/components/roadmap/module-accordion";
+
+// Reads live progress from SQLite on every request
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return TRACKS.map((t) => ({ trackSlug: t.id }));
@@ -31,7 +34,7 @@ export default async function TrackPage({
 
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("roadmap");
-  const progress: ProgressMap = {};
+  const progress = getProgressMap();
   const stats = trackCompletion(track.id, progress);
   const modules = getModulesOfTrack(track.id);
 

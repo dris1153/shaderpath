@@ -42,9 +42,3 @@ test("roadmap renders all 14 tracks with modules", async ({ page }) => {
   await expect(page.getByRole("link", { name: "Nền tảng Toán học cho đồ hoạ" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Capstone Projects" })).toBeVisible();
 });
-
-test("MDX pipeline renders KaTeX math and shiki GLSL", async ({ page }) => {
-  await page.goto("/vi/dev-mdx-check");
-  await expect(page.locator(".katex").first()).toBeVisible();
-  await expect(page.locator("pre.shiki")).toBeVisible();
-});

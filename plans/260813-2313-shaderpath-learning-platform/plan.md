@@ -26,7 +26,7 @@ Every lesson = Theory → Citations → Interactive demo → Exercises.
 |---|-------|--------|--------|-----|
 | 1 | Scaffold Next.js + shadcn + next-intl + Drizzle; layout, theme, language switcher | ✅ Complete (2026-08-13) | 8h | [phase-01](phase-01-scaffold-nextjs-shadcn-intl-drizzle.md) |
 | 2 | Content pipeline: MDX + KaTeX + shiki, `LessonMeta`, `curriculum.ts` (14 tracks, metadata only) | ✅ Complete (2026-08-14) | 10h | [phase-02](phase-02-content-pipeline-mdx-katex-shiki-curriculum.md) |
-| 3 | Lesson page + TOC + progress tracking + SQLite read/write | Not Started | 10h | [phase-03](phase-03-lesson-page-toc-progress-tracking.md) |
+| 3 | Lesson page + TOC + progress tracking + SQLite read/write | ✅ Complete (2026-08-14) | 10h | [phase-03](phase-03-lesson-page-toc-progress-tracking.md) |
 | 4 | Demo system: `<Demo>` wrapper, control panel, IntersectionObserver pause | Not Started | 10h | [phase-04](phase-04-interactive-demo-system-r3f.md) |
 | 5 | GLSL Playground: Monaco + live compile + error mapping + snippet save | Not Started | 12h | [phase-05](phase-05-glsl-playground-monaco.md) |
 | 6 | Exercise system: hints, checklist, solution reveal, code persistence | Not Started | 8h | [phase-06](phase-06-exercise-system.md) |

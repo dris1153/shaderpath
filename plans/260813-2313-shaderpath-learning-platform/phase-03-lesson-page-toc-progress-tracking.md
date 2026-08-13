@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~10h
 - **Description:** Render a lesson from the registry in a 3-column layout with sticky auto-highlighting TOC, and persist reading progress (scroll %, time spent, status) to SQLite with resume-on-reload.
 
@@ -96,18 +96,18 @@ TanStack Query holds the progress cache; optimistic update on write, invalidate 
 
 ## Todo List
 
-- [ ] remark TOC extraction plugin + registered in MDX chain
-- [ ] First Track 0 lesson authored as render target (D6)
-- [ ] Lesson RSC page + loading/error/not-found
-- [ ] 3-col shell + mobile Sheet/Drawer fallbacks
-- [ ] Sticky TOC with scroll-spy + a11y attrs
-- [ ] Sidebar module nav (ScrollArea + Accordion)
-- [ ] `lib/progress.ts` server actions + session open/close
-- [ ] Progress tracker island: scroll %, visible-time, 5s debounce, pagehide flush
-- [ ] Scroll restore on revisit
-- [ ] Mark complete + confidence rating
-- [ ] Dashboard/roadmap consume real progress
-- [ ] Unit + e2e tests
+- [x] remark TOC extraction plugin + registered in MDX chain
+- [x] First Track 0 lesson authored as render target (D6)
+- [x] Lesson RSC page + loading/error/not-found
+- [x] 3-col shell + mobile Sheet/Drawer fallbacks
+- [x] Sticky TOC with scroll-spy + a11y attrs
+- [x] Sidebar module nav (ScrollArea + Accordion)
+- [x] `lib/progress.ts` server actions + session open/close
+- [x] Progress tracker island: scroll %, visible-time, 5s debounce, pagehide flush
+- [x] Scroll restore on revisit
+- [x] Mark complete + confidence rating
+- [x] Dashboard/roadmap consume real progress
+- [x] Unit + e2e tests
 
 ## Success Criteria
 
@@ -138,6 +138,22 @@ TanStack Query holds the progress cache; optimistic update on write, invalidate 
 ## Rollback
 
 Revert phase commit; DB tables stay (created in Phase 1) — orphan rows are harmless. No migration to undo.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Deviations:**
+- TOC extracted in `scripts/gen-lesson-registry.ts` (parse `##`–`####` headings + github-slugger), NOT a remark plugin — Turbopack requires MDX plugins in serializable string form; injecting `export const toc` via estree was far heavier. `TOC_REGISTRY` + `REFERENCES_REGISTRY` join `LESSON_REGISTRY` in the generated file.
+- No zustand reader store — the single `ProgressTracker` island keeps state in an effect-local closure (zustand reserved for the playground, its actual spec §1 role).
+- No per-lesson `meta.ts` (spec §2 tree) — metadata single-sourced in `content/tracks/*` since Phase 2.
+- Missing translation → renders the other locale + notice Alert; missing content (155 lessons) → "coming soon" Alert. No white screens (§7).
+- All progress-reading pages `export const dynamic = "force-dynamic"` — otherwise `next build` freezes DB state into prerendered pages.
+- Base UI gotcha: `Button render={<Link/>}` needs `nativeButton={false}`.
+- Confidence rating = 5 plain buttons with `role="radio"` (skipped ToggleGroup API uncertainty).
+- `db/client.ts` honors `SHADERPATH_DB` env — unit tests use a tmp DB; e2e web server gets a per-run `data/e2e-<ts>.db` with `reuseExistingServer: false` (a reused server would keep a previous run's DB env). Orphaned `next dev` processes on Windows must be killed before e2e (Next 16 single-server lock).
+- First real lesson authored (D6): `cartesian-and-uv-space` — vi 1249 / en 1223 words (~3% over the 1200 guideline, kept for §10 depth), 4 verified citations, canvas-2D runnable code, one mistake-callout per locale.
+- Time tracking hidden-tab rule enforced by the 1s interval checking `document.visibilityState` — verified by code review; e2e does not simulate tab-hiding.
+
+**Verification run:** typecheck ✓ · eslint ✓ (after fixing react-hooks/refs rule in tracker) · vitest 15/15 (5 progress: slug validation, clamps, accumulation, completed-stickiness, sessions; 10 curriculum) ✓ · `next build` ✓ · e2e 8/8: theory+KaTeX+shiki+TOC+references render, **scroll % + time persist across reload (§9 DoD)**, mark-complete + confidence persists ✓.
 
 ## Next Steps
 

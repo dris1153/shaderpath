@@ -7,8 +7,10 @@ import * as schema from "./schema";
 // Server-only (spec §8.7): must never be imported from client components.
 // serverExternalPackages in next.config.ts keeps better-sqlite3 out of bundles.
 
-const DB_DIR = path.join(process.cwd(), "data");
-const DB_PATH = path.join(DB_DIR, "progress.db");
+// SHADERPATH_DB override exists for tests (scratch DB) — defaults to spec §2 path
+const DB_PATH =
+  process.env.SHADERPATH_DB ?? path.join(process.cwd(), "data", "progress.db");
+const DB_DIR = path.dirname(DB_PATH);
 
 function createDb() {
   fs.mkdirSync(DB_DIR, { recursive: true });

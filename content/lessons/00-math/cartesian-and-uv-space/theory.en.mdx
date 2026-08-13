@@ -1,0 +1,94 @@
+## Cartesian Coordinates: From the Number Line to 3D Space
+
+Cartesian coordinates — named after René Descartes, who folded algebra into geometry back in the 17th century — are the simplest way to turn a geometric point into a pair, or triple, of numbers. In the 2D plane you pick an origin $O$ and two perpendicular axes: the $x$-axis and the $y$-axis. A point $P$ is fully determined by the pair $(x, y)$: travel $x$ units along the horizontal axis, then $y$ units along the vertical one. None of this is sacred — you could tilt the axes 30° apart, or flip the positive direction — but the perpendicular, evenly-spaced convention is exactly what every graphics tool silently assumes, so breaking it by accident is the single most common source of beginner bugs.
+
+3D space adds a third axis, $z$, perpendicular to the other two. A point $P(x, y, z)$ sits at the intersection of three perpendicular planes built from those coordinates. Three axes alone don't fully pin down a coordinate system, though — you still need to know which axis points "up," and which way the three axes wind around each other. Those two questions are what the next section answers.
+
+## Axis Conventions: Y-up vs Z-up, Left- or Right-handed
+
+Pure math doesn't care which axis is "up" — but graphics software does, because users have an intuitive sense of up. Two conventions dominate:
+
+- **Y-up**: the $y$-axis points skyward, the ground is the $xz$ plane. Three.js defaults to this — its default camera looks down $-z$, and "up" is $+y$. glTF, the standard web 3D model format, mandates Y-up as well.
+- **Z-up**: the $z$-axis points skyward, the ground is the $xy$ plane. Blender uses Z-up internally (which is why its glTF exporter silently rotates everything 90° around $x$ to convert to Y-up on export), and CAD tools and some engineering-oriented software favor Z-up because it matches a top-down 2D blueprint.
+
+The second question is whether a coordinate system is **right-handed** or **left-handed**. The right-hand rule: fingers curl from $+x$ toward $+y$; the thumb points along $+z$ if the system is right-handed. Three.js is right-handed; DirectX and Unity are traditionally left-handed. Not trivia — the cross product, the tool you'll use a few lessons from now to build surface normals, flips sign when handedness switches, and a model imported without conversion ends up with normals pointing inward instead of outward.
+
+The most concrete axis flip sits right on a 2D canvas: standard Cartesian coordinates have $y$ pointing up, a 2D canvas has its origin top-left with $y$ pointing down. Plotting a Cartesian point onto a canvas always requires flipping $y$:
+
+```js
+// Cartesian point P(x, y) — origin at center, y up
+// → pixel on a 2D canvas — origin top-left, y down
+function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
+  return {
+    px: canvasWidth / 2 + x,
+    py: canvasHeight / 2 - y, // flip y
+  };
+}
+```
+
+## What UV Space Is, and Why It Always Runs 0 to 1
+
+UV space is a 2D coordinate system for referencing a position on a surface — usually a texture image — independent of that surface's actual pixel dimensions. $u$ is the horizontal axis, $v$ the vertical one (named differently from $x, y$ specifically so they're never confused with a vertex's 3D position). The convention is $u, v \in [0, 1]$: one corner of the texture is always $(0,0)$, the opposite corner always $(1,1)$, whether the underlying image is $16\times16$ or $8192\times8192$ pixels.
+
+The reason to normalize to $[0,1]$ is practical: a shader sampling a texture by UV never needs to know how many pixels that texture has — swapping in a higher-resolution texture, or a different mip level, doesn't touch a single line of shader code, because the sample coordinate still lives inside $[0,1]$. That's why UV, not pixel coordinates, is the language every vertex uses to tell the GPU where to fetch color from.
+
+## Mapping Pixels to UV: The Formula and the Pixel Center
+
+### The Mapping Formula
+
+An image or canvas $W$ pixels wide, $H$ pixels tall; the pixel at column $x$, row $y$ (zero-indexed, origin top-left) maps to UV as:
+
+$$
+u = \frac{x + 0.5}{W}, \qquad v = \frac{y + 0.5}{H}
+$$
+
+```js
+function pixelToUV(x, y, width, height) {
+  return {
+    u: (x + 0.5) / width,
+    v: (y + 0.5) / height,
+  };
+}
+
+// a 400x300 canvas: first and last pixel
+pixelToUV(0, 0, 400, 300);     // ≈ { u: 0.00125, v: 0.00167 }
+pixelToUV(399, 299, 400, 300); // ≈ { u: 0.99875, v: 0.99833 }
+```
+
+### Why You Add 0.5
+
+A pixel isn't a mathematical point — it's a square with area, and the integer $x$ only indexes that square, not its center. The geometric center of pixel $x$ sits at $x + 0.5$, so mapping directly with $u = x / W$ would place pixel 0's center at $u = 0$ — wrong, since its real center sits half a pixel from the left edge. Adding $0.5$ before dividing guarantees $[0,1]$ splits evenly into $W$ equal cells, each center landing where it should. In the example above, UV never actually touches exactly 0 or 1 — the first pixel stops at $u \approx 0.00125$, not $0$; that's correct, not a rounding bug.
+
+## Normalizing the Screen: [0,1] and a Preview of [-1,1] (NDC)
+
+UV's $[0,1]$ range suits sampling textures, but $[-1, 1]$ suits directions and vectors better, since it's centered on 0 and symmetric — a number's sign directly tells you "left/right" or "front/back" without subtracting 0.5 every time. This is exactly the space WebGL calls **NDC** (Normalized Device Coordinates) — the later Model → View → Projection lesson digs into it properly, but the conversion from UV to NDC is just a scale-and-shift:
+
+$$
+x_{ndc} = 2u - 1, \qquad y_{ndc} = 1 - 2v
+$$
+
+The $y$-axis uses $1 - 2v$ rather than $2v - 1$ because $v$ increases downward (the canvas/image convention) while $y_{ndc}$ increases upward (the NDC convention) — a vertical flip that has to happen every time data crosses from "image space" into "math/NDC space." The most common real-world use of this formula: converting a mouse position (pixels, origin top-left) into NDC for raycasting:
+
+```js
+// browser: wire up with canvas.addEventListener("pointermove", (e) => mouseToNDC(e, canvas))
+function mouseToNDC(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const u = (event.clientX - rect.left) / rect.width;
+  const v = (event.clientY - rect.top) / rect.height;
+  return { x: 2 * u - 1, y: 1 - 2 * v };
+}
+```
+
+## Where This Foundation Leads: Textures and Shaders
+
+Everything above sounds purely theoretical, but it's literally the first two lines of nearly every fragment shader you'll write: normalize `gl_FragCoord` (pixel coordinates) into UV, then remap UV into $[-1,1]$ to draw shapes symmetric around the center. Track 1 reuses this exact formula to upload and sample textures; Track 2 (GLSL) opens by normalizing screen coordinates this same way to draw shapes with distance fields. Get comfortable with these two formulas now, and you won't have to re-derive them for the rest of the tracks.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common pixel/UV mistakes when starting out:
+
+1. **Forgetting to add 0.5 when mapping pixel → UV.** Using `u = x / width` instead of `u = (x + 0.5) / width` shifts the entire UV grid by half a pixel — invisible on smooth images, but obvious on repeating patterns, checkerboards, or small text offset by 1px from the original design.
+2. **Mixing up the Y direction between 2D canvas and Cartesian/NDC.** Canvas 2D has its origin top-left with $y$ increasing downward; standard Cartesian and NDC have $y$ increasing upward. Copying a math-plotting formula straight into canvas code without flipping $y$ (or forgetting the $1 - 2v$ when converting to NDC) flips the drawing upside down.
+3. **Confusing an image's UV origin with a WebGL texture's UV origin.** Bitmap images (canvas, `<img>`, PNG/JPEG) always store their first pixel row at the top ($v=0$ = top). Classic WebGL/OpenGL textures instead treat $v=0$ as the **bottom**. Uploading an image straight into a texture without setting `UNPACK_FLIP_Y_WEBGL` (or flipping manually) renders the texture upside down — a classic bug that shows up in Track 1's very first texture lesson.
+
+</Callout>

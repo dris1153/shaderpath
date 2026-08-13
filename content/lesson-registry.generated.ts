@@ -2,12 +2,37 @@
 // Regenerate with: pnpm gen:registry
 import type { ComponentType } from "react";
 import type { LessonSlug } from "./slugs";
-import type { Locale } from "./types";
+import type { Citation, Locale } from "./types";
 
 export type LessonModuleLoader = () => Promise<{ default: ComponentType }>;
+export type ReferencesLoader = () => Promise<{ references: Citation[] }>;
+
+export interface TocItem {
+  id: string;
+  text: string;
+  depth: 2 | 3 | 4;
+}
 
 export const LESSON_REGISTRY: Partial<
   Record<LessonSlug, Partial<Record<Locale, LessonModuleLoader>>>
 > = {
+  "cartesian-and-uv-space": {
+    vi: () => import("./lessons/00-math/cartesian-and-uv-space/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/cartesian-and-uv-space/theory.en.mdx"),
+  },
+};
 
+export const REFERENCES_REGISTRY: Partial<
+  Record<LessonSlug, ReferencesLoader>
+> = {
+  "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/references"),
+};
+
+export const TOC_REGISTRY: Partial<
+  Record<LessonSlug, Partial<Record<Locale, TocItem[]>>>
+> = {
+  "cartesian-and-uv-space": {
+    vi: [{"id":"hệ-toạ-độ-descartes-từ-đường-số-đến-không-gian-3d","text":"Hệ toạ độ Descartes: từ đường số đến không gian 3D","depth":2},{"id":"quy-ước-trục-y-up-vs-z-up-và-tay-trái-hay-tay-phải","text":"Quy ước trục: Y-up vs Z-up, và tay trái hay tay phải","depth":2},{"id":"uv-space-là-gì-và-vì-sao-luôn-chạy-từ-0-đến-1","text":"UV space là gì, và vì sao luôn chạy từ 0 đến 1","depth":2},{"id":"ánh-xạ-pixel--uv-công-thức-và-pixel-center","text":"Ánh xạ pixel ↔ UV: công thức và pixel center","depth":2},{"id":"công-thức-ánh-xạ","text":"Công thức ánh xạ","depth":3},{"id":"vì-sao-phải-cộng-05","text":"Vì sao phải cộng 0.5","depth":3},{"id":"chuẩn-hoá-màn-hình-01-và-xem-trước--11-ndc","text":"Chuẩn hoá màn hình: [0,1] và xem trước [-1,1] (NDC)","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-texture-và-shader","text":"Nền tảng này dẫn tới đâu: texture và shader","depth":2}],
+    en: [{"id":"cartesian-coordinates-from-the-number-line-to-3d-space","text":"Cartesian Coordinates: From the Number Line to 3D Space","depth":2},{"id":"axis-conventions-y-up-vs-z-up-left--or-right-handed","text":"Axis Conventions: Y-up vs Z-up, Left- or Right-handed","depth":2},{"id":"what-uv-space-is-and-why-it-always-runs-0-to-1","text":"What UV Space Is, and Why It Always Runs 0 to 1","depth":2},{"id":"mapping-pixels-to-uv-the-formula-and-the-pixel-center","text":"Mapping Pixels to UV: The Formula and the Pixel Center","depth":2},{"id":"the-mapping-formula","text":"The Mapping Formula","depth":3},{"id":"why-you-add-05","text":"Why You Add 0.5","depth":3},{"id":"normalizing-the-screen-01-and-a-preview-of--11-ndc","text":"Normalizing the Screen: [0,1] and a Preview of [-1,1] (NDC)","depth":2},{"id":"where-this-foundation-leads-textures-and-shaders","text":"Where This Foundation Leads: Textures and Shaders","depth":2}],
+  },
 };

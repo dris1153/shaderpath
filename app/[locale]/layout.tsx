@@ -6,6 +6,7 @@ import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
@@ -60,6 +61,7 @@ export default async function LocaleLayout({
               <TooltipProvider>
                 <AppHeader />
                 {children}
+                <Toaster />
               </TooltipProvider>
             </QueryProvider>
           </ThemeProvider>
