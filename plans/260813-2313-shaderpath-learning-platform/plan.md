@@ -28,7 +28,7 @@ Every lesson = Theory → Citations → Interactive demo → Exercises.
 | 2 | Content pipeline: MDX + KaTeX + shiki, `LessonMeta`, `curriculum.ts` (14 tracks, metadata only) | ✅ Complete (2026-08-14) | 10h | [phase-02](phase-02-content-pipeline-mdx-katex-shiki-curriculum.md) |
 | 3 | Lesson page + TOC + progress tracking + SQLite read/write | ✅ Complete (2026-08-14) | 10h | [phase-03](phase-03-lesson-page-toc-progress-tracking.md) |
 | 4 | Demo system: `<Demo>` wrapper, control panel, IntersectionObserver pause | ✅ Complete (2026-08-14) | 10h | [phase-04](phase-04-interactive-demo-system-r3f.md) |
-| 5 | GLSL Playground: Monaco + live compile + error mapping + snippet save | Not Started | 12h | [phase-05](phase-05-glsl-playground-monaco.md) |
+| 5 | GLSL Playground: Monaco + live compile + error mapping + snippet save | ✅ Complete (2026-08-14) | 12h | [phase-05](phase-05-glsl-playground-monaco.md) |
 | 6 | Exercise system: hints, checklist, solution reveal, code persistence | Not Started | 8h | [phase-06](phase-06-exercise-system.md) |
 | 7 | Real content: Track 0 + Track 1 fully bilingual (golden sample) | Not Started | 45h | [phase-07](phase-07-content-track-0-and-1-bilingual.md) |
 | 8 | Notes, bookmarks, command palette, stats + heatmap, SRS | Not Started | 14h | [phase-08](phase-08-notes-command-palette-stats-srs.md) |

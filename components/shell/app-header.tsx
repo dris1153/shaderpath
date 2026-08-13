@@ -18,6 +18,12 @@ export async function AppHeader() {
             <Link href="/roadmap" className="hover:text-foreground transition-colors">
               {tNav("roadmap")}
             </Link>
+            <Link
+              href="/playground"
+              className="hover:text-foreground transition-colors"
+            >
+              {tNav("playground")}
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-1">

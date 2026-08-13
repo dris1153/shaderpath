@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/lesson/callout";
+import { PlaygroundClient } from "@/components/playground/playground-client";
 import { Separator } from "@/components/ui/separator";
 
 // Element → shadcn/Tailwind mapping shared by every lesson MDX file.
@@ -62,6 +63,10 @@ const components: MDXComponents = {
     />
   ),
   Callout,
+  // Embedded playground for hasPlayground lessons: <Playground source={"..."} />
+  Playground: ({ source }: { source?: string }) => (
+    <PlaygroundClient compact initialSource={source} />
+  ),
 };
 
 export function useMDXComponents(): MDXComponents {

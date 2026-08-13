@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~12h
 - **Description:** Standalone `/playground` (and embeddable variant) with Monaco GLSL editing, live-compiled fullscreen-quad preview, precise error line mapping, default uniforms, and snippet persistence in SQLite.
 
@@ -90,19 +90,19 @@ Data in: editor text, uniform values, saved snippets. Data out: markers, pixels,
 
 ## Todo List
 
-- [ ] Install `@monaco-editor/react`
-- [ ] GLSL Monarch tokenizer + completions + language config (D4)
-- [ ] Prelude assembly with single-source `PRELUDE_LINES`
-- [ ] Compile + link with strict resource disposal
-- [ ] Error log parser (Chrome/Firefox/Safari) + unit tests
-- [ ] Shader preview (fullscreen quad, default uniforms)
-- [ ] Editor pane, theme sync, 300ms debounce, markers
-- [ ] Error list with jump-to-line
-- [ ] Uniform panel from parsed declarations
-- [ ] Snippet CRUD server actions + UI (`playground_snippets`)
-- [ ] `Resizable` layout per §7
-- [ ] Embeddable compact playground for lessons/exercises
-- [ ] e2e: syntax error shows correct line, app alive
+- [x] Install `@monaco-editor/react`
+- [x] GLSL Monarch tokenizer + completions + language config (D4)
+- [x] Prelude assembly with single-source `PRELUDE_LINES`
+- [x] Compile + link with strict resource disposal
+- [x] Error log parser (Chrome/Firefox/Safari) + unit tests
+- [x] Shader preview (fullscreen quad, default uniforms)
+- [x] Editor pane, theme sync, 300ms debounce, markers
+- [x] Error list with jump-to-line
+- [x] Uniform panel from parsed declarations
+- [x] Snippet CRUD server actions + UI (`playground_snippets`)
+- [x] `Resizable` layout per §7
+- [x] Embeddable compact playground for lessons/exercises
+- [x] e2e: syntax error shows correct line, app alive
 
 ## Success Criteria
 
@@ -134,6 +134,22 @@ Data in: editor text, uniform values, saved snippets. Data out: markers, pixels,
 ## Rollback
 
 Revert phase commit; `/playground` route disappears; lessons with `hasPlayground` degrade to theory+demo. `playground_snippets` rows remain (harmless).
+
+## Notes (post-implementation, 2026-08-14)
+
+**Deviations (scoped to spec §6.1.5 MVP):**
+- **Preview = raw WebGL2 fullscreen triangle, NOT R3F/Three ShaderMaterial** — Three injects its own preamble which shifts compiler line numbers unpredictably; with raw GL the assembled source is exactly `FRAG_PRELUDE + user`, so `PRELUDE_LINES` maps 1:1 (§11.5). Compile happens in the same context: success swaps + deletes the old program, failure keeps the last good frame.
+- Vertex-shader editing deferred (schema field stays null) — §6.1.5 demands fragment + default uniforms only; add when Track 6 content needs it.
+- Custom uniform panel (`uniformsJson`) deferred — §6.1.5 lists only default uniforms; revisit with Track 2/7 content or Phase 6.
+- No zustand store — one client component owns the state (editor/preview/snippets are direct children).
+- Monaco loads via `@monaco-editor/react`'s default CDN loader (zero bundler config). Offline path if ever needed: `loader.config({ monaco })` + self-hosted `monaco-editor` (already a devDep for types).
+- `react-resizable-panels` v4: prop is `orientation`, not `direction`.
+- pnpm quirk: Monaco types don't flow through the peer boundary — `monaco-editor` devDep + explicit param annotations in `glsl-language.ts`.
+
+**E2E lessons (Monaco automation):**
+- Never keyboard-type shader code (auto-closing pairs corrupt it); never trust a single `editor.setValue` (the React wrapper's change listener may not be attached yet, and Strict Mode leaves dying instances). Pattern that works: setValue on ALL editors inside an `expect().toPass` retry loop that waits for a **state flip** (ok→errors or errors→ok) — a same-state expectation proves nothing.
+
+**Verification run:** typecheck ✓ · eslint ✓ · vitest 28/28 (9 new parse-error tests: 3 formats, line-1/last-line boundaries, prelude clamp, raw-log fallback) ✓ · `next build` ✓ · e2e 14/14 — **§11.5: syntax error → marker + list on the correct user line, canvas keeps rendering the last good frame, fixing restores ✓** · snippet save→reload→load roundtrip ✓.
 
 ## Next Steps
 

@@ -4,7 +4,8 @@
     "tagline": "Lộ trình 3D & shader cho frontend developer"
   },
   "nav": {
-    "roadmap": "Lộ trình"
+    "roadmap": "Lộ trình",
+    "playground": "Playground"
   },
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",
@@ -42,6 +43,28 @@
     "learnAnyway": "Bài này chưa mở khoá theo lộ trình — bạn vẫn có thể học trước nếu muốn.",
     "openNav": "Mục lục track",
     "openToc": "Trong bài"
+  },
+  "playground": {
+    "title": "GLSL Playground",
+    "subtitle": "Fragment shader biên dịch trực tiếp — có sẵn uTime, uResolution, uMouse.",
+    "compiledIn": "Biên dịch ✓ · {ms}ms",
+    "errorsTitle": "{count} lỗi biên dịch",
+    "line": "Dòng {line}",
+    "snippets": "Snippet đã lưu",
+    "snippetPlaceholder": "Chọn snippet…",
+    "new": "Mới",
+    "save": "Lưu",
+    "saveTitle": "Lưu snippet",
+    "titleLabel": "Tên snippet",
+    "defaultTitle": "Snippet chưa đặt tên",
+    "delete": "Xoá",
+    "deleteConfirmTitle": "Xoá snippet?",
+    "deleteConfirmDescription": "\"{title}\" sẽ bị xoá vĩnh viễn.",
+    "cancel": "Huỷ",
+    "savedToast": "Đã lưu snippet",
+    "saveFailedToast": "Lưu thất bại — kiểm tra tên và độ dài shader",
+    "deletedToast": "Đã xoá snippet",
+    "contextLost": "GPU context bị mất — tải lại trang để tiếp tục."
   },
   "demo": {
     "reset": "Đặt lại tham số",

@@ -4,7 +4,8 @@
     "tagline": "A 3D & shader roadmap for frontend developers"
   },
   "nav": {
-    "roadmap": "Roadmap"
+    "roadmap": "Roadmap",
+    "playground": "Playground"
   },
   "dashboard": {
     "welcome": "Welcome to Shaderpath",
@@ -42,6 +43,28 @@
     "learnAnyway": "This lesson isn't unlocked on your path yet — you can still learn ahead.",
     "openNav": "Track contents",
     "openToc": "On this page"
+  },
+  "playground": {
+    "title": "GLSL Playground",
+    "subtitle": "Live-compiled fragment shaders — uTime, uResolution and uMouse are built in.",
+    "compiledIn": "Compiled ✓ · {ms}ms",
+    "errorsTitle": "{count} compile errors",
+    "line": "Line {line}",
+    "snippets": "Saved snippets",
+    "snippetPlaceholder": "Pick a snippet…",
+    "new": "New",
+    "save": "Save",
+    "saveTitle": "Save snippet",
+    "titleLabel": "Snippet name",
+    "defaultTitle": "Untitled snippet",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete snippet?",
+    "deleteConfirmDescription": "\"{title}\" will be permanently removed.",
+    "cancel": "Cancel",
+    "savedToast": "Snippet saved",
+    "saveFailedToast": "Save failed — check the name and shader size",
+    "deletedToast": "Snippet deleted",
+    "contextLost": "GPU context lost — reload the page to continue."
   },
   "demo": {
     "reset": "Reset parameters",
