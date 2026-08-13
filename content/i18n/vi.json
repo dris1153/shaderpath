@@ -43,6 +43,11 @@
     "openNav": "Mục lục track",
     "openToc": "Trong bài"
   },
+  "demo": {
+    "reset": "Đặt lại tham số",
+    "errorTitle": "Không chạy được demo",
+    "errorDescription": "Trình duyệt không hỗ trợ WebGL2 hoặc demo gặp lỗi khi khởi tạo."
+  },
   "errors": {
     "title": "Có lỗi xảy ra",
     "description": "Không tải được nội dung. Thử lại nhé.",

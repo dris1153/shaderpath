@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~10h
 - **Description:** Reusable `<Demo>` wrapper hosting R3F canvases inside MDX, with a shadcn control panel for live parameters, viewport-gated render loop, and guaranteed GPU resource disposal.
 
@@ -87,17 +87,17 @@ Data in: control params, time, pointer. Data out: pixels only — demos never wr
 
 ## Todo List
 
-- [ ] Install 3D + animation deps
-- [ ] `useDisposable` hook + unit test
-- [ ] `useVisibleFrameloop` IntersectionObserver gate
-- [ ] `<Demo>` wrapper: Card/AspectRatio/Skeleton/error boundary
-- [ ] Typed control schema → shadcn widgets + reset
-- [ ] GSAP↔R3F single-loop helper
-- [ ] Track 0 demo (vectors)
-- [ ] Track 1 demo (raw WebGL2 triangle)
-- [ ] Track 2 demo (GLSL smoothstep, `.glsl` import)
-- [ ] Register `Demo` in MDX components + `hasDemo` slot
-- [ ] Viewport-pause e2e + disposal unit tests
+- [x] Install 3D + animation deps
+- [x] `useDisposable` hook + unit test
+- [x] `useVisibleFrameloop` IntersectionObserver gate
+- [x] `<Demo>` wrapper: Card/AspectRatio/Skeleton/error boundary
+- [x] Typed control schema → shadcn widgets + reset
+- [x] GSAP↔R3F single-loop helper
+- [x] Track 0 demo (vectors)
+- [x] Track 1 demo (raw WebGL2 triangle)
+- [x] Track 2 demo (GLSL smoothstep, `.glsl` import)
+- [x] Register `Demo` in MDX components + `hasDemo` slot
+- [x] Viewport-pause e2e + disposal unit tests
 
 ## Success Criteria
 
@@ -128,6 +128,21 @@ Data in: control params, time, pointer. Data out: pixels only — demos never wr
 ## Rollback
 
 Revert phase commit; MDX `Demo` placeholder returns. Lesson pages still render (demo slot no-ops when `hasDemo` false).
+
+## Notes (post-implementation, 2026-08-14)
+
+**Resolved versions:** three 0.185.1 · @react-three/fiber 9.7.0 (React 19) · drei 10.7.8 · @react-three/postprocessing 3.0.5 · gsap 3.15.0. `aspect-ratio` shadcn component added (was missing from the §7 install list).
+
+**Deviations / gotchas:**
+- Params flow via a render-prop-free context (`DemoContextProvider` carries `{values, containerRef}`); controls talk to `Demo` state directly — no zustand, no prop drilling.
+- Frameloop gate: `frameloop="demand"` + a RAF pump (`useVisibleRaf`) that only runs while the container intersects the viewport. `data-frames` counts pump ticks for the e2e assertion. Raw-canvas demos reuse `useVisibleRaf` directly.
+- `Demo` NOT registered in `mdx-components` — demos load from `DEMO_REGISTRY` (registry v3) and render in the lesson page's demo slot. MDX stays RSC.
+- **`loseContext()` removed from per-demo cleanup:** Strict Mode remounts reuse the same canvas element, and `getContext("webgl2")` then returns the permanently-lost context → demo dies in dev. Deleting buffers/program/VAO is the leak-relevant cleanup; the browser reclaims the context when the canvas leaves the DOM.
+- New react-hooks compiler-era lint rules reject the standard Three "mutate memoized uniforms in effects/useFrame" idiom — `react-hooks/immutability` scoped OFF for `content/lessons/**/demo.tsx` + `components/viz/**` only. `useDisposable` returns a `useState`-held registry (rule-compliant lazy init).
+- Demo titles/labels are bilingual via a local `LABELS` object + `useLocale()` (content pattern for Phases 7/9), not global i18n keys.
+- Track 1 sample lives in `first-triangle-webgl2`, Track 2 in `shaping-functions-and-2d-sdf` (lessons without theory yet render header + coming-soon + demo).
+
+**Verification run:** typecheck ✓ · eslint ✓ · vitest 19/19 (4 new: disposal LIFO order, fn-before-object, failure isolation, idempotency) ✓ · `next build` ✓ · e2e 11/11 — incl. **below-fold demo frozen at 0 ticks until scrolled into view (§8.3/§11.4)**, raw WebGL2 + GLSL `.glsl`-import demos render with working controls ✓.
 
 ## Next Steps
 

@@ -36,3 +36,9 @@ export const TOC_REGISTRY: Partial<
     en: [{"id":"cartesian-coordinates-from-the-number-line-to-3d-space","text":"Cartesian Coordinates: From the Number Line to 3D Space","depth":2},{"id":"axis-conventions-y-up-vs-z-up-left--or-right-handed","text":"Axis Conventions: Y-up vs Z-up, Left- or Right-handed","depth":2},{"id":"what-uv-space-is-and-why-it-always-runs-0-to-1","text":"What UV Space Is, and Why It Always Runs 0 to 1","depth":2},{"id":"mapping-pixels-to-uv-the-formula-and-the-pixel-center","text":"Mapping Pixels to UV: The Formula and the Pixel Center","depth":2},{"id":"the-mapping-formula","text":"The Mapping Formula","depth":3},{"id":"why-you-add-05","text":"Why You Add 0.5","depth":3},{"id":"normalizing-the-screen-01-and-a-preview-of--11-ndc","text":"Normalizing the Screen: [0,1] and a Preview of [-1,1] (NDC)","depth":2},{"id":"where-this-foundation-leads-textures-and-shaders","text":"Where This Foundation Leads: Textures and Shaders","depth":2}],
   },
 };
+
+export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
+  "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/demo"),
+  "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/demo"),
+  "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
+};

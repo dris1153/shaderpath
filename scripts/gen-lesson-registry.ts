@@ -47,6 +47,7 @@ const slugSet = new Set<string>(LESSON_SLUGS);
 const theoryEntries: string[] = [];
 const referenceEntries: string[] = [];
 const tocEntries: string[] = [];
+const demoEntries: string[] = [];
 const warnings: string[] = [];
 
 if (fs.existsSync(LESSONS_DIR)) {
@@ -92,6 +93,12 @@ if (fs.existsSync(LESSONS_DIR)) {
           `  "${lessonDir}": () => import("./lessons/${trackDir}/${lessonDir}/references"),`,
         );
       }
+
+      if (fs.existsSync(path.join(lessonPath, "demo.tsx"))) {
+        demoEntries.push(
+          `  "${lessonDir}": () => import("./lessons/${trackDir}/${lessonDir}/demo"),`,
+        );
+      }
     }
   }
 }
@@ -128,10 +135,14 @@ export const TOC_REGISTRY: Partial<
 > = {
 ${tocEntries.join("\n")}
 };
+
+export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
+${demoEntries.join("\n")}
+};
 `;
 
 fs.writeFileSync(OUT, body, "utf8");
 console.log(
-  `lesson registry: ${theoryEntries.length} theory, ${referenceEntries.length} references`,
+  `lesson registry: ${theoryEntries.length} theory, ${referenceEntries.length} references, ${demoEntries.length} demos`,
 );
 for (const w of warnings) console.warn(`  ${w}`);

@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import {
+  DEMO_REGISTRY,
   LESSON_REGISTRY,
   REFERENCES_REGISTRY,
   TOC_REGISTRY,
@@ -54,6 +55,9 @@ export default async function LessonPage({
   const references = referencesLoader
     ? (await referencesLoader()).references
     : [];
+
+  const demoLoader = DEMO_REGISTRY[lesson.slug];
+  const LessonDemo = demoLoader ? (await demoLoader()).default : null;
 
   const progressRow = getProgressRow(lesson.slug);
   const progress = getProgressMap();
@@ -132,6 +136,8 @@ export default async function LessonPage({
             <AlertDescription>{t("contentComingSoon")}</AlertDescription>
           </Alert>
         )}
+
+        {LessonDemo && <LessonDemo />}
 
         <References references={references} locale={locale} />
 

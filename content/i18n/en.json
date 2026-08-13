@@ -43,6 +43,11 @@
     "openNav": "Track contents",
     "openToc": "On this page"
   },
+  "demo": {
+    "reset": "Reset parameters",
+    "errorTitle": "Demo failed to run",
+    "errorDescription": "Your browser lacks WebGL2 support or the demo failed to initialize."
+  },
   "errors": {
     "title": "Something went wrong",
     "description": "The content failed to load. Please try again.",

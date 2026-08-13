@@ -13,6 +13,15 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    // Three.js/R3F idiom: uniforms are memoized mutable containers written to
+    // from effects/useFrame. The compiler-era immutability rule can't model
+    // this; scoped off for demo/viz code only.
+    files: ["content/lessons/**/demo.tsx", "components/viz/**"],
+    rules: {
+      "react-hooks/immutability": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;
