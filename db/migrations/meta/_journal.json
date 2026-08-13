@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1786640013912,
+      "tag": "0000_small_deadpool",
+      "breakpoints": true
+    }
+  ]
+}

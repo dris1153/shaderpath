@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "Shaderpath",
+    "tagline": "Lộ trình 3D & shader cho frontend developer"
+  },
+  "dashboard": {
+    "welcome": "Chào mừng đến Shaderpath",
+    "progressTitle": "Tiến độ học tập",
+    "empty": "Chưa có tiến độ — lộ trình sẽ xuất hiện ở đây sau Phase 2."
+  },
+  "localeSwitcher": {
+    "label": "Ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "themeToggle": {
+    "label": "Giao diện",
+    "light": "Sáng",
+    "dark": "Tối",
+    "system": "Hệ thống"
+  }
+}

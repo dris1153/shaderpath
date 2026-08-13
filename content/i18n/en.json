@@ -1,0 +1,22 @@
+{
+  "app": {
+    "name": "Shaderpath",
+    "tagline": "A 3D & shader roadmap for frontend developers"
+  },
+  "dashboard": {
+    "welcome": "Welcome to Shaderpath",
+    "progressTitle": "Learning progress",
+    "empty": "No progress yet — the roadmap will appear here after Phase 2."
+  },
+  "localeSwitcher": {
+    "label": "Language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "themeToggle": {
+    "label": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}
