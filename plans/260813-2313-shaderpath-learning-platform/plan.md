@@ -30,7 +30,7 @@ Every lesson = Theory → Citations → Interactive demo → Exercises.
 | 4 | Demo system: `<Demo>` wrapper, control panel, IntersectionObserver pause | ✅ Complete (2026-08-14) | 10h | [phase-04](phase-04-interactive-demo-system-r3f.md) |
 | 5 | GLSL Playground: Monaco + live compile + error mapping + snippet save | ✅ Complete (2026-08-14) | 12h | [phase-05](phase-05-glsl-playground-monaco.md) |
 | 6 | Exercise system: hints, checklist, solution reveal, code persistence | ✅ Complete (2026-08-14) | 8h | [phase-06](phase-06-exercise-system.md) |
-| 7 | Real content: Track 0 + Track 1 fully bilingual (golden sample) | Not Started | 45h | [phase-07](phase-07-content-track-0-and-1-bilingual.md) |
+| 7 | Real content: Track 0 + Track 1 fully bilingual (golden sample) | ✅ Complete (2026-08-14) | 45h | [phase-07](phase-07-content-track-0-and-1-bilingual.md) |
 | 8 | Notes, bookmarks, command palette, stats + heatmap, SRS | Not Started | 14h | [phase-08](phase-08-notes-command-palette-stats-srs.md) |
 | 9 | Remaining content: Tracks 2 → 13 (~110 lessons, one track per session) | Not Started | 220h | [phase-09](phase-09-content-tracks-2-to-13.md) |
 | 10 | Polish: a11y, performance audit, export/import, acceptance sweep | Not Started | 14h | [phase-10](phase-10-polish-a11y-performance-export.md) |

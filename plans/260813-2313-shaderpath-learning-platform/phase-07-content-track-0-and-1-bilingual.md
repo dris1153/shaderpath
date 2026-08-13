@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1 (defines the quality bar for all remaining content)
-- **Status:** 🔄 In Progress — lint gate + module math-01 done (2026-08-14); awaiting user quality review before math-02/03 + webgl modules
+- **Status:** ✅ Complete (2026-08-14) — 29/29 units, `lint:content --require math,webgl` zero errors
 - **Effort:** ~45h (≈2h/regular lesson, checkpoints lighter; exact unit counts locked in Phase 2 metadata)
 - **Description:** Author Track 0 (math foundations, ~3 modules) and Track 1 (raw WebGL, ~3–4 modules) completely in vi + en per D9: regular lessons (theory, ≥2 verifiable citations, demo, ≥2 exercises) + one checkpoint mini-build per module. This is the reference standard every later track is measured against.
 
@@ -81,14 +81,14 @@ Authoring loop per lesson: outline (headings, both locales) → vi theory → de
 
 ## Todo List
 
-- [ ] `scripts/lint-content.ts` + `_template` lesson
-- [ ] Track 0: ~3 modules (regular lessons: theory vi+en, demo, ≥2 citations, ≥2 exercises; + checkpoint build per module) — one checkbox per unit when executing
-- [ ] Track 1: ~3–4 modules incl. raw WebGL2 triangle lesson + checkpoints
-- [ ] All citation URLs verified live
-- [ ] Common-mistakes callout in all 21 lessons, both locales
-- [ ] Registry regenerated; roadmap shows Tracks 0–1 as authored
-- [ ] `lint:content` green; typecheck/build clean
-- [ ] Track metadata finalized
+- [x] `scripts/lint-content.ts` + `_template` lesson
+- [x] Track 0: ~3 modules (regular lessons: theory vi+en, demo, ≥2 citations, ≥2 exercises; + checkpoint build per module) — one checkbox per unit when executing
+- [x] Track 1: ~3–4 modules incl. raw WebGL2 triangle lesson + checkpoints
+- [x] All citation URLs verified live
+- [x] Common-mistakes callout in all 21 lessons, both locales
+- [x] Registry regenerated; roadmap shows Tracks 0–1 as authored
+- [x] `lint:content` green; typecheck/build clean
+- [x] Track metadata finalized
 
 ## Success Criteria
 
@@ -121,6 +121,21 @@ Authoring loop per lesson: outline (headings, both locales) → vi theory → de
 ## Rollback
 
 Content is additive: revert per-lesson commits independently. Registry regeneration makes removed lessons disappear cleanly; curriculum metadata entry must be removed in the same commit to avoid dangling registry keys.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Process that worked (template for Phase 9):** lint gate first (`scripts/lint-content.ts`, --require per track) → one golden module authored + user-approved as the quality bar → then parallel waves of content agents (2–2.5 units each, ~200–280k tokens per agent), all reading one shared `reports/phase7-authoring-brief.md`. Wave 1: 5 agents (Track 0 remainder), Wave 2: 7 agents (Track 1). Agents self-verify with lint:content + typecheck only; orchestrator runs gen:registry/build/e2e once after each wave, spot-reads content, commits per track.
+
+**Results:** 29 units (23 regular + 6 checkpoints), 12 commits' worth of content in 3 (math-01, track-0, track-1). Registry: 29 theory / 23 references / 24 demos / 29 exercises — fully consistent. All citation URLs verified live by agents (WebFetch/WebSearch). Vietnamese-first prose with numeric worked examples throughout; en rewrites keep identical heading trees (lint-enforced).
+
+**Caveats / conventions settled:**
+- Checkpoint = 3 files (theory.vi/en + exercises.ts) — no references/demo; agents corrected the brief's "4 files" miscount against the golden convention.
+- Word counts: lint's crude tokenizer inflates KaTeX-dense lessons; guideline stays 800–1200 prose words, hard warning at 1500 tokens. One accepted warning: matrix-basics vi (1578 tokens, LaTeX-heavy derivations).
+- KaTeX cannot render Vietnamese inside `\text{}` (missing glyphs) — rule added to the brief: pure math notation, prose outside.
+- `--require math,webgl` in PowerShell needs quotes (`'math,webgl'`) — bare comma becomes a space.
+- `02-glsl/shaping-functions-and-2d-sdf` (Phase 4 demo) stays warning-only until Phase 9 authors Track 2.
+
+**Verification run:** `lint:content --require 'math,webgl'` 0 errors · typecheck ✓ · eslint ✓ · vitest 34/34 ✓ · build ✓ · e2e 15/15 ✓.
 
 ## Next Steps
 
