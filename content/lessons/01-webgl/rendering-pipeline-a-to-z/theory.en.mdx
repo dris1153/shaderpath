@@ -1,0 +1,71 @@
+## The Pipeline: Alternating Fixed and Programmable Stations
+
+The WebGL rendering pipeline isn't a black box that "takes vertices in, spits pixels out" — it's a strictly ordered chain of processing stations, each one consuming the previous station's output as its own input. The single most important thing to grasp up front: only **two** stations in that chain are ones you write code for — the vertex shader and the fragment shader — everything else is fixed-function logic running directly on GPU hardware, untouchable by GLSL. Knowing exactly where that programmable/fixed boundary sits is the key to debugging: if geometry is wrong (position, clipping), suspect the vertex shader; if color/pixels are wrong, suspect the fragment shader; and if nothing shows up at all, the bug is more likely sitting one step earlier — in the vertex data or the draw call's state.
+
+## Eight Stations, from Vertex to Pixel
+
+The full chain, in execution order:
+
+```
+1. Vertex specification   (you supply the data — FIXED)
+2. Vertex shader           (PROGRAMMABLE)
+3. Primitive assembly      (FIXED)
+4. Clipping                (FIXED)
+5. Rasterization            (FIXED)
+6. Fragment shader          (PROGRAMMABLE)
+7. Per-fragment tests        (depth/stencil/blend — FIXED, but CONFIGURABLE)
+8. Framebuffer               (final result, FIXED)
+```
+
+### Vertex Specification → Vertex Shader
+
+Station 1 runs no code at all — it's exactly what you already did in the buffer/VAO lesson: raw data (coordinates, colors, UVs) sitting in a VBO, described by a VAO for how to read it. Station 2, the vertex shader, is the first programmable stop: it runs **once per vertex**, receives that vertex's attributes, and is **required** to assign a value to the special variable `gl_Position` — a 4-component coordinate (x, y, z, w) in **clip space**. That's the entire contract at this station: the vertex shader doesn't "draw" anything, it only answers one question — "where does this vertex sit in clip space?"
+
+### Primitive Assembly → Clipping → Rasterization
+
+The next three stations are entirely fixed-function — not a single line of GLSL runs here. **Primitive assembly** groups the vertices that just came out of the vertex shader into geometry — three consecutive vertices (under `gl.TRIANGLES`) become one triangle. **Clipping** discards whatever geometry falls outside the viewing volume (the frustum) — a triangle with one vertex off-screen can still render correctly for the part that remains, because the GPU computes the intersection and generates new vertices right at the clip boundary. **Rasterization** is the decision-making station: it scans the triangle (now in NDC, after the divide by w) and figures out exactly which on-screen pixels actually fall inside it — each one becomes exactly one **fragment**, a candidate for a final pixel color.
+
+### Fragment Shader → Per-Fragment Tests → Framebuffer
+
+The fragment shader is the second programmable station, running **independently for every fragment** — at DPR 2 on a 1920×1080 display (a drawing buffer near 3840×2160), a single full-screen draw call invokes it around 8.3 million times per frame, so one unnecessary computation (an extra `pow()`, say) shows up measurably in milliseconds, while the same computation in a vertex shader (a few hundred times for a small mesh) is nearly free. After returning a color, a fragment still has to survive **per-fragment tests** — the depth test (closer to the camera than whatever's already at this pixel), the stencil test, then blending if enabled — before it's written into the **framebuffer**, the pixel memory that ends up on screen.
+
+## One Real Vertex Through the Pipeline: Concrete Coordinates at Each Station
+
+Follow the first vertex of a simple triangle where `gl_Position = vec4(aPosition, 0.0, 1.0)` applies no further transform:
+
+- **Vertex specification**: attribute `aPosition = (0.0, 0.5)` read straight from the VBO.
+- **Vertex shader output (clip space)**: `gl_Position = (0.0, 0.5, 0.0, 1.0)`.
+- **After clipping + the perspective divide (NDC)**: dividing by $w=1$ changes nothing: $(0.0, 0.5, 0.0)$ — comfortably inside the $[-1,1]^3$ cube, nothing gets clipped.
+- **Viewport transform**: on an $800\times450$ canvas, $x_{px} = (x_{ndc} \cdot 0.5 + 0.5) \cdot 800$ gives pixel $(400, 337.5)$ — OpenGL-style coordinates, bottom-left origin, unlike 2D canvas pixels (top-left origin).
+- **Rasterization**: this vertex is just one corner — it doesn't generate a fragment on its own; the triangle it belongs to generates hundreds or thousands, depending on how large it renders.
+
+This lesson's demo lets you pick any station yourself and read the real numbers, instead of trusting the walkthrough above on faith.
+
+## Interpolating Varyings During Rasterization: Barycentric Coordinates
+
+A natural question: each vertex can carry its own color or UV — so what value does a fragment sitting *between* three vertices get? The rasterizer answers with **barycentric coordinates**: for a fragment at $P$ inside triangle $ABC$, there exist exactly three weights $(\lambda_A, \lambda_B, \lambda_C)$, summing to 1, such that $P = \lambda_A A + \lambda_B B + \lambda_C C$. Every `varying` (an `out` variable in the vertex shader — color, UV, normal) is interpolated with that same formula: $v_P = \lambda_A v_A + \lambda_B v_B + \lambda_C v_C$. That's why a triangle with three different vertex colors paints out as a smooth gradient — not GPU magic, just a well-defined linear interpolation running automatically for every varying, no extra code required. (Note: this interpolation is perspective-correct by default — it divides back through the original $w$ first — the later Model-View-Projection lesson covers why.)
+
+## A Blank Canvas: Which Station to Suspect First
+
+When the canvas shows nothing but the `clearColor`, working backward from the end of the chain is more effective than working forward:
+
+1. **Is the draw call's count actually right?** `gl.drawArrays(gl.TRIANGLES, 0, 3)` called with `count=0` draws nothing — check parameters first, since it's the cheapest suspect to rule out.
+2. **Did clipping remove everything?** If `gl_Position`'s $x$, $y$, or $z$ exceeds $|w|$ at every vertex, the whole triangle sits outside the frustum, and clipping discards it before rasterization ever runs.
+3. **Is the fragment shader writing alpha = 0?** With blending enabled, a fragment technically still "draws," just fully transparent — easy to mistake for nothing rendering at all.
+4. **Winding order and face culling?** A triangle with correct coordinates but the wrong vertex order can get discarded by `gl.CULL_FACE` before rasterization if culling is enabled.
+
+These four suspects run from the last station (the draw call, closest to your own code) back toward the first (clip space, closest to the GPU) — the order worth checking in while debugging, since stations closer to your JavaScript are easier to inspect with a `console.log`.
+
+## Where This Foundation Leads
+
+The next lesson (Canvas, Context & devicePixelRatio) loops back to the very start of the chain — configuring the canvas correctly before any data flows through this pipeline at all. Track 2 (GLSL) lives entirely inside the two programmable stations covered here — the vertex and fragment shader — with a much deeper look at the language and its built-in functions than the minimal example used here.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first learning the pipeline:
+
+1. **Assuming the fragment shader runs before the vertex shader because "fragment" sounds like raw input.** The order is always fixed: the vertex shader runs first to determine where geometry sits in clip space, rasterization only then generates fragments, and the fragment shader runs last — there's no shortcut that reverses this order.
+2. **Editing `gl_Position` to "fix" a color problem, or editing the fragment shader's output color to "fix" a position problem.** The two stations have completely separate responsibilities — the vertex shader can't read or write the final color, and the fragment shader can't move geometry that's already been rasterized. This mix-up routinely wastes tens of minutes debugging the wrong file.
+3. **Forgetting that varyings interpolate linearly, and expecting them to "clamp" or "step" automatically.** A varying that's 0 at vertex A and 10 at vertex B smoothly passes through every intermediate value between the two — a hard edge (a crisp color band, say) requires explicitly calling `step()`/`smoothstep()` in the fragment shader; interpolation alone never produces one.
+
+</Callout>

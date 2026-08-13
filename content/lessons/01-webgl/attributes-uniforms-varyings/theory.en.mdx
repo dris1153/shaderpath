@@ -1,0 +1,63 @@
+## Three Data Roads Into a Shader
+
+A shader program never invents its own data — every number it uses has to arrive from outside, and WebGL offers only three roads in: **attribute**, **uniform**, **varying** (GLSL ES 3.00 spells that last pair `out`/`in`). The three names encode the exact question "how often does this change, which stage can read it?" Picking the wrong road doesn't raise a compile error — it produces a wrong-looking render or mysteriously slow code, worth nailing down before wiring all three together in the very next lesson, Your First Triangle.
+
+### Attribute: Data Per Vertex
+
+`in` declared at the top of a vertex shader (the old 1.00 dialect uses `attribute`) marks a value the GPU fetches **fresh for every vertex**. The real data lives in a buffer already uploaded to the GPU; `vertexAttribPointer` and `enableVertexAttribArray`, captured inside a VAO, teach the hardware how to walk that buffer and pour the right bytes into the right attribute per vertex. A 3-vertex triangle means the vertex shader runs 3 times, each with different attribute values — and an attribute is only readable **inside the vertex shader**; the fragment shader never sees it directly.
+
+### Uniform: One Value for the Whole Draw Call
+
+`uniform` can be declared in either stage, and lives up to its name: **uniform**, identical across every invocation for one `drawArrays`/`drawElements` call — whether 3 vertices or 3 million fragments. JavaScript sets it once before the draw call through `gl.uniform*`; the GPU holds that value in a small constant memory region broadcast to every core at once, instead of re-fetching it per invocation like an attribute — why reading a uniform is nearly free no matter how many times a shader reads it.
+
+### Varying (out/in): The Vertex → Fragment Bridge, Interpolated
+
+The vertex and fragment shaders are entirely separate stages sharing no local variables. The only way a value computed in the vertex shader reaches the fragment shader is declaring `out` in the vertex shader and a matching `in` — same name, same type — in the fragment shader. Between the two, the **rasterizer** — a fixed-function stage, not programmable — interpolates the three per-vertex values across each fragment using barycentric coordinates:
+
+$$
+v_{frag} = w_0 v_0 + w_1 v_1 + w_2 v_2, \qquad w_0 + w_1 + w_2 = 1
+$$
+
+the closer a fragment sits to a vertex, the larger that vertex's weight $w$. The GPU doesn't "recompute" anything per fragment — it mechanically blends 3 existing numbers, which is why a varying should never carry complex branching: interpolating the result of an `if` taken at one vertex but not the other produces a meaningless value in between.
+
+## Scope & Frequency Table — the Same Value, Modeled Three Ways
+
+| Road | Declared where | Set from | Update frequency | Readable by |
+|---|---|---|---|---|
+| `attribute` (`in`) | Vertex shader | A buffer, via a VAO | Per vertex | Vertex shader only |
+| `uniform` | Vertex and/or fragment | JS, `gl.uniform*` | Per draw call | Both stages |
+| `out` → `in` | Out of vertex, into fragment | Computed in the vertex shader | Per vertex, interpolated per fragment | Fragment shader |
+
+A running example, exactly what the demo below renders: a triangle's color, modeled all three ways. As a uniform: `uniform vec3 uSolidColor`, set once before the draw call — every fragment reads the exact same value, the triangle is one flat block of color. As an attribute: the buffer holds three RGB triples, one per vertex (`in vec3 aColor`) — but an attribute stops at the vertex shader, so painting that color across the surface requires forwarding it as `out vec3 vColor = aColor;`, and it's that forward-then-interpolate step (not the attribute itself) that produces the three-color gradient you actually see. As a varying computed from position: no dedicated color buffer needed — the vertex shader derives color from the `aPosition` it already has (remap NDC to $[0,1]$, assign to `out vec2 vUv`), and the fragment shader paints by the interpolated `vUv`; the transport mechanism is identical to the attribute case, only the value's origin differs.
+
+The last two cases share the exact same `out`/`in` mechanism — no contradiction: "attribute" answers where the data is BORN (a buffer, per vertex); "varying" answers how it TRAVELS from vertex to fragment (interpolation). Almost every attribute that needs to show up in the fragment shader has to pass through a varying.
+
+## Calling Uniforms from JavaScript: getUniformLocation and the uniform* Family
+
+Setting a uniform is always a two-step move. Step 1: after linking, call `gl.getUniformLocation(program, "uSolidColor")` for an opaque handle — the GLSL compiler is free to strip out any uniform it never uses, so this call can validly return `null`, not an error; code has to tolerate that. Step 2: call the exact function in the `gl.uniform*` family matching the GLSL type — the trailing digit is the component count, the letter is the type: `uniform1f` for `float`, `uniform3f`/`uniform3fv` for `vec3`, `uniform1i` for `int`/`bool`/`sampler2D`, `uniformMatrix4fv` for `mat4`.
+
+The single easiest thing to forget: `gl.uniform*` applies its value to whichever program is **currently active**, not to an abstract name — `gl.useProgram(program)` must run first, or the value lands on the wrong program, with no clear warning catching the mistake.
+
+## Why Uniforms Don't Belong in Buffers, and Attributes Can't Change Mid-Draw
+
+A buffer exists to hand the vertex fetch stage a NEW value on EVERY step, read sequentially at the offset declared in a VAO. A uniform is the same value for the whole draw call; stuffing it into a buffer means duplicating that number N times (N = vertex count) — wasted memory, since the value is identical at every vertex anyway. A uniform instead lives in a small constant memory region optimized to broadcast one value to thousands of cores at once.
+
+The reverse: an attribute can't change **mid-draw-call**, since its value is already latched by the vertex fetch stage the moment the draw call begins, based on whatever buffer and offset were bound into the VAO at that instant. The only way to give one vertex a different value is editing the buffer's contents (`bufferSubData`/`bufferData`) BEFORE the next `drawArrays` call — the smallest granularity for changing an attribute is "between two draw calls." A uniform can be re-set as many times as you like between draw calls (`uAngle` in the next lesson changes every frame), but INSIDE one draw call both are frozen — the difference is an attribute freezes PER VERTEX, while a uniform freezes at one shared value.
+
+## Mental Checklist: Which Road Does This Data Take?
+
+Before writing `uniform`, `in`, or `out` for a new value, ask in order: does the value differ between fragments INSIDE the same triangle? Then it must travel through a varying, whether its source is an attribute or a computation in the vertex shader. Does it differ between vertices but stay fixed at each one, already living in the mesh data? Then it's an attribute. Does it stay identical for the whole draw call, every vertex and fragment alike? That's a uniform. Does it need to change every frame but NOT differ between vertices/fragments within one frame (time, a rotation angle, camera position)? Still a uniform — just one you call `gl.uniform*` on again every frame, between draw calls.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common attribute/uniform/varying mistakes:
+
+1. Forgetting `gl.useProgram(program)` before calling `gl.uniform*`. A uniform set applies to whichever program is currently active — skip this and the value lands on the wrong program, with no clear warning catching it.
+2. Assuming `getUniformLocation` always returns a valid handle. The GLSL compiler strips out any uniform it never uses (a typo, or one that never reaches the output) — the function validly returns `null`, and `gl.uniform1f(null, ...)` is a silent no-op: no throw, no log.
+3. Declaring `vertexAttribPointer` with the wrong component count for the GLSL type — the shader declares `in vec3 aColor` but JS calls `vertexAttribPointer(loc, 2, ...)`. The third component never gets read, the GPU quietly fills in a default — colors come out subtly wrong with nothing pointing at the actual cause.
+
+</Callout>
+
+## Where This Leads Next
+
+The very next lesson, Your First Triangle, wires all three roads into one working program: `uAngle` is the uniform, `aPosition`/`aColor` are attributes, `vColor` is the varying. Track 2 (GLSL) leans on varyings constantly to build distance fields and gradients; Track 6 (Custom Shaders in Three.js) adds a variant of attribute — per-instance attributes through `InstancedMesh`, shifting the frequency from "per vertex" to "per instance"; and the texture lesson later in this track introduces `uniform sampler2D`, a uniform that points at image data instead of a single number.

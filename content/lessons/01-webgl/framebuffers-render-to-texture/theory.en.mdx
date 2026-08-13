@@ -1,0 +1,77 @@
+## The Default Framebuffer vs a Framebuffer Object (FBO)
+
+Every draw call (`gl.drawArrays`, `gl.drawElements`) writes its result into whichever framebuffer is currently bound — but a "framebuffer" doesn't have to be the screen. The default framebuffer (`null`, the target after calling `gl.bindFramebuffer(gl.FRAMEBUFFER, null)`) is the buffer the browser presents to the canvas; it's created for you, and you never manage its memory directly. A Framebuffer Object (FBO) is a second (third, fourth...) framebuffer you create yourself with `gl.createFramebuffer()` — an empty "container" that holds no pixels of its own until you attach a texture or renderbuffer to it.
+
+## Render-to-Texture: Attaching a Texture as the Color Attachment
+
+Attaching a pre-created (empty, dataless) texture to an FBO turns that texture into a draw target:
+
+```js
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texImage2D(
+  gl.TEXTURE_2D, 0, gl.RGBA8, size, size, 0,
+  gl.RGBA, gl.UNSIGNED_BYTE, null, // null = allocate memory only, no pixels yet
+);
+
+const fbo = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+gl.framebufferTexture2D(
+  gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+  gl.TEXTURE_2D, texture, 0,
+);
+```
+
+`framebufferTexture2D` doesn't copy any data — it just says "from now on, this FBO's `COLOR_ATTACHMENT0` IS level 0 of that texture." Any draw call issued while this FBO is bound writes color straight into that texture, exactly the way it would write to the canvas with the default framebuffer bound — the fragment shader has no idea (and doesn't need to know) where it's actually drawing.
+
+## checkFramebufferStatus and the Usual Completeness Errors
+
+Not every attachment combination is valid — a missing attachment, a mismatched format, or mismatched sizes between attachments all leave a framebuffer "incomplete." Always check right after attaching:
+
+```js
+const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+if (status !== gl.FRAMEBUFFER_COMPLETE) {
+  throw new Error(`Framebuffer incomplete: 0x${status.toString(16)}`);
+}
+```
+
+The two most common status codes: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (an attachment exists but has the wrong format — say, attaching a compressed texture as a color attachment) and `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (nothing was attached at all). WebGL doesn't throw when you draw into an incomplete framebuffer — the draw call quietly does nothing — so this class of bug usually shows up as "blank screen, no console error" if the check is skipped.
+
+## The 2-Pass Pipeline: Scene → Texture → Screen Effect
+
+The core idea of render-to-texture is splitting a single frame into multiple **passes**, each writing to a different framebuffer:
+
+```js
+// Pass 1: draw the scene into the FBO instead of the canvas
+gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+gl.viewport(0, 0, fboSize, fboSize);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.TRIANGLES, 0, sceneVertexCount);
+
+// Pass 2: draw a fullscreen quad, sampling pass 1's texture
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+gl.viewport(0, 0, canvas.width, canvas.height);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.bindTexture(gl.TEXTURE_2D, fboTexture);
+gl.drawArrays(gl.TRIANGLES, 0, 6); // 2 triangles = 1 quad
+```
+
+Pass 1 doesn't care what effect gets applied to it afterward — it just draws the scene normally, only the write target differs. Pass 2 doesn't care how many draw calls or what geometry built the scene — it only sees a flat 2D texture and runs an effect fragment shader (invert, pixelate, distort...) over every pixel of it. That separation — the later pass never needs to know how the earlier one built its scene — is exactly why render-to-texture is a pattern, not a single feature.
+
+## The Viewport Must Match the Attachment Size
+
+`gl.viewport` decides which region of the currently bound draw target receives rasterized output; it does not automatically track the size of the bound framebuffer. Binding a 256×256 FBO texture but leaving the viewport at the canvas' size (say 1200×800) makes the rasterizer project clip-space coordinates onto an imagined 1200×800 area and then clip whatever falls outside the real 256×256 target — the image ends up cropped incorrectly, not scaled proportionally. The reverse mistake — forgetting to restore the viewport to the canvas' size before pass 2 — leaves the final image filling only a corner of the screen. An FBO's size is also entirely independent of the displayed canvas' size — a 256×256 FBO is perfectly valid even while the canvas shows at 1200×800 real pixels, which is exactly how shadow maps or lower-resolution render targets save performance.
+
+## The Foundation for Post-Processing, Shadow Maps and GPGPU Ping-Pong
+
+This exact 2-pass pattern underlies three major techniques you'll meet again: **post-processing** (Track 10) is just pass 2 chained through several effect fragment shaders in sequence (bloom, chromatic aberration, tone mapping — each one a pair of FBOs alternating read/write); **shadow mapping** (Three.js, Track 3) renders the scene from the light's point of view into an FBO holding depth instead of color, then samples that FBO again while drawing the real scene to know which points are occluded; **GPGPU ping-pong** (Track 9) uses exactly two FBOs swapping read/write roles every frame to keep state (particle position, velocity) entirely on the GPU, with no CPU round-trip. Getting comfortable with attaching, checking completeness, and syncing the viewport right now means those three later lessons are just variations on the same idea.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with framebuffers:
+
+1. **Skipping `checkFramebufferStatus`.** A framebuffer missing an attachment or with a mismatched format doesn't throw when you draw into it — the draw call just silently has no effect, so the bug shows up as an unexplained blank screen instead of a clear exception.
+2. **Forgetting to change the viewport when switching passes.** The viewport doesn't auto-sync to the bound framebuffer; keeping the previous pass' viewport while drawing the next leaves the image cropped or confined to a corner of the canvas, easy to mistake for a geometry or shader bug.
+3. **Forgetting `bindFramebuffer(gl.FRAMEBUFFER, null)` before drawing to the screen.** If the FBO is still bound during what was meant to be the final pass, the result keeps writing into the offscreen texture instead of the canvas — the screen never updates, as if the whole pipeline silently did nothing.
+
+</Callout>

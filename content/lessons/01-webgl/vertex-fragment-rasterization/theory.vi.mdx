@@ -1,0 +1,64 @@
+## Vertex shader: một việc duy nhất — ghi gl_Position trong clip space
+
+Vertex shader chạy đúng **một lần cho mỗi vertex** bạn draw, và có đúng một việc bắt buộc phải làm: ghi vào biến dựng sẵn `gl_Position` một `vec4` nằm trong **clip space** — hệ toạ độ mà GPU dùng để quyết định thứ gì nằm trong khung nhìn. Mọi thứ khác vertex shader làm (tính varying, biến đổi pháp tuyến, sample texture để dịch chuyển đỉnh) đều tuỳ chọn; bỏ qua `gl_Position` thì không có gì được vẽ ra, dù shader compile và link thành công tuyệt đối không lỗi. Với một tam giác 2D đơn giản không cần phép chiếu 3D, vertex shader có thể tối giản đến mức chỉ chuyển tiếp `aPosition` thẳng vào `gl_Position`:
+
+```glsl
+#version 300 es
+in vec2 aPosition;
+void main() {
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+```
+
+Ba vertex của một tam giác chạy qua đúng ba lần gọi hàm `main()` này — độc lập với nhau, không vertex nào biết vertex kia đang ở đâu trong cùng draw call. Đó là lý do mọi phép biến đổi hình học (xoay, dịch, chiếu phối cảnh) phải tự chứa trong một lần chạy: không có trạng thái chia sẻ giữa các lần gọi.
+
+## Rasterization: biến tam giác thành fragment
+
+Sau khi cả ba vertex có `gl_Position`, một giai đoạn **cố định, không lập trình được** — rasterizer — nhận vào tam giác đã dựng từ ba điểm đó và quyết định pixel nào bị nó "phủ". Với mỗi pixel tiềm năng, rasterizer kiểm tra tâm pixel (hoặc theo fill rule cho các pixel nằm đúng trên biên cạnh) có nằm trong tam giác không; nếu có, nó sinh ra một **fragment** — một ứng viên pixel mang theo toạ độ và một bộ **toạ độ trọng tâm (barycentric coordinates)** $(\lambda_0, \lambda_1, \lambda_2)$ với $\lambda_0 + \lambda_1 + \lambda_2 = 1$, biểu diễn fragment đó "gần" vertex nào nhất trong ba vertex. Với bất kỳ biến `out`/`in` nào bạn khai báo giữa hai shader (gọi là **varying**), giá trị tại fragment được nội suy tuyến tính bằng đúng ba trọng số đó:
+
+$$
+V_{\text{fragment}} = \lambda_0 V_0 + \lambda_1 V_1 + \lambda_2 V_2
+$$
+
+Với một tam giác phẳng ở clip space $w=1$ như demo dưới đây, đây là nội suy tuyến tính đơn thuần; khi có phép chiếu phối cảnh thật (Track 0, bài Model → View → Projection), nội suy phải chia thêm cho $w$ để đúng phối cảnh — chi tiết đó chưa cần ở đây, chỉ cần biết công thức trọng tâm ở trên là điểm khởi đầu.
+
+## Fragment shader: một việc duy nhất — nhưng chạy nhiều hơn rất nhiều lần
+
+Fragment shader cũng chỉ có một việc bắt buộc: ghi một màu ra biến `out vec4` — nhưng nó chạy **một lần cho mỗi fragment** rasterizer vừa sinh ra, không phải một lần cho mỗi pixel màn hình (một pixel có thể nhận nhiều fragment nếu bật multisampling, dù trường hợp phổ biến nhất là 1 fragment ứng với 1 pixel được phủ). Về hình thức, fragment shader tối giản trông giống hệt vertex shader:
+
+```glsl
+#version 300 es
+precision highp float;
+out vec4 outColor;
+void main() {
+  outColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+```
+
+nhưng số lần gọi giữa hai giai đoạn lệch nhau theo cấp số nhân.
+
+### Con số cụ thể: 3 đỉnh so với hàng nghìn fragment (ước lượng)
+
+Một tam giác có đúng 3 vertex — vertex shader chạy đúng 3 lần, không hơn không kém, bất kể tam giác to hay nhỏ trên màn hình. Fragment shader thì ngược lại: số lần chạy tỉ lệ với **diện tích màn hình mà tam giác phủ**. Ước lượng cụ thể: một canvas 1920×1080 ở DPR 1 có $1920 \times 1080 = 2{,}073{,}600$ pixel; một tam giác phủ khoảng 10% diện tích đó (một hình tương đối lớn, không phải toàn màn hình) tương ứng khoảng $207{,}360$ fragment — tức fragment shader chạy nhiều hơn vertex shader khoảng **69.000 lần**. Đây là con số ước lượng (phụ thuộc kích thước tam giác thật trên màn hình), nhưng bậc độ lớn — hàng chục nghìn tới hàng triệu lần — luôn đúng cho bất kỳ hình khối phủ đầy màn hình nào. Demo bên dưới cho bạn kéo một đỉnh để tự thấy con số fragment ước lượng đổi theo diện tích tam giác trong thời gian thực.
+
+## in/out phải khớp: hợp đồng giữa hai shader
+
+Một biến `out` khai báo trong vertex shader và một biến `in` cùng tên, cùng kiểu trong fragment shader tạo thành một **varying** — kênh dữ liệu duy nhất nối hai giai đoạn với nhau. `out vec3 vColor;` ở vertex shader phải khớp chính xác tên `vColor` và kiểu `vec3` với `in vec3 vColor;` ở fragment shader; đây không phải quy ước đặt tên, mà là cách driver liên kết (link) hai shader vào cùng một program — sai tên hoặc sai kiểu ở một trong hai phía khiến `gl.linkProgram` thất bại với lỗi rõ ràng, hoặc trong một số driver, khiến biến bị coi là không dùng và bị loại bỏ âm thầm khỏi kết quả link. Vertex shader **ghi** vào varying mỗi lần chạy (một lần mỗi vertex); fragment shader chỉ **đọc** — giá trị nó nhận được không phải giá trị gốc từ một vertex cụ thể nào, mà là kết quả nội suy trọng tâm giữa ba giá trị `out` của ba vertex thuộc tam giác đang rasterize.
+
+## Nội suy varying: gradient màu chứng minh bằng mắt
+
+Cách trực quan nhất để thấy nội suy trọng tâm đang thực sự chạy: gán mỗi vertex một màu khác hẳn nhau (đỏ, lục, lam), truyền màu đó qua varying, rồi để fragment shader xuất thẳng varying đó ra `outColor` không sửa gì. Kết quả là một gradient mượt lấp đầy toàn bộ tam giác — không có texture, không có phép tính màu nào trong fragment shader, toàn bộ gradient là sản phẩm của giai đoạn rasterization nội suy ba con số theo đúng công thức trọng tâm ở trên. Đổi vị trí một đỉnh (như demo dưới đây cho phép), gradient biến dạng theo đúng hình tam giác mới — bằng chứng gradient không phải hiệu ứng hình ảnh vẽ sẵn, mà là kết quả tính toán lại mỗi frame từ vị trí ba đỉnh hiện tại.
+
+## "Mỗi pixel một lần" đắt đến đâu — và khi nào mới thực sự đắt
+
+Trực giác "chạy mỗi pixel thì đắt" đúng về hướng nhưng cần chính xác hoá: một fragment shader tối giản như ví dụ trên (một `vec4` hằng số) gần như miễn phí — GPU hiện đại xử lý song song hàng nghìn fragment cùng lúc, và phép gán đơn giản không tốn gì đáng kể trên mỗi luồng. Chi phí thật sự xuất hiện khi thân hàm fragment shader **phức tạp lên**: nhiều phép tính lượng giác, nhiều lần sample texture, hoặc — đắt nhất — có `if`/`for` phụ thuộc dữ liệu khiến các luồng trong cùng một nhóm thực thi (warp/wavefront) phải chờ nhau thay vì chạy song song thật sự. Bài về branching ở Track 2 (GLSL Fundamentals) sẽ định lượng chính xác vì sao `if` trên GPU không "rẻ" như trên CPU; ở đây chỉ cần nhớ: số lần gọi (hàng trăm nghìn) không tự động đồng nghĩa với chậm — độ phức tạp bên trong mỗi lần gọi mới là biến số quyết định.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với vertex/fragment shader và rasterization:
+
+1. **Quên `gl_Position` hoặc gán sai clip space.** Shader compile và link không báo lỗi gì, nhưng tam giác không hiện — vì `gl_Position` mặc định là `vec4(0,0,0,0)`, một điểm suy biến rasterizer không thể tạo fragment từ đó.
+2. **Đặt tên hoặc kiểu varying lệch giữa hai shader.** `out vec3 vColor` ở vertex nhưng `in vec4 vColor` ở fragment (sai kiểu) hay `vColour` (sai chính tả) khiến link thất bại hoặc — tệ hơn — driver âm thầm coi biến là chưa dùng, cho ra màu mặc định thay vì báo lỗi rõ ràng.
+3. **Tưởng nội suy varying là tuyến tính đơn giản trong mọi trường hợp.** Với tam giác 2D phẳng đúng như demo bài này, nội suy tuyến tính theo trọng tâm là chính xác; nhưng ngay khi có phép chiếu phối cảnh thật (world space 3D qua ma trận projection), nội suy phải perspective-correct — thiếu bước chia $w$ đó khiến texture hay màu bị méo dọc theo cạnh xa của tam giác, một lỗi kinh điển khi tự viết software rasterizer mà không biết Track 0 (Model → View → Projection) đã cảnh báo trước.
+
+</Callout>

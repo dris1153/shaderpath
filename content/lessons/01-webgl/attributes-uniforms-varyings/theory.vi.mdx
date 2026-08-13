@@ -1,0 +1,63 @@
+## Ba con đường dữ liệu vào shader
+
+Một shader program không tự sinh ra dữ liệu — mọi con số nó dùng đều phải đi vào từ bên ngoài, và WebGL chỉ cho đúng ba con đường: **attribute**, **uniform**, **varying** (GLSL ES 3.00 gọi cặp đó là `out`/`in`). Ba cái tên mã hoá thẳng câu hỏi "giá trị này đổi bao lâu một lần, giai đoạn nào đọc được?". Đi sai đường không tạo lỗi biên dịch; nó tạo hình vẽ sai hoặc code chạy chậm không rõ nguyên nhân, nên đáng nắm chắc trước khi ghép cả ba vào bài Tam giác đầu tiên ngay sau đây.
+
+### Attribute: dữ liệu theo từng đỉnh
+
+`in` khai ở đầu vertex shader (bản 1.00 cũ dùng `attribute`) đánh dấu một giá trị GPU đọc **mới cho mỗi đỉnh**. Dữ liệu thật nằm trong một buffer đã upload lên GPU; `vertexAttribPointer` cùng `enableVertexAttribArray`, gói trong VAO, dạy phần cứng cách bước qua buffer và rót đúng byte vào đúng attribute cho từng đỉnh. Tam giác 3 đỉnh nghĩa là vertex shader chạy 3 lần, mỗi lần một bộ attribute khác nhau — và attribute chỉ đọc được **bên trong vertex shader**; fragment shader không bao giờ thấy nó trực tiếp.
+
+### Uniform: một giá trị cho cả draw call
+
+`uniform` khai được ở cả hai giai đoạn, đúng nghĩa đen tên gọi: **đồng nhất** cho mọi lần shader chạy suốt một lệnh `drawArrays`/`drawElements`, dù 3 đỉnh hay 3 triệu fragment. JavaScript set nó một lần trước draw call bằng họ hàm `gl.uniform*`; GPU giữ giá trị trong một vùng nhớ constant broadcast tới mọi core cùng lúc, không fetch lại theo từng invocation như attribute — nên đọc uniform gần như miễn phí dù đọc bao nhiêu lần.
+
+### Varying (out/in): cầu nối vertex → fragment, được nội suy
+
+Vertex shader và fragment shader tách biệt hoàn toàn, không share biến. Cách duy nhất để một giá trị tính trong vertex shader tới fragment shader là khai `out` ở vertex và `in` cùng tên, cùng kiểu ở fragment. Ở giữa, **rasterizer** — công đoạn cố định, không lập trình được — nội suy ba giá trị tại ba đỉnh theo toạ độ trọng tâm (barycentric):
+
+$$
+v_{frag} = w_0 v_0 + w_1 v_1 + w_2 v_2, \qquad w_0 + w_1 + w_2 = 1
+$$
+
+fragment càng gần đỉnh nào, trọng số $w$ đỉnh đó càng lớn. GPU không "tính lại" gì cho mỗi fragment — nó nội suy cơ học giữa 3 số đã có, nên một varying không nên chứa logic rẽ nhánh: nội suy kết quả một `if` giữa hai đỉnh cho ra giá trị vô nghĩa ở giữa.
+
+## Bảng phạm vi & tần suất — cùng một giá trị, ba cách mô hình hoá
+
+| Con đường | Khai báo ở đâu | Đổi từ đâu | Tần suất đổi | Ai đọc được |
+|---|---|---|---|---|
+| `attribute` (`in`) | Vertex shader | Buffer, qua VAO | Mỗi đỉnh | Chỉ vertex shader |
+| `uniform` | Vertex và/hoặc fragment | JS, `gl.uniform*` | Mỗi draw call | Cả hai giai đoạn |
+| `out` → `in` | Ra ở vertex, vào ở fragment | Vertex shader tự tính | Mỗi đỉnh, nội suy mỗi fragment | Fragment shader |
+
+Ví dụ xuyên suốt, cũng chính là demo bên dưới: màu một tam giác, mô hình hoá ba cách. Là uniform: `uniform vec3 uSolidColor`, set một lần trước draw call — mọi fragment đọc đúng một giá trị, tam giác là khối màu phẳng. Là attribute: buffer chứa 3 bộ RGB, một cho mỗi đỉnh (`in vec3 aColor`) — nhưng attribute dừng ở vertex shader, muốn tô lên bề mặt phải forward ra `out vec3 vColor = aColor;`, và chính bước forward-rồi-nội-suy đó (không phải bản thân attribute) tạo gradient ba màu trộn vào nhau. Là varying tính từ vị trí: không cần buffer màu riêng — vertex shader tự suy màu từ `aPosition` sẵn có (map NDC về $[0,1]$, gán vào `out vec2 vUv`), fragment shader tô theo `vUv` đã nội suy; cơ chế vận chuyển giống hệt case attribute, chỉ khác nguồn gốc giá trị.
+
+Hai case sau dùng chung cơ chế `out`/`in` — không mâu thuẫn: "attribute" trả lời dữ liệu SINH RA ở đâu (buffer, theo đỉnh); "varying" trả lời nó DI CHUYỂN thế nào từ vertex sang fragment (nội suy). Gần như mọi attribute muốn hiện hình ở fragment shader đều phải qua một varying.
+
+## Gọi uniform từ JavaScript: getUniformLocation và họ hàm uniform*
+
+Set một uniform luôn hai bước. Bước 1: sau khi link, gọi `gl.getUniformLocation(program, "uSolidColor")` lấy một handle mờ — GLSL compiler được quyền loại bỏ uniform không dùng tới, nên hàm này có thể trả `null` hợp lệ; code phải chịu được trường hợp đó. Bước 2: gọi đúng hàm trong họ `gl.uniform*` khớp kiểu GLSL — số cuối tên hàm là số component, chữ cái là kiểu: `uniform1f` cho `float`, `uniform3f`/`uniform3fv` cho `vec3`, `uniform1i` cho `int`/`bool`/`sampler2D`, `uniformMatrix4fv` cho `mat4`.
+
+Điều dễ quên nhất: `gl.uniform*` áp giá trị lên **chương trình đang active**, không phải một cái tên trừu tượng — bắt buộc `gl.useProgram(program)` trước, nếu không giá trị rơi vào chương trình sai, không cảnh báo nào bắt lỗi này.
+
+## Vì sao uniform không thuộc về buffer, và attribute không đổi được giữa draw call
+
+Buffer tồn tại để cấp giá trị MỚI cho MỖI lần vertex fetch bước tới, đọc tuần tự theo offset khai trong VAO. Một uniform là cùng một giá trị cho toàn draw call; nhét vào buffer nghĩa là chép lặp con số đó N lần (N = số đỉnh) — tốn bộ nhớ vô ích, vẫn không đổi được gì per-vertex vì giá trị y hệt mọi đỉnh. Uniform ngược lại nằm trong vùng nhớ constant nhỏ, tối ưu để broadcast một giá trị tới hàng nghìn core cùng lúc.
+
+Chiều ngược lại: attribute không đổi được **giữa chừng** một draw call vì giá trị đã bị "chốt" bởi vertex fetch stage ngay khi draw call bắt đầu, dựa trên buffer/offset đã bind vào VAO lúc đó. Muốn một vertex có giá trị khác, cách duy nhất là sửa buffer (`bufferSubData`/`bufferData`) TRƯỚC lần `drawArrays` kế tiếp — granularity nhỏ nhất của attribute là "giữa hai draw call". Uniform set lại được tuỳ ý giữa các draw call (`uAngle` ở bài sau đổi mỗi frame), nhưng bên trong MỘT draw call cả hai đều đóng băng — khác nhau ở chỗ attribute đóng băng THEO TỪNG ĐỈNH, uniform đóng băng ở đúng MỘT giá trị chung.
+
+## Checklist tinh thần: dữ liệu này đi con đường nào?
+
+Trước khi viết `uniform`, `in`, hay `out` cho một giá trị mới, hỏi theo thứ tự: giá trị khác nhau giữa các fragment BÊN TRONG cùng một tam giác? Có thì phải qua varying, dù nguồn là attribute hay tính ngay trong vertex shader. Khác nhau giữa các đỉnh nhưng cố định tại mỗi đỉnh, nằm sẵn trong dữ liệu mesh? Đó là attribute. Giữ nguyên cho toàn draw call, mọi đỉnh mọi fragment thấy y hệt? Đó là uniform. Cần đổi mỗi frame nhưng KHÔNG khác nhau giữa các đỉnh/fragment trong cùng một frame (thời gian, góc xoay, camera)? Vẫn là uniform — chỉ gọi `gl.uniform*` lại mỗi frame, giữa các draw call.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với attribute/uniform/varying:
+
+1. Quên `gl.useProgram(program)` trước khi gọi `gl.uniform*`. Giá trị set uniform áp lên chương trình đang active — thiếu bước này, giá trị rơi vào chương trình sai, không cảnh báo nào bắt lỗi hộ bạn.
+2. Coi `getUniformLocation` luôn trả handle hợp lệ. GLSL compiler loại bỏ uniform không dùng tới (typo tên, hoặc không ảnh hưởng tới output) — hàm trả `null` hợp lệ, và `gl.uniform1f(null, ...)` là no-op im lặng, không throw, không log.
+3. Khai `vertexAttribPointer` sai số component so với kiểu GLSL — shader khai `in vec3 aColor` nhưng gọi `vertexAttribPointer(loc, 2, ...)`. Component thứ ba không đọc được, GPU tự điền mặc định — màu lệch nhẹ mà không lỗi nào chỉ đúng nguyên nhân.
+
+</Callout>
+
+## Kết nối về sau
+
+Bài Tam giác đầu tiên ngay sau đây ghép cả ba con đường vào một chương trình chạy thật: `uAngle` là uniform, `aPosition`/`aColor` là attribute, `vColor` là varying. Track 2 (GLSL) dùng varying liên tục để dựng distance field và gradient; Track 6 (Custom Shader trong Three.js) thêm một biến thể của attribute — per-instance attribute qua `InstancedMesh`, đổi tần suất từ "mỗi đỉnh" thành "mỗi instance"; bài Texture cuối track này giới thiệu `uniform sampler2D` — một uniform trỏ tới dữ liệu ảnh thay vì một con số.

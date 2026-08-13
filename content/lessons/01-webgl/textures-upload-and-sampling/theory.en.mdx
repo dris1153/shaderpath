@@ -1,0 +1,106 @@
+## What a Texture Is: an Image Living on the GPU, Sampled in the Fragment Shader
+
+A texture is an array of image data stored in GPU memory, readable at any coordinate while the fragment shader is running — unlike a vertex buffer, which is only ever read sequentially by vertex index. A 1920×1080 canvas rendered at DPR 1 produces roughly 2 million fragments per frame; at DPR 2 that's ~8.3 million. Every one of those fragments needs to answer "what color sits at this point on the surface," and a texture is exactly that lookup table — the lookup coordinate is UV, the $[0,1]^2$ coordinate system from Track 0's Cartesian Coordinates & UV Space lesson. Without textures, every color would have to come from pure math inside the shader; textures are how real image data — photographs, baked noise, color lookup tables — enters the render pipeline.
+
+## Getting Pixels onto the GPU: createTexture, bind, texImage2D
+
+Three fixed calls upload a 2D texture to the GPU:
+
+```js
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texImage2D(
+  gl.TEXTURE_2D, 0, gl.RGBA8,
+  width, height, 0,
+  gl.RGBA, gl.UNSIGNED_BYTE,
+  pixelData, // raw Uint8Array, or an ImageBitmap/HTMLImageElement
+);
+```
+
+`createTexture` only allocates an empty "name" (id), no data yet. `bindTexture` attaches that texture to the context's `TEXTURE_2D` target — every subsequent texture call (texImage2D, texParameteri...) operates on whatever is currently bound, the same state-machine model this track already reused from the buffer/VAO lesson. `texImage2D` copies real pixel data into GPU memory at mip level 0 (the base image, full resolution); the `pixelData` argument can be a raw `Uint8Array` (self-generated, as in this lesson's demo) or directly an `ImageBitmap`/`HTMLImageElement`/`HTMLCanvasElement` — WebGL reads pixels straight from those objects without you decoding the image by hand.
+
+## Texture Units and Sampler Uniforms: the Classic Mix-up
+
+A GPU exposes multiple texture units (at least 16 per the WebGL2 spec; `gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS)` gives the real number) — each unit is an independent "slot" that can hold one active texture. Attaching a texture to a unit and telling the shader's sampler which unit to read from are three separate steps, and this is the single most common source of confusion in this lesson:
+
+```js
+gl.activeTexture(gl.TEXTURE0);           // 1. select the active "slot"
+gl.bindTexture(gl.TEXTURE_2D, texture);  // 2. attach the texture to that slot
+gl.uniform1i(uTextureLoc, 0);            // 3. tell the sampler to use slot 0
+```
+
+A sampler uniform (`uniform sampler2D uTexture` in GLSL) doesn't hold the texture object itself — it only holds an **integer unit index**. `uniform1i(loc, 0)` means "read from unit 0," matching `activeTexture(gl.TEXTURE0)` in step 1. With a single texture, unit 0 is the default, so it's easy to "work by accident" while skipping step 3 — but the moment the next lesson's Framebuffer demo needs two textures at once (a scene texture plus an effect), forgetting this step means a sampler silently reads the wrong unit.
+
+## Sampling with texture(): UV Comes Back From Track 0
+
+Inside a fragment shader, `texture(sampler, uv)` reads the color at a UV coordinate — exactly the normalized $u, v \in [0, 1]$ formula from Track 0, closing the loop between coordinate theory and a real application:
+
+```glsl
+uniform sampler2D uTexture;
+in vec2 vUV;
+out vec4 outColor;
+
+void main() {
+  outColor = texture(uTexture, vUV);
+}
+```
+
+`vUV` is usually assigned by the vertex shader from a mesh's UV attribute, then linearly interpolated by the rasterizer for every fragment sitting between a triangle's three vertices — the exact varying mechanism from the attribute/uniform/varying lesson.
+
+## Filtering: MIN/MAG, NEAREST vs LINEAR
+
+When a texel (a texture's pixel) doesn't map 1:1 to a screen fragment — because the texture is magnified or minified — the GPU has to decide which color to pick. `TEXTURE_MAG_FILTER` applies when magnifying, `TEXTURE_MIN_FILTER` when minifying:
+
+```js
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+```
+
+`NEAREST` picks whichever texel sits closest to the sample center — crisp, sometimes blocky ("pixelated"). `LINEAR` performs bilinear interpolation across the 4 nearest texels — smoother, but blurs sharp edges. Neither is "objectively correct" — pixel art deliberately uses NEAREST to preserve hard edges, while photographs almost always use LINEAR.
+
+## Mipmaps: Why Minified Textures Shimmer, and What generateMipmap Fixes
+
+When a 1024×1024 texture only covers a 20×20 pixel patch on screen, each fragment has to stand in for thousands of texels at once — sampling just 1 or 4 of them (NEAREST/LINEAR at full resolution) misses almost all the data, producing shimmering/aliasing that's most obvious when the camera or texture moves slightly, since each frame happens to land on a different, essentially random texel. Mipmaps fix this by precomputing a chain of progressively smaller texture versions in powers of two (1024→512→256→...→1), each already smoothed; the GPU picks whichever level roughly matches that fragment's real minification ratio, cutting aliasing sharply without re-filtering every frame:
+
+```js
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+gl.generateMipmap(gl.TEXTURE_2D);
+```
+
+`generateMipmap` derives the entire level chain from the base image (level 0) automatically — call it once after uploading, no manual per-level work needed. `LINEAR_MIPMAP_LINEAR` ("trilinear filtering") interpolates both between texels within a level and between two adjacent mip levels, giving the smoothest transition as distance changes continuously.
+
+## Wrap Modes: REPEAT, CLAMP_TO_EDGE, MIRRORED_REPEAT
+
+UV values outside $[0,1]$ (say $u = 1.5$) need a handling rule, the wrap mode, configured independently for the $S$ axis (matching $u$) and $T$ axis (matching $v$):
+
+```js
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+```
+
+`REPEAT` tiles the texture periodically (the fractional part of UV) — used for tiling patterns, grass, brick. `CLAMP_TO_EDGE` clamps UV back into $[0,1]$, stretching the edge color outward indefinitely — avoids an obvious repeat seam at a mesh's border, and is the usual choice for a texture that was never meant to tile (like the render-to-texture target in the next lesson). `MIRRORED_REPEAT` tiles but flips direction each repetition, erasing the hard seam between tiles — useful when a pattern isn't seamlessly periodic on its own.
+
+## UNPACK_FLIP_Y_WEBGL: an Image's V-axis Doesn't Match a GL Texture's
+
+Bitmap images (2D canvas, `<img>`, PNG/JPEG) always store their first pixel row at the top — row 0 is the top. Classic WebGL/OpenGL textures instead define $v = 0$ as the **bottom** (the math convention: origin bottom-left, same as NDC). Uploading an image straight into a texture with no adjustment renders it flipped vertically — exactly the callback bug Track 0 warned about in advance. The simplest fix:
+
+```js
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+// call this BEFORE texImage2D — the driver flips rows during upload
+```
+
+For a texture generated entirely by code (like this lesson's demo, built directly from a `Uint8Array`), you control the row order yourself, so this flag can be skipped — but any time you upload from an `<img>`/canvas/`ImageBitmap`, setting `UNPACK_FLIP_Y_WEBGL` is the first thing to remember.
+
+## Where These Three Decisions Lead: Render Targets and Compressed Textures
+
+Track 1 reuses this exact texture object in the very next Framebuffer lesson — except this time the texture doesn't hold an uploaded image, it's a **render target** receiving data straight from another draw call. Track 3 (Three.js) wraps everything covered here inside `THREE.Texture`/`TextureLoader`, and Track 12 (Performance) returns to texture compression (KTX2/Basis) to shrink GPU memory when a source image is too large. Getting comfortable with createTexture/bind/texImage2D/texParameteri now means Three.js's texture-handling code stops being a black box later on.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first working with textures:
+
+1. **Forgetting `uniform1i` when using a texture unit other than 0.** A sampler uniform only holds an integer unit index, not the texture object; binding a texture to `TEXTURE1` but forgetting `uniform1i(loc, 1)` leaves the sampler reading from unit 0 — the wrong texture, or nothing at all, not a bug in the texture you just uploaded.
+2. **Leaving `TEXTURE_MIN_FILTER` at its default mipmap mode without calling `generateMipmap`.** `TEXTURE_MIN_FILTER` defaults to `NEAREST_MIPMAP_LINEAR` — a mode that requires mipmaps. A freshly created texture with only level 0 uploaded is "incomplete" and renders solid black until you call `generateMipmap` or switch `MIN_FILTER` to `NEAREST`/`LINEAR`.
+3. **Forgetting `UNPACK_FLIP_Y_WEBGL` when uploading from `<img>`/canvas.** Bitmap images store row 0 at the top; GL textures treat $v=0$ as the bottom — skipping this flag renders the texture upside down, a classic bug in the very first texture lesson.
+
+</Callout>

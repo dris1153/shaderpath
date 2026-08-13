@@ -1,0 +1,98 @@
+## Blending là gì: trộn fragment mới với framebuffer đã có
+
+Không có blending, mỗi fragment vượt qua depth test **ghi đè** hoàn toàn màu cũ trong framebuffer — thắng thì lấy hết. Blending chèn thêm một bước trước khi ghi: fragment mới (**src**, source) được **trộn** với màu đã có sẵn trong framebuffer tại đúng pixel đó (**dst**, destination) theo một công thức cấu hình được, thay vì thay thế thẳng. Đây là cơ chế duy nhất trong pipeline cố định cho phép một fragment "trong suốt một phần" — fragment shader không hề biết gì về trong suốt, nó chỉ xuất ra một màu RGBA; trong suốt là kết quả GPU trộn màu đó với những gì đã vẽ trước.
+
+## Phương trình blend: src×srcFactor + dst×dstFactor
+
+Công thức chung, áp dụng độc lập cho từng kênh màu:
+
+$$
+\text{color}_{out} = \text{color}_{src} \cdot F_{src} + \text{color}_{dst} \cdot F_{dst}
+$$
+
+`gl.blendEquation` chọn phép toán nối hai số hạng (mặc định `FUNC_ADD`, dấu `+` ở trên — `FUNC_SUBTRACT`, `MIN`, `MAX` tồn tại nhưng hiếm dùng). `gl.blendFunc(srcFactor, dstFactor)` chọn hai hệ số $F_{src}$, $F_{dst}$ — chính hai hệ số này, không phải equation, quyết định "chất" của hiệu ứng: cùng `FUNC_ADD` nhưng đổi hệ số cho ra alpha blending, additive, hay multiply, như phần dưới sẽ nêu.
+
+### Bật gl.BLEND và gọi blendFunc
+
+Blending mặc định **tắt**, giống depth test:
+
+```js
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+```
+
+Không gọi `gl.enable(gl.BLEND)`, `blendFunc` được set cũng vô nghĩa — fragment vẫn ghi đè thẳng, alpha bị bỏ qua hoàn toàn.
+
+## Alpha blending cổ điển vs additive: hai công thức, hai chất riêng
+
+### Alpha blending cổ điển: SRC_ALPHA / ONE_MINUS_SRC_ALPHA
+
+```js
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src}\cdot\alpha_{src} + \text{color}_{dst}\cdot(1-\alpha_{src})
+$$
+
+Đây là phép **tổ hợp lồi** (convex combination) — hai hệ số cộng lại đúng bằng 1 — nên kết quả luôn nằm giữa màu src và dst, không bao giờ vọt ra ngoài. Chất hình ảnh: kính màu, film mờ, UI mờ đục — chồng nhiều lớp làm màu tiệm cận dần về đục chứ không bao giờ sáng hơn lớp sáng nhất. Ví dụ: src đỏ thuần $(1,0,0)$ alpha $0.4$ chồng lên dst xanh dương đặc $(0,0,1)$ cho ra $(0.4, 0, 0.6)$ — tím lệch xanh, nằm gọn giữa hai màu gốc.
+
+### Additive: ONE / ONE
+
+```js
+gl.blendFunc(gl.ONE, gl.ONE);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src} + \text{color}_{dst}
+$$
+
+Không trọng số — mỗi lần vẽ chỉ **cộng dồn** năng lượng màu vào những gì đã có, không "nhường chỗ". Chất hình ảnh: lửa, tia sáng, hạt phát sáng, vệt laser — các lớp chồng nhau không làm tối nhau mà cộng dồn, dễ "cháy" về trắng khi đủ lớp (mỗi kênh bị clamp về $1.0$). Cùng ví dụ trên: đỏ $(1,0,0)$ cộng xanh dương $(0,0,1)$ ra đúng $(1,0,1)$ — magenta trọn vẹn, không pha loãng. Additive còn có tính chất hiếm: vì phép cộng giao hoán ($a+b=b+a$), thứ tự vẽ **không** ảnh hưởng kết quả — ngoại lệ hiếm giữa các chế độ blend, tương phản hẳn với phần thứ tự vẽ ngay sau đây.
+
+### Multiply qua factor: DST_COLOR / ZERO
+
+Multiply không cần một `blendEquation` riêng — chỉ cần chọn đúng cặp factor:
+
+```js
+gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src}\cdot\text{color}_{dst} + \text{color}_{dst}\cdot 0 = \text{color}_{src}\cdot\text{color}_{dst}
+$$
+
+Chất hình ảnh: kính lọc màu, bóng đổ nhân (multiply shadow), vignette tối góc — chỉ có thể làm **tối** đi, không bao giờ sáng hơn màu nền, vì nhân hai số trong $[0,1]$ luôn ra kết quả nhỏ hơn hoặc bằng số lớn hơn trong hai.
+
+## Thứ tự vẽ quyết định kết quả
+
+Alpha blending và multiply không giao hoán: $\text{blend}(a, b) \neq \text{blend}(b, a)$ nói chung, vì công thức phụ thuộc bất đối xứng vào src và dst. Vẽ trong suốt **xa trước, gần sau** (back-to-front) cho đúng ngữ nghĩa "lớp gần nằm chồng lên lớp xa, để lộ một phần lớp xa qua độ mờ của nó" — chính là toán tử "over" kinh điển trong compositing. Đảo ngược thứ tự với cùng hệ số cho ra màu sai hoàn toàn: lớp gần (đáng lẽ chiếm ưu thế) bị pha loãng bởi lớp vẽ sau nó. Vì vậy engine thời gian thực phải sort lại object trong suốt theo khoảng cách camera **mỗi frame** — chi phí mà object đặc không phải trả, vì thứ tự vẽ của chúng không ảnh hưởng màu cuối (chỉ depth test mới quan trọng).
+
+## Depth write và trong suốt: vì sao phải tắt
+
+Lỗi kinh điển: để `gl.depthMask(true)` (mặc định) khi vẽ vật trong suốt. Blending trộn màu đúng, nhưng depth test vẫn **ghi** depth của lớp trong suốt vừa vẽ vào buffer. Khi lớp trong suốt tiếp theo (xa hơn, đáng lẽ vẫn hiện một phần qua lớp gần) được vẽ, depth test so nó với depth vừa ghi và **loại** nó — không phải vì bị vật đặc che, mà vì chính depth của một vật trong suốt khác chặn nó. Kết quả: mảng hình như bị "đục lỗ" giữa các vật trong suốt chồng nhau, dù màu đáng lẽ trộn mượt.
+
+Khắc phục: `gl.depthMask(false)` trong lúc vẽ pass trong suốt — depth test vẫn **hoạt động** (vật trong suốt vẫn bị vật đặc phía trước che đúng cách), chỉ riêng việc **ghi** depth bị tắt, nên các lớp trong suốt không tự chặn nhau. Bật lại `gl.depthMask(true)` ngay sau pass đó cho các draw call đặc tiếp theo.
+
+## Premultiplied alpha và vì sao canvas WebGL mong đợi nó
+
+Alpha "thẳng" (straight): RGB lưu màu thật, tách biệt với alpha — đỏ bão hoà mờ 50% là $(1,0,0,0.5)$. Alpha "premultiplied": RGB nhân sẵn với alpha trước khi lưu — cùng màu đó lưu thành $(0.5,0,0,0.5)$. Khác biệt không chỉ là biểu diễn: công thức "over" viết bằng premultiplied gọn hơn ($\text{out} = \text{src} + \text{dst}\cdot(1-\alpha_{src})$, không cần nhân lại src với alpha vì đã nhân sẵn), và quan trọng hơn, xử lý đúng trường hợp $\alpha = 0$ — với alpha thẳng, RGB "ẩn" phía sau alpha bằng 0 vẫn tồn tại trong bộ nhớ và có thể lộ ra khi lọc/nội suy (mipmap, blur, resize), tạo viền màu lạ quanh vật trong suốt — chính là **halo artifact**.
+
+Context WebGL2 mặc định tạo với `premultipliedAlpha: true` — trình duyệt giả định color buffer xuất ra đã premultiplied để composite đúng canvas lên phần còn lại trang. Shader xuất alpha thẳng vào context này khiến viền vật trong suốt gần biên trang hoặc chồng DOM khác hiện halo màu sai. Sửa bằng cách xuất màu đã premultiply từ shader (`outColor = vec4(rgb * a, a)`), hoặc tạo context với `{ premultipliedAlpha: false }` và giữ nhất quán xuyên suốt — nếu chuyển sang lưu premultiplied nội bộ, cặp factor blend đúng đổi thành `(ONE, ONE_MINUS_SRC_ALPHA)` vì phép nhân alpha đã nằm sẵn trong màu.
+
+## Kỷ luật bật/tắt state
+
+Blending là state toàn cục của GPU, giống depth test — tồn tại xuyên suốt mọi draw call cho tới khi bị đổi, không tự giới hạn trong "ý định" người viết code. Bật `gl.BLEND` trước pass trong suốt mà quên `gl.disable(gl.BLEND)` sau đó khiến draw call đặc tiếp theo âm thầm bị trộn với bất cứ thứ gì phía sau — thường không rõ ngay (nếu alpha ra đúng $1.0$ gần như vô hình), nhưng đủ gây lỗi hình ảnh khó truy khi factor hoặc alpha khác giả định. Khuyên dùng: bật state ngay trước pass cần nó, khôi phục (`disable`, `depthMask(true)`) ngay sau — cùng kỷ luật scoping như `polygonOffset` ở bài trước.
+
+## Kết nối về sau
+
+Post-processing (Track 10) chain nhiều pass blend liên tiếp — bloom accumulation bản chất là additive blending lặp lại; hệ hạt (Track 9) vẽ hàng nghìn sprite trong suốt/additive, nơi sort theo thứ tự thành đánh đổi hiệu năng thật, không chỉ lý thuyết; vật liệu PBR (Track 11) trong Three.js cấu hình `material.transparent`/`blending` ẩn đúng những gì bài này vừa mở ra — hiểu tận gốc khiến các cờ đó dễ đọc thay vì ma thuật.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với blending:
+
+1. **Quên `gl.depthMask(false)` khi vẽ vật trong suốt.** Depth ghi từ lớp trong suốt gần hơn chặn nhầm lớp trong suốt xa hơn, tạo lỗ thủng kỳ lạ dù màu trộn đúng công thức.
+2. **Vẽ vật trong suốt theo thứ tự tuỳ ý** (không sort theo khoảng cách camera) khi dùng alpha blending — công thức không giao hoán, kết quả màu sai lệch hẳn so với additive, nơi thứ tự vô hại.
+3. **Xuất màu alpha thẳng vào context `premultipliedAlpha: true` mặc định** mà không premultiply thủ công trong shader — viền halo màu lạ quanh vật trong suốt khi trình duyệt composite canvas lên trang.
+
+</Callout>

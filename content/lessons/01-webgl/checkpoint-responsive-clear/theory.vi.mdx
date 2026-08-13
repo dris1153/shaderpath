@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build đầu tiên của Track 1: không có lý thuyết mới, chỉ có một sản phẩm chạy được để chứng minh bạn thật sự làm chủ context setup, hai kích thước canvas, và devicePixelRatio từ bài trước — dùng chúng để dựng ra một canvas full-screen luôn nét, resize đúng, và chạy animate liên tục.
+
+## Yêu cầu
+
+Dựng một canvas WebGL2 phủ kín màn hình, luôn nét ở mọi devicePixelRatio, tự resize đúng khi cửa sổ đổi kích thước (`ResizeObserver` hoặc kiểm tra kích thước mỗi rAF đều được), và màu clear đổi mượt qua các hue theo thời gian (tính HSL→RGB bằng JS, gọi `gl.clearColor` mỗi frame). Chi tiết đầy đủ nằm trong phần Bài tập bên dưới — đọc kỹ yêu cầu ở đó trước khi bắt đầu.
+
+## Gợi ý cấu trúc
+
+Toàn bộ bài dựng quanh hai hàm: `resizeCanvasToDisplaySize` từ bài trước, quyết định buffer size đúng theo DPR; và `hslToRgb(h, s, l)`, chuyển hue tăng dần theo thời gian thành `[r, g, b]` cho `gl.clearColor`. Vòng lặp `requestAnimationFrame` gọi cả hai mỗi frame: resize trước (rẻ, có điều kiện), rồi advance hue, rồi clear.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — canvas nét ở DPR lớn hơn 1 (thử zoom trình duyệt hoặc DevTools device toolbar), không bị giãn/méo sau khi resize cửa sổ, màu chuyển mượt liên tục qua các hue không giật, và toàn bộ chạy bằng `requestAnimationFrame`, không thư viện ngoài.

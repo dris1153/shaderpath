@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build closes out the "First Triangle" module: wiring an index buffer, per-vertex attributes and a time uniform into one working animated scene — proving that both the three-phase skeleton (Setup → Data → Draw) from Your First Triangle and the attribute/uniform/varying data roads sit firmly in your own hands, not just in the theory you read.
+
+## Requirements
+
+Build a quad from exactly 4 vertices, each with its own color (attribute), joined into 2 triangles via `gl.drawElements` with an `ELEMENT_ARRAY_BUFFER` holding 6 indices — no duplicating shared vertex coordinates between the two triangles. The quad spins around its center in real time: the vertex shader receives a `uTime` uniform and derives the rotation angle from it itself (don't compute the angle in JS and hand it a different number each frame — `uTime` itself is the number that changes every frame). Full details live in the Exercises section below.
+
+## Structure Hint
+
+Vertex data: 4 quad-corner positions + 4 colors, packed into one interleaved buffer just like the previous lesson. Index data: a 6-element `Uint16Array` describing 2 triangles, pointing into those same 4 vertices. The vertex shader only needs a few extra lines compared to Your First Triangle: build a rotation `mat2` from `uTime` (`cos`, `sin`), multiply it into the position before assigning `gl_Position`.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the quad doesn't break apart while rotating, no vertex is duplicated in the buffer, `gl.drawElements` draws exactly 6 indices, and all motion comes purely from `uTime` changing every frame, with no `bufferData`/`bufferSubData` call touching position data inside the draw loop.

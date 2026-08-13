@@ -1,0 +1,37 @@
+## Từ ba mảnh ghép tới một tam giác thật
+
+Ba bài trước để lại đúng ba mảnh ghép rời: buffer chứa dữ liệu đỉnh (VBO/VAO), một cặp vertex/fragment shader biết đọc attribute/uniform/varying, và khái niệm rasterization biến tam giác thành fragment. Bài này ghép cả ba vào một component chạy thật — demo bên dưới (`demo.tsx` cùng `triangle.vert`/`triangle.frag`) — theo đúng thứ tự bạn sẽ lặp lại ở MỌI chương trình WebGL2 thuần sau này: compile → link → nạp dữ liệu → vẽ. Không bước nào trong bốn bước đó là tuỳ chọn; bỏ qua error-check ở bất kỳ bước nào cũng không sinh exception JavaScript — nó sinh ra một canvas trống, và đó là lý do phần lớn bài này nói về CÁCH PHÁT HIỆN lỗi, không chỉ cách gọi API đúng.
+
+## Compile shader: #version 300 es và error-check pattern
+
+Dòng đầu tiên của cả `triangle.vert` lẫn `triangle.frag` phải là `#version 300 es` — không khoảng trắng hay comment nào trước nó; GLSL ES 3.00 yêu cầu directive này đứng đúng dòng 1, nếu không trình biên dịch coi shader là ES 1.00 và từ khoá `in`/`out` (thay cho `attribute`/`varying` cũ) báo lỗi cú pháp. Hàm `compile()` trong demo làm đúng bốn việc: `gl.createShader(type)` xin một shader object rỗng, `gl.shaderSource(shader, source)` nạp text GLSL vào, `gl.compileShader(shader)` yêu cầu driver biên dịch — và đây là chỗ dễ bị bỏ qua nhất: `compileShader` không bao giờ ném exception dù GLSL sai cú pháp hoàn toàn, nó chỉ âm thầm đặt một cờ nội bộ. Muốn biết compile có thành công hay không, phải tự hỏi bằng `gl.getShaderParameter(shader, gl.COMPILE_STATUS)`; thất bại thì `gl.getShaderInfoLog(shader)` trả về chuỗi lỗi có số dòng — đúng dòng trong source vừa nạp, kể cả khi lỗi nằm ở chính dòng `#version`.
+
+## Link program: gắn hai shader lại, kiểm tra LINK_STATUS
+
+Một shader đơn lẻ chưa làm được gì — `gl.createProgram()` tạo một chương trình rỗng, `gl.attachShader` gắn cả vertex lẫn fragment shader đã compile thành công vào đó, rồi `gl.linkProgram(program)` khớp các biến `out`/`in` giữa hai giai đoạn theo tên (chính cơ chế varying của bài trước) và gán vị trí bộ nhớ cho từng attribute/uniform. Link cũng có thể fail — kể cả khi cả hai shader compile riêng lẻ thành công, ví dụ một `out vec3 vColor` ở vertex shader không khớp kiểu với `in vec3 vColor` ở fragment shader — nên `gl.getProgramParameter(program, gl.LINK_STATUS)` và `gl.getProgramInfoLog(program)` là cặp kiểm tra bắt buộc y hệt cặp compile ở trên. Sau khi link xong, hai shader object gốc không còn cần thiết — demo gọi `gl.deleteShader(vs)`/`gl.deleteShader(fs)` ngay, GPU vẫn giữ code đã biên dịch bên trong `program` nhờ cơ chế đếm tham chiếu.
+
+## VBO + VAO xen kẽ: một buffer, hai attribute
+
+Demo dùng đúng MỘT buffer chứa cả vị trí lẫn màu xen kẽ nhau: mỗi đỉnh là 5 số thực (`x, y, r, g, b`), tổng 20 byte/đỉnh (5 × 4 byte). `gl.bindVertexArray(vao)` trước, rồi `gl.bufferData` nạp toàn bộ `Float32Array` lên GPU một lần — không phải một buffer riêng cho từng attribute, một buffer interleaved duy nhất. Hai lệnh `vertexAttribPointer` khác nhau đọc từ CÙNG một buffer đó với offset khác nhau: `aPosition` đọc 2 số bắt đầu từ byte 0, `aColor` đọc 3 số bắt đầu từ byte 8 (sau 2 số đầu) — cả hai dùng stride 20 để nhảy đúng sang đỉnh tiếp theo. Toàn bộ cấu hình này — hai `vertexAttribPointer`, hai `enableVertexAttribArray`, cùng buffer đang bound — được VAO ghi nhớ trọn vẹn; từ giờ chỉ cần `gl.bindVertexArray(vao)` một lần trước khi vẽ, không phải lặp lại bốn lệnh setup đó mỗi frame.
+
+## Vòng lặp vẽ: viewport, clear, useProgram, bindVertexArray, drawArrays
+
+Vòng lặp trong `useVisibleRaf` chạy đúng năm bước mỗi frame, và thứ tự có ý nghĩa. `gl.viewport(0, 0, w, h)` phải chạy lại mỗi khi kích thước canvas đổi — viewport KHÔNG tự động theo kích thước drawing buffer, quên bước này sau resize là vẽ đúng nhưng lệch tỉ lệ hoặc lệch góc. `gl.clear(gl.COLOR_BUFFER_BIT)` xoá framebuffer mặc định (chính là canvas) về màu đã set bằng `clearColor`. `gl.useProgram` chỉ cần gọi lại nếu đổi sang chương trình khác — demo này chỉ có một chương trình nên gọi đúng một lần lúc setup, WebGL giữ nguyên "chương trình đang active" cho tới khi bạn đổi. `gl.bindVertexArray(vao)` khôi phục toàn bộ cấu hình attribute đã ghi nhớ ở bước trước. Cuối cùng `gl.drawArrays(gl.TRIANGLES, 0, 3)` phát lệnh vẽ thật: mode `TRIANGLES` nhóm mỗi 3 đỉnh liên tiếp thành một tam giác, offset `0` bắt đầu từ đỉnh đầu buffer, count `3` nghĩa là đọc đúng 3 đỉnh. Đây là điểm pipeline chuyển từ code JavaScript sang phần cứng cố định: `drawArrays` kích hoạt vertex shader chạy 3 lần (vertex specification → vertex shader), GPU tự gom 3 đỉnh thành một primitive rồi clip vào clip space (primitive assembly → clipping), rasterizer sinh fragment và nội suy `vColor` cho từng fragment (rasterization), fragment shader chạy độc lập cho mỗi fragment (fragment shader) và ghi màu thẳng vào framebuffer mặc định — demo này không bật depth test hay blending nên bỏ qua giai đoạn depth/stencil/blend, màu fragment đi thẳng ra canvas.
+
+## ~40 dòng nghi thức: một mental template dùng lại mãi mãi
+
+Bỏ qua phần JSX, label song ngữ và logic React, phần lõi thực sự gọi WebGL API trong demo — compile, link, buffer/VAO, draw loop — chỉ khoảng 40 dòng (ước lượng, đếm riêng các lệnh `gl.*`). Đáng nhớ không phải từng dòng, mà bộ khung ba giai đoạn: **Setup** (lấy context → compile 2 shader → tạo program, attach, link, kiểm tra status) → **Data** (tạo buffer, upload dữ liệu, tạo VAO, cấu hình attribute) → **Draw** (viewport → clear → useProgram nếu cần → bindVertexArray → set uniform → drawArrays). Mọi chương trình WebGL2 thuần từ giờ tới hết Track 1 — texture, framebuffer, depth test — đều xếp gọn vào đúng ba giai đoạn này, chỉ thêm bước ở giữa (bind texture, cấu hình FBO...), không đổi bộ khung.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba nguyên nhân phổ biến nhất khiến canvas chỉ hiện màu clear, không thấy tam giác:
+
+1. Shader compile fail âm thầm. `compileShader`/`linkProgram` không ném exception dù GLSL sai hoàn toàn — thiếu cặp kiểm tra `COMPILE_STATUS`/`LINK_STATUS` (hoặc bỏ qua log lỗi) khiến chương trình "chạy" với shader rỗng/hỏng; `useProgram` trên một program link-fail sinh lỗi GL nội bộ chứ không phải JS exception, và `drawArrays` sau đó không vẽ được gì hợp lệ.
+2. Viewport 0×0. `gl.viewport` không tự chạy lại khi canvas resize — gọi nó trước khi canvas có kích thước thật (ví dụ container chưa layout xong) hoặc quên gọi lại sau resize khiến GPU rasterize vào một vùng 0 pixel: draw call vẫn "thành công", chỉ là sinh ra 0 fragment.
+3. Attribute location sai. `gl.getAttribLocation` trả về `-1` cho một tên không khớp chính xác với shader (typo, hoặc attribute bị compiler loại khỏi chương trình đã link vì không ảnh hưởng tới `gl_Position`) — gọi `enableVertexAttribArray(-1)` là no-op im lặng, dữ liệu vị trí không bao giờ tới vertex shader, `gl_Position` giữ giá trị mặc định cho mọi đỉnh và "tam giác" co lại thành một điểm.
+
+</Callout>
+
+## Kết nối về sau
+
+Bài checkpoint ngay sau đây (Quad động 2 tam giác) tái sử dụng nguyên bộ khung ba giai đoạn này, chỉ đổi Data (thêm index buffer, `drawElements` thay `drawArrays`) và Draw (`uTime` thay `uAngle`). Texture ở cuối Track 1 thêm một bước mới vào Setup — upload ảnh bằng `texImage2D` — nhưng vẫn compile/link y hệt; và mọi bài ở Track 3 (Three.js) thực chất là `WebGLRenderer` tự động hoá đúng bốn bước bạn vừa viết tay ở đây.

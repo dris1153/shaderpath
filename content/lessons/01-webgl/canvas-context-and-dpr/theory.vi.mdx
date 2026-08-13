@@ -1,0 +1,89 @@
+## getContext("webgl2") và các option ảnh hưởng thật
+
+`canvas.getContext("webgl2", options)` không chỉ "bật WebGL" — object option truyền vào quyết định cách trình duyệt cấp phát và compose framebuffer mặc định, ảnh hưởng trực tiếp đến hiệu năng và đúng-sai hình ảnh chứ không phải chi tiết vặt:
+
+- **`antialias`** (mặc định `true`): bật multisample (MSAA) cho framebuffer mặc định — trình duyệt cấp thêm sample buffer rồi resolve (lấy trung bình) chúng lại mỗi frame. Trên GPU tile-based ở thiết bị di động, băng thông ghi thêm các sample này có thể tăng vài lần tuỳ mức MSAA; tắt hẳn (`antialias: false`) khi bạn tự AA bằng cách khác, hoặc chấp nhận răng cưa để đổi lấy tốc độ — phổ biến khi vẽ full-screen fragment shader như Track 2 sẽ làm.
+- **`alpha`** (mặc định `true`): giữ kênh alpha cho framebuffer mặc định để trình duyệt **compose** canvas lên trên phần còn lại của trang, giống một lớp PNG trong suốt. Việc này tốn thêm một bước blend mỗi frame; đặt `alpha: false` báo trình duyệt coi canvas là nền đục, bỏ bước blend đó — thường nhanh hơn, và tránh hiện tượng canvas "nhìn xuyên" ra nền trang khi bạn quên set alpha = 1 lúc clear.
+- **`powerPreference`**: gợi ý GPU nào chạy context này trên máy có 2 GPU (tích hợp tiết kiệm pin vs rời hiệu năng cao). `"high-performance"` ưu tiên tốc độ, đổi lại máy nóng và tốn pin hơn; `"low-power"` ưu tiên GPU tích hợp; mặc định `"default"` để trình duyệt tự quyết — và trình duyệt luôn có quyền bỏ qua gợi ý này.
+- **`preserveDrawingBuffer`** (mặc định `false`): khi `false`, trình duyệt được phép **swap** buffer sau mỗi frame thay vì copy nội dung sang chỗ khác — rẻ hơn hẳn. Đặt `true` giữ nguyên buffer sau khi vẽ xong, cần cho `canvas.toDataURL()` chụp đúng frame cuối hoặc hiệu ứng "trail" dựa vào việc không clear frame trước; đổi lại tốn thêm một lần copy toàn bộ buffer mỗi frame.
+
+```js
+const gl = canvas.getContext("webgl2", {
+  antialias: true,
+  alpha: false,
+  powerPreference: "high-performance",
+  preserveDrawingBuffer: false,
+});
+if (!gl) throw new Error("WebGL2 không được hỗ trợ trên trình duyệt này");
+```
+
+Hầu hết demo trong track này dùng đúng bộ giá trị trên: `alpha: false` vì canvas luôn phủ kín container nên không cần compose với nền trang, `preserveDrawingBuffer: false` vì animate liên tục nên chẳng ai cần giữ lại một frame cũ.
+
+## Hai kích thước của canvas: CSS size và drawing buffer
+
+Một thẻ `<canvas>` có **hai** kích thước hoàn toàn độc lập, và nhầm lẫn giữa chúng là nguồn lỗi hình ảnh phổ biến nhất khi mới học WebGL:
+
+- **CSS size** — `canvas.clientWidth`/`clientHeight` (hoặc `canvas.style.width`/`height`): kích thước canvas **chiếm chỗ** trên trang, tính bằng CSS pixel, do layout quyết định.
+- **Drawing buffer size** — `canvas.width`/`canvas.height`: số **texel thật** trong framebuffer mà GPU render vào, tính bằng device pixel.
+
+Nếu chỉ đổi CSS size (ví dụ `canvas.style.width = "100%"`) mà không đụng đến `canvas.width`/`height`, trình duyệt không tự render lại ở độ phân giải mới — nó **kéo giãn** buffer cũ để lấp đầy CSS box, y hệt phóng to một tấm ảnh nhỏ. Mặc định `canvas.width = 300`, `canvas.height = 150` nếu không set gì, nên đây cũng là lý do canvas hay "tự nhiên bị mờ và méo" khi mới thêm vào layout responsive mà quên set buffer tương ứng.
+
+## devicePixelRatio: vì sao Retina cần nhiều pixel hơn
+
+`window.devicePixelRatio` (viết tắt DPR) là tỉ lệ giữa device pixel vật lý và CSS pixel logic trên màn hình hiện tại — màn hình thường là $1$, MacBook Retina hay điện thoại flagship thường là $2$ hoặc $3$. Một ô vuông CSS $1\text{px} \times 1\text{px}$ trên màn Retina DPR $2$ thực chiếm $2 \times 2 = 4$ device pixel thật — diện tích scale theo $\text{dpr}^2$, không phải $\text{dpr}$, vì cả chiều rộng lẫn chiều cao đều nhân đôi.
+
+Nếu buffer chỉ khớp CSS size mà bỏ qua DPR, GPU render đủ điểm ảnh cho màn hình DPR $1$, nhưng trình duyệt vẫn phải kéo giãn buffer đó lên đúng số device pixel thật của Retina — kết quả là mờ, cùng cơ chế với mục trước, chỉ khác nguồn gốc: lần này buffer "đúng" theo CSS size nhưng vẫn thiếu so với số device pixel màn hình thật sự có.
+
+### Công thức resize: round(clientSize × dpr)
+
+Công thức chuẩn để tính buffer size từ CSS size và DPR:
+
+$$
+\text{buffer.width} = \operatorname{round}(\text{clientWidth} \times \text{dpr}), \qquad
+\text{buffer.height} = \operatorname{round}(\text{clientHeight} \times \text{dpr})
+$$
+
+Dùng `round`, không phải `floor` hay `ceil` tuỳ ý — làm tròn tới device pixel gần nhất khi `clientWidth * dpr` ra số lẻ, chuyện thường gặp vì layout responsive hiếm khi cho ra số CSS pixel chẵn tuyệt đối. Ví dụ cụ thể: canvas CSS $800 \times 450$, DPR $2$ cho buffer $1600 \times 900 = 1{,}440{,}000$ pixel. So với DPR $1$ ($800 \times 450 = 360{,}000$ pixel), DPR $2$ cần gấp $4$ lần số pixel — và với một full-screen fragment shader, đúng gấp $4$ lần số lần fragment shader chạy mỗi frame, vì mỗi buffer pixel là một invocation.
+
+### Vì sao phải clamp DPR
+
+Một số thiết bị báo `devicePixelRatio` tới $3$ hoặc $4$ (điện thoại flagship); dùng thẳng con số đó cho một canvas full-screen nghĩa là render $9$–$16$ lần số pixel so với DPR $1$, trong khi mắt người khó phân biệt thêm độ nét vượt quá DPR khoảng $2$ ở khoảng cách xem bình thường. Clamp DPR, ví dụ `Math.min(window.devicePixelRatio || 1, 2)`, giữ hình đủ nét mà không đốt GPU budget vô ích — đặc biệt quan trọng cho canvas full-screen chạy animate liên tục, khác với một canvas tĩnh nhỏ.
+
+## gl.viewport phải theo đúng kích thước buffer
+
+Đổi `canvas.width`/`height` thôi chưa đủ — WebGL không tự biết buffer vừa đổi size. `gl.viewport(x, y, width, height)` khai báo vùng của buffer mà GPU ánh xạ clip space $[-1, 1]$ vào; quên gọi lại `gl.viewport` sau khi resize khiến GPU tiếp tục vẽ theo viewport cũ dù buffer đã lớn hơn hoặc nhỏ hơn — hình bị co vào một góc hoặc chỉ phủ một phần buffer, phần còn lại là nội dung rác chưa clear.
+
+```js
+function resizeCanvasToDisplaySize(canvas, gl, dprCap = 2) {
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+  const width = Math.round(canvas.clientWidth * dpr);
+  const height = Math.round(canvas.clientHeight * dpr);
+  const changed = canvas.width !== width || canvas.height !== height;
+  if (changed) {
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
+  }
+  return changed;
+}
+```
+
+## Resize "theo yêu cầu", không phải mỗi frame
+
+Gọi hàm trên là rẻ — vài phép so sánh số nguyên. Nhưng **gán** `canvas.width`/`height` thì không rẻ: mỗi lần gán, kể cả gán đúng giá trị cũ, trình duyệt coi đó là yêu cầu cấp phát lại buffer và xoá sạch nội dung, dù kích thước không hề đổi. Dòng `if (changed)` ở trên vì vậy không phải phong cách viết code — nó là điều kiện bắt buộc để tránh reallocate buffer hàng chục lần mỗi giây một cách vô ích.
+
+Cách làm đúng: gọi hàm resize ở đầu mỗi frame (chi phí kiểm tra gần như bằng 0) nhưng để chính hàm đó quyết định có thật sự cần đổi buffer hay không; hoặc dùng `ResizeObserver` để chỉ resize khi layout thật sự đổi, không polling mỗi frame. Cả hai cách đều đúng miễn tuân thủ một nguyên tắc: đọc mỗi frame, ghi khi cần.
+
+## Nền tảng này dẫn tới đâu
+
+Hàm resize và cách khởi tạo context ở bài này là đoạn code đầu tiên trong gần như mọi demo còn lại của track — kể cả bài tam giác đầu tiên sắp tới đã dùng đúng logic `if (canvas.width !== w)` này. Track 3 (Three.js) đóng gói lại chính xác vấn đề này trong `renderer.setPixelRatio()` và `renderer.setSize()`; hiểu rõ nó ở tầng WebGL thuần tại đây nghĩa là đọc source Three.js sau này không còn là hộp đen.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với canvas, context và DPR:
+
+1. **Chỉ đổi CSS size mà quên đổi drawing buffer.** Set `canvas.style.width = "100%"` nhưng để `canvas.width`/`height` nguyên giá trị mặc định $300 \times 150$ khiến trình duyệt kéo giãn buffer nhỏ để lấp đầy khung lớn — hình bị mờ và méo tỉ lệ.
+2. **Bỏ qua devicePixelRatio khi set buffer size.** Set `canvas.width = clientWidth`, `canvas.height = clientHeight` (không nhân DPR) trông "đúng" trên màn hình thường nhưng vẫn mờ trên Retina, vì buffer thiếu hẳn số device pixel thật màn hình có.
+3. **Quên gọi lại `gl.viewport` sau khi buffer đổi size.** Resize `canvas.width`/`height` xong nhưng không gọi `gl.viewport(0, 0, width, height)` khiến GPU tiếp tục vẽ theo viewport cũ — hình bị co vào một góc hoặc kéo dài sai tỉ lệ dù buffer đã đúng kích thước.
+
+</Callout>

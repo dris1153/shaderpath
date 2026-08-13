@@ -1,0 +1,89 @@
+## getContext("webgl2") and the Options That Actually Matter
+
+`canvas.getContext("webgl2", options)` doesn't just "turn on WebGL" — the options object you pass decides how the browser allocates and composes the default framebuffer, with a direct effect on performance and image correctness, not just minor detail:
+
+- **`antialias`** (defaults to `true`): enables multisampling (MSAA) on the default framebuffer — the browser allocates extra sample buffers and resolves (averages) them every frame. On tile-based mobile GPUs, the extra bandwidth this write costs can multiply a few times over depending on the sample count; turn it off entirely (`antialias: false`) when you AA some other way, or accept jagged edges to buy speed — common when drawing a full-screen fragment shader, which Track 2 does throughout.
+- **`alpha`** (defaults to `true`): keeps an alpha channel on the default framebuffer so the browser can **compose** the canvas over the rest of the page, like a transparent PNG layer. That costs an extra blend step every frame; setting `alpha: false` tells the browser to treat the canvas as opaque and skip that blend — usually faster, and it avoids the canvas "seeing through" to the page background when you forget to set alpha to 1 on clear.
+- **`powerPreference`**: a hint about which GPU should run this context on dual-GPU machines (power-saving integrated vs. high-performance discrete). `"high-performance"` favors speed at the cost of heat and battery; `"low-power"` favors the integrated GPU; the default `"default"` leaves the choice to the browser — which is always free to ignore the hint anyway.
+- **`preserveDrawingBuffer`** (defaults to `false`): when `false`, the browser is allowed to **swap** buffers after each frame instead of copying content elsewhere — considerably cheaper. Setting it to `true` keeps the buffer intact after drawing, needed for `canvas.toDataURL()` to capture the exact last frame or for a "trail" effect that relies on not clearing the previous frame; the tradeoff is an extra full-buffer copy every single frame.
+
+```js
+const gl = canvas.getContext("webgl2", {
+  antialias: true,
+  alpha: false,
+  powerPreference: "high-performance",
+  preserveDrawingBuffer: false,
+});
+if (!gl) throw new Error("WebGL2 is not supported in this browser");
+```
+
+Most demos in this track use exactly this set of values: `alpha: false` because the canvas always fills its container so there's nothing behind it to compose with, `preserveDrawingBuffer: false` because they animate continuously so no one ever needs a stale frame kept around.
+
+## A Canvas Has Two Sizes: CSS Size and Drawing Buffer
+
+An `<canvas>` element has **two** entirely independent sizes, and confusing them is the single most common source of visual bugs when learning WebGL:
+
+- **CSS size** — `canvas.clientWidth`/`clientHeight` (or `canvas.style.width`/`height`): the space the canvas **occupies** on the page, in CSS pixels, decided by layout.
+- **Drawing buffer size** — `canvas.width`/`canvas.height`: the number of **actual texels** in the framebuffer the GPU renders into, in device pixels.
+
+If you only change the CSS size (say, `canvas.style.width = "100%"`) without touching `canvas.width`/`height`, the browser does not re-render at the new resolution — it **stretches** the old buffer to fill the CSS box, exactly like zooming into a small image. The default is `canvas.width = 300`, `canvas.height = 150` if you set nothing at all, which is also why a canvas so often "mysteriously" looks blurry and distorted the moment it's dropped into a responsive layout without setting a matching buffer size.
+
+## devicePixelRatio: Why Retina Needs More Pixels
+
+`window.devicePixelRatio` (DPR) is the ratio between physical device pixels and logical CSS pixels on the current screen — a typical monitor reports $1$, a Retina MacBook or a flagship phone typically reports $2$ or $3$. A $1\text{px} \times 1\text{px}$ CSS square on a DPR $2$ Retina screen actually occupies $2 \times 2 = 4$ real device pixels — the area scales with $\text{dpr}^2$, not $\text{dpr}$, because both width and height double.
+
+If the buffer only matches the CSS size while ignoring DPR, the GPU renders exactly enough pixels for a DPR $1$ screen, but the browser still has to stretch that buffer up to the real device pixel count on Retina — the result is blur, the same mechanism as the previous section, just a different origin: this time the buffer is "correct" relative to the CSS size but still falls short of the screen's actual device pixel count.
+
+### The Resize Formula: round(clientSize × dpr)
+
+The standard formula for computing buffer size from CSS size and DPR:
+
+$$
+\text{buffer.width} = \operatorname{round}(\text{clientWidth} \times \text{dpr}), \qquad
+\text{buffer.height} = \operatorname{round}(\text{clientHeight} \times \text{dpr})
+$$
+
+Use `round`, not an arbitrary `floor` or `ceil` — rounding to the nearest device pixel matters whenever `clientWidth * dpr` lands on a fraction, which is common since responsive layouts rarely produce perfectly even CSS pixel counts. A concrete example: a canvas with CSS size $800 \times 450$ at DPR $2$ produces a buffer of $1600 \times 900 = 1{,}440{,}000$ pixels. Compared to DPR $1$ ($800 \times 450 = 360{,}000$ pixels), DPR $2$ needs $4\times$ as many pixels — and for a full-screen fragment shader, that's exactly $4\times$ as many fragment shader invocations per frame, since each buffer pixel is one invocation.
+
+### Why You Have to Clamp DPR
+
+Some devices report `devicePixelRatio` as high as $3$ or $4$ (flagship phones); using that number directly for a full-screen canvas means rendering $9$–$16\times$ as many pixels as DPR $1$, while the human eye struggles to notice extra sharpness past roughly DPR $2$ at normal viewing distance. Clamping DPR, e.g. `Math.min(window.devicePixelRatio || 1, 2)`, keeps the image sharp enough without burning GPU budget for nothing — especially important for a full-screen canvas animating continuously, unlike a small static one.
+
+## gl.viewport Has to Match the Buffer Size
+
+Changing `canvas.width`/`height` alone isn't enough — WebGL has no automatic awareness that the buffer just changed size. `gl.viewport(x, y, width, height)` declares the region of the buffer the GPU maps clip space $[-1, 1]$ into; forgetting to call `gl.viewport` again after a resize leaves the GPU drawing into the old viewport even though the buffer got bigger or smaller — the image shrinks into a corner or only covers part of the buffer, with the rest left as uncleared garbage.
+
+```js
+function resizeCanvasToDisplaySize(canvas, gl, dprCap = 2) {
+  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+  const width = Math.round(canvas.clientWidth * dpr);
+  const height = Math.round(canvas.clientHeight * dpr);
+  const changed = canvas.width !== width || canvas.height !== height;
+  if (changed) {
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
+  }
+  return changed;
+}
+```
+
+## Resize "On Demand", Not Every Frame
+
+Calling the function above is cheap — a couple of integer comparisons. But **assigning** `canvas.width`/`height` is not: every assignment, even to the same value it already had, tells the browser to reallocate the buffer and wipe its contents, whether or not the size actually changed. The `if (changed)` line above is therefore not a style choice — it's the condition that keeps you from pointlessly reallocating the buffer dozens of times a second.
+
+The right approach: call the resize function at the top of every frame (the check itself costs almost nothing), but let that function decide whether the buffer actually needs to change; or use a `ResizeObserver` to resize only when layout genuinely changes, with no per-frame polling at all. Both are correct as long as they follow one rule: read every frame, write only when needed.
+
+## Where This Foundation Leads
+
+The resize function and context setup from this lesson are the first lines of code in nearly every other demo in this track — even the upcoming first-triangle lesson already relies on exactly this `if (canvas.width !== w)` logic. Track 3 (Three.js) packages this same problem inside `renderer.setPixelRatio()` and `renderer.setSize()`; understanding it at the raw WebGL layer here means reading Three.js's source later is no longer a black box.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common canvas, context and DPR mistakes:
+
+1. **Changing only the CSS size and forgetting the drawing buffer.** Setting `canvas.style.width = "100%"` while leaving `canvas.width`/`height` at their $300 \times 150$ default makes the browser stretch that small buffer to fill the bigger box — the image comes out blurry and distorted in aspect ratio.
+2. **Ignoring devicePixelRatio when setting the buffer size.** Setting `canvas.width = clientWidth`, `canvas.height = clientHeight` (without multiplying by DPR) looks "correct" on a standard display but still comes out blurry on Retina, because the buffer falls short of the screen's actual device pixel count.
+3. **Forgetting to call `gl.viewport` again after the buffer changes size.** Resizing `canvas.width`/`height` without also calling `gl.viewport(0, 0, width, height)` leaves the GPU drawing into the old viewport — the image shrinks into a corner or stretches with the wrong aspect ratio even though the buffer itself is now the right size.
+
+</Callout>

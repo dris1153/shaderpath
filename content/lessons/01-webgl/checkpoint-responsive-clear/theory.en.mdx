@@ -1,0 +1,15 @@
+## Goal
+
+This is Track 1's first mini-build: no new theory, just a working artifact that proves you actually command context setup, the two canvas sizes, and devicePixelRatio from the previous lesson — using them to build a fullscreen canvas that stays crisp, resizes correctly, and animates continuously.
+
+## Requirements
+
+Build a WebGL2 canvas that fills the screen, stays crisp at any devicePixelRatio, resizes correctly whenever the window changes size (either a `ResizeObserver` or a per-rAF size check is fine), and cycles its clear color smoothly through hues over time (compute HSL→RGB in JS, call `gl.clearColor` every frame). Full details live in the Exercises section below — read the requirements there closely before starting.
+
+## Structure Hint
+
+Everything here is built around two functions: `resizeCanvasToDisplaySize` from the previous lesson, deciding the correct buffer size from DPR; and `hslToRgb(h, s, l)`, turning a hue that advances over time into `[r, g, b]` for `gl.clearColor`. The `requestAnimationFrame` loop calls both every frame: resize first (cheap, conditional), then advance the hue, then clear.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the canvas stays crisp at DPR above 1 (try browser zoom or the DevTools device toolbar), nothing stretches or distorts after resizing the window, the color cycles smoothly through hues with no jumps, and everything runs on `requestAnimationFrame`, with no external libraries.

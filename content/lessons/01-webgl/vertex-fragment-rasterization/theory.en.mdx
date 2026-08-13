@@ -1,0 +1,64 @@
+## The Vertex Shader's One Job: Write gl_Position in Clip Space
+
+A vertex shader runs exactly **once per vertex** you draw, and has exactly one mandatory job: write a `vec4` into the built-in `gl_Position` variable, expressed in **clip space** — the coordinate system the GPU uses to decide what falls inside the view. Everything else a vertex shader can do (computing varyings, transforming normals, displacing a vertex by sampling a texture) is optional; skip `gl_Position` and nothing gets drawn, even if the shader compiles and links without a single error. For a plain 2D triangle that needs no 3D projection, a vertex shader can be as minimal as forwarding `aPosition` straight into `gl_Position`:
+
+```glsl
+#version 300 es
+in vec2 aPosition;
+void main() {
+  gl_Position = vec4(aPosition, 0.0, 1.0);
+}
+```
+
+A triangle's three vertices run through exactly three calls to this `main()` — independently of each other, with no vertex aware of where another vertex landed in the same draw call. That's why every geometric transform (rotation, translation, perspective projection) has to be self-contained within a single invocation: there's no shared state between calls.
+
+## Rasterization: Turning a Triangle into Fragments
+
+Once all three vertices have a `gl_Position`, a **fixed-function, non-programmable** stage — the rasterizer — takes the triangle built from those three points and decides which pixels it covers. For every candidate pixel, the rasterizer tests whether the pixel's center (or, for pixels sitting exactly on an edge, whatever the fill rule dictates) falls inside the triangle; if it does, it emits a **fragment** — a pixel candidate carrying a position and a set of **barycentric coordinates** $(\lambda_0, \lambda_1, \lambda_2)$ with $\lambda_0 + \lambda_1 + \lambda_2 = 1$, expressing which of the three vertices that fragment sits "closest" to. For any `out`/`in` variable pair declared between the two shaders (a **varying**), the value at a fragment is linearly interpolated using exactly those three weights:
+
+$$
+V_{\text{fragment}} = \lambda_0 V_0 + \lambda_1 V_1 + \lambda_2 V_2
+$$
+
+For a flat 2D triangle at clip-space $w=1$, like the demo below, that's plain linear interpolation; once a real perspective projection enters the picture (Track 0's Model → View → Projection lesson), interpolation needs an extra division by $w$ to stay perspective-correct — that detail isn't needed yet, just know the barycentric formula above is where it starts.
+
+## The Fragment Shader's One Job: But Called Far More Often
+
+A fragment shader also has exactly one mandatory job: write a color to an `out vec4` variable — but it runs **once per fragment** the rasterizer just emitted, not once per screen pixel (a single pixel can receive multiple fragments if multisampling is enabled, though the common case is one fragment per covered pixel). In shape, a minimal fragment shader looks nearly identical to a minimal vertex shader:
+
+```glsl
+#version 300 es
+precision highp float;
+out vec4 outColor;
+void main() {
+  outColor = vec4(1.0, 0.5, 0.2, 1.0);
+}
+```
+
+but the call count between the two stages diverges exponentially.
+
+### A Concrete Number: 3 Vertices vs Thousands of Fragments (Estimate)
+
+A triangle has exactly 3 vertices — the vertex shader runs exactly 3 times, no more, no less, regardless of how large or small the triangle appears on screen. The fragment shader runs the opposite way: its call count scales with **the screen area the triangle covers**. A concrete estimate: a 1920×1080 canvas at DPR 1 has $1920 \times 1080 = 2{,}073{,}600$ pixels; a triangle covering roughly 10% of that area (fairly large, not full-screen) works out to about $207{,}360$ fragments — meaning the fragment shader runs roughly **69,000 times more often** than the vertex shader. That's an estimate (it depends on the triangle's actual on-screen size), but the order of magnitude — tens of thousands to millions — holds for any reasonably screen-filling shape. The demo below lets you drag a vertex and watch the estimated fragment count change live as the triangle's area changes.
+
+## in/out Must Match: The Contract Between Two Shaders
+
+An `out` variable declared in a vertex shader and an `in` variable of the same name and type in the fragment shader together form a **varying** — the single data channel connecting the two stages. `out vec3 vColor;` in the vertex shader has to match `vColor`'s name and `vec3` type exactly with `in vec3 vColor;` in the fragment shader; this isn't a naming convention, it's how the driver links both shaders into one program — a name or type mismatch on either side either fails `gl.linkProgram` with a clear error, or on some drivers, gets the variable silently treated as unused and dropped from the linked result. The vertex shader **writes** to the varying once per invocation (once per vertex); the fragment shader only **reads** — the value it receives isn't the raw value from any one specific vertex, it's the barycentric interpolation of the three `out` values from the triangle currently being rasterized.
+
+## Interpolated Varyings: A Color Gradient Makes It Tangible
+
+The most direct way to see barycentric interpolation actually running: assign each vertex a distinctly different color (red, green, blue), pass it through a varying, and have the fragment shader output that varying straight to `outColor` with zero modification. The result is a smooth gradient filling the whole triangle — no texture, no color math inside the fragment shader at all, the entire gradient is a byproduct of the rasterization stage interpolating three numbers with the barycentric formula above. Move one vertex (as the demo below lets you do), and the gradient deforms to match the new triangle shape exactly — proof the gradient isn't a pre-baked visual effect, but something recomputed every frame from the three vertices' current positions.
+
+## How Expensive Is "Once Per Pixel" — and When It Actually Gets Expensive
+
+The intuition "running per-pixel is expensive" points in the right direction but needs sharpening: a minimal fragment shader like the one above (a constant `vec4`) is nearly free — a modern GPU processes thousands of fragments in parallel, and a plain assignment costs essentially nothing per thread. The real cost shows up once the fragment shader's body **gets complex**: heavy trigonometry, multiple texture samples, or — most expensive of all — data-dependent `if`/`for` branches that force threads within the same execution group (a warp/wavefront) to wait on each other instead of running genuinely in parallel. The branching lesson in Track 2 (GLSL Fundamentals) quantifies exactly why `if` on a GPU isn't "cheap" the way it is on a CPU; for now, the takeaway is: a high call count (hundreds of thousands) doesn't automatically mean slow — the complexity inside each call is the variable that actually decides that.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common vertex/fragment shader and rasterization mistakes:
+
+1. **Forgetting `gl_Position` or writing the wrong clip-space value.** The shader compiles and links with zero errors, but the triangle never appears — because `gl_Position` defaults to `vec4(0,0,0,0)`, a degenerate point the rasterizer can't build a fragment from.
+2. **Mismatching a varying's name or type between the two shaders.** `out vec3 vColor` in the vertex shader but `in vec4 vColor` in the fragment shader (wrong type) or `vColour` (a typo) either fails linking outright or — worse — gets silently treated as unused by the driver, producing a default color instead of a clear error.
+3. **Assuming varying interpolation is always simple linear interpolation.** For a flat 2D triangle exactly like this lesson's demo, plain barycentric linear interpolation is correct; but the moment a real perspective projection enters (3D world space through a projection matrix), interpolation has to be perspective-correct — skipping that division by $w$ warps textures or colors along a triangle's far edge, a classic bug when hand-writing a software rasterizer without knowing Track 0's Model → View → Projection lesson already warned about it.
+
+</Callout>

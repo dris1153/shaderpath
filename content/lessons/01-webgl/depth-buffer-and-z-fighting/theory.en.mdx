@@ -1,0 +1,85 @@
+## Painter's Algorithm and Why It Fails
+
+The painter's algorithm is the naive answer to "which object occludes which": sort objects by distance from the camera, draw the farthest first and the nearest last — like a painter blocking in the background before layering foreground detail. For a few dozen discrete objects this actually works, but it breaks in two ways no cleverer sort can patch.
+
+First, three triangles A, B, and C can form an occlusion cycle — A partly hides B, B partly hides C, C partly hides A — and no single draw order is correct for all three at once, because "drawn before/after" is a global relation on whole objects, while occlusion is a local relation that differs region by region. Second: sorting thousands of triangles every frame on the CPU, then issuing draw calls in that exact order, is too slow for a modern GPU built to accept large batches and parallelize them itself.
+
+The fix hardware settled on isn't a smarter sort — it's dropping object-level sorting entirely and pushing the occlusion decision down to the **pixel**: each pixel decides for itself which fragment is nearest the camera, independent of draw order.
+
+## The Depth Buffer: One Float Per Pixel
+
+The depth buffer (or z-buffer) is a second buffer running parallel to the color buffer, same dimensions — one value per pixel, recording the (normalized) distance of the nearest fragment written there so far. WebGL2 allocates a depth buffer by default when a context is created (`depth: true`); the spec only guarantees "at least 16 bits," but real desktop/mobile drivers today almost always give 24 — read the actual number with `gl.getParameter(gl.DEPTH_BITS)` instead of guessing.
+
+### Enabling DEPTH_TEST and Choosing depthFunc
+
+Depth testing starts **off** — it has to be enabled explicitly:
+
+```js
+gl.enable(gl.DEPTH_TEST);
+gl.depthFunc(gl.LESS); // default: a new fragment only wins if its depth is SMALLER
+```
+
+`depthFunc` decides whether a new fragment "beats" whatever's already stored. `LESS` (the default) means the new fragment has to be genuinely closer — an exact tie **loses**, so whatever was drawn first keeps priority when two fragments land on the same depth. `LEQUAL` lets ties win instead, useful when a second pass redraws the exact same geometry at the exact same depth (an outline pass, say). `ALWAYS` neutralizes the depth test without a separate `gl.disable` call.
+
+### Clearing Depth Every Frame
+
+```js
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+```
+
+Forgetting to OR in `DEPTH_BUFFER_BIT` is a quiet bug: last frame's depth values survive, a new fragment at the same screen position gets compared against its own stale value and usually **loses** — because it isn't genuinely closer than itself — so an object vanishes even though the color buffer was cleared cleanly and the drawing code is otherwise correct.
+
+## Why Depth Precision Isn't Linear
+
+The perspective projection matrix doesn't store distance $d$ from the camera linearly in the depth buffer — it stores a function of $1/d$. The standard formula (LearnOpenGL, and before that Steve Baker's classic z-buffer writeup) for the normalized depth value in $[0, 1]$, given near $n$ and far $f$:
+
+$$
+\text{depth}(d) = \frac{f}{f - n}\left(1 - \frac{n}{d}\right)
+$$
+
+This function is **hyperbolic** in $d$, not linear: its derivative with respect to $d$ scales with $1/d^2$, so the same physical gap (say, one meter) produces a huge jump in the depth value when $d$ is small (near the near plane), and a nearly imperceptible jump when $d$ is large (near the far plane). Most of the depth buffer's precision budget piles up right against the near plane.
+
+### The Near Plane Dominates the Precision Distribution
+
+The point where $\text{depth}(d) = 0.5$ — half the $[0, 1]$ range already spent — sits at $d = \dfrac{2nf}{n+f}$, which is approximately $2n$ once $f \gg n$. With $n = 0.1$, $f = 1000$: $d \approx 0.1998$ — meaning **half** the depth buffer's resolution is used up within the first 0.1-to-0.2-unit stretch past the near plane, leaving the other half to share out across the entire remaining distance from 0.2 to 1000.
+
+Setting $n = 0.001$ "just to be safe" (so nothing gets near-clipped) makes this considerably worse: $d \approx 0.002$ — half the depth range vanishes inside the first 0.001 units, leaving the other half to carry the entire rest of the scene. Objects at ordinary distances (5–50 units, where most real scenes actually live) now share a vanishingly thin slice of that crowded half — two surfaces a few centimeters apart get quantized to the same depth value with ease.
+
+## Z-Fighting: When Depth Quantization Collides
+
+The depth buffer doesn't store infinite-precision real numbers — it quantizes $[0,1]$ into $2^{N}$ discrete levels ($N$ = bit depth, typically 24, over 16 million levels). When two nearly-coplanar surfaces (two stacked decals, two CAD faces flush against each other, a quad "glued" onto a floor) land on the same quantized level — or on adjacent levels close enough that ordinary floating-point noise (a slightly different interpolation, a tiny camera shift) can flip the result — the depth test stops picking a consistent winner. The result is **z-fighting**: bands of pixels flickering between the two surfaces, especially obvious the moment the camera or the geometry moves.
+
+## Three Ways to Fix Z-Fighting
+
+### Separate the Surfaces or Tighten the Far/Near Ratio
+
+The cheapest fix when the geometry allows it: nudge one surface slightly along its normal (a few thousandths of a unit is usually enough). When the geometry can't change, tighten the $f/n$ ratio instead — set $n$ as large as the scene tolerates (don't leave it at $0.001$ if the nearest object sits 0.1 units away) and $f$ as small as actually needed — widening the "second half" of the range available to the physical distances that matter, cutting how often surfaces collide on the same quantized level.
+
+### gl.polygonOffset: Biasing Depth Without Touching Vertices
+
+```js
+gl.enable(gl.POLYGON_OFFSET_FILL);
+gl.polygonOffset(-1, -1); // negative = pull toward the camera
+drawDecal(gl);
+gl.disable(gl.POLYGON_OFFSET_FILL);
+```
+
+`polygonOffset(factor, units)` adds a depth bias right after rasterization — `factor` scales with the surface's slope (steeper surfaces need a bigger nudge), `units` is a flat constant measured in the smallest step the hardware can distinguish. The vertex itself never moves — only the depth value written to the buffer shifts — which makes this the standard tool for decals (bullet holes, fake shadows, road markings) that sit flush against another surface without touching the mesh.
+
+### Reverse-Z (Estimate)
+
+A more advanced technique: flip the mapping (near → depth 1, far → depth 0) and pair it with a floating-point depth buffer instead of a normalized integer one. Floating-point numbers have their own uneven precision distribution — most bits cluster around 0 — running opposite the hyperbolic curve above; flipping the mapping makes the two unevenness patterns largely cancel out, spreading precision far more evenly across the practically useful range (estimate: a substantial improvement, by multiple orders of magnitude, in the far region versus an ordinary integer depth buffer). It needs a `DEPTH_COMPONENT32F` render target and sits outside this lesson's raw demo — worth recognizing the name for when a larger engine reaches for it.
+
+## Where This Leads
+
+This non-linear formula resurfaces in Track 3 when Three.js exposes a `logarithmicDepthBuffer` option for scenes spanning enormous distance ratios, and again in Tracks 9/10 when picking cascade split points for shadow maps — the algorithm choosing those split distances leans directly on the same non-linear precision distribution covered here.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common depth buffer mistakes:
+
+1. **Forgetting to OR `gl.DEPTH_BUFFER_BIT` into `gl.clear`.** Last frame's depth survives, a new fragment at the same spot gets compared against itself and loses even though it's perfectly valid — an object vanishes for no apparent reason.
+2. **Setting near absurdly small (`0.001`) "just in case."** This dumps nearly the entire precision budget into the first few millimeters, starving the rest of the scene at ordinary distances — the quiet root cause behind z-fighting that looks random.
+3. **Using `polygonOffset` with the wrong sign, or forgetting `gl.disable(POLYGON_OFFSET_FILL)`.** A positive offset pushes a decal away from the camera instead of toward it (sinking below the floor instead of sitting on top); leaving it enabled bleeds that same offset into unrelated draw calls that come after.
+
+</Callout>

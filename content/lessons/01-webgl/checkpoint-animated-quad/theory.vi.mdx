@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build đóng module "Tam giác đầu tiên": ghép index buffer, per-vertex attribute và uniform thời gian vào một cảnh động chạy thật — chứng minh cả bộ khung ba giai đoạn (Setup → Data → Draw) của bài Tam giác đầu tiên, cùng ba con đường dữ liệu attribute/uniform/varying, đều nằm gọn trong tay bạn chứ không chỉ đọc hiểu lý thuyết.
+
+## Yêu cầu
+
+Dựng một quad (hình vuông) từ đúng 4 đỉnh, mỗi đỉnh một màu riêng (attribute), nối thành 2 tam giác bằng `gl.drawElements` với một `ELEMENT_ARRAY_BUFFER` chứa 6 chỉ số — không lặp lại toạ độ đỉnh chung giữa hai tam giác. Quad xoay quanh tâm theo thời gian thực: vertex shader nhận một uniform `uTime`, tự tính góc xoay từ đó (không tính góc trong JS rồi gán một số khác mỗi frame — chính `uTime` mới là con số đổi mỗi frame). Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Dữ liệu đỉnh: 4 vị trí góc quad + 4 màu, đưa vào một buffer interleaved như bài trước. Dữ liệu chỉ số: một `Uint16Array` 6 phần tử mô tả 2 tam giác, trỏ vào cùng 4 đỉnh đó. Vertex shader chỉ cần thêm đúng vài dòng so với bài Tam giác đầu tiên: tính `mat2` xoay từ `uTime` (`cos`, `sin`), nhân vào vị trí trước khi gán `gl_Position`.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — quad không vỡ hình khi xoay, không có đỉnh nào bị lặp thừa trong buffer, `gl.drawElements` vẽ đúng 6 chỉ số, và toàn bộ chuyển động chỉ đến từ việc `uTime` đổi giá trị mỗi frame, không đụng lại `bufferData`/`bufferSubData` nào cho vị trí bên trong vòng lặp vẽ.

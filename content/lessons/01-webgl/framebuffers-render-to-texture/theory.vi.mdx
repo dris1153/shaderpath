@@ -1,0 +1,77 @@
+## Framebuffer mặc định và Framebuffer Object (FBO)
+
+Mọi lệnh vẽ (`gl.drawArrays`, `gl.drawElements`) ghi kết quả vào một framebuffer đang được bind — nhưng "framebuffer" không nhất thiết là màn hình. Framebuffer mặc định (`null`, tức lúc gọi `gl.bindFramebuffer(gl.FRAMEBUFFER, null)`) là bộ đệm được trình duyệt hiển thị lên canvas; nó được tạo sẵn, bạn không tự quản lý bộ nhớ của nó. Framebuffer Object (FBO) là một framebuffer thứ hai (thứ ba, thứ tư...) bạn tự tạo bằng `gl.createFramebuffer()` — một "container" rỗng, không tự nó chứa pixel nào, cần gắn (attach) một texture hoặc renderbuffer vào mới có chỗ ghi dữ liệu thật.
+
+## Render-to-texture: gắn texture làm color attachment
+
+Gắn một texture đã tạo sẵn (rỗng, không có dữ liệu ban đầu) vào FBO biến texture đó thành đích vẽ:
+
+```js
+const texture = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, texture);
+gl.texImage2D(
+  gl.TEXTURE_2D, 0, gl.RGBA8, size, size, 0,
+  gl.RGBA, gl.UNSIGNED_BYTE, null, // null = chỉ cấp bộ nhớ, chưa có pixel
+);
+
+const fbo = gl.createFramebuffer();
+gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+gl.framebufferTexture2D(
+  gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+  gl.TEXTURE_2D, texture, 0,
+);
+```
+
+`framebufferTexture2D` không copy dữ liệu — nó chỉ nói "từ giờ, `COLOR_ATTACHMENT0` của FBO này chính là level 0 của texture kia". Mọi draw call chạy trong lúc FBO này đang bind sẽ ghi màu thẳng vào texture đó, y hệt cách nó ghi vào canvas khi bind framebuffer mặc định — fragment shader không hề biết (và không cần biết) nó đang vẽ vào đâu.
+
+## checkFramebufferStatus và các lỗi completeness thường gặp
+
+Không phải combination attachment nào cũng hợp lệ — thiếu attachment, sai định dạng, hoặc kích thước không khớp giữa các attachment đều khiến framebuffer "incomplete". Luôn kiểm tra ngay sau khi attach xong:
+
+```js
+const status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+if (status !== gl.FRAMEBUFFER_COMPLETE) {
+  throw new Error(`Framebuffer incomplete: 0x${status.toString(16)}`);
+}
+```
+
+Hai mã lỗi hay gặp nhất: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (attachment tồn tại nhưng sai định dạng — ví dụ gắn texture nén vào color attachment) và `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (chưa attach gì cả). WebGL không tự throw khi bạn vẽ vào một framebuffer incomplete — draw call lặng lẽ không làm gì cả, nên bug loại này thường lộ ra dưới dạng "màn hình đen, không lỗi console" nếu bỏ qua bước check.
+
+## Pipeline 2 pass: scene → texture → hiệu ứng màn hình
+
+Ý tưởng cốt lõi của render-to-texture là tách một khung hình thành nhiều **pass**, mỗi pass ghi vào một framebuffer khác nhau:
+
+```js
+// Pass 1: vẽ scene vào FBO thay vì canvas
+gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+gl.viewport(0, 0, fboSize, fboSize);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.drawArrays(gl.TRIANGLES, 0, sceneVertexCount);
+
+// Pass 2: vẽ một quad phủ kín canvas, sample texture của pass 1
+gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+gl.viewport(0, 0, canvas.width, canvas.height);
+gl.clear(gl.COLOR_BUFFER_BIT);
+gl.bindTexture(gl.TEXTURE_2D, fboTexture);
+gl.drawArrays(gl.TRIANGLES, 0, 6); // 2 tam giác = 1 quad
+```
+
+Pass 1 không quan tâm hiệu ứng gì sẽ áp dụng lên nó sau — nó chỉ vẽ scene như bình thường, chỉ khác đích ghi. Pass 2 không quan tâm scene được dựng bằng bao nhiêu draw call hay hình học nào — nó chỉ thấy một texture 2D phẳng và chạy fragment shader hiệu ứng (đảo màu, pixelate, làm méo...) trên từng pixel của texture đó. Sự tách biệt này — pass sau không cần biết pass trước dựng cảnh thế nào — chính là lý do render-to-texture là một pattern chứ không phải một tính năng đơn lẻ.
+
+## Viewport phải khớp kích thước attachment
+
+`gl.viewport` xác định vùng nào của đích vẽ hiện tại nhận kết quả rasterize; nó không tự động đồng bộ với kích thước framebuffer đang bind. Bind một FBO có texture 256×256 nhưng quên đổi viewport (còn giữ nguyên kích thước canvas, ví dụ 1200×800) khiến rasterizer chiếu toạ độ clip space lên một vùng 1200×800 tưởng tượng rồi cắt (clip) phần vượt ra ngoài 256×256 thật — hình bị crop sai lệch, không phải scale đúng tỉ lệ. Ngược lại, quên đổi viewport về kích thước canvas khi chuyển sang pass 2 khiến ảnh cuối chỉ phủ một góc màn hình. Kích thước FBO cũng hoàn toàn độc lập với kích thước canvas hiển thị — một FBO 256×256 là hợp lệ dù canvas đang hiển thị ở 1200×800 pixel thật, đây chính là cách shadow map hay render target chất lượng thấp hơn màn hình chính hoạt động để tiết kiệm hiệu năng.
+
+## Nền tảng cho post-processing, shadow map và GPGPU ping-pong
+
+Chính xác pattern 2 pass ở trên là nền của ba kỹ thuật lớn sẽ gặp lại: **post-processing** (Track 10) chỉ là pass 2 với nhiều fragment shader hiệu ứng nối tiếp nhau (bloom, chromatic aberration, tone mapping — mỗi cái là một cặp FBO đọc/ghi luân phiên); **shadow map** (Three.js, Track 3) render scene từ góc nhìn ánh sáng vào một FBO chứa depth thay vì màu, rồi sample lại FBO đó khi vẽ scene thật để biết điểm nào bị che khuất; **GPGPU ping-pong** (Track 9) dùng đúng hai FBO hoán đổi vai trò đọc/ghi mỗi frame để lưu trạng thái (vị trí, vận tốc particle) hoàn toàn trên GPU, không đẩy dữ liệu qua lại CPU. Nắm chắc cách attach, check completeness và đồng bộ viewport ngay bây giờ nghĩa là ba bài học lớn đó chỉ còn là biến thể của cùng một ý tưởng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi bắt đầu dùng framebuffer:
+
+1. **Bỏ qua `checkFramebufferStatus`.** Framebuffer thiếu attachment hoặc sai định dạng không throw lỗi khi bạn vẽ vào nó — draw call chỉ lặng lẽ không hiệu lực, nên bug hiện ra dưới dạng màn hình đen không rõ nguyên nhân thay vì một exception rõ ràng.
+2. **Quên đổi viewport khi chuyển pass.** Viewport không tự đồng bộ theo framebuffer đang bind; giữ nguyên viewport của pass trước khi sang pass sau khiến hình bị crop hoặc chỉ phủ một góc canvas, dễ nhầm là lỗi hình học hoặc lỗi shader.
+3. **Quên `bindFramebuffer(gl.FRAMEBUFFER, null)` trước khi vẽ ra màn hình.** Nếu FBO vẫn đang bind ở pass "cuối cùng", kết quả lại ghi tiếp vào texture offscreen thay vì canvas — màn hình không bao giờ cập nhật, trông như cả pipeline không chạy.
+
+</Callout>

@@ -1,0 +1,15 @@
+## Goal
+
+This is Track 1's closing mini-build: no new theory, just a working multi-pass pipeline that proves you can combine framebuffers, texture sampling, depth testing and blending in one place — exactly the pieces the previous four lessons taught separately.
+
+## Requirements
+
+Render an animated scene (a spinning quad, plus a static quad at a different depth) into an FBO (pass 1, with `DEPTH_TEST` enabled correctly). Then draw that exact resulting texture fullscreen through a tint + vignette fragment shader (pass 2, depth test off since it's a single flat layer). Finally, enable blending and draw a translucent quad on top (pass 3) to prove the blend state is correct and doesn't leak into the next frame. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Everything here is built around three blocks: create the FBO (a color texture plus a depth renderbuffer, checked against `FRAMEBUFFER_COMPLETE`), render the animated scene into the FBO exactly like rendering to the screen — just a different target and viewport — then bind the default framebuffer back and draw one fullscreen triangle sampling the resulting texture.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the spinning quad reads clearly through the tint/vignette, the static quad behind it stays correctly occluded wherever they overlap regardless of draw order, the pass 3 overlay is genuinely translucent rather than a solid color, and no canvas is left bound to the wrong framebuffer.

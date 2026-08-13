@@ -1,0 +1,43 @@
+## GPU không đọc được mảng JavaScript
+
+Một `number[]` hay object literal trong JavaScript sống trên heap do V8 quản lý — garbage-collected, mỗi phần tử có thể đóng hộp hoặc là con trỏ tới object khác, và đặc tả ngôn ngữ không đảm bảo bố cục bộ nhớ liên tục. GPU thì ngược lại: driver cần một khối byte liên tục, kích thước cố định, để copy thẳng vào VRAM và đọc bằng phép tính địa chỉ đơn giản — không có chỗ cho con trỏ hay boxing. `gl.bufferData(gl.ARRAY_BUFFER, data, usage)` chính là phép copy đó: nhận một `BufferSource` — trên thực tế luôn là TypedArray — và sao chép nguyên byte của nó vào một buffer nằm trong bộ nhớ GPU truy cập được (VBO — Vertex Buffer Object, tên OpenGL cổ điển cộng đồng WebGL vẫn dùng dù spec chỉ gọi nó là "buffer gắn vào ARRAY_BUFFER"). Trước khi phép copy này chạy, GPU hoàn toàn không biết dữ liệu vertex của bạn tồn tại.
+
+Cụ thể có ba bước tách biệt: `gl.createBuffer()` chỉ cấp một handle rỗng (giống file descriptor chưa có byte nào); `gl.bindBuffer(gl.ARRAY_BUFFER, buffer)` đặt handle đó làm "mục tiêu hiện hành" của điểm bind `ARRAY_BUFFER` — WebGL là một state machine, lệnh gọi sau đó tác động lên bất cứ thứ gì đang được bind, không phải lên id truyền trực tiếp; `gl.bufferData(...)` mới thực sự copy byte. Nhầm lẫn phổ biến nhất khi mới học là gộp "tạo buffer" và "nạp dữ liệu" làm một — chúng là ba lệnh, ba trách nhiệm khác nhau.
+
+## Float32Array và bố cục byte
+
+Dữ liệu vertex trong WebGL gần như luôn là `Float32Array` — typed array chứa số thực 32-bit IEEE-754, mỗi số đúng 4 byte, xếp sát nhau không đệm. `new Float32Array([1, 2, 3])` cấp phát chính xác 12 byte: phần tử 0 ở byte 0, phần tử 1 ở byte 4, phần tử 2 ở byte 8. Bố cục cố định, tính trước được này là thứ GPU cần để đọc bằng thuần phép cộng/nhân địa chỉ — không cần biết độ dài mảng lưu ở đâu, không cần theo con trỏ. Đây đúng là thứ `number[]` thường không có: hình dạng bộ nhớ phía sau nó không nằm trong đặc tả ngôn ngữ, nên `bufferData` từ chối nhận thẳng — phải đi qua TypedArray trước.
+
+## Buffer xen kẽ so với buffer tách riêng
+
+Một vertex thường cần nhiều hơn một thuộc tính: vị trí, màu, pháp tuyến, UV. Có hai cách sắp dữ liệu vào buffer: **xen kẽ (interleaved)** — một buffer duy nhất, dữ liệu mỗi vertex nằm sát nhau (`x,y,r,g,b, x,y,r,g,b, ...`) — hoặc **tách riêng (separate)** — mỗi thuộc tính một buffer độc lập (toàn bộ vị trí trong một `Float32Array`, toàn bộ màu trong một mảng khác). Interleaved thắng về cache: đọc vị trí và màu cùng vertex chỉ chạm một vùng byte liên tục thay vì hai lần fetch — với mesh hàng trăm nghìn vertex, khác biệt đo được bằng cache line thật. Separate thắng về linh hoạt: cập nhật riêng vị trí (skinning, particle) chỉ ghi vào một buffer nhỏ, không đụng byte màu vốn không đổi.
+
+### Ví dụ cụ thể: stride 20 byte
+
+Lấy đúng layout track này dùng xuyên suốt: 2 số thực cho vị trí ($x, y$), 3 số thực cho màu ($r, g, b$) — tổng 5 số thực, mỗi số 4 byte, tức **20 byte mỗi vertex**. Với vertex chỉ số $i$, dữ liệu của nó bắt đầu tại byte $i \times 20$. Trong khối 20 byte đó: vị trí chiếm các byte $[0, 8)$ (2 số thực × 4 byte), màu chiếm các byte $[8, 20)$ (3 số thực × 4 byte). Lệnh `gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 20, 0)` nói với GPU: đọc 2 số thực, cách nhau 20 byte giữa hai vertex liên tiếp, bắt đầu từ offset byte 0. Lệnh `gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 20, 8)` đọc 3 số thực, cùng stride 20 byte, nhưng bắt đầu từ byte thứ 8. Sai lệch `20` hoặc `8` dù chỉ 4 byte (đúng một số thực) khiến GPU đọc nhầm byte làm màu — không crash, chỉ ra hình sai lặng lẽ, đúng thứ mà demo dưới đây cho bạn tự phá để thấy tận mắt.
+
+## VAO: "bản ghi dây nối" của attribute pointer
+
+Vertex Array Object không giữ dữ liệu vertex — nó giữ **trạng thái**: buffer nào gắn với attribute nào, stride, offset, kiểu dữ liệu và số thành phần của từng lệnh `vertexAttribPointer`, cùng attribute nào đang bật. Gọi `gl.bindVertexArray(vao)` một lần, chạy chuỗi `bindBuffer` / `vertexAttribPointer` / `enableVertexAttribArray`, toàn bộ cách nối dây đó được ghi lại vào `vao`. Frame sau — hay draw call cho một mesh hoàn toàn khác — chỉ một lệnh `gl.bindVertexArray(vao)` khôi phục ngay mọi thiết lập pointer đó; GPU không parse lại gì, chỉ đổi sang đọc bảng dây nối đã ghi sẵn. Không có VAO (WebGL2 luôn cấp một VAO mặc định, bắt buộc chứ không tuỳ chọn như WebGL1), bạn phải lặp lại toàn bộ chuỗi `vertexAttribPointer`/`enableVertexAttribArray` trước mỗi draw call — chậm hơn (driver validate lại từ đầu) và dễ lỗi (quên bật lại một attribute khiến nó lặng lẽ đọc giá trị hằng số của attribute 0 thay vì buffer). Một scene 50 mesh khác nhau là 50 VAO, mỗi cái nhớ đúng cách nối dây riêng — chuyển mesh là 50 lệnh `bindVertexArray` rẻ tiền, không phải 50 × N lệnh pointer.
+
+## STATIC_DRAW vs DYNAMIC_DRAW: ý định sử dụng
+
+Tham số thứ ba của `bufferData` — `gl.STATIC_DRAW`, `gl.DYNAMIC_DRAW`, hay `gl.STREAM_DRAW` — không phải ràng buộc cứng; WebGL vẫn cho phép nạp lại một buffer `STATIC_DRAW` mỗi frame nếu bạn cố tình. Đây là một **gợi ý (hint)** để driver quyết định đặt buffer ở đâu trong bộ nhớ vật lý. `STATIC_DRAW` hứa "ghi một lần, vẽ nhiều lần" — hợp với hình học không đổi sau khi load; driver tự do đặt nó ở vùng nhớ nhanh nhất, gần GPU nhất. `DYNAMIC_DRAW` hứa "ghi lại thường xuyên" — driver chọn vùng nhớ chịu được ghi từ CPU liên tục mà không gây stall toàn bộ GPU. Nói dối driver — dùng `STATIC_DRAW` cho buffer nạp lại mỗi frame — không phá đúng/sai hình ảnh, chỉ phá hiệu năng, vì mỗi lần nạp lại có thể buộc driver di chuyển buffer sang vùng nhớ khác, đúng thứ hint lẽ ra phải tránh.
+
+## Giải mã chuỗi bindBuffer → bufferData → vertexAttribPointer → enableVertexAttribArray
+
+Chuỗi bốn lệnh mở đầu gần như mọi setup WebGL đọc rối vì thứ tự có vẻ ngược — cho tới khi gọi đúng tên việc mỗi lệnh làm: `bindBuffer` chọn buffer nào nhận các lệnh tiếp theo (một "lựa chọn hiện hành" của state machine, không phải tham số truyền trực tiếp); `bufferData` copy byte của typed array vào buffer vừa chọn; `vertexAttribPointer` nói GPU **đọc byte đó như thế nào** cho một attribute cụ thể — nhưng chỉ có tác dụng khi `enableVertexAttribArray` bật attribute đó từ "giá trị hằng số" sang "đọc từ buffer". Bỏ quên lệnh `enable` khiến thiết lập pointer bị lặng lẽ bỏ qua — attribute vẫn giữ giá trị hằng (thường toàn số 0) từ lần gọi `vertexAttrib*` gần nhất, hình học biến mất mà không một dòng lỗi nào xuất hiện.
+
+## Kết nối tiếp theo
+
+Bài tiếp theo — Vertex shader, fragment shader & rasterization — là nơi đọc dữ liệu ra khỏi VBO bài này vừa dựng: `aPosition` và `aColor` trở thành biến `in` mà vertex shader nhận một lần mỗi vertex, lấy thẳng từ cách nối dây một VAO vừa ghi. Track 3 (Three.js) che toàn bộ chuỗi này sau `BufferGeometry`/`BufferAttribute` — nhưng mỗi lệnh `setAttribute("position", ...)` bạn viết ở đó, phía dưới vẫn sinh ra đúng chuỗi bindBuffer/bufferData/vertexAttribPointer bài này vừa giải mã.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với VBO và VAO:
+
+1. **Quên gọi `enableVertexAttribArray`.** `vertexAttribPointer` đã gọi đúng nhưng attribute vẫn đọc giá trị hằng số thay vì buffer — hình học biến mất mà không có lỗi nào trong console, vì về mặt kỹ thuật không có gì sai cú pháp cả.
+2. **Tính sai stride/offset theo byte khi có nhiều attribute xen kẽ.** Quên rằng 3 số thực màu chiếm 12 byte (không phải 3) khi tính offset của attribute tiếp theo — lệch dù chỉ 4 byte cũng đủ khiến GPU đọc nhầm dữ liệu của trường bên cạnh.
+3. **Tưởng VAO ghi nhớ "buffer nào đang bind vào ARRAY_BUFFER".** VAO không lưu điểm bind toàn cục đó — nó lưu buffer nào đã được bind **tại đúng thời điểm** mỗi lệnh `vertexAttribPointer` chạy, riêng cho từng attribute. Bind sang buffer khác sau đó không tự cập nhật lại VAO; đây là lý do bạn có thể an toàn bind một buffer khác cho việc khác giữa chừng mà không sợ phá cấu hình VAO đã ghi.
+
+</Callout>

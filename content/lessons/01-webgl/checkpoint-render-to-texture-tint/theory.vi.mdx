@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build đóng Track 1 (WebGL Thuần): không có lý thuyết mới, chỉ có một pipeline nhiều-pass thật sự chạy được, chứng minh bạn ghép được framebuffer, texture sampling, depth test và blending vào cùng một chỗ — đúng những mảnh rời rạc bốn bài trước đã dạy riêng lẻ.
+
+## Yêu cầu
+
+Vẽ một scene động (quad xoay theo thời gian, cộng thêm một quad tĩnh ở độ sâu khác) vào một FBO (pass 1, bật `DEPTH_TEST` đúng cách). Sau đó vẽ toàn màn hình đúng texture kết quả đó qua một fragment shader tint + vignette (pass 2, tắt depth test vì chỉ có một lớp phẳng). Cuối cùng bật blending, vẽ thêm một quad bán trong suốt đè lên trên (pass 3) để chứng minh trạng thái blend đúng và không rò rỉ sang frame sau. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Toàn bộ bài dựng quanh ba khối: tạo FBO (texture màu + renderbuffer depth, kiểm tra `FRAMEBUFFER_COMPLETE`), vẽ scene động vào FBO giống hệt vẽ ra màn hình bình thường — chỉ đổi target và viewport, rồi bind lại framebuffer mặc định và vẽ một tam giác phủ kín màn hình sample texture kết quả.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — quad xoay thấy được rõ qua tint/vignette, quad tĩnh phía sau luôn bị che đúng chỗ giao nhau bất kể thứ tự vẽ, overlay pass 3 thật sự trong suốt chứ không phủ kín một màu, và không canvas nào bị bỏ quên bind framebuffer sai.

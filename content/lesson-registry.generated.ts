@@ -72,6 +72,66 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/00-math/vector-basics/theory.vi.mdx"),
     en: () => import("./lessons/00-math/vector-basics/theory.en.mdx"),
   },
+  "attributes-uniforms-varyings": {
+    vi: () => import("./lessons/01-webgl/attributes-uniforms-varyings/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/attributes-uniforms-varyings/theory.en.mdx"),
+  },
+  "blending-and-alpha": {
+    vi: () => import("./lessons/01-webgl/blending-and-alpha/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/blending-and-alpha/theory.en.mdx"),
+  },
+  "buffers-vbo-vao": {
+    vi: () => import("./lessons/01-webgl/buffers-vbo-vao/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/buffers-vbo-vao/theory.en.mdx"),
+  },
+  "canvas-context-and-dpr": {
+    vi: () => import("./lessons/01-webgl/canvas-context-and-dpr/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/canvas-context-and-dpr/theory.en.mdx"),
+  },
+  "checkpoint-animated-quad": {
+    vi: () => import("./lessons/01-webgl/checkpoint-animated-quad/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/checkpoint-animated-quad/theory.en.mdx"),
+  },
+  "checkpoint-render-to-texture-tint": {
+    vi: () => import("./lessons/01-webgl/checkpoint-render-to-texture-tint/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/checkpoint-render-to-texture-tint/theory.en.mdx"),
+  },
+  "checkpoint-responsive-clear": {
+    vi: () => import("./lessons/01-webgl/checkpoint-responsive-clear/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/checkpoint-responsive-clear/theory.en.mdx"),
+  },
+  "depth-buffer-and-z-fighting": {
+    vi: () => import("./lessons/01-webgl/depth-buffer-and-z-fighting/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/depth-buffer-and-z-fighting/theory.en.mdx"),
+  },
+  "first-triangle-webgl2": {
+    vi: () => import("./lessons/01-webgl/first-triangle-webgl2/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/first-triangle-webgl2/theory.en.mdx"),
+  },
+  "framebuffers-render-to-texture": {
+    vi: () => import("./lessons/01-webgl/framebuffers-render-to-texture/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/framebuffers-render-to-texture/theory.en.mdx"),
+  },
+  "rendering-pipeline-a-to-z": {
+    vi: () => import("./lessons/01-webgl/rendering-pipeline-a-to-z/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/rendering-pipeline-a-to-z/theory.en.mdx"),
+  },
+  "textures-upload-and-sampling": {
+    vi: () => import("./lessons/01-webgl/textures-upload-and-sampling/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/textures-upload-and-sampling/theory.en.mdx"),
+  },
+  "vertex-fragment-rasterization": {
+    vi: () => import("./lessons/01-webgl/vertex-fragment-rasterization/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/vertex-fragment-rasterization/theory.en.mdx"),
+  },
+  "webgl-vs-webgpu-landscape": {
+    vi: () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/theory.en.mdx"),
+  },
+  "what-webgl-is-and-isnt": {
+    vi: () => import("./lessons/01-webgl/what-webgl-is-and-isnt/theory.vi.mdx"),
+    en: () => import("./lessons/01-webgl/what-webgl-is-and-isnt/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -88,6 +148,18 @@ export const REFERENCES_REGISTRY: Partial<
   "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/references"),
   "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/references"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/references"),
+  "attributes-uniforms-varyings": () => import("./lessons/01-webgl/attributes-uniforms-varyings/references"),
+  "blending-and-alpha": () => import("./lessons/01-webgl/blending-and-alpha/references"),
+  "buffers-vbo-vao": () => import("./lessons/01-webgl/buffers-vbo-vao/references"),
+  "canvas-context-and-dpr": () => import("./lessons/01-webgl/canvas-context-and-dpr/references"),
+  "depth-buffer-and-z-fighting": () => import("./lessons/01-webgl/depth-buffer-and-z-fighting/references"),
+  "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/references"),
+  "framebuffers-render-to-texture": () => import("./lessons/01-webgl/framebuffers-render-to-texture/references"),
+  "rendering-pipeline-a-to-z": () => import("./lessons/01-webgl/rendering-pipeline-a-to-z/references"),
+  "textures-upload-and-sampling": () => import("./lessons/01-webgl/textures-upload-and-sampling/references"),
+  "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/references"),
+  "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/references"),
+  "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -149,6 +221,66 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"vector-là-gì-mũi-tên-và-bộ-số","text":"Vector là gì: mũi tên và bộ số","depth":2},{"id":"cộng-và-trừ-vector-ý-nghĩa-hình-học","text":"Cộng và trừ vector: ý nghĩa hình học","depth":2},{"id":"cộng-nối-đuôi-nhau-tip-to-tail","text":"Cộng: nối đuôi nhau (tip-to-tail)","depth":3},{"id":"trừ-vector-nối-từ-điểm-này-đến-điểm-kia","text":"Trừ: vector nối từ điểm này đến điểm kia","depth":3},{"id":"nhân-vô-hướng-co-giãn-và-đổi-chiều","text":"Nhân vô hướng: co giãn và đổi chiều","depth":2},{"id":"độ-dài-vector-và-định-lý-pythagoras","text":"Độ dài vector và định lý Pythagoras","depth":2},{"id":"normalize-tách-hướng-ra-khỏi-độ-lớn","text":"Normalize: tách hướng ra khỏi độ lớn","depth":2},{"id":"vector-đóng-ba-vai-vị-trí-hướng-vận-tốc","text":"Vector đóng ba vai: vị trí, hướng, vận tốc","depth":2},{"id":"kết-nối-về-sau-vector-trong-shader-và-3d","text":"Kết nối về sau: vector trong shader và 3D","depth":2}],
     en: [{"id":"what-a-vector-is-arrows-and-number-tuples","text":"What a Vector Is: Arrows and Number Tuples","depth":2},{"id":"adding-and-subtracting-vectors-the-geometric-meaning","text":"Adding and Subtracting Vectors: The Geometric Meaning","depth":2},{"id":"addition-tip-to-tail","text":"Addition: Tip-to-Tail","depth":3},{"id":"subtraction-the-vector-from-one-point-to-another","text":"Subtraction: The Vector From One Point to Another","depth":3},{"id":"scalar-multiplication-stretching-and-flipping","text":"Scalar Multiplication: Stretching and Flipping","depth":2},{"id":"vector-length-and-the-pythagorean-theorem","text":"Vector Length and the Pythagorean Theorem","depth":2},{"id":"normalizing-separating-direction-from-magnitude","text":"Normalizing: Separating Direction From Magnitude","depth":2},{"id":"three-roles-of-a-vector-position-direction-velocity","text":"Three Roles of a Vector: Position, Direction, Velocity","depth":2},{"id":"where-this-leads-vectors-in-shaders-and-3d","text":"Where This Leads: Vectors in Shaders and 3D","depth":2}],
   },
+  "attributes-uniforms-varyings": {
+    vi: [{"id":"ba-con-đường-dữ-liệu-vào-shader","text":"Ba con đường dữ liệu vào shader","depth":2},{"id":"attribute-dữ-liệu-theo-từng-đỉnh","text":"Attribute: dữ liệu theo từng đỉnh","depth":3},{"id":"uniform-một-giá-trị-cho-cả-draw-call","text":"Uniform: một giá trị cho cả draw call","depth":3},{"id":"varying-outin-cầu-nối-vertex--fragment-được-nội-suy","text":"Varying (out/in): cầu nối vertex → fragment, được nội suy","depth":3},{"id":"bảng-phạm-vi--tần-suất--cùng-một-giá-trị-ba-cách-mô-hình-hoá","text":"Bảng phạm vi & tần suất — cùng một giá trị, ba cách mô hình hoá","depth":2},{"id":"gọi-uniform-từ-javascript-getuniformlocation-và-họ-hàm-uniform","text":"Gọi uniform từ JavaScript: getUniformLocation và họ hàm uniform","depth":2},{"id":"vì-sao-uniform-không-thuộc-về-buffer-và-attribute-không-đổi-được-giữa-draw-call","text":"Vì sao uniform không thuộc về buffer, và attribute không đổi được giữa draw call","depth":2},{"id":"checklist-tinh-thần-dữ-liệu-này-đi-con-đường-nào","text":"Checklist tinh thần: dữ liệu này đi con đường nào?","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"three-data-roads-into-a-shader","text":"Three Data Roads Into a Shader","depth":2},{"id":"attribute-data-per-vertex","text":"Attribute: Data Per Vertex","depth":3},{"id":"uniform-one-value-for-the-whole-draw-call","text":"Uniform: One Value for the Whole Draw Call","depth":3},{"id":"varying-outin-the-vertex--fragment-bridge-interpolated","text":"Varying (out/in): The Vertex → Fragment Bridge, Interpolated","depth":3},{"id":"scope--frequency-table--the-same-value-modeled-three-ways","text":"Scope & Frequency Table — the Same Value, Modeled Three Ways","depth":2},{"id":"calling-uniforms-from-javascript-getuniformlocation-and-the-uniform-family","text":"Calling Uniforms from JavaScript: getUniformLocation and the uniform Family","depth":2},{"id":"why-uniforms-dont-belong-in-buffers-and-attributes-cant-change-mid-draw","text":"Why Uniforms Don't Belong in Buffers, and Attributes Can't Change Mid-Draw","depth":2},{"id":"mental-checklist-which-road-does-this-data-take","text":"Mental Checklist: Which Road Does This Data Take?","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
+  "blending-and-alpha": {
+    vi: [{"id":"blending-là-gì-trộn-fragment-mới-với-framebuffer-đã-có","text":"Blending là gì: trộn fragment mới với framebuffer đã có","depth":2},{"id":"phương-trình-blend-srcsrcfactor--dstdstfactor","text":"Phương trình blend: src×srcFactor + dst×dstFactor","depth":2},{"id":"bật-glblend-và-gọi-blendfunc","text":"Bật gl.BLEND và gọi blendFunc","depth":3},{"id":"alpha-blending-cổ-điển-vs-additive-hai-công-thức-hai-chất-riêng","text":"Alpha blending cổ điển vs additive: hai công thức, hai chất riêng","depth":2},{"id":"alpha-blending-cổ-điển-srcalpha--oneminussrcalpha","text":"Alpha blending cổ điển: SRCALPHA / ONEMINUSSRCALPHA","depth":3},{"id":"additive-one--one","text":"Additive: ONE / ONE","depth":3},{"id":"multiply-qua-factor-dstcolor--zero","text":"Multiply qua factor: DSTCOLOR / ZERO","depth":3},{"id":"thứ-tự-vẽ-quyết-định-kết-quả","text":"Thứ tự vẽ quyết định kết quả","depth":2},{"id":"depth-write-và-trong-suốt-vì-sao-phải-tắt","text":"Depth write và trong suốt: vì sao phải tắt","depth":2},{"id":"premultiplied-alpha-và-vì-sao-canvas-webgl-mong-đợi-nó","text":"Premultiplied alpha và vì sao canvas WebGL mong đợi nó","depth":2},{"id":"kỷ-luật-bậttắt-state","text":"Kỷ luật bật/tắt state","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"what-blending-is-mixing-a-new-fragment-with-whats-already-there","text":"What Blending Is: Mixing a New Fragment with What's Already There","depth":2},{"id":"the-blend-equation-srcsrcfactor--dstdstfactor","text":"The Blend Equation: src×srcFactor + dst×dstFactor","depth":2},{"id":"enabling-glblend-and-calling-blendfunc","text":"Enabling gl.BLEND and Calling blendFunc","depth":3},{"id":"classic-alpha-blending-vs-additive-two-formulas-two-very-different-looks","text":"Classic Alpha Blending vs Additive: Two Formulas, Two Very Different Looks","depth":2},{"id":"classic-alpha-blending-srcalpha--oneminussrcalpha","text":"Classic Alpha Blending: SRCALPHA / ONEMINUSSRCALPHA","depth":3},{"id":"additive-one--one","text":"Additive: ONE / ONE","depth":3},{"id":"multiply-through-factors-dstcolor--zero","text":"Multiply Through Factors: DSTCOLOR / ZERO","depth":3},{"id":"draw-order-decides-the-outcome","text":"Draw Order Decides the Outcome","depth":2},{"id":"depth-write-and-transparency-why-it-has-to-be-off","text":"Depth Write and Transparency: Why It Has to Be Off","depth":2},{"id":"premultiplied-alpha-and-why-the-webgl-canvas-expects-it","text":"Premultiplied Alpha and Why the WebGL Canvas Expects It","depth":2},{"id":"state-discipline","text":"State Discipline","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "buffers-vbo-vao": {
+    vi: [{"id":"gpu-không-đọc-được-mảng-javascript","text":"GPU không đọc được mảng JavaScript","depth":2},{"id":"float32array-và-bố-cục-byte","text":"Float32Array và bố cục byte","depth":2},{"id":"buffer-xen-kẽ-so-với-buffer-tách-riêng","text":"Buffer xen kẽ so với buffer tách riêng","depth":2},{"id":"ví-dụ-cụ-thể-stride-20-byte","text":"Ví dụ cụ thể: stride 20 byte","depth":3},{"id":"vao-bản-ghi-dây-nối-của-attribute-pointer","text":"VAO: \"bản ghi dây nối\" của attribute pointer","depth":2},{"id":"staticdraw-vs-dynamicdraw-ý-định-sử-dụng","text":"STATICDRAW vs DYNAMICDRAW: ý định sử dụng","depth":2},{"id":"giải-mã-chuỗi-bindbuffer--bufferdata--vertexattribpointer--enablevertexattribarray","text":"Giải mã chuỗi bindBuffer → bufferData → vertexAttribPointer → enableVertexAttribArray","depth":2},{"id":"kết-nối-tiếp-theo","text":"Kết nối tiếp theo","depth":2}],
+    en: [{"id":"the-gpu-cant-read-javascript-arrays","text":"The GPU Can't Read JavaScript Arrays","depth":2},{"id":"float32array-and-byte-layout","text":"Float32Array and Byte Layout","depth":2},{"id":"interleaved-vs-separate-attribute-buffers","text":"Interleaved vs Separate Attribute Buffers","depth":2},{"id":"worked-example-20-byte-stride","text":"Worked Example: 20-Byte Stride","depth":3},{"id":"the-vao-a-recorded-wiring-table-for-attribute-pointers","text":"The VAO: a Recorded Wiring Table for Attribute Pointers","depth":2},{"id":"staticdraw-vs-dynamicdraw-usage-intent","text":"STATICDRAW vs DYNAMICDRAW: Usage Intent","depth":2},{"id":"demystifying-bindbuffer--bufferdata--vertexattribpointer--enablevertexattribarray","text":"Demystifying bindBuffer → bufferData → vertexAttribPointer → enableVertexAttribArray","depth":2},{"id":"where-this-connects-next","text":"Where This Connects Next","depth":2}],
+  },
+  "canvas-context-and-dpr": {
+    vi: [{"id":"getcontextwebgl2-và-các-option-ảnh-hưởng-thật","text":"getContext(\"webgl2\") và các option ảnh hưởng thật","depth":2},{"id":"hai-kích-thước-của-canvas-css-size-và-drawing-buffer","text":"Hai kích thước của canvas: CSS size và drawing buffer","depth":2},{"id":"devicepixelratio-vì-sao-retina-cần-nhiều-pixel-hơn","text":"devicePixelRatio: vì sao Retina cần nhiều pixel hơn","depth":2},{"id":"công-thức-resize-roundclientsize--dpr","text":"Công thức resize: round(clientSize × dpr)","depth":3},{"id":"vì-sao-phải-clamp-dpr","text":"Vì sao phải clamp DPR","depth":3},{"id":"glviewport-phải-theo-đúng-kích-thước-buffer","text":"gl.viewport phải theo đúng kích thước buffer","depth":2},{"id":"resize-theo-yêu-cầu-không-phải-mỗi-frame","text":"Resize \"theo yêu cầu\", không phải mỗi frame","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"getcontextwebgl2-and-the-options-that-actually-matter","text":"getContext(\"webgl2\") and the Options That Actually Matter","depth":2},{"id":"a-canvas-has-two-sizes-css-size-and-drawing-buffer","text":"A Canvas Has Two Sizes: CSS Size and Drawing Buffer","depth":2},{"id":"devicepixelratio-why-retina-needs-more-pixels","text":"devicePixelRatio: Why Retina Needs More Pixels","depth":2},{"id":"the-resize-formula-roundclientsize--dpr","text":"The Resize Formula: round(clientSize × dpr)","depth":3},{"id":"why-you-have-to-clamp-dpr","text":"Why You Have to Clamp DPR","depth":3},{"id":"glviewport-has-to-match-the-buffer-size","text":"gl.viewport Has to Match the Buffer Size","depth":2},{"id":"resize-on-demand-not-every-frame","text":"Resize \"On Demand\", Not Every Frame","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "checkpoint-animated-quad": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-render-to-texture-tint": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-responsive-clear": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "depth-buffer-and-z-fighting": {
+    vi: [{"id":"painters-algorithm-và-vì-sao-nó-thất-bại","text":"Painter's algorithm và vì sao nó thất bại","depth":2},{"id":"depth-buffer-một-số-thực-trên-mỗi-pixel","text":"Depth buffer: một số thực trên mỗi pixel","depth":2},{"id":"bật-depthtest-và-chọn-depthfunc","text":"Bật DEPTHTEST và chọn depthFunc","depth":3},{"id":"xoá-depth-buffer-mỗi-frame","text":"Xoá depth buffer mỗi frame","depth":3},{"id":"vì-sao-độ-chính-xác-depth-không-tuyến-tính","text":"Vì sao độ chính xác depth không tuyến tính","depth":2},{"id":"near-plane-áp-đảo-phân-bố-precision","text":"Near plane áp đảo phân bố precision","depth":3},{"id":"z-fighting-khi-lượng-tử-hoá-depth-trùng-nhau","text":"Z-fighting: khi lượng tử hoá depth trùng nhau","depth":2},{"id":"ba-cách-khắc-phục-z-fighting","text":"Ba cách khắc phục z-fighting","depth":2},{"id":"tách-bề-mặt-hoặc-thu-hẹp-tỉ-lệ-farnear","text":"Tách bề mặt hoặc thu hẹp tỉ lệ far/near","depth":3},{"id":"glpolygonoffset-đẩy-depth-mà-không-đụng-vertex","text":"gl.polygonOffset: đẩy depth mà không đụng vertex","depth":3},{"id":"reverse-z-ước-lượng","text":"Reverse-Z (ước lượng)","depth":3},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"painters-algorithm-and-why-it-fails","text":"Painter's Algorithm and Why It Fails","depth":2},{"id":"the-depth-buffer-one-float-per-pixel","text":"The Depth Buffer: One Float Per Pixel","depth":2},{"id":"enabling-depthtest-and-choosing-depthfunc","text":"Enabling DEPTHTEST and Choosing depthFunc","depth":3},{"id":"clearing-depth-every-frame","text":"Clearing Depth Every Frame","depth":3},{"id":"why-depth-precision-isnt-linear","text":"Why Depth Precision Isn't Linear","depth":2},{"id":"the-near-plane-dominates-the-precision-distribution","text":"The Near Plane Dominates the Precision Distribution","depth":3},{"id":"z-fighting-when-depth-quantization-collides","text":"Z-Fighting: When Depth Quantization Collides","depth":2},{"id":"three-ways-to-fix-z-fighting","text":"Three Ways to Fix Z-Fighting","depth":2},{"id":"separate-the-surfaces-or-tighten-the-farnear-ratio","text":"Separate the Surfaces or Tighten the Far/Near Ratio","depth":3},{"id":"glpolygonoffset-biasing-depth-without-touching-vertices","text":"gl.polygonOffset: Biasing Depth Without Touching Vertices","depth":3},{"id":"reverse-z-estimate","text":"Reverse-Z (Estimate)","depth":3},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "first-triangle-webgl2": {
+    vi: [{"id":"từ-ba-mảnh-ghép-tới-một-tam-giác-thật","text":"Từ ba mảnh ghép tới một tam giác thật","depth":2},{"id":"compile-shader-version-300-es-và-error-check-pattern","text":"Compile shader: #version 300 es và error-check pattern","depth":2},{"id":"link-program-gắn-hai-shader-lại-kiểm-tra-linkstatus","text":"Link program: gắn hai shader lại, kiểm tra LINKSTATUS","depth":2},{"id":"vbo--vao-xen-kẽ-một-buffer-hai-attribute","text":"VBO + VAO xen kẽ: một buffer, hai attribute","depth":2},{"id":"vòng-lặp-vẽ-viewport-clear-useprogram-bindvertexarray-drawarrays","text":"Vòng lặp vẽ: viewport, clear, useProgram, bindVertexArray, drawArrays","depth":2},{"id":"40-dòng-nghi-thức-một-mental-template-dùng-lại-mãi-mãi","text":"~40 dòng nghi thức: một mental template dùng lại mãi mãi","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"from-three-loose-pieces-to-a-real-triangle","text":"From Three Loose Pieces to a Real Triangle","depth":2},{"id":"compiling-shaders-version-300-es-and-the-error-check-pattern","text":"Compiling Shaders: #version 300 es and the Error-Check Pattern","depth":2},{"id":"linking-the-program-joining-two-shaders-checking-linkstatus","text":"Linking the Program: Joining Two Shaders, Checking LINKSTATUS","depth":2},{"id":"one-interleaved-vbo--vao-two-attributes","text":"One Interleaved VBO + VAO, Two Attributes","depth":2},{"id":"the-draw-loop-viewport-clear-useprogram-bindvertexarray-drawarrays","text":"The Draw Loop: viewport, clear, useProgram, bindVertexArray, drawArrays","depth":2},{"id":"40-lines-of-ceremony-a-mental-template-youll-reuse-forever","text":"~40 Lines of Ceremony: A Mental Template You'll Reuse Forever","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
+  "framebuffers-render-to-texture": {
+    vi: [{"id":"framebuffer-mặc-định-và-framebuffer-object-fbo","text":"Framebuffer mặc định và Framebuffer Object (FBO)","depth":2},{"id":"render-to-texture-gắn-texture-làm-color-attachment","text":"Render-to-texture: gắn texture làm color attachment","depth":2},{"id":"checkframebufferstatus-và-các-lỗi-completeness-thường-gặp","text":"checkFramebufferStatus và các lỗi completeness thường gặp","depth":2},{"id":"pipeline-2-pass-scene--texture--hiệu-ứng-màn-hình","text":"Pipeline 2 pass: scene → texture → hiệu ứng màn hình","depth":2},{"id":"viewport-phải-khớp-kích-thước-attachment","text":"Viewport phải khớp kích thước attachment","depth":2},{"id":"nền-tảng-cho-post-processing-shadow-map-và-gpgpu-ping-pong","text":"Nền tảng cho post-processing, shadow map và GPGPU ping-pong","depth":2}],
+    en: [{"id":"the-default-framebuffer-vs-a-framebuffer-object-fbo","text":"The Default Framebuffer vs a Framebuffer Object (FBO)","depth":2},{"id":"render-to-texture-attaching-a-texture-as-the-color-attachment","text":"Render-to-Texture: Attaching a Texture as the Color Attachment","depth":2},{"id":"checkframebufferstatus-and-the-usual-completeness-errors","text":"checkFramebufferStatus and the Usual Completeness Errors","depth":2},{"id":"the-2-pass-pipeline-scene--texture--screen-effect","text":"The 2-Pass Pipeline: Scene → Texture → Screen Effect","depth":2},{"id":"the-viewport-must-match-the-attachment-size","text":"The Viewport Must Match the Attachment Size","depth":2},{"id":"the-foundation-for-post-processing-shadow-maps-and-gpgpu-ping-pong","text":"The Foundation for Post-Processing, Shadow Maps and GPGPU Ping-Pong","depth":2}],
+  },
+  "rendering-pipeline-a-to-z": {
+    vi: [{"id":"pipeline-là-gì-một-chuỗi-trạm-cố-định-và-lập-trình-được-xen-kẽ","text":"Pipeline là gì: một chuỗi trạm cố định và lập trình được xen kẽ","depth":2},{"id":"tám-trạm-từ-vertex-đến-pixel","text":"Tám trạm, từ vertex đến pixel","depth":2},{"id":"vertex-specification--vertex-shader","text":"Vertex specification → vertex shader","depth":3},{"id":"primitive-assembly--clipping--rasterization","text":"Primitive assembly → clipping → rasterization","depth":3},{"id":"fragment-shader--per-fragment-tests--framebuffer","text":"Fragment shader → per-fragment tests → framebuffer","depth":3},{"id":"một-đỉnh-thật-đi-qua-pipeline-toạ-độ-cụ-thể-ở-từng-trạm","text":"Một đỉnh thật đi qua pipeline: toạ độ cụ thể ở từng trạm","depth":2},{"id":"nội-suy-varying-khi-rasterize-barycentric-coordinate","text":"Nội suy varying khi rasterize: barycentric coordinate","depth":2},{"id":"không-thấy-gì-trên-màn-hình-nghi-ngờ-trạm-nào-trước","text":"Không thấy gì trên màn hình: nghi ngờ trạm nào trước","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-pipeline-alternating-fixed-and-programmable-stations","text":"The Pipeline: Alternating Fixed and Programmable Stations","depth":2},{"id":"eight-stations-from-vertex-to-pixel","text":"Eight Stations, from Vertex to Pixel","depth":2},{"id":"vertex-specification--vertex-shader","text":"Vertex Specification → Vertex Shader","depth":3},{"id":"primitive-assembly--clipping--rasterization","text":"Primitive Assembly → Clipping → Rasterization","depth":3},{"id":"fragment-shader--per-fragment-tests--framebuffer","text":"Fragment Shader → Per-Fragment Tests → Framebuffer","depth":3},{"id":"one-real-vertex-through-the-pipeline-concrete-coordinates-at-each-station","text":"One Real Vertex Through the Pipeline: Concrete Coordinates at Each Station","depth":2},{"id":"interpolating-varyings-during-rasterization-barycentric-coordinates","text":"Interpolating Varyings During Rasterization: Barycentric Coordinates","depth":2},{"id":"a-blank-canvas-which-station-to-suspect-first","text":"A Blank Canvas: Which Station to Suspect First","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "textures-upload-and-sampling": {
+    vi: [{"id":"texture-là-gì-ảnh-sống-trên-gpu-sample-được-trong-fragment-shader","text":"Texture là gì: ảnh sống trên GPU, sample được trong fragment shader","depth":2},{"id":"đưa-pixel-lên-gpu-createtexture-bind-teximage2d","text":"Đưa pixel lên GPU: createTexture, bind, texImage2D","depth":2},{"id":"texture-unit-và-sampler-uniform-chỗ-hay-nhầm-nhất","text":"Texture unit và sampler uniform: chỗ hay nhầm nhất","depth":2},{"id":"sample-bằng-texture-uv-quay-lại-từ-track-0","text":"Sample bằng texture(): UV quay lại từ Track 0","depth":2},{"id":"filtering-minmag-nearest-vs-linear","text":"Filtering: MIN/MAG, NEAREST vs LINEAR","depth":2},{"id":"mipmap-vì-sao-texture-thu-nhỏ-bị-nhiễu-và-generatemipmap-sửa-thế-nào","text":"Mipmap: vì sao texture thu nhỏ bị nhiễu, và generateMipmap sửa thế nào","depth":2},{"id":"wrap-mode-repeat-clamptoedge-mirroredrepeat","text":"Wrap mode: REPEAT, CLAMPTOEDGE, MIRROREDREPEAT","depth":2},{"id":"unpackflipywebgl-trục-v-của-ảnh-và-trục-v-của-texture-gl-không-khớp","text":"UNPACKFLIPYWEBGL: trục v của ảnh và trục v của texture GL không khớp","depth":2},{"id":"ba-quyết-định-này-dẫn-tới-đâu-render-target-và-texture-nén","text":"Ba quyết định này dẫn tới đâu: render target và texture nén","depth":2}],
+    en: [{"id":"what-a-texture-is-an-image-living-on-the-gpu-sampled-in-the-fragment-shader","text":"What a Texture Is: an Image Living on the GPU, Sampled in the Fragment Shader","depth":2},{"id":"getting-pixels-onto-the-gpu-createtexture-bind-teximage2d","text":"Getting Pixels onto the GPU: createTexture, bind, texImage2D","depth":2},{"id":"texture-units-and-sampler-uniforms-the-classic-mix-up","text":"Texture Units and Sampler Uniforms: the Classic Mix-up","depth":2},{"id":"sampling-with-texture-uv-comes-back-from-track-0","text":"Sampling with texture(): UV Comes Back From Track 0","depth":2},{"id":"filtering-minmag-nearest-vs-linear","text":"Filtering: MIN/MAG, NEAREST vs LINEAR","depth":2},{"id":"mipmaps-why-minified-textures-shimmer-and-what-generatemipmap-fixes","text":"Mipmaps: Why Minified Textures Shimmer, and What generateMipmap Fixes","depth":2},{"id":"wrap-modes-repeat-clamptoedge-mirroredrepeat","text":"Wrap Modes: REPEAT, CLAMPTOEDGE, MIRROREDREPEAT","depth":2},{"id":"unpackflipywebgl-an-images-v-axis-doesnt-match-a-gl-textures","text":"UNPACKFLIPYWEBGL: an Image's V-axis Doesn't Match a GL Texture's","depth":2},{"id":"where-these-three-decisions-lead-render-targets-and-compressed-textures","text":"Where These Three Decisions Lead: Render Targets and Compressed Textures","depth":2}],
+  },
+  "vertex-fragment-rasterization": {
+    vi: [{"id":"vertex-shader-một-việc-duy-nhất--ghi-glposition-trong-clip-space","text":"Vertex shader: một việc duy nhất — ghi glPosition trong clip space","depth":2},{"id":"rasterization-biến-tam-giác-thành-fragment","text":"Rasterization: biến tam giác thành fragment","depth":2},{"id":"fragment-shader-một-việc-duy-nhất--nhưng-chạy-nhiều-hơn-rất-nhiều-lần","text":"Fragment shader: một việc duy nhất — nhưng chạy nhiều hơn rất nhiều lần","depth":2},{"id":"con-số-cụ-thể-3-đỉnh-so-với-hàng-nghìn-fragment-ước-lượng","text":"Con số cụ thể: 3 đỉnh so với hàng nghìn fragment (ước lượng)","depth":3},{"id":"inout-phải-khớp-hợp-đồng-giữa-hai-shader","text":"in/out phải khớp: hợp đồng giữa hai shader","depth":2},{"id":"nội-suy-varying-gradient-màu-chứng-minh-bằng-mắt","text":"Nội suy varying: gradient màu chứng minh bằng mắt","depth":2},{"id":"mỗi-pixel-một-lần-đắt-đến-đâu--và-khi-nào-mới-thực-sự-đắt","text":"\"Mỗi pixel một lần\" đắt đến đâu — và khi nào mới thực sự đắt","depth":2}],
+    en: [{"id":"the-vertex-shaders-one-job-write-glposition-in-clip-space","text":"The Vertex Shader's One Job: Write glPosition in Clip Space","depth":2},{"id":"rasterization-turning-a-triangle-into-fragments","text":"Rasterization: Turning a Triangle into Fragments","depth":2},{"id":"the-fragment-shaders-one-job-but-called-far-more-often","text":"The Fragment Shader's One Job: But Called Far More Often","depth":2},{"id":"a-concrete-number-3-vertices-vs-thousands-of-fragments-estimate","text":"A Concrete Number: 3 Vertices vs Thousands of Fragments (Estimate)","depth":3},{"id":"inout-must-match-the-contract-between-two-shaders","text":"in/out Must Match: The Contract Between Two Shaders","depth":2},{"id":"interpolated-varyings-a-color-gradient-makes-it-tangible","text":"Interpolated Varyings: A Color Gradient Makes It Tangible","depth":2},{"id":"how-expensive-is-once-per-pixel--and-when-it-actually-gets-expensive","text":"How Expensive Is \"Once Per Pixel\" — and When It Actually Gets Expensive","depth":2}],
+  },
+  "webgl-vs-webgpu-landscape": {
+    vi: [{"id":"dòng-thời-gian-từ-opengl-đến-webgpu","text":"Dòng thời gian: từ OpenGL đến WebGPU","depth":2},{"id":"webgl2-thêm-gì-so-với-webgl1","text":"WebGL2 thêm gì so với WebGL1","depth":2},{"id":"mô-hình-lập-trình-khác-của-webgpu","text":"Mô hình lập trình khác của WebGPU","depth":2},{"id":"vì-sao-kiến-thức-webgl-không-mất-giá-trị","text":"Vì sao kiến thức WebGL không mất giá trị","depth":2},{"id":"chọn-công-nghệ-nào-vào-năm-2026","text":"Chọn công nghệ nào vào năm 2026","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"timeline-from-opengl-to-webgpu","text":"Timeline: From OpenGL to WebGPU","depth":2},{"id":"what-webgl2-added-over-webgl1","text":"What WebGL2 Added Over WebGL1","depth":2},{"id":"webgpus-different-programming-model","text":"WebGPU's Different Programming Model","depth":2},{"id":"why-webgl-knowledge-doesnt-expire","text":"Why WebGL Knowledge Doesn't Expire","depth":2},{"id":"what-to-reach-for-in-2026","text":"What to Reach for in 2026","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
+  "what-webgl-is-and-isnt": {
+    vi: [{"id":"webgl-là-gì-một-api-rasterization-cấp-thấp","text":"WebGL là gì: một API rasterization cấp thấp","depth":2},{"id":"chồng-ngăn-xếp-browser--webgl--driver--gpu","text":"Chồng ngăn xếp: browser → WebGL → driver → GPU","depth":2},{"id":"angle-trên-windows-dịch-gl-sang-d3dvulkan","text":"ANGLE trên Windows: dịch GL sang D3D/Vulkan","depth":3},{"id":"những-gì-webgl-không-cung-cấp-sẵn","text":"Những gì WebGL KHÔNG cung cấp sẵn","depth":2},{"id":"từ-vựng-thật-của-webgl-buffer-shader-texture-draw-call-state-machine","text":"Từ vựng thật của WebGL: buffer, shader, texture, draw call, state machine","depth":2},{"id":"khi-nào-viết-webgl-thuần-khi-nào-dùng-threejs","text":"Khi nào viết WebGL thuần, khi nào dùng Three.js","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"what-webgl-is-a-low-level-rasterization-api","text":"What WebGL Is: a Low-Level Rasterization API","depth":2},{"id":"the-stack-browser--webgl--driver--gpu","text":"The Stack: Browser → WebGL → Driver → GPU","depth":2},{"id":"angle-on-windows-translating-gl-to-d3dvulkan","text":"ANGLE on Windows: Translating GL to D3D/Vulkan","depth":3},{"id":"what-webgl-does-not-provide","text":"What WebGL Does NOT Provide","depth":2},{"id":"webgls-real-vocabulary-buffers-shaders-textures-draw-calls-state-machine","text":"WebGL's Real Vocabulary: Buffers, Shaders, Textures, Draw Calls, State Machine","depth":2},{"id":"when-to-reach-for-raw-webgl-vs-threejs","text":"When to Reach for Raw WebGL vs Three.js","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -163,7 +295,18 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/demo"),
   "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/demo"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/demo"),
+  "attributes-uniforms-varyings": () => import("./lessons/01-webgl/attributes-uniforms-varyings/demo"),
+  "blending-and-alpha": () => import("./lessons/01-webgl/blending-and-alpha/demo"),
+  "buffers-vbo-vao": () => import("./lessons/01-webgl/buffers-vbo-vao/demo"),
+  "canvas-context-and-dpr": () => import("./lessons/01-webgl/canvas-context-and-dpr/demo"),
+  "depth-buffer-and-z-fighting": () => import("./lessons/01-webgl/depth-buffer-and-z-fighting/demo"),
   "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/demo"),
+  "framebuffers-render-to-texture": () => import("./lessons/01-webgl/framebuffers-render-to-texture/demo"),
+  "rendering-pipeline-a-to-z": () => import("./lessons/01-webgl/rendering-pipeline-a-to-z/demo"),
+  "textures-upload-and-sampling": () => import("./lessons/01-webgl/textures-upload-and-sampling/demo"),
+  "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/demo"),
+  "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/demo"),
+  "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
 };
 
@@ -186,4 +329,19 @@ export const EXERCISES_REGISTRY: Partial<
   "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/exercises"),
   "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/exercises"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/exercises"),
+  "attributes-uniforms-varyings": () => import("./lessons/01-webgl/attributes-uniforms-varyings/exercises"),
+  "blending-and-alpha": () => import("./lessons/01-webgl/blending-and-alpha/exercises"),
+  "buffers-vbo-vao": () => import("./lessons/01-webgl/buffers-vbo-vao/exercises"),
+  "canvas-context-and-dpr": () => import("./lessons/01-webgl/canvas-context-and-dpr/exercises"),
+  "checkpoint-animated-quad": () => import("./lessons/01-webgl/checkpoint-animated-quad/exercises"),
+  "checkpoint-render-to-texture-tint": () => import("./lessons/01-webgl/checkpoint-render-to-texture-tint/exercises"),
+  "checkpoint-responsive-clear": () => import("./lessons/01-webgl/checkpoint-responsive-clear/exercises"),
+  "depth-buffer-and-z-fighting": () => import("./lessons/01-webgl/depth-buffer-and-z-fighting/exercises"),
+  "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/exercises"),
+  "framebuffers-render-to-texture": () => import("./lessons/01-webgl/framebuffers-render-to-texture/exercises"),
+  "rendering-pipeline-a-to-z": () => import("./lessons/01-webgl/rendering-pipeline-a-to-z/exercises"),
+  "textures-upload-and-sampling": () => import("./lessons/01-webgl/textures-upload-and-sampling/exercises"),
+  "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/exercises"),
+  "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/exercises"),
+  "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/exercises"),
 };

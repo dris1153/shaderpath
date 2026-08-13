@@ -1,0 +1,44 @@
+## Dòng thời gian: từ OpenGL đến WebGPU
+
+OpenGL ra đời năm 1992, do Silicon Graphics (SGI) công bố ngày 30/6/1992 làm phiên bản mở, đa nền tảng thay thế API độc quyền IRIS GL. Từ một API cho workstation đồ hoạ chuyên nghiệp, Khronos Group tách ra nhánh **OpenGL ES** (Embedded Systems) năm 2003 với OpenGL ES 1.0 — thu gọn API cho điện thoại và thiết bị nhúng, bỏ phần lớn fixed-function pipeline cồng kềnh của bản gốc.
+
+WebGL ra đời để đưa chính nhánh ES đó vào trình duyệt qua JavaScript, không phải phát minh lại API đồ hoạ mới. **WebGL1**, đặc tả cuối cùng công bố tháng 3/2011 tại GDC, bám theo OpenGL ES 2.0 gần như nguyên vẹn — cùng shader model, cùng giới hạn. **WebGL2**, công bố tháng 1/2017, nâng cấp lên OpenGL ES 3.0, biến một loạt tính năng vốn phải xin qua extension ở WebGL1 thành mặc định. **WebGPU**, chuẩn hoá bởi W3C với Chrome triển khai ổn định đầu tiên (bản 113, tháng 4/2023) trước các trình duyệt khác, không kế thừa trực tiếp từ OpenGL ES nữa — nó mô phỏng các API GPU cấp thấp hiện đại hơn (Vulkan, Metal, Direct3D 12). Tính đến khi viết bài (giữa 2026), cả bốn trình duyệt lớn đều đã bật WebGPU mặc định trên phần lớn nền tảng, dù độ ổn định trên driver GPU cũ vẫn còn khoảng cách với WebGL — con số hỗ trợ chính xác nên tra lại tại thời điểm bạn đọc, đừng coi số liệu ở đây là cố định.
+
+## WebGL2 thêm gì so với WebGL1
+
+Phần lớn "tính năng mới" của WebGL2 không phải phát minh — chúng là những extension WebGL1 vốn phải tự kiểm tra và fallback, nay trở thành mặc định của core spec, không cần `getExtension` nữa: Vertex Array Object (`gl.createVertexArray`, thay cho extension `OES_vertex_array_object`), instanced rendering (`drawArraysInstanced`/`vertexAttribDivisor`, thay cho `ANGLE_instanced_arrays`), và multiple render targets — ghi nhiều color attachment cùng lúc từ một fragment shader (thay cho `WEBGL_draw_buffers`). Bên cạnh nâng cấp từ extension lên core, WebGL2 còn thêm hẳn hai khả năng WebGL1 hoàn toàn không có: **transform feedback** — chụp lại output của vertex shader thẳng vào buffer, cho phép cập nhật vị trí hạt hoàn toàn trên GPU mà không cần đọc dữ liệu về CPU; và **3D texture** — texture ba chiều thật sự, khác texture 2D thường dùng để giả lập volume. Đi kèm là **GLSL ES 3.00**, phiên bản shader mới thay `attribute`/`varying` bằng `in`/`out`, thêm kiểu số nguyên và nhiều hàm dựng sẵn hơn.
+
+```js
+// WebGL1: instancing luôn phải xin extension và kiểm tra null
+const ext = gl1.getExtension("ANGLE_instanced_arrays");
+if (ext) ext.drawArraysInstancedANGLE(gl1.TRIANGLES, 0, 3, count);
+
+// WebGL2: instancing là core, gọi thẳng trên context, không cần extension
+gl2.drawArraysInstanced(gl2.TRIANGLES, 0, 3, count);
+```
+
+## Mô hình lập trình khác của WebGPU
+
+WebGL là một **state machine**: bạn `bindBuffer`, `bindTexture`, `useProgram`, chỉnh state rồi gọi `drawArrays` — driver đọc state hiện tại đúng lúc draw call chạy, và không có gì đảm bảo bạn không quên reset một cờ nào đó từ draw call trước. WebGPU đảo ngược mô hình: mọi state — vertex layout, shader, blend, depth/stencil — được đóng gói và validate một lần khi tạo `GPURenderPipeline`, một object bất biến; đổi blend mode nghĩa là dùng pipeline khác, không phải set lại cờ. Tài nguyên (buffer, texture, sampler) không bind lẻ từng cái vào texture unit nữa, mà gom thành `GPUBindGroup` khớp đúng layout mà pipeline khai báo, validate ngay lúc tạo bind group thay vì lúc draw. Lệnh vẽ không chạy ngay: bạn ghi chúng vào `GPUCommandEncoder` thành một `GPUCommandBuffer`, rồi submit cả loạt cho hàng đợi GPU cùng lúc — mô hình command-buffer giống Vulkan/Metal hơn là gọi hàm tức thời kiểu WebGL. Shader viết bằng **WGSL**, cú pháp khác GLSL nhưng biểu diễn đúng khái niệm quen thuộc: input/output có `@location`, biến hệ thống có `@builtin`. Khác biệt lớn nhất về năng lực: **compute shader là công dân hạng nhất** — `GPUComputePipeline` chạy song song ngang hàng render pipeline, không cần các mẹo "giả lập compute bằng render-to-texture" mà WebGL2 buộc phải dùng cho GPGPU (Track 9 đi sâu vào chính những mẹo đó).
+
+## Vì sao kiến thức WebGL không mất giá trị
+
+Ceremony đổi hoàn toàn, nhưng khái niệm GPU bên dưới thì không: buffer vẫn là buffer, vertex layout vẫn mô tả byte nào là position hay UV, shader stage vẫn là vertex → fragment (cộng compute), texture vẫn cần sampler quyết định filter/wrap, blending vẫn là phép trộn src/dst theo factor. Hiểu vì sao WebGL cần VAO để nhớ cách đọc buffer giúp đọc `GPUVertexBufferLayout` gần như dịch cơ học; hiểu blend factor `SRC_ALPHA`/`ONE_MINUS_SRC_ALPHA` trong WebGL giúp đọc `GPUBlendState` không phải học lại từ đầu. Nói cách khác: chuyển sang WebGPU không phải học lại đồ hoạ GPU — mà là học một cú pháp tường minh hơn để nói ra đúng những gì trước đây driver ngầm suy luận từ state machine.
+
+## Chọn công nghệ nào vào năm 2026
+
+Với phần lớn dự án, **WebGL2 vẫn là baseline an toàn**: hỗ trợ gần như phổ cập kể cả thiết bị Android tầm trung/cũ, không cần bật cờ, không phụ thuộc driver GPU mới nhất. **WebGPU** đáng dùng khi cần compute shader thật sự (mô phỏng hạt số lượng lớn, tính toán song song trên GPU) hoặc khối lượng draw call rất lớn mà command-buffer submit theo lô giúp giảm overhead CPU — nhưng nên coi là progressive enhancement: feature-detect rồi fallback WebGL2, không phải yêu cầu bắt buộc. Three.js đơn giản hoá lựa chọn này: `WebGPURenderer` chạy được trên cả hai backend và tự fallback về WebGL khi `navigator.gpu` không có, còn TSL (Three.js Shading Language) cho viết node shader một lần bằng JavaScript rồi tự biên dịch ra GLSL cho backend WebGL hoặc WGSL cho backend WebGPU — nghĩa là phần lớn quyết định "WebGL hay WebGPU" ở tầng Three.js không còn là lựa chọn một chiều nữa (chi tiết cơ chế này thuộc Track 6).
+
+## Kết nối về sau
+
+Track này dừng ở WebGL thuần vì đó là nơi mọi khái niệm nền — buffer, shader stage, uniform, blend state — hiện ra tường minh nhất, chưa bị framework che bớt. Track 3 sẽ cho thấy Three.js dựng `WebGLRenderer` đúng bằng những lời gọi bạn vừa viết tay ở track này; Track 6 quay lại đúng câu hỏi WebGL-hay-WebGPU với TSL và `onBeforeCompile`; Track 9 (GPGPU) là nơi bạn thấy rõ nhất cái giá của việc thiếu compute shader thật sự trên WebGL2, và tại sao WebGPU giải quyết nó bằng thiết kế chứ không phải mẹo.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp khi so sánh hoặc chuyển đổi giữa WebGL1/WebGL2/WebGPU:
+
+1. **Copy nguyên code feature-detect của WebGL1 sang WebGL2.** Gọi `gl.getExtension("ANGLE_instanced_arrays")` trên context WebGL2 vẫn chạy được nhưng là code chết — instancing đã là hàm gốc trên context, không cần đường vòng qua extension object nữa.
+2. **Coi `navigator.gpu` tồn tại nghĩa là WebGPU chắc chắn dùng được.** Property này chỉ báo trình duyệt *biết* API, không đảm bảo `requestAdapter()` trả về adapter — GPU process bị tắt, chạy trong CI headless, hay driver bị blocklist đều khiến `requestAdapter()` resolve `null` hoặc reject; code phải xử lý nhánh async đó, không giả định đồng bộ.
+3. **Nghĩ WebGPU chỉ là WebGL đổi tên hàm.** `GPURenderPipeline` bất biến sau khi tạo — đổi blend mode giữa chừng nghĩa là dùng một pipeline khác đã precompile sẵn, không phải set lại một cờ như `gl.blendFunc` giữa hai draw call.
+
+</Callout>

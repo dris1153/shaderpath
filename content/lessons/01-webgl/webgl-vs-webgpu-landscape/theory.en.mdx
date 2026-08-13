@@ -1,0 +1,44 @@
+## Timeline: From OpenGL to WebGPU
+
+OpenGL dates back to 1992, released by Silicon Graphics (SGI) on June 30, 1992 as an open, cross-platform replacement for their proprietary IRIS GL API. Starting life as an API for professional graphics workstations, the Khronos Group later split off **OpenGL ES** (Embedded Systems) in 2003 with OpenGL ES 1.0 — a trimmed-down API for phones and embedded devices that dropped most of the original's bulky fixed-function pipeline.
+
+WebGL exists to bring that exact ES lineage into the browser through JavaScript, not to reinvent a new graphics API. **WebGL1**, whose final spec shipped in March 2011 at GDC, tracks OpenGL ES 2.0 almost one-to-one — same shader model, same limits. **WebGL2**, released in January 2017, upgrades to OpenGL ES 3.0, turning a long list of WebGL1 extensions into defaults. **WebGPU**, standardized by the W3C with Chrome shipping the first stable implementation (version 113, April 2023) ahead of other browsers, doesn't inherit from OpenGL ES at all anymore — it mirrors more modern, lower-level GPU APIs (Vulkan, Metal, Direct3D 12). As of this writing (mid-2026), all four major browsers ship WebGPU enabled by default on most platforms, though stability on older GPU drivers still lags behind WebGL — check current support numbers when you're actually reading this, don't treat the figures here as fixed.
+
+## What WebGL2 Added Over WebGL1
+
+Most of WebGL2's "new features" aren't inventions — they're WebGL1 extensions that used to require manual feature-detection and fallback, now folded into the core spec with no `getExtension` call needed: Vertex Array Objects (`gl.createVertexArray`, replacing the `OES_vertex_array_object` extension), instanced rendering (`drawArraysInstanced`/`vertexAttribDivisor`, replacing `ANGLE_instanced_arrays`), and multiple render targets — writing several color attachments at once from one fragment shader (replacing `WEBGL_draw_buffers`). Beyond promoting extensions to core, WebGL2 also adds two capabilities WebGL1 has no equivalent for at all: **transform feedback** — capturing a vertex shader's output straight into a buffer, letting you update particle positions entirely on the GPU without reading data back to the CPU; and **3D textures** — genuine volumetric textures, distinct from the 2D textures typically abused to fake a volume. Alongside all this comes **GLSL ES 3.00**, the new shader language version that replaces `attribute`/`varying` with `in`/`out` and adds integer types plus a larger built-in function library.
+
+```js
+// WebGL1: instancing always needs an extension and a null check
+const ext = gl1.getExtension("ANGLE_instanced_arrays");
+if (ext) ext.drawArraysInstancedANGLE(gl1.TRIANGLES, 0, 3, count);
+
+// WebGL2: instancing is core, call it straight on the context, no extension
+gl2.drawArraysInstanced(gl2.TRIANGLES, 0, 3, count);
+```
+
+## WebGPU's Different Programming Model
+
+WebGL is a **state machine**: you `bindBuffer`, `bindTexture`, `useProgram`, mutate state, then call `drawArrays` — the driver reads whatever state happens to be current the moment the draw call runs, and nothing guarantees you didn't forget to reset a flag from the previous draw call. WebGPU flips that model around: all state — vertex layout, shader, blend, depth/stencil — gets bundled and validated once when you create a `GPURenderPipeline`, an immutable object; changing blend mode means switching to a different pipeline, not flipping a flag. Resources (buffers, textures, samplers) no longer bind one at a time to a texture unit — they're grouped into a `GPUBindGroup` matching exactly the layout the pipeline declared, validated right when the bind group is created instead of at draw time. Draw commands don't run immediately either: you record them into a `GPUCommandEncoder` as a `GPUCommandBuffer`, then submit the whole batch to the GPU queue at once — a command-buffer model closer to Vulkan/Metal than WebGL's immediate-mode function calls. Shaders are written in **WGSL**, syntactically different from GLSL but expressing the same familiar concepts: inputs/outputs carry `@location`, system variables carry `@builtin`. The biggest capability gap: **compute shaders are first-class citizens** — a `GPUComputePipeline` runs alongside render pipelines as an equal, with none of the "fake compute via render-to-texture" tricks WebGL2 forces you into for GPGPU work (Track 9 goes deep into exactly those tricks).
+
+## Why WebGL Knowledge Doesn't Expire
+
+The ceremony changes completely, but the GPU concepts underneath don't: a buffer is still a buffer, a vertex layout still describes which bytes are position or UV, shader stages are still vertex → fragment (plus compute now), textures still need a sampler to decide filtering/wrapping, blending is still mixing src/dst by a factor. Understanding why WebGL needs a VAO to remember how to read a buffer makes reading a `GPUVertexBufferLayout` almost a mechanical translation; understanding WebGL's `SRC_ALPHA`/`ONE_MINUS_SRC_ALPHA` blend factors means `GPUBlendState` isn't something you learn from zero. In other words: moving to WebGPU isn't relearning GPU graphics — it's learning a more explicit syntax for stating exactly what the driver used to infer silently from a state machine.
+
+## What to Reach for in 2026
+
+For most projects, **WebGL2 is still the safe baseline**: near-universal support even on mid-range or older Android devices, no flags to enable, no dependency on the latest GPU driver. **WebGPU** is worth reaching for when you genuinely need compute shaders (large-scale particle simulation, general-purpose GPU computation) or draw-call volumes large enough that batched command-buffer submission meaningfully cuts CPU overhead — but treat it as progressive enhancement: feature-detect, then fall back to WebGL2, not a hard requirement. Three.js simplifies this decision: `WebGPURenderer` runs on either backend and automatically falls back to WebGL when `navigator.gpu` is missing, while TSL (Three.js Shading Language) lets you write a node shader once in JavaScript and have it compile to GLSL for the WebGL backend or WGSL for the WebGPU backend — meaning most of the "WebGL or WebGPU" decision at the Three.js layer stops being a one-way choice (the full mechanics belong to Track 6).
+
+## Where This Leads Next
+
+This track stops at raw WebGL because that's where the foundational concepts — buffers, shader stages, uniforms, blend state — show up most explicitly, before any framework smooths them over. Track 3 shows Three.js building its `WebGLRenderer` from exactly the calls you just wrote by hand in this track; Track 6 returns to this same WebGL-or-WebGPU question with TSL and `onBeforeCompile`; Track 9 (GPGPU) is where you'll feel most directly the cost of WebGL2 lacking real compute shaders, and why WebGPU solves it by design instead of by trick.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three common mistakes when comparing or moving between WebGL1/WebGL2/WebGPU:
+
+1. **Copying WebGL1 feature-detection code straight into WebGL2.** Calling `gl.getExtension("ANGLE_instanced_arrays")` on a WebGL2 context still runs without error, but it's dead code — instancing is already a native method on the context, no extension detour needed anymore.
+2. **Treating `navigator.gpu` existing as proof WebGPU will actually work.** That property only reports that the browser *knows about* the API — it doesn't guarantee `requestAdapter()` returns an adapter. A disabled GPU process, a headless CI environment, or a blocklisted driver can all make `requestAdapter()` resolve `null` or reject; code has to handle that async path, not assume it's synchronous.
+3. **Thinking WebGPU is just WebGL with renamed functions.** A `GPURenderPipeline` is immutable once created — changing blend mode mid-stream means switching to a different, already-precompiled pipeline, not flipping a flag like `gl.blendFunc` between two draw calls.
+
+</Callout>

@@ -1,0 +1,98 @@
+## What Blending Is: Mixing a New Fragment with What's Already There
+
+Without blending, every fragment that survives the depth test **overwrites** the framebuffer's existing color completely — winner takes all. Blending inserts one extra step before that write: the new fragment (**src**, source) gets **mixed** with the color already sitting in the framebuffer at that pixel (**dst**, destination) using a configurable formula, instead of replacing it outright. This is the only mechanism in the fixed-function pipeline that lets a fragment be "partially transparent" — the fragment shader itself knows nothing about transparency, it just outputs one RGBA color; transparency is purely the result of the GPU mixing that color with whatever was drawn before it.
+
+## The Blend Equation: src×srcFactor + dst×dstFactor
+
+The general formula, applied independently per color channel:
+
+$$
+\text{color}_{out} = \text{color}_{src} \cdot F_{src} + \text{color}_{dst} \cdot F_{dst}
+$$
+
+`gl.blendEquation` picks the operator joining the two terms (default `FUNC_ADD`, the `+` above — `FUNC_SUBTRACT`, `MIN`, `MAX` exist but see little use). `gl.blendFunc(srcFactor, dstFactor)` picks the two factors $F_{src}$, $F_{dst}$ — and it's these factors, not the equation, that decide the effect's "character": the same `FUNC_ADD` produces alpha blending, additive, or multiply depending purely on which factors are chosen, as the next section shows.
+
+### Enabling gl.BLEND and Calling blendFunc
+
+Blending starts **off**, just like the depth test:
+
+```js
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+```
+
+Setting `blendFunc` without calling `gl.enable(gl.BLEND)` is a no-op — the fragment still overwrites outright, alpha ignored entirely.
+
+## Classic Alpha Blending vs Additive: Two Formulas, Two Very Different Looks
+
+### Classic Alpha Blending: SRC_ALPHA / ONE_MINUS_SRC_ALPHA
+
+```js
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src}\cdot\alpha_{src} + \text{color}_{dst}\cdot(1-\alpha_{src})
+$$
+
+This is a **convex combination** — the two factors always sum to 1 — so the result is always trapped between the src and dst colors, never overshooting either. Visual character: stained glass, translucent film, frosted UI panels — stacking layers pushes the color toward opacity, but it never gets brighter than the brightest single layer. Example: pure red src $(1,0,0)$ at alpha $0.4$ over opaque blue dst $(0,0,1)$ produces $(0.4, 0, 0.6)$ — a blue-leaning purple, sitting neatly between the two source colors.
+
+### Additive: ONE / ONE
+
+```js
+gl.blendFunc(gl.ONE, gl.ONE);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src} + \text{color}_{dst}
+$$
+
+No weighting at all — every draw simply **adds** color energy onto whatever's already there, nothing "yields ground." Visual character: fire, sparks, glowing particles, laser trails — overlapping layers don't dim each other, they pile up and readily blow out to white once enough layers stack (each channel clamps at $1.0$). Same example: red $(1,0,0)$ plus blue $(0,0,1)$ gives exactly $(1,0,1)$ — full, undiluted magenta. Additive also has a rare property: because addition commutes ($a+b=b+a$), draw order **doesn't** affect the result — a rare exception among blend modes, contrasting sharply with the draw-order section right after this one.
+
+### Multiply Through Factors: DST_COLOR / ZERO
+
+Multiply needs no special `blendEquation` — just the right factor pair:
+
+```js
+gl.blendFunc(gl.DST_COLOR, gl.ZERO);
+```
+
+$$
+\text{color}_{out} = \text{color}_{src}\cdot\text{color}_{dst} + \text{color}_{dst}\cdot 0 = \text{color}_{src}\cdot\text{color}_{dst}
+$$
+
+Visual character: color filters, multiplicative shadows, corner vignettes — it can only ever **darken**, never brighten past the background, since multiplying two numbers in $[0,1]$ always yields something no larger than the bigger of the two.
+
+## Draw Order Decides the Outcome
+
+Alpha blending and multiply don't commute: $\text{blend}(a, b) \neq \text{blend}(b, a)$ in general, since the formula treats src and dst asymmetrically. Drawing transparent objects **far first, near last** (back-to-front) gives the intended meaning — "the nearer layer sits over the farther one, letting some of the farther layer show through by its own opacity" — exactly the classic "over" operator from compositing theory. Reversing the order with identical factors produces flatly wrong colors: the nearer layer (which should dominate) gets diluted by whatever's drawn on top of it afterward. This is why real-time engines re-sort their list of transparent objects by camera distance **every frame** — a cost opaque objects never pay, since their draw order has no effect on the final color (only the depth test matters for them).
+
+## Depth Write and Transparency: Why It Has to Be Off
+
+The classic bug: leaving `gl.depthMask(true)` (the default) on while drawing transparent geometry. Blending mixes the colors correctly, but the depth test still **writes** the depth of the transparent layer just drawn. When the next transparent layer (farther away, meant to still partially show through the nearer one) gets drawn, its depth test compares against that just-written value and **fails** — not because it's actually hidden behind an opaque object, but because a different transparent object's depth is blocking it. The result: patches that look "punched out" between overlapping transparent objects, even though the colors should have blended smoothly.
+
+The fix: `gl.depthMask(false)` during the transparent pass — the depth test still **runs** (transparent objects stay correctly hidden behind opaque geometry in front of them), only the **write** is disabled, so transparent layers stop blocking each other. Restore `gl.depthMask(true)` right after that pass for whatever opaque draws come next.
+
+## Premultiplied Alpha and Why the WebGL Canvas Expects It
+
+"Straight" alpha: RGB stores the true color, kept separate from alpha — saturated red at 50% opacity is $(1,0,0,0.5)$. "Premultiplied" alpha: RGB is multiplied by alpha before storage — that same visible color is stored as $(0.5,0,0,0.5)$. The difference isn't just representation: the premultiplied "over" formula is simpler ($\text{out} = \text{src} + \text{dst}\cdot(1-\alpha_{src})$, no need to re-multiply src by alpha since it's already baked in), and more importantly, it correctly handles the $\alpha = 0$ case — with straight alpha, the RGB value "hidden" behind a zero alpha still exists in memory and can leak out during filtering or interpolation (mipmapping, blurring, resizing), producing a stray colored fringe around transparent shapes — the **halo artifact**.
+
+A WebGL2 context defaults to `premultipliedAlpha: true` — the browser assumes the color buffer output is already premultiplied so it can correctly composite the canvas over the rest of the page. A fragment shader outputting straight alpha into that default context shows a mismatched colored halo around transparent edges, especially near the page background or other DOM content behind the canvas. Fix it by outputting already-premultiplied color directly from the shader (`outColor = vec4(rgb * a, a)`), or by creating the context with `{ premultipliedAlpha: false }` and staying consistent throughout — if switching to storing premultiplied values internally, the correct blend factor pair becomes `(ONE, ONE_MINUS_SRC_ALPHA)`, since the alpha multiply is already folded into the color.
+
+## State Discipline
+
+Blending is global GPU state, just like the depth test — it persists across every draw call until something changes it, with no automatic scoping to the programmer's intent. Enabling `gl.BLEND` before a transparent pass and forgetting `gl.disable(gl.BLEND)` afterward silently blends the next opaque draw call with whatever's behind it — often invisible at first (if that draw's alpha happens to be exactly $1.0$), but enough to cause a hard-to-trace visual bug the moment a factor or alpha value doesn't match that assumption. The fix is the same discipline as `polygonOffset` from the previous lesson: enable state right before the pass that needs it, restore it (`disable`, `depthMask(true)`) right after.
+
+## Where This Leads
+
+Post-processing (Track 10) chains multiple blend passes back to back — bloom accumulation is, at its core, repeated additive blending; particle systems (Track 9) render thousands of transparent or additive sprites, where sorting by draw order becomes a genuine performance tradeoff, not just theory; PBR materials (Track 11) in Three.js configure `material.transparent`/`blending` under the hood, doing exactly what this lesson just opened up — understanding it from the ground makes those flags legible instead of magic.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common blending mistakes:
+
+1. **Forgetting `gl.depthMask(false)` while drawing transparent objects.** Depth written by a nearer transparent layer wrongly blocks a farther transparent layer, punching odd holes even though the color math is correct.
+2. **Drawing transparent objects in arbitrary order** (not sorted by camera distance) while using alpha blending — the formula doesn't commute, so the resulting color is flatly wrong, unlike additive blending where order is harmless.
+3. **Outputting straight alpha into the default `premultipliedAlpha: true` context** without premultiplying manually in the shader — a stray colored halo appears around transparent edges once the browser composites the canvas onto the page.
+
+</Callout>

@@ -1,0 +1,85 @@
+## Painter's algorithm và vì sao nó thất bại
+
+Painter's algorithm là ý tưởng ngây thơ nhất để giải bài toán "vật nào che vật nào": sắp xếp object theo khoảng cách tới camera, vẽ vật xa nhất trước, gần nhất sau cùng — giống hoạ sĩ sơn nền trước, chi tiết gần sau. Với vài chục object rời rạc, cách này chạy được, nhưng thất bại theo hai cách không vá được bằng sort tinh vi hơn.
+
+Thứ nhất: ba tam giác A, B, C có thể tạo vòng che khuất — A che một phần B, B che một phần C, C che một phần A — không có thứ tự vẽ nào đúng cho cả ba, vì "vẽ trước/sau" là quan hệ toàn cục trên cả object, còn che khuất là quan hệ cục bộ, khác nhau ở từng vùng chồng lấn. Thứ hai: sort hàng nghìn tam giác mỗi frame trên CPU rồi gửi draw call đúng thứ tự đó quá chậm cho GPU hiện đại — vốn thiết kế để nhận batch lớn và tự song song hoá.
+
+Giải pháp phần cứng chọn không phải sort tốt hơn — mà bỏ hẳn sort ở cấp object, đưa bài toán che khuất xuống cấp **pixel**: mỗi pixel tự quyết định fragment nào gần camera nhất, độc lập thứ tự vẽ.
+
+## Depth buffer: một số thực trên mỗi pixel
+
+Depth buffer (z-buffer) là buffer thứ hai song song với color buffer, cùng kích thước — mỗi pixel lưu đúng một giá trị độ sâu, ghi lại khoảng cách (đã chuẩn hoá) của fragment gần camera nhất từng vẽ tại đó. WebGL2 cấp depth buffer mặc định khi tạo context (`depth: true`); spec chỉ đảm bảo "ít nhất 16 bit", nhưng driver thực tế hầu hết cấp 24 bit — đọc con số thật bằng `gl.getParameter(gl.DEPTH_BITS)` thay vì đoán.
+
+### Bật DEPTH_TEST và chọn depthFunc
+
+Depth test mặc định **tắt** — phải bật tường minh:
+
+```js
+gl.enable(gl.DEPTH_TEST);
+gl.depthFunc(gl.LESS); // mặc định: fragment mới chỉ thắng nếu depth NHỎ HƠN
+```
+
+`depthFunc` quyết định fragment mới có "thắng" fragment đã lưu hay không. `LESS` (mặc định) nghĩa là fragment mới phải gần camera hơn thực sự — bằng nhau tuyệt đối thì **thua**, nên vật vẽ trước giữ ưu thế khi hai fragment trùng depth. `LEQUAL` cho phép bằng nhau vẫn thắng, hữu ích khi vẽ nhiều pass cùng hình học ở đúng cùng depth (ví dụ outline pass). `ALWAYS` tắt hiệu lực depth test mà không cần `gl.disable`.
+
+### Xoá depth buffer mỗi frame
+
+```js
+gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+```
+
+Quên OR thêm `DEPTH_BUFFER_BIT` là lỗi âm thầm: depth frame trước còn nguyên, fragment mới ở đúng vị trí cũ bị so với chính giá trị cũ đó — thường **thua**, khiến vật biến mất dù color buffer đã xoá sạch và code vẽ hoàn toàn đúng.
+
+## Vì sao độ chính xác depth không tuyến tính
+
+Ma trận perspective projection không lưu khoảng cách $d$ tới camera tuyến tính vào depth buffer — nó lưu một hàm của $1/d$. Công thức chuẩn (LearnOpenGL, và trước đó là bài viết kinh điển của Steve Baker) cho giá trị depth đã chuẩn hoá về $[0, 1]$ với near $n$, far $f$:
+
+$$
+\text{depth}(d) = \frac{f}{f - n}\left(1 - \frac{n}{d}\right)
+$$
+
+Hàm này **hyperbolic** theo $d$: đạo hàm tỉ lệ với $1/d^2$, nghĩa là cùng một khoảng cách vật lý tạo bước nhảy giá trị depth rất lớn khi $d$ nhỏ (gần near), và cực nhỏ khi $d$ lớn (gần far). Phần lớn ngân sách precision bị dồn sát near plane.
+
+### Near plane áp đảo phân bố precision
+
+Điểm mà $\text{depth}(d) = 0.5$ — nửa dải $[0, 1]$ đã dùng hết — nằm ở $d = \dfrac{2nf}{n+f} \approx 2n$ khi $f \gg n$. Với $n = 0.1$, $f = 1000$: $d \approx 0.1998$ — **nửa** độ phân giải depth buffer tiêu hết chỉ trong khoảng $0.1$ đến $0.2$ đơn vị đầu, nửa còn lại chia sẻ cho toàn bộ quãng $0.2$ đến $1000$.
+
+Đặt $n = 0.001$ "cho chắc ăn" làm mọi thứ tệ hơn nhiều: $d \approx 0.002$ — nửa dải giá trị biến mất trong $0.001$ đơn vị đầu, để nửa còn lại gánh toàn bộ scene. Vật ở khoảng cách bình thường (5–50 đơn vị, nơi hầu hết scene thực tế nằm) giờ chỉ chia nhau phần cực nhỏ trong nửa "chật chội" đó — hai bề mặt cách nhau vài centimet dễ bị lượng tử hoá về cùng một depth.
+
+## Z-fighting: khi lượng tử hoá depth trùng nhau
+
+Depth buffer không lưu số thực vô hạn chính xác — nó lượng tử hoá $[0,1]$ thành $2^{N}$ mức rời rạc ($N$ thường 24 → hơn 16 triệu mức). Khi hai bề mặt gần đồng phẳng (hai lớp decal, hai mặt CAD chồng khít, quad "dán" lên sàn) rơi vào cùng một mức lượng tử — hoặc hai mức sát nhau tới mức nhiễu dấu phẩy động (nội suy hơi khác, camera dịch nhẹ) đủ lật kết quả — depth test không còn quyết định nhất quán bề mặt nào thắng. Kết quả là **z-fighting**: các dải pixel nhấp nháy qua lại giữa hai bề mặt, rõ nhất khi camera hoặc vật di chuyển nhẹ.
+
+## Ba cách khắc phục z-fighting
+
+### Tách bề mặt hoặc thu hẹp tỉ lệ far/near
+
+Cách rẻ nhất khi hình học cho phép: dịch một bề mặt ra xa một chút theo pháp tuyến (vài phần nghìn đơn vị thường đủ). Khi không sửa được hình học, thu hẹp tỉ lệ $f/n$ — đặt $n$ lớn nhất scene cho phép (đừng để $0.001$ nếu vật gần nhất thực tế cách 0.1 đơn vị) và $f$ nhỏ nhất đủ dùng — nới rộng phần "nửa dải giá trị" cho khoảng cách vật lý còn lại, giảm tần suất trùng mức lượng tử.
+
+### gl.polygonOffset: đẩy depth mà không đụng vertex
+
+```js
+gl.enable(gl.POLYGON_OFFSET_FILL);
+gl.polygonOffset(-1, -1); // âm = kéo về phía camera
+drawDecal(gl);
+gl.disable(gl.POLYGON_OFFSET_FILL);
+```
+
+`polygonOffset(factor, units)` cộng thêm độ lệch depth ngay sau rasterization — `factor` tỉ lệ theo độ dốc bề mặt, `units` là hằng số cộng thêm theo đơn vị nhỏ nhất phần cứng phân biệt được. Vertex vẫn ở đúng vị trí hình học — chỉ giá trị depth ghi vào buffer bị đẩy — nên đây là công cụ chuẩn cho decal (vết đạn, bóng đổ giả, vạch đường) nằm sát bề mặt khác mà không cần sửa mesh.
+
+### Reverse-Z (ước lượng)
+
+Kỹ thuật nâng cao hơn: đảo chiều mapping (near → depth 1, far → depth 0) kết hợp depth buffer số thực dấu phẩy động thay vì số nguyên. Số thực tự nó phân bố precision không đều — dồn nhiều bit nhất quanh 0 — ngược chiều đường cong hyperbolic ở trên; đảo mapping khiến hai kiểu không đều này gần triệt tiêu nhau, trải precision đều hơn hẳn trên dải khoảng cách thực dụng (ước lượng: cải thiện tới nhiều bậc độ lớn ở vùng xa near plane so với buffer số nguyên thông thường). Cần render target `DEPTH_COMPONENT32F`, không nằm trong demo thô của bài này — biết tên để nhận ra khi gặp trong engine lớn.
+
+## Kết nối về sau
+
+Công thức phi tuyến ở trên quay lại trong Track 3 khi Three.js expose tuỳ chọn `logarithmicDepthBuffer` cho scene có tỉ lệ khoảng cách cực lớn, và trong Track 9/10 khi chọn điểm chia cascade cho shadow map — thuật toán chọn split distance dựa thẳng vào chính phân bố precision phi tuyến vừa học ở đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với depth buffer:
+
+1. **Quên OR `gl.DEPTH_BUFFER_BIT` vào `gl.clear`.** Depth cũ từ frame trước vẫn còn, fragment mới ở cùng vị trí bị so với chính nó và thua ngay cả khi hoàn toàn hợp lệ — vật biến mất không rõ lý do.
+2. **Đặt near cực nhỏ (`0.001`) "cho chắc".** Dồn gần hết ngân sách precision vào vài milimet đầu tiên, bỏ đói phần còn lại của scene ở khoảng cách bình thường — chính nguyên nhân âm thầm của z-fighting tưởng như ngẫu nhiên.
+3. **Dùng `polygonOffset` với dấu sai hoặc quên `gl.disable(POLYGON_OFFSET_FILL)`.** Offset dương đẩy decal ra xa camera thay vì lại gần (chìm dưới sàn thay vì nổi lên); quên tắt sau khi vẽ khiến offset đó áp nhầm lên các draw call tiếp theo không liên quan.
+
+</Callout>

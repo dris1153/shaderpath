@@ -1,0 +1,71 @@
+## Pipeline là gì: một chuỗi trạm cố định và lập trình được xen kẽ
+
+Rendering pipeline của WebGL không phải một hộp đen "đưa vertex vào, ra pixel" — nó là một chuỗi các trạm xử lý cố định thứ tự, mỗi trạm nhận đầu ra của trạm trước làm đầu vào. Điều quan trọng nhất cần nắm ngay từ đầu: chỉ có **hai** trạm trong chuỗi đó bạn viết code cho — vertex shader và fragment shader — còn lại đều là logic cố định (fixed-function) chạy trực tiếp trên phần cứng GPU, không thể can thiệp bằng GLSL. Hiểu ranh giới lập trình được/cố định này là chìa khoá để debug: nếu hình vẽ sai theo cách hình học (vị trí, bị cắt), nghi ngờ vertex shader; nếu sai theo cách màu sắc/pixel, nghi ngờ fragment shader; còn nếu không thấy gì cả, nhiều khả năng lỗi nằm ở ngay bước trước khi tới shader — dữ liệu vertex hoặc trạng thái draw call.
+
+## Tám trạm, từ vertex đến pixel
+
+Toàn bộ chuỗi, theo đúng thứ tự thực thi:
+
+```
+1. Vertex specification   (bạn cung cấp dữ liệu — CỐ ĐỊNH)
+2. Vertex shader           (LẬP TRÌNH ĐƯỢC)
+3. Primitive assembly      (CỐ ĐỊNH)
+4. Clipping                (CỐ ĐỊNH)
+5. Rasterization            (CỐ ĐỊNH)
+6. Fragment shader          (LẬP TRÌNH ĐƯỢC)
+7. Per-fragment tests        (depth/stencil/blend — CỐ ĐỊNH, nhưng CẤU HÌNH ĐƯỢC)
+8. Framebuffer               (kết quả cuối cùng, CỐ ĐỊNH)
+```
+
+### Vertex specification → vertex shader
+
+Trạm 1 không chạy code gì cả — nó chỉ là việc bạn đã làm ở bài buffer/VAO: dữ liệu thô (toạ độ, màu, UV) nằm trong VBO, được VAO mô tả cách đọc. Trạm 2, vertex shader, là trạm lập trình được đầu tiên: nó chạy **một lần cho mỗi vertex**, nhận vào các attribute của vertex đó, và **bắt buộc** phải gán giá trị cho biến đặc biệt `gl_Position` — toạ độ 4 chiều (x, y, z, w) trong **clip space**. Đây là hợp đồng duy nhất giữa bạn và GPU ở trạm này: vertex shader không "vẽ" gì cả, nó chỉ trả lời đúng một câu hỏi — "đỉnh này nằm ở đâu trong clip space?".
+
+### Primitive assembly → clipping → rasterization
+
+Ba trạm tiếp theo hoàn toàn cố định, không có một dòng GLSL nào chạy ở đây. **Primitive assembly** gom các vertex đã qua vertex shader lại thành hình học — ba vertex liên tiếp (theo `gl.TRIANGLES`) hợp thành một tam giác. **Clipping** cắt bỏ phần hình học nằm ngoài viewing volume (frustum) — một tam giác có một đỉnh ngoài màn hình vẫn có thể render đúng phần còn lại nằm trong, vì GPU tự tính giao điểm và sinh vertex mới ngay tại biên clip. **Rasterization** là trạm quyết định: nó quét tam giác (đã ở NDC, sau phép chia cho w) và xác định pixel nào trên màn hình thực sự nằm bên trong tam giác đó — mỗi pixel như vậy sinh ra đúng một **fragment**, ứng viên cho một pixel màu cuối cùng.
+
+### Fragment shader → per-fragment tests → framebuffer
+
+Fragment shader là trạm lập trình được thứ hai, chạy **độc lập cho từng fragment** — ở DPR 2 trên màn 1920×1080 (drawing buffer thực ~3840×2160), một draw call phủ kín màn hình gọi nó khoảng 8.3 triệu lần mỗi frame, nên một phép tính thừa (như `pow()` không cần thiết) đo được bằng mili-giây, trong khi cùng phép đó ở vertex shader (vài trăm lần cho một mesh nhỏ) gần như miễn phí. Sau khi trả về màu, fragment còn phải vượt **per-fragment tests** — depth test (gần camera hơn fragment đã vẽ tại cùng pixel không), stencil test, rồi blend nếu bật — trước khi ghi vào **framebuffer**, bộ nhớ pixel cuối cùng hiện lên màn hình.
+
+## Một đỉnh thật đi qua pipeline: toạ độ cụ thể ở từng trạm
+
+Theo dõi đỉnh đầu tiên của một tam giác đơn giản, nơi `gl_Position = vec4(aPosition, 0.0, 1.0)` không biến đổi gì thêm:
+
+- **Vertex specification**: attribute `aPosition = (0.0, 0.5)` đọc thẳng từ VBO.
+- **Vertex shader output (clip space)**: `gl_Position = (0.0, 0.5, 0.0, 1.0)`.
+- **Sau clipping + perspective divide (NDC)**: chia cho $w=1$ nên không đổi: $(0.0, 0.5, 0.0)$ — nằm gọn trong $[-1,1]^3$, không bị cắt.
+- **Viewport transform**: canvas $800\times450$, công thức $x_{px} = (x_{ndc} \cdot 0.5 + 0.5) \cdot 800$ cho pixel $(400, 337.5)$ — toạ độ kiểu OpenGL, gốc dưới-trái, khác canvas 2D (gốc trên-trái).
+- **Rasterization**: đỉnh chỉ là một góc — nó không tự sinh fragment, tam giác nó thuộc về mới sinh ra hàng trăm/nghìn fragment tuỳ kích thước hiển thị.
+
+Demo của bài này cho bạn tự chọn từng trạm và đọc số thật, thay vì tin vào ví dụ trên lời.
+
+## Nội suy varying khi rasterize: barycentric coordinate
+
+Một câu hỏi tự nhiên: mỗi vertex có thể mang màu, UV riêng — vậy fragment nằm *giữa* ba vertex lấy giá trị nào? Rasterizer trả lời bằng **toạ độ barycentric**: với fragment tại $P$ bên trong tam giác $ABC$, tồn tại đúng ba trọng số $(\lambda_A, \lambda_B, \lambda_C)$, cộng lại bằng 1, sao cho $P = \lambda_A A + \lambda_B B + \lambda_C C$. Mọi `varying` (biến `out` trong vertex shader — màu, UV, normal) được nội suy bằng đúng công thức đó: $v_P = \lambda_A v_A + \lambda_B v_B + \lambda_C v_C$. Đây là lý do tam giác 3 đỉnh 3 màu tô ra một gradient mượt — không phải "phép màu" GPU, mà là nội suy tuyến tính chạy tự động cho mọi varying, không cần thêm dòng code nào. (Ghi chú: phép nội suy này mặc định *perspective-correct* — chia lại theo $w$ gốc trước khi nội suy — track Model-View-Projection sẽ nói kỹ hơn vì sao.)
+
+## Không thấy gì trên màn hình: nghi ngờ trạm nào trước
+
+Khi canvas chỉ hiện màu `clearColor` mà không có hình gì, đi ngược từ cuối chuỗi lên hiệu quả hơn đi xuôi:
+
+1. **Draw call có đúng count không?** `gl.drawArrays(gl.TRIANGLES, 0, 3)` gọi với `count=0` không vẽ gì — kiểm tra tham số trước tiên vì đây là nghi vấn rẻ nhất để loại trừ.
+2. **Có bị clip hết không?** Nếu `gl_Position` có toạ độ $x$, $y$ hoặc $z$ vượt quá $|w|$ ở mọi đỉnh, cả tam giác nằm ngoài frustum, bị clipping loại sạch trước khi tới rasterization.
+3. **Fragment shader có ghi alpha = 0 không?** Với blending bật, fragment vẫn "vẽ" về mặt kỹ thuật nhưng trong suốt hoàn toàn — dễ nhầm với "không vẽ được gì".
+4. **Winding order và cull face?** Một tam giác đúng toạ độ nhưng sai thứ tự đỉnh có thể bị `gl.CULL_FACE` loại bỏ trước rasterization nếu tính năng này đang bật.
+
+Bốn nghi vấn này đi từ trạm cuối (draw call, gần code JavaScript của bạn nhất) ngược về trạm đầu (clip space, gần GPU nhất) — đúng thứ tự nên kiểm tra khi debug, vì trạm càng gần code của bạn càng dễ kiểm tra bằng `console.log`.
+
+## Nền tảng này dẫn tới đâu
+
+Bài tiếp theo (Canvas, context & devicePixelRatio) quay lại đầu chuỗi — cấu hình đúng canvas trước khi có bất kỳ dữ liệu nào chạy qua pipeline này. Track 2 (GLSL) sẽ sống trọn trong hai trạm lập trình được vừa học — vertex và fragment shader — với ngôn ngữ và built-in function chi tiết hơn nhiều so với ví dụ tối giản ở đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới học pipeline:
+
+1. **Tưởng fragment shader chạy trước vertex shader vì "fragment" nghe giống input thô.** Thứ tự luôn cố định: vertex shader chạy trước để xác định hình học nằm ở đâu trong clip space, rasterization mới sinh ra fragment, rồi fragment shader mới chạy — không có đường tắt nào đảo ngược được thứ tự này.
+2. **Sửa `gl_Position` để "canh chỉnh" màu sắc, hoặc sửa biến màu output của fragment shader để "canh chỉnh" vị trí.** Hai trạm có hai trách nhiệm tách biệt hoàn toàn — vertex shader không đọc được, không ghi được màu cuối; fragment shader không thể dịch chuyển hình học đã rasterize xong. Nhầm lẫn này thường dẫn tới sửa sai file suốt hàng chục phút.
+3. **Quên rằng varying nội suy tuyến tính, kỳ vọng nó tự "clamp" hoặc "step".** Một varying có giá trị 0 tại đỉnh A và 10 tại đỉnh B sẽ đi qua mọi giá trị trung gian mượt mà giữa hai đỉnh — muốn có ranh giới cứng (như dải màu rõ nét) phải tự dùng `step()`/`smoothstep()` trong fragment shader, nội suy không tự tạo ra điều đó.
+
+</Callout>
