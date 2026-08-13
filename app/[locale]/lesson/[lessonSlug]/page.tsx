@@ -19,6 +19,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { ExerciseSection } from "@/components/exercise/exercise-section";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { LessonHeader } from "@/components/lesson/lesson-header";
 import { LessonToc } from "@/components/lesson/lesson-toc";
@@ -138,6 +139,8 @@ export default async function LessonPage({
         )}
 
         {LessonDemo && <LessonDemo />}
+
+        <ExerciseSection slug={lesson.slug} locale={locale} />
 
         <References references={references} locale={locale} />
 

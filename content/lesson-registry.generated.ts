@@ -2,7 +2,7 @@
 // Regenerate with: pnpm gen:registry
 import type { ComponentType } from "react";
 import type { LessonSlug } from "./slugs";
-import type { Citation, Locale } from "./types";
+import type { Citation, Exercise, Locale } from "./types";
 
 export type LessonModuleLoader = () => Promise<{ default: ComponentType }>;
 export type ReferencesLoader = () => Promise<{ references: Citation[] }>;
@@ -41,4 +41,13 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/demo"),
   "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
+};
+
+export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
+
+export const EXERCISES_REGISTRY: Partial<
+  Record<LessonSlug, ExercisesLoader>
+> = {
+  "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/exercises"),
+  "checkpoint-vector-clock": () => import("./lessons/00-math/checkpoint-vector-clock/exercises"),
 };

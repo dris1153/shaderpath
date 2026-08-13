@@ -4,6 +4,7 @@ import {
   real,
   sqliteTable,
   text,
+  uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
 // Spec §5 — progress only, lesson content never enters the DB.
@@ -46,7 +47,14 @@ export const exerciseAttempts = sqliteTable(
     checklistState: text("checklist_state", { mode: "json" }).$type<boolean[]>(),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
   },
-  (t) => [index("idx_exercise_attempts_lesson_slug").on(t.lessonSlug)],
+  (t) => [
+    index("idx_exercise_attempts_lesson_slug").on(t.lessonSlug),
+    // One row per exercise — required by the upsert in lib/exercises.ts
+    uniqueIndex("uq_exercise_attempts_lesson_exercise").on(
+      t.lessonSlug,
+      t.exerciseId,
+    ),
+  ],
 );
 
 export const notes = sqliteTable(

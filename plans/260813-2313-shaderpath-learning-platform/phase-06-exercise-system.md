@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~8h
 - **Description:** Render `Exercise[]` at the bottom of a lesson with the full flow: attempt → sequential hints (counted) → self-assessment checklist → solution reveal, all persisted per exercise.
 
@@ -88,17 +88,17 @@ Read path on load: one query per lesson (`WHERE lesson_slug = ?`, indexed per §
 
 ## Todo List
 
-- [ ] `lib/exercises.ts` server actions + id validation
-- [ ] Exercise list/card shell with kind badges + statuses
-- [ ] MDX prompt rendering (shared pipeline)
-- [ ] Sequential hint stack with persisted counter
-- [ ] Checklist with positional-drift guard
-- [ ] Code pane (Monaco / embedded playground) + debounced `userCode` save + reset
-- [ ] Solution reveal gate + `referenceImage` comparison
-- [ ] Status transitions incl. skip
-- [ ] Lesson-level exercise summary
-- [ ] Track 0 sample exercises (concept/code/build)
-- [ ] Unit + e2e tests
+- [x] `lib/exercises.ts` server actions + id validation
+- [x] Exercise list/card shell with kind badges + statuses
+- [x] MDX prompt rendering (shared pipeline)
+- [x] Sequential hint stack with persisted counter
+- [x] Checklist with positional-drift guard
+- [x] Code pane (Monaco / embedded playground) + debounced `userCode` save + reset
+- [x] Solution reveal gate + `referenceImage` comparison
+- [x] Status transitions incl. skip
+- [x] Lesson-level exercise summary
+- [x] Track 0 sample exercises (concept/code/build)
+- [x] Unit + e2e tests
 
 ## Success Criteria
 
@@ -129,6 +129,23 @@ Read path on load: one query per lesson (`WHERE lesson_slug = ?`, indexed per §
 ## Rollback
 
 Revert phase commit; lesson pages lose the exercise section only. `exercise_attempts` rows persist harmlessly.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Schema change:** migration `0001` adds `uq_exercise_attempts_lesson_exercise` unique index on (lesson_slug, exercise_id) — §5 lacked it but the one-row-per-exercise upsert requires it. Boot auto-migrates existing DBs.
+
+**Deviations / gotchas:**
+- Exercise prompts render through a ~70-line custom renderer (`PromptBody`): paragraphs, `` `code` ``, `$math$` via the katex package, fenced blocks. Full MDX prompts skipped — no runtime MDX eval (D2). Phase 7 lint must keep prompts inside this subset.
+- Solutions highlighted server-side via shiki `codeToHtml` (dual theme, cached internally), injected as HTML into the client card.
+- Drizzle upsert trap: SQL fragments referencing existing columns (`CASE WHEN status...`) are valid ONLY in the DO UPDATE SET clause — spreading them into INSERT VALUES prepares to "no such column". `upsert()` now takes separate insertValues/updateSet.
+- Engagement model: any interaction (hint, code edit, checklist tick, solution) bumps `not_started → attempted` server-side via a CASE that never downgrades completed/skipped.
+- `checkbox` shadcn component added (absent from the §7 list).
+- Checklist drift guard is client-side length compare + reset with toast; server independently validates length against content.
+- Lazy body: card content mounts on first expand (Monaco/playground stay out of the initial page).
+- `EXERCISES_REGISTRY` joins the generated registry (v4) — also consumed server-side for exercise-id validation.
+- Playwright: Vietnamese labels collide as substrings ("Tôi đã thử" ⊂ "Đánh dấu \"Tôi đã thử\"...") — use `exact: true`.
+
+**Verification run:** typecheck ✓ · eslint ✓ · vitest 34/34 (6 new: slug/id validation, hint monotonic+cap, single-row upsert, reveal-first status, code size cap, checklist shape) ✓ · build ✓ · e2e 15/15 — **§9 phase 6 DoD: hint 2/2 + checklist ticks + solution + completed status all survive reload ✓**; solution locked until attempted ✓.
 
 ## Next Steps
 

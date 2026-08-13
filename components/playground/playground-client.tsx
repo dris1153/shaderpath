@@ -20,10 +20,13 @@ export function PlaygroundClient({
   initialSnippets = [],
   initialSource,
   compact = false,
+  onSourceChange,
 }: {
   initialSnippets?: Snippet[];
   initialSource?: string;
   compact?: boolean;
+  /** Fires on editor edits — used by shader exercises to autosave userCode */
+  onSourceChange?: (source: string) => void;
 }) {
   const [snippets, setSnippets] = useState(initialSnippets);
   const [snippetId, setSnippetId] = useState<number | null>(null);
@@ -73,7 +76,10 @@ export function PlaygroundClient({
         <ResizablePanel defaultSize={50} minSize={25}>
           <GlslEditor
             value={source}
-            onChange={setSource}
+            onChange={(v) => {
+              setSource(v);
+              onSourceChange?.(v);
+            }}
             errors={errors}
             handleRef={editorHandle}
           />
