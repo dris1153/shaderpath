@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~10h
 - **Description:** Stand up the MDX toolchain (math + code highlight) and the typed curriculum tree covering all 13 tracks — metadata only, no lesson prose yet. Roadmap and track pages render the full tree with locked/unlocked state.
 
@@ -91,20 +91,20 @@ MDX compile chain: `@next/mdx` → remark: `remark-gfm`, `remark-math` → rehyp
 
 ## Todo List
 
-- [ ] Install MDX/KaTeX/shiki deps
-- [ ] Wire `@next/mdx` + remark/rehype chain in `next.config.ts`
-- [ ] KaTeX CSS import in locale layout (D7)
-- [ ] shiki dual theme + glsl grammar verified
-- [ ] `content/types.ts` per §3.1
-- [ ] `content/slugs.ts` + `LessonSlug` union
-- [ ] 14 track metadata files covering all 13 tracks (§4)
-- [ ] `content/curriculum.ts` aggregate + invariants
-- [ ] `lib/curriculum.ts` query/unlock/percent helpers
-- [ ] `scripts/gen-lesson-registry.ts` + generated registry (D2)
-- [ ] `mdx-components.tsx` mapped to shadcn primitives
-- [ ] Roadmap page + track page
-- [ ] Unit tests for curriculum helpers
-- [ ] typecheck/lint/build clean
+- [x] Install MDX/KaTeX/shiki deps
+- [x] Wire `@next/mdx` + remark/rehype chain in `next.config.ts`
+- [x] KaTeX CSS import in locale layout (D7)
+- [x] shiki dual theme + glsl grammar verified
+- [x] `content/types.ts` per §3.1
+- [x] `content/slugs.ts` + `LessonSlug` union
+- [x] 14 track metadata files covering all 13 tracks (§4)
+- [x] `content/curriculum.ts` aggregate + invariants
+- [x] `lib/curriculum.ts` query/unlock/percent helpers
+- [x] `scripts/gen-lesson-registry.ts` + generated registry (D2)
+- [x] `mdx-components.tsx` mapped to shadcn primitives
+- [x] Roadmap page + track page
+- [x] Unit tests for curriculum helpers
+- [x] typecheck/lint/build clean
 
 ## Success Criteria
 
@@ -135,6 +135,22 @@ MDX compile chain: `@next/mdx` → remark: `remark-gfm`, `remark-math` → rehyp
 ## Rollback
 
 Self-contained: revert the phase commit. Phase 1 shell keeps working since `next.config.ts` MDX wrapper is the only shared-file edit.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Final curriculum (user-approved, slugs FROZEN):** 14 tracks · 35 modules · **162 units** = 112 core lessons + 38 mini-builds (incl. 4 capstones à 480min) + 13 electives (~8% — fewer than D9's 15–20% estimate; deep topics like SSAO/BRDF/source-reading stayed core deliberately). ≈136h total. Full listing: `reports/curriculum-listing.md`.
+
+**Deviations / gotchas:**
+- `@mdx-js/loader` is a required peer of `@next/mdx` under Turbopack (build error without it) — added alongside `@mdx-js/react`.
+- MDX remark/rehype plugins configured in **string form** (`[["remark-math"], ...]`) — Turbopack must serialize the config; function refs would fail.
+- shiki dual-theme needs the `.dark .shiki` CSS variable block appended to `app/globals.css` (still the only CSS file).
+- Temporary route `/[locale]/dev-mdx-check` + `content/dev/pipeline-check.mdx` verify KaTeX/shiki/Callout — **delete in Phase 3** when the real lesson page lands.
+- `tsx` added as devDep to run TS scripts (`pnpm gen:registry`); registry is empty until Phase 7 content exists.
+- Unit invariant tests caught 3 agent-authored prereqs pointing at electives (gsap/custom-shaders/gpgpu) — fixed; rule: prerequisites are ALWAYS core-tier.
+- Track files exceed the 200-line guideline (~350–600 lines) — bilingual metadata is data, not logic; splitting further would hurt readability.
+- Failed Playwright runs on Windows can orphan `next dev` processes; Next 16 then refuses new dev servers. Fix: kill node processes matching the project dir.
+
+**Verification run:** typecheck ✓ · eslint ✓ · vitest 10/10 (slug coverage, module linkage, core-only prereqs, order uniqueness, D9 minute bounds, unlock/completion logic) ✓ · `next build` ✓ (37 pages) · e2e 6/6 incl. roadmap renders 14 tracks + KaTeX/shiki render ✓ · `gen:registry` idempotent ✓.
 
 ## Next Steps
 

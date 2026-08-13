@@ -3,10 +3,23 @@
     "name": "Shaderpath",
     "tagline": "Lộ trình 3D & shader cho frontend developer"
   },
+  "nav": {
+    "roadmap": "Lộ trình"
+  },
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",
     "progressTitle": "Tiến độ học tập",
-    "empty": "Chưa có tiến độ — lộ trình sẽ xuất hiện ở đây sau Phase 2."
+    "empty": "Chưa có tiến độ — mở trang Lộ trình để bắt đầu."
+  },
+  "roadmap": {
+    "title": "Lộ trình",
+    "subtitle": "{completed}/{total} bài core hoàn thành · {electives} bài tự chọn cho chiều sâu senior",
+    "coreProgress": "{completed}/{total} core",
+    "checkpoint": "Mini-build",
+    "elective": "Tự chọn",
+    "locked": "Chưa mở khoá",
+    "difficulty": "Độ khó {level}/5",
+    "minutes": "{minutes} phút"
   },
   "localeSwitcher": {
     "label": "Ngôn ngữ",

@@ -1,0 +1,377 @@
+import type { LessonMeta, ModuleDef, TrackDef } from "../types";
+
+export const track: TrackDef = {
+  id: "glsl",
+  order: 2,
+  title: { vi: "GLSL Fundamentals", en: "GLSL Fundamentals" },
+  summary: {
+    vi: "Ngôn ngữ của GPU: cú pháp, hàm dựng sẵn, distance field và tư duy viết code chạy song song cho từng pixel.",
+    en: "The GPU's language: syntax, built-ins, distance fields and the mindset of code that runs per-pixel in parallel.",
+  },
+  moduleIds: ["glsl-01-language-of-the-gpu", "glsl-02-shaping-and-patterns"],
+};
+
+export const modules: ModuleDef[] = [
+  {
+    id: "glsl-01-language-of-the-gpu",
+    trackId: "glsl",
+    order: 1,
+    title: { vi: "Ngôn ngữ của GPU", en: "The GPU's Language" },
+    lessonSlugs: [
+      "glsl-syntax-types-swizzling",
+      "precision-qualifiers",
+      "glsl-builtin-functions",
+      "branching-cost-on-gpu",
+      "checkpoint-gradient-palette",
+    ],
+  },
+  {
+    id: "glsl-02-shaping-and-patterns",
+    trackId: "glsl",
+    order: 2,
+    title: { vi: "Shaping & Patterns", en: "Shaping & Patterns" },
+    lessonSlugs: [
+      "shaping-functions-and-2d-sdf",
+      "gradients-patterns-tiling",
+      "matrix-transforms-in-shaders",
+      "shader-debugging-by-color",
+      "checkpoint-pattern-tile-poster",
+    ],
+  },
+];
+
+export const lessons: LessonMeta[] = [
+  {
+    slug: "glsl-syntax-types-swizzling",
+    trackId: "glsl",
+    moduleId: "glsl-01-language-of-the-gpu",
+    order: 1,
+    title: {
+      vi: "Cú pháp GLSL, kiểu dữ liệu & swizzling",
+      en: "GLSL Syntax, Types & Swizzling",
+    },
+    summary: {
+      vi: "GLSL là ngôn ngữ kiểu tĩnh giống C với vec2/vec3/vec4/mat làm công dân hạng nhất — swizzling (`.xyz`, `.rgba`, `.xy`) cho phép đọc/ghi thành phần vector chỉ bằng một biểu thức.",
+      en: "GLSL is a statically-typed, C-like language where vec2/vec3/vec4/mat are first-class citizens — swizzling (.xyz, .rgba, .xy) lets you read or write vector components with a single expression.",
+    },
+    difficulty: 2,
+    estimatedMinutes: 30,
+    tags: ["glsl"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["checkpoint-render-to-texture-tint"],
+    objectives: {
+      vi: [
+        "Khai báo và thao tác đúng các kiểu float/vec2/vec3/vec4/mat3/mat4 trong GLSL",
+        "Dùng swizzling để đọc/ghi hoán vị thành phần vector (vd hoán đổi .rg thành .gr)",
+        "Phân biệt cú pháp GLSL với JavaScript ở các điểm dễ nhầm nhất (khai báo kiểu, không có kiểu động)",
+      ],
+      en: [
+        "Declare and manipulate float/vec2/vec3/vec4/mat3/mat4 types correctly in GLSL",
+        "Use swizzling to read or write permuted vector components (e.g. swap .rg into .gr)",
+        "Spot the syntax traps where GLSL differs most from JavaScript (explicit typing, no dynamic types)",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "precision-qualifiers",
+    trackId: "glsl",
+    moduleId: "glsl-01-language-of-the-gpu",
+    order: 2,
+    title: { vi: "Precision qualifier", en: "Precision Qualifiers" },
+    summary: {
+      vi: "highp/mediump/lowp quyết định độ chính xác dấu phẩy động của biến — chọn sai trên GPU mobile gây banding hoặc artifact rõ rệt, chọn đúng tiết kiệm băng thông ALU đáng kể.",
+      en: "highp/mediump/lowp control a variable's floating-point precision — the wrong choice on mobile GPUs causes visible banding or artifacts, the right one saves meaningful ALU bandwidth.",
+    },
+    difficulty: 2,
+    estimatedMinutes: 25,
+    tags: ["glsl", "perf"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["glsl-syntax-types-swizzling"],
+    objectives: {
+      vi: [
+        "Khai báo default precision đúng cho fragment shader (bắt buộc trên nhiều thiết bị)",
+        "Giải thích khác biệt giữa highp/mediump/lowp và chi phí phần cứng tương ứng",
+        "Nhận diện artifact hình ảnh gây ra bởi mediump không đủ chính xác (vd tính toán vị trí lớn)",
+      ],
+      en: [
+        "Declare the correct default precision for a fragment shader (mandatory on many devices)",
+        "Explain the difference between highp/mediump/lowp and their respective hardware cost",
+        "Recognize visual artifacts caused by insufficient mediump precision (e.g. large position math)",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "glsl-builtin-functions",
+    trackId: "glsl",
+    moduleId: "glsl-01-language-of-the-gpu",
+    order: 3,
+    title: {
+      vi: "Hàm dựng sẵn của GLSL",
+      en: "GLSL Built-in Functions",
+    },
+    summary: {
+      vi: "mix, clamp, step, smoothstep, fract, mod, length, distance — bộ hàm dựng sẵn nhỏ nhưng đủ để dựng gần như mọi hiệu ứng procedural mà không cần if/else.",
+      en: "mix, clamp, step, smoothstep, fract, mod, length, distance — a small built-in toolkit powerful enough to build nearly any procedural effect without if/else.",
+    },
+    difficulty: 2,
+    estimatedMinutes: 35,
+    tags: ["glsl"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["precision-qualifiers"],
+    objectives: {
+      vi: [
+        "Dùng mix/clamp/step/smoothstep để tạo chuyển tiếp mượt hoặc ngưỡng có kiểm soát",
+        "Dùng fract/mod để tạo pattern lặp lại và length/distance để đo khoảng cách trong shader",
+        "Thay thế một đoạn if/else đơn giản bằng tổ hợp step/mix tương đương",
+      ],
+      en: [
+        "Use mix/clamp/step/smoothstep to build smooth transitions or controlled thresholds",
+        "Use fract/mod to build repeating patterns and length/distance to measure distance in a shader",
+        "Replace a simple if/else block with an equivalent step/mix combination",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "branching-cost-on-gpu",
+    trackId: "glsl",
+    moduleId: "glsl-01-language-of-the-gpu",
+    order: 4,
+    title: {
+      vi: "Cái giá của branching trên GPU",
+      en: "The Cost of Branching on GPU",
+    },
+    summary: {
+      vi: "GPU chạy các thread theo warp/wavefront lockstep (thường 32 hoặc 64 lane) — khi một if phân nhánh khác nhau trong cùng warp, cả hai nhánh đều bị thực thi và mask kết quả, nên if không hề 'miễn phí' như trên CPU.",
+      en: "GPUs execute threads in lockstep warps/wavefronts (typically 32 or 64 lanes) — when an if diverges within the same warp, both branches actually execute and get masked, so branching is never 'free' the way it feels on a CPU.",
+    },
+    difficulty: 3,
+    estimatedMinutes: 35,
+    tags: ["glsl", "perf"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["glsl-builtin-functions"],
+    objectives: {
+      vi: [
+        "Giải thích khái niệm warp/wavefront và vì sao divergence trong cùng warp làm cả hai nhánh chạy",
+        "Đo (hoặc ước lượng) chi phí một if phân nhánh nhiều trên fragment shader so với phiên bản branchless",
+        "Viết lại một if/else đơn giản thành biểu thức branchless dùng step/mix",
+      ],
+      en: [
+        "Explain the warp/wavefront concept and why divergence within a warp runs both branches",
+        "Measure (or estimate) the cost of a highly divergent if in a fragment shader versus a branchless rewrite",
+        "Rewrite a simple if/else as a branchless expression using step/mix",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "checkpoint-gradient-palette",
+    trackId: "glsl",
+    moduleId: "glsl-01-language-of-the-gpu",
+    order: 5,
+    title: {
+      vi: "Mini-build: Gradient palette bằng cosine",
+      en: "Mini-build: Cosine Gradient Palette",
+    },
+    summary: {
+      vi: "Dựng bảng màu động bằng công thức cosine palette của Inigo Quilez — 4 vector điều khiển toàn bộ dải màu chuyển động mượt theo thời gian, không cần texture lookup.",
+      en: "Build an animated color palette using Inigo Quilez's cosine palette formula — 4 control vectors drive a smoothly shifting color range over time, with no texture lookup needed.",
+    },
+    difficulty: 3,
+    estimatedMinutes: 50,
+    tags: ["glsl", "color", "build"],
+    tier: "core",
+    kind: "checkpoint",
+    prerequisites: ["branching-cost-on-gpu"],
+    objectives: {
+      vi: [
+        "Triển khai công thức cosine palette và điều chỉnh 4 vector để đạt dải màu mong muốn",
+        "Kết hợp built-in function và precision hợp lý vào một shader chạy mượt real-time",
+      ],
+      en: [
+        "Implement the cosine palette formula and tune its 4 vectors to reach a target color range",
+        "Combine built-in functions and sane precision choices into a shader that runs smoothly in real time",
+      ],
+    },
+    hasDemo: false,
+    hasPlayground: false,
+  },
+  {
+    slug: "shaping-functions-and-2d-sdf",
+    trackId: "glsl",
+    moduleId: "glsl-02-shaping-and-patterns",
+    order: 6,
+    title: {
+      vi: "Shaping function & 2D SDF",
+      en: "Shaping Functions & 2D SDFs",
+    },
+    summary: {
+      vi: "Signed distance field trả về khoảng cách có dấu đến biên hình — dương ngoài, âm trong, 0 tại biên — cho phép vẽ hình tròn, box, ngôi sao chỉ bằng một biểu thức toán, không cần polygon.",
+      en: "A signed distance field returns the signed distance to a shape's boundary — positive outside, negative inside, zero at the edge — letting you draw circles, boxes and stars from a single math expression, no polygons needed.",
+    },
+    difficulty: 3,
+    estimatedMinutes: 40,
+    tags: ["glsl", "shader"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["checkpoint-gradient-palette"],
+    objectives: {
+      vi: [
+        "Viết SDF cho hình tròn và hình chữ nhật bo góc, chuyển SDF thành mặt nạ hình bằng smoothstep",
+        "Giải thích vì sao SDF cho viền anti-alias mượt tự nhiên mà không cần MSAA",
+        "Kết hợp 2 SDF bằng min/max để tạo union/intersection cơ bản",
+      ],
+      en: [
+        "Write SDFs for a circle and a rounded rectangle, then turn an SDF into a shape mask via smoothstep",
+        "Explain why SDFs give naturally smooth anti-aliased edges without needing MSAA",
+        "Combine 2 SDFs with min/max for a basic union/intersection",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "gradients-patterns-tiling",
+    trackId: "glsl",
+    moduleId: "glsl-02-shaping-and-patterns",
+    order: 7,
+    title: {
+      vi: "Gradient, pattern & tiling",
+      en: "Gradients, Patterns & Tiling",
+    },
+    summary: {
+      vi: "fract(uv * N) chia UV thành N ô lặp lại — nền tảng của mọi pattern tiling, kết hợp với gradient và SDF để tạo texture procedural vô hạn không seam.",
+      en: "fract(uv * N) splits UV into N repeating cells — the basis of every tiling pattern, combined with gradients and SDFs to build seamless, infinite procedural textures.",
+    },
+    difficulty: 2,
+    estimatedMinutes: 35,
+    tags: ["glsl", "color"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["shaping-functions-and-2d-sdf"],
+    objectives: {
+      vi: [
+        "Dùng fract để chia không gian UV thành lưới ô lặp lại và vẽ hình trong từng ô",
+        "Tạo linear gradient và radial gradient bằng phép toán UV thuần (không texture)",
+        "Nhận diện và sửa seam khi pattern lặp không khớp biên",
+      ],
+      en: [
+        "Use fract to tile UV space into a repeating grid and draw a shape inside each cell",
+        "Build a linear gradient and a radial gradient using pure UV math (no texture)",
+        "Spot and fix seams when a repeating pattern doesn't line up at its edges",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "matrix-transforms-in-shaders",
+    trackId: "glsl",
+    moduleId: "glsl-02-shaping-and-patterns",
+    order: 8,
+    title: {
+      vi: "Ma trận biến đổi trong shader",
+      en: "Matrix Transforms in Shaders",
+    },
+    summary: {
+      vi: "Xoay, scale, translate một UV space bằng mat2/mat3 ngay trong fragment shader — cùng công thức Track 0 đã học, giờ áp dụng để xoay pattern hoặc dựng camera 2D procedural.",
+      en: "Rotate, scale and translate UV space with mat2/mat3 right inside a fragment shader — the same formulas from Track 0, now applied to spin a pattern or build a procedural 2D camera.",
+    },
+    difficulty: 3,
+    estimatedMinutes: 35,
+    tags: ["glsl", "shader"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["gradients-patterns-tiling"],
+    objectives: {
+      vi: [
+        "Dựng ma trận rotate 2x2 trong GLSL và áp lên UV trước khi tính SDF/pattern",
+        "Compose nhiều transform (scale rồi rotate rồi translate) đúng thứ tự nhân ma trận",
+        "Giải thích vì sao transform UV space chạy ngược hướng với transform hình muốn thấy (frame of reference đảo)",
+      ],
+      en: [
+        "Build a 2x2 rotation matrix in GLSL and apply it to UV before computing an SDF or pattern",
+        "Compose multiple transforms (scale, then rotate, then translate) in the correct multiplication order",
+        "Explain why transforming UV space runs opposite to the shape's apparent motion (inverted frame of reference)",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "shader-debugging-by-color",
+    trackId: "glsl",
+    moduleId: "glsl-02-shaping-and-patterns",
+    order: 9,
+    title: {
+      vi: "Debug shader bằng màu",
+      en: "Debugging Shaders by Color",
+    },
+    summary: {
+      vi: "Không có console.log trong GLSL: kỹ thuật debug chính là xuất giá trị cần kiểm tra ra kênh màu (đỏ = giá trị âm, xanh lá = trong khoảng, xanh dương = giá trị cụ thể) rồi đọc bằng mắt.",
+      en: "There is no console.log in GLSL: the core debugging technique is outputting the value you want to inspect as a color channel (red = negative, green = in-range, blue = a specific value) and reading it visually.",
+    },
+    difficulty: 2,
+    estimatedMinutes: 25,
+    tags: ["glsl", "tooling"],
+    tier: "core",
+    kind: "lesson",
+    prerequisites: ["matrix-transforms-in-shaders"],
+    objectives: {
+      vi: [
+        "Xuất một giá trị trung gian (UV, SDF, normal...) ra gl_FragColor để kiểm tra bằng mắt",
+        "Dùng quy ước màu nhất quán (âm/dương, trong/ngoài khoảng) để đọc kết quả debug nhanh hơn",
+        "Kết hợp debug-by-color với Spector.js hoặc browser devtools để xác nhận giá trị chính xác",
+      ],
+      en: [
+        "Output an intermediate value (UV, SDF, normal...) to gl_FragColor to inspect it visually",
+        "Use a consistent color convention (negative/positive, in/out of range) to read debug output faster",
+        "Pair debug-by-color with Spector.js or browser devtools to confirm the exact values",
+      ],
+    },
+    hasDemo: true,
+    hasPlayground: true,
+  },
+  {
+    slug: "checkpoint-pattern-tile-poster",
+    trackId: "glsl",
+    moduleId: "glsl-02-shaping-and-patterns",
+    order: 10,
+    title: {
+      vi: "Mini-build: Poster pattern lát gạch động",
+      en: "Mini-build: Animated Tiled Pattern Poster",
+    },
+    summary: {
+      vi: "Một poster fullscreen: pattern lát gạch không seam, biến dạng bằng ma trận theo thời gian, tô màu bằng cosine palette từ checkpoint trước — tổng kết toàn bộ track GLSL.",
+      en: "A fullscreen poster: a seamless tiled pattern, warped by a time-based matrix, colored with the cosine palette from the earlier checkpoint — a synthesis of the entire GLSL track.",
+    },
+    difficulty: 3,
+    estimatedMinutes: 55,
+    tags: ["glsl", "color", "build"],
+    tier: "core",
+    kind: "checkpoint",
+    prerequisites: ["shader-debugging-by-color"],
+    objectives: {
+      vi: [
+        "Kết hợp SDF, tiling, matrix transform và cosine palette trong một shader duy nhất",
+        "Tự debug bằng kỹ thuật debug-by-color trước khi đối chiếu với đáp án",
+      ],
+      en: [
+        "Combine SDFs, tiling, matrix transforms and the cosine palette in a single shader",
+        "Self-debug using the debug-by-color technique before checking the solution",
+      ],
+    },
+    hasDemo: false,
+    hasPlayground: false,
+  },
+];

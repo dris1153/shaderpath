@@ -8,6 +8,8 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppHeader } from "@/components/shell/app-header";
 import "../globals.css";
+// Vendored stylesheet for a mandated dependency — allowed per decision D7
+import "katex/dist/katex.min.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

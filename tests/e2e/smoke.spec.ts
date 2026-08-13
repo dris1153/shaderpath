@@ -33,3 +33,18 @@ test("theme toggle applies dark class", async ({ page }) => {
   await page.getByRole("menuitem", { name: "Tối" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
+
+test("roadmap renders all 14 tracks with modules", async ({ page }) => {
+  await page.goto("/vi/roadmap");
+  await expect(
+    page.getByRole("heading", { name: "Lộ trình", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Nền tảng Toán học cho đồ hoạ" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Capstone Projects" })).toBeVisible();
+});
+
+test("MDX pipeline renders KaTeX math and shiki GLSL", async ({ page }) => {
+  await page.goto("/vi/dev-mdx-check");
+  await expect(page.locator(".katex").first()).toBeVisible();
+  await expect(page.locator("pre.shiki")).toBeVisible();
+});
