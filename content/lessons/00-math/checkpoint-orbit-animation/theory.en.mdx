@@ -1,0 +1,15 @@
+## Goal
+
+This is module 3's closing mini-build (Rotation, Interpolation & Color): synthesizing trigonometry, easing/decay and linear color into one working 2D canvas scene — no new theory, just assembling what this math track already taught into something visible and running.
+
+## Requirements
+
+Build a 2D canvas scene with several "bodies" orbiting a center via $(\cos\theta, \sin\theta)$, each with a distinct radius, speed and phase; a heading line that aims at the mouse using `atan2`, chasing that direction with a dt-correct exponential decay (independent of frame rate); and each body's color blended in **linear** space, hand-decoded/encoded with the power-2.2 shorthand — never a straight interpolation on display values. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Three separate pieces, combined in one `requestAnimationFrame` loop: (1) a loop computing each body's position from `phase + t * speed`; (2) an `aimAngle` state variable updated every frame via `aimAngle += angleDiff(target, aimAngle) * (1 - Math.exp(-rate * dt))`, with wrap-around handling around $\pm\pi$; (3) a pair of `srgbToLinear`/`linearToSrgb` helpers using `Math.pow` to blend color correctly before assigning `ctx.fillStyle`.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — smooth orbits with the right period, the aim line following the mouse everywhere (including across the $\pm\pi$ angle boundary), a chase speed that stays constant regardless of frame rate (throttle CPU in DevTools to verify), and the blended color between two bodies noticeably brighter than a naive blend on display values.

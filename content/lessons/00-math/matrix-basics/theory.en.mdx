@@ -1,0 +1,72 @@
+## What a Matrix Is: A Space-Transforming Machine
+
+A 2×2 matrix isn't an abstract table of numbers — it's a **space-transforming machine**: feed it a vector, it hands back another vector, following one fixed rule applied uniformly to every point in the plane. "Uniformly" has a precise meaning here: straight lines stay straight after the transform (nothing bends), parallel lines stay parallel, and the origin $O$ never moves. These three properties — collectively called **linearity** — are exactly what separates a "matrix-able" transformation from an arbitrary one (a fisheye-style warp, for instance, isn't linear; no matrix can produce it).
+
+Because the origin always stays put and the grid of lines stays evenly spaced, the entire transformation is fully determined by just **two vectors**: where the unit vectors $\hat i = (1, 0)$ and $\hat j = (0, 1)$ land after the transform. Knowing those two destinations means knowing exactly how the whole plane gets stretched, rotated, or skewed — nothing else is needed. The next section turns that idea into a concrete rule for reading a matrix.
+
+## Reading a Matrix by Columns: Where the Basis Vectors Land
+
+Written out, a 2×2 matrix
+
+$$
+M = \begin{pmatrix} a & b \\ c & d \end{pmatrix}
+$$
+
+stores exactly those two vectors, one per **column**: the first column $(a, c)$ is where $\hat i$ lands, the second column $(b, d)$ is where $\hat j$ lands. This is the detail most often misread — it's easy to confuse rows with columns, especially when a matrix looks like a spreadsheet — but the rule never changes: **columns, not rows**, carry the geometric information.
+
+Take $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$: column 1 is $(2,0)$, meaning $\hat i$ gets stretched to twice its length along $x$; column 2 is $(0,1)$, meaning $\hat j$ doesn't move at all. No multiplication required — the two columns alone say "double horizontal stretch." This direct-reading skill matters more than memorizing the multiplication formula, because it's what you actually reach for when a `mat3`/`mat4` printed to the console looks wrong and you need to know why an object is warped.
+
+## Matrix Times Vector: A Linear Combination of Columns
+
+The familiar matrix-vector multiplication formula — $M\vec v = (ax+by,\ cx+dy)$ — is, underneath, exactly:
+
+$$
+M\vec v = x\begin{pmatrix}a\\c\end{pmatrix} + y\begin{pmatrix}b\\d\end{pmatrix}
+$$
+
+a **linear combination of the two columns**, weighted by the original vector's $x$ and $y$. That lines up perfectly with the previous section: any vector $(x,y)$ is already the combination $x\hat i + y\hat j$; transforming it means swapping in the new images of $\hat i$ and $\hat j$ (the two columns) while keeping the same weights $x, y$. Reusing the same horizontal-stretch matrix $M$ from the example above with $\vec v = (3, 4)$: $M\vec v = 3(2,0) + 4(0,1) = (6, 4)$ — matching the row-by-column recipe, but thinking in terms of "combine the columns" gives instant geometric intuition instead of just a number.
+
+## Building the 2D Rotation Matrix From Scratch
+
+### Why the Second Column Is $(-\sin\theta, \cos\theta)$
+
+Rotating the plane around the origin by an angle $\theta$ (counter-clockwise, the standard math convention with $y$ pointing up) just means answering: where do $\hat i$ and $\hat j$ end up? $\hat i = (1,0)$ sits at angle $0°$ on the unit circle; rotating by $\theta$ moves it to angle $\theta$, landing at $(\cos\theta, \sin\theta)$ — which is literally the definition of $\sin$ and $\cos$: the coordinates of a point on the radius-1 circle at angle $\theta$. $\hat j = (0,1)$ sits at angle $90°$; rotating by $\theta$ moves it to $90° + \theta$, and the angle-sum identities $\cos(90°+\theta) = -\sin\theta$, $\sin(90°+\theta) = \cos\theta$ give its new coordinates: $(-\sin\theta, \cos\theta)$.
+
+Stacking the two columns exactly as the previous section's rule demands:
+
+$$
+R(\theta) = \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}
+$$
+
+A quick sanity check at $\theta = 90°$: $R(90°) = \begin{pmatrix}0 & -1\\1 & 0\end{pmatrix}$ — column 1 is $(0,1)$ ($\hat i$ swings up to the positive $y$-axis), column 2 is $(-1,0)$ ($\hat j$ swings to the negative $x$-axis) — exactly a 90° counter-clockwise turn.
+
+## Scale and Shear Matrices
+
+The scale matrix is simpler: $\begin{pmatrix}s_x & 0\\0 & s_y\end{pmatrix}$ stretches each axis independently, because column 1 only touches the $x$ component ($\hat i \to (s_x, 0)$) and column 2 only touches $y$ ($\hat j \to (0, s_y)$) — neither axis leaks into the other.
+
+Shear is different in kind: $\begin{pmatrix}1 & k\\0 & 1\end{pmatrix}$ leaves $\hat i = (1,0)$ untouched but pushes $\hat j$ to $(k, 1)$ — the vertical edge tilts sideways, proportionally to $k$. The unit square turns into a slanted parallelogram with no right angles left except the one edge that wasn't touched. Shear is easy to confuse with rotation because both make a shape "lean," but they differ on one crucial point: rotation preserves every edge length, shear doesn't — the edge along $\hat j$ grows to $\sqrt{k^2+1}$ instead of staying at $1$ as $|k|$ increases.
+
+## Composition: Why Matrix Multiplication Order Matters
+
+Applying transform $A$ then transform $B$ is equivalent to the matrix product $BA$ (not $AB$), because $B(A\vec v)$ collapses to $(BA)\vec v$: the matrix **closest to the vector** runs **first**. This is exactly where intuition misleads — reading $BA$ left to right like a sentence tempts you to think $B$ runs first, but it's the opposite.
+
+A concrete numeric example makes the order visible: take $R = R(90°) = \begin{pmatrix}0&-1\\1&0\end{pmatrix}$ (a 90° rotation) and $S = \begin{pmatrix}2&0\\0&1\end{pmatrix}$ (doubling along $x$), applied to $\vec v = (1, 0)$:
+
+- **Rotate then scale** ($S \cdot R \cdot \vec v$): rotate first gives $(0,1)$; scaling afterward leaves it unchanged since its $x$ component is already $0$ — result $(0, 1)$.
+- **Scale then rotate** ($R \cdot S \cdot \vec v$): scale first gives $(2,0)$; rotating that afterward turns it into $(0, 2)$ — result $(0, 2)$.
+
+The two outcomes are completely different despite using the exact same two matrices, only in reversed order. Visually: "rotate then scale" stretches along the **world's** $x$-axis, while "scale then rotate" stretches along the $x$-axis **as it was before rotating**, then rotates the already-distorted result — the two operations don't commute except in special cases (two scales always commute with each other, but a scale and a rotation almost never do).
+
+## Looking Ahead: Matrices in the 3D Pipeline
+
+Everything here — reading by columns, multiplication as a linear combination, order mattering — carries over unchanged when matrices grow to 3×3 and 4×4 for 3D space; only the row/column count grows, not the rules. The next lesson adds a fourth dimension (homogeneous coordinates) to solve the one thing 2×2/3×3 matrices can't do: translation — and the scale/rotate/shear moves learned here come back intact, just one dimension larger.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with transformation matrices:
+
+1. **Reading rows instead of columns.** Looking at a matrix and assuming "the top row is the x-axis transform" reads it backwards — the top row is just the $x$ component of **both** columns combined. Three.js and WebGL even store matrices as flat column-major arrays, so swapping rows and columns while hand-building a `mat3`/`mat4` produces a completely different transform even though the numbers "look about right."
+2. **Multiplying in the wrong order when chaining transforms.** Writing `M = A * B` and expecting $A$ to run first because it's written first — but $M\vec v = A(B\vec v)$ means $B$ runs first, $A$ second. Getting this backwards (extremely common when combining rotate + scale) warps an object along the wrong axis, with no error thrown anywhere.
+3. **Mistaking shear for a mild rotation.** Both make a shape "lean," but only rotation preserves every edge's length; reaching for a shear matrix where a rotation was needed (or vice versa) silently stretches the object along one axis — a bug that only shows up when checking proportions carefully, never in a console log.
+
+</Callout>

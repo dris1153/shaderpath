@@ -1,0 +1,95 @@
+## The Unit Circle: the Master Picture Behind Every Periodic Motion
+
+The unit circle is the circle of radius 1 centered at the origin. Pick an angle $t$ (in radians, measured from the positive $X$-axis, counter-clockwise); the point on the circle at that angle has coordinates exactly $(\cos t, \sin t)$ — that's not a formula to memorize separately, it **is** the definition of $\cos$ and $\sin$: the point's horizontal and vertical coordinates, straight from the trigonometric definition on a circle. As $t$ grows with real time — say, $t$ equals the number of seconds elapsed since the page loaded — the point $(\cos t, \sin t)$ automatically traces uniform circular motion around the center, with no extra geometry required. That's why sin/cos shows up everywhere in animation: any motion that repeats on a cycle — a pendulum, a spinning wheel, a blinking light — can be described as a point moving on (or around) this circle.
+
+One property worth carrying forward: $\cos^2 t + \sin^2 t = 1$ for every $t$ — a direct consequence of the Pythagorean theorem, since the point always sits exactly 1 unit from the center. That property explains why scaling the circle up just means multiplying both components by the same number $R$: the point $(R\cos t, R\sin t)$ always lands on a circle of radius $R$, never a distorted ellipse, because the ratio between the two components never changes under uniform scaling.
+
+## Radians vs Degrees: Why Code Always Uses Radians
+
+Degrees ($360°$ per turn) are the unit humans reach for intuitively, but nearly every programming environment — including `Math.sin`/`Math.cos` in JavaScript and every trig function in GLSL — expects **radians**, not degrees. A radian's definition ties directly to the unit circle: one radian is the angle that sweeps an arc exactly as long as the radius; since a radius-1 circle's circumference is $2\pi$, a full turn equals $2\pi$ radians, meaning $360° = 2\pi \text{ rad}$, or $180° = \pi \text{ rad}$. Converting between them:
+
+$$
+\text{rad} = \text{deg} \times \frac{\pi}{180}, \qquad \text{deg} = \text{rad} \times \frac{180}{\pi}
+$$
+
+```ts
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+Math.sin(toRad(90)); // 1 — correct, since 90° = π/2 rad
+Math.sin(90);        // 0.893... — WRONG intent: 90 is read as 90 radians
+```
+
+Radians aren't just an arbitrary convention: several calculus identities (the derivative of $\sin t$ is $\cos t$; the small-angle approximation $\sin t \approx t$) only hold when $t$ is measured in radians — using degrees throws these off by a factor of $\pi/180$. That's why the user-facing side (a slider showing "degrees" for readability) and the internal math (always radians) should stay cleanly separated, with exactly one conversion at the boundary between the two worlds.
+
+## Amplitude, Frequency, Phase: Reading $A\sin(\omega t + \phi)$
+
+These three parameters are the standardized "knobs" of any sine-based oscillation, and each one controls exactly one geometric aspect, independent of the other two:
+
+- **Amplitude $A$**: multiplies the whole sine term, deciding "how tall the wave gets" — the value now swings within $[-A, A]$ instead of the default $[-1, 1]$. Raising $A$ stretches the graph vertically without touching how fast it oscillates.
+- **Angular frequency $\omega$** (rad/s): multiplies $t$ inside the sine, deciding "how fast the oscillation runs." The period — the time to complete exactly one cycle — is $T = \frac{2\pi}{\omega}$; the frequency in Hz (cycles per second) is $f = \frac{\omega}{2\pi}$. For example, $\omega = \pi$ rad/s gives $T = 2$ seconds per cycle — easy to verify by eye with a stopwatch.
+- **Phase $\phi$** (rad): added inside the sine, shifting the graph along the time axis without changing its shape or speed. $\phi > 0$ makes the wave "start earlier" — at $t=0$ the value is already $A\sin\phi$ instead of $0$. Phase is the right tool whenever two objects should oscillate with the same amplitude and frequency but out of sync — several flags flapping without matching each other, or several bobbing particles that shouldn't all "hop" on the same beat.
+
+The three parameters are linearly independent of one another: changing $A$ never touches $\omega$ or $\phi$, and vice versa — which is exactly why one slider per parameter is always enough to explore the full space of sine-based oscillation.
+
+## atan2 Instead of atan: Getting the Angle Right When Aiming at a Target
+
+The inverse of "given an angle, find the point" is "given a direction $(\Delta x, \Delta y)$, find the angle" — for instance, the rotation a turret needs to face the mouse. The first instinct is $\theta = \arctan(\Delta y / \Delta x)$, but the single-argument `atan` function has a real mathematical gap: the ratio $\Delta y / \Delta x$ is identical for two exactly opposite directions — $(\Delta x, \Delta y) = (3, 2)$ and $(-3, -2)$ produce the same ratio $2/3$, so `atan` returns the same angle for both, even though they point in completely opposite directions. `atan` only ever returns a value inside $(-90°, 90°)$ — it has no way to tell the four quadrants apart.
+
+`atan2(Δy, Δx)` fixes exactly this by taking **two** separate arguments instead of one ratio — knowing the sign of both $\Delta x$ and $\Delta y$ pins down exactly which quadrant the direction is in, so it returns the correct angle across the entire range $(-180°, 180°]$:
+
+```ts
+function angleToTarget(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  return Math.atan2(dy, dx); // correct for EVERY direction, including dx < 0
+}
+```
+
+Practical rule: whenever you need "the angle of a direction vector," reach for `atan2(v.y, v.x)` — never `atan(v.y / v.x)` patched with `if (dx < 0) angle += Math.PI`. `atan2` already does that patching correctly internally, including edge cases like $\Delta x = 0$ (a perfectly vertical direction), where the division $\Delta y/\Delta x$ would divide by zero.
+
+## Layering Sine Waves: From Monotonous Oscillation to Organic Motion
+
+A single sine wave oscillates so evenly it reads instantly as "the computer did this" — real biological motion (breathing, water, swaying grass) looks more natural even though it's still periodic. The cheapest trick to fake that feeling is **summing several sine waves with different frequencies, amplitudes, and phases**:
+
+```ts
+function organicOffset(t: number) {
+  return (
+    Math.sin(t * 1.0) * 1.0 +
+    Math.sin(t * 2.7 + 1.3) * 0.5 +
+    Math.sin(t * 5.1 + 0.4) * 0.25
+  );
+}
+```
+
+Each term is a "harmonic" wave whose frequency isn't a clean integer multiple of the previous one (2.7 and 5.1, not 2 and 4), so the sum never repeats obviously over a short window — the eye can't easily predict the next cycle, so it reads as more "organic" than any single sine wave. The shrinking amplitudes (1.0 → 0.5 → 0.25) mirror real physics: higher-frequency oscillation typically carries less energy (amplitude) than lower-frequency oscillation. This technique is a crude stepping stone toward FBM (fractal Brownian motion) in Track 7 — the same "stack several frequencies" idea, just swapping sine for noise.
+
+## Driving Circular Orbits Directly From Time
+
+A common mistake when spinning an object is accumulating the angle every frame: `angle += speed` inside the render loop. The correct, far more stable approach computes the angle directly from a single point in time:
+
+```ts
+function orbitPosition(center: { x: number; y: number }, radius: number, omega: number, elapsedSeconds: number) {
+  const angle = omega * elapsedSeconds;
+  return {
+    x: center.x + Math.cos(angle) * radius,
+    y: center.y + Math.sin(angle) * radius,
+  };
+}
+```
+
+`elapsedSeconds` comes from a monotonic clock (`performance.now()`, or `state.clock.elapsedTime` in React Three Fiber) — not a hand-rolled accumulator. This distinction matters more than it looks: computing `angle += omega * dt` every frame lets floating-point rounding error accumulate across tens of thousands of frames, and the rotation speed becomes directly dependent on whether frames were dropped or the tab was paused — pausing a hidden tab and returning leaves the angle "frozen" at its old value while real time kept moving. Computing straight from `elapsedSeconds` re-syncs the position automatically the instant the tab resumes, with no extra compensation logic needed.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common trigonometry-for-animation mistakes:
+
+1. **Feeding degrees straight into `Math.sin`/`Math.cos` and forgetting to convert to radians.** `Math.sin(90)` is not `1` — it reads `90` as 90 *radians* (over 14 full turns), producing `0.893...`. Always multiply by `Math.PI / 180` before calling a trig function if the source value is in degrees.
+2. **Using `Math.atan(dy/dx)` to aim at a target instead of `Math.atan2(dy, dx)`.** When the target sits to the left ($dx < 0$), `atan` returns an angle off by exactly $180°$ from the real direction — the object turns its back on the target instead of facing it, and the bug only surfaces when testing with a target on the left, easy to miss if testing only covers the right side.
+3. **Accumulating the angle every frame (`angle += speed`) instead of computing it directly from elapsed time.** This makes rotation speed frame-rate dependent (unless properly multiplied by `dt`), accumulates floating-point error over a long run, and never self-corrects its position after the tab is hidden or paused. Prefer `angle = omega * elapsedSeconds` instead.
+
+</Callout>
+
+## Where This Leads: From Pure Math to a Real Render Loop
+
+Track 1 (raw WebGL) and Track 4 (React Three Fiber) both hand you exactly one number per frame — a timestamp, or `state.clock.elapsedTime` — and every formula from this lesson ($A\sin(\omega t+\phi)$, `atan2`, circular orbits) plugs straight into that number with no extra work. GSAP (Track 5) packages these same wave shapes into easing and `yoyo repeat`, but understanding the mechanism underneath — this lesson's whole point — is what tells you when to reach for a library and when to write the formula yourself. The next lesson covers lerp, smoothstep, and easing curves: the second toolkit, alongside trigonometry, for steering a value from A to B over time.

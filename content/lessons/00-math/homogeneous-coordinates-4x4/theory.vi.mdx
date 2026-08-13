@@ -1,0 +1,56 @@
+## Vì sao translation không tuyến tính trong 3D
+
+Một phép biến đổi tuyến tính phải giữ gốc toạ độ đứng yên: $f(\vec 0) = \vec 0$, vì bất kỳ ma trận $M$ nào cũng cho $M \cdot \vec 0 = \vec 0$ — nhân với vector không luôn ra vector không, không có ma trận 3×3 nào phá được quy tắc này. Nhưng translation — dịch chuyển mọi điểm đi cùng một vector $\vec t$ — định nghĩa là $f(\vec p) = \vec p + \vec t$, và $f(\vec 0) = \vec t \neq \vec 0$ khi $\vec t \neq \vec 0$. Kết luận trực tiếp: **không có ma trận 3×3 nào biểu diễn được translation** trong không gian 3D, bất kể cố nhồi $\vec t$ vào đâu trong 9 con số của ma trận.
+
+Đây không phải chi tiết học thuật suông — nó giải thích vì sao mọi engine đồ hoạ, kể cả Three.js, không thể dựng "model matrix" chỉ từ một ma trận 3×3: nếu chỉ có scale và rotate (tuyến tính) mà thiếu translation, mọi object buộc phải đứng yên tại gốc toạ độ, không thể đặt ở bất kỳ đâu khác trong scene.
+
+## Thêm chiều thứ 4: gấp translation vào phép nhân ma trận
+
+Cách khắc phục: thêm một chiều giả, gọi là $w$, biến điểm 3D $(x,y,z)$ thành vector 4D $(x,y,z,1)$ — gọi là **toạ độ đồng nhất** (homogeneous coordinates). Trong không gian 4 chiều này, translation lại trở thành tuyến tính, vì bây giờ có thể "mượn" thành phần $w=1$ cố định làm nguồn cho độ dịch chuyển.
+
+### Ma trận translate 4×4
+
+$$
+T = \begin{pmatrix} 1 & 0 & 0 & t_x \\ 0 & 1 & 0 & t_y \\ 0 & 0 & 1 & t_z \\ 0 & 0 & 0 & 1 \end{pmatrix}
+$$
+
+Áp dụng lên điểm $(x,y,z,1)$ bằng đúng quy tắc "tổ hợp tuyến tính của các cột" đã học ở bài trước: ba cột đầu là identity (không đổi $x,y,z$), cột thứ tư $(t_x,t_y,t_z,1)$ được cộng vào với trọng số bằng $w=1$ — kết quả $(x+t_x,\ y+t_y,\ z+t_z,\ 1)$, đúng là điểm đã dịch chuyển. Cái giá phải trả rất nhỏ: mọi ma trận giờ 4×4 thay vì 3×3, và mọi vector mang thêm một số $w$ — nhưng đổi lại translate, rotate, scale giờ đều là **cùng một phép toán**: nhân ma trận, ghép được với nhau tự do.
+
+## w=1 là điểm, w=0 là hướng — và vì sao normal biến đổi khác
+
+Thành phần $w$ không phải chỉ là một chỗ trống kỹ thuật — nó mã hoá **loại đối tượng** đang được biến đổi. Thay $(x,y,z,0)$ vào đúng phép nhân với $T$ ở trên: cột thứ tư giờ được cộng vào với trọng số $w=0$, tức là **không cộng gì cả** — kết quả $(x,y,z,0)$, y hệt đầu vào. Đây chính xác là hành vi mong muốn cho một **hướng** (direction) — vận tốc, tia sáng, hay pháp tuyến bề mặt: dịch chuyển cả object đi đâu cũng không được làm các hướng này đổi theo, vì chúng mô tả "chỉ về đâu", không phải "đang ở đâu". Quy ước gọn: $w=1$ đánh dấu một **điểm** (bị translation ảnh hưởng), $w=0$ đánh dấu một **hướng** (miễn nhiễm với translation) — đúng như lời hẹn ở bài Vector cơ bản, nơi lỗi "cộng nhầm vector hướng vào vị trí" được nêu ra nhưng chưa có công cụ phân biệt tường minh; $w$ chính là công cụ đó.
+
+Tuy nhiên phần rotate/scale của ma trận vẫn tác động lên cả điểm lẫn hướng như nhau — và đây là chỗ pháp tuyến (normal) cần một ngoại lệ riêng. Nếu model matrix scale không đều (ví dụ ép dẹt theo trục $x$), áp dụng đúng ma trận đó lên pháp tuyến làm nó không còn vuông góc với bề mặt đã bị biến đổi nữa. Cách sửa chuẩn: biến đổi pháp tuyến bằng **nghịch đảo chuyển vị** (inverse-transpose) của phần 3×3 rotate/scale trong model matrix, thay vì chính ma trận đó — với rotation thuần (không scale), nghịch đảo chuyển vị trùng với chính ma trận nên khác biệt không lộ ra, chỉ hiện rõ khi có scale không đều.
+
+## Dựng rotate/scale 4×4 và compose TRS
+
+Nhúng ma trận rotate hoặc scale 3×3 đã học ở bài trước vào góc trên-trái của một ma trận 4×4, giữ nguyên phần còn lại là identity:
+
+$$
+R_{4} = \begin{pmatrix} R_{3\times3} & \vec 0 \\ \vec 0^T & 1 \end{pmatrix}, \qquad
+S_4 = \begin{pmatrix} s_x&0&0&0\\0&s_y&0&0\\0&0&s_z&0\\0&0&0&1\end{pmatrix}
+$$
+
+Hàng/cột thứ tư của $R_4$ toàn số 0 (trừ góc dưới-phải bằng 1) đảm bảo rotate không "rò rỉ" vào thành phần dịch chuyển — mọi cơ chế từ bài trước áp dụng y nguyên trên khối 3×3 này.
+
+Ghép ba phép translate, rotate, scale vào một ma trận model duy nhất luôn theo thứ tự $M = T \cdot R \cdot S$ — áp dụng phải-sang-trái nghĩa là scale object tại chỗ trước, rotate quanh tâm của chính nó tiếp theo, rồi mới translate cả kết quả ra vị trí trong world. Đây là quy ước gần như phổ biến (Three.js, glTF): nó đảm bảo object luôn xoay quanh **tâm cục bộ** của nó chứ không quanh gốc toạ độ world. Đổi thứ tự, ví dụ $R \cdot T \cdot S$, làm object dịch chuyển ra xa gốc world trước rồi mới xoay quanh gốc world đó — kết quả object bay theo quỹ đạo tròn quanh world thay vì tự xoay tại chỗ, một lỗi hay gặp khi tự tay ghép transform mà quên thứ tự chuẩn.
+
+## Phép chia phối cảnh: xem trước x/w
+
+Toàn bộ ma trận T, R, S ở trên đều **affine** — chúng không bao giờ đụng tới $w$, nó luôn giữ nguyên $1$. Nhưng có một loại ma trận 4×4 khác, ma trận **phối cảnh** (perspective projection, học kỹ ở bài Model → View → Projection), cố ý ghi giá trị khác 1 vào $w$ — thường bằng đúng $-z$ trong không gian camera. Sau khi nhân ma trận này, GPU tự động thực hiện một bước gọi là **phép chia phối cảnh** (perspective divide): chia cả $x, y, z$ cho $w$, trước khi rasterize.
+
+Ví dụ đơn giản: một điểm ra khỏi vertex shader ở clip space $(2, 2, 5, w=5)$ chia cho $w$ cho $(0.4, 0.4, 1)$. Một điểm khác ở xa gấp đôi, cùng toạ độ $x=2$ nhưng $w=10$, chia ra $(0.2, 0.2, 1)$ — đúng một nửa vị trí trên màn hình. Đây chính là cơ chế toán học đằng sau việc "vật ở xa trông nhỏ hơn": không phải hiệu ứng đặc biệt nào, chỉ là một phép chia đơn giản, ẩn trong đúng thành phần $w$ mà bài này vừa học cách dùng cho việc khác (translation).
+
+## Kết nối về sau: Model → View → Projection
+
+Bốn ma trận affine của bài này — translate, rotate, scale, và cách compose chúng — chính là ma trận **Model** trong chuỗi $p_{clip} = P \cdot V \cdot M \cdot p_{model}$ sẽ học ở bài tiếp theo; $V$ (view) cũng chỉ là một ma trận affine khác (nghịch đảo của transform camera), còn $P$ (projection) là nơi phép chia phối cảnh vừa xem trước ở đây trở thành công cụ chính thức để đưa cả một cảnh 3D lên màn hình 2D.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với toạ độ đồng nhất:
+
+1. **Quên đặt $w=0$ cho vector hướng khi nhân với ma trận có translation.** Nếu vô tình để $w=1$ cho một vận tốc hay pháp tuyến, nó sẽ bị "dịch chuyển" theo translation như một điểm — lỗi im lặng, không crash, chỉ cho ra hướng sai lệch tăng dần mỗi khi object di chuyển xa gốc.
+2. **Dùng nguyên model matrix để biến đổi pháp tuyến khi có scale không đều.** Pháp tuyến lệch khỏi vuông góc thật với bề mặt, ánh sáng tính sai — lỗi gần như vô hình trên mesh tỉ lệ đều, chỉ lộ rõ khi asset bị kéo dẹt theo một trục.
+3. **Ghép TRS sai thứ tự.** Đặt rotate hoặc scale sau translate (thay vì $T \cdot R \cdot S$) làm object xoay/scale quanh gốc toạ độ world thay vì quanh tâm cục bộ của chính nó — biểu hiện rõ nhất là object "bay quỹ đạo" quanh world khi đáng lẽ chỉ nên tự xoay tại chỗ.
+
+</Callout>

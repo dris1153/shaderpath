@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build khép lại module 3 (Xoay, Nội suy & Màu): tổng hợp lượng giác, easing/decay và color linear vào một cảnh canvas 2D chạy thật — không lý thuyết mới, chỉ ráp lại những gì track Toán đã dạy thành một sản phẩm nhìn thấy được.
+
+## Yêu cầu
+
+Dựng một cảnh canvas 2D gồm nhiều "hành tinh" bay quanh một tâm bằng $(\cos\theta, \sin\theta)$ với bán kính, tốc độ và pha khác nhau cho từng hành tinh; một đường ngắm bám theo chuột bằng `atan2`, đuổi theo hướng đó bằng decay hàm mũ đúng dt (không phụ thuộc frame rate); và màu mỗi hành tinh trộn trong không gian **linear**, tự tay decode/encode bằng xấp xỉ luỹ thừa 2.2 — không dùng nội suy thẳng trên giá trị hiển thị. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Ba khối tách biệt, ghép lại trong cùng một vòng `requestAnimationFrame`: (1) một vòng lặp tính vị trí từng hành tinh từ `phase + t * speed`; (2) một biến trạng thái `aimAngle` cập nhật mỗi frame bằng `aimAngle += angleDiff(target, aimAngle) * (1 - Math.exp(-rate * dt))`, có xử lý wrap-around quanh $\pm\pi$; (3) một cặp hàm `srgbToLinear`/`linearToSrgb` dùng `Math.pow` để trộn màu đúng cách trước khi gán `ctx.fillStyle`.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — quỹ đạo mượt và đúng chu kỳ, đường ngắm bám chuột tại mọi vị trí (kể cả khi vượt ranh giới góc $\pm\pi$), tốc độ đuổi theo không đổi dù đổi frame rate (throttle CPU trong DevTools để kiểm tra), và màu trộn giữa hai hành tinh sáng hơn rõ rệt so với trộn ngây thơ trên giá trị hiển thị.

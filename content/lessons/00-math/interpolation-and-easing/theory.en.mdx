@@ -1,0 +1,122 @@
+## Lerp: Linear Interpolation — the Workhorse Behind Every Animation
+
+`lerp` (linear interpolation) is the single most-called operation across animation code, whether you notice it or not:
+
+$$
+\text{lerp}(a, b, t) = a + (b - a)\,t
+$$
+
+Start at $a$, add $t$'s worth of the distance to $b$. At $t=0$ the result is $a$; at $t=1$ it's $b$; at $t=0.5$ it's the midpoint. Values outside $[0,1]$ are still mathematically valid — called **extrapolation** — occasionally useful (overshoot animation) but usually a bug if unintended. `lerp(10, 50, 0.25)` gives $10 + 40 \times 0.25 = 20$.
+
+```ts
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+```
+
+This works on anything with addition and scalar multiplication — numbers, vectors, even RGB colors (though only linear-space color gives a physically correct result — the sRGB lesson's topic) — which is why it's the "engine" behind most tweens and camera transitions.
+
+## Inverse Lerp and Remap: Lerp's Two Siblings
+
+`lerp` goes from $t$ to a value; **inverse lerp** does the opposite — given $v$ sitting between $a$ and $b$, it returns the matching $t$:
+
+$$
+\text{invLerp}(a, b, v) = \frac{v - a}{b - a}
+$$
+
+`invLerp(10, 50, 20)` gives $\frac{20-10}{50-10} = 0.25$ — exactly the $t$ used above, confirming the two are inverses. Chaining one range's `invLerp` into another range's `lerp` produces **remap** — moving a value from one scale onto another:
+
+```ts
+function invLerp(a: number, b: number, v: number): number {
+  return (v - a) / (b - a);
+}
+function remap(v: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+  return lerp(outMin, outMax, invLerp(inMin, inMax, v));
+}
+
+remap(75, 0, 100, 0, 1);      // 0.75 — remaining health % into an alpha factor
+remap(0.75, 0, 1, -1, 1);     // 0.5  — UV [0,1] into NDC [-1,1]
+```
+
+`remap` shows up everywhere: a sensor reading into pixels, health into a progress bar's width, UV into NDC exactly as the UV space lesson covered. Getting `lerp`/`invLerp`/`remap` to reflex level is one of the highest-leverage skills for writing shaders or animation code fast.
+
+## Clamp: Keeping a Value Inside Its Bounds
+
+`remap` can return a value outside $[outMin, outMax]$ whenever $v$ falls outside the source range — mathematically correct, but not what you want when a health bar shouldn't render past 100%. `clamp` pins the value back inside its bounds:
+
+```ts
+function clamp(v: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, v));
+}
+```
+
+`clamp(remap(v, inMin, inMax, 0, 1), 0, 1)` is an extremely common pattern — guarantees the output lands cleanly inside $[0,1]$ no matter how far out of range the input goes.
+
+## Smoothstep: the $3t^2 - 2t^3$ Polynomial, and Why a Zero Derivative at Both Ends Matters
+
+`lerp` moves at a **constant speed** — the derivative of $a+(b-a)t$ is the constant $(b-a)$, so motion starts and stops **abruptly**. `smoothstep` fixes this by swapping the straight line for a cubic polynomial:
+
+$$
+\text{smoothstep}(t) = 3t^2 - 2t^3, \qquad t \in [0, 1]
+$$
+
+Its derivative $6t - 6t^2 = 6t(1-t)$ is exactly $0$ at $t=0$ and $t=1$ — meaning **zero velocity** at both ends: motion eases in gently, speeds up mid-way, eases back to zero, no jerk anywhere. That's why `smoothstep` is the default for nearly every smoothing effect: fade in/out, softening a geometric edge in a shader (manual anti-aliasing instead of a hard 0/1 step), camera motion. GLSL ships `smoothstep(edge0, edge1, x)` as a built-in bundling `invLerp` + clamp + the polynomial — the exact `remap → clamp → ease` pipeline just covered.
+
+```ts
+function smoothstep(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+}
+```
+
+## Easing Curves: Remapping Time Before You Lerp
+
+An easing curve is just a function $f: [0,1] \to [0,1]$ with $f(0)=0$, $f(1)=1$, used to **substitute for $t$** before `lerp`: `lerp(a, b, ease(t))`. `smoothstep` is itself one such curve (an ease-in-out shape). The family of power functions gives three other classic variants:
+
+- **easeIn** (slow start, fast finish): $f(t) = t^p$ — $p=2$ is quadratic, $p=3$ is cubic.
+- **easeOut** (fast start, slow finish — a "hard brake" feel): $f(t) = 1-(1-t)^p$ — the mirror of easeIn.
+- **easeInOut**: easeIn for the first half stitched to easeOut for the second, or `smoothstep` directly.
+
+easeOut suits UI that responds instantly to interaction (a "snappy" feel); easeIn suits an object leaving the screen (slow start, accelerating away); easeInOut suits camera moves or transitions with no direct interaction, where "smooth" beats "snappy."
+
+## Lerp-per-Frame Is Exponential Decay — and Its Frame-Rate Trap
+
+A common pattern for smoothing a real-time value is re-lerping toward a target every frame:
+
+```ts
+value += (target - value) * k; // k in (0, 1)
+```
+
+This isn't linear motion — it's **exponential decay**: each frame the remaining distance gets multiplied by $(1-k)$, so after $n$ frames it scales with $(1-k)^n$, never quite reaching 0. The problem: $k$ is a constant **per frame**, not per second — the same $k=0.1$ at 30fps converges noticeably slower than at 144fps, since 144fps applies the multiplication far more times per real second. Identical code, different smoothing speed depending on the machine — a classic bug, hard to spot because it always "works," just at the wrong speed.
+
+The $\Delta t$-correct form replaces $k$ with an expression depending on $\Delta t$ and a fixed convergence rate $\lambda$:
+
+$$
+\text{value} \mathrel{+}= (\text{target} - \text{value}) \times \left(1 - e^{-\lambda \, \Delta t}\right)
+$$
+
+```ts
+function dampTowards(value: number, target: number, lambda: number, dt: number): number {
+  return value + (target - value) * (1 - Math.exp(-lambda * dt));
+}
+```
+
+This converges at the same **real** speed regardless of framerate — doubling $\Delta t$ compensates by applying a larger decay factor in one step, instead of repeating the same small factor more times. This is "frame-rate independent damping" — `value += (target-value)*k` every frame is the textbook broken version; `SmoothDamp`-style functions in modern engines are the dt-correct one.
+
+## Slerp: Interpolating an Angle, Not a Straight Line
+
+Applying `lerp` directly to a quaternion (interpolating each component $x,y,z,w$ separately) produces a vector that's *no longer unit length*, breaking the valid-quaternion condition. `slerp` (spherical linear interpolation) interpolates along an **angle** on the 4D unit sphere instead of a straight line — the result is always a valid quaternion, with perfectly uniform rotation speed, unlike lerp-then-renormalize ("nlerp," cheaper but not speed-uniform). The full formula already lives in the Quaternion lesson — the takeaway here: `slerp` is "lerp, but on a sphere, for rotations," the same remap-the-progress mindset as every easing curve above, just a different interpolation space.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common lerp and easing mistakes:
+
+1. **Forgetting to `clamp` after `remap`/`invLerp` when the input can go out of range.** A health bar or alpha fade receives a negative or >1 value from unintended extrapolation — UI renders past its frame, or a negative alpha gets misread by the driver. Always `clamp(t, 0, 1)` before using $t$ as an alpha.
+2. **Mixing up GLSL's `smoothstep` argument order.** `smoothstep(edge0, edge1, x)` — the first two are bounds, the third is the value; writing `smoothstep(x, edge0, edge1)` (a habit from `clamp`) compiles fine but produces a completely wrong gradient.
+3. **Using `value += (target - value) * k` every frame without multiplying by `dt`.** The same `k` runs at a different effective speed depending on the player's frame rate. Use the $1 - e^{-\lambda \Delta t}$ form to separate desired convergence speed from actual frame rate.
+
+</Callout>
+
+## Where This Leads: Easing Becomes an API, Smoothstep Becomes a Shader Tool
+
+Track 5 (GSAP) packages easeIn/easeOut/easeInOut into named strings (`power2.out`, `back.inOut`...) plus extra families (elastic, bounce) built from the same "remap $t$ before you lerp" principle. Track 2 (GLSL) and Track 7 (Procedural) reach for `smoothstep` constantly — not to animate over time, but to build smooth edges in space (manual anti-aliasing, blending two color regions) — the same polynomial, a different axis. This track's next mini-build combines trigonometry and interpolation into one complete moving scene.

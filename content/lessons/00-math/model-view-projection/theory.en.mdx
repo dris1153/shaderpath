@@ -1,0 +1,95 @@
+## The Chain From Model to Clip Space: What Each Matrix Does
+
+Every vertex that ever reaches your screen passes through exactly one chain of matrix multiplications:
+
+$$
+\mathbf{p}_{clip} = P \, V \, M \, \mathbf{p}_{model}
+$$
+
+Read it right to left — the order the GPU actually applies it, since vectors are columns multiplied from the right: $M$ places a single object into the scene's shared coordinates; $V$ rewrites that whole scene from the camera's point of view; $P$ warps the space around the camera into the volume hardware knows how to clip, setting up the perspective divide. Most engines fold $VM$ into a single `modelViewMatrix` first, avoiding re-multiplying $M$ per vertex — the line you already used in the previous track's demo shader is this exact chain, written out: `gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);`, where `modelViewMatrix` is $VM$ and `projectionMatrix` is $P$.
+
+The multiplication order isn't an arbitrary convention: swapping it to $MVP$, or reordering any pair, produces a completely different transform — not "slightly off," but an object that vanishes from the screen or warps beyond recognition.
+
+## Six Spaces, Six Concrete Meanings
+
+- **Model space**: coordinates local to the mesh itself, origin usually at its center or base — a cube modeled at $[-0.5, 0.5]^3$ has no idea yet where it will stand in the scene.
+- **World space**: after multiplying by $M$, every object, light and camera shares one coordinate frame — say $M$ translates that cube to $(3, 0, -5)$; it now genuinely sits there in the shared world.
+- **View space (camera space)**: after multiplying by $V$, the same coordinates are rewritten with the camera sitting at the origin, looking down $-z$ — distance along $z$ here is literally "how far in front of the camera," the exact value the perspective formula below needs.
+- **Clip space**: after multiplying by $P$, a 4D homogeneous coordinate $(x, y, z, w)$ — the GPU clips triangles against $-w \le x, y, z \le w$ right here, before dividing; that clipping step is where the name "clip space" comes from.
+- **NDC**: after dividing by $w$ — the one nonlinear step in the entire chain — the clip volume becomes a genuine $[-1,1]^3$ cube, simple to compare and clip further.
+- **Screen/viewport space**: NDC remapped to actual render-target pixels via `gl.viewport()` — a fully separate 2D affine step, not part of the projection matrix at all.
+
+## The View Matrix Is the Camera's Transform, Inverted
+
+A camera in the scene has a transform just like any other object — its position and orientation form a "camera-to-world" matrix, call it $C$. The single most confusable point in this lesson: the view matrix isn't $C$, it's $C^{-1}$. The reason is purely geometric: $C$ answers "which world point does this camera-space point correspond to," while what you actually need is the opposite — "what does the world look like from the camera." Inverting the matrix is exactly that reversal.
+
+This is the root of the classic intuition "the camera moves left, the world drifts right": if $C$ translates the camera $+3$ units along $x$, then $C^{-1}$ translates every world point $-3$ along $x$ — the camera perceives itself as sitting still at the origin, while the entire world slides the opposite direction it just moved. Rotation works the same way: the inverse of an orthonormal rotation $R$ is $R^\top$ (the transpose) — spinning the world the exact opposite way the camera just turned.
+
+## Building the lookAt Matrix From Eye, Target and Up
+
+The practical way to get $C$ isn't typing 16 numbers by hand — it's building it from three orthogonal vectors, exactly what every engine's `lookAt(eye, target, up)` does:
+
+$$
+\hat f = \widehat{eye - target}, \qquad \hat r = \widehat{up \times \hat f}, \qquad \hat u = \hat f \times \hat r
+$$
+
+```ts
+function lookAtBasis(eye: Vec3, target: Vec3, worldUp: Vec3) {
+  const forward = normalize(sub(eye, target)); // points AWAY from the view direction (right-hand convention)
+  const right = normalize(cross(worldUp, forward));
+  const up = cross(forward, right); // exactly perpendicular, even if worldUp wasn't
+  return { right, up, forward };
+}
+```
+
+$\hat f$ ("forward," pointing opposite the view direction under the right-handed convention) is the negated look direction; $\hat r$ is built from the cross of a temporary up and $\hat f$ — the same cross-product technique from the previous lesson; $\hat u$ is simply the cross of the other two, guaranteeing all three are exactly perpendicular even when `worldUp` isn't perfectly perpendicular to the view direction. These three vectors are $C$'s first three columns; the fourth column is `eye`.
+
+## The Perspective Matrix at the Formula Level: fov, Focal Length, Near/Far
+
+The actual "perspective" lives in four numbers of $P$:
+
+$$
+P = \begin{bmatrix}
+\dfrac{f}{\text{aspect}} & 0 & 0 & 0 \\
+0 & f & 0 & 0 \\
+0 & 0 & \dfrac{\text{far}+\text{near}}{\text{near}-\text{far}} & \dfrac{2\,\text{far}\,\text{near}}{\text{near}-\text{far}} \\
+0 & 0 & -1 & 0
+\end{bmatrix}, \qquad f = \frac{1}{\tan(\text{fov}/2)}
+$$
+
+$f$ acts as "focal length": the smaller the fov (a zoomed-in lens), the smaller $\tan(\text{fov}/2)$, the larger $f$, the "tighter" and bigger objects appear. A $60°$ fov gives $f = 1/\tan(30°) \approx 1.732$; a $90°$ fov gives $f = 1/\tan(45°) = 1$ — a much wider angle pulls $f$ down toward 1. The bottom row $(0, 0, -1, 0)$ is the most commonly overlooked detail: it copies $-z_{view}$ straight into $w_{clip}$, and $w$ is exactly the denominator of the upcoming perspective divide — the farther an object is (the larger $-z_{view}$), the larger $w$, and the more the post-divide coordinate shrinks. That's the entire mechanism behind distant objects looking smaller. The third row compresses the $[\text{near}, \text{far}]$ range (nonlinearly, as $1/z$) into $[-1, 1]$ of $z_{ndc}$ — NDC depth isn't linear with real-world depth, a fact that causes bugs whenever depth gets compared by eye instead of by number.
+
+## From NDC to Pixels: the Viewport Transform
+
+The last step is just a scale-and-shift, identical to what you did in the UV space lesson, only flipped:
+
+$$
+x_{screen} = (x_{ndc} \cdot 0.5 + 0.5)\, W, \qquad y_{screen} = \big(1 - (y_{ndc} \cdot 0.5 + 0.5)\big)\, H
+$$
+
+```js
+function ndcToScreen(xNdc, yNdc, W, H) {
+  return {
+    x: (xNdc * 0.5 + 0.5) * W,
+    y: (1 - (yNdc * 0.5 + 0.5)) * H, // flip y: NDC points up, pixels point down
+  };
+}
+
+ndcToScreen(0.5, -0.5, 800, 600); // { x: 600, y: 450 }
+```
+
+$W, H$ are the viewport's pixel dimensions; the $y$ axis still needs flipping because NDC has $y$ pointing up while screen pixels have $y$ pointing down — the exact problem you already solved in Cartesian & UV Space, just with different variable names.
+
+## Where This Chain Resurfaces Later
+
+Track 1 (raw WebGL) will make you write that exact `gl_Position = ...` line yourself, in a real vertex shader; Track 4 (React Three Fiber) packages the lookAt construction and $P$ into a `Camera` object, but the formulas underneath are exactly the ones here; Track 12 (Performance) uses the very frustum shape derived from $P$ to do frustum culling — skipping the render of anything outside the clip volume's six planes.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with the model-view-projection chain:
+
+1. **Multiplying the matrices in the wrong order.** three.js is column-major and multiplies column vectors from the right, so the correct expression is always $P V M \mathbf{p}$. Writing $MVP$ instead, or swapping any two matrices, produces a completely different transform — usually an object that vanishes from the screen or warps beyond recognition, not something merely "slightly off."
+2. **Forgetting to divide by $w$ after multiplying by $P$.** Clip space is still an unnormalized 4D coordinate; comparing $x, y, z$ directly against $[-1, 1]$ before dividing by $w$ is always wrong, because $w$ equals $-z_{view}$, not the constant 1.
+3. **Using the camera's own transform matrix ($C$) as the view matrix instead of $C^{-1}$.** The camera moves right, and the code sees the whole world drift right too, in the same direction, instead of the opposite one — a bug that's hard to spot by eye because the scene still "moves," just in the wrong direction.
+
+</Callout>

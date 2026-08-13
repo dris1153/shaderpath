@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1 (defines the quality bar for all remaining content)
-- **Status:** Not Started
+- **Status:** 🔄 In Progress — lint gate + module math-01 done (2026-08-14); awaiting user quality review before math-02/03 + webgl modules
 - **Effort:** ~45h (≈2h/regular lesson, checkpoints lighter; exact unit counts locked in Phase 2 metadata)
 - **Description:** Author Track 0 (math foundations, ~3 modules) and Track 1 (raw WebGL, ~3–4 modules) completely in vi + en per D9: regular lessons (theory, ≥2 verifiable citations, demo, ≥2 exercises) + one checkpoint mini-build per module. This is the reference standard every later track is measured against.
 

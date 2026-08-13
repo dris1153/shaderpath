@@ -1,0 +1,15 @@
+## Goal
+
+This is Track 0's second mini-build: prove you can hand-build the entire model → view → projection → screen pipeline without WebGL or three.js doing it for you — just a 2D canvas and matrices you write yourself.
+
+## Requirements
+
+Render a wireframe cube (only its 12 edges, no filled faces) continuously spinning on a 2D canvas. Write your own: 4x4 matrix multiply, a rotation matrix, a simple perspective matrix, and the NDC → pixel projection (including the divide by $w$). No math or graphics library imports — just `Math` and `CanvasRenderingContext2D`. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Three sequential steps for every vertex: (1) multiply the vertex by the model matrix (rotating over time), then the view matrix (pushing it away from the camera), (2) multiply by the perspective matrix to get a 4-component clip coordinate, (3) divide by $w$ to get NDC, then map NDC to canvas pixels. Draw 12 line segments connecting the projected vertex pairs from the given edge list.
+
+## What "Done" Looks Like
+
+Check against the checklist in the exercises section before opening the solution — the cube must spin and genuinely look 3D (not a flat 2D shape rotating), edges closer to the camera must appear bigger/farther apart than distant edges (foreshortening), no WebGL/three.js/matrix library used, and everything runs smoothly via `requestAnimationFrame`.

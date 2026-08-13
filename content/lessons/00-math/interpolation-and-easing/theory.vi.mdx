@@ -1,0 +1,122 @@
+## Lerp: phép nội suy tuyến tính — công cụ nền của mọi hoạt hình
+
+`lerp` (linear interpolation) là phép toán được gọi nhiều nhất trong animation code, dù bạn có nhận ra hay không:
+
+$$
+\text{lerp}(a, b, t) = a + (b - a)\,t
+$$
+
+Xuất phát từ $a$, cộng thêm $t$ phần khoảng cách tới $b$. Tại $t=0$ ra $a$; tại $t=1$ ra $b$; tại $t=0.5$ ra chính giữa. $t$ ngoài $[0,1]$ vẫn hợp lệ về toán học — gọi là **ngoại suy** (extrapolation) — đôi khi hữu ích (overshoot animation) nhưng thường là lỗi nếu không chủ đích. Ví dụ: `lerp(10, 50, 0.25)` cho $10 + 40 \times 0.25 = 20$.
+
+```ts
+function lerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+```
+
+Hàm này áp dụng cho mọi đại lượng có cộng và nhân vô hướng — số thực, vector, cả màu RGB (dù chỉ linear-space color mới cho kết quả đúng vật lý, chủ đề bài sRGB sau này) — nên nó là "động cơ" phía sau phần lớn tween và camera transition.
+
+## Inverse lerp và remap: hai người anh em của lerp
+
+`lerp` đi từ $t$ ra giá trị; **inverse lerp** làm ngược lại — cho $v$ nằm giữa $a$ và $b$, trả về $t$ tương ứng:
+
+$$
+\text{invLerp}(a, b, v) = \frac{v - a}{b - a}
+$$
+
+`invLerp(10, 50, 20)` cho $\frac{20-10}{50-10} = 0.25$ — đúng $t$ ở ví dụ trên, kiểm chứng hai hàm nghịch đảo nhau. Ghép `invLerp` khoảng này với `lerp` khoảng khác cho ra **remap** — chuyển giá trị từ thang đo này sang thang đo khác:
+
+```ts
+function invLerp(a: number, b: number, v: number): number {
+  return (v - a) / (b - a);
+}
+function remap(v: number, inMin: number, inMax: number, outMin: number, outMax: number): number {
+  return lerp(outMin, outMax, invLerp(inMin, inMax, v));
+}
+
+remap(75, 0, 100, 0, 1);      // 0.75 — % máu còn lại thành hệ số alpha
+remap(0.75, 0, 1, -1, 1);     // 0.5  — UV [0,1] thành NDC [-1,1]
+```
+
+`remap` xuất hiện khắp nơi: cảm biến sang pixel, thanh máu sang độ rộng progress bar, UV sang NDC như bài UV space đã học. Nắm ba hàm `lerp`/`invLerp`/`remap` tới mức phản xạ là một trong những kỹ năng tiết kiệm thời gian nhất khi viết shader hay animation code.
+
+## Clamp: giữ giá trị trong biên đã định
+
+`remap` có thể trả về giá trị ngoài $[outMin, outMax]$ nếu $v$ đầu vào ngoài khoảng gốc — đúng toán học, nhưng không phải điều bạn muốn khi thanh máu không nên dài hơn 100%. `clamp` chặn giá trị về đúng biên:
+
+```ts
+function clamp(v: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, v));
+}
+```
+
+`clamp(remap(v, inMin, inMax, 0, 1), 0, 1)` là pattern cực phổ biến — bảo đảm output luôn gọn trong $[0,1]$ dù input vượt biên bao nhiêu.
+
+## Smoothstep: đa thức $3t^2 - 2t^3$ và vì sao đạo hàm bằng 0 ở hai đầu quan trọng
+
+`lerp` di chuyển với **tốc độ không đổi** — đạo hàm của $a+(b-a)t$ là hằng số $(b-a)$, nên chuyển động bắt đầu/kết thúc **đột ngột**. `smoothstep` sửa đúng vấn đề này bằng đa thức bậc ba thay đường thẳng:
+
+$$
+\text{smoothstep}(t) = 3t^2 - 2t^3, \qquad t \in [0, 1]
+$$
+
+Đạo hàm $6t - 6t^2 = 6t(1-t)$ bằng $0$ chính xác tại $t=0$ và $t=1$ — nghĩa là **vận tốc bằng 0** ở hai đầu: khởi động từ từ, tăng tốc ở giữa, giảm tốc về 0, không cú giật nào. Đây là lý do `smoothstep` là lựa chọn mặc định cho hầu hết hiệu ứng mượt: fade in/out, làm mờ cạnh hình học trong shader (chống răng cưa thay vì bước nhảy nhị phân 0/1), chuyển động camera. GLSL có sẵn `smoothstep(edge0, edge1, x)` — gộp cả `invLerp` + clamp + đa thức bên trong, đúng pipeline `remap → clamp → ease` vừa học.
+
+```ts
+function smoothstep(t: number): number {
+  const x = Math.min(1, Math.max(0, t));
+  return x * x * (3 - 2 * x);
+}
+```
+
+## Easing curve: remap thời gian trước khi lerp
+
+Easing curve chỉ là một hàm $f: [0,1] \to [0,1]$ với $f(0)=0$, $f(1)=1$, dùng để **thay $t$** trước khi đưa vào `lerp`: `lerp(a, b, ease(t))`. `smoothstep` chính là một easing curve (kiểu ease-in-out). Họ hàm mũ cho ba biến thể kinh điển khác:
+
+- **easeIn** (chậm đầu, nhanh cuối): $f(t) = t^p$ — $p=2$ là quadratic, $p=3$ là cubic.
+- **easeOut** (nhanh đầu, chậm cuối — "phanh gấp"): $f(t) = 1-(1-t)^p$ — đối xứng ngược của easeIn.
+- **easeInOut**: ghép easeIn nửa đầu với easeOut nửa sau, hoặc dùng thẳng `smoothstep`.
+
+easeOut hợp UI phản hồi ngay khi tương tác (cảm giác nhanh nhẹn); easeIn hợp vật thể rời màn hình (bắt đầu chậm, tăng tốc rồi biến mất); easeInOut hợp camera hay transition không tương tác trực tiếp, nơi "êm" quan trọng hơn "nhanh".
+
+## lerp-per-frame là suy giảm mũ — và bẫy phụ thuộc frame rate
+
+Pattern phổ biến để làm mượt giá trị thời gian thực là lerp lại mỗi frame về target:
+
+```ts
+value += (target - value) * k; // k trong (0, 1)
+```
+
+Đây không phải chuyển động tuyến tính — là **suy giảm mũ**: mỗi frame khoảng cách còn lại nhân thêm $(1-k)$, sau $n$ frame tỉ lệ với $(1-k)^n$, không bao giờ chạm đúng 0. Vấn đề: $k$ là hằng số **trên mỗi frame**, không phải mỗi giây — cùng $k=0.1$ ở 30fps hội tụ chậm hơn hẳn 144fps, vì 144fps áp phép nhân nhiều lần hơn trong cùng một giây thực. Cùng code cho tốc độ khác nhau tuỳ máy — lỗi kinh điển, khó phát hiện vì luôn "chạy được", chỉ sai tốc độ.
+
+Dạng đúng theo $\Delta t$ thay $k$ bằng biểu thức phụ thuộc $\Delta t$ và tốc độ hội tụ $\lambda$ cố định:
+
+$$
+\text{value} \mathrel{+}= (\text{target} - \text{value}) \times \left(1 - e^{-\lambda \, \Delta t}\right)
+$$
+
+```ts
+function dampTowards(value: number, target: number, lambda: number, dt: number): number {
+  return value + (target - value) * (1 - Math.exp(-lambda * dt));
+}
+```
+
+Công thức này hội tụ cùng tốc độ **thực** (giây) bất kể framerate — tăng gấp đôi $\Delta t$ tự bù bằng hệ số suy giảm lớn hơn trong một bước, thay vì lặp cùng hệ số nhỏ nhiều lần hơn. Đây là kỹ thuật "frame-rate independent damping" — `value += (target-value)*k` mỗi frame là bản SAI kinh điển; các hàm `SmoothDamp` trong engine hiện đại là bản dt-correct.
+
+## Slerp: nội suy trên góc, không phải trên đường thẳng
+
+`lerp` áp trực tiếp cho quaternion (nội suy từng thành phần $x,y,z,w$) cho ra vector *không còn độ dài 1*, phá vỡ điều kiện quaternion hợp lệ. `slerp` (spherical linear interpolation) nội suy theo **góc** trên mặt cầu đơn vị 4 chiều thay vì đường thẳng — kết quả luôn là quaternion hợp lệ, tốc độ xoay đều tuyệt đối, không như lerp-rồi-normalize ("nlerp", rẻ hơn nhưng không đều tốc độ). Chi tiết đã nằm ở bài Quaternion — nhớ: `slerp` là "lerp, nhưng trên hình cầu, cho hướng xoay", cùng tư duy remap-tiến-trình như mọi easing curve trên, chỉ khác không gian nội suy.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với lerp và easing:
+
+1. **Quên `clamp` sau `remap`/`invLerp` khi input có thể vượt biên.** Thanh máu hay alpha fade nhận giá trị âm hoặc lớn hơn 1 từ ngoại suy không mong muốn — UI vẽ lố khung hoặc alpha âm bị driver hiểu sai. Luôn `clamp(t, 0, 1)` trước khi dùng $t$ làm alpha.
+2. **Nhầm thứ tự tham số `smoothstep` trong GLSL.** `smoothstep(edge0, edge1, x)` — hai tham số đầu là biên, thứ ba là giá trị cần đánh giá; viết nhầm `smoothstep(x, edge0, edge1)` (thói quen từ `clamp`) compile được nhưng cho gradient sai hoàn toàn.
+3. **Dùng `value += (target - value) * k` mỗi frame mà không nhân theo `dt`.** Cùng `k` chạy nhanh chậm khác nhau tuỳ frame rate máy người chơi. Dùng $1 - e^{-\lambda \Delta t}$ để tách tốc độ hội tụ mong muốn khỏi frame rate thực tế.
+
+</Callout>
+
+## Kết nối về sau: easing curve trở thành API, smoothstep trở thành công cụ shader
+
+Track 5 (GSAP) đóng gói easeIn/easeOut/easeInOut vừa học thành tên gọi (`power2.out`, `back.inOut`...) và vài dạng bổ sung (elastic, bounce) dựng từ cùng nguyên lý "remap $t$ trước khi lerp". Track 2 (GLSL) và Track 7 (Procedural) dùng `smoothstep` liên tục — không để animate theo thời gian, mà để tạo cạnh mượt trong không gian (anti-aliasing thủ công, blend hai vùng màu) — cùng đa thức, khác trục áp dụng. Bài mini-build tiếp theo ghép lượng giác và nội suy vào một cảnh chuyển động hoàn chỉnh.

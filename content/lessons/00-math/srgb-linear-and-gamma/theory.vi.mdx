@@ -1,0 +1,53 @@
+## Ánh sáng cộng tuyến tính, mắt người thì không
+
+Vật lý ánh sáng đơn giản: khi hai nguồn sáng chiếu chồng lên cùng một điểm, năng lượng của chúng **cộng tuyến tính** — hai đèn 50W chiếu cùng chỗ cho đúng 100W, không có khúc quanh phi tuyến nào trong bản thân ánh sáng. Hệ quả: mọi phép toán đúng trên ánh sáng — cộng nhiều nguồn sáng, trộn (blend) hai màu, lấy trung bình mẫu khi lọc mipmap hay khử răng cưa — về vật lý phải là phép cộng hoặc trung bình tuyến tính của *năng lượng ánh sáng thật*.
+
+Vấn đề: mắt người không cảm nhận độ sáng tuyến tính theo năng lượng ánh sáng. Võng mạc nhạy hơn nhiều với chênh lệch ở vùng tối so với vùng sáng — tăng gấp đôi năng lượng ánh sáng không khiến ta thấy "sáng gấp đôi", chỉ sáng hơn một chút. Vì mắt phân biệt tốt vùng tối, lưu ảnh hiệu quả nghĩa là dành nhiều "mã số" hơn cho vùng tối, ít hơn cho vùng sáng — đúng việc một đường cong **phi tuyến, gần giống luỹ thừa** làm được. Đường cong đó có tên **sRGB**.
+
+## sRGB: mã hoá theo cảm nhận, không phải theo năng lượng
+
+sRGB (chuẩn hoá bởi IEC từ 1996) là phép biến đổi giữa giá trị pixel trong code (`0..1` hoặc `0..255`) và năng lượng ánh sáng thật, gọi là **linear light**. Xấp xỉ phổ biến nhất — đủ dùng cho hầu hết code đồ hoạ thời gian thực — là luỹ thừa 2.2:
+
+$$
+\text{linear} \approx \text{srgb}^{2.2}, \qquad \text{srgb} \approx \text{linear}^{1/2.2}
+$$
+
+Nhưng chuẩn sRGB thật không dùng một luỹ thừa 2.2 trên toàn dải — nó là hàm **từng khúc** (piecewise): đoạn gần 0 dùng quan hệ tuyến tính để tránh sai số ở giá trị rất nhỏ, đoạn còn lại dùng luỹ thừa 2.4 với hai hằng số hiệu chỉnh 0.055 và 1.055 để nối liền mượt với đoạn tuyến tính:
+
+$$
+\text{linear} = \begin{cases} \text{srgb}/12.92 & \text{srgb} \le 0.04045 \\ \left(\dfrac{\text{srgb}+0.055}{1.055}\right)^{2.4} & \text{srgb} > 0.04045 \end{cases}
+$$
+
+Với `srgb = 0.5`, luỹ thừa 2.2 xấp xỉ cho `linear ≈ 0.218`; công thức từng khúc chính xác cho `linear ≈ 0.214` — chênh chưa tới 2%, đủ gần để xấp xỉ 2.2 dùng được trong shader thời gian thực, nhưng không phải con số chính xác nếu cần khớp màu với công cụ chỉnh màu chuyên nghiệp.
+
+## Vì sao trộn màu trong sRGB là sai: tính bằng số thật
+
+Hệ quả quan trọng nhất của hai phần trên: `0.5` là con số **đã mã hoá theo cảm nhận**, không phải một nửa năng lượng ánh sáng. Ví dụ đơn giản nhất — trộn đen `(0,0,0)` và trắng `(1,1,1)`. Trộn ngây thơ ngay trên giá trị sRGB cho `(0.5, 0.5, 0.5)` — nhìn "có vẻ" là điểm giữa. Nhưng giải mã `0.5` bằng công thức từng khúc trên ra `linear ≈ 0.214` — pixel này chỉ mang **~21% năng lượng ánh sáng** của trắng, không phải 50%. Muốn điểm giữa thật sự mang đúng 50% năng lượng, phải lấy trung bình *trong linear* rồi mã hoá ngược: `linear = 0.5` → `srgb = 1.055 · 0.5^(1/2.4) − 0.055 ≈ 0.735`. Nói cách khác, xám "đúng nửa sáng" hiển thị ở mã sRGB `≈ 0.735`, sáng hơn hẳn con số `0.5` bạn tưởng là điểm giữa.
+
+Sai số này *lộ rõ nhất* khi trộn hai màu bão hoà đối lập thay vì đen-trắng — chính là demo của bài này. Trộn đỏ thuần `(1,0,0)` và lục thuần `(0,1,0)` ngây thơ (thẳng trên giá trị sRGB) cho `(0.5, 0.5, 0)`. Giải mã ra linear (đỏ và lục đều `0.5 → 0.214`), rồi tính độ chói tương đối theo trọng số Rec. 709 ($0.2126R + 0.7152G + 0.0722B$): $0.214 \times (0.2126 + 0.7152) \approx 0.199$ — chưa tới **20% độ chói tối đa**, hiện ra như một màu nâu-ô-liu đục, xỉn. Trộn đúng cách: giải mã đỏ và lục thành linear trước (`(1,0,0)` và `(0,1,0)`, không đổi vì luỹ thừa của 0 và 1 vẫn là 0 và 1), lấy trung bình trong linear ra `(0.5, 0.5, 0)`, **rồi mới** mã hoá ngược mỗi kênh về sRGB (`0.5 → 0.735`) để hiển thị `(0.735, 0.735, 0)` — độ chói $0.5 \times 0.9278 \approx 0.464$, **hơn 46%**, gấp hơn hai lần bản trộn sai: mắt thấy ngay một màu vàng rực thay vì nâu xỉn. Cùng hai màu đầu vào, cùng ý định "trộn nửa nửa", nhưng sai không gian màu khi trộn cho ra một màu tối hơn gấp đôi và lệch hẳn sắc thái.
+
+## Quy tắc vàng: decode → tính toán → encode
+
+Hai ví dụ trên rút ra một quy tắc áp dụng cho *mọi* phép toán ánh sáng, không riêng blend: **giải mã (decode) giá trị sRGB về linear trước khi tính, tính toán trong linear, rồi mã hoá (encode) kết quả về sRGB đúng một lần khi hiển thị**. Cộng nhiều nguồn sáng, nhân màu vật liệu với ánh sáng, lấy trung bình mẫu khi khử răng cưa hay lọc mipmap — tất cả phải tuân theo trình tự decode → compute → encode. Encode hai lần làm ảnh "cháy sáng" giả; không decode trước khi tính (đúng lỗi ở ví dụ trên) làm ảnh tối và xỉn màu giả.
+
+## Phép chuyển đổi này nằm ở đâu trong pipeline
+
+Trong pipeline WebGL/OpenGL thực tế, hai điểm là nơi decode/encode xảy ra tự động nếu khai đúng định dạng: **texture sampling** — texture chứa màu (albedo, diffuse map) là ảnh JPEG/PNG lưu ở sRGB; khai định dạng `SRGB8_ALPHA8` (thay vì `RGBA8` thường) khiến GPU tự decode về linear ngay khi shader gọi `texture()`, không cần viết `pow()` tay. Và **framebuffer output** — bật `FRAMEBUFFER_SRGB` (hoặc surface sRGB của WebGL2) khiến GPU tự encode kết quả linear trong shader về sRGB đúng một lần khi ghi ra màn hình. Texture không phải màu (normal map, roughness map, mask) **không** được đánh dấu sRGB — chúng không phải năng lượng ánh sáng, decode qua gamma sẽ làm sai lệch toàn bộ giá trị.
+
+## Three.js quản lý color space ra sao (từ r150)
+
+Từ r150, Three.js tự động hoá gần trọn quy tắc trên: `renderer.outputColorSpace = THREE.SRGBColorSpace` (mặc định) đảm nhiệm bước encode cuối khi ghi ra canvas; texture chứa màu (`map`, `emissiveMap`...) cần gắn `texture.colorSpace = THREE.SRGBColorSpace` để GPU tự decode khi sample, còn texture dữ liệu (`normalMap`, `roughnessMap`) giữ `NoColorSpace`. Track 3 đi sâu vào từng thuộc tính này và các lỗi thường gặp khi migrate code cũ (trước r150 dùng `outputEncoding`/`THREE.sRGBEncoding`, API đã bị loại bỏ).
+
+## Kết nối về sau
+
+Quy tắc decode → compute → encode không dừng lại ở trộn hai màu tĩnh: đó chính là nền tảng của mọi phép tính ánh sáng trong Track 6 (custom shader) và Track 11 (PBR) — cộng nhiều nguồn sáng, tính specular, tonemap HDR về LDR đều phải tuân thủ đúng trình tự này, sai một bước là cả scene lệch màu dù công thức lighting đúng tuyệt đối. Ghi nhớ decode–compute–encode ngay từ bài toán màu đơn giản này để không phải gỡ lỗi nó giữa một shader PBR phức tạp gấp mười lần.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với sRGB/linear:
+
+1. **Trộn hoặc cộng màu trực tiếp trên giá trị sRGB mà không decode trước.** Đúng lỗi vừa tính ở trên — kết quả tối hơn và xỉn màu hơn đáng kể so với trộn đúng trong linear, dù công thức trộn (lerp/mix) nhìn hoàn toàn "đúng cú pháp".
+2. **Đánh dấu sRGB nhầm cho texture dữ liệu (normal map, roughness map).** Các texture này không lưu năng lượng ánh sáng — decode qua gamma làm méo toàn bộ giá trị pháp tuyến/độ nhám, gây lỗi shading khó chẩn đoán vì không liên quan trực tiếp tới màu sắc nhìn thấy.
+3. **Encode hai lần hoặc không encode lần nào.** Quên set `outputColorSpace`/`FRAMEBUFFER_SRGB` khiến ảnh ra tối và xỉn (thiếu bước encode cuối); ngược lại, tự tay gọi `pow(color, 1.0/2.2)` trong shader *rồi* vẫn bật sRGB framebuffer sẽ encode chồng hai lần, làm ảnh cháy sáng giả tạo.
+
+</Callout>

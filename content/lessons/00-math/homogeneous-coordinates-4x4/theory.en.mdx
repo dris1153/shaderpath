@@ -1,0 +1,56 @@
+## Why Translation Isn't a Linear Transformation
+
+A linear transformation must leave the origin fixed: $f(\vec 0) = \vec 0$, because any matrix $M$ gives $M \cdot \vec 0 = \vec 0$ — multiplying by the zero vector always produces the zero vector, and no 3×3 matrix can break that rule. But translation — shifting every point by the same vector $\vec t$ — is defined as $f(\vec p) = \vec p + \vec t$, and $f(\vec 0) = \vec t \neq \vec 0$ whenever $\vec t \neq \vec 0$. The direct consequence: **no 3×3 matrix can represent translation** in 3D space, no matter where you try to stuff $\vec t$ among its nine numbers.
+
+This isn't academic trivia — it explains why every graphics engine, Three.js included, can't build a "model matrix" out of a plain 3×3 matrix alone: with only scale and rotate (both linear) and no translation, every object would be stuck at the origin, unable to sit anywhere else in the scene.
+
+## Adding a Fourth Dimension: Homogeneous Coordinates Turn Translation Into a Matrix
+
+The fix: add an extra fake dimension, called $w$, turning the 3D point $(x,y,z)$ into a 4D vector $(x,y,z,1)$ — this is called **homogeneous coordinates**. In this 4D space, translation becomes linear again, because there's now a fixed $w=1$ component to "borrow" as the source of the shift.
+
+### The 4×4 Translation Matrix
+
+$$
+T = \begin{pmatrix} 1 & 0 & 0 & t_x \\ 0 & 1 & 0 & t_y \\ 0 & 0 & 1 & t_z \\ 0 & 0 & 0 & 1 \end{pmatrix}
+$$
+
+Applying it to a point $(x,y,z,1)$ follows exactly the "linear combination of columns" rule from the previous lesson: the first three columns are identity (leaving $x,y,z$ untouched), and the fourth column $(t_x,t_y,t_z,1)$ gets added in with weight $w=1$ — giving $(x+t_x,\ y+t_y,\ z+t_z,\ 1)$, precisely the shifted point. The cost is small: every matrix is now 4×4 instead of 3×3, and every vector carries one extra number — but in exchange, translate, rotate and scale become **the same operation**, matrix multiplication, freely chainable with each other.
+
+## w=1 Is a Point, w=0 Is a Direction — and Why Normals Transform Differently
+
+The $w$ component isn't just technical padding — it encodes **what kind of thing** is being transformed. Plug $(x,y,z,0)$ into the same multiplication with $T$ above: the fourth column now gets added in with weight $w=0$, meaning **nothing gets added at all** — the result is $(x,y,z,0)$, identical to the input. That's exactly the behavior a **direction** needs — velocity, a light ray, a surface normal: moving the whole object around must never change what these point toward, because they describe "which way," not "where." The convention is compact: $w=1$ marks a **point** (affected by translation), $w=0$ marks a **direction** (immune to it) — exactly the tool promised back in the Vector Basics lesson, where the mistake of "adding a direction vector into a position as if they were the same thing" was flagged without yet having a way to tell them apart; $w$ is that way.
+
+The rotate/scale part of the matrix, though, still acts on points and directions identically — and that's exactly where surface normals need a special exception. If the model matrix applies a non-uniform scale (squashing along $x$, say), applying that same matrix to a normal leaves it no longer perpendicular to the now-distorted surface. The standard fix: transform the normal using the **inverse transpose** of the 3×3 rotate/scale block in the model matrix, instead of the matrix itself — for pure rotation (no scale), the inverse transpose equals the matrix itself, so the difference is invisible, and only shows up once a non-uniform scale enters the picture.
+
+## Building 4x4 Rotate/Scale Matrices and Composing TRS
+
+Embed the 3×3 rotate or scale matrix from the previous lesson into the top-left corner of a 4×4 matrix, keeping the rest as identity:
+
+$$
+R_{4} = \begin{pmatrix} R_{3\times3} & \vec 0 \\ \vec 0^T & 1 \end{pmatrix}, \qquad
+S_4 = \begin{pmatrix} s_x&0&0&0\\0&s_y&0&0\\0&0&s_z&0\\0&0&0&1\end{pmatrix}
+$$
+
+The fourth row/column of $R_4$ is all zeros (except the bottom-right $1$), guaranteeing rotation never "leaks" into the translation slot — every mechanism from the previous lesson applies unchanged to this 3×3 block.
+
+Combining translate, rotate and scale into a single model matrix almost always follows the order $M = T \cdot R \cdot S$ — applying right-to-left means scaling the object in place first, rotating around its own center next, and only then translating the whole result out into the world. This is close to a universal convention (Three.js, glTF): it guarantees an object always rotates around its **own local center**, not the world origin. Reversing the order, say $R \cdot T \cdot S$, moves the object away from the world origin first and only then rotates around that same world origin — the result is an object orbiting the world instead of spinning in place, a common bug when hand-assembling transforms without following the standard order.
+
+## The Perspective Divide: A Preview of x/w
+
+Every matrix above — T, R, S — is **affine**: none of them ever touch $w$, which stays fixed at $1$. But there's another kind of 4×4 matrix, the **perspective projection** matrix (covered in depth in the Model → View → Projection lesson), that deliberately writes a value other than 1 into $w$ — typically exactly $-z$ in camera space. After multiplying by this matrix, the GPU automatically performs a step called the **perspective divide**: dividing $x$, $y$ and $z$ by $w$, before rasterization.
+
+A simple example: a point leaving the vertex shader at clip space $(2, 2, 5, w=5)$ divides to $(0.4, 0.4, 1)$. Another point twice as far away, with the same $x=2$ but $w=10$, divides to $(0.2, 0.2, 1)$ — exactly half the position on screen. This is the entire mathematical mechanism behind "farther objects look smaller": not a special effect, just a plain division, hiding inside the exact same $w$ component this lesson just repurposed for translation.
+
+## Looking Ahead: Model → View → Projection
+
+The four affine matrices from this lesson — translate, rotate, scale, and how to compose them — are exactly the **Model** matrix in the chain $p_{clip} = P \cdot V \cdot M \cdot p_{model}$ covered next; $V$ (view) is just another affine matrix (the inverse of the camera's own transform), and $P$ (projection) is where the perspective divide previewed here becomes the official tool for putting an entire 3D scene onto a 2D screen.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with homogeneous coordinates:
+
+1. **Forgetting to set $w=0$ on direction vectors when multiplying by a matrix that includes translation.** Leaving $w=1$ on a velocity or normal by accident makes it get "translated" like a point — a silent bug, nothing crashes, just a direction that drifts further wrong the farther the object moves from the origin.
+2. **Using the plain model matrix to transform normals under non-uniform scale.** The normal drifts away from true perpendicularity to the surface, and lighting comes out wrong — nearly invisible on a uniformly-scaled mesh, only showing up once an asset gets stretched along one axis.
+3. **Assembling TRS in the wrong order.** Placing rotate or scale after translate (instead of $T \cdot R \cdot S$) makes the object rotate/scale around the world origin instead of its own local center — the most visible symptom is an object "orbiting" the world when it should just be spinning in place.
+
+</Callout>

@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build thứ hai của Track 0: chứng minh bạn tự tay dựng được toàn bộ pipeline model → view → projection → screen mà không cần WebGL hay three.js làm hộ — chỉ canvas 2D và ma trận bạn tự viết.
+
+## Yêu cầu
+
+Render một khối lập phương wireframe (chỉ vẽ 12 cạnh, không tô mặt) tự xoay liên tục trên canvas 2D. Tự viết: nhân ma trận 4x4, ma trận xoay, ma trận perspective đơn giản, và phép chiếu NDC → pixel (kèm chia $w$). Không import bất kỳ thư viện toán hay đồ hoạ nào — chỉ `Math` và `CanvasRenderingContext2D`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Ba bước tuần tự cho mỗi đỉnh: (1) nhân đỉnh với ma trận model (xoay theo thời gian) rồi ma trận view (dịch ra xa camera), (2) nhân với ma trận perspective để ra toạ độ clip 4 chiều, (3) chia cho $w$ để ra NDC, rồi map NDC sang pixel canvas. Vẽ 12 đường thẳng nối các cặp đỉnh đã chiếu theo danh sách cạnh cho sẵn.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — cube phải xoay và trông thật sự 3D (không phải hình 2D xoay phẳng), các cạnh gần phải to/xa hơn các cạnh xa (foreshortening), không dùng WebGL/three.js/thư viện ma trận nào, và chạy mượt bằng `requestAnimationFrame`.

@@ -1,0 +1,95 @@
+## Vòng tròn đơn vị: bức tranh gốc của mọi chuyển động tuần hoàn
+
+Vòng tròn đơn vị là đường tròn bán kính 1, tâm tại gốc toạ độ. Chọn một góc $t$ (tính bằng radian, đo từ trục $X$ dương, ngược chiều kim đồng hồ), điểm trên vòng tròn ứng với góc đó có toạ độ chính xác là $(\cos t, \sin t)$ — đây không phải một công thức cần nhớ tách rời, mà **là định nghĩa** của $\cos$ và $\sin$: hoành độ và tung độ của điểm đó, đúng theo định nghĩa lượng giác trên vòng tròn. Khi $t$ tăng dần theo thời gian thực — ví dụ gán $t$ bằng số giây đã trôi qua kể từ khi trang tải xong — điểm $(\cos t, \sin t)$ tự động chuyển động tròn đều quanh tâm, không cần thêm bất kỳ phép tính hình học nào khác. Đây là lý do sin/cos xuất hiện khắp nơi trong animation: mọi chuyển động lặp lại theo chu kỳ, dù là con lắc, bánh xe quay hay ánh sáng nhấp nháy, đều có thể mô tả bằng một điểm di chuyển trên (hoặc quanh) vòng tròn này.
+
+Một tính chất quan trọng đi kèm: $\cos^2 t + \sin^2 t = 1$ với mọi $t$ — hệ quả trực tiếp của định lý Pythagoras vì điểm luôn cách tâm đúng 1 đơn vị. Tính chất này giải thích vì sao muốn phóng to vòng tròn chỉ cần nhân cả hai thành phần với cùng một số $R$: điểm $(R\cos t, R\sin t)$ luôn nằm trên vòng tròn bán kính $R$, không méo thành hình elip, vì tỉ lệ giữa hai thành phần không đổi khi scale đều.
+
+## Radian vs độ: vì sao code luôn dùng radian
+
+Độ ($360°$ một vòng) là đơn vị quen thuộc với con người, nhưng hầu như mọi ngôn ngữ lập trình — bao gồm `Math.sin`/`Math.cos` trong JavaScript và toàn bộ hàm lượng giác trong GLSL — nhận tham số bằng **radian**, không phải độ. Định nghĩa radian gắn thẳng với vòng tròn đơn vị: một radian là góc chắn một cung có độ dài đúng bằng bán kính; vì chu vi vòng tròn bán kính 1 là $2\pi$, một vòng tròn đầy đủ ứng với $2\pi$ radian, tức $360° = 2\pi \text{ rad}$, hay $180° = \pi \text{ rad}$. Công thức đổi qua lại:
+
+$$
+\text{rad} = \text{deg} \times \frac{\pi}{180}, \qquad \text{deg} = \text{rad} \times \frac{180}{\pi}
+$$
+
+```ts
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const toDeg = (rad: number) => (rad * 180) / Math.PI;
+
+Math.sin(toRad(90)); // 1 — đúng, vì 90° = π/2 rad
+Math.sin(90);        // 0.893... — SAI ý định, vì 90 bị hiểu là 90 radian
+```
+
+Radian không chỉ là quy ước tuỳ chọn: nhiều công thức giải tích (đạo hàm của $\sin t$ là $\cos t$, xấp xỉ $\sin t \approx t$ khi $t$ nhỏ) chỉ đúng khi $t$ tính bằng radian — dùng độ sẽ làm sai lệch các công thức này bởi một hệ số $\pi/180$. Vì vậy giao diện người dùng (slider hiển thị "độ" cho dễ đọc) và phần tính toán bên trong (luôn dùng radian) nên tách bạch rõ ràng, chuyển đổi đúng một lần tại ranh giới giữa hai thế giới.
+
+## Biên độ, tần số, pha: đọc vị $A\sin(\omega t + \phi)$
+
+Ba tham số này là "núm vặn" chuẩn hoá của mọi dao động hình sin, mỗi tham số điều khiển đúng một khía cạnh hình học, độc lập với hai cái còn lại:
+
+- **Biên độ $A$**: nhân ra ngoài hàm sin, quyết định "sóng cao bao nhiêu" — giá trị dao động trong khoảng $[-A, A]$ thay vì $[-1, 1]$ mặc định. Tăng $A$ kéo dãn đồ thị theo trục dọc, không ảnh hưởng tốc độ dao động.
+- **Tần số góc $\omega$** (rad/s): nhân với $t$ bên trong hàm sin, quyết định "dao động nhanh hay chậm". Chu kỳ — thời gian để lặp lại đúng một vòng — tính bằng $T = \frac{2\pi}{\omega}$; tần số theo Hz (chu kỳ mỗi giây) là $f = \frac{\omega}{2\pi}$. Ví dụ $\omega = \pi$ rad/s cho $T = 2$ giây mỗi chu kỳ — dễ kiểm chứng bằng mắt với một đồng hồ bấm giờ.
+- **Pha $\phi$** (rad): cộng thêm bên trong hàm sin, dịch chuyển đồ thị theo trục thời gian mà không đổi hình dạng hay tốc độ. $\phi > 0$ làm sóng "xuất phát sớm hơn" — tại $t=0$, giá trị đã là $A\sin\phi$ thay vì $0$. Pha là công cụ đúng để hai vật thể dao động cùng biên độ, cùng tần số nhưng lệch nhịp nhau — ví dụ nhiều lá cờ tung bay không đồng bộ, hay các hạt bồng bềnh (bobbing) không "nhảy" cùng lúc.
+
+Ba tham số độc lập tuyến tính với nhau: đổi $A$ không ảnh hưởng $\omega$ hay $\phi$, và ngược lại — đây là lý do một slider riêng cho mỗi tham số luôn đủ để khám phá toàn bộ không gian dao động hình sin.
+
+## atan2 thay vì atan: xác định đúng góc khi ngắm mục tiêu
+
+Bài toán ngược lại với "cho góc, tìm điểm" là "cho một hướng $(\Delta x, \Delta y)$, tìm góc" — ví dụ tính góc xoay để một khẩu pháo quay mặt về phía chuột. Trực giác đầu tiên là dùng $\theta = \arctan(\Delta y / \Delta x)$, nhưng hàm `atan` một tham số có một lỗ hổng toán học: tỉ số $\Delta y / \Delta x$ giống hệt nhau cho hai hướng đối nghịch nhau — $(\Delta x, \Delta y) = (3, 2)$ và $(-3, -2)$ cho cùng tỉ số $2/3$, nên `atan` trả về cùng một góc cho cả hai, dù chúng chỉ về hai phía hoàn toàn ngược nhau. `atan` chỉ trả giá trị trong khoảng $(-90°, 90°)$ — nó không có cách nào phân biệt bốn góc phần tư.
+
+`atan2(Δy, Δx)` giải quyết đúng vấn đề này bằng cách nhận **hai** tham số riêng biệt thay vì một tỉ số — biết dấu của cả $\Delta x$ lẫn $\Delta y$ nghĩa là biết chính xác góc phần tư nào, nên trả về góc đúng trong toàn bộ khoảng $(-180°, 180°]$:
+
+```ts
+function angleToTarget(from: { x: number; y: number }, to: { x: number; y: number }) {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  return Math.atan2(dy, dx); // đúng cho MỌI hướng, kể cả khi dx < 0
+}
+```
+
+Quy tắc thực dụng: bất cứ khi nào cần "góc của một vector hướng", dùng `atan2(v.y, v.x)` — không bao giờ dùng `atan(v.y / v.x)` rồi tự vá thêm điều kiện `if (dx < 0) angle += Math.PI`. `atan2` đã làm đúng việc vá đó bên trong, kể cả các trường hợp biên như $\Delta x = 0$ (đường thẳng đứng) mà phép chia $\Delta y/\Delta x$ sẽ chia cho 0.
+
+## Chồng nhiều sóng sin: từ dao động đơn điệu đến chuyển động hữu cơ
+
+Một sóng sin đơn lẻ dao động rất đều, dễ nhận ra là "máy tính đang làm" — chuyển động sinh học thật (hơi thở, sóng nước, cỏ đung đưa) trông tự nhiên hơn dù vẫn tuần hoàn. Kỹ thuật rẻ nhất để giả lập cảm giác đó là **cộng nhiều sóng sin có tần số, biên độ, pha khác nhau** lại với nhau:
+
+```ts
+function organicOffset(t: number) {
+  return (
+    Math.sin(t * 1.0) * 1.0 +
+    Math.sin(t * 2.7 + 1.3) * 0.5 +
+    Math.sin(t * 5.1 + 0.4) * 0.25
+  );
+}
+```
+
+Mỗi số hạng là một sóng "hài" (harmonic) với tần số không phải bội số nguyên gọn của số hạng trước (2.7 và 5.1, không phải 2 và 4), khiến tổng không lặp lại rõ ràng trong một khoảng thời gian ngắn — mắt người khó đoán trước chu kỳ tiếp theo, nên cảm giác "hữu cơ" hơn hẳn một sóng sin đơn. Biên độ giảm dần (1.0 → 0.5 → 0.25) mô phỏng nguyên lý vật lý thật: dao động tần số cao thường mang năng lượng (biên độ) nhỏ hơn dao động tần số thấp. Kỹ thuật này chính là bước đệm thô sơ trước khi vào FBM (fractal Brownian motion) ở Track 7 — cùng ý tưởng "chồng nhiều tần số", chỉ thay sin bằng noise.
+
+## Điều khiển quỹ đạo tròn trực tiếp từ thời gian
+
+Cách sai phổ biến để xoay một vật thể là cộng dồn góc mỗi frame: `angle += speed` trong vòng lặp render. Cách đúng, ổn định hơn nhiều, là tính góc trực tiếp từ một mốc thời gian duy nhất:
+
+```ts
+function orbitPosition(center: { x: number; y: number }, radius: number, omega: number, elapsedSeconds: number) {
+  const angle = omega * elapsedSeconds;
+  return {
+    x: center.x + Math.cos(angle) * radius,
+    y: center.y + Math.sin(angle) * radius,
+  };
+}
+```
+
+`elapsedSeconds` lấy từ một đồng hồ đơn điệu (`performance.now()`, hoặc `state.clock.elapsedTime` trong React Three Fiber) — không phải một biến cộng dồn thủ công. Khác biệt này quan trọng hơn vẻ ngoài: nếu tính bằng `angle += omega * dt` mỗi frame, sai số làm tròn dấu phẩy động cộng dồn qua hàng chục nghìn frame, và tốc độ quay phụ thuộc trực tiếp vào việc frame có bị bỏ lỡ hay tạm dừng (tab ẩn) hay không — tạm dừng tab rồi quay lại làm góc "đứng yên" tại giá trị cũ, trong khi thời gian thực đã trôi tiếp. Tính thẳng từ `elapsedSeconds` tự động đồng bộ lại đúng vị trí ngay khi resume, không cần logic bù trừ nào thêm.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng lượng giác cho animation:
+
+1. **Truyền độ thẳng vào `Math.sin`/`Math.cos` mà quên đổi sang radian.** `Math.sin(90)` không phải `1` — nó hiểu `90` là 90 *radian* (hơn 14 vòng tròn), cho ra `0.893...`. Luôn nhân với `Math.PI / 180` trước khi gọi hàm lượng giác nếu giá trị gốc là độ.
+2. **Dùng `Math.atan(dy/dx)` để ngắm mục tiêu thay vì `Math.atan2(dy, dx)`.** Khi mục tiêu nằm bên trái ($dx < 0$), `atan` trả về góc lệch đúng $180°$ so với hướng thật — vật thể quay lưng lại mục tiêu thay vì hướng về nó, và lỗi này chỉ lộ ra khi test với mục tiêu ở bên trái, dễ bị bỏ sót nếu chỉ test bên phải.
+3. **Cộng dồn góc mỗi frame (`angle += speed`) thay vì tính trực tiếp từ đồng hồ elapsed time.** Cách này làm tốc độ quay phụ thuộc frame rate (trừ khi nhân đúng `dt`), cộng dồn sai số dấu phẩy động qua thời gian dài, và không tự phục hồi đúng vị trí sau khi tab bị ẩn/tạm dừng. Luôn ưu tiên `angle = omega * elapsedSeconds`.
+
+</Callout>
+
+## Kết nối về sau: từ toán thuần đến render loop thật
+
+Track 1 (WebGL thuần) và Track 4 (React Three Fiber) đều cung cấp đúng một con số mỗi frame — timestamp hoặc `state.clock.elapsedTime` — và toàn bộ công thức $A\sin(\omega t+\phi)$, `atan2`, và quỹ đạo tròn ở bài này cắm thẳng vào con số đó mà không cần sửa gì thêm. GSAP (Track 5) còn đóng gói sẵn các dạng sóng này thành easing và `yoyo repeat`, nhưng hiểu cơ chế bên dưới — chính là nội dung bài này — giúp biết khi nào nên tự viết công thức thay vì gọi thư viện. Bài tiếp theo học lerp, smoothstep và easing curve: công cụ thứ hai, song song với lượng giác, để điều khiển giá trị đi từ A đến B theo thời gian.

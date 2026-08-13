@@ -20,13 +20,53 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/00-math/cartesian-and-uv-space/theory.vi.mdx"),
     en: () => import("./lessons/00-math/cartesian-and-uv-space/theory.en.mdx"),
   },
+  "checkpoint-orbit-animation": {
+    vi: () => import("./lessons/00-math/checkpoint-orbit-animation/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/checkpoint-orbit-animation/theory.en.mdx"),
+  },
   "checkpoint-vector-clock": {
     vi: () => import("./lessons/00-math/checkpoint-vector-clock/theory.vi.mdx"),
     en: () => import("./lessons/00-math/checkpoint-vector-clock/theory.en.mdx"),
   },
+  "checkpoint-wireframe-cube": {
+    vi: () => import("./lessons/00-math/checkpoint-wireframe-cube/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/checkpoint-wireframe-cube/theory.en.mdx"),
+  },
   "dot-and-cross-products": {
     vi: () => import("./lessons/00-math/dot-and-cross-products/theory.vi.mdx"),
     en: () => import("./lessons/00-math/dot-and-cross-products/theory.en.mdx"),
+  },
+  "euler-angles-and-gimbal-lock": {
+    vi: () => import("./lessons/00-math/euler-angles-and-gimbal-lock/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/euler-angles-and-gimbal-lock/theory.en.mdx"),
+  },
+  "homogeneous-coordinates-4x4": {
+    vi: () => import("./lessons/00-math/homogeneous-coordinates-4x4/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/homogeneous-coordinates-4x4/theory.en.mdx"),
+  },
+  "interpolation-and-easing": {
+    vi: () => import("./lessons/00-math/interpolation-and-easing/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/interpolation-and-easing/theory.en.mdx"),
+  },
+  "matrix-basics": {
+    vi: () => import("./lessons/00-math/matrix-basics/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/matrix-basics/theory.en.mdx"),
+  },
+  "model-view-projection": {
+    vi: () => import("./lessons/00-math/model-view-projection/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/model-view-projection/theory.en.mdx"),
+  },
+  "quaternions": {
+    vi: () => import("./lessons/00-math/quaternions/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/quaternions/theory.en.mdx"),
+  },
+  "srgb-linear-and-gamma": {
+    vi: () => import("./lessons/00-math/srgb-linear-and-gamma/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/srgb-linear-and-gamma/theory.en.mdx"),
+  },
+  "trigonometry-for-animation": {
+    vi: () => import("./lessons/00-math/trigonometry-for-animation/theory.vi.mdx"),
+    en: () => import("./lessons/00-math/trigonometry-for-animation/theory.en.mdx"),
   },
   "vector-basics": {
     vi: () => import("./lessons/00-math/vector-basics/theory.vi.mdx"),
@@ -39,6 +79,14 @@ export const REFERENCES_REGISTRY: Partial<
 > = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/references"),
   "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/references"),
+  "euler-angles-and-gimbal-lock": () => import("./lessons/00-math/euler-angles-and-gimbal-lock/references"),
+  "homogeneous-coordinates-4x4": () => import("./lessons/00-math/homogeneous-coordinates-4x4/references"),
+  "interpolation-and-easing": () => import("./lessons/00-math/interpolation-and-easing/references"),
+  "matrix-basics": () => import("./lessons/00-math/matrix-basics/references"),
+  "model-view-projection": () => import("./lessons/00-math/model-view-projection/references"),
+  "quaternions": () => import("./lessons/00-math/quaternions/references"),
+  "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/references"),
+  "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/references"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/references"),
 };
 
@@ -49,13 +97,53 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"hệ-toạ-độ-descartes-từ-đường-số-đến-không-gian-3d","text":"Hệ toạ độ Descartes: từ đường số đến không gian 3D","depth":2},{"id":"quy-ước-trục-y-up-vs-z-up-và-tay-trái-hay-tay-phải","text":"Quy ước trục: Y-up vs Z-up, và tay trái hay tay phải","depth":2},{"id":"uv-space-là-gì-và-vì-sao-luôn-chạy-từ-0-đến-1","text":"UV space là gì, và vì sao luôn chạy từ 0 đến 1","depth":2},{"id":"ánh-xạ-pixel--uv-công-thức-và-pixel-center","text":"Ánh xạ pixel ↔ UV: công thức và pixel center","depth":2},{"id":"công-thức-ánh-xạ","text":"Công thức ánh xạ","depth":3},{"id":"vì-sao-phải-cộng-05","text":"Vì sao phải cộng 0.5","depth":3},{"id":"chuẩn-hoá-màn-hình-01-và-xem-trước--11-ndc","text":"Chuẩn hoá màn hình: [0,1] và xem trước [-1,1] (NDC)","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-texture-và-shader","text":"Nền tảng này dẫn tới đâu: texture và shader","depth":2}],
     en: [{"id":"cartesian-coordinates-from-the-number-line-to-3d-space","text":"Cartesian Coordinates: From the Number Line to 3D Space","depth":2},{"id":"axis-conventions-y-up-vs-z-up-left--or-right-handed","text":"Axis Conventions: Y-up vs Z-up, Left- or Right-handed","depth":2},{"id":"what-uv-space-is-and-why-it-always-runs-0-to-1","text":"What UV Space Is, and Why It Always Runs 0 to 1","depth":2},{"id":"mapping-pixels-to-uv-the-formula-and-the-pixel-center","text":"Mapping Pixels to UV: The Formula and the Pixel Center","depth":2},{"id":"the-mapping-formula","text":"The Mapping Formula","depth":3},{"id":"why-you-add-05","text":"Why You Add 0.5","depth":3},{"id":"normalizing-the-screen-01-and-a-preview-of--11-ndc","text":"Normalizing the Screen: [0,1] and a Preview of [-1,1] (NDC)","depth":2},{"id":"where-this-foundation-leads-textures-and-shaders","text":"Where This Foundation Leads: Textures and Shaders","depth":2}],
   },
+  "checkpoint-orbit-animation": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
   "checkpoint-vector-clock": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-wireframe-cube": {
     vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
     en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
   },
   "dot-and-cross-products": {
     vi: [{"id":"dot-product-hai-công-thức-cho-cùng-một-phép-toán","text":"Dot product: hai công thức cho cùng một phép toán","depth":2},{"id":"công-thức-đại-số","text":"Công thức đại số","depth":3},{"id":"công-thức-hình-học-liên-hệ-với-góc","text":"Công thức hình học: liên hệ với góc","depth":3},{"id":"dùng-dot-để-kiểm-tra-góc-và-hướng-đối-diện","text":"Dùng dot để kiểm tra góc và hướng đối diện","depth":2},{"id":"phép-chiếu-nhìn-một-vector-dưới-góc-của-vector-khác","text":"Phép chiếu: nhìn một vector \"dưới góc\" của vector khác","depth":2},{"id":"cross-product-dựng-vector-vuông-góc-với-cả-hai","text":"Cross product: dựng vector vuông góc với cả hai","depth":2},{"id":"định-nghĩa-và-quy-tắc-bàn-tay-phải","text":"Định nghĩa và quy tắc bàn tay phải","depth":3},{"id":"độ-lớn-của-cross--diện-tích-hình-bình-hành","text":"Độ lớn của cross = diện tích hình bình hành","depth":3},{"id":"dựng-pháp-tuyến-tam-giác-bằng-cross-product","text":"Dựng pháp tuyến tam giác bằng cross product","depth":2},{"id":"kết-nối-về-sau-nl-trong-lighting-và-cross-trong-backface-culling","text":"Kết nối về sau: N·L trong lighting và cross trong backface culling","depth":2}],
     en: [{"id":"dot-product-two-formulas-for-the-same-operation","text":"Dot Product: Two Formulas for the Same Operation","depth":2},{"id":"the-algebraic-formula","text":"The Algebraic Formula","depth":3},{"id":"the-geometric-formula-tied-to-the-angle","text":"The Geometric Formula: Tied to the Angle","depth":3},{"id":"using-the-dot-product-to-test-angle-and-facing","text":"Using the Dot Product to Test Angle and Facing","depth":2},{"id":"projection-viewing-one-vector-through-anothers-direction","text":"Projection: Viewing One Vector Through Another's Direction","depth":2},{"id":"cross-product-building-a-vector-perpendicular-to-both","text":"Cross Product: Building a Vector Perpendicular to Both","depth":2},{"id":"definition-and-the-right-hand-rule","text":"Definition and the Right-Hand Rule","depth":3},{"id":"the-cross-products-magnitude-is-a-parallelograms-area","text":"The Cross Product's Magnitude Is a Parallelogram's Area","depth":3},{"id":"building-a-triangle-normal-with-the-cross-product","text":"Building a Triangle Normal With the Cross Product","depth":2},{"id":"where-this-leads-nl-in-lighting-and-cross-in-backface-culling","text":"Where This Leads: N·L in Lighting and Cross in Backface Culling","depth":2}],
+  },
+  "euler-angles-and-gimbal-lock": {
+    vi: [{"id":"euler-angles-ba-phép-xoay-quanh-trục-nối-tiếp-nhau","text":"Euler angles: ba phép xoay quanh trục nối tiếp nhau","depth":2},{"id":"thứ-tự-trục-quyết-định-kết-quả-xyz-vs-zyx","text":"Thứ tự trục quyết định kết quả: XYZ vs ZYX","depth":2},{"id":"intrinsic-vs-extrinsic-xoay-quanh-trục-nào","text":"Intrinsic vs extrinsic: xoay quanh trục nào","depth":2},{"id":"gimbal-lock-khi-trục-giữa-chạm-90-một-bậc-tự-do-biến-mất","text":"Gimbal lock: khi trục giữa chạm ±90°, một bậc tự do biến mất","depth":2},{"id":"ví-dụ-số-hai-bộ-góc-khác-nhau-cùng-một-ma-trận","text":"Ví dụ số: hai bộ góc khác nhau, cùng một ma trận","depth":3},{"id":"vì-sao-nội-suy-euler-lượn-bất-ngờ","text":"Vì sao nội suy Euler \"lượn\" bất ngờ","depth":2},{"id":"khi-nào-euler-đủ-dùng-khi-nào-cần-công-cụ-khác","text":"Khi nào Euler đủ dùng, khi nào cần công cụ khác","depth":2},{"id":"kết-nối-về-sau-quaternion-và-animation","text":"Kết nối về sau: quaternion và animation","depth":2}],
+    en: [{"id":"euler-angles-three-rotations-applied-in-sequence","text":"Euler Angles: Three Rotations Applied in Sequence","depth":2},{"id":"axis-order-decides-the-outcome-xyz-vs-zyx","text":"Axis Order Decides the Outcome: XYZ vs ZYX","depth":2},{"id":"intrinsic-vs-extrinsic-rotating-about-which-axis","text":"Intrinsic vs Extrinsic: Rotating About Which Axis","depth":2},{"id":"gimbal-lock-when-the-middle-rotation-hits-90-a-degree-of-freedom-vanishes","text":"Gimbal Lock: When the Middle Rotation Hits ±90°, a Degree of Freedom Vanishes","depth":2},{"id":"a-numeric-check-two-different-angle-pairs-one-matrix","text":"A Numeric Check: Two Different Angle Pairs, One Matrix","depth":3},{"id":"why-interpolating-euler-poses-can-swing-unexpectedly","text":"Why Interpolating Euler Poses Can Swing Unexpectedly","depth":2},{"id":"when-euler-is-enough-when-you-need-something-else","text":"When Euler Is Enough, When You Need Something Else","depth":2},{"id":"where-this-leads-quaternions-and-animation","text":"Where This Leads: Quaternions and Animation","depth":2}],
+  },
+  "homogeneous-coordinates-4x4": {
+    vi: [{"id":"vì-sao-translation-không-tuyến-tính-trong-3d","text":"Vì sao translation không tuyến tính trong 3D","depth":2},{"id":"thêm-chiều-thứ-4-gấp-translation-vào-phép-nhân-ma-trận","text":"Thêm chiều thứ 4: gấp translation vào phép nhân ma trận","depth":2},{"id":"ma-trận-translate-44","text":"Ma trận translate 4×4","depth":3},{"id":"w1-là-điểm-w0-là-hướng--và-vì-sao-normal-biến-đổi-khác","text":"w=1 là điểm, w=0 là hướng — và vì sao normal biến đổi khác","depth":2},{"id":"dựng-rotatescale-44-và-compose-trs","text":"Dựng rotate/scale 4×4 và compose TRS","depth":2},{"id":"phép-chia-phối-cảnh-xem-trước-xw","text":"Phép chia phối cảnh: xem trước x/w","depth":2},{"id":"kết-nối-về-sau-model--view--projection","text":"Kết nối về sau: Model → View → Projection","depth":2}],
+    en: [{"id":"why-translation-isnt-a-linear-transformation","text":"Why Translation Isn't a Linear Transformation","depth":2},{"id":"adding-a-fourth-dimension-homogeneous-coordinates-turn-translation-into-a-matrix","text":"Adding a Fourth Dimension: Homogeneous Coordinates Turn Translation Into a Matrix","depth":2},{"id":"the-44-translation-matrix","text":"The 4×4 Translation Matrix","depth":3},{"id":"w1-is-a-point-w0-is-a-direction--and-why-normals-transform-differently","text":"w=1 Is a Point, w=0 Is a Direction — and Why Normals Transform Differently","depth":2},{"id":"building-4x4-rotatescale-matrices-and-composing-trs","text":"Building 4x4 Rotate/Scale Matrices and Composing TRS","depth":2},{"id":"the-perspective-divide-a-preview-of-xw","text":"The Perspective Divide: A Preview of x/w","depth":2},{"id":"looking-ahead-model--view--projection","text":"Looking Ahead: Model → View → Projection","depth":2}],
+  },
+  "interpolation-and-easing": {
+    vi: [{"id":"lerp-phép-nội-suy-tuyến-tính--công-cụ-nền-của-mọi-hoạt-hình","text":"Lerp: phép nội suy tuyến tính — công cụ nền của mọi hoạt hình","depth":2},{"id":"inverse-lerp-và-remap-hai-người-anh-em-của-lerp","text":"Inverse lerp và remap: hai người anh em của lerp","depth":2},{"id":"clamp-giữ-giá-trị-trong-biên-đã-định","text":"Clamp: giữ giá trị trong biên đã định","depth":2},{"id":"smoothstep-đa-thức-3t2---2t3-và-vì-sao-đạo-hàm-bằng-0-ở-hai-đầu-quan-trọng","text":"Smoothstep: đa thức $3t^2 - 2t^3$ và vì sao đạo hàm bằng 0 ở hai đầu quan trọng","depth":2},{"id":"easing-curve-remap-thời-gian-trước-khi-lerp","text":"Easing curve: remap thời gian trước khi lerp","depth":2},{"id":"lerp-per-frame-là-suy-giảm-mũ--và-bẫy-phụ-thuộc-frame-rate","text":"lerp-per-frame là suy giảm mũ — và bẫy phụ thuộc frame rate","depth":2},{"id":"slerp-nội-suy-trên-góc-không-phải-trên-đường-thẳng","text":"Slerp: nội suy trên góc, không phải trên đường thẳng","depth":2},{"id":"kết-nối-về-sau-easing-curve-trở-thành-api-smoothstep-trở-thành-công-cụ-shader","text":"Kết nối về sau: easing curve trở thành API, smoothstep trở thành công cụ shader","depth":2}],
+    en: [{"id":"lerp-linear-interpolation--the-workhorse-behind-every-animation","text":"Lerp: Linear Interpolation — the Workhorse Behind Every Animation","depth":2},{"id":"inverse-lerp-and-remap-lerps-two-siblings","text":"Inverse Lerp and Remap: Lerp's Two Siblings","depth":2},{"id":"clamp-keeping-a-value-inside-its-bounds","text":"Clamp: Keeping a Value Inside Its Bounds","depth":2},{"id":"smoothstep-the-3t2---2t3-polynomial-and-why-a-zero-derivative-at-both-ends-matters","text":"Smoothstep: the $3t^2 - 2t^3$ Polynomial, and Why a Zero Derivative at Both Ends Matters","depth":2},{"id":"easing-curves-remapping-time-before-you-lerp","text":"Easing Curves: Remapping Time Before You Lerp","depth":2},{"id":"lerp-per-frame-is-exponential-decay--and-its-frame-rate-trap","text":"Lerp-per-Frame Is Exponential Decay — and Its Frame-Rate Trap","depth":2},{"id":"slerp-interpolating-an-angle-not-a-straight-line","text":"Slerp: Interpolating an Angle, Not a Straight Line","depth":2},{"id":"where-this-leads-easing-becomes-an-api-smoothstep-becomes-a-shader-tool","text":"Where This Leads: Easing Becomes an API, Smoothstep Becomes a Shader Tool","depth":2}],
+  },
+  "matrix-basics": {
+    vi: [{"id":"ma-trận-là-gì-máy-biến-đổi-không-gian","text":"Ma trận là gì: máy biến đổi không gian","depth":2},{"id":"đọc-ma-trận-theo-cột-basis-vector-đi-về-đâu","text":"Đọc ma trận theo cột: basis vector đi về đâu","depth":2},{"id":"nhân-ma-trận-với-vector-tổ-hợp-tuyến-tính-của-các-cột","text":"Nhân ma trận với vector: tổ hợp tuyến tính của các cột","depth":2},{"id":"dựng-ma-trận-xoay-2d-từ-đầu","text":"Dựng ma trận xoay 2D từ đầu","depth":2},{"id":"vì-sao-cột-thứ-hai-là--sintheta-costheta","text":"Vì sao cột thứ hai là $(-\\sin\\theta, \\cos\\theta)$","depth":3},{"id":"ma-trận-scale-và-shear","text":"Ma trận scale và shear","depth":2},{"id":"composition-vì-sao-thứ-tự-nhân-ma-trận-quan-trọng","text":"Composition: vì sao thứ tự nhân ma trận quan trọng","depth":2},{"id":"kết-nối-về-sau-ma-trận-trong-pipeline-3d","text":"Kết nối về sau: ma trận trong pipeline 3D","depth":2}],
+    en: [{"id":"what-a-matrix-is-a-space-transforming-machine","text":"What a Matrix Is: A Space-Transforming Machine","depth":2},{"id":"reading-a-matrix-by-columns-where-the-basis-vectors-land","text":"Reading a Matrix by Columns: Where the Basis Vectors Land","depth":2},{"id":"matrix-times-vector-a-linear-combination-of-columns","text":"Matrix Times Vector: A Linear Combination of Columns","depth":2},{"id":"building-the-2d-rotation-matrix-from-scratch","text":"Building the 2D Rotation Matrix From Scratch","depth":2},{"id":"why-the-second-column-is--sintheta-costheta","text":"Why the Second Column Is $(-\\sin\\theta, \\cos\\theta)$","depth":3},{"id":"scale-and-shear-matrices","text":"Scale and Shear Matrices","depth":2},{"id":"composition-why-matrix-multiplication-order-matters","text":"Composition: Why Matrix Multiplication Order Matters","depth":2},{"id":"looking-ahead-matrices-in-the-3d-pipeline","text":"Looking Ahead: Matrices in the 3D Pipeline","depth":2}],
+  },
+  "model-view-projection": {
+    vi: [{"id":"chuỗi-từ-model-tới-clip-space-vai-trò-ba-ma-trận","text":"Chuỗi từ model tới clip space: vai trò ba ma trận","depth":2},{"id":"sáu-không-gian-sáu-ý-nghĩa-cụ-thể","text":"Sáu không gian, sáu ý nghĩa cụ thể","depth":2},{"id":"ma-trận-view-là-nghịch-đảo-transform-của-camera","text":"Ma trận view là nghịch đảo transform của camera","depth":2},{"id":"dựng-ma-trận-lookat-từ-eye-target-và-up","text":"Dựng ma trận lookAt từ eye, target và up","depth":2},{"id":"ma-trận-perspective-ở-mức-công-thức-fov-focal-length-nearfar","text":"Ma trận perspective ở mức công thức: fov, focal length, near/far","depth":2},{"id":"từ-ndc-ra-pixel-viewport-transform","text":"Từ NDC ra pixel: viewport transform","depth":2},{"id":"track-sau-dùng-lại-toàn-bộ-chuỗi-này","text":"Track sau dùng lại toàn bộ chuỗi này","depth":2}],
+    en: [{"id":"the-chain-from-model-to-clip-space-what-each-matrix-does","text":"The Chain From Model to Clip Space: What Each Matrix Does","depth":2},{"id":"six-spaces-six-concrete-meanings","text":"Six Spaces, Six Concrete Meanings","depth":2},{"id":"the-view-matrix-is-the-cameras-transform-inverted","text":"The View Matrix Is the Camera's Transform, Inverted","depth":2},{"id":"building-the-lookat-matrix-from-eye-target-and-up","text":"Building the lookAt Matrix From Eye, Target and Up","depth":2},{"id":"the-perspective-matrix-at-the-formula-level-fov-focal-length-nearfar","text":"The Perspective Matrix at the Formula Level: fov, Focal Length, Near/Far","depth":2},{"id":"from-ndc-to-pixels-the-viewport-transform","text":"From NDC to Pixels: the Viewport Transform","depth":2},{"id":"where-this-chain-resurfaces-later","text":"Where This Chain Resurfaces Later","depth":2}],
+  },
+  "quaternions": {
+    vi: [{"id":"quaternion-là-gì-bốn-số-mã-hoá-trục-quay-và-góc-quay","text":"Quaternion là gì: bốn số mã hoá trục quay và góc quay","depth":2},{"id":"dùng-như-hộp-đen-normalize-nhân-để-ghép-q-và--q","text":"Dùng như hộp đen: normalize, nhân để ghép, $q$ và $-q$","depth":2},{"id":"vì-sao-quaternion-không-bị-gimbal-lock","text":"Vì sao quaternion không bị gimbal lock","depth":2},{"id":"slerp-nội-suy-xoay-với-tốc-độ-góc-không-đổi","text":"Slerp: nội suy xoay với tốc độ góc không đổi","depth":2},{"id":"chi-phí-và-khi-nào-không-cần-bận-tâm","text":"Chi phí và khi nào không cần bận tâm","depth":2},{"id":"từ-axis-angle-sang-quaternion-trong-code","text":"Từ axis-angle sang quaternion trong code","depth":2},{"id":"kết-nối-về-sau-object-thật-và-animation-clip","text":"Kết nối về sau: object thật và animation clip","depth":2}],
+    en: [{"id":"what-a-quaternion-is-four-numbers-encoding-an-axis-and-an-angle","text":"What a Quaternion Is: Four Numbers Encoding an Axis and an Angle","depth":2},{"id":"using-it-as-a-black-box-normalize-multiply-to-compose-q-and--q","text":"Using It as a Black Box: Normalize, Multiply to Compose, $q$ and $-q$","depth":2},{"id":"why-quaternions-escape-gimbal-lock","text":"Why Quaternions Escape Gimbal Lock","depth":2},{"id":"slerp-interpolating-rotation-at-constant-angular-velocity","text":"Slerp: Interpolating Rotation at Constant Angular Velocity","depth":2},{"id":"cost-and-when-not-to-bother","text":"Cost and When Not to Bother","depth":2},{"id":"converting-axis-angle-to-quaternion-in-code","text":"Converting Axis-Angle to Quaternion in Code","depth":2},{"id":"where-this-leads-real-objects-and-animation-clips","text":"Where This Leads: Real Objects and Animation Clips","depth":2}],
+  },
+  "srgb-linear-and-gamma": {
+    vi: [{"id":"ánh-sáng-cộng-tuyến-tính-mắt-người-thì-không","text":"Ánh sáng cộng tuyến tính, mắt người thì không","depth":2},{"id":"srgb-mã-hoá-theo-cảm-nhận-không-phải-theo-năng-lượng","text":"sRGB: mã hoá theo cảm nhận, không phải theo năng lượng","depth":2},{"id":"vì-sao-trộn-màu-trong-srgb-là-sai-tính-bằng-số-thật","text":"Vì sao trộn màu trong sRGB là sai: tính bằng số thật","depth":2},{"id":"quy-tắc-vàng-decode--tính-toán--encode","text":"Quy tắc vàng: decode → tính toán → encode","depth":2},{"id":"phép-chuyển-đổi-này-nằm-ở-đâu-trong-pipeline","text":"Phép chuyển đổi này nằm ở đâu trong pipeline","depth":2},{"id":"threejs-quản-lý-color-space-ra-sao-từ-r150","text":"Three.js quản lý color space ra sao (từ r150)","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"light-adds-linearly-human-vision-doesnt","text":"Light Adds Linearly, Human Vision Doesn't","depth":2},{"id":"srgb-a-perceptual-encoding-not-an-energy-one","text":"sRGB: A Perceptual Encoding, Not an Energy One","depth":2},{"id":"why-blending-in-srgb-is-wrong-the-actual-math","text":"Why Blending in sRGB Is Wrong: The Actual Math","depth":2},{"id":"the-golden-rule-decode--compute--encode","text":"The Golden Rule: Decode → Compute → Encode","depth":2},{"id":"where-these-conversions-actually-live","text":"Where These Conversions Actually Live","depth":2},{"id":"how-threejs-manages-color-space-r150","text":"How Three.js Manages Color Space (r150+)","depth":2},{"id":"where-this-goes-next","text":"Where This Goes Next","depth":2}],
+  },
+  "trigonometry-for-animation": {
+    vi: [{"id":"vòng-tròn-đơn-vị-bức-tranh-gốc-của-mọi-chuyển-động-tuần-hoàn","text":"Vòng tròn đơn vị: bức tranh gốc của mọi chuyển động tuần hoàn","depth":2},{"id":"radian-vs-độ-vì-sao-code-luôn-dùng-radian","text":"Radian vs độ: vì sao code luôn dùng radian","depth":2},{"id":"biên-độ-tần-số-pha-đọc-vị-asinomega-t--phi","text":"Biên độ, tần số, pha: đọc vị $A\\sin(\\omega t + \\phi)$","depth":2},{"id":"atan2-thay-vì-atan-xác-định-đúng-góc-khi-ngắm-mục-tiêu","text":"atan2 thay vì atan: xác định đúng góc khi ngắm mục tiêu","depth":2},{"id":"chồng-nhiều-sóng-sin-từ-dao-động-đơn-điệu-đến-chuyển-động-hữu-cơ","text":"Chồng nhiều sóng sin: từ dao động đơn điệu đến chuyển động hữu cơ","depth":2},{"id":"điều-khiển-quỹ-đạo-tròn-trực-tiếp-từ-thời-gian","text":"Điều khiển quỹ đạo tròn trực tiếp từ thời gian","depth":2},{"id":"kết-nối-về-sau-từ-toán-thuần-đến-render-loop-thật","text":"Kết nối về sau: từ toán thuần đến render loop thật","depth":2}],
+    en: [{"id":"the-unit-circle-the-master-picture-behind-every-periodic-motion","text":"The Unit Circle: the Master Picture Behind Every Periodic Motion","depth":2},{"id":"radians-vs-degrees-why-code-always-uses-radians","text":"Radians vs Degrees: Why Code Always Uses Radians","depth":2},{"id":"amplitude-frequency-phase-reading-asinomega-t--phi","text":"Amplitude, Frequency, Phase: Reading $A\\sin(\\omega t + \\phi)$","depth":2},{"id":"atan2-instead-of-atan-getting-the-angle-right-when-aiming-at-a-target","text":"atan2 Instead of atan: Getting the Angle Right When Aiming at a Target","depth":2},{"id":"layering-sine-waves-from-monotonous-oscillation-to-organic-motion","text":"Layering Sine Waves: From Monotonous Oscillation to Organic Motion","depth":2},{"id":"driving-circular-orbits-directly-from-time","text":"Driving Circular Orbits Directly From Time","depth":2},{"id":"where-this-leads-from-pure-math-to-a-real-render-loop","text":"Where This Leads: From Pure Math to a Real Render Loop","depth":2}],
   },
   "vector-basics": {
     vi: [{"id":"vector-là-gì-mũi-tên-và-bộ-số","text":"Vector là gì: mũi tên và bộ số","depth":2},{"id":"cộng-và-trừ-vector-ý-nghĩa-hình-học","text":"Cộng và trừ vector: ý nghĩa hình học","depth":2},{"id":"cộng-nối-đuôi-nhau-tip-to-tail","text":"Cộng: nối đuôi nhau (tip-to-tail)","depth":3},{"id":"trừ-vector-nối-từ-điểm-này-đến-điểm-kia","text":"Trừ: vector nối từ điểm này đến điểm kia","depth":3},{"id":"nhân-vô-hướng-co-giãn-và-đổi-chiều","text":"Nhân vô hướng: co giãn và đổi chiều","depth":2},{"id":"độ-dài-vector-và-định-lý-pythagoras","text":"Độ dài vector và định lý Pythagoras","depth":2},{"id":"normalize-tách-hướng-ra-khỏi-độ-lớn","text":"Normalize: tách hướng ra khỏi độ lớn","depth":2},{"id":"vector-đóng-ba-vai-vị-trí-hướng-vận-tốc","text":"Vector đóng ba vai: vị trí, hướng, vận tốc","depth":2},{"id":"kết-nối-về-sau-vector-trong-shader-và-3d","text":"Kết nối về sau: vector trong shader và 3D","depth":2}],
@@ -66,6 +154,14 @@ export const TOC_REGISTRY: Partial<
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/demo"),
   "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/demo"),
+  "euler-angles-and-gimbal-lock": () => import("./lessons/00-math/euler-angles-and-gimbal-lock/demo"),
+  "homogeneous-coordinates-4x4": () => import("./lessons/00-math/homogeneous-coordinates-4x4/demo"),
+  "interpolation-and-easing": () => import("./lessons/00-math/interpolation-and-easing/demo"),
+  "matrix-basics": () => import("./lessons/00-math/matrix-basics/demo"),
+  "model-view-projection": () => import("./lessons/00-math/model-view-projection/demo"),
+  "quaternions": () => import("./lessons/00-math/quaternions/demo"),
+  "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/demo"),
+  "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/demo"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/demo"),
   "first-triangle-webgl2": () => import("./lessons/01-webgl/first-triangle-webgl2/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
@@ -77,7 +173,17 @@ export const EXERCISES_REGISTRY: Partial<
   Record<LessonSlug, ExercisesLoader>
 > = {
   "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/exercises"),
+  "checkpoint-orbit-animation": () => import("./lessons/00-math/checkpoint-orbit-animation/exercises"),
   "checkpoint-vector-clock": () => import("./lessons/00-math/checkpoint-vector-clock/exercises"),
+  "checkpoint-wireframe-cube": () => import("./lessons/00-math/checkpoint-wireframe-cube/exercises"),
   "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/exercises"),
+  "euler-angles-and-gimbal-lock": () => import("./lessons/00-math/euler-angles-and-gimbal-lock/exercises"),
+  "homogeneous-coordinates-4x4": () => import("./lessons/00-math/homogeneous-coordinates-4x4/exercises"),
+  "interpolation-and-easing": () => import("./lessons/00-math/interpolation-and-easing/exercises"),
+  "matrix-basics": () => import("./lessons/00-math/matrix-basics/exercises"),
+  "model-view-projection": () => import("./lessons/00-math/model-view-projection/exercises"),
+  "quaternions": () => import("./lessons/00-math/quaternions/exercises"),
+  "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/exercises"),
+  "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/exercises"),
   "vector-basics": () => import("./lessons/00-math/vector-basics/exercises"),
 };

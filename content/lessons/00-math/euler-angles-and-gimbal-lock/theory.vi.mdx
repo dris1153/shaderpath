@@ -1,0 +1,97 @@
+## Euler angles: ba phép xoay quanh trục nối tiếp nhau
+
+Một phép xoay 3D bất kỳ chỉ có đúng 3 bậc tự do — ma trận $3\times 3$ có 9 phần tử nhưng luôn ràng buộc lẫn nhau sao cho 3 con số độc lập là đủ mô tả trọn vẹn. Euler angles đóng gói 3 số đó theo cách dễ hình dung nhất: chẻ một phép xoay tổng quát (khó tưởng tượng trực tiếp) thành ba phép xoay đơn giản hơn — mỗi phép chỉ quanh **một trục** — rồi nối tiếp chúng lại. Ba góc này thường gọi là roll/pitch/yaw trong hàng không, hoặc đơn giản là góc quanh $X$, $Y$, $Z$.
+
+Mỗi phép xoay đơn trục là ma trận quen thuộc từ bài Ma trận & Transform:
+
+$$
+R_x(\alpha)=\begin{pmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{pmatrix}\quad
+R_y(\beta)=\begin{pmatrix}\cos\beta&0&\sin\beta\\0&1&0\\-\sin\beta&0&\cos\beta\end{pmatrix}\quad
+R_z(\gamma)=\begin{pmatrix}\cos\gamma&-\sin\gamma&0\\\sin\gamma&\cos\gamma&0\\0&0&1\end{pmatrix}
+$$
+
+Một Euler rotation với order `"XYZ"` (mặc định của Three.js `Euler`) là tích ba ma trận này theo một thứ tự cụ thể. Chính "thứ tự cụ thể" đó — không phải bản thân ba góc — là nguồn gốc mọi rắc rối trong phần còn lại của bài.
+
+## Thứ tự trục quyết định kết quả: XYZ vs ZYX
+
+Nhân ma trận không giao hoán, nên áp hai phép xoay giống hệt nhau theo hai thứ tự khác nhau cho ra hai hướng cuối khác nhau. Ví dụ: lấy $v=(1,0,0)$, xoay $90°$ quanh $X$ rồi $90°$ quanh $Y$, so với xoay $Y$ trước $X$ sau:
+
+```ts
+type Vec3 = [number, number, number];
+
+function rotateX(v: Vec3, a: number): Vec3 {
+  const [x, y, z] = v;
+  return [x, y * Math.cos(a) - z * Math.sin(a), y * Math.sin(a) + z * Math.cos(a)];
+}
+function rotateY(v: Vec3, a: number): Vec3 {
+  const [x, y, z] = v;
+  return [x * Math.cos(a) + z * Math.sin(a), y, -x * Math.sin(a) + z * Math.cos(a)];
+}
+
+const v: Vec3 = [1, 0, 0];
+const rad = Math.PI / 2;
+rotateY(rotateX(v, rad), rad); // X trước, Y sau → [0, 0, -1]
+rotateX(rotateY(v, rad), rad); // Y trước, X sau → [0, 1, 0]
+```
+
+Cùng một cặp góc $90°/90°$, đổi thứ tự áp dụng cho ra $(0,0,-1)$ hoặc $(0,1,0)$ — hai hướng vuông góc, không phải sai số làm tròn. Đây là lý do `THREE.Euler` luôn đi kèm `order`: hai object cùng `rotation.x/y/z` nhưng khác `order` xoay ra hai hướng khác nhau.
+
+## Intrinsic vs extrinsic: xoay quanh trục nào
+
+**Extrinsic**: cả ba trục là trục thế giới cố định, không trục nào di chuyển giữa các bước. **Intrinsic**: mỗi trục sau được đo trên hệ toạ độ đã bị trục trước xoay theo — trục $Y$ ở bước hai là trục $Y$ *của vật sau khi đã xoay theo $X$*, không phải $Y$ thế giới ban đầu. Một gimbal kim loại lồng nhau thật (la bàn hàng hải) là hiện thân vật lý của intrinsic: vòng ngoài xoay kéo cả vòng giữa và vòng trong theo.
+
+`THREE.Euler` order mặc định `"XYZ"` dùng quy ước intrinsic: xoay quanh $X$ cục bộ trước, $Y$ cục bộ sau (đã nghiêng theo bước trước), $Z$ cục bộ cuối (đã nghiêng theo hai bước trước). Về ma trận, điều này tương đương áp $R_x$ trước lên vector — $R = R_z(\gamma)R_y(\beta)R_x(\alpha)$, đúng ví dụ vừa tính. Bảng đầy đủ 12 order khả dĩ nằm trong tài liệu Eberly ở Tham khảo — không cần thuộc, chỉ cần nhớ: đổi `order` là đổi cả phép toán, không phải đổi nhãn.
+
+## Gimbal lock: khi trục giữa chạm ±90°, một bậc tự do biến mất
+
+Viết lại composition trên với tên quen thuộc — $\alpha$ = roll (X), $\beta$ = pitch (Y, trục **giữa**), $\gamma$ = yaw (Z):
+
+$$
+R(\alpha,\beta,\gamma) = R_z(\gamma)\,R_y(\beta)\,R_x(\alpha)
+$$
+
+Tại $\beta = 90°$: $\cos\beta=0$, $\sin\beta=1$. Nhân ba ma trận ra, mọi số hạng chứa $\cos\beta$ triệt tiêu, kết quả rút gọn còn:
+
+$$
+R(\alpha,90°,\gamma) =
+\begin{pmatrix}
+0 & \sin(\alpha-\gamma) & \cos(\alpha-\gamma)\\
+0 & \cos(\alpha-\gamma) & -\sin(\alpha-\gamma)\\
+-1 & 0 & 0
+\end{pmatrix}
+$$
+
+$\alpha$ và $\gamma$ không còn xuất hiện riêng lẻ, chỉ hiệu số $\alpha-\gamma$ quyết định ma trận. Roll và yaw — hai trục lẽ ra độc lập — sụp thành **một** biến chung khi pitch chạm $90°$; ba bậc tự do ban đầu còn hai. Vật lý: vòng giữa (pitch) xoay đủ $90°$ khiến trục quay của vòng trong (roll, đã bị pitch làm nghiêng) song song với trục quay của vòng ngoài (yaw, cố định thế giới) — xoay vòng nào cũng cho cùng một chuyển động.
+
+### Ví dụ số: hai bộ góc khác nhau, cùng một ma trận
+
+Hai cặp $(\alpha,\gamma)=(60°,25°)$ và $(\alpha,\gamma)=(10°,-25°)$ đều có $\alpha-\gamma=35°$. Với $\sin 35°\approx 0.574$, $\cos 35°\approx 0.819$, cả hai cho đúng cùng một ma trận:
+
+$$
+R(\alpha, 90°, \gamma) \approx
+\begin{pmatrix} 0 & 0.574 & 0.819 \\ 0 & 0.819 & -0.574 \\ -1 & 0 & 0 \end{pmatrix}
+$$
+
+Hai bộ ba góc Euler khác hẳn nhau mô tả **cùng một hướng vật lý** — hệ quả tất yếu của việc $\beta=90°$ xoá mất một chiều thông tin, không phải trùng hợp số học.
+
+## Vì sao nội suy Euler "lượn" bất ngờ
+
+Lerp trực tiếp ba con số ($\alpha,\beta,\gamma$ mỗi cái theo $t$) không tôn trọng hình học ràng buộc của không gian xoay vừa thấy. Gần $\beta\approx 90°$, ma trận chỉ phụ thuộc $\alpha-\gamma$ — muốn hướng hiển thị đổi mượt, $\alpha$ và $\gamma$ phải trôi cùng nhau; lerp độc lập từng kênh không biết điều đó, nên vật thể lướt chậm bất thường rồi lồng tốc, hoặc quay qua hướng trung gian kỳ quặc dù hai đầu trông "gần nhau". Một nguồn "lượn" khác, tầm thường hơn: lerp góc qua biên $0°/360°$ — nội suy $350°\to10°$ kiểu tuyến tính đơn giản quét gần $340°$ dài thay vì $20°$ ngắn. Cả hai đều là hệ quả của dùng lerp tuyến tính (thiết kế cho số phẳng) trên một không gian không phẳng — bài quaternion tiếp theo sửa đúng chỗ này bằng slerp.
+
+## Khi nào Euler đủ dùng, khi nào cần công cụ khác
+
+Euler ổn khi chỉ 2/3 trục thực sự dùng và trục còn lại bị **chặn cứng** tránh xa $90°$: camera FPS chỉ cần pitch (nhìn lên/xuống) và yaw (quay trái/phải), không roll, pitch luôn clamp trong $[-89°,89°]$ — chưa bao giờ chạm điểm lock. Euler vỡ khi vật thể xoay tự do quanh cả ba trục không giới hạn: mô phỏng bay lộn (drone, tàu vũ trụ tự do xoay), hoặc animation blending giữa các pose bất kỳ của rig xương — cả hai sớm muộn đưa hướng xoay qua đúng vùng $\beta=90°$, và nội suy giữa keyframe Euler sẽ "lượn" như phần trên.
+
+## Kết nối về sau: quaternion và animation
+
+Bài tiếp theo thay Euler bằng quaternion — không có khái niệm "trục thứ hai, thứ ba" nên không thể gimbal lock, và hỗ trợ nội suy mượt thật (slerp) thay vì lerp từng góc. Từ Track 3, mọi `Object3D` lưu xoay bằng cả `object.rotation` (Euler, tiện chỉnh tay) và `object.quaternion` (nguồn thật dựng ma trận, đồng bộ hai chiều) — `AnimationMixer` luôn nội suy keyframe bằng quaternion, không bao giờ Euler, chính vì lý do vừa học.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với Euler angles:
+
+1. **Tưởng `rotation.x/y/z` là ba con số độc lập.** Đổi `object.rotation.order` mà giữ nguyên `x, y, z` vẫn đổi hướng cuối — order quyết định các ma trận $R_x,R_y,R_z$ nhân theo thứ tự nào, không chỉ là nhãn.
+2. **Lerp góc thẳng qua biên $0°/360°$.** Nội suy $350°\to10°$ bằng lerp thường đi qua gần $340°$ (đường dài) thay vì $20°$ (đường ngắn) — phải đưa hiệu góc về $(-180°,180°]$ trước khi lerp.
+3. **Coi gimbal lock là lỗi phần mềm cần "sửa" bằng tăng độ chính xác số học.** Đây là tính chất cấu trúc của MỌI biểu diễn xoay bằng ba phép xoay trục tuần tự — `float64` cũng không thoát, vì mất bậc tự do là đại số tại $\beta=90°$, không phải sai số làm tròn. Cách thoát duy nhất là đổi biểu diễn, như bài sau làm với quaternion.
+
+</Callout>

@@ -1,0 +1,53 @@
+## Light Adds Linearly, Human Vision Doesn't
+
+Physics is straightforward here: light energy from two sources landing on the same point **adds linearly**. Two 50W bulbs shining on the same spot make exactly 100W, no more, no less — nothing nonlinear happens in the light itself. The direct consequence: every physically correct light operation — summing multiple lights in a scene, blending two colors, averaging samples for mipmap filtering or antialiasing — has to be a linear sum or average of *actual light energy*.
+
+The catch: human vision doesn't perceive brightness linearly with light energy. The retina is far more sensitive to differences in dark tones than in bright ones — doubling the light energy doesn't look "twice as bright," it looks only slightly brighter. Because the eye discriminates dark tones so well, storing an image efficiently means spending more code values on the dark end and fewer on the bright end — exactly what a **nonlinear, roughly power-law** curve does. That curve is called **sRGB**.
+
+## sRGB: A Perceptual Encoding, Not an Energy One
+
+sRGB (standardized by the IEC in 1996) is the transform between the pixel values you see in code (`0..1` or `0..255`) and actual light energy, called **linear light**. The most common shorthand — good enough for most real-time graphics code — is a power of 2.2:
+
+$$
+\text{linear} \approx \text{srgb}^{2.2}, \qquad \text{srgb} \approx \text{linear}^{1/2.2}
+$$
+
+But the actual sRGB standard isn't a single power of 2.2 across the whole range — it's a **piecewise** function: a linear segment near zero avoids numerical error at very small values, and a power-2.4 segment covers the rest, with two correction constants (0.055 and 1.055) that make the two pieces meet smoothly:
+
+$$
+\text{linear} = \begin{cases} \text{srgb}/12.92 & \text{srgb} \le 0.04045 \\ \left(\dfrac{\text{srgb}+0.055}{1.055}\right)^{2.4} & \text{srgb} > 0.04045 \end{cases}
+$$
+
+For `srgb = 0.5`, the 2.2-power shorthand gives `linear ≈ 0.218`; the exact piecewise formula gives `linear ≈ 0.214` — under 2% apart, close enough that the 2.2 shorthand works fine inside a real-time shader, but not the exact number a color-managed pipeline needs.
+
+## Why Blending in sRGB Is Wrong: The Actual Math
+
+This is the important consequence of the two sections above: `0.5` is a **perceptually encoded** number, not half the light energy. Take the simplest case — blending black `(0,0,0)` and white `(1,1,1)`. Naively blending right on the sRGB values gives `(0.5, 0.5, 0.5)`, which looks like the midpoint. But decoding `0.5` with the piecewise formula above gives `linear ≈ 0.214` — that pixel carries only **~21% of white's light energy**, not 50%. A pixel that truly carries 50% of the light energy has to be averaged *in linear space* first, then encoded back: `linear = 0.5` → `srgb = 1.055 · 0.5^(1/2.4) − 0.055 ≈ 0.735`. In other words, the gray that's actually "half as bright" displays at sRGB code `≈ 0.735` — noticeably lighter than the `0.5` you'd guess is the midpoint.
+
+The error is *most visible* blending two saturated, opposing colors instead of black-and-white — exactly this lesson's demo. Naively blending pure red `(1,0,0)` and pure green `(0,1,0)` right on their sRGB values gives `(0.5, 0.5, 0)`. Decode that to linear (each channel's `0.5 → 0.214`), then compute relative luminance with Rec. 709 weights ($0.2126R + 0.7152G + 0.0722B$): $0.214 \times (0.2126 + 0.7152) \approx 0.199$ — under **20% of maximum luminance**, appearing as a dull, muddy olive-brown. Blended correctly: decode red and green to linear first (`(1,0,0)` and `(0,1,0)` — unchanged, since 0 and 1 are fixed points of any power curve), average in linear to get `(0.5, 0.5, 0)`, **then** encode each channel back to sRGB (`0.5 → 0.735`) for display: `(0.735, 0.735, 0)` — luminance $0.5 \times 0.9278 \approx 0.464$, over **46%**, more than double the wrong blend's luminance, and the eye catches it instantly: a vivid yellow instead of a dull brown. Same two inputs, same "halfway" intent, but blending in the wrong color space produces a result twice as dark and shifted in hue.
+
+## The Golden Rule: Decode → Compute → Encode
+
+Both examples above point to one rule that applies to *every* light operation, not just blending: **decode sRGB values to linear before computing, do the math in linear, and encode the result back to sRGB exactly once, at display time.** Summing multiple lights, multiplying a material's color by incoming light, averaging samples for antialiasing or mipmap filtering — all of it has to follow decode → compute → encode. Encoding twice (decoding, computing, encoding, then accidentally encoding again downstream) blows highlights out artificially; skipping the decode before computing (the exact mistake above) makes everything look darker and muddier than it should.
+
+## Where These Conversions Actually Live
+
+In a real WebGL/OpenGL pipeline, two places handle decode/encode automatically once you declare the right format: **texture sampling** — a color texture (albedo, diffuse map) is a JPEG/PNG stored in sRGB; declaring its format as `SRGB8_ALPHA8` (instead of plain `RGBA8`) makes the GPU decode to linear automatically the moment the shader calls `texture()`, no manual `pow()` needed. And **framebuffer output** — enabling `FRAMEBUFFER_SRGB` (or WebGL2's sRGB-aware surface) makes the GPU encode the shader's linear result back to sRGB exactly once when writing to the screen. Non-color textures (normal maps, roughness maps, masks) must **not** be marked sRGB — they don't hold light energy, and gamma-decoding them corrupts every value they carry.
+
+## How Three.js Manages Color Space (r150+)
+
+Since r150, Three.js automates most of this rule: `renderer.outputColorSpace = THREE.SRGBColorSpace` (the default) handles the final encode step when writing to the canvas; every color-carrying texture (`map`, `emissiveMap`, ...) needs `texture.colorSpace = THREE.SRGBColorSpace` so the GPU decodes it on sample, while data textures (`normalMap`, `roughnessMap`) stay `NoColorSpace`. Track 3 covers each of these properties in depth, along with the common migration bugs from pre-r150 code that used `outputEncoding`/`THREE.sRGBEncoding`, an API that's since been removed.
+
+## Where This Goes Next
+
+The decode → compute → encode rule from this lesson doesn't stop at blending two static colors — it's exactly the foundation of every lighting calculation in Track 6 (custom shaders) and Track 11 (PBR): summing multiple lights, computing specular terms, tonemapping HDR down to LDR all have to follow this same order, and skipping one step shifts an entire scene's color even when the lighting math itself is flawless. Remember decode–compute–encode from this simple color-blending problem now, so you're not debugging it for the first time inside a shader ten times more complex.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common sRGB/linear mistakes:
+
+1. **Blending or summing colors directly on sRGB values without decoding first.** The exact error computed above — the result is noticeably darker and muddier than a correct linear blend, even though the blend/lerp code itself looks syntactically fine.
+2. **Marking a data texture (normal map, roughness map) as sRGB by mistake.** These textures don't store light energy — gamma-decoding them corrupts every normal/roughness value, causing shading bugs that are hard to diagnose because they don't look like a color problem at first.
+3. **Encoding twice, or not at all.** Forgetting to set `outputColorSpace`/`FRAMEBUFFER_SRGB` leaves the image dark and muddy (missing the final encode); conversely, manually calling `pow(color, 1.0/2.2)` in a shader *and* leaving the sRGB framebuffer enabled encodes twice, blowing out highlights that were never supposed to be that bright.
+
+</Callout>
