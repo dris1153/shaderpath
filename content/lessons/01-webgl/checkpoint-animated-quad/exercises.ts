@@ -182,6 +182,7 @@ function draw(t: number) {
   requestAnimationFrame((ms) => draw(ms / 1000));
 }
 draw(0);`,
+    referenceImage: "/figures/01-webgl/checkpoint-animated-quad.svg",
     hints: [
       {
         vi: "Chỉ số (index) được PHÉP lặp — 0 và 2 xuất hiện trong cả hai tam giác — nhưng DỮ LIỆU đỉnh (toạ độ + màu) trong buffer chỉ tồn tại đúng một lần cho mỗi trong 4 góc.",

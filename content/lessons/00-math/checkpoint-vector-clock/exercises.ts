@@ -70,6 +70,7 @@ function draw() {
 
   requestAnimationFrame(draw);
 }`,
+    referenceImage: "/figures/00-math/checkpoint-vector-clock.svg",
     hints: [
       {
         vi: "Trên canvas trục y hướng XUỐNG. Muốn góc 0 chỉ hướng 12h và quay thuận chiều kim: x = sin(góc), y = -cos(góc).",

@@ -4,6 +4,12 @@ The WebGL rendering pipeline isn't a black box that "takes vertices in, spits pi
 
 ## Eight Stations, from Vertex to Pixel
 
+<Figure
+  src="/figures/01-webgl/rendering-pipeline.svg"
+  alt="Diagram of the eight WebGL pipeline stations from vertex specification down to the framebuffer, with the two programmable stations highlighted"
+  caption="Only the two highlighted stations are code you write; the other six run fixed on the hardware — knowing that boundary tells you where a bug can and cannot be."
+/>
+
 The full chain, in execution order:
 
 ```

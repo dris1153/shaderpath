@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 352" width="520" height="352" role="img">
+  <title>Spinning wireframe cube</title>
+  <style>
+    :root {
+      --muted: #64748b;
+      --line: #94a3b8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #94a3b8;
+        --line: #64748b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 12px;
+      fill: var(--muted);
+    }
+    .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  </style>
+  <rect x="0" y="0" width="520" height="292" fill="#0f1116" />
+  <g stroke="#7dd3fc" stroke-width="2" fill="none" stroke-linecap="square">
+    <line x1="177.5" y1="205.35" x2="272.23" y2="192.92" />
+    <line x1="272.23" y1="192.92" x2="272.23" y2="99.08" />
+    <line x1="272.23" y1="99.08" x2="177.5" y2="86.65" />
+    <line x1="177.5" y1="86.65" x2="177.5" y2="205.35" />
+    <line x1="234.74" y1="242.89" x2="354" y2="213.63" />
+    <line x1="354" y1="213.63" x2="354" y2="78.37" />
+    <line x1="354" y1="78.37" x2="234.74" y2="49.11" />
+    <line x1="234.74" y1="49.11" x2="234.74" y2="242.89" />
+    <line x1="177.5" y1="205.35" x2="234.74" y2="242.89" />
+    <line x1="272.23" y1="192.92" x2="354" y2="213.63" />
+    <line x1="272.23" y1="99.08" x2="354" y2="78.37" />
+    <line x1="177.5" y1="86.65" x2="234.74" y2="49.11" />
+  </g>
+  <rect class="frame" x="0.5" y="0.5" width="519" height="291" />
+  <text x="0" y="314">One frame at t = 1.0 s (rotation angle 0.6 rad), canvas 520 x 292</text>
+  <text x="0" y="330">Transparent canvas over a dark page; all 12 edges stroke #7dd3fc</text>
+  <text x="0" y="346">A wireframe hides nothing: the far edges are drawn too</text>
+</svg>

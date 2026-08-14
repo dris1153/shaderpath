@@ -4,6 +4,12 @@ Mọi lệnh vẽ (`gl.drawArrays`, `gl.drawElements`) ghi kết quả vào mộ
 
 ## Render-to-texture: gắn texture làm color attachment
 
+<Figure
+  src="/figures/01-webgl/fbo-attachments.svg"
+  alt="Framebuffer object với COLOR_ATTACHMENT0 gắn một texture rỗng và depth attachment là renderbuffer; pass 1 vẽ vào FBO, pass 2 sample texture đó ra framebuffer mặc định"
+  caption="Bản thân FBO không chứa pixel nào — ảnh rơi vào texture được attach, và chính điều đó cho phép pass 2 đọc lại đúng thứ pass 1 vừa vẽ."
+/>
+
 Gắn một texture đã tạo sẵn (rỗng, không có dữ liệu ban đầu) vào FBO biến texture đó thành đích vẽ:
 
 ```js

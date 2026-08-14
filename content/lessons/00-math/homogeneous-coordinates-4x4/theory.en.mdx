@@ -8,6 +8,12 @@ This isn't academic trivia — it explains why every graphics engine, Three.js i
 
 The fix: add an extra fake dimension, called $w$, turning the 3D point $(x,y,z)$ into a 4D vector $(x,y,z,1)$ — this is called **homogeneous coordinates**. In this 4D space, translation becomes linear again, because there's now a fixed $w=1$ component to "borrow" as the source of the shift.
 
+<Figure
+  src="/figures/00-math/homogeneous-4x4-layout.svg"
+  alt="Block layout of a 4x4 matrix: the 3x3 rotate and scale block, the translation column, and the bottom row 0 0 0 1"
+  caption="The bottom row is what separates an affine matrix from a projection one — only the latter writes a w other than 1, which is what triggers the divide."
+/>
+
 ### The 4×4 Translation Matrix
 
 $$

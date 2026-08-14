@@ -14,6 +14,12 @@ A vertex usually needs more than one attribute: position, color, normal, UV. The
 
 ### Worked Example: 20-Byte Stride
 
+<Figure
+  src="/figures/01-webgl/vbo-memory-layout.svg"
+  alt="A VAO recording two attribute pointers above an interleaved VBO whose cells hold x, y, r, g, b per vertex, with the 20-byte stride and the 8-byte colour offset drawn as measured spans"
+  caption="Stride and offset are both measured in bytes from the start of a vertex, and the VAO keeps only those numbers — the data itself never leaves the VBO."
+/>
+
 Take the exact layout this track reuses throughout: 2 floats for position ($x, y$), 3 floats for color ($r, g, b$) — 5 floats total, 4 bytes each, **20 bytes per vertex**. For vertex index $i$, its data starts at byte $i \times 20$. Inside that 20-byte block: position occupies bytes $[0, 8)$ (2 floats × 4 bytes), color occupies bytes $[8, 20)$ (3 floats × 4 bytes). `gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 20, 0)` tells the GPU: read 2 floats, stride 20 bytes between consecutive vertices, starting at byte offset 0. `gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 20, 8)` reads 3 floats, the same 20-byte stride, but starting at byte 8. Get either the `20` or the `8` wrong by even 4 bytes — one float's worth — and the GPU reads the wrong bytes as color: no crash, just silently wrong pixels, which is exactly what the demo below lets you break on purpose to see.
 
 ## The VAO: a Recorded Wiring Table for Attribute Pointers

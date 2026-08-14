@@ -137,6 +137,7 @@ function draw(now: number) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);`,
+    referenceImage: "/figures/00-math/checkpoint-orbit-animation.svg",
     hints: [
       {
         vi: "requestAnimationFrame truyền vào timestamp tính bằng ms — chia 1000 để ra giây trước khi dùng trong tốc độ góc hay decay rate.",

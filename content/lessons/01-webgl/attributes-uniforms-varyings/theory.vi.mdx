@@ -2,6 +2,12 @@
 
 Một shader program không tự sinh ra dữ liệu — mọi con số nó dùng đều phải đi vào từ bên ngoài, và WebGL chỉ cho đúng ba con đường: **attribute**, **uniform**, **varying** (GLSL ES 3.00 gọi cặp đó là `out`/`in`). Ba cái tên mã hoá thẳng câu hỏi "giá trị này đổi bao lâu một lần, giai đoạn nào đọc được?". Đi sai đường không tạo lỗi biên dịch; nó tạo hình vẽ sai hoặc code chạy chậm không rõ nguyên nhân, nên đáng nắm chắc trước khi ghép cả ba vào bài Tam giác đầu tiên ngay sau đây.
 
+<Figure
+  src="/figures/01-webgl/attribute-uniform-varying-flow.svg"
+  alt="Sơ đồ luồng dữ liệu: buffer đưa attribute vào vertex shader, JavaScript đưa uniform mà cả hai shader đọc được, còn varying ghi theo từng đỉnh được rasterizer nội suy trước khi fragment shader đọc"
+  caption="Rasterizer nằm chen giữa hai shader: varying ghi một lần mỗi đỉnh nhưng tới fragment shader đã thành giá trị trộn sẵn, nên attribute muốn hiện lên màn hình bắt buộc phải đi nhờ một varying."
+/>
+
 ### Attribute: dữ liệu theo từng đỉnh
 
 `in` khai ở đầu vertex shader (bản 1.00 cũ dùng `attribute`) đánh dấu một giá trị GPU đọc **mới cho mỗi đỉnh**. Dữ liệu thật nằm trong một buffer đã upload lên GPU; `vertexAttribPointer` cùng `enableVertexAttribArray`, gói trong VAO, dạy phần cứng cách bước qua buffer và rót đúng byte vào đúng attribute cho từng đỉnh. Tam giác 3 đỉnh nghĩa là vertex shader chạy 3 lần, mỗi lần một bộ attribute khác nhau — và attribute chỉ đọc được **bên trong vertex shader**; fragment shader không bao giờ thấy nó trực tiếp.

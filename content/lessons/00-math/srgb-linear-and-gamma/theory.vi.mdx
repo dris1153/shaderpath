@@ -18,6 +18,12 @@ $$
 \text{linear} = \begin{cases} \text{srgb}/12.92 & \text{srgb} \le 0.04045 \\ \left(\dfrac{\text{srgb}+0.055}{1.055}\right)^{2.4} & \text{srgb} > 0.04045 \end{cases}
 $$
 
+<Figure
+  src="/figures/00-math/srgb-transfer-curve.svg"
+  alt="Đường cong sRGB vẽ cùng đường thẳng y = x, với mốc sRGB 0.5 rơi xuống khoảng 0.21 linear light"
+  caption="Khoảng cách giữa đường cong và đường thẳng chính là sai số bạn tạo ra mỗi lần tính toán ánh sáng trên giá trị đã mã hoá."
+/>
+
 Với `srgb = 0.5`, luỹ thừa 2.2 xấp xỉ cho `linear ≈ 0.218`; công thức từng khúc chính xác cho `linear ≈ 0.214` — chênh chưa tới 2%, đủ gần để xấp xỉ 2.2 dùng được trong shader thời gian thực, nhưng không phải con số chính xác nếu cần khớp màu với công cụ chỉnh màu chuyên nghiệp.
 
 ## Vì sao trộn màu trong sRGB là sai: tính bằng số thật

@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 548" width="560" height="548" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .stage { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .hop { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .hop-auto { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .legend { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- local / object space -->
+  <rect class="box" x="120" y="16" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="38" text-anchor="middle">Local / object space</text>
+  <text class="note" x="270" y="54" text-anchor="middle">mesh coordinates, origin at its own pivot</text>
+  <path class="arrow" d="M270,62 L270,104" marker-end="url(#head)" />
+  <text class="hop" x="282" y="87">× model matrix M</text>
+
+  <!-- world space -->
+  <rect class="box" x="120" y="104" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="126" text-anchor="middle">World space</text>
+  <text class="note" x="270" y="142" text-anchor="middle">objects, lights and camera share one frame</text>
+  <path class="arrow" d="M270,150 L270,192" marker-end="url(#head)" />
+  <text class="hop" x="282" y="175">× view matrix V</text>
+
+  <!-- view / camera space -->
+  <rect class="box" x="120" y="192" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="214" text-anchor="middle">View / camera space</text>
+  <text class="note" x="270" y="230" text-anchor="middle">camera at the origin, looking down -z</text>
+  <path class="arrow" d="M270,238 L270,280" marker-end="url(#head)" />
+  <text class="hop" x="282" y="263">× projection matrix P</text>
+
+  <!-- clip space -->
+  <rect class="box" x="120" y="280" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="302" text-anchor="middle">Clip space</text>
+  <text class="note" x="270" y="318" text-anchor="middle">GPU clips here, against |x, y, z| &lt;= w</text>
+  <path class="arrow" d="M270,326 L270,368" marker-end="url(#head)" />
+  <text class="hop-auto" x="282" y="351">÷ w (perspective divide)</text>
+
+  <!-- ndc -->
+  <rect class="box" x="120" y="368" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="390" text-anchor="middle">NDC</text>
+  <text class="note" x="270" y="406" text-anchor="middle">a [-1, 1] cube on all three axes</text>
+  <path class="arrow" d="M270,414 L270,456" marker-end="url(#head)" />
+  <text class="hop-auto" x="282" y="439">viewport transform</text>
+
+  <!-- screen space -->
+  <rect class="box" x="120" y="456" width="300" height="46" rx="8" />
+  <text class="stage" x="270" y="478" text-anchor="middle">Screen space</text>
+  <text class="note" x="270" y="494" text-anchor="middle">pixels in the render target, y points down</text>
+
+  <!-- legend -->
+  <circle cx="126" cy="520" r="5" fill="var(--accent-stroke)" />
+  <text class="legend" x="138" y="524">matrix you supply (M, V, P)</text>
+  <circle cx="330" cy="520" r="5" fill="var(--line)" />
+  <text class="legend" x="342" y="524">automatic GPU step</text>
+</svg>

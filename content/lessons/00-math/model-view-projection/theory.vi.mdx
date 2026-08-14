@@ -12,6 +12,12 @@ Thứ tự nhân không phải quy ước tuỳ chọn: đổi thành $MVP$ hay 
 
 ## Sáu không gian, sáu ý nghĩa cụ thể
 
+<Figure
+  src="/figures/00-math/mvp-transform-chain.svg"
+  alt="Chuỗi dọc các hệ toạ độ từ local space xuống pixel màn hình, mỗi mũi tên ghi rõ ma trận hoặc bước phần cứng thực hiện phép chuyển đó"
+  caption="Chỉ ba bước đầu là ma trận bạn tự cấp; perspective divide và viewport transform chạy tự động sau vertex shader."
+/>
+
 - **Model space**: toạ độ gắn với chính mesh, gốc thường ở tâm hoặc chân object — một cube modeling ở $[-0.5, 0.5]^3$ chưa biết nó sẽ đứng ở đâu trong scene.
 - **World space**: sau khi nhân $M$, mọi object, ánh sáng, camera cùng chia sẻ một hệ toạ độ — ví dụ $M$ dịch cube trên tới $(3, 0, -5)$, giờ nó thật sự đứng ở đó trong thế giới chung.
 - **View space (camera space)**: sau khi nhân $V$, cùng toạ độ đó được viết lại với camera đứng tại gốc, nhìn dọc trục $-z$ — khoảng cách theo trục $z$ ở đây chính là "cách camera bao xa," giá trị dùng trực tiếp cho công thức chiếu phối cảnh ở phần sau.

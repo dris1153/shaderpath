@@ -12,6 +12,12 @@ The multiplication order isn't an arbitrary convention: swapping it to $MVP$, or
 
 ## Six Spaces, Six Concrete Meanings
 
+<Figure
+  src="/figures/00-math/mvp-transform-chain.svg"
+  alt="Vertical chain of coordinate spaces from local space down to screen pixels, each arrow labelled with the matrix or hardware step that performs that hop"
+  caption="Only the first three hops are matrices you supply; the perspective divide and the viewport transform run automatically after the vertex shader."
+/>
+
 - **Model space**: coordinates local to the mesh itself, origin usually at its center or base — a cube modeled at $[-0.5, 0.5]^3$ has no idea yet where it will stand in the scene.
 - **World space**: after multiplying by $M$, every object, light and camera shares one coordinate frame — say $M$ translates that cube to $(3, 0, -5)$; it now genuinely sits there in the shared world.
 - **View space (camera space)**: after multiplying by $V$, the same coordinates are rewritten with the camera sitting at the origin, looking down $-z$ — distance along $z$ here is literally "how far in front of the camera," the exact value the perspective formula below needs.

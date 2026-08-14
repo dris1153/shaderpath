@@ -90,6 +90,7 @@ function draw(t: number) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);`,
+    referenceImage: "/figures/01-webgl/checkpoint-responsive-clear.svg",
     hints: [
       {
         vi: "resizeCanvasToDisplaySize là hàm y hệt bài trước — chỉ so sánh canvas.width/height với round(clientSize × dpr) trước khi gán, và luôn gọi gl.viewport ngay sau khi gán.",

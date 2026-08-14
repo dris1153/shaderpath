@@ -30,6 +30,12 @@ function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
 
 UV space là hệ toạ độ 2D tham chiếu vị trí trên một bề mặt — thường là texture (ảnh) — độc lập với kích thước pixel thực tế của bề mặt đó. $u$ là trục ngang, $v$ trục dọc (đặt tên khác $x, y$ để không nhầm toạ độ 3D của vertex). Quy ước $u, v \in [0, 1]$: một góc texture luôn là $(0,0)$, góc đối diện luôn là $(1,1)$, dù ảnh gốc $16\times16$ hay $8192\times8192$ pixel.
 
+<Figure
+  src="/figures/00-math/uv-origin-conventions.svg"
+  alt="Hai hình vuông đơn vị đặt cạnh nhau: texture space của GL gốc dưới-trái và image space gốc trên-trái, cùng một texel được ghi toạ độ ở cả hai"
+  caption="Toạ độ u của một texel giống hệt nhau ở cả hai quy ước, chỉ v khác — nên texture lật sai luôn lộn theo chiều dọc chứ không bao giờ lộn ngang."
+/>
+
 Lý do chọn $[0,1]$ rất thực dụng: shader sample texture bằng UV không cần biết texture có bao nhiêu pixel — đổi độ phân giải hay mip level không phải sửa dòng shader nào, vì toạ độ sample vẫn nằm trong $[0,1]$. Đây là lý do UV, không phải toạ độ pixel, là ngôn ngữ mọi vertex dùng để nói với GPU "lấy màu ở đâu trên texture".
 
 ## Ánh xạ pixel ↔ UV: công thức và pixel center

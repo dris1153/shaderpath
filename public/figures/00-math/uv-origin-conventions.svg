@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 348" width="620" height="348" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .stage { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .coord { font-size: 12px; fill: var(--muted); }
+    .mark { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .axis-label { font-size: 13px; font-weight: 600; fill: var(--ink); }
+    .quad { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .axis { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .guide { stroke: var(--accent-stroke); stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- left: WebGL texture space, origin bottom-left -->
+  <text class="stage" x="170" y="20" text-anchor="middle">WebGL / OpenGL texture</text>
+  <text class="note" x="170" y="38" text-anchor="middle">origin bottom-left, v points up</text>
+  <rect class="quad" x="70" y="72" width="200" height="200" rx="4" />
+  <path class="axis" d="M54,272 L54,168" marker-end="url(#head)" />
+  <text class="axis-label" x="46" y="226" text-anchor="end">v</text>
+  <path class="axis" d="M70,290 L170,290" marker-end="url(#head)" />
+  <text class="axis-label" x="178" y="294">u</text>
+  <circle cx="70" cy="272" r="4" fill="var(--ink)" />
+  <text class="coord" x="80" y="262">(0, 0)</text>
+  <text class="coord" x="260" y="92" text-anchor="end">(1, 1)</text>
+  <path class="guide" d="M70,122 L130,122" />
+  <path class="guide" d="M130,122 L130,272" />
+  <circle cx="130" cy="122" r="4.5" fill="var(--accent-stroke)" />
+  <text class="mark" x="140" y="118">(0.3, 0.75)</text>
+
+  <!-- right: image / canvas space, origin top-left -->
+  <text class="stage" x="450" y="20" text-anchor="middle">Image / 2D canvas</text>
+  <text class="note" x="450" y="38" text-anchor="middle">origin top-left, v points down</text>
+  <rect class="quad" x="350" y="72" width="200" height="200" rx="4" />
+  <path class="axis" d="M334,72 L334,176" marker-end="url(#head)" />
+  <text class="axis-label" x="326" y="130" text-anchor="end">v</text>
+  <path class="axis" d="M350,56 L450,56" marker-end="url(#head)" />
+  <text class="axis-label" x="458" y="60">u</text>
+  <circle cx="350" cy="72" r="4" fill="var(--ink)" />
+  <text class="coord" x="360" y="92">(0, 0)</text>
+  <text class="coord" x="540" y="262" text-anchor="end">(1, 1)</text>
+  <path class="guide" d="M350,122 L410,122" />
+  <path class="guide" d="M410,122 L410,72" />
+  <circle cx="410" cy="122" r="4.5" fill="var(--accent-stroke)" />
+  <text class="mark" x="420" y="118">(0.3, 0.25)</text>
+
+  <!-- takeaway -->
+  <text class="note" x="310" y="316" text-anchor="middle">Same texel, same u — only v flips: v_gl = 1 - v_image.</text>
+  <text class="note" x="310" y="334" text-anchor="middle">Upload an image into a GL texture without that flip and it renders upside down.</text>
+</svg>

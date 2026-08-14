@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 344" width="400" height="344" role="img">
+  <title>Orbiting bodies with a pointer-tracking aim line</title>
+  <style>
+    :root {
+      --muted: #64748b;
+      --line: #94a3b8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #94a3b8;
+        --line: #64748b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 12px;
+      fill: var(--muted);
+    }
+    .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  </style>
+  <rect x="0" y="0" width="400" height="300" fill="#0f1116" />
+  <circle cx="155.76" cy="190.53" r="8" fill="rgb(105, 177, 224)" />
+  <circle cx="289.55" cy="141.01" r="10" fill="rgb(176, 135, 170)" />
+  <circle cx="131.02" cy="51.81" r="6" fill="rgb(220, 72, 88)" />
+  <circle cx="170.05" cy="176.52" r="5" fill="rgb(106, 176, 223)" />
+  <line x1="200" y1="150" x2="315.55" y2="70.95" stroke="#ffffff" stroke-width="2" />
+  <rect class="frame" x="0.5" y="0.5" width="399" height="299" />
+  <text x="0" y="322">One frame at t = 2.0 s — four bodies, no orbit rings</text>
+  <text x="0" y="338">The white aim line follows the pointer</text>
+</svg>

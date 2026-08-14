@@ -18,6 +18,12 @@ $$
 \text{linear} = \begin{cases} \text{srgb}/12.92 & \text{srgb} \le 0.04045 \\ \left(\dfrac{\text{srgb}+0.055}{1.055}\right)^{2.4} & \text{srgb} > 0.04045 \end{cases}
 $$
 
+<Figure
+  src="/figures/00-math/srgb-transfer-curve.svg"
+  alt="The sRGB transfer curve plotted against the straight y = x line, with sRGB 0.5 marked as landing at roughly 0.21 of linear light"
+  caption="The gap between the curve and the straight line is exactly the error you introduce every time light math runs on encoded values."
+/>
+
 For `srgb = 0.5`, the 2.2-power shorthand gives `linear ≈ 0.218`; the exact piecewise formula gives `linear ≈ 0.214` — under 2% apart, close enough that the 2.2 shorthand works fine inside a real-time shader, but not the exact number a color-managed pipeline needs.
 
 ## Why Blending in sRGB Is Wrong: The Actual Math

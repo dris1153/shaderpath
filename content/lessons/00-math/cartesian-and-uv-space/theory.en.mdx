@@ -30,6 +30,12 @@ function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
 
 UV space is a 2D coordinate system for referencing a position on a surface — usually a texture image — independent of that surface's actual pixel dimensions. $u$ is the horizontal axis, $v$ the vertical one (named differently from $x, y$ specifically so they're never confused with a vertex's 3D position). The convention is $u, v \in [0, 1]$: one corner of the texture is always $(0,0)$, the opposite corner always $(1,1)$, whether the underlying image is $16\times16$ or $8192\times8192$ pixels.
 
+<Figure
+  src="/figures/00-math/uv-origin-conventions.svg"
+  alt="Two unit squares side by side: GL texture space with its origin bottom-left and image space with its origin top-left, the same texel labelled in both"
+  caption="A texel's u is identical under both conventions and only v differs, which is why a wrongly-flipped texture always looks mirrored vertically, never horizontally."
+/>
+
 The reason to normalize to $[0,1]$ is practical: a shader sampling a texture by UV never needs to know how many pixels that texture has — swapping in a higher-resolution texture, or a different mip level, doesn't touch a single line of shader code, because the sample coordinate still lives inside $[0,1]$. That's why UV, not pixel coordinates, is the language every vertex uses to tell the GPU where to fetch color from.
 
 ## Mapping Pixels to UV: The Formula and the Pixel Center

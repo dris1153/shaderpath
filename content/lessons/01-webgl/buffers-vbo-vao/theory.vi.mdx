@@ -14,6 +14,12 @@ Một vertex thường cần nhiều hơn một thuộc tính: vị trí, màu, 
 
 ### Ví dụ cụ thể: stride 20 byte
 
+<Figure
+  src="/figures/01-webgl/vbo-memory-layout.svg"
+  alt="VAO ghi lại hai attribute pointer nằm phía trên một VBO xen kẽ với các ô x, y, r, g, b của từng đỉnh, kèm stride 20 byte và offset màu 8 byte vẽ thành đoạn đo"
+  caption="Stride và offset đều đo bằng byte tính từ đầu mỗi vertex, và VAO chỉ giữ đúng mấy con số đó — dữ liệu thật vẫn nằm nguyên trong VBO."
+/>
+
 Lấy đúng layout track này dùng xuyên suốt: 2 số thực cho vị trí ($x, y$), 3 số thực cho màu ($r, g, b$) — tổng 5 số thực, mỗi số 4 byte, tức **20 byte mỗi vertex**. Với vertex chỉ số $i$, dữ liệu của nó bắt đầu tại byte $i \times 20$. Trong khối 20 byte đó: vị trí chiếm các byte $[0, 8)$ (2 số thực × 4 byte), màu chiếm các byte $[8, 20)$ (3 số thực × 4 byte). Lệnh `gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 20, 0)` nói với GPU: đọc 2 số thực, cách nhau 20 byte giữa hai vertex liên tiếp, bắt đầu từ offset byte 0. Lệnh `gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 20, 8)` đọc 3 số thực, cùng stride 20 byte, nhưng bắt đầu từ byte thứ 8. Sai lệch `20` hoặc `8` dù chỉ 4 byte (đúng một số thực) khiến GPU đọc nhầm byte làm màu — không crash, chỉ ra hình sai lặng lẽ, đúng thứ mà demo dưới đây cho bạn tự phá để thấy tận mắt.
 
 ## VAO: "bản ghi dây nối" của attribute pointer

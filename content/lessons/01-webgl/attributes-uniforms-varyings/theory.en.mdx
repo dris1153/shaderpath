@@ -2,6 +2,12 @@
 
 A shader program never invents its own data — every number it uses has to arrive from outside, and WebGL offers only three roads in: **attribute**, **uniform**, **varying** (GLSL ES 3.00 spells that last pair `out`/`in`). The three names encode the exact question "how often does this change, which stage can read it?" Picking the wrong road doesn't raise a compile error — it produces a wrong-looking render or mysteriously slow code, worth nailing down before wiring all three together in the very next lesson, Your First Triangle.
 
+<Figure
+  src="/figures/01-webgl/attribute-uniform-varying-flow.svg"
+  alt="Data flow diagram: a buffer feeds attributes into the vertex shader, JavaScript feeds a uniform readable by both shaders, and a varying written per vertex is interpolated by the rasterizer before the fragment shader reads it"
+  caption="The rasterizer sits between the two shaders: a varying is written once per vertex but arrives at the fragment shader as a blended value, which is why an attribute has to be forwarded through one to show up on screen."
+/>
+
 ### Attribute: Data Per Vertex
 
 `in` declared at the top of a vertex shader (the old 1.00 dialect uses `attribute`) marks a value the GPU fetches **fresh for every vertex**. The real data lives in a buffer already uploaded to the GPU; `vertexAttribPointer` and `enableVertexAttribArray`, captured inside a VAO, teach the hardware how to walk that buffer and pour the right bytes into the right attribute per vertex. A 3-vertex triangle means the vertex shader runs 3 times, each with different attribute values — and an attribute is only readable **inside the vertex shader**; the fragment shader never sees it directly.

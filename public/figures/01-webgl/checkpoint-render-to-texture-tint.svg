@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" width="360" height="420" role="img">
+  <title>Three-pass render to texture with tint, vignette and overlay</title>
+  <style>
+    :root {
+      --muted: #64748b;
+      --line: #94a3b8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #94a3b8;
+        --line: #64748b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 12px;
+      fill: var(--muted);
+    }
+    .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  </style>
+  <defs>
+    <linearGradient id="s0" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#ff5d25" /><stop offset="0.0156" stop-color="#fd5d26" /><stop offset="1" stop-color="#5d88b1" /></linearGradient>
+    <linearGradient id="s1" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fe6025" /><stop offset="0.0469" stop-color="#fa6128" /><stop offset="1" stop-color="#5e8aaf" /></linearGradient>
+    <linearGradient id="s2" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fd6325" /><stop offset="0.0781" stop-color="#f6652a" /><stop offset="1" stop-color="#608dac" /></linearGradient>
+    <linearGradient id="s3" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fc6625" /><stop offset="0.1094" stop-color="#f2692c" /><stop offset="1" stop-color="#618faa" /></linearGradient>
+    <linearGradient id="s4" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fb6a25" /><stop offset="0.1406" stop-color="#ef6d2e" /><stop offset="1" stop-color="#6392a7" /></linearGradient>
+    <linearGradient id="s5" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fb6d25" /><stop offset="0.1719" stop-color="#eb7130" /><stop offset="1" stop-color="#6495a5" /></linearGradient>
+    <linearGradient id="s6" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#fa7025" /><stop offset="0.2031" stop-color="#e87532" /><stop offset="1" stop-color="#6697a2" /></linearGradient>
+    <linearGradient id="s7" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f97325" /><stop offset="0.2344" stop-color="#e47834" /><stop offset="1" stop-color="#679aa0" /></linearGradient>
+    <linearGradient id="s8" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f87725" /><stop offset="0.2656" stop-color="#e17c36" /><stop offset="1" stop-color="#699c9d" /></linearGradient>
+    <linearGradient id="s9" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f77a25" /><stop offset="0.2969" stop-color="#dd8038" /><stop offset="1" stop-color="#6a9f9b" /></linearGradient>
+    <linearGradient id="s10" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f77d25" /><stop offset="0.3281" stop-color="#d98439" /><stop offset="1" stop-color="#6ca198" /></linearGradient>
+    <linearGradient id="s11" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f68025" /><stop offset="0.3594" stop-color="#d6883b" /><stop offset="1" stop-color="#6da496" /></linearGradient>
+    <linearGradient id="s12" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f58425" /><stop offset="0.3906" stop-color="#d28c3d" /><stop offset="1" stop-color="#6fa793" /></linearGradient>
+    <linearGradient id="s13" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f48725" /><stop offset="0.4219" stop-color="#cf903f" /><stop offset="1" stop-color="#70a991" /></linearGradient>
+    <linearGradient id="s14" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f38a25" /><stop offset="0.4531" stop-color="#cb9441" /><stop offset="1" stop-color="#72ac8e" /></linearGradient>
+    <linearGradient id="s15" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f38d25" /><stop offset="0.4844" stop-color="#c79843" /><stop offset="1" stop-color="#73ae8c" /></linearGradient>
+    <linearGradient id="s16" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f29125" /><stop offset="0.5156" stop-color="#c49c45" /><stop offset="1" stop-color="#75b189" /></linearGradient>
+    <linearGradient id="s17" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f19425" /><stop offset="0.5469" stop-color="#c0a047" /><stop offset="1" stop-color="#76b387" /></linearGradient>
+    <linearGradient id="s18" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#f09724" /><stop offset="0.5781" stop-color="#bda449" /><stop offset="1" stop-color="#78b684" /></linearGradient>
+    <linearGradient id="s19" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#ef9a24" /><stop offset="0.6094" stop-color="#b9a84a" /><stop offset="1" stop-color="#79b982" /></linearGradient>
+    <linearGradient id="s20" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#ef9e24" /><stop offset="0.6406" stop-color="#b5ac4c" /><stop offset="1" stop-color="#7bbb7f" /></linearGradient>
+    <linearGradient id="s21" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#eea124" /><stop offset="0.6719" stop-color="#b2af4e" /><stop offset="1" stop-color="#7cbe7d" /></linearGradient>
+    <linearGradient id="s22" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#eda424" /><stop offset="0.7031" stop-color="#aeb350" /><stop offset="1" stop-color="#7ec07a" /></linearGradient>
+    <linearGradient id="s23" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#eca724" /><stop offset="0.7344" stop-color="#abb752" /><stop offset="1" stop-color="#7fc378" /></linearGradient>
+    <linearGradient id="s24" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#ebab24" /><stop offset="0.7656" stop-color="#a7bb54" /><stop offset="1" stop-color="#81c575" /></linearGradient>
+    <linearGradient id="s25" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#ebae24" /><stop offset="0.7969" stop-color="#a4bf56" /><stop offset="1" stop-color="#82c872" /></linearGradient>
+    <linearGradient id="s26" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#eab124" /><stop offset="0.8281" stop-color="#a0c358" /><stop offset="1" stop-color="#84cb70" /></linearGradient>
+    <linearGradient id="s27" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#e9b424" /><stop offset="0.8594" stop-color="#9cc75a" /><stop offset="1" stop-color="#85cd6d" /></linearGradient>
+    <linearGradient id="s28" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#e8b824" /><stop offset="0.8906" stop-color="#99cb5c" /><stop offset="1" stop-color="#87d06b" /></linearGradient>
+    <linearGradient id="s29" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#e7bb24" /><stop offset="0.9219" stop-color="#95cf5d" /><stop offset="1" stop-color="#88d268" /></linearGradient>
+    <linearGradient id="s30" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#e7be24" /><stop offset="0.9531" stop-color="#92d35f" /><stop offset="1" stop-color="#8ad566" /></linearGradient>
+    <linearGradient id="s31" gradientUnits="userSpaceOnUse" x1="-63" y1="0" x2="63" y2="0"><stop offset="0" stop-color="#e6c124" /><stop offset="0.9844" stop-color="#8ed761" /><stop offset="1" stop-color="#8bd763" /></linearGradient>
+    <clipPath id="sclip" clipPathUnits="userSpaceOnUse">
+      <rect x="-63" y="-63" width="126" height="126" />
+    </clipPath>
+    <radialGradient id="vignette" gradientUnits="userSpaceOnUse" cx="180" cy="180" r="270">
+      <stop offset="0.0000" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.0417" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.0833" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.1250" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.1667" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.2083" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.2500" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.2917" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.3333" stop-color="#000000" stop-opacity="0.0000" />
+      <stop offset="0.3750" stop-color="#000000" stop-opacity="0.0112" />
+      <stop offset="0.4167" stop-color="#000000" stop-opacity="0.0430" />
+      <stop offset="0.4583" stop-color="#000000" stop-opacity="0.0923" />
+      <stop offset="0.5000" stop-color="#000000" stop-opacity="0.1563" />
+      <stop offset="0.5417" stop-color="#000000" stop-opacity="0.2319" />
+      <stop offset="0.5833" stop-color="#000000" stop-opacity="0.3164" />
+      <stop offset="0.6250" stop-color="#000000" stop-opacity="0.4067" />
+      <stop offset="0.6667" stop-color="#000000" stop-opacity="0.5000" />
+      <stop offset="0.7083" stop-color="#000000" stop-opacity="0.5933" />
+      <stop offset="0.7500" stop-color="#000000" stop-opacity="0.6836" />
+      <stop offset="0.7917" stop-color="#000000" stop-opacity="0.7681" />
+      <stop offset="0.8333" stop-color="#000000" stop-opacity="0.8438" />
+      <stop offset="0.8750" stop-color="#000000" stop-opacity="0.9077" />
+      <stop offset="0.9167" stop-color="#000000" stop-opacity="0.9570" />
+      <stop offset="0.9583" stop-color="#000000" stop-opacity="0.9888" />
+      <stop offset="1.0000" stop-color="#000000" stop-opacity="1.0000" />
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="360" height="360" fill="#0d0b0e" />
+  <rect x="36" y="36" width="288" height="288" fill="#401636" />
+  <g transform="translate(180 180) rotate(-57.3)">
+    <g clip-path="url(#sclip)">
+      <rect x="-63" y="58.83" width="126" height="4.41" fill="url(#s0)" />
+      <rect x="-63" y="54.89" width="126" height="4.41" fill="url(#s1)" />
+      <rect x="-63" y="50.95" width="126" height="4.41" fill="url(#s2)" />
+      <rect x="-63" y="47.01" width="126" height="4.41" fill="url(#s3)" />
+      <rect x="-63" y="43.08" width="126" height="4.41" fill="url(#s4)" />
+      <rect x="-63" y="39.14" width="126" height="4.41" fill="url(#s5)" />
+      <rect x="-63" y="35.2" width="126" height="4.41" fill="url(#s6)" />
+      <rect x="-63" y="31.26" width="126" height="4.41" fill="url(#s7)" />
+      <rect x="-63" y="27.33" width="126" height="4.41" fill="url(#s8)" />
+      <rect x="-63" y="23.39" width="126" height="4.41" fill="url(#s9)" />
+      <rect x="-63" y="19.45" width="126" height="4.41" fill="url(#s10)" />
+      <rect x="-63" y="15.51" width="126" height="4.41" fill="url(#s11)" />
+      <rect x="-63" y="11.58" width="126" height="4.41" fill="url(#s12)" />
+      <rect x="-63" y="7.64" width="126" height="4.41" fill="url(#s13)" />
+      <rect x="-63" y="3.7" width="126" height="4.41" fill="url(#s14)" />
+      <rect x="-63" y="-0.24" width="126" height="4.41" fill="url(#s15)" />
+      <rect x="-63" y="-4.17" width="126" height="4.41" fill="url(#s16)" />
+      <rect x="-63" y="-8.11" width="126" height="4.41" fill="url(#s17)" />
+      <rect x="-63" y="-12.05" width="126" height="4.41" fill="url(#s18)" />
+      <rect x="-63" y="-15.99" width="126" height="4.41" fill="url(#s19)" />
+      <rect x="-63" y="-19.92" width="126" height="4.41" fill="url(#s20)" />
+      <rect x="-63" y="-23.86" width="126" height="4.41" fill="url(#s21)" />
+      <rect x="-63" y="-27.8" width="126" height="4.41" fill="url(#s22)" />
+      <rect x="-63" y="-31.74" width="126" height="4.41" fill="url(#s23)" />
+      <rect x="-63" y="-35.67" width="126" height="4.41" fill="url(#s24)" />
+      <rect x="-63" y="-39.61" width="126" height="4.41" fill="url(#s25)" />
+      <rect x="-63" y="-43.55" width="126" height="4.41" fill="url(#s26)" />
+      <rect x="-63" y="-47.49" width="126" height="4.41" fill="url(#s27)" />
+      <rect x="-63" y="-51.42" width="126" height="4.41" fill="url(#s28)" />
+      <rect x="-63" y="-55.36" width="126" height="4.41" fill="url(#s29)" />
+      <rect x="-63" y="-59.3" width="126" height="4.41" fill="url(#s30)" />
+      <rect x="-63" y="-63.24" width="126" height="4.41" fill="url(#s31)" />
+    </g>
+  </g>
+  <rect x="0" y="0" width="360" height="360" fill="url(#vignette)" />
+  <rect x="90" y="252" width="180" height="72" fill="#1a99ff" fill-opacity="0.35" />
+  <rect class="frame" x="0.5" y="0.5" width="359" height="359" />
+  <text x="0" y="382">One frame at t = 1.25 s, square canvas</text>
+  <text x="0" y="398">Tinted, vignetted FBO image; overlay blended on top</text>
+  <text x="0" y="414">The back quad stays occluded: depth test, not draw order</text>
+</svg>
