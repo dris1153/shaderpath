@@ -1,0 +1,19 @@
+## Mục tiêu
+
+Đây là bài kiểm tra cuối cùng của toàn bộ lộ trình: một trang portfolio thật, có 3D hero, nhưng phải sống được ngoài đời — đạt Lighthouse trên 90 ở mọi trang không chứa canvas, và chạy mượt trên một thiết bị di động tầm trung, không chỉ trên máy dev. Mọi kỹ thuật hiệu năng rời rạc của Track 12 (canvas an toàn với SSR, tier thích nghi, dispose, kỷ luật bundle) hợp lại thành sản phẩm cuối cùng của platform.
+
+## Yêu cầu
+
+Kiến trúc site dựng bằng Next.js App Router: nội dung — heading, văn bản, SEO, a11y — nằm trong Server Component, render sẵn trong HTML đầu tiên; hero 3D là một "hòn đảo canvas" duy nhất, boundary bằng `next/dynamic({ ssr: false })` gọi từ một Client Component, giữ chỗ layout bằng aspect-ratio cố định trước khi mount. Hero áp dụng tier thích nghi (giảm độ chi tiết geometry/DPR trên thiết bị yếu), tôn trọng `prefers-reduced-motion`, và dừng hẳn render loop khi tab ẩn hoặc canvas ngoài viewport — đúng triết lý `useVisibleFrameloop` mà mọi demo trên platform này đã tuân theo. Vì App Router điều hướng phía client không reload trang, disposal phải được xác nhận đúng qua NHIỀU LẦN điều hướng route, không chỉ một lần mount/unmount. `three`/`@react-three/fiber` chỉ được nằm trong chunk của hero, xác minh bằng bundle analyzer thật, không đoán. Kết quả cuối cùng: một bảng audit Lighthouse đầy đủ, theo đúng phương pháp luận chính thức (mobile preset, throttled, đọc riêng LCP/CLS/TBT và biết chính xác canvas đe doạ từng chỉ số đó ở đâu).
+
+## Lộ trình gợi ý
+
+1. Site skeleton + trang nội dung (chưa có 3D) đạt 95+ — dựng layout/page thuần Server Component theo `nextjs-ssr-hydration-canvas`, cộng nền tảng SEO/a11y cơ bản (semantic HTML, meta, alt text) trước khi thêm bất cứ thứ gì chạm WebGL.
+2. Tích hợp hero island mà không phá CLS/LCP — áp dụng đúng pattern `next/dynamic` + AspectRatio placeholder của `nextjs-ssr-hydration-canvas`, đo LCP/CLS trước/sau khi hero mount.
+3. Tier + xác minh mobile — áp dụng `adaptive-quality-tiers` và `checkpoint-mobile-ready-scene`: giảm chi tiết geometry/DPR theo tier, tôn trọng `prefers-reduced-motion`, dừng render loop khi ẩn bằng `useVisibleFrameloop`.
+4. Audit disposal qua điều hướng route — mở rộng `dispose-and-leak-hunting` từ một trang sang nhiều route: điều hướng qua lại bằng `<Link>` nhiều lần, xác nhận `renderer.info.memory` quay về baseline mỗi lần.
+5. Hoàn thiện + bảng audit cuối — chạy lại quy trình chẩn đoán năm bước của `profiling-webgl-tools`, xác nhận bundle qua `next experimental-analyze`, và tổng hợp bảng Lighthouse đầy đủ theo phương pháp luận chính thức.
+
+## Tiêu chí hoàn thành
+
+Mọi trang không chứa canvas đạt Lighthouse Performance trên 90 (mobile preset, throttled). Hero 3D không kéo CLS lên trên 0.1 hay LCP quá 2.5s dù đang tải `three`. Tier thích nghi hoạt động thật — xác minh trên một cấu hình thiết bị mô phỏng tầm trung, không chỉ đọc code. Điều hướng qua lại giữa các route nhiều lần không làm `renderer.info.memory` tăng dần. Bundle analyzer xác nhận `three`/`@react-three/fiber` chỉ nằm trong chunk của hero, không rò vào chunk trang hay chunk chia sẻ. Có một bảng audit Lighthouse đầy đủ, ghi rõ phương pháp đo (preset, throttle, phiên bản Lighthouse) chứ không chỉ con số trần trụi.

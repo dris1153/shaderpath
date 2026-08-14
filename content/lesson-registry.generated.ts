@@ -648,6 +648,22 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/12-performance/texture-memory-budget/theory.vi.mdx"),
     en: () => import("./lessons/12-performance/texture-memory-budget/theory.en.mdx"),
   },
+  "capstone-3d-portfolio": {
+    vi: () => import("./lessons/13-capstones/capstone-3d-portfolio/theory.vi.mdx"),
+    en: () => import("./lessons/13-capstones/capstone-3d-portfolio/theory.en.mdx"),
+  },
+  "capstone-gpu-particle-system": {
+    vi: () => import("./lessons/13-capstones/capstone-gpu-particle-system/theory.vi.mdx"),
+    en: () => import("./lessons/13-capstones/capstone-gpu-particle-system/theory.en.mdx"),
+  },
+  "capstone-raymarched-landscape": {
+    vi: () => import("./lessons/13-capstones/capstone-raymarched-landscape/theory.vi.mdx"),
+    en: () => import("./lessons/13-capstones/capstone-raymarched-landscape/theory.en.mdx"),
+  },
+  "capstone-scroll-product-showcase": {
+    vi: () => import("./lessons/13-capstones/capstone-scroll-product-showcase/theory.vi.mdx"),
+    en: () => import("./lessons/13-capstones/capstone-scroll-product-showcase/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -777,6 +793,10 @@ export const REFERENCES_REGISTRY: Partial<
   "profiling-webgl-tools": () => import("./lessons/12-performance/profiling-webgl-tools/references"),
   "shader-compilation-stalls": () => import("./lessons/12-performance/shader-compilation-stalls/references"),
   "texture-memory-budget": () => import("./lessons/12-performance/texture-memory-budget/references"),
+  "capstone-3d-portfolio": () => import("./lessons/13-capstones/capstone-3d-portfolio/references"),
+  "capstone-gpu-particle-system": () => import("./lessons/13-capstones/capstone-gpu-particle-system/references"),
+  "capstone-raymarched-landscape": () => import("./lessons/13-capstones/capstone-raymarched-landscape/references"),
+  "capstone-scroll-product-showcase": () => import("./lessons/13-capstones/capstone-scroll-product-showcase/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -1414,6 +1434,22 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"vram-kẻ-ăn-bộ-nhớ-âm-thầm-nhất-trong-scene","text":"VRAM: kẻ ăn bộ nhớ âm thầm nhất trong scene","depth":2},{"id":"công-thức-dung-lượng-thật-của-một-texture-trên-gpu","text":"Công thức: dung lượng thật của một texture trên GPU","depth":2},{"id":"float-và-half-float-nhân-đôi-chi-phí","text":"Float và half-float nhân đôi chi phí","depth":2},{"id":"thuế-render-target-chi-phí-ẩn-trong-hậu-kỳ","text":"Thuế render target: chi phí ẩn trong hậu kỳ","depth":2},{"id":"lập-ngân-sách-cho-một-thiết-bị-cụ-thể","text":"Lập ngân sách cho một thiết bị cụ thể","depth":2},{"id":"vì-sao-độ-phân-giải-không-đồng-nghĩa-chất-lượng","text":"Vì sao độ phân giải không đồng nghĩa chất lượng","depth":2},{"id":"nén-gpu-native-cách-sửa-thật-sự","text":"Nén GPU-native: cách sửa thật sự","depth":2},{"id":"đo-và-dọn-rendererinfo-và-dispose","text":"Đo và dọn: renderer.info và dispose","depth":2},{"id":"từ-đây-tới-pipeline-nén-thật","text":"Từ đây tới pipeline nén thật","depth":2}],
     en: [{"id":"vram-the-silent-memory-eater-in-your-scene","text":"VRAM: The Silent Memory Eater in Your Scene","depth":2},{"id":"the-formula-a-textures-real-gpu-footprint","text":"The Formula: A Texture's Real GPU Footprint","depth":2},{"id":"float-and-half-float-double-the-cost","text":"Float and Half-Float Double the Cost","depth":2},{"id":"the-render-target-tax-a-hidden-post-processing-cost","text":"The Render-Target Tax: A Hidden Post-Processing Cost","depth":2},{"id":"budgeting-for-a-specific-device","text":"Budgeting for a Specific Device","depth":2},{"id":"why-resolution-isnt-the-same-as-quality","text":"Why Resolution Isn't the Same as Quality","depth":2},{"id":"gpu-native-compression-the-real-fix","text":"GPU-Native Compression: The Real Fix","depth":2},{"id":"measuring-and-cleaning-up-rendererinfo-and-dispose","text":"Measuring and Cleaning Up: renderer.info and dispose","depth":2},{"id":"from-here-to-a-real-compression-pipeline","text":"From Here to a Real Compression Pipeline","depth":2}],
   },
+  "capstone-3d-portfolio": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"lộ-trình-gợi-ý","text":"Lộ trình gợi ý","depth":2},{"id":"tiêu-chí-hoàn-thành","text":"Tiêu chí hoàn thành","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"suggested-milestones","text":"Suggested Milestones","depth":2},{"id":"definition-of-done","text":"Definition of Done","depth":2}],
+  },
+  "capstone-gpu-particle-system": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"lộ-trình-gợi-ý","text":"Lộ trình gợi ý","depth":2},{"id":"tiêu-chí-hoàn-thành","text":"Tiêu chí hoàn thành","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"suggested-milestones","text":"Suggested Milestones","depth":2},{"id":"definition-of-done","text":"Definition of Done","depth":2}],
+  },
+  "capstone-raymarched-landscape": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"lộ-trình-gợi-ý","text":"Lộ trình gợi ý","depth":2},{"id":"tiêu-chí-hoàn-thành","text":"Tiêu chí hoàn thành","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"suggested-milestones","text":"Suggested Milestones","depth":2},{"id":"definition-of-done","text":"Definition of Done","depth":2}],
+  },
+  "capstone-scroll-product-showcase": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"lộ-trình-gợi-ý","text":"Lộ trình gợi ý","depth":2},{"id":"tiêu-chí-hoàn-thành","text":"Tiêu chí hoàn thành","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"suggested-milestones","text":"Suggested Milestones","depth":2},{"id":"definition-of-done","text":"Definition of Done","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -1706,4 +1742,8 @@ export const EXERCISES_REGISTRY: Partial<
   "profiling-webgl-tools": () => import("./lessons/12-performance/profiling-webgl-tools/exercises"),
   "shader-compilation-stalls": () => import("./lessons/12-performance/shader-compilation-stalls/exercises"),
   "texture-memory-budget": () => import("./lessons/12-performance/texture-memory-budget/exercises"),
+  "capstone-3d-portfolio": () => import("./lessons/13-capstones/capstone-3d-portfolio/exercises"),
+  "capstone-gpu-particle-system": () => import("./lessons/13-capstones/capstone-gpu-particle-system/exercises"),
+  "capstone-raymarched-landscape": () => import("./lessons/13-capstones/capstone-raymarched-landscape/exercises"),
+  "capstone-scroll-product-showcase": () => import("./lessons/13-capstones/capstone-scroll-product-showcase/exercises"),
 };

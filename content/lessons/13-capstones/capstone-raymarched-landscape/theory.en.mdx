@@ -1,0 +1,25 @@
+## Goal
+
+The second capstone: build a fully infinite landscape experience in a single fullscreen fragment shader — no mesh, no pre-baked heightmap texture, just FBM math and a march loop. The difference from what the `checkpoint-raymarched-vista` checkpoint (Track 8) already did: that one stopped at ONE fixed render on the dev machine; this capstone requires a quality-tier system as a first-class citizen — not a feature bolted on at the end — so the scene actually runs on weaker machines, backed by measurements taken under real throttling. Budget 480 minutes.
+
+## Requirements
+
+An FBM-built heightfield, marched with the terrain-marching technique (growing steps then bisection refine — not sphere tracing, since a heightfield has no true SDF) as used in `checkpoint-raymarched-vista`. A daytime sky with a simple scattering gradient plus sun glow, and height fog that fades distant terrain out gradually. A camera that flies slowly through the scene along a path (a looping or otherwise smoother-than-a-straight-line route), or mouse-look if you choose that direction instead. The mandatory requirement and the biggest departure from the checkpoint: a tier config object (`low`/`mid`/`high`) controlling max march steps, FBM octave count, and render resolution — plus a real benchmark (measured on this actual shader, not guessed from a GPU name) to pick the starting tier, and a frame-time watchdog running continuously to adjust the tier at runtime. Every tier parameter lives in ONE object, not scattered `if/else` branches across the shader or component. Optional stretch goals: a cheap reflective water plane (no real ray tracing), clouds via 2.5D FBM.
+
+## Suggested Milestones
+
+Milestone 1 — Ray setup + flat-plane march: build the ray origin/direction from UV and march a test flat plane first, confirming the camera basis is correct before adding terrain (the foundation from `sphere-tracing-principle`, Track 8).
+
+Milestone 2 — FBM terrain + normals + basic shading: swap in the FBM heightfield, compute normals via gradient (the `sdf-normals-from-gradient` lesson, Track 8), and simple Lambertian shading toward the sun direction.
+
+Milestone 3 — Sky/scattering/fog integration: a sky gradient, sun glow, and exponential height fog warming toward the sun (the `fog-and-atmospheric-scattering` lesson, Track 8).
+
+Milestone 4 — Camera path + polish: a smoother-than-a-straight-line camera trajectory, tuned height/slope coloring.
+
+Milestone 5 — Tier system + watchdog: a tier config object driving max steps/octaves/resolution, a benchmark picking the starting tier, an EMA watchdog with hysteresis (the `adaptive-quality-tiers` lesson, Track 12).
+
+Milestone 6 — Verification under throttling: checked with DevTools CPU throttle 4×/6×, confirming tiers switch smoothly without flickering (the `checkpoint-mobile-ready-scene` lesson, Track 12).
+
+## Definition of Done
+
+The terrain marches correctly with no silhouette holes at normal marching speed; the sky/fog genuinely sells a sense of depth rather than a flat uniform haze; the camera flies smoothly through the whole scene; tiers switch based on real measurements (benchmark + watchdog), not a guess from `navigator`; hysteresis is strong enough that tiers don't flip-flop when frame time hovers near a threshold; under 4× and 6× CPU throttle, the scene lowers its own tier and holds a stable frame rate instead of locking up.

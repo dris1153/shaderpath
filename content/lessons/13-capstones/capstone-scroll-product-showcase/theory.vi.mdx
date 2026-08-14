@@ -1,0 +1,25 @@
+## Mục tiêu
+
+Đây là capstone đầu tiên: dựng một trang giới thiệu sản phẩm cuộn trang ở chất lượng thật sự đem ra sản xuất, không phải một demo minh hoạ kỹ thuật. Ba track hội tụ vào đây — GLTF/asset pipeline (Track 3 + 12), ScrollTrigger đồng bộ với render loop R3F (Track 5), và một chuỗi post-processing hoàn thiện (Track 10) — và bài kiểm tra thật sự không phải "bạn có gọi đúng API không" mà là: cả ba mảnh đó có ghép lại thành MỘT trải nghiệm mượt, nhất quán, không đụng độ vòng lặp render, hay không. Dự kiến 480 phút, chia làm nhiều buổi theo 6 mốc bên dưới.
+
+## Yêu cầu
+
+Tải một model GLTF thật (không phải asset nhúng minh hoạ như các checkpoint trước) đã qua pipeline nén Draco/KTX2 đúng quy trình của bài `asset-pipeline-draco-ktx2`, ghi rõ quyết định nén (geometry dùng Draco hay meshopt, texture nào cần UASTC thay vì ETC1S) ngay trong code hoặc README đi kèm. Dựng một chuỗi ScrollTrigger chia trang thành nhiều "chapter", mỗi chapter cuộn-scrub một khía cạnh khác nhau của sản phẩm — camera dolly vào gần, model tự xoay (turntable), và một khoảnh khắc "spotlight" nhấn vào chi tiết vật liệu (ví dụ vùng kim loại/emissive sáng lên). Toàn bộ những giá trị này PHẢI đi qua một plain object trung gian, không bao giờ để ScrollTrigger gọi trực tiếp hàm render — đúng quy tắc single-render-loop đã học ở bài `scrolltrigger-plus-r3f-single-loop`. Overlay text xuất hiện theo từng chapter bằng `toggleActions`, tách biệt khỏi phần scrub 3D. Hoàn thiện bằng một chuỗi post-processing tiết chế — không phải "thêm càng nhiều effect càng đẹp", mà đúng một hoặc hai điểm nhấn có chủ đích (bloom trên chi tiết phát sáng, vignette khép khung hình) cộng đo ngân sách frame time thật. Toàn trang phải tôn trọng `prefers-reduced-motion`.
+
+## Lộ trình gợi ý
+
+Mốc 1 — Asset pipeline + hero tĩnh: nén model thật bằng `gltf-transform`, wiring `DRACOLoader`/`KTX2Loader` đúng thứ tự trước `load()` (bài `asset-pipeline-draco-ktx2`, Track 12), dựng khung camera tĩnh đầu tiên với ánh sáng cơ bản (kỹ thuật framing theo bounding box của `checkpoint-gltf-viewer`, Track 3).
+
+Mốc 2 — Khung xương cuộn: một proxy object (`{ dolly, turntable, spotlight }`) và ScrollTrigger đầu tiên ghi vào nó, `useFrame` đọc lại, `invalidate()` sau mỗi lần ghi — đúng nguyên xi pattern của bài `scrolltrigger-plus-r3f-single-loop` (Track 5).
+
+Mốc 3 — Biên đạo chapter + text: thêm các ScrollTrigger scrub còn lại (turntable, spotlight) cộng overlay text theo `toggleActions`, tham khảo cấu trúc nhiều-chapter của `checkpoint-scrollytelling-page` (Track 5).
+
+Mốc 4 — Vật liệu & ánh sáng: tinh chỉnh material/light cho đúng cảm giác "sản phẩm cao cấp" — độ nhám, ánh kim, điểm nhấn emissive tại khoảnh khắc spotlight.
+
+Mốc 5 — Chuỗi post-processing + kiểm ngân sách: composer thủ công (`EffectComposer`/`RenderPass`/`UnrealBloomPass`/`OutputPass`), đo `composer.render()` bằng EMA, so với một ngân sách cụ thể — đúng kỷ luật của `checkpoint-signature-effect-stack` (Track 10).
+
+Mốc 6 — Reduced-motion + checklist ship: `gsap.matchMedia()` tách nhánh rút gọn, dispose toàn bộ composer/pass/model qua nhiều chu kỳ mount/unmount, đối chiếu checklist cuối trước khi coi là "xong".
+
+## Tiêu chí hoàn thành
+
+Model thật tải được qua GLTFLoader với Draco/KTX2 wiring đúng thứ tự; camera dolly, model turntable và spotlight vật liệu đều chỉ đọc từ đúng MỘT proxy object, không có lệnh render thứ hai nào ngoài `useFrame`; text overlay vào/ra mượt theo từng chapter; chuỗi post-processing có ngân sách đo được bằng số thật, không phải cảm tính; bật `prefers-reduced-motion: reduce` tắt hết phần cuộn-scrub và hiện thẳng một pose tĩnh; không rò rỉ GPU sau nhiều lần mount/unmount composer và model.

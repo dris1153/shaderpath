@@ -1,0 +1,20 @@
+## Mục tiêu
+
+Đây là capstone lớn nhất của Track 9: mô phỏng và render một triệu particle tương tác hoàn toàn trên GPU, không một dòng JavaScript nào chạm vào vị trí từng particle mỗi frame. Toàn bộ kỹ thuật rời rạc của track — ping-pong FBO, `GPUComputationRenderer`, curl-noise flow field, tương tác chuột, instancing — hợp lại thành một hệ thống thật, cùng kỷ luật hiệu năng của Track 12 để nó thực sự chạy được trên nhiều tầng thiết bị, không chỉ trên máy dev mạnh.
+
+## Yêu cầu
+
+Dựng pipeline trạng thái bằng ping-pong FBO thủ công hoặc `GPUComputationRenderer` (chọn một, hoặc cả hai nếu muốn so sánh); particle chuyển động theo một flow field dựng từ curl noise, cộng với một tuổi thọ hữu hạn khiến chúng chết và hồi sinh ở vị trí mới — trường particle không bao giờ đứng yên hay thưa dần. Thêm một trường lực chuột với ba chế độ: hút (attract), đẩy (repel), và xoáy (vortex — lực tiếp tuyến quanh con trỏ, không phải xuyên tâm). Render bằng point hoặc instanced quad với additive glow, tô màu theo tốc độ hoặc tuổi thọ từng particle. Luật "không CPU mỗi frame" phải được thi hành nghiêm ngặt và có bằng chứng đo được bằng `renderer.info.render.calls`/`renderer.info.memory` — không phải suy đoán từ đọc code. Về hiệu năng: texture trạng thái dùng `HalfFloatType`, DPR bị giới hạn, và một hệ tier hạ dần lưới tính toán từ $1024^2$ xuống $512^2$ rồi $256^2$ trên thiết bị yếu hơn. Toàn bộ tài nguyên GPU phải dispose sạch qua nhiều chu kỳ mount/unmount và đổi tier.
+
+## Lộ trình gợi ý
+
+1. Dựng pipeline state-texture ở lưới $256^2$ (~65k particle) với mô phỏng nhìn thấy được — làm lại đúng kỹ thuật ping-pong FBO thủ công của bài `pingpong-fbo-state-textures`, rồi chuyển sang `GPUComputationRenderer` (bài cùng tên) để không tự quản lý từng render target.
+2. Thêm curl-noise flow field và lifecycle tuổi thọ, mở rộng `flow-field-particles` và `why-particles-live-on-gpu`: particle già dần theo `uTime`, chết và hồi sinh ở vị trí ngẫu nhiên khi vượt tuổi tối đa.
+3. Thêm lực tương tác chuột ba chế độ, mở rộng trực tiếp `checkpoint-interactive-particle-field` — chế độ vortex đòi một lực TIẾP TUYẾN quanh con trỏ (vuông góc với hướng xuyên tâm), không chỉ đẩy/hút như checkpoint gốc.
+4. Scale lên lưới $1024^2$ (~1 triệu particle) và hoàn thiện render, áp dụng kỹ thuật đọc texture trạng thái trực tiếp trong vertex/fragment shader từ `instancing-a-million-objects`: additive glow, color ramp theo tốc độ/tuổi.
+5. Thêm tier fallback và xác minh ngân sách, áp dụng `adaptive-quality-tiers` (hạ lưới $1024^2 \to 512^2 \to 256^2$) và `dispose-and-leak-hunting` (đổi tier/remount không leak FBO) — chứng minh số draw call không đổi bất kể grid size.
+6. Tinh chỉnh cảm giác tương tác: falloff, cường độ, damping giữa ba chế độ lực, tham khảo lại `checkpoint-interactive-particle-field` cho cảm giác "nặn" trường particle và `mobile-tile-gpus-and-overdraw` cho chi phí overdraw của glow cộng dồn ở tier thấp.
+
+## Tiêu chí hoàn thành
+
+Một triệu particle chạy ổn định ở tier cao trên máy dev, với `renderer.info.render.calls` không đổi bất kể lưới tính toán $256^2$/$512^2$/$1024^2$ — bằng chứng CPU không hề chạm vào vị trí từng particle. Flow field giữ chuyển động organic liên tục kể cả khi không có tương tác chuột; cả ba chế độ lực hoạt động phân biệt rõ ràng và tắt/mở mượt mà. Particle không bao giờ đứng yên vĩnh viễn hay biến mất hẳn — lifecycle respawn giữ mật độ trường ổn định. Tier tự động hạ xuống $512^2$/$256^2$ trên thiết bị mô phỏng yếu và không dao động qua lại liên tục. Sau nhiều chu kỳ mount/unmount và đổi tier, `renderer.info.memory` quay về đúng baseline — không leak FBO hay geometry nào sót lại.

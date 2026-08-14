@@ -1,0 +1,20 @@
+## Goal
+
+This is Track 9's biggest capstone: simulate and render one million interactive particles entirely on the GPU, with zero JavaScript ever touching an individual particle's position per frame. Every technique the track built up separately — ping-pong FBOs, `GPUComputationRenderer`, curl-noise flow fields, mouse interaction, instancing — comes together into one real system, backed by Track 12's performance discipline so it actually runs across device tiers, not just on a strong dev machine.
+
+## Requirements
+
+Build the state pipeline with either manual ping-pong FBOs or `GPUComputationRenderer` (pick one, or both if you want to compare). Particles move along a curl-noise flow field and carry a finite lifespan — they die and respawn at a fresh position, so the field never stalls or thins out. Add a mouse force field with three modes: attract, repel, and vortex (a tangential force around the pointer, not radial). Render as points or instanced quads with additive glow, colored by speed or age. The "no CPU per frame" law must be enforced and PROVEN — measured with `renderer.info.render.calls`/`renderer.info.memory`, not assumed from reading the code. On the performance side: state textures use `HalfFloatType`, DPR is capped, and a tier system steps the compute grid down from $1024^2$ to $512^2$ to $256^2$ on weaker devices. Every GPU resource must dispose cleanly across repeated mount/unmount cycles and tier switches.
+
+## Suggested Milestones
+
+1. Build the state-texture pipeline at a $256^2$ grid (~65k particles) with a visible simulation — redo the manual ping-pong FBO technique from `pingpong-fbo-state-textures`, then move to `GPUComputationRenderer` (same-name lesson) so you stop managing individual render targets by hand.
+2. Add the curl-noise flow field and age-based lifecycle, extending `flow-field-particles` and `why-particles-live-on-gpu`: particles age with `uTime`, die, and respawn at a random position once past a maximum age.
+3. Add the three-mode mouse force, extending `checkpoint-interactive-particle-field` directly — the vortex mode needs a TANGENTIAL force around the pointer (perpendicular to the radial direction), not just push/pull like the original checkpoint.
+4. Scale up to a $1024^2$ grid (~1 million particles) and finish the render, applying the direct state-texture-in-shader technique from `instancing-a-million-objects`: additive glow, a speed/age color ramp.
+5. Add tier fallback and budget verification, applying `adaptive-quality-tiers` (stepping the grid $1024^2 \to 512^2 \to 256^2$) and `dispose-and-leak-hunting` (no leaked FBOs across tier switches/remounts) — prove the draw-call count stays constant regardless of grid size.
+6. Tune interaction feel: falloff, strength, and damping across the three force modes, revisiting `checkpoint-interactive-particle-field` for how the field should "sculpt" under the pointer and `mobile-tile-gpus-and-overdraw` for the overdraw cost of additive glow at low tier.
+
+## Definition of Done
+
+One million particles run stably at high tier on the dev machine, with `renderer.info.render.calls` unchanged regardless of whether the compute grid is $256^2$, $512^2$, or $1024^2$ — proof the CPU never touches individual particle positions. The flow field keeps motion organic and continuous even with zero mouse input; all three force modes are visibly distinct and blend in/out smoothly. Particles never freeze permanently or vanish for good — lifecycle respawn keeps the field's density stable. The tier drops to $512^2$/$256^2$ on a simulated weak device and doesn't flip-flop. After repeated mount/unmount cycles and tier switches, `renderer.info.memory` returns to the exact baseline — no leaked FBOs or geometries left behind.

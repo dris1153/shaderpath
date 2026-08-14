@@ -1,0 +1,25 @@
+## Mục tiêu
+
+Capstone thứ hai: dựng một trải nghiệm địa hình vô hạn hoàn toàn bằng fullscreen fragment shader — không mesh, không texture heightmap tải sẵn, chỉ toán FBM và một vòng lặp raymarch. Điểm khác biệt so với checkpoint `checkpoint-raymarched-vista` (Track 8) đã làm: bài đó dừng lại ở MỘT bản render cố định trên máy dev; capstone này bắt buộc thêm một hệ thống quality tier là công dân hạng nhất — không phải tính năng phụ thêm sau cùng — để cảnh chạy được cả trên máy yếu, kèm bằng chứng đo được dưới throttle thật. Dự kiến 480 phút.
+
+## Yêu cầu
+
+Heightfield dựng từ FBM, march bằng kỹ thuật terrain-marching (bước tăng dần rồi nhị phân tinh chỉnh — không phải sphere tracing, vì heightfield không có SDF thật) như bài `checkpoint-raymarched-vista` đã dùng. Bầu trời ban ngày có gradient tán xạ đơn giản cộng sun glow, và height fog làm mờ dần địa hình xa. Camera bay chậm xuyên cảnh theo một quỹ đạo (đường bay vòng hoặc mượt hơn một đường thẳng đơn thuần), hoặc điều khiển bằng chuột nếu bạn chọn hướng đó. Yêu cầu bắt buộc và khác biệt lớn nhất so với checkpoint: một object cấu hình tier (`low`/`mid`/`high`) kiểm soát số bước march tối đa, số octave FBM và độ phân giải render — cộng một benchmark thật (đo trên chính shader này, không đoán qua tên GPU) để chọn tier khởi điểm, và một watchdog frame-time chạy suốt để tự điều chỉnh tier lúc runtime. Mọi tham số tier nằm trong MỘT object, không rải `if/else` khắp shader hay component. Stretch goal không bắt buộc: mặt nước phản chiếu kiểu "cheat" (không ray tracing thật), mây bằng FBM 2.5D.
+
+## Lộ trình gợi ý
+
+Mốc 1 — Ray setup + march mặt phẳng: dựng ray origin/direction từ UV và march thử một mặt phẳng phẳng, xác nhận camera basis đúng trước khi thêm địa hình (nền tảng từ bài `sphere-tracing-principle`, Track 8).
+
+Mốc 2 — FBM terrain + normal + shading cơ bản: thay heightfield FBM vào, tính normal bằng gradient (bài `sdf-normals-from-gradient`, Track 8) và Lambertian shading đơn giản theo hướng mặt trời.
+
+Mốc 3 — Tích hợp sky/scattering/fog: gradient bầu trời, sun glow, height fog hàm mũ ấm dần về phía mặt trời (bài `fog-and-atmospheric-scattering`, Track 8).
+
+Mốc 4 — Đường bay camera + polish: quỹ đạo camera mượt hơn đường thẳng, tinh chỉnh màu theo cao/dốc.
+
+Mốc 5 — Hệ thống tier + watchdog: object config tier điều khiển max steps/octave/độ phân giải, benchmark chọn tier khởi điểm, watchdog EMA có hysteresis (bài `adaptive-quality-tiers`, Track 12).
+
+Mốc 6 — Xác nhận dưới throttle: kiểm tra bằng DevTools CPU throttle 4×/6×, xác nhận tier chuyển bậc mượt không nhấp nháy (bài `checkpoint-mobile-ready-scene`, Track 12).
+
+## Tiêu chí hoàn thành
+
+Địa hình march đúng, không thủng silhouette ở tốc độ march bình thường; bầu trời/sương mù bán được cảm giác chiều sâu chứ không phải lớp mù đều; camera bay mượt suốt cảnh; tier chuyển bậc dựa trên số đo thật (benchmark + watchdog), không phải đoán qua `navigator`; hysteresis đủ mạnh để tier không nhấp nháy qua lại khi frame time dập dềnh quanh ngưỡng; dưới CPU throttle 4× và 6×, cảnh tự hạ tier và giữ được frame rate ổn định thay vì đơ cứng.

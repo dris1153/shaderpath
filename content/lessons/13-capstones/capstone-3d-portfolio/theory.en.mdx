@@ -1,0 +1,19 @@
+## Goal
+
+This is the whole path's final exam: a real portfolio site with a 3D hero that has to survive out in the world — scoring above 90 on Lighthouse for every non-canvas page, and running smoothly on a mid-range mobile device, not just a dev machine. Every performance technique Track 12 taught separately (SSR-safe canvas mounting, adaptive tiers, disposal, bundle discipline) comes together as the platform's final deliverable.
+
+## Requirements
+
+Architect the site with the Next.js App Router: content — headings, copy, SEO, accessibility — lives in Server Components, present in the very first HTML response; the 3D hero is a single "canvas island," boundary drawn with `next/dynamic({ ssr: false })` called from a Client Component, with layout space reserved via a fixed aspect-ratio before it mounts. The hero applies adaptive tiers (lower geometry detail/DPR on weaker devices), respects `prefers-reduced-motion`, and fully stops its render loop when the tab is hidden or the canvas is off-screen — the exact `useVisibleFrameloop` philosophy every demo on this platform already follows. Because App Router client-side navigation never reloads the page, disposal must be verified across MULTIPLE route navigations, not a single mount/unmount. `three`/`@react-three/fiber` may only live in the hero's own chunk, confirmed with a real bundle analyzer run, not a guess. The deliverable ends with a complete Lighthouse audit table, following the official methodology (mobile preset, throttled, LCP/CLS/TBT read separately with a clear account of exactly how a canvas threatens each one).
+
+## Suggested Milestones
+
+1. Site skeleton + content pages (no 3D yet) hitting 95+ — build a pure Server Component layout/page following `nextjs-ssr-hydration-canvas`, plus baseline SEO/a11y (semantic HTML, meta tags, alt text) before anything touches WebGL.
+2. Integrate the hero island without tanking CLS/LCP — apply the `next/dynamic` + AspectRatio placeholder pattern from `nextjs-ssr-hydration-canvas` exactly, measuring LCP/CLS before and after the hero mounts.
+3. Tiers + mobile verification — apply `adaptive-quality-tiers` and `checkpoint-mobile-ready-scene`: lower geometry detail/DPR per tier, respect `prefers-reduced-motion`, stop the render loop when hidden via `useVisibleFrameloop`.
+4. Audit disposal across route navigation — extend `dispose-and-leak-hunting` from a single page to multiple routes: navigate back and forth with `<Link>` repeatedly, confirming `renderer.info.memory` returns to baseline every time.
+5. Polish + final audit table — rerun the five-step diagnostic flow from `profiling-webgl-tools`, confirm the bundle with `next experimental-analyze`, and assemble a complete Lighthouse table following the official methodology.
+
+## Definition of Done
+
+Every non-canvas page scores above 90 on Lighthouse Performance (mobile preset, throttled). The 3D hero never pushes CLS above 0.1 or LCP past 2.5s while `three` is loading. Adaptive tiers genuinely work — verified against a simulated mid-range device profile, not just read from the code. Repeatedly navigating between routes never makes `renderer.info.memory` climb. The bundle analyzer confirms `three`/`@react-three/fiber` live only in the hero's chunk, never leaking into a page or shared chunk. A complete Lighthouse audit table exists, documenting the measurement method (preset, throttle, Lighthouse version) rather than bare numbers.

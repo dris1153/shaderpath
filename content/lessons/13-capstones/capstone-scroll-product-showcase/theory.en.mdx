@@ -1,0 +1,25 @@
+## Goal
+
+This is the first capstone: build a scroll-driven product page at real production quality, not a technique demo. Three tracks converge here — the GLTF/asset pipeline (Track 3 + 12), ScrollTrigger synced to R3F's render loop (Track 5), and a finishing post-processing chain (Track 10) — and the real test isn't "did you call the right API" but whether those three pieces fuse into ONE smooth, coherent experience that never lets two systems fight over the same render loop. Budget 480 minutes across multiple sessions, following the 6 milestones below.
+
+## Requirements
+
+Load a real GLTF model (not the embedded placeholder asset earlier checkpoints used) that has gone through the Draco/KTX2 compression pipeline from `asset-pipeline-draco-ktx2`, and write down the compression decisions (Draco vs. meshopt for geometry, which textures need UASTC instead of ETC1S) directly in code or an accompanying README. Build a ScrollTrigger sequence splitting the page into multiple "chapters," each scrubbing a different facet of the product — a camera dolly moving in, the model turning on its own (turntable), and a "spotlight" moment highlighting a material detail (a metallic or emissive area lighting up). All of these values MUST flow through one intermediate plain object — ScrollTrigger must never call a render function directly, following the single-render-loop rule from `scrolltrigger-plus-r3f-single-loop`. Text overlays enter per chapter via `toggleActions`, kept separate from the 3D scrub. Finish with a restrained post-processing chain — not "more effects look better," but one or two deliberate accents (bloom on a glowing detail, a vignette closing the frame) plus a real measured frame-time budget. The whole page must respect `prefers-reduced-motion`.
+
+## Suggested Milestones
+
+Milestone 1 — Asset pipeline + static hero: compress the real model with `gltf-transform`, wire `DRACOLoader`/`KTX2Loader` in the correct order before `load()` (the `asset-pipeline-draco-ktx2` lesson, Track 12), build the first static camera framing with basic lighting (the bounding-box framing technique from `checkpoint-gltf-viewer`, Track 3).
+
+Milestone 2 — Scroll skeleton: a proxy object (`{ dolly, turntable, spotlight }`) and the first ScrollTrigger writing into it, `useFrame` reading it back, `invalidate()` after every write — the exact pattern from `scrolltrigger-plus-r3f-single-loop` (Track 5).
+
+Milestone 3 — Chapter choreography + text: add the remaining scrub triggers (turntable, spotlight) plus text overlays via `toggleActions`, following the multi-chapter structure of `checkpoint-scrollytelling-page` (Track 5).
+
+Milestone 4 — Materials & lighting: tune material/light for a genuine "premium product" feel — roughness, metallic sheen, an emissive accent for the spotlight moment.
+
+Milestone 5 — Post chain + budget check: a manual composer (`EffectComposer`/`RenderPass`/`UnrealBloomPass`/`OutputPass`), measuring `composer.render()` with an EMA against a stated budget — the same discipline as `checkpoint-signature-effect-stack` (Track 10).
+
+Milestone 6 — Reduced-motion + ship checklist: `gsap.matchMedia()` splitting off the reduced branch, disposing every composer/pass/model across repeated mount/unmount cycles, checked off against a final list before calling it done.
+
+## Definition of Done
+
+The real model loads through GLTFLoader with Draco/KTX2 wired in the correct order; camera dolly, model turntable, and the material spotlight all read from exactly ONE proxy object, with no second render call anywhere outside `useFrame`; text overlays enter and exit smoothly per chapter; the post-processing chain has a measured budget backed by real numbers, not a guess; enabling `prefers-reduced-motion: reduce` disables all scroll-scrubbing and shows a static pose directly; no GPU leak survives repeated mount/unmount of the composer and model.
