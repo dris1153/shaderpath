@@ -112,6 +112,7 @@ void main() {
   vec3 color = mix(bg, motif, mask);
   fragColor = vec4(color, 1.0);
 }`,
+    referenceImage: "/figures/02-glsl/checkpoint-pattern-tile-poster.png",
     hints: [
       {
         vi: "mat2(a,b,c,d) điền theo CỘT: cột 0=(a,b), cột 1=(c,d) — với R(θ), cột 0=(cosθ,sinθ), cột 1=(-sinθ,cosθ). Bài Ma trận biến đổi trong shader đã nói kỹ lỗi gõ nhầm hàng-thành-cột.",

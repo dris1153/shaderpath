@@ -58,6 +58,7 @@ void main() {
 
   fragColor = vec4(color, 1.0);
 }`,
+    referenceImage: "/figures/02-glsl/checkpoint-gradient-palette.png",
     hints: [
       {
         vi: "Công thức chỉ có 4 vec3 và một cos: pal(t) = a + b*cos(2π(c*t+d)). 6.28318 xấp xỉ 2π — không cần độ chính xác hơn cho mục đích màu sắc.",
