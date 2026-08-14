@@ -42,6 +42,19 @@ function wordCount(src: string): number {
     .filter(Boolean).length;
 }
 
+// KaTeX fonts carry no Vietnamese glyphs, so diacritics inside \text{} render
+// with missing metrics and borrow another font mid-formula. Math labels stay
+// ASCII; the Vietnamese explanation belongs in the prose around the formula.
+const VN_DIACRITICS =
+  /[àáâãèéêìíòóôõùúýăđĩũơưạảấầẩẫậắằẳẵặẹẻẽếềểễệỉịọỏốồổỗộớờởỡợụủứừửữựỳỵỷỹ]/i;
+
+function katexTextViolations(src: string): string[] {
+  return [...src.matchAll(/\\text\{([^}]*)\}/g)]
+    .map((m) => m[1] ?? "")
+    .filter((inner) => VN_DIACRITICS.test(inner))
+    .map((inner) => `\\text{${inner}}`);
+}
+
 async function lintLesson(trackDir: string, slug: string) {
   const at = `${trackDir}/${slug}`;
   const dir = path.join(LESSONS_DIR, trackDir, slug);
@@ -108,6 +121,19 @@ async function lintLesson(trackDir: string, slug: string) {
           );
         }
       }
+    }
+  }
+
+  // --- KaTeX text mode (both locales + exercise prompts) --------------
+  for (const file of ["theory.vi.mdx", "theory.en.mdx", "exercises.ts"]) {
+    const filePath = path.join(dir, file);
+    if (!fs.existsSync(filePath)) continue;
+    for (const bad of katexTextViolations(
+      fs.readFileSync(filePath, "utf8"),
+    )) {
+      report(
+        `${at}: ${file} puts Vietnamese diacritics in KaTeX ${bad} - no glyph metrics, use an ASCII label and explain in prose`,
+      );
     }
   }
 

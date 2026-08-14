@@ -44,7 +44,7 @@ $$
 Tăng gấp đôi một chiều không tăng gấp đôi bộ nhớ — nó tăng **gấp bốn**, vì số texel tăng theo cả hai chiều cùng lúc:
 
 $$
-1024 \times 1024 \approx 2\text{ MB} \quad (\times 4 \text{ so với } 512) \qquad 2048 \times 2048 \approx 8\text{ MB} \quad (\times 4 \text{ so với } 1024,\ \times 16 \text{ so với } 512)
+1024 \times 1024 \approx 2\text{ MB} \quad (\times 4 \text{ vs. } 512) \qquad 2048 \times 2048 \approx 8\text{ MB} \quad (\times 4 \text{ vs. } 1024,\ \times 16 \text{ vs. } 512)
 $$
 
 Và với `PointLight`, nhân thêm 6 vì shadow map là cube map sáu mặt — một Point light shadow $2048^2$ tốn xấp xỉ $8\text{MB} \times 6 \approx 48\text{MB}$ chỉ riêng cho một light, lý do thực dụng để không bao giờ đặt `mapSize` lớn cho Point light một cách tuỳ tiện.

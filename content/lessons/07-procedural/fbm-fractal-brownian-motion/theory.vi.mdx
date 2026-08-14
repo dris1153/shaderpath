@@ -30,14 +30,14 @@ với $N$ là số octave, $g$ là gain (tỉ lệ thu nhỏ biên độ mỗi b
 
 ## Số octave: chi phí tuyến tính, và điểm dừng dưới kích thước pixel
 
-Mỗi octave thêm đúng một lần gọi hàm noise cùng vài phép nhân/cộng — chi phí tăng TUYẾN TÍNH theo số octave $N$, khác hẳn "lời nguyền lưới vuông" $2^n$ của bài trước (chi phí theo SỐ CHIỀU của một lần gọi noise, không phải số lần gọi). Nhân đôi octave từ 4 lên 8 tốn gấp đôi, không tệ hơn. Nhưng octave không miễn phí mãi: octave thứ $i$ có chu kỳ không gian xấp xỉ $\text{kích thước gốc} / l^i$ — khi chu kỳ đó nhỏ hơn khoảng cách giữa hai pixel liền kề (vượt giới hạn Nyquist của độ phân giải render), octave đó không còn thêm chi tiết NHÌN THẤY ĐƯỢC — chỉ thêm nhiễu cao tần không giải được (aliasing, nhấp nháy khi có chuyển động nhẹ). Ước lượng thực dụng: FBM phủ mặt phẳng rộng 4 đơn vị UV trên canvas 512px, octave có chu kỳ dưới $4/512 \approx 0.008$ đơn vị đã vượt ngưỡng hữu ích — thường rơi vào octave 6–8 với $l=2$, một lý do 6–8 là số octave phổ biến trong game/demo thay vì 20–30.
+Mỗi octave thêm đúng một lần gọi hàm noise cùng vài phép nhân/cộng — chi phí tăng TUYẾN TÍNH theo số octave $N$, khác hẳn "lời nguyền lưới vuông" $2^n$ của bài trước (chi phí theo SỐ CHIỀU của một lần gọi noise, không phải số lần gọi). Nhân đôi octave từ 4 lên 8 tốn gấp đôi, không tệ hơn. Nhưng octave không miễn phí mãi: octave thứ $i$ có chu kỳ không gian xấp xỉ $\text{base size} / l^i$ — khi chu kỳ đó nhỏ hơn khoảng cách giữa hai pixel liền kề (vượt giới hạn Nyquist của độ phân giải render), octave đó không còn thêm chi tiết NHÌN THẤY ĐƯỢC — chỉ thêm nhiễu cao tần không giải được (aliasing, nhấp nháy khi có chuyển động nhẹ). Ước lượng thực dụng: FBM phủ mặt phẳng rộng 4 đơn vị UV trên canvas 512px, octave có chu kỳ dưới $4/512 \approx 0.008$ đơn vị đã vượt ngưỡng hữu ích — thường rơi vào octave 6–8 với $l=2$, một lý do 6–8 là số octave phổ biến trong game/demo thay vì 20–30.
 
 ## Chuẩn hoá: chia cho tổng biên độ tối đa
 
 Vì mỗi lớp noise nằm trong khoảng $[-1,1]$ (xấp xỉ, xem bài trước), tổng $N$ lớp có biên độ TỐI ĐA lý thuyết bằng tổng cấp số nhân của các biên độ, không phải $N$:
 
 $$
-\text{biên độ tối đa} = \sum_{i=0}^{N-1} g^{\,i} = \frac{1 - g^{N}}{1 - g} \quad (g \neq 1)
+\text{max amplitude} = \sum_{i=0}^{N-1} g^{\,i} = \frac{1 - g^{N}}{1 - g} \quad (g \neq 1)
 $$
 
 Chia kết quả thô cho đúng tổng này giữ FBM luôn ổn định bất kể chọn bao nhiêu octave hay gain — thiếu bước này, đổi số octave khi chỉnh demo sẽ vô tình làm ảnh sáng/tối hẳn lên chỉ vì tổng biên độ đổi, không phải vì hình dạng noise đổi. Demo `fbm.frag` tính đúng tổng này (`maxAmplitude`) trong cùng vòng lặp rồi chia ở bước cuối.

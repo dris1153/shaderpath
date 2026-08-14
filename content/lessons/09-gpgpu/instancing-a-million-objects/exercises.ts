@@ -47,7 +47,7 @@ Compute the total texture reads per second for placement alone (not fragment sha
     id: "instance-uv-attribute",
     kind: "code",
     prompt: {
-      vi: `Viết hàm TypeScript \`buildInstanceUvAttribute(gridSize, instanceCount)\` trả về một \`Float32Array\` 2 số/instance, ánh xạ chỉ số instance $i$ sang toạ độ UV tâm texel $(u, v)$ trong lưới \`gridSize × gridSize\`, đúng công thức pixel-to-UV: cột $= i \\bmod W$, hàng $= \\lfloor i / W \\rfloor$, $u = (\\text{cột}+0.5)/W$, $v = (\\text{hàng}+0.5)/W$.`,
+      vi: `Viết hàm TypeScript \`buildInstanceUvAttribute(gridSize, instanceCount)\` trả về một \`Float32Array\` 2 số/instance, ánh xạ chỉ số instance $i$ sang toạ độ UV tâm texel $(u, v)$ trong lưới \`gridSize × gridSize\`, đúng công thức pixel-to-UV: cột $= i \\bmod W$, hàng $= \\lfloor i / W \\rfloor$, $u = (\\text{column}+0.5)/W$, $v = (\\text{row}+0.5)/W$.`,
       en: `Write a TypeScript \`buildInstanceUvAttribute(gridSize, instanceCount)\` function returning a \`Float32Array\` with 2 numbers per instance, mapping instance index $i$ to the UV coordinate of its texel's center $(u, v)$ in a \`gridSize × gridSize\` grid, using the pixel-to-UV formula: column $= i \\bmod W$, row $= \\lfloor i / W \\rfloor$, $u = (\\text{column}+0.5)/W$, $v = (\\text{row}+0.5)/W$.`,
     },
     starterCode: `function buildInstanceUvAttribute(gridSize: number, instanceCount: number): Float32Array {

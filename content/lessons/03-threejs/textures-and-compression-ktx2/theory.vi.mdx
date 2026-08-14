@@ -53,7 +53,7 @@ $$
 — bất kể ảnh gốc là JPEG 400KB hay 4MB, số byte trên GPU như nhau. Cộng thêm mip chain: tổng cả chuỗi mip ($1 + \tfrac14 + \tfrac{1}{16} + \dots$) hội tụ về $\tfrac{4}{3}$ lần level gốc, nên texture mipmapped thực tế tốn:
 
 $$
-16\text{MB} \times \frac{4}{3} \approx 21.3\text{MB} \quad \text{(ước lượng)}
+16\text{MB} \times \frac{4}{3} \approx 21.3\text{MB} \quad \text{(estimate)}
 $$
 
 Một ảnh JPEG "nhẹ" 400KB trên đĩa hoá ra chiếm hơn 21MB VRAM sau khi upload và sinh mipmap — trực giác "file nhỏ nên nhẹ" của lập trình web thông thường gây hiểu lầm nghiêm trọng ở đây.

@@ -15,7 +15,7 @@ AO đứng ngay sau cảnh vì occlusion là một phần của PHÉP TÍNH ÁNH
 Mỗi fullscreen pass là một hình chữ nhật phủ kín màn hình được rasterize — GPU chạy fragment shader cho từng texel, đọc ít nhất một texture nguồn và ghi ít nhất một render target đích. Với buffer HDR nửa-float (`HalfFloatType`, 8 byte/texel RGBA), một pass đơn giản (1 lần đọc, 1 lần ghi) di chuyển xấp xỉ:
 
 $$
-\text{bytes} \approx W \times H \times 8_{\text{đọc}} + W \times H \times 8_{\text{ghi}} = W \times H \times 16
+\text{bytes} \approx W \times H \times 8_{\text{read}} + W \times H \times 8_{\text{write}} = W \times H \times 16
 $$
 
 | Độ phân giải | Số texel | 1 pass đơn giản | Chuỗi 5 pass |

@@ -12,7 +12,7 @@ Chi tiết dễ gây nhầm lẫn nhất: `instanceMatrix` không phải nơi ch
 
 ### Định vị texel của từng instance: gl_InstanceID hay instanced attribute
 
-Mỗi instance cần biết phải đọc texel nào trong texture trạng thái. WebGL2 cấp sẵn biến dựng sẵn `gl_InstanceID` trong vertex shader — chuyển thành toạ độ UV bằng phép chia lấy dư: hàng $= \lfloor id / W \rfloor$, cột $= id \bmod W$, rồi $u = (\text{cột} + 0.5)/W$, $v = (\text{hàng} + 0.5)/H$, đúng công thức pixel-to-UV đã học ở Track 0. Cách khác — cách demo bài này chọn — là gán sẵn một `InstancedBufferAttribute` chứa UV cho mỗi instance ngay lúc dựng mesh: tính một lần trên CPU (rẻ, chỉ chạy khi tạo/resize, không phải mỗi frame), rồi gửi thẳng vào GPU dưới dạng attribute. Cả hai cách đều đúng; attribute tránh phụ thuộc vào cách trình biên dịch shader của Three xử lý `gl_InstanceID`.
+Mỗi instance cần biết phải đọc texel nào trong texture trạng thái. WebGL2 cấp sẵn biến dựng sẵn `gl_InstanceID` trong vertex shader — chuyển thành toạ độ UV bằng phép chia lấy dư: hàng $= \lfloor id / W \rfloor$, cột $= id \bmod W$, rồi $u = (\text{column} + 0.5)/W$, $v = (\text{row} + 0.5)/H$, đúng công thức pixel-to-UV đã học ở Track 0. Cách khác — cách demo bài này chọn — là gán sẵn một `InstancedBufferAttribute` chứa UV cho mỗi instance ngay lúc dựng mesh: tính một lần trên CPU (rẻ, chỉ chạy khi tạo/resize, không phải mỗi frame), rồi gửi thẳng vào GPU dưới dạng attribute. Cả hai cách đều đúng; attribute tránh phụ thuộc vào cách trình biên dịch shader của Three xử lý `gl_InstanceID`.
 
 ## Nối dây trong Three: onBeforeCompile hay ShaderMaterial riêng
 
@@ -31,7 +31,7 @@ Nguyên tắc bất di bất dịch của toàn bộ pipeline này: không bao g
 "Hàng triệu object" trong tên bài là mục tiêu thực tế, không phải con số của demo (demo giữ ở 16k–65k để không đốt máy người học — spec nền tảng giới hạn mọi demo nhúng ở mức này). Điều dễ bỏ sót: vertex shader chạy theo VERTEX, không theo INSTANCE — một tứ diện không lập chỉ mục có 12 đỉnh, nên mỗi instance tốn $12 \times 2 = 24$ lần đọc texture (position + velocity), không phải 2. Ở $N = 1{,}000{,}000$ instance, 60fps, tổng số lần đọc texture mỗi giây riêng cho việc định vị là
 
 $$
-1{,}000{,}000 \times 12 \times 2 \times 60 \approx 1.44 \text{ tỷ lần/giây}
+1{,}000{,}000 \times 12 \times 2 \times 60 \approx 1.44 \text{ billion reads/second}
 $$
 
 — một GPU tầm trung xử lý được ước lượng vài trăm triệu đến vài tỷ lần đọc texture mỗi giây (ước lượng, tuỳ kiến trúc), nên con số này đã chạm hoặc vượt ngưỡng thoải mái. Đây chính là lý do LOD ở quy mô instancing không chỉ tiết kiệm chi phí raster hoá (ít pixel hơn) mà còn cắt thẳng vào số lần đọc texture: dùng geometry ít đỉnh hơn cho instance ở xa (một tam giác 3 đỉnh thay vì tứ diện 12 đỉnh) giảm số lần đọc texture định vị theo đúng tỉ lệ số đỉnh, không chỉ giảm số pixel tô màu.

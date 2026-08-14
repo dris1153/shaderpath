@@ -9,7 +9,7 @@ Mọi `THREE.WebGLRenderer` đã có sẵn `renderer.info`, không cần cài g�
 ## FPS meter và frame time: 16.67ms không phải số ma thuật
 
 $$
-\text{ngân sách 1 frame ở 60fps} = \frac{1000}{60} \approx 16.67\text{ms}
+\text{one-frame budget at 60fps} = \frac{1000}{60} \approx 16.67\text{ms}
 $$
 
 FPS là số liệu TRUNG BÌNH trên một khoảng thời gian, và trung bình che giấu chính xác thứ cần thấy: một cảnh chạy ổn định 60fps suốt một phút, xen giữa một lần đứng hình 300ms (garbage collection, hoặc nút "Gây spike" trong demo dưới), vẫn có thể báo "trung bình 59fps" — số đẹp, trải nghiệm tệ. Đây là lý do dân chuyên nói "frame time, không phải FPS": đo trực tiếp số mili-giây mỗi frame tốn (một EMA — exponential moving average — cộng dồn `delta * (giá_trị_mới - EMA_cũ)`, khoảng 15 dòng, không cần `stats.js`), rồi nhìn PHƯƠNG SAI theo thời gian, không chỉ trung bình. Demo dưới vẽ chuỗi này thành sparkline: mỗi cột một frame thật, vạch trắng đánh dấu ngân sách 16.67ms — bấm nút spike và nhìn đúng một cột vọt lên trong khi FPS trung bình gần như không nhúc nhích.
