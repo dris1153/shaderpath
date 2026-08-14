@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14) — commit `1f60c4d`
 - **Effort:** ~6h across agent waves
 - **Description:** One pass per `exercises.ts`: move prose answers into
   `solutionNote`, translate genuine code comments to English.
@@ -90,3 +90,24 @@ None — content-only edits, no new inputs or IO paths.
 ## Next Steps
 
 Phase 3 adds the lint rule that makes the result permanent.
+
+## Notes (post-implementation, 2026-08-14)
+
+- 8 agents over disjoint track slices, one pass per file. 137 files changed.
+- **Final measurement: 0** Vietnamese lines in `starterCode`/`solutionCode`
+  (was 854 visible + 116 hidden). **118 `solutionNote` fields, all with both
+  locales filled.** 7 concept exercises still carry `solutionCode` — all verified
+  as genuine code snippets in the answer, which D1 allows.
+- Agents self-corrected well: one caught its own stray line, another found and
+  fixed `${\approx}` in a template literal (JS read it as interpolation and broke
+  the file — this was the syntax error that blocked five other agents'
+  `lint:content` runs for a while), a third fixed `\text{ đã remap}` that the
+  KaTeX rule from `751131c` flagged.
+- Two gaps the sweep left, fixed by hand afterwards: the reference lesson's own
+  `// TODO` comment stayed Vietnamese because the brief told agents not to touch
+  that file **at all** (say "do not change the migrated exercise" next time), and
+  one English-only prose `solutionCode` slipped past a Vietnamese-only filter.
+- **Grep output lies about backslashes** — it renders `\\` as `\`. It fooled me
+  into "finding" broken TeX escapes twice; a script reading the files directly,
+  and a raw-byte read, both showed the escaping was correct. Verify backslash
+  questions with a script, never with grep output.
