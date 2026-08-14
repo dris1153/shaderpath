@@ -25,7 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { deleteSnippet, saveSnippet, type Snippet } from "@/lib/playground";
-import { PRESET_GROUPS, findPreset } from "@/content/playground-presets";
+import {
+  PRESET_GROUPS,
+  findPreset,
+  presetSource,
+} from "@/content/playground-presets";
 import type { Locale } from "@/content/types";
 
 // Select values are namespaced because presets and snippets share one list:
@@ -50,6 +54,14 @@ export function SnippetBar({
   const currentId = selection.startsWith("u:")
     ? Number(selection.slice(2))
     : null;
+
+  const selectItems: Record<string, string> = {};
+  for (const group of PRESET_GROUPS) {
+    for (const p of group.presets) {
+      selectItems[`p:${p.slug}`] = p.title[locale] ?? p.title.vi;
+    }
+  }
+  for (const s of snippets) selectItems[`u:${s.id}`] = s.title;
   const [pending, startTransition] = useTransition();
   const [saveOpen, setSaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -87,6 +99,9 @@ export function SnippetBar({
     <div className="flex flex-wrap items-center gap-2">
       <Select
         value={selection}
+        // Base UI resolves the trigger label from `items`; without it the
+        // trigger renders the raw value ("p:shaping-functions").
+        items={selectItems}
         onValueChange={(v) => {
           if (!v) return;
           if (v.startsWith("p:")) {
@@ -94,7 +109,7 @@ export function SnippetBar({
             if (preset) {
               onSelect(v, {
                 title: preset.title[locale] ?? preset.title.vi,
-                source: preset.source,
+                source: presetSource(preset, locale),
               });
             }
             return;

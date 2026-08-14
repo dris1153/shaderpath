@@ -24,7 +24,7 @@ export const RAYMARCH_PRESETS: PlaygroundPreset[] = [
   {
     slug: "raymarch-sphere",
     title: { vi: "Raymarch quả cầu", en: "Raymarched Sphere" },
-    source: `// Cảnh là một hàm khoảng cách, không có tam giác nào
+    source: `// @sceneIsFunction
 float map(vec3 p) {
   float sphere = length(p) - 1.0;
   float ground = p.y + 1.0;
@@ -40,7 +40,7 @@ void main() {
   vec3 ro = vec3(sin(angle) * 4.0, 1.3, cos(angle) * 4.0);
   vec3 rd = rayDirection(p, ro, vec3(0.0), 1.6);
 
-  // Sphere tracing: mỗi bước đi đúng khoảng cách an toàn
+  // @sphereTracing
   float t = 0.0;
   bool hit = false;
   for (int i = 0; i < 96; i++) {
@@ -80,7 +80,7 @@ float map(vec3 p) {
   float body = length(p) - 0.85;
   float head = length(p - vec3(0.0, 0.9 + sin(uTime) * 0.1, 0.0)) - 0.45;
   float collar = sdTorus(p - vec3(0.0, 0.35, 0.0), vec2(0.85, 0.12));
-  float shape = smin(body, head, 0.35);       // hàn hai khối như đất sét
+  float shape = smin(body, head, 0.35);       // @weldShapes
   shape = smin(shape, collar, 0.2);
   return min(shape, p.y + 1.2);
 }
@@ -126,7 +126,7 @@ void main() {
 }
 
 float map(vec3 p) {
-  // Lặp toạ độ truy vấn: một object, vô hạn bản sao, bộ nhớ O(1)
+  // @repeatSpace
   vec3 c = vec3(4.0, 0.0, 4.0);
   vec3 q = p;
   q.xz = p.xz - c.xz * round(p.xz / c.xz);
@@ -148,7 +148,7 @@ void main() {
   for (int i = 0; i < 110; i++) {
     float d = map(ro + rd * t);
     if (d < 0.002) { hit = true; break; }
-    t += d * 0.85;          // bước dè hơn vì mod nói dối gần biên ô
+    t += d * 0.85;          // @cautiousStep
     if (t > 40.0) break;
   }
 

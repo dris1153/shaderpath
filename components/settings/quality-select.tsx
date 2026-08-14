@@ -25,6 +25,11 @@ export function QualitySelect() {
       </div>
       <Select
         value={tier}
+        // Base UI reads the trigger label from `items`; without it the trigger
+        // renders the raw value ("low" instead of the translated tier name).
+        items={Object.fromEntries(
+          TIERS.map((tr) => [tr, t(`qualityTier_${tr}`)]),
+        )}
         onValueChange={(next) => {
           if (next) setTier(next);
         }}

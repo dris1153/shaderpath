@@ -11,7 +11,7 @@ const VALUE_NOISE = `float hash21(vec2 p) {
 float valueNoise(vec2 p) {
   vec2 i = floor(p);
   vec2 f = fract(p);
-  vec2 u = f * f * (3.0 - 2.0 * f);   // fade: bỏ đi thì lộ kim cương ở mắt lưới
+  vec2 u = f * f * (3.0 - 2.0 * f);   // @fadeCurve
   float a = hash21(i);
   float b = hash21(i + vec2(1.0, 0.0));
   float c = hash21(i + vec2(0.0, 1.0));
@@ -64,7 +64,7 @@ void main() {
   vec2 cell = floor(grid);
   vec2 local = fract(grid);
 
-  // Quét 3x3 ô lân cận: chỉ xét ô của mình sẽ đứt gãy ở biên
+  // @scanNeighbours
   float f1 = 8.0;
   float f2 = 8.0;
   for (int y = -1; y <= 1; y++) {
@@ -82,7 +82,7 @@ void main() {
     }
   }
 
-  float border = smoothstep(0.0, 0.08, f2 - f1);   // F2-F1 = viền
+  float border = smoothstep(0.0, 0.08, f2 - f1);   // @f2f1Border
   vec3 color = mix(vec3(1.0), vec3(0.15, 0.45, 0.75), border);
   fragColor = vec4(color * (0.35 + 0.65 * f1), 1.0);
 }
@@ -98,7 +98,7 @@ void main() {
   uv.x *= uResolution.x / uResolution.y;
   vec2 p = uv * 3.0;
 
-  // Kỹ thuật Quilez: lấy noise để làm méo chính toạ độ đưa vào noise
+  // @quilezWarp
   vec2 q = vec2(fbm(p), fbm(p + vec2(5.2, 1.3)));
   vec2 r = vec2(fbm(p + 4.0 * q + vec2(1.7, 9.2) + uTime * 0.08),
                 fbm(p + 4.0 * q + vec2(8.3, 2.8)));
@@ -115,7 +115,7 @@ void main() {
     title: { vi: "Curl noise & dòng chảy", en: "Curl Noise Flow" },
     source: `${VALUE_NOISE}
 ${FBM}
-// Curl 2D của trường tiềm năng: xoay gradient 90 độ -> phân kỳ bằng 0
+// @curlDivFree
 vec2 curl(vec2 p) {
   float e = 0.01;
   float dx = fbm(p + vec2(e, 0.0)) - fbm(p - vec2(e, 0.0));
@@ -130,7 +130,7 @@ void main() {
   vec2 p = uv * 3.0;
   float acc = 0.0;
   for (int i = 0; i < 12; i++) {
-    p -= curl(p) * 0.004;                 // đi ngược dòng vài bước
+    p -= curl(p) * 0.004;                 // @walkUpstream
     acc += 0.5 + 0.5 * sin(p.x * 12.0 + uTime);
   }
   acc /= 12.0;
@@ -148,7 +148,7 @@ void main() {
   uv.x *= uResolution.x / uResolution.y;
   float t = uTime * 0.7;
 
-  // Demoscene: cộng vài sóng sin lệch pha rồi map qua bảng màu
+  // @plasmaSum
   float v = sin(uv.x * 10.0 + t);
   v += sin((uv.y * 10.0 + t) * 0.7);
   v += sin((uv.x * 8.0 + uv.y * 8.0 + t) * 0.5);

@@ -82,6 +82,11 @@ function ControlRow({
           </label>
           <Select
             value={typeof value === "string" ? value : control.defaultValue}
+            // Base UI labels the trigger from `items`; without it every demo
+            // select shows its raw value instead of the option label.
+            items={Object.fromEntries(
+              control.options.map((o) => [o.value, o.label]),
+            )}
             onValueChange={(v) => {
               if (typeof v === "string") onChange(v);
             }}

@@ -99,6 +99,11 @@ export function ImportDialog({
           <span className="text-sm font-medium">{t("importModeLabel")}</span>
           <Select
             value={mode}
+            // Base UI needs `items` to label the trigger — see quality-select
+            items={{
+              merge: t("importModeMerge"),
+              replace: t("importModeReplace"),
+            }}
             onValueChange={(next) => {
               if (next) setMode(next);
             }}

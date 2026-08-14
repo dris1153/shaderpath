@@ -7,13 +7,13 @@ export const BASICS_PRESETS: PlaygroundPreset[] = [
     source: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
 
-  // Bảng màu cosine: a + b * cos(2pi * (c*t + d))
+  // @cosinePalette
   vec3 a = vec3(0.5);
   vec3 b = vec3(0.5);
   vec3 d = vec3(0.0, 0.33, 0.67);
   vec3 color = a + b * cos(6.28318 * (uv.x + d + uTime * 0.1));
 
-  // Quầng sáng bám theo con trỏ (uMouse chuẩn hoá 0..1)
+  // @mouseHalo
   float halo = 0.08 / (distance(uv, uMouse) + 0.06);
   fragColor = vec4(color + halo * 0.3, 1.0);
 }
@@ -25,7 +25,7 @@ export const BASICS_PRESETS: PlaygroundPreset[] = [
     source: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
 
-  // Bốn dải ngang, mỗi dải vẽ một hàm nhào nặn khác nhau
+  // @fourBands
   float band = floor(uv.y * 4.0);
   float x = uv.x;
 
@@ -56,7 +56,7 @@ float sdBox(vec2 p, vec2 b) {
   return length(max(d, 0.0)) + min(max(d.x, d.y), 0.0);
 }
 
-// Hoà hai hình như đất sét thay vì cắt góc cứng
+// @claySmin
 float smin(float a, float b, float k) {
   float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
   return mix(b, a, h) - k * h * (1.0 - h);
@@ -70,7 +70,7 @@ void main() {
   float d = smin(circle, box, 0.25);
 
   vec3 color = d < 0.0 ? vec3(0.25, 0.65, 0.95) : vec3(0.09, 0.11, 0.16);
-  color *= 1.0 - exp(-7.0 * abs(d));                  // vân đồng mức
+  color *= 1.0 - exp(-7.0 * abs(d));                  // @isolines
   color = mix(color, vec3(1.0), 1.0 - smoothstep(0.0, 0.015, abs(d)));
   fragColor = vec4(color, 1.0);
 }
@@ -90,8 +90,8 @@ void main() {
   uv.x *= uResolution.x / uResolution.y;
 
   vec2 grid = uv * 8.0;
-  vec2 cell = floor(grid);          // ô nào
-  vec2 local = fract(grid) - 0.5;   // vị trí trong ô
+  vec2 cell = floor(grid);          // @whichCell
+  vec2 local = fract(grid) - 0.5;   // @posInCell
 
   float h = hash21(cell);
   float pulse = 0.5 + 0.5 * sin(uTime * 1.5 + h * 6.28318);
@@ -110,11 +110,11 @@ void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   float aspect = uResolution.x / uResolution.y;
 
-  // Đo khoảng cách trong không gian đã sửa tỉ lệ khung hình
+  // @aspectSpace
   vec2 p = vec2((uv.x - uMouse.x) * aspect, uv.y - uMouse.y);
   float dist = length(p);
 
-  // Sóng lan ra, tắt dần theo khoảng cách
+  // @rippleDecay
   float ripple = sin(dist * 38.0 - uTime * 6.0) * exp(-dist * 4.0);
 
   vec3 base = mix(vec3(0.04, 0.06, 0.11), vec3(0.11, 0.17, 0.27), uv.y);
