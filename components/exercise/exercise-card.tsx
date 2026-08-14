@@ -138,6 +138,14 @@ export function ExerciseCard({
             <CardContent className="border-t pt-4 pb-6">
               {prompt}
 
+              {/* A build exercise is judged by eye against its target, so the
+                  reference output belongs beside the brief — locking it behind
+                  the solution only reveals it once the learner has given up.
+                  Other kinds keep it inside the solution block below. */}
+              {exercise.referenceImage && exercise.kind === "build" && (
+                <ReferenceImage src={exercise.referenceImage} label={t("referenceImage")} />
+              )}
+
               {exercise.starterCode !== undefined &&
                 (exercise.kind === "code" || exercise.kind === "shader") && (
                   <ExerciseCodePane
@@ -216,12 +224,10 @@ export function ExerciseCard({
                           dangerouslySetInnerHTML={{ __html: solutionHtml }}
                         />
                       )}
-                      {exercise.referenceImage && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                      {exercise.referenceImage && exercise.kind !== "build" && (
+                        <ReferenceImage
                           src={exercise.referenceImage}
-                          alt={t("referenceImage")}
-                          className="mt-3 max-w-full rounded-lg border"
+                          label={t("referenceImage")}
                         />
                       )}
                     </div>
@@ -278,6 +284,20 @@ export function ExerciseCard({
         </CollapsibleContent>
       </Collapsible>
     </Card>
+  );
+}
+
+// Captioned, because next to the brief an uncaptioned render reads as part of
+// the task description rather than as the target to match.
+function ReferenceImage({ src, label }: { src: string; label: string }) {
+  return (
+    <figure className="mt-4">
+      {/* eslint-disable-next-line @next/next/no-img-element -- local asset, nothing for the optimiser to do */}
+      <img src={src} alt={label} className="max-w-full rounded-lg border" />
+      <figcaption className="text-muted-foreground mt-1.5 text-xs">
+        {label}
+      </figcaption>
+    </figure>
   );
 }
 
