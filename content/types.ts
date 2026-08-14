@@ -71,8 +71,13 @@ export interface Exercise {
   id: string;
   kind: "concept" | "code" | "shader" | "build";
   prompt: Localized<string>;
+  // Code stays single-language (English comments): duplicating real GLSL/TS per
+  // locale invites the two versions to drift apart.
   starterCode?: string;
   solutionCode?: string;
+  /** Prose worked answer. Concept exercises used to smuggle this into
+   *  solutionCode as `//` lines, which rendered as syntax-highlighted code. */
+  solutionNote?: Localized<string>;
   hints: Localized<string>[];
   checklist: Localized<string>[];
   referenceImage?: string;

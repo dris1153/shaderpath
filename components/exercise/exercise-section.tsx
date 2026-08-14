@@ -53,6 +53,9 @@ export async function ExerciseSection({
         exercise: vm,
         initial,
         prompt: <PromptBody text={ex.prompt[locale]} />,
+        solutionNote: ex.solutionNote ? (
+          <PromptBody text={ex.solutionNote[locale]} />
+        ) : null,
         solutionHtml: ex.solutionCode
           ? await highlightCode(
               ex.solutionCode,

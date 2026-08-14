@@ -40,6 +40,7 @@ export function ExerciseCard({
   index,
   initial,
   prompt,
+  solutionNote,
   solutionHtml,
   onStatusChange,
 }: {
@@ -48,11 +49,14 @@ export function ExerciseCard({
   index: number;
   initial: AttemptVM | null;
   prompt: ReactNode;
+  solutionNote: ReactNode;
   solutionHtml: string | null;
   onStatusChange: (id: string, status: AttemptStatus) => void;
 }) {
   const t = useTranslations("exercise");
   const attempt = initial ?? EMPTY_ATTEMPT;
+  // A concept answer has only a note; a code exercise only a snippet.
+  const hasSolution = Boolean(solutionNote) || Boolean(solutionHtml);
 
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -198,15 +202,20 @@ export function ExerciseCard({
 
               <div className="mt-6">
                 {solutionShown ? (
-                  solutionHtml && (
+                  hasSolution && (
                     <div>
                       <p className="text-sm font-medium">
                         {t("solutionTitle")}
                       </p>
-                      <div
-                        className="[&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:p-3 [&_pre]:text-xs [&_pre]:leading-5"
-                        dangerouslySetInnerHTML={{ __html: solutionHtml }}
-                      />
+                      {solutionNote && (
+                        <div className="mt-2">{solutionNote}</div>
+                      )}
+                      {solutionHtml && (
+                        <div
+                          className="[&_pre]:mt-2 [&_pre]:overflow-x-auto [&_pre]:rounded-lg [&_pre]:border [&_pre]:p-3 [&_pre]:text-xs [&_pre]:leading-5"
+                          dangerouslySetInnerHTML={{ __html: solutionHtml }}
+                        />
+                      )}
                       {exercise.referenceImage && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -217,7 +226,7 @@ export function ExerciseCard({
                       )}
                     </div>
                   )
-                ) : solutionHtml ? (
+                ) : hasSolution ? (
                   <Button
                     variant="outline"
                     size="sm"

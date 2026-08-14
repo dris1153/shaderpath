@@ -1,5 +1,33 @@
 import { expect, test } from "@playwright/test";
 
+// A concept answer lives in `solutionNote` (bilingual prose), not in
+// `solutionCode`. Two things regress easily: the reveal button used to be gated
+// on solutionCode alone, so a note-only exercise could never be opened; and the
+// note must render as prose, never as a syntax-highlighted code block.
+test("a note-only solution reveals and renders as prose in both locales", async ({
+  page,
+}) => {
+  const card = page.locator("#exercise-dot-product-angle-and-facing");
+
+  await page.goto("/vi/lesson/dot-and-cross-products");
+  // First visit compiles the lesson route on demand — give it room, the way
+  // the playground specs do, instead of racing the default click timeout.
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await card.locator("button").first().click();
+  await page.getByRole("button", { name: "Tôi đã thử", exact: true }).click();
+  await page.getByRole("button", { name: "Xem lời giải" }).click();
+
+  await expect(card).toContainText("được chiếu sáng");
+  await expect(card.locator(".katex").first()).toBeVisible();
+  await expect(card.locator("pre")).toHaveCount(0);
+
+  await page.goto("/en/lesson/dot-and-cross-products");
+  await expect(card).toBeVisible({ timeout: 30_000 });
+  await card.locator("button").first().click();
+  await expect(card).toContainText("faces the light source");
+  await expect(card.locator("pre")).toHaveCount(0);
+});
+
 // §9 phase 6 DoD: complete one exercise fully, reload → everything preserved.
 test("exercise flow persists across reload", async ({ page }) => {
   await page.goto("/vi/lesson/cartesian-and-uv-space");

@@ -14,6 +14,7 @@ export function ExerciseList({
     exercise: ExerciseVM;
     initial: AttemptVM | null;
     prompt: ReactNode;
+    solutionNote: ReactNode;
     solutionHtml: string | null;
   }[];
 }) {
@@ -46,6 +47,7 @@ export function ExerciseList({
             index={i + 1}
             initial={item.initial}
             prompt={item.prompt}
+            solutionNote={item.solutionNote}
             solutionHtml={item.solutionHtml}
             onStatusChange={(id, status) =>
               setStatuses((prev) => ({ ...prev, [id]: status }))

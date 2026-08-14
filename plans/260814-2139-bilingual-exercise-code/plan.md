@@ -47,7 +47,7 @@ multiplication.
 
 | # | Phase | Status | File |
 |---|---|---|---|
-| 1 | Model + renderer: `solutionNote`, PromptBody wiring | Not Started | [phase-01](phase-01-model-and-renderer.md) |
+| 1 | Model + renderer: `solutionNote`, PromptBody wiring | ✅ Complete (2026-08-14) | [phase-01](phase-01-model-and-renderer.md) |
 | 2 | Content sweep: 81 prose migrations + 373 comment lines | Not Started | [phase-02](phase-02-content-sweep.md) |
 | 3 | Lint guard + full acceptance | Not Started | [phase-03](phase-03-guard-and-acceptance.md) |
 

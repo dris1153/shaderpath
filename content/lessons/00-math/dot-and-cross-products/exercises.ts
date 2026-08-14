@@ -36,11 +36,14 @@ Compute $\\hat n \\cdot \\hat L$ using the algebraic formula (sum of component p
         en: "I can explain why a positive dot means the surface faces the light",
       },
     ],
-    solutionCode: `// n·L = (0)(0.6) + (1)(0.8) + (0)(0) = 0.8
-// theta = arccos(0.8) ≈ 36.87°
-//
-// 0.8 > 0 → góc < 90° → bề mặt hướng về phía nguồn sáng (được chiếu sáng),
-// không quay lưng lại (điều đó chỉ xảy ra khi dot <= 0).`,
+    solutionNote: {
+      vi: `$\\hat n \\cdot \\hat L = (0)(0.6) + (1)(0.8) + (0)(0) = 0.8$, nên $\\theta = \\arccos(0.8) \\approx 36.87^\\circ$.
+
+Vì $0.8 > 0$ nên $\\theta < 90^\\circ$: bề mặt đang hướng về phía nguồn sáng, tức là được chiếu sáng. Bề mặt chỉ quay lưng lại với nguồn sáng khi dot product $\\le 0$.`,
+      en: `$\\hat n \\cdot \\hat L = (0)(0.6) + (1)(0.8) + (0)(0) = 0.8$, so $\\theta = \\arccos(0.8) \\approx 36.87^\\circ$.
+
+Since $0.8 > 0$, $\\theta < 90^\\circ$: the surface faces the light source and is lit. A surface only turns away from the light once the dot product is $\\le 0$.`,
+    },
   },
   {
     id: "cross-product-triangle-normal",

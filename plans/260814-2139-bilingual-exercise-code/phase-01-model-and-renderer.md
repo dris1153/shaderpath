@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P1 (blocks phase 2)
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~1h
 - **Description:** Add a bilingual prose field for exercise solutions and render
   it with the existing minimal renderer, so the 81 concept lessons have somewhere
@@ -85,3 +85,28 @@
 ## Next Steps
 
 Phase 2 cannot start until the field exists and the reference lesson is committed.
+
+## Notes (post-implementation, 2026-08-14)
+
+- Reference lesson: `00-math/dot-and-cross-products`, exercise
+  `dot-product-angle-and-facing`. Its `solutionCode` (5 `//` lines) became a
+  `solutionNote` with the maths in KaTeX. Phase 2 agents should copy this shape.
+- **Use `^\circ`, not the `°` character, inside `$...$`** — a raw degree sign is
+  an unrecognised Unicode character to KaTeX and produces the same warning class
+  fixed in commit `751131c`.
+- The reveal button and the revealed block were both gated on `solutionHtml`, so
+  a note-only exercise could never be opened. Now gated on
+  `hasSolution = note || code`; when both exist the note renders first.
+- Verified in a real browser before writing the test: prose + KaTeX render in
+  vi and en, and the card contains no `<pre>` — the fake code block is gone.
+- New e2e in `exercise-flow.spec.ts` locks that behaviour. It needs an explicit
+  30s visibility wait: the first visit to a lesson route compiles it on demand
+  and a bare click races the default timeout (passed alone, timed out when run
+  after another spec).
+- **False alarm worth recording:** the Grep tool renders `//` as `\` and can
+  make escaped TeX (`\\hat`) look unescaped. A script that read the files
+  directly found **0** broken escapes — do not bulk-fix on the strength of grep
+  output alone.
+- Watch item: one transient e2e failure appeared in 2 of ~6 full-suite runs and
+  could not be identified (output truncated, and `test-results/.last-run.json`
+  only keeps the latest run). Next failure: read that file immediately.
