@@ -1,0 +1,15 @@
+## Goal
+
+Track 6's second mini-build: no new theory, just a working artifact that proves you actually command `onBeforeCompile` and the shader chunk system from the previous two lessons — not just recognizing how to inject code into a built-in material, but using it to build an effect that's visible, runs for real, and doesn't break `MeshStandardMaterial`'s original lighting/shadows.
+
+## Requirements
+
+Upgrade a `MeshStandardMaterial` via `onBeforeCompile` into a dissolve effect: a 3D noise function compared against a `uProgress` threshold to `discard` fragments, plus a glowing edge band right at the dissolve boundary, colored by a `uEdgeColor` uniform. Both uniforms must be objects created outside `onBeforeCompile`, mutated through `.value` directly — never recreate the shader every time progress changes. Full details live in the Exercises section below.
+
+## Structure Hint
+
+The object's shadow has to dissolve at the exact same threshold — meaning `mesh.customDepthMaterial` also needs its own `MeshDepthMaterial`, `onBeforeCompile`'d with the SAME noise function and the SAME `uProgress` object (shared by reference, not given its own separate value). Since the shader's content depends on a parameter baked straight into the GLSL string, both materials need `customProgramCacheKey` so Three doesn't mistakenly reuse a program compiled for a different parameter value.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — lighting still matches the original `MeshStandardMaterial`, a glowing edge band is clearly visible at the dissolve boundary, the shadow on the floor dissolves in lockstep with the object (not a solid shadow while the object is already half-gone), both `uProgress = 0` and `uProgress = 1` render cleanly (no glitches at either end), and cleanup leaves no global state changed.

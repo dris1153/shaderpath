@@ -1,0 +1,70 @@
+## Boilerplate mà ShaderMaterial thuần buộc bạn viết
+
+Track 4 đã cảnh báo: mỗi lần render, `<shaderMaterial uniforms={{...}} />` với một object uniforms MỚI (`{}` tạo lại mỗi lần) sẽ phá sạch identity của uniform và làm shader "giật" hoặc reset. Cách đúng — và cũng là toàn bộ boilerplate của `ShaderMaterial` thuần — là: `useMemo(() => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color(...) } }), [])` để object đó chỉ sinh ra một lần, rồi trong `useFrame` tự tay viết `uniforms.uTime.value = state.clock.elapsedTime` ngay trên chính object đã memo hoá đó — không cần một ref riêng tới material, bản thân object uniforms đã là điểm neo ổn định. Muốn đổi màu qua một control? Thêm một `useEffect` khác, tự đọc giá trị control, tự gọi `uniforms.uColor.value.set(...)`. Không sai, nhưng mỗi uniform mới lại thêm một dòng khai báo, một chỗ mutate, một chỗ dễ quên — không có gì "phản ứng" (reactive) với JSX props như mọi material built-in khác (`<meshStandardMaterial color="hotpink" />` chẳng hạn).
+
+## drei's shaderMaterial: một class, không phải một component
+
+Bất chấp cái tên viết thường kiểu hàm, `shaderMaterial(uniforms, vertexShader, fragmentShader, onInit?)` của drei **không** trả về một React component — nó trả về một **class JavaScript** kế thừa thẳng `THREE.ShaderMaterial`. Đọc trực tiếp source (chỉ khoảng 25 dòng): với mỗi key trong object `uniforms` bạn truyền vào, constructor của class đó gọi `Object.defineProperty` để biến key đó thành một cặp getter/setter đọc/ghi thẳng `this.uniforms[key].value`:
+
+```js
+const WaveMaterialImpl = shaderMaterial(
+  { uTime: 0, uColor: new THREE.Color("#4da6ff") },
+  vertexShader,
+  fragmentShader,
+);
+```
+
+Kết quả: từ bên ngoài, `materialInstance.uColor` không còn là `{ value: Color }` nữa — nó chính là `Color` đó luôn, đọc và ghi trực tiếp. Đây là điểm khác biệt cốt lõi so với `ShaderMaterial` thuần, nơi bạn luôn phải đi vòng qua `.uniforms.uColor.value`.
+
+## Uniform trở thành prop reactive — cơ chế thật sự
+
+Gọi `extend({ WaveMaterial: WaveMaterialImpl })` đăng ký class đó vào catalogue nội bộ của reconciler R3F; sau đó nó dùng được như một phần tử JSX viết thường chữ đầu: `<waveMaterial uColor="#ff8a3d" />`. Khi React re-render với `uColor` mới, R3F's `applyProps` đọc giá trị HIỆN TẠI của `material.uColor` (qua getter ở trên, trả về đúng instance `THREE.Color`), thấy nó là `THREE.Color` và giá trị mới là một chuỗi hex hợp lệ, nên gọi `.set(newValue)` ngay trên chính object đó — **giống hệt** cách `<meshStandardMaterial color="hotpink" />` hoạt động, không tạo `Color` mới, không phá identity. Đây chính là ý nghĩa "uniform trở thành prop reactive": bạn viết `<waveMaterial uColor={color} />` như bất kỳ prop JSX nào khác, không cần `useEffect` hay `ref` thủ công cho riêng uniform đó.
+
+## extend và .key: đăng ký lớp, và cái bẫy hot-reload
+
+`shaderMaterial()` còn gắn thêm một thuộc tính tĩnh `.key` — một UUID sinh **một lần duy nhất** khi hàm chạy (`THREE.MathUtils.generateUUID()`). Điều này chỉ đúng nếu `shaderMaterial()`/`extend()` được gọi ở **module scope**, không phải bên trong thân component — gọi bên trong component nghĩa là mỗi lần component render lại tạo ra một class MỚI với một `.key` MỚI, phá sạch mọi state đã có. `.key` tồn tại chính vì lý do ngược lại: khi bạn sửa file `vertex.glsl`/`fragment.glsl` lúc đang chạy dev server, Fast Refresh biên dịch lại module — module đó chạy lại từ đầu, `shaderMaterial()` sinh một class MỚI với `.key` MỚI, nhưng React (nếu không có gì báo hiệu) có thể vẫn coi phần tử JSX là "cùng một chỗ" và tái sử dụng WebGLProgram đã biên dịch CŨ. Gán `key={WaveMaterialImpl.key}` trên phần tử JSX buộc React so khớp theo giá trị `.key` đó — key đổi, React unmount rồi remount, chương trình GPU biên dịch lại đúng shader mới.
+
+## Giới hạn: khi nào ref vẫn thắng prop
+
+`uColor` đổi THỈNH THOẢNG (người dùng bấm một control) — dùng prop reactive là đúng chỗ. `uTime` đổi MỖI FRAME — nửa `drei` của demo vẫn cập nhật nó qua một ref thật sự tới instance (`materialRef.current.uTime = state.clock.elapsedTime`, vì instance do JSX tạo ra chỉ lấy được qua ref) bên trong `useFrame`, hoàn toàn bỏ qua props; nửa thuần cũng làm y hệt về bản chất — mutate trực tiếp object uniforms đang giữ trong closure. Lý do: nếu đẩy `uTime` qua state React cập nhật mỗi frame, mỗi lần đổi kéo theo một lần re-render component VÀ một lượt `applyProps` duyệt lại toàn bộ object props — trong khi ref-mutation chỉ là một phép gán thuộc tính JavaScript thuần, không chạm React ở đâu cả. Đây không phải lý do để luôn né tránh JSX prop cho uniform — chỉ là ranh giới: giá trị đổi liên tục theo frame vẫn nên đi qua ref, giá trị đổi rời rạc theo tương tác mới thật sự hưởng lợi từ prop. Và ngay cả ranh giới đó cũng nên được **đo**, không đoán — Track 12 sẽ giới thiệu profiler thật (Spector.js, React DevTools Profiler) để biết một lượt `applyProps` có thực sự đáng lo trong ngân sách 16.6ms/frame hay không, trước khi vội tối ưu.
+
+## Kiểu hoá phần tử JSX tự tạo trong TypeScript
+
+R3F định nghĩa mọi phần tử JSX ba chiều qua một interface duy nhất tên `ThreeElements` (export từ `@react-three/fiber`, merge vào `JSX.IntrinsicElements` của React). Một class đăng ký qua `extend({ WaveMaterial })` theo kiểu catalogue không tự động xuất hiện trong interface đó — TypeScript sẽ báo phần tử `<waveMaterial>` không tồn tại, trừ khi bạn tự mở rộng nó bằng **declaration merging**:
+
+```ts
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    waveMaterial: ThreeElement<typeof WaveMaterialImpl>;
+  }
+}
+```
+
+`ThreeElement<T>` là type helper R3F xuất sẵn, tự suy ra đúng tập prop (bao gồm cả `uTime`, `uColor`, vì chúng là property thật trên instance class do `Object.defineProperty` tạo ra ở trên) — không cần viết tay interface prop, không cần `any`.
+
+## So sánh trung thực: thuần vs helper
+
+| | ShaderMaterial thuần | drei's shaderMaterial |
+|---|---|---|
+| Đổi uniform từ control | `useEffect` + mutate `.value` thủ công | JSX prop, reconciler tự lo |
+| Đổi uniform mỗi frame | `ref` + `useFrame` | `ref` + `useFrame` (không đổi) |
+| Boilerplate mỗi uniform mới | Thêm dòng vào object + chỗ mutate | Không cần gì thêm |
+| Cần đăng ký (`extend`) | Không | Có, một lần ở module scope |
+| Type JSX element tuỳ biến | Không áp dụng (dùng thẳng `<shaderMaterial>`) | Cần tự `declare module` |
+| HMR khi sửa shader source | Ăn theo cơ chế mặc định của R3F | Cần `key={Material.key}` |
+
+Không bên nào "thắng" tuyệt đối: helper của drei xoá boilerplate cho uniform đổi rời rạc, đổi lại một lượt đăng ký + type augmentation phải làm đúng một lần; `ShaderMaterial` thuần không cần bước đăng ký nào nhưng bắt bạn tự viết lại chính xác đoạn mutate cho từng uniform, từng lần.
+
+## Nền tảng này dẫn tới đâu
+
+Bài checkpoint tiếp theo (`checkpoint-waving-flag`) ghép lại chính hai kỹ thuật của module này — custom attribute (bài trước) và uniform/helper (bài này) — thành một lá cờ bay hoàn chỉnh. `onBeforeCompile` ở module sau cũng cần một class material để hook vào, nhưng lần này là material BUILT-IN của Three (`MeshStandardMaterial`) thay vì tự viết `ShaderMaterial` từ đầu — một dạng "helper" khác cho cùng một vấn đề: tối thiểu hoá code phải viết lại mỗi khi cần một hiệu ứng tuỳ biến.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng helper `shaderMaterial`:
+
+1. **Gọi `shaderMaterial()`/`extend()` bên trong thân component thay vì module scope.** Mỗi lần component render lại tạo một class MỚI với một `.key` MỚI — React thấy "loại phần tử" đổi liên tục, unmount/remount material ở mọi lần render, mất sạch state, tệ hơn cả `ShaderMaterial` thuần.
+2. **Dùng ref-mutation cho uniform đổi mỗi frame nhưng quên rằng đó vẫn cần thiết với class do drei sinh ra.** Prop reactive không phải "miễn phí" — đẩy một giá trị đổi 60 lần/giây qua React state vẫn tốn một lượt re-render + applyProps mỗi lần, y hệt bất kỳ prop nào khác.
+3. **Quên `declare module` augmentation rồi `as any` để "cho qua" lỗi TypeScript.** Phần tử JSX tự tạo qua `extend({ ... })` không tự nhiên xuất hiện trong `ThreeElements` — ép kiểu qua `any` xoá luôn mọi kiểm tra prop (gõ sai tên uniform, TypeScript sẽ không còn báo được), trong khi chỉ cần đúng vài dòng `declare module` là có type-safety đầy đủ.
+
+</Callout>

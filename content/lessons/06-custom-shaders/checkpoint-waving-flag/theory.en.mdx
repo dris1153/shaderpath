@@ -1,0 +1,15 @@
+## Goal
+
+This is the ShaderMaterial module's mini-build: no new theory, just a working artifact proving you can combine custom uniforms, a custom attribute and vertex displacement — all at once, in one shader, rather than as four separate exercises.
+
+## Requirements
+
+Build a waving flag in React Three Fiber: a `planeGeometry` with a high enough segment count for smooth displacement (no jagged edges), pinned solid at the pole edge (`uv.x = 0`) and free to move at the outer edge (`uv.x = 1`). The vertex shader combines two `sin` waves of different frequency/speed, driven by three uniforms — `uTime`, `uWindStrength`, `uAmplitude` — with amplitude always multiplied by `uv.x` so the pole edge never moves no matter what the uniforms are set to. Add a custom `aFlutter` attribute — one random value assigned per vertex — adding a light, high-frequency jitter that reads as fabric flutter, not a smooth extension of the main waves. The fragment shader paints two colors as a stripe/gradient along the flag's length, and fakes shading using the displacement's derivative (an analytic `cos`, or `dFdx`) instead of building a real normal via cross product. Full details — code structure, formula hints — live in the Exercises section below; read it closely before starting.
+
+## Structure Hint
+
+The whole effect collapses into one formula: `displacement = wave(x, t) * amplitude * mask(uv.x)`. `wave` is the sum of two sines, `mask` pins the pole edge to 0, and `aFlutter` just adds its own per-vertex jitter into that same formula — not a separate system bolted on the side.
+
+## What "Done" Looks Like
+
+Check your result against the exercise checklist before opening the solution: the pole edge stays perfectly still regardless of the uniforms, the motion reads as real wind (several frequencies layered together) rather than a "jello flag" bobbing on a single beat, all three uniforms update every frame without recreating the `ShaderMaterial`, `aFlutter` jitter is clearly visible up close, and setting `uAmplitude = 0` produces no `NaN` or flashing.

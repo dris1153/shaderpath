@@ -1,0 +1,51 @@
+## What a Draw Call Costs, and Why Merging Them Pays Off
+
+Every time `renderer.render()` runs, EACH separate mesh in the scene triggers at least one `gl.drawElements`/`gl.drawArrays` call — a draw call. Before that call executes, the driver has to make sure the entire GPU state (bound shader program, bound buffers, texture units, blend mode, ...) matches what that mesh needs — the "Reading Three.js Source" lesson in Track 3 already showed `WebGLState.js` caching state to avoid redundant `gl.enable`/`gl.disable` calls, but the draw call itself still carries a fixed CPU cost per invocation (building the command, validation, crossing into the driver) — an estimate, but this cost is roughly INDEPENDENT of how many triangles the mesh has, and depends only on HOW MANY TIMES you call it. Drawing 2000 identical boxes as 2000 separate `THREE.Mesh` objects pays that fixed cost 2000 times every frame; `InstancedMesh` folds all 2000 copies into EXACTLY ONE `gl.drawElementsInstanced` call — the driver pays the fixed cost once, and 2000 different transforms get read straight from a single buffer right on the GPU. This is exactly the subject of "Draw Calls, Batching & Instancing" in Track 12; this lesson goes deep on one of those techniques — InstancedMesh — with enough of the mechanism underneath to use it correctly, not just use it.
+
+## Building an InstancedMesh: the Constructor, setMatrixAt, instanceMatrix.needsUpdate
+
+`new THREE.InstancedMesh(geometry, material, count)` (`src/objects/InstancedMesh.js`) takes exactly the geometry and material you'd hand a regular `THREE.Mesh`, plus `count` — the maximum number of copies. The constructor allocates `this.instanceMatrix = new InstancedBufferAttribute(new Float32Array(count * 16), 16)` on its own — a 4×4-matrix buffer for EVERY copy, defaulting every one to identity. To give copy `i` its own transform, the standard trick is a "dummy" `THREE.Object3D` used purely as a matrix calculator:
+
+```js
+const dummy = new THREE.Object3D();
+for (let i = 0; i < count; i++) {
+  dummy.position.set(Math.random() * 10 - 5, 0, Math.random() * 10 - 5);
+  dummy.updateMatrix(); // the dummy isn't in the scene, so nothing updates it automatically
+  mesh.setMatrixAt(i, dummy.matrix);
+}
+mesh.instanceMatrix.needsUpdate = true; // ONCE, after the loop
+```
+
+`setMatrixAt(i, matrix)` simply does `matrix.toArray(this.instanceMatrix.array, i * 16)` — it writes 16 numbers directly into the right spot in the buffer, entirely on the CPU, and does NOT automatically tell the GPU the buffer changed. `needsUpdate = true` is that signal; forgetting this line is the most common mistake — the code runs with no error, the console is clean, but every copy sits frozen at the origin because the GPU is still reading the original identity buffer.
+
+## Coloring Each Copy: instanceColor
+
+`setColorAt(i, color)` works exactly like `setMatrixAt` but for color — calling it for the first time lazily creates `this.instanceColor` (a 3-channel `InstancedBufferAttribute`), and it also needs `mesh.instanceColor.needsUpdate = true` after the loop. The easiest part to miss: reading `color_fragment.glsl.js` inside `meshphysical.glsl.js` (three@0.185.1) directly shows it only multiplies `diffuseColor *= vColor` when `USE_COLOR`/`USE_COLOR_ALPHA` is defined — that condition only turns on when you set `material.vertexColors = true`, it does NOT turn on automatically just because `instanceColor` exists. Skip that line and `setColorAt` still runs, the buffer still holds correct data, but the vertex shader writes `vColor` that the fragment shader never reads — every copy still renders in the same flat `material.color`.
+
+## Going Further: InstancedBufferAttribute for Arbitrary Data
+
+`instanceMatrix`/`instanceColor` are just two built-in cases of a more general mechanism: ANY `InstancedBufferAttribute` attached to a geometry automatically repeats PER INSTANCE instead of per vertex. To give each box its own oscillation phase (`aPhase`), create a `Float32Array` of length `count`, wrap it in `new THREE.InstancedBufferAttribute(array, 1)`, attach it with `geometry.setAttribute('aPhase', ...)`, then declare that exact name in the vertex shader: `attribute float aPhase;`. This declaration works identically inside a hand-written `ShaderMaterial` AND inside a built-in material hacked via `onBeforeCompile` — exactly this module's synthesis: attach `aPhase` to the geometry, then `.replace()` the `#include <begin_vertex>` marker (previous lesson) to read `aPhase` right inside that chunk. One buffer-free alternative: `gl_InstanceID`, a WebGL2 built-in available for free on any instanced draw call, giving you the instance index at zero extra cost — fine when a per-instance value can be derived purely from a formula on the index (a hash, `sin(float(gl_InstanceID))`), but useless when the value you need is data you AUTHORED yourself (state, health, a designer-picked color) that can't be recomputed from the index alone.
+
+## Frustum Culling: One Bounding Sphere for the Whole Field
+
+`computeBoundingSphere()` (`src/objects/InstancedMesh.js`) computes an InstancedMesh's bounding sphere by taking the UNION of the geometry's ORIGINAL bounding sphere, transformed through EVERY matrix you've `setMatrixAt` — entirely on the CPU, based on the positions you SET, with no knowledge of any displacement you later add in the vertex shader (like the `aPhase` bob above). This is exactly the caveat the "Reading Three.js Source" lesson raised for `frustumCulled` in general: if the displacement amplitude is large enough, some copies can be culled incorrectly even though they're still "visible" thanks to a GPU-side effect. The fix: manually widen `boundingSphere.radius` by the maximum displacement amplitude after calling `computeBoundingSphere()`, or disable `frustumCulled` outright if the field always stays in frame.
+
+## Update Patterns: Set-Once vs. Every Frame, and the CPU Cost
+
+For a static field (positioned once at setup), calling `setMatrixAt` in a loop then `needsUpdate = true` exactly ONCE is enough. For a field that needs transforms changed EVERY FRAME (per-copy physics), a JS loop plus `matrix.toArray()` for thousands of instances costs CPU proportional to `count`, and by default `needsUpdate = true` re-uploads the ENTIRE buffer (`gl.bufferSubData` with the whole array — confirmed in `WebGLAttributes.js`) even when only a handful of instances actually changed. `instanceMatrix.addUpdateRange(start, count)` (available in this version's `BufferAttribute.js`) scopes the re-upload to just the byte range that changed — worth reaching for when the field is large but only a few instances move per frame.
+
+## When Instancing Wins, and When It Doesn't
+
+InstancedMesh wins when: it's the same geometry + material, you need to PASS a per-copy transform/attribute, and the count is large enough that draw-call overhead actually matters (hundreds to tens of thousands). Objects that NEVER move individually after the scene is built and don't need distinguishing attributes are cheaper merged outright with `BufferGeometryUtils.mergeGeometries` (Track 12) — no instance buffer needed. Objects that only need to render as dots/billboards rather than real 3D shapes (tiny particles, stars) are cheaper still as `THREE.Points`, one `BufferGeometry` holding hundreds of thousands of positions in a SINGLE draw call, trading away independent rotation/shape per particle.
+
+The module's closing checkpoint (Enhanced Standard Material) can combine this lesson's technique directly with the previous two lessons' `onBeforeCompile` work to build one complete effect across thousands of copies at once; Track 9 (GPGPU) pushes this "thousands of instances" idea up to millions by encoding transforms into a texture instead of a buffer, updated entirely on the GPU.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common InstancedMesh mistakes:
+
+1. **Forgetting `instanceMatrix.needsUpdate = true` after the `setMatrixAt` loop.** The mesh compiles cleanly, the console reports nothing, but every copy sits frozen at the origin (identity matrix) because the GPU never received the new buffer.
+2. **Setting `instanceColor` while forgetting `material.vertexColors = true`.** The color buffer holds correct data, the vertex shader even writes `vColor` correctly, but the fragment shader never reads it because `USE_COLOR` was never enabled — every copy still renders in the same flat `material.color`.
+3. **Updating the entire `instanceMatrix` every frame for thousands of instances without considering `addUpdateRange`.** The result is still correct, but every frame re-uploads the whole buffer to the GPU even when most instances didn't change — an easy CPU-to-GPU bottleneck before the GPU itself is even busy.
+
+</Callout>

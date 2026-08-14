@@ -1,0 +1,70 @@
+## The Boilerplate Plain ShaderMaterial Forces On You
+
+Track 4 already flagged the trap: on every render, `<shaderMaterial uniforms={{...}} />` with a FRESH uniforms object (a `{}` literal re-created each time) wrecks uniform identity and makes the shader stutter or reset. The correct pattern — and the entire boilerplate that comes with plain `ShaderMaterial` — is: `useMemo(() => ({ uTime: { value: 0 }, uColor: { value: new THREE.Color(...) } }), [])` so that object is built exactly once, and inside `useFrame` you hand-write `uniforms.uTime.value = state.clock.elapsedTime` directly on that memoized object — no separate ref to the material is needed, the uniforms object itself is already a stable handle. Want to change color from a control? Add another `useEffect`, read the control value yourself, call `uniforms.uColor.value.set(...)` yourself. None of this is wrong, but every new uniform adds a declaration line, a mutation site, one more thing to forget — none of it "reactive" the way JSX props are on every built-in material (`<meshStandardMaterial color="hotpink" />`, for instance).
+
+## drei's shaderMaterial: a Class, Not a Component
+
+Despite the lowercase, function-like name, drei's `shaderMaterial(uniforms, vertexShader, fragmentShader, onInit?)` does **not** return a React component — it returns a plain **JavaScript class** that extends `THREE.ShaderMaterial` directly. Reading the source directly (it's only about 25 lines): for every key in the `uniforms` object you pass in, that class's constructor calls `Object.defineProperty` to turn the key into a getter/setter pair that reads and writes `this.uniforms[key].value` directly:
+
+```js
+const WaveMaterialImpl = shaderMaterial(
+  { uTime: 0, uColor: new THREE.Color("#4da6ff") },
+  vertexShader,
+  fragmentShader,
+);
+```
+
+The result: from the outside, `materialInstance.uColor` is no longer `{ value: Color }` — it IS that `Color`, read and written directly. That's the core difference from plain `ShaderMaterial`, where you always have to go through `.uniforms.uColor.value`.
+
+## Uniforms Becoming Reactive Props — the Actual Mechanism
+
+Calling `extend({ WaveMaterial: WaveMaterialImpl })` registers that class into R3F's internal reconciler catalogue; from then on it's usable as a lowercase-first JSX element: `<waveMaterial uColor="#ff8a3d" />`. When React re-renders with a new `uColor`, R3F's `applyProps` reads the CURRENT value of `material.uColor` (via the getter above, returning the actual `THREE.Color` instance), sees it's a `THREE.Color` and the new value is a valid hex string, and calls `.set(newValue)` right on that same object — **exactly** how `<meshStandardMaterial color="hotpink" />` works, no new `Color` created, no identity broken. That's what "uniforms become reactive props" actually means: you write `<waveMaterial uColor={color} />` like any other JSX prop, no manual `useEffect` or `ref` needed for that one uniform.
+
+## extend and .key: Registering the Class, and the Hot-Reload Trap
+
+`shaderMaterial()` also attaches a static `.key` property — a UUID generated **exactly once** when the function runs (`THREE.MathUtils.generateUUID()`). That only holds if `shaderMaterial()`/`extend()` are called at **module scope**, not inside a component body — calling them inside a component means every re-render mints a BRAND NEW class with a BRAND NEW `.key`, wiping out any existing state. `.key` exists precisely for the opposite scenario: while editing `vertex.glsl`/`fragment.glsl` with the dev server running, Fast Refresh recompiles the module — the module re-runs from the top, `shaderMaterial()` produces a NEW class with a NEW `.key`, but React (with no signal telling it otherwise) might still treat the JSX element as "the same spot" and reuse the OLD, already-compiled WebGLProgram. Setting `key={WaveMaterialImpl.key}` on the JSX element forces React to reconcile by that `.key` value instead — the key changes, React unmounts then remounts, and the GPU program gets recompiled against the actual new shader.
+
+## The Limit: When a Ref Still Beats a Prop
+
+`uColor` changes OCCASIONALLY (a user clicks a control) — a reactive prop is the right tool there. `uTime` changes EVERY FRAME — the demo's drei half still updates it through an actual ref to the instance (`materialRef.current.uTime = state.clock.elapsedTime`, since a JSX-created instance is only reachable via a ref) inside `useFrame`, bypassing props entirely; the plain half does the same thing in substance — mutating the uniforms object it already holds in closure. The reason: pushing `uTime` through React state updated every frame would mean every change triggers a component re-render AND an `applyProps` pass over the entire props object — while ref-mutation is just a plain JavaScript property assignment, never touching React at all. This isn't a reason to always avoid JSX props for uniforms — it's a boundary: values that change continuously frame-to-frame still belong on a ref, values that change discretely from interaction genuinely benefit from a prop. And even that boundary should be **measured**, not guessed — Track 12 introduces real profilers (Spector.js, React DevTools Profiler) to find out whether one `applyProps` pass is actually a concern within a 16.6ms frame budget, before optimizing prematurely.
+
+## Typing a Custom Shader Element in TypeScript
+
+R3F types every 3D JSX element through a single interface named `ThreeElements` (exported from `@react-three/fiber`, merged into React's `JSX.IntrinsicElements`). A class registered the catalogue way via `extend({ WaveMaterial })` doesn't automatically show up in that interface — TypeScript will complain that `<waveMaterial>` doesn't exist, unless you extend it yourself via **declaration merging**:
+
+```ts
+declare module "@react-three/fiber" {
+  interface ThreeElements {
+    waveMaterial: ThreeElement<typeof WaveMaterialImpl>;
+  }
+}
+```
+
+`ThreeElement<T>` is a type helper R3F already exports, and it derives the correct prop set on its own (including `uTime`, `uColor`, since they're real properties on the class instance created by the `Object.defineProperty` calls above) — no hand-written prop interface, no `any`.
+
+## An Honest Comparison: Plain vs Helper
+
+| | Plain ShaderMaterial | drei's shaderMaterial |
+|---|---|---|
+| Changing a uniform from a control | `useEffect` + manual `.value` mutation | JSX prop, reconciler handles it |
+| Changing a uniform every frame | `ref` + `useFrame` | `ref` + `useFrame` (unchanged) |
+| Boilerplate per new uniform | Add a line to the object + a mutation site | Nothing extra needed |
+| Registration required (`extend`) | No | Yes, once at module scope |
+| Typing the custom JSX element | N/A (use `<shaderMaterial>` directly) | Needs a manual `declare module` |
+| HMR when editing shader source | Rides R3F's default behavior | Needs `key={Material.key}` |
+
+Neither side "wins" outright: drei's helper erases boilerplate for occasionally-changing uniforms, in exchange for a registration + type augmentation step that has to be done correctly once; plain `ShaderMaterial` needs no registration step at all, but forces you to hand-write the exact mutation code for every uniform, every time.
+
+## Where This Foundation Leads
+
+The upcoming checkpoint (`checkpoint-waving-flag`) combines this module's two techniques — custom attributes (the previous lesson) and uniforms/helpers (this one) — into a complete waving flag. `onBeforeCompile`, in the next module, also needs a material class to hook into, but this time it's one of Three's BUILT-IN materials (`MeshStandardMaterial`) instead of a hand-written `ShaderMaterial` — a different kind of "helper" for the same underlying problem: minimizing the code you have to rewrite every time you need one more custom effect.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with the `shaderMaterial` helper:
+
+1. **Calling `shaderMaterial()`/`extend()` inside a component body instead of module scope.** Every re-render mints a NEW class with a NEW `.key` — React sees the "element type" changing constantly, unmounting/remounting the material on every render, losing all state, worse off than plain `ShaderMaterial` would have been.
+2. **Using ref-mutation for a per-frame uniform but forgetting it's still required with a drei-generated class.** A reactive prop isn't "free" — pushing a value that changes 60 times a second through React state still costs a re-render + an `applyProps` pass every single time, exactly like any other prop.
+3. **Skipping the `declare module` augmentation and reaching for `as any` to silence TypeScript instead.** A custom JSX element created via `extend({ ... })` doesn't naturally show up in `ThreeElements` — casting through `any` wipes out ALL prop checking (a typo'd uniform name will no longer be caught), when a few lines of `declare module` buys full type-safety instead.
+
+</Callout>

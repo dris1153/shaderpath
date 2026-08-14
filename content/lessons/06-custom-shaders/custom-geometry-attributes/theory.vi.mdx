@@ -1,0 +1,67 @@
+## Ba tốc độ dữ liệu quay lại: attribute, uniform, varying
+
+Track 1 (bài `attributes-uniforms-varyings`) đã chia GLSL thành ba loại biến theo tần suất thay đổi: attribute đổi theo từng vertex, uniform cố định suốt một draw call, varying được nội suy tuyến tính từ vertex shader sang fragment shader. Ba tốc độ này không phải phân loại hàn lâm — chúng quyết định trực tiếp bạn lưu một con số ở ĐÂU. Bài trước (`three-injected-uniforms`) cho thấy Three.js tự bơm sẵn hàng loạt uniform (`modelMatrix`, `cameraPosition`...) và attribute chuẩn (`position`, `normal`, `uv`) vào mọi `ShaderMaterial`. Bài này đi xa hơn: khi dữ liệu cần không nằm trong danh sách chuẩn đó — mỗi vertex cần một số ngẫu nhiên riêng, hay một "trọng số" do bạn tự vẽ — bạn phải tự tạo attribute mới và gắn nó vào geometry.
+
+## Tạo attribute tuỳ biến: Float32Array và BufferAttribute
+
+Một attribute, xét cho cùng, chỉ là một mảng số thô nằm trong bộ nhớ GPU, GPU đọc lại đúng một giá trị (hoặc một bộ vài giá trị) cho mỗi lần vertex shader chạy. Phía JavaScript, tạo mảng đó bằng `Float32Array`, gói vào một `THREE.BufferAttribute`, rồi gắn vào geometry bằng `setAttribute`:
+
+```js
+const count = geometry.attributes.position.count; // 1 giá trị / 1 vertex
+const random = new Float32Array(count);
+for (let i = 0; i < count; i++) random[i] = Math.random();
+
+geometry.setAttribute("aRandom", new THREE.BufferAttribute(random, 1));
+```
+
+Tham số thứ hai của `BufferAttribute` — `itemSize` — nói cho Three biết mỗi vertex chiếm bao nhiêu số liên tiếp trong mảng phẳng đó.
+
+### Chọn itemSize: float hay vec3
+
+`itemSize: 1` nghĩa là mỗi vertex có đúng một số (một `float` trong shader) — dùng cho seed ngẫu nhiên, trọng số, hay bất kỳ đại lượng vô hướng nào. `itemSize: 3` nghĩa là mỗi vertex có ba số liên tiếp gộp thành một `vec3` — dùng khi cần một hướng hoặc offset 3D riêng cho từng vertex, ví dụ một vector dịch chuyển ngẫu nhiên. Không có lựa chọn "đúng" tuyệt đối, chỉ có lựa chọn khớp hình dạng dữ liệu: ép một hướng 3D vào ba attribute `float` riêng (`aOffsetX`, `aOffsetY`, `aOffsetZ`) vẫn chạy được, nhưng tốn ba lần `setAttribute` và ba lần khai báo shader thay vì một, không có lý do thực dụng nào để chọn cách đó.
+
+## Khai báo attribute trong shader: quy ước đặt tên aXxx
+
+Attribute JS tên gì, shader phải khai báo attribute GLSL đúng tên đó, đúng kiểu tương ứng với `itemSize`:
+
+```glsl
+attribute float aRandom;
+attribute float aWeight;
+attribute vec3 aRandomDir;
+```
+
+Cú pháp `attribute` (thay vì `in` của GLSL ES 3.00) là phong cách GLSL1 quen thuộc — Three.js tự biên dịch shader của `ShaderMaterial` sang đúng phiên bản GLSL context yêu cầu (WebGL2 dùng GLSL ES 3.00 nội bộ), không cần tự lo `#version` hay tự đổi `attribute` thành `in`. Tiền tố `a` cho attribute (song song `u` cho uniform, `v` cho varying) không phải luật trình biên dịch — không ai bắt dùng nó — nhưng là quy ước cộng đồng Three.js/shader dùng rộng rãi để một dòng code tự nói lên tốc độ dữ liệu của biến, không cần lật lên phần khai báo ở đầu file mỗi lần đọc.
+
+## Dùng attribute để lái vị trí và màu
+
+Demo đi kèm bài này gắn hai attribute `float` (`aRandom` — seed ngẫu nhiên, `aWeight` — trọng số "vẽ tay" tính từ độ cao $y$ của từng vertex trên mặt cầu) và một attribute `vec3` (`aRandomDir` — hướng ngẫu nhiên cố định mỗi vertex) lên một `SphereGeometry`. Vertex shader nhân biên độ dịch chuyển với cả `aRandom` lẫn `aWeight`, rồi cộng vào vị trí gốc theo hướng pháp tuyến hoặc theo `aRandomDir`:
+
+```glsl
+float amt = uAmplitude * aRandom * aWeight;
+vec3 dir = uMode < 0.5 ? normal : aRandomDir;
+vec3 displaced = position + dir * amt;
+```
+
+Vì `aRandom` và `aWeight` là attribute — khác giá trị ở MỖI vertex — kết quả là một mặt cầu gồ ghề không đều, chứ không phải phồng lên đồng loạt như khi biên độ chỉ đến từ một uniform. `aWeight`, tính từ toạ độ $y$ ($y \in [-1, 1]$ remap về $[0, 1]$), mô phỏng đúng khái niệm "weight painting" quen thuộc trong công cụ 3D (Blender, Maya): một hoạ sĩ vẽ tay giá trị 0..1 lên từng vertex để kiểm soát vùng nào chịu hiệu ứng mạnh, vùng nào không — ở đây thay bằng một công thức, nhưng cơ chế lưu trữ dưới GPU giống hệt. Bật toggle "tô màu theo attribute" trong demo pha trộn `aWeight`/`aRandom` thẳng vào màu fragment — trực quan hoá chính hai con số đang lái hình học.
+
+## Cập nhật attribute: needsUpdate, usage hint, và khi nào đó là smell
+
+Sửa nội dung một `Float32Array` sau khi đã upload không tự động đẩy lại lên GPU — phải set `attribute.needsUpdate = true` để báo Three copy lại buffer ở lần render tiếp theo, y hệt cờ `needsUpdate` của texture. Nút "đổi seed" trong demo làm đúng việc đó: ghi số ngẫu nhiên mới vào `aRandom`/`aRandomDir` rồi bật `needsUpdate`. Vì đây là hành động rời rạc do người dùng bấm, `usage` mặc định (`THREE.StaticDrawUsage`) là lựa chọn đúng — usage hint chỉ là gợi ý cho driver GPU cấp phát bộ nhớ tối ưu theo tần suất ghi, và `StaticDrawUsage` (ghi một/vài lần, đọc nhiều lần) khớp chính xác với việc regenerate xảy ra theo cú click, không theo frame. Nếu một attribute thật sự đổi giá trị MỖI frame, cần gọi `attribute.setUsage(THREE.DynamicDrawUsage)` để driver cấp phát đúng kiểu bộ nhớ cho ghi liên tục — nhưng đến lúc thấy mình gọi `needsUpdate = true` mỗi frame cho hàng nghìn vertex, đó thường là dấu hiệu nên dừng lại: đẩy lại toàn bộ buffer qua CPU→GPU mỗi frame cho một hiệu ứng đơn giản (sóng, dòng chảy, particle) là chính xác bài toán GPGPU giải quyết tốt hơn nhiều — tính ngay trên GPU bằng texture làm bộ nhớ trạng thái, không đi vòng qua CPU — chủ đề của Track 9.
+
+## Số lượng vertex: geometry indexed và đường nối kinh tuyến
+
+`geometry.attributes.position.count` cho biết chính xác có bao nhiêu "hàng" trong mọi attribute per-vertex — con số này, không phải số tam giác, quyết định `Float32Array` dài bao nhiêu. Với `SphereGeometry(1, 64, 64)`, Three dựng một lưới $(64{+}1) \times (64{+}1) = 4225$ vertex, dùng `setIndex` để các tam giác dùng lại chung vertex thay vì lặp dữ liệu — nhưng "dùng lại" không áp dụng đều khắp. Đọc thẳng trong mã nguồn `SphereGeometry`, cột đầu ($u=0$) và cột cuối ($u=1$) của lưới có TOẠ ĐỘ 3D trùng nhau (cùng một điểm trên đường nối kinh tuyến $\phi = 0$) nhưng là hai chỉ số (index) khác nhau, vì UV cần $u$ chạy trọn $0 \to 1$ mà không "gói vòng" ngược. Với 64 heightSegments, đó là 65 cặp vertex trùng vị trí nhưng lệch index dọc suốt đường nối. Một attribute ngẫu nhiên gán độc lập theo index — như `Math.random()` trong vòng lặp phía trên — cho cặp đó hai giá trị khác nhau, nên hiệu ứng per-vertex (đặc biệt là displacement) để lộ một đường "may" mờ dọc kinh tuyến 0°, nơi hai nửa mặt cầu không khớp giá trị dù trùng vị trí hình học.
+
+## Nền tảng này dẫn tới đâu
+
+Bài kế tiếp (`drei-shadermaterial-helper`) quay lại uniform, không phải attribute — nhưng dùng đúng cặp vertex/fragment shader kiểu này để so sánh boilerplate `ShaderMaterial` thuần với helper `shaderMaterial` của drei. Track 9 (GPGPU) tổng quát hoá chính vấn đề "smell" ở trên: khi một hệ thống có hàng chục nghìn phần tử cần đổi trạng thái mỗi frame, lời giải không phải ghi đè `Float32Array` rồi `needsUpdate` mỗi tick, mà giữ trạng thái ngay trong một texture và để một fragment shader tính bước tiếp theo — CPU không còn tham gia vòng lặp cập nhật nữa.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tự tạo attribute:
+
+1. **Đặt tên attribute JS và attribute GLSL lệch nhau (hoặc lệch hoa/thường).** `geometry.setAttribute("aRandom", ...)` nhưng shader khai báo `attribute float arandom;` — Three không luôn báo lỗi biên dịch rõ ràng, attribute đơn giản đọc toàn số 0, hiệu ứng "biến mất" mà không có thông báo chỉ thẳng nguyên nhân.
+2. **Quên `needsUpdate = true` sau khi ghi lại `Float32Array`.** Mảng JS đã đổi giá trị đúng, nhưng buffer trên GPU vẫn giữ dữ liệu cũ cho tới lần `needsUpdate` tiếp theo — dễ nhầm tưởng logic random/tính toán bị sai, trong khi vấn đề chỉ là quên báo cho Three copy lại.
+3. **`itemSize` không khớp độ dài mảng.** `new THREE.BufferAttribute(data, 3)` nhưng `data.length` không chia hết cho 3 (ví dụ lỡ tạo mảng theo `count` thay vì `count * 3`) khiến Three đọc lệch pha — vertex sau nhận một phần dữ liệu của vertex trước, hiện ra thành hình học méo mó khó truy vết nếu không kiểm tra `data.length === count * itemSize` trước khi gắn.
+
+</Callout>

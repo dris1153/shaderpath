@@ -1,0 +1,73 @@
+## Who Updates Built-in Uniforms, and How Often
+
+ShaderMaterial doesn't just hand you declarations — it also drives the per-frame UPDATE of those uniforms, and the update frequency differs sharply between them, straight from `src/renderers/WebGLRenderer.js` (three@0.185.1, tag `r185`):
+
+- `modelMatrix`, `modelViewMatrix`, `normalMatrix` get written **every object, every frame, unconditionally** — the `p_uniforms.setValue(_gl, 'modelMatrix', object.matrixWorld)` line and its two siblings (around L2768-2770) sit in a "common matrices" block that runs for EVERY object drawn, with no "did the value change" check first.
+- `projectionMatrix`, `viewMatrix`, `cameraPosition` (and `isOrthographic`) go the OPPOSITE way — only rewritten when `refreshProgram || _currentCamera !== camera` is true (around L2557): once per active camera/program switch, not repeated for the next object sharing that camera in the same frame. One scene, one camera, one program: this block runs exactly ONCE per frame, whether the scene holds 1 object or 10,000.
+
+This asymmetry isn't accidental: `modelMatrix` differs per object, so there's nothing to cache; the camera is shared across a whole batch of objects, worth checking before rewriting. `modelViewMatrix`/`normalMatrix` are stuck in the per-object bucket because both depend on the camera AND the object at once (`object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld)`, around L2128) — no object can share another object's modelViewMatrix.
+
+## normalMatrix: Why You Can't Just Take modelView's 3×3
+
+Right after the modelViewMatrix multiplication, Three calls `object.normalMatrix.getNormalMatrix(object.modelViewMatrix)` — not a straight copy of modelViewMatrix's upper-left 3×3. There's a tight geometric reason, not Three overcomplicating things.
+
+A surface normal $\vec n$ is perpendicular to the tangent plane: every tangent $\vec t$ on the surface has $\vec n \cdot \vec t = 0$. Transforming the mesh by $M$ (3×3, modelView's linear part) turns $\vec t$ into $\vec t' = M\vec t$. Transform $\vec n$ by that same $M$ too, and the product $\vec n' \cdot \vec t'$ is NO LONGER guaranteed zero once $M$ isn't a pure rotation/uniform scale — the normal stops being perpendicular to the transformed surface.
+
+The correct matrix $N$ (the normal matrix) has to satisfy $\vec n' \cdot \vec t' = 0$ for every $\vec t$ that originally satisfied $\vec n \cdot \vec t = 0$. Setting $\vec n' = N\vec n$ and expanding:
+
+$$
+\vec n'^{\mathsf T} \vec t' = (N\vec n)^{\mathsf T} (M\vec t) = \vec n^{\mathsf T} N^{\mathsf T} M \vec t
+$$
+
+This equals $\vec n^{\mathsf T} \vec t$ (which is 0) for every $\vec t$ when $N^{\mathsf T} M = I$, i.e. $N^{\mathsf T} = M^{-1}$, i.e.:
+
+$$
+N = (M^{-1})^{\mathsf T} = (M^{\mathsf T})^{-1}
+$$
+
+— the inverse-transpose, exactly what `Matrix3.getNormalMatrix()` implements (`setFromMatrix4(m).invert().transpose()`). Under a pure rotation/uniform scale, $M^{-1} = M^{\mathsf T}$, so $N = M$ — this is exactly why the bug slips past eyeball testing (a uniformly-scaled mesh looks right either way). The problem only surfaces with **non-uniform scale**: $M = \mathrm{diag}(2, 1, 1)$ (stretched 2× along X), $\vec n = (\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2}, 0)$. Applying $M$ directly gives $M\vec n = (\sqrt2, \tfrac{1}{\sqrt2}, 0)$ — leaning FURTHER toward the stretched axis, backwards (a surface stretched along X should flatten out along X, leaning AWAY from it). Since $M$ is diagonal, $M^{-1} = \mathrm{diag}(0.5, 1, 1)$ and its transpose is itself, so $N = \mathrm{diag}(0.5, 1, 1)$: $N\vec n = (\tfrac{1}{2\sqrt2}, \tfrac{1}{\sqrt2}, 0)$, which after renormalizing leans toward Y as expected — away from the stretched axis, matching intuition.
+
+## Declaring Custom Uniforms: The House Pattern — Memoize Once, Mutate .value Every Frame
+
+A custom uniform is declared exactly like a built-in one — `uniform float uTime;` in GLSL, with the JS side passing an object shaped like `{ uTime: { value: 0 } }` into the `uniforms` prop. The standard R3F pattern (it repeats across every shader demo since Track 2): create that object exactly ONCE with `useMemo(() => ({ uTime: { value: 0 } }), [])`, then every frame only overwrite `.value`, never recreate the whole object:
+
+```ts
+const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+useFrame((state) => {
+  uniforms.uTime.value = state.clock.elapsedTime; // direct write, no setState
+});
+```
+
+Why "mutate, not setState": calling `setState` every frame forces a React re-render, dragging the entire subtree through reconciliation (the exact anti-pattern the Track 4 `useFrame` hooks lesson measured with a render counter) — while writing `.value` directly is a plain JS assignment that never touches React. R3F itself handles this exact prop with care: `applyProps` in `@react-three/fiber@9.7.0`'s source doesn't overwrite `material.uniforms` wholesale when the prop changes — it merges each field with `Object.assign`, with a comment right in the code: "ShaderMaterial uniforms must keep a stable target reference," because `WebGLPrograms.getUniforms()` only re-reads `material.uniforms` when the shader needs a fresh compile; swapping that object for a different one after it's already compiled leaves Three reading the OLD object until the next recompile.
+
+## Textures Are Uniforms Too: A Procedural DataTexture as an Example
+
+A texture is just another uniform — `uniform sampler2D uNoiseMap;` in GLSL, `{ uNoiseMap: { value: texture } }` on the JS side, no special syntax for "texture uniform." This lesson's demo uses a procedural `THREE.DataTexture` (no binary image loaded, matching this platform's Track 3 convention) as a third color source mixed into the fragment shader — create the texture, set `needsUpdate = true` once at creation, then assign it straight into the uniform's `.value`, exactly like a number or an array. Since that texture isn't a JSX object (R3F won't dispose it for you), it has to be registered with `useDisposable` like every other procedural resource on this platform.
+
+## The Collision Rule: Redeclaring a Built-in Is a Compile Error
+
+If you redeclare a uniform Three already injected — say, accidentally writing `uniform mat4 modelMatrix;` inside a ShaderMaterial's fragment shader — the GLSL compiler fails the build with a redefinition error, something like:
+
+```
+ERROR: 0:9: 'modelMatrix' : redefinition
+```
+
+(the real line number depends on your shader — what matters is the error KIND: `redefinition`, not `undeclared identifier`.) This is a direct consequence of the previous lesson: the prelude Three injects already has `modelMatrix`, so the line you added is a DUPLICATE declaration, not a new one. The rule to avoid it: only self-declare names that AREN'T among the six built-in uniforms plus three attributes (`modelMatrix`, `modelViewMatrix`, `projectionMatrix`, `viewMatrix`, `normalMatrix`, `cameraPosition`, `position`, `normal`, `uv`) — every custom uniform in this lesson carries a `u` prefix (`uTime`, `uNoiseMap`, `uRim`) for exactly this reason: it shrinks the odds of colliding with the built-in list, or with a uniform you declared in some other shader when copy-pasting code.
+
+## The Cost Model: Cheap Value Writes, Expensive Material Recompiles
+
+Writing `.value` every frame is nearly free: `WebGLUniforms.upload()` caches the last JS value sent for each uniform (`setValueV3f` checks `cache[0] !== v.x` before ever calling `gl.uniform3f`) — an unchanged uniform between two frames costs not a single GL call, just a JS comparison. The opposite end is forcing Three to recompile the shader program — changing the `vertexShader`/`fragmentShader` strings outright, remounting `<shaderMaterial>` with a new `key`, or changing `customProgramCacheKey` — which triggers `gl.compileShader` twice, `gl.linkProgram`, and a fresh location lookup for every uniform (`programCache.acquireProgram` only caches by `cacheKey`; a cache miss means a real compile, one of the most expensive synchronous calls a real Three.js app makes — Track 12 digs into this in depth). The practical rule starting from this lesson: change a uniform's VALUE, not the shader's SOURCE, to update in real time.
+
+## Where This Leads: Custom Attributes and onBeforeCompile
+
+The next lesson in this module (Custom Geometry Attributes) extends the exact same "attach extra data to the GPU" idea to per-vertex data instead of per-draw-call — a self-declared attribute lives alongside the built-in `position`/`normal`/`uv` exactly the way a self-declared uniform lives alongside `modelMatrix`/`cameraPosition` in this lesson. This track's second module (Hacking Built-in Materials) reuses the exact collision rule you just learned when `onBeforeCompile` injects code into a much longer prelude — `MeshStandardMaterial`'s.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when working with built-in and custom uniforms:
+
+1. **Using modelViewMatrix's 3×3 instead of `normalMatrix` on a non-uniformly scaled mesh.** It looks correct on every uniformly-scaled mesh (an undistorted sphere, an undistorted cube), and only breaks once someone calls `scale.set(2, 1, 1)` — normals lean the wrong way, lighting/rim looks off, and it's hard to spot unless you know exactly which symptom to look for.
+2. **Recreating the `uniforms` object on every component render instead of mutating `.value`.** Even though R3F safely merges it via `applyProps`, driving the update through state/props forces a React re-render and reconciliation of the whole subtree every frame — while a direct mutation is a plain JS assignment that never touches React.
+3. **Naming a custom uniform after a built-in (`color`, `normal`, `position`, `modelMatrix`, …).** The resulting redefinition error is hard to guess at unless you know the prelude already injected that name; the `u`-prefix convention (uTime, uColor) all but eliminates this risk.
+
+</Callout>

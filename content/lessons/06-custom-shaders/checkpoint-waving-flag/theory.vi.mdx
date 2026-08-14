@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build tổng kết module ShaderMaterial: không có lý thuyết mới, chỉ một sản phẩm chạy được chứng minh bạn nắm được custom uniform, custom attribute và vertex displacement — kết hợp cùng lúc trong một shader, thay vì học rời từng phần như bốn bài trước.
+
+## Yêu cầu
+
+Dựng một lá cờ bay bằng React Three Fiber: một `planeGeometry` với số segment đủ cao để displacement mượt (không răng cưa ở mép), ghim chặt tại mép cột cờ (`uv.x = 0`) và bay tự do ở mép ngoài (`uv.x = 1`). Vertex shader kết hợp hai sóng `sin` tần số/tốc độ khác nhau, điều khiển bởi ba uniform `uTime`, `uWindStrength`, `uAmplitude`; biên độ luôn nhân với `uv.x` để mép cột cờ không bao giờ dịch chuyển dù uniform đổi thế nào. Gắn thêm một custom attribute `aFlutter` — một giá trị ngẫu nhiên gán riêng cho từng vertex — cộng thêm rung nhẹ tần số cao mô phỏng vải phần phật, không phải chuyển động mượt như sóng chính. Fragment shader tô hai màu dạng sọc/gradient dọc theo chiều dài lá cờ, và "giả lập" ánh sáng bằng đạo hàm của phần displacement (đạo hàm giải tích qua `cos`, hoặc `dFdx`) thay vì dựng normal thật bằng cross product. Chi tiết đầy đủ — cấu trúc code, gợi ý công thức — nằm trong phần Bài tập bên dưới; đọc kỹ trước khi bắt đầu.
+
+## Gợi ý cấu trúc
+
+Toàn bộ hiệu ứng gói gọn trong đúng một công thức: `displacement = wave(x, t) * amplitude * mask(uv.x)`. `wave` là tổng hai `sin`, `mask` ghim mép cột cờ về 0, và `aFlutter` chỉ cộng thêm rung riêng của từng vertex vào đúng công thức đó — không phải một hệ thống tách biệt.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution: mép cột cờ đứng yên tuyệt đối bất kể uniform, chuyển động trông như gió thật (nhiều tần số chồng lên nhau) chứ không phải "cờ thạch" lắc đều một nhịp, ba uniform cập nhật mỗi frame mà không cần tạo lại `ShaderMaterial`, rung `aFlutter` nhìn rõ khi zoom gần vào bề mặt, và đặt `uAmplitude = 0` không gây `NaN` hay chớp hình.

@@ -1,0 +1,67 @@
+## Three Data Rates, Again: Attribute, Uniform, Varying
+
+Track 1's `attributes-uniforms-varyings` lesson split GLSL variables into three kinds by update frequency: attributes vary per vertex, uniforms stay fixed for an entire draw call, varyings get linearly interpolated from the vertex shader into the fragment shader. That split isn't academic trivia — it decides WHERE a given number lives. The previous lesson (`three-injected-uniforms`) showed that Three.js quietly injects a pile of uniforms (`modelMatrix`, `cameraPosition`...) and standard attributes (`position`, `normal`, `uv`) into every `ShaderMaterial`. This lesson goes further: when the data you need isn't on that standard list — say every vertex needs its own random number, or a hand-painted "weight" — you have to create a brand new attribute yourself and attach it to the geometry.
+
+## Creating a Custom Attribute: Float32Array and BufferAttribute
+
+An attribute, at bottom, is just a flat array of numbers sitting in GPU memory, read back one value (or a small fixed bundle of values) per vertex shader invocation. On the JavaScript side, you build that array with a `Float32Array`, wrap it in a `THREE.BufferAttribute`, then attach it to a geometry with `setAttribute`:
+
+```js
+const count = geometry.attributes.position.count; // 1 value per vertex
+const random = new Float32Array(count);
+for (let i = 0; i < count; i++) random[i] = Math.random();
+
+geometry.setAttribute("aRandom", new THREE.BufferAttribute(random, 1));
+```
+
+`BufferAttribute`'s second argument — `itemSize` — tells Three how many consecutive numbers in that flat array belong to each vertex.
+
+### Choosing itemSize: Float or vec3
+
+`itemSize: 1` means each vertex owns exactly one number (a `float` in the shader) — right for a random seed, a weight, or any scalar quantity. `itemSize: 3` means each vertex owns three consecutive numbers packed into a `vec3` — right when you need a direction or a 3D offset per vertex, like a random displacement vector. There's no universally "correct" choice here, only one that matches the shape of your data: forcing a 3D direction into three separate `float` attributes (`aOffsetX`, `aOffsetY`, `aOffsetZ`) still works, but costs three `setAttribute` calls and three shader declarations instead of one, with no practical upside.
+
+## Declaring the Attribute in the Shader: the aXxx Convention
+
+Whatever name a JS attribute has, the shader must declare a GLSL attribute with that exact name and a type matching its `itemSize`:
+
+```glsl
+attribute float aRandom;
+attribute float aWeight;
+attribute vec3 aRandomDir;
+```
+
+The `attribute` keyword (instead of GLSL ES 3.00's `in`) is the familiar GLSL1 style — Three.js compiles a `ShaderMaterial`'s shaders down to whatever GLSL version the context actually needs (WebGL2 uses GLSL ES 3.00 internally), so there's no `#version` pragma to manage or manual `attribute` → `in` rewriting to do yourself. The `a` prefix for attributes (alongside `u` for uniforms, `v` for varyings) isn't a compiler rule — nothing enforces it — but it's a widely used Three.js/shader community convention that lets a single line of code announce its own data rate, without flipping back up to the declarations at the top of the file every time.
+
+## Using Attributes to Drive Position and Color
+
+This lesson's demo attaches two `float` attributes (`aRandom` — a random seed, `aWeight` — a hand-painted weight computed from each vertex's $y$ height on the sphere) and one `vec3` attribute (`aRandomDir` — a fixed random direction per vertex) to a `SphereGeometry`. The vertex shader multiplies the displacement amplitude by both `aRandom` and `aWeight`, then adds it to the base position along either the normal or `aRandomDir`:
+
+```glsl
+float amt = uAmplitude * aRandom * aWeight;
+vec3 dir = uMode < 0.5 ? normal : aRandomDir;
+vec3 displaced = position + dir * amt;
+```
+
+Because `aRandom` and `aWeight` are attributes — a different value at EVERY vertex — the result is an uneven, bumpy sphere, not a uniformly inflated one the way it would look if the amplitude came only from a uniform. `aWeight`, computed from $y$ ($y \in [-1, 1]$ remapped to $[0, 1]$), mirrors the "weight painting" concept familiar from DCC tools (Blender, Maya): an artist hand-paints a 0..1 value onto each vertex to control where an effect hits hard and where it doesn't — here a formula stands in for the brush, but the underlying GPU storage mechanism is identical. Flipping the demo's "color by attribute" toggle blends `aWeight`/`aRandom` straight into the fragment color — visualizing the exact two numbers driving the geometry.
+
+## Updating Attributes: needsUpdate, Usage Hints, and When It's a Smell
+
+Editing a `Float32Array`'s contents after it's already been uploaded doesn't automatically push the change to the GPU — you have to set `attribute.needsUpdate = true` to tell Three to re-copy the buffer on the next render, exactly like a texture's `needsUpdate` flag. The demo's "reroll seed" button does exactly that: writes fresh random numbers into `aRandom`/`aRandomDir`, then flips `needsUpdate`. Because this is a discrete, user-triggered action, the default `usage` (`THREE.StaticDrawUsage`) is the right call — a usage hint is just a suggestion to the GPU driver about how to allocate memory given how often you write, and `StaticDrawUsage` (write once or occasionally, read many times) matches a click-driven regenerate exactly, not a per-frame one. If an attribute genuinely changes value EVERY frame, call `attribute.setUsage(THREE.DynamicDrawUsage)` so the driver allocates the right kind of memory for continuous writes — but by the time you find yourself calling `needsUpdate = true` every frame for thousands of vertices, that's usually a sign to stop: re-uploading an entire buffer CPU→GPU every frame for a simple effect (waves, flow, particles) is exactly the problem GPGPU solves far better — computing directly on the GPU with a texture as the state store, with the CPU no longer in the update loop at all — the subject of Track 9.
+
+## Vertex Count: Indexed Geometry and the Seam
+
+`geometry.attributes.position.count` tells you exactly how many "rows" every per-vertex attribute needs — that number, not the triangle count, is what determines how long your `Float32Array` should be. With `SphereGeometry(1, 64, 64)`, Three builds a $(64{+}1) \times (64{+}1) = 4225$-vertex grid and uses `setIndex` so triangles share vertices instead of duplicating data — but that sharing isn't uniform everywhere. Reading `SphereGeometry`'s source directly, the grid's first column ($u=0$) and last column ($u=1$) have MATCHING 3D coordinates (the same point on the $\phi = 0$ seam) but two different indices, because UV needs $u$ to run the full $0 \to 1$ range instead of wrapping back on itself. With 64 heightSegments, that's 65 position-matching pairs with mismatched indices running down the seam. A random attribute assigned independently per index — like the `Math.random()` loop above — hands that pair two different values, so a per-vertex effect (displacement especially) leaves a faint "stitch" visible along the 0° meridian, where two halves of the sphere don't agree despite occupying the same geometric point.
+
+## Where This Foundation Leads
+
+The next lesson (`drei-shadermaterial-helper`) circles back to uniforms, not attributes — but reuses this exact vertex/fragment shader pairing style to compare plain `ShaderMaterial` boilerplate against drei's `shaderMaterial` helper. Track 9 (GPGPU) generalizes the exact "smell" flagged above: once a system has tens of thousands of elements that need a new state every frame, the answer isn't overwriting a `Float32Array` and flipping `needsUpdate` on every tick — it's keeping state inside a texture and letting a fragment shader compute the next step, with the CPU dropped out of the update loop entirely.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when hand-rolling attributes:
+
+1. **The JS attribute name and the GLSL declaration drift apart (or differ in case).** `geometry.setAttribute("aRandom", ...)` while the shader declares `attribute float arandom;` — Three doesn't always surface a clear compile error, the attribute simply reads as all zeros, and the effect just "disappears" with no message pointing at the cause.
+2. **Forgetting `needsUpdate = true` after rewriting a `Float32Array`.** The JS array holds the correct new values, but the GPU-resident buffer still has stale data until the next `needsUpdate` — easy to mistake for a broken random/computation bug, when the real issue is simply forgetting to tell Three to re-copy it.
+3. **`itemSize` mismatched against the array's length.** `new THREE.BufferAttribute(data, 3)` where `data.length` isn't a multiple of 3 (say the array was sized by `count` instead of `count * 3`) makes Three read out of phase — the next vertex ends up reading part of the previous vertex's data, producing garbled geometry that's hard to trace back unless you check `data.length === count * itemSize` before attaching.
+
+</Callout>

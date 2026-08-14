@@ -332,6 +332,46 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/05-gsap/tweens-timelines-stagger/theory.vi.mdx"),
     en: () => import("./lessons/05-gsap/tweens-timelines-stagger/theory.en.mdx"),
   },
+  "checkpoint-enhanced-standard-material": {
+    vi: () => import("./lessons/06-custom-shaders/checkpoint-enhanced-standard-material/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/checkpoint-enhanced-standard-material/theory.en.mdx"),
+  },
+  "checkpoint-waving-flag": {
+    vi: () => import("./lessons/06-custom-shaders/checkpoint-waving-flag/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/checkpoint-waving-flag/theory.en.mdx"),
+  },
+  "custom-geometry-attributes": {
+    vi: () => import("./lessons/06-custom-shaders/custom-geometry-attributes/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/custom-geometry-attributes/theory.en.mdx"),
+  },
+  "drei-shadermaterial-helper": {
+    vi: () => import("./lessons/06-custom-shaders/drei-shadermaterial-helper/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/drei-shadermaterial-helper/theory.en.mdx"),
+  },
+  "instancedmesh-per-instance-attributes": {
+    vi: () => import("./lessons/06-custom-shaders/instancedmesh-per-instance-attributes/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/instancedmesh-per-instance-attributes/theory.en.mdx"),
+  },
+  "onbeforecompile": {
+    vi: () => import("./lessons/06-custom-shaders/onbeforecompile/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/onbeforecompile/theory.en.mdx"),
+  },
+  "shadermaterial-vs-rawshadermaterial": {
+    vi: () => import("./lessons/06-custom-shaders/shadermaterial-vs-rawshadermaterial/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/shadermaterial-vs-rawshadermaterial/theory.en.mdx"),
+  },
+  "three-injected-uniforms": {
+    vi: () => import("./lessons/06-custom-shaders/three-injected-uniforms/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/three-injected-uniforms/theory.en.mdx"),
+  },
+  "three-shader-chunk-system": {
+    vi: () => import("./lessons/06-custom-shaders/three-shader-chunk-system/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/three-shader-chunk-system/theory.en.mdx"),
+  },
+  "tsl-and-webgpu-outlook": {
+    vi: () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/theory.vi.mdx"),
+    en: () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -399,6 +439,14 @@ export const REFERENCES_REGISTRY: Partial<
   "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/references"),
   "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/references"),
   "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/references"),
+  "custom-geometry-attributes": () => import("./lessons/06-custom-shaders/custom-geometry-attributes/references"),
+  "drei-shadermaterial-helper": () => import("./lessons/06-custom-shaders/drei-shadermaterial-helper/references"),
+  "instancedmesh-per-instance-attributes": () => import("./lessons/06-custom-shaders/instancedmesh-per-instance-attributes/references"),
+  "onbeforecompile": () => import("./lessons/06-custom-shaders/onbeforecompile/references"),
+  "shadermaterial-vs-rawshadermaterial": () => import("./lessons/06-custom-shaders/shadermaterial-vs-rawshadermaterial/references"),
+  "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/references"),
+  "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/references"),
+  "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -720,6 +768,46 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"tween-đơn-vị-nhỏ-nhất-của-gsap","text":"Tween: đơn vị nhỏ nhất của GSAP","depth":2},{"id":"điều-khiển-playback-tween-là-bộ-sinh-giá-trị-đọc-được-không-phải-bắn-rồi-quên","text":"Điều khiển playback: tween là bộ sinh giá trị đọc được, không phải \"bắn rồi quên\"","depth":2},{"id":"timeline-sắp-xếp-nhiều-tween-theo-thời-gian-tương-đối","text":"Timeline: sắp xếp nhiều tween theo thời gian tương đối","depth":2},{"id":"lồng-timeline-dàn-dựng-theo-từng-thành-phần","text":"Lồng timeline: dàn dựng theo từng thành phần","depth":2},{"id":"stagger-nhân-bản-độ-trễ-trên-nhiều-phần-tử","text":"Stagger: nhân bản độ trễ trên nhiều phần tử","depth":2},{"id":"timeline-defaults-dry-hoá-ease-và-duration","text":"Timeline defaults: DRY hoá ease và duration","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
     en: [{"id":"the-tween-gsaps-smallest-building-block","text":"The Tween: GSAP's Smallest Building Block","depth":2},{"id":"playback-control-a-readable-value-generator-not-fire-and-forget","text":"Playback Control: A Readable Value Generator, Not \"Fire and Forget\"","depth":2},{"id":"timelines-sequencing-tweens-on-relative-time","text":"Timelines: Sequencing Tweens on Relative Time","depth":2},{"id":"nesting-timelines-choreography-by-component","text":"Nesting Timelines: Choreography by Component","depth":2},{"id":"stagger-fanning-delay-across-many-elements","text":"Stagger: Fanning Delay Across Many Elements","depth":2},{"id":"timeline-defaults-drying-up-ease-and-duration","text":"Timeline Defaults: DRYing Up Ease and Duration","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
   },
+  "checkpoint-enhanced-standard-material": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-waving-flag": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "custom-geometry-attributes": {
+    vi: [{"id":"ba-tốc-độ-dữ-liệu-quay-lại-attribute-uniform-varying","text":"Ba tốc độ dữ liệu quay lại: attribute, uniform, varying","depth":2},{"id":"tạo-attribute-tuỳ-biến-float32array-và-bufferattribute","text":"Tạo attribute tuỳ biến: Float32Array và BufferAttribute","depth":2},{"id":"chọn-itemsize-float-hay-vec3","text":"Chọn itemSize: float hay vec3","depth":3},{"id":"khai-báo-attribute-trong-shader-quy-ước-đặt-tên-axxx","text":"Khai báo attribute trong shader: quy ước đặt tên aXxx","depth":2},{"id":"dùng-attribute-để-lái-vị-trí-và-màu","text":"Dùng attribute để lái vị trí và màu","depth":2},{"id":"cập-nhật-attribute-needsupdate-usage-hint-và-khi-nào-đó-là-smell","text":"Cập nhật attribute: needsUpdate, usage hint, và khi nào đó là smell","depth":2},{"id":"số-lượng-vertex-geometry-indexed-và-đường-nối-kinh-tuyến","text":"Số lượng vertex: geometry indexed và đường nối kinh tuyến","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"three-data-rates-again-attribute-uniform-varying","text":"Three Data Rates, Again: Attribute, Uniform, Varying","depth":2},{"id":"creating-a-custom-attribute-float32array-and-bufferattribute","text":"Creating a Custom Attribute: Float32Array and BufferAttribute","depth":2},{"id":"choosing-itemsize-float-or-vec3","text":"Choosing itemSize: Float or vec3","depth":3},{"id":"declaring-the-attribute-in-the-shader-the-axxx-convention","text":"Declaring the Attribute in the Shader: the aXxx Convention","depth":2},{"id":"using-attributes-to-drive-position-and-color","text":"Using Attributes to Drive Position and Color","depth":2},{"id":"updating-attributes-needsupdate-usage-hints-and-when-its-a-smell","text":"Updating Attributes: needsUpdate, Usage Hints, and When It's a Smell","depth":2},{"id":"vertex-count-indexed-geometry-and-the-seam","text":"Vertex Count: Indexed Geometry and the Seam","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "drei-shadermaterial-helper": {
+    vi: [{"id":"boilerplate-mà-shadermaterial-thuần-buộc-bạn-viết","text":"Boilerplate mà ShaderMaterial thuần buộc bạn viết","depth":2},{"id":"dreis-shadermaterial-một-class-không-phải-một-component","text":"drei's shaderMaterial: một class, không phải một component","depth":2},{"id":"uniform-trở-thành-prop-reactive--cơ-chế-thật-sự","text":"Uniform trở thành prop reactive — cơ chế thật sự","depth":2},{"id":"extend-và-key-đăng-ký-lớp-và-cái-bẫy-hot-reload","text":"extend và .key: đăng ký lớp, và cái bẫy hot-reload","depth":2},{"id":"giới-hạn-khi-nào-ref-vẫn-thắng-prop","text":"Giới hạn: khi nào ref vẫn thắng prop","depth":2},{"id":"kiểu-hoá-phần-tử-jsx-tự-tạo-trong-typescript","text":"Kiểu hoá phần tử JSX tự tạo trong TypeScript","depth":2},{"id":"so-sánh-trung-thực-thuần-vs-helper","text":"So sánh trung thực: thuần vs helper","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-boilerplate-plain-shadermaterial-forces-on-you","text":"The Boilerplate Plain ShaderMaterial Forces On You","depth":2},{"id":"dreis-shadermaterial-a-class-not-a-component","text":"drei's shaderMaterial: a Class, Not a Component","depth":2},{"id":"uniforms-becoming-reactive-props--the-actual-mechanism","text":"Uniforms Becoming Reactive Props — the Actual Mechanism","depth":2},{"id":"extend-and-key-registering-the-class-and-the-hot-reload-trap","text":"extend and .key: Registering the Class, and the Hot-Reload Trap","depth":2},{"id":"the-limit-when-a-ref-still-beats-a-prop","text":"The Limit: When a Ref Still Beats a Prop","depth":2},{"id":"typing-a-custom-shader-element-in-typescript","text":"Typing a Custom Shader Element in TypeScript","depth":2},{"id":"an-honest-comparison-plain-vs-helper","text":"An Honest Comparison: Plain vs Helper","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "instancedmesh-per-instance-attributes": {
+    vi: [{"id":"draw-call-tốn-gì-và-vì-sao-gộp-lại-thành-một-đáng-giá","text":"Draw call tốn gì, và vì sao gộp lại thành một đáng giá","depth":2},{"id":"dựng-instancedmesh-constructor-setmatrixat-instancematrixneedsupdate","text":"Dựng InstancedMesh: constructor, setMatrixAt, instanceMatrix.needsUpdate","depth":2},{"id":"tô-riêng-từng-bản-sao-instancecolor","text":"Tô riêng từng bản sao: instanceColor","depth":2},{"id":"đi-xa-hơn-instancedbufferattribute-cho-dữ-liệu-tuỳ-ý","text":"Đi xa hơn: InstancedBufferAttribute cho dữ liệu tuỳ ý","depth":2},{"id":"frustum-culling-một-bounding-sphere-cho-cả-field","text":"Frustum culling: một bounding sphere cho cả field","depth":2},{"id":"cập-nhật-set-once-vs-mỗi-frame-và-chi-phí-cpu","text":"Cập nhật: set-once vs mỗi-frame, và chi phí CPU","depth":2},{"id":"khi-nào-instancing-thắng-khi-nào-không","text":"Khi nào instancing thắng, khi nào không","depth":2}],
+    en: [{"id":"what-a-draw-call-costs-and-why-merging-them-pays-off","text":"What a Draw Call Costs, and Why Merging Them Pays Off","depth":2},{"id":"building-an-instancedmesh-the-constructor-setmatrixat-instancematrixneedsupdate","text":"Building an InstancedMesh: the Constructor, setMatrixAt, instanceMatrix.needsUpdate","depth":2},{"id":"coloring-each-copy-instancecolor","text":"Coloring Each Copy: instanceColor","depth":2},{"id":"going-further-instancedbufferattribute-for-arbitrary-data","text":"Going Further: InstancedBufferAttribute for Arbitrary Data","depth":2},{"id":"frustum-culling-one-bounding-sphere-for-the-whole-field","text":"Frustum Culling: One Bounding Sphere for the Whole Field","depth":2},{"id":"update-patterns-set-once-vs-every-frame-and-the-cpu-cost","text":"Update Patterns: Set-Once vs. Every Frame, and the CPU Cost","depth":2},{"id":"when-instancing-wins-and-when-it-doesnt","text":"When Instancing Wins, and When It Doesn't","depth":2}],
+  },
+  "onbeforecompile": {
+    vi: [{"id":"vì-sao-phải-hack-material-có-sẵn-thay-vì-tự-viết-shadermaterial","text":"Vì sao phải \"hack\" material có sẵn thay vì tự viết ShaderMaterial","depth":2},{"id":"cơ-chế-onbeforecompile-nhận-gì-chạy-khi-nào","text":"Cơ chế: onBeforeCompile nhận gì, chạy khi nào","depth":2},{"id":"chèn-code-bằng-string-replace-vào-đúng-include","text":"Chèn code bằng string replace vào đúng include","depth":2},{"id":"thêm-uniform-và-giữ-handle-để-cập-nhật-mỗi-frame","text":"Thêm uniform và giữ handle để cập nhật mỗi frame","depth":2},{"id":"customprogramcachekey-vì-sao-three-không-tự-phát-hiện-code-bạn-vừa-đổi","text":"customProgramCacheKey: vì sao Three không tự phát hiện code bạn vừa đổi","depth":2},{"id":"giới-hạn--sự-mong-manh-của-kỹ-thuật-này","text":"Giới hạn & sự mong manh của kỹ thuật này","depth":2}],
+    en: [{"id":"why-hack-a-built-in-material-instead-of-writing-a-shadermaterial","text":"Why Hack a Built-in Material Instead of Writing a ShaderMaterial","depth":2},{"id":"the-mechanism-what-onbeforecompile-receives-and-when-it-runs","text":"The Mechanism: What onBeforeCompile Receives, and When It Runs","depth":2},{"id":"injecting-code-with-string-replacement-at-the-right-include","text":"Injecting Code with String Replacement at the Right Include","depth":2},{"id":"adding-uniforms-and-keeping-a-handle-for-per-frame-updates","text":"Adding Uniforms and Keeping a Handle for Per-Frame Updates","depth":2},{"id":"customprogramcachekey-why-three-cant-auto-detect-the-code-you-just-changed","text":"customProgramCacheKey: Why Three Can't Auto-Detect the Code You Just Changed","depth":2},{"id":"limits-and-fragility-of-this-technique","text":"Limits and Fragility of This Technique","depth":2}],
+  },
+  "shadermaterial-vs-rawshadermaterial": {
+    vi: [{"id":"shadermaterial-bạn-chỉ-viết-phần-thân-three-viết-sẵn-phần-đầu","text":"ShaderMaterial: bạn chỉ viết phần thân, Three viết sẵn phần đầu","depth":2},{"id":"prelude-thật-three-chèn-vào-đối-chiếu-trực-tiếp-trong-source","text":"Prelude thật Three chèn vào: đối chiếu trực tiếp trong source","depth":2},{"id":"shadermaterial-tối-thiểu-chiếu-position-tô-theo-uv","text":"ShaderMaterial tối thiểu: chiếu position, tô theo uv","depth":2},{"id":"rawshadermaterial-prelude-rỗng--khai-báo-tất-cả","text":"RawShaderMaterial: prelude rỗng — khai báo TẤT CẢ","depth":2},{"id":"glslversion-mặc-định-glsl-es-100-tường-minh-glsl-es-300","text":"glslVersion: mặc định GLSL ES 1.00, tường minh GLSL ES 3.00","depth":2},{"id":"khi-nào-raw-đúng-chia-sẻ-shader-tránh-trùng-tên-kiểm-soát-toàn-phần","text":"Khi nào Raw đúng: chia sẻ shader, tránh trùng tên, kiểm soát toàn phần","depth":2},{"id":"mô-hình-tư-duy-shadermaterial--glsl--header-hình-three","text":"Mô hình tư duy: ShaderMaterial = GLSL + header hình Three","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-onbeforecompile-và-hack-material-có-sẵn","text":"Nền tảng này dẫn tới đâu: onBeforeCompile và hack material có sẵn","depth":2}],
+    en: [{"id":"shadermaterial-you-write-the-body-three-writes-the-header","text":"ShaderMaterial: You Write the Body, Three Writes the Header","depth":2},{"id":"the-real-prelude-three-injects-verified-straight-from-source","text":"The Real Prelude Three Injects: Verified Straight From Source","depth":2},{"id":"a-minimal-shadermaterial-project-position-color-by-uv","text":"A Minimal ShaderMaterial: Project Position, Color by UV","depth":2},{"id":"rawshadermaterial-zero-prelude--you-declare-everything","text":"RawShaderMaterial: Zero Prelude — You Declare EVERYTHING","depth":2},{"id":"glslversion-implicit-glsl-es-100-vs-explicit-glsl-es-300","text":"glslVersion: Implicit GLSL ES 1.00 vs Explicit GLSL ES 3.00","depth":2},{"id":"when-raw-is-right-sharing-shaders-avoiding-collisions-full-control","text":"When Raw Is Right: Sharing Shaders, Avoiding Collisions, Full Control","depth":2},{"id":"the-mental-model-shadermaterial--glsl-plus-a-three-shaped-header","text":"The Mental Model: ShaderMaterial = GLSL Plus a Three-Shaped Header","depth":2},{"id":"where-this-leads-onbeforecompile-and-hacking-built-in-materials","text":"Where This Leads: onBeforeCompile and Hacking Built-in Materials","depth":2}],
+  },
+  "three-injected-uniforms": {
+    vi: [{"id":"ai-cập-nhật-uniform-built-in-và-cập-nhật-bao-lâu-một-lần","text":"Ai cập nhật uniform built-in, và cập nhật bao lâu một lần","depth":2},{"id":"normalmatrix-vì-sao-không-thể-chỉ-lấy-33-của-modelview","text":"normalMatrix: vì sao không thể chỉ lấy 3×3 của modelView","depth":2},{"id":"khai-báo-uniform-tuỳ-biến-mẫu-nhà--memo-một-lần-mutate-value-mỗi-frame","text":"Khai báo uniform tuỳ biến: mẫu nhà — memo một lần, mutate .value mỗi frame","depth":2},{"id":"texture-cũng-là-một-uniform-datatexture-thủ-tục-làm-ví-dụ","text":"Texture cũng là một uniform: DataTexture thủ tục làm ví dụ","depth":2},{"id":"luật-trùng-tên-khai-báo-lại-một-built-in-là-lỗi-biên-dịch","text":"Luật trùng tên: khai báo lại một built-in là lỗi biên dịch","depth":2},{"id":"chi-phí-cập-nhật-uniform-ghi-giá-trị-rẻ-biên-dịch-lại-material-đắt","text":"Chi phí cập nhật uniform: ghi giá trị rẻ, biên dịch lại material đắt","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-attribute-tuỳ-biến-và-onbeforecompile","text":"Nền tảng này dẫn tới đâu: attribute tuỳ biến và onBeforeCompile","depth":2}],
+    en: [{"id":"who-updates-built-in-uniforms-and-how-often","text":"Who Updates Built-in Uniforms, and How Often","depth":2},{"id":"normalmatrix-why-you-cant-just-take-modelviews-33","text":"normalMatrix: Why You Can't Just Take modelView's 3×3","depth":2},{"id":"declaring-custom-uniforms-the-house-pattern--memoize-once-mutate-value-every-frame","text":"Declaring Custom Uniforms: The House Pattern — Memoize Once, Mutate .value Every Frame","depth":2},{"id":"textures-are-uniforms-too-a-procedural-datatexture-as-an-example","text":"Textures Are Uniforms Too: A Procedural DataTexture as an Example","depth":2},{"id":"the-collision-rule-redeclaring-a-built-in-is-a-compile-error","text":"The Collision Rule: Redeclaring a Built-in Is a Compile Error","depth":2},{"id":"the-cost-model-cheap-value-writes-expensive-material-recompiles","text":"The Cost Model: Cheap Value Writes, Expensive Material Recompiles","depth":2},{"id":"where-this-leads-custom-attributes-and-onbeforecompile","text":"Where This Leads: Custom Attributes and onBeforeCompile","depth":2}],
+  },
+  "three-shader-chunk-system": {
+    vi: [{"id":"ba-tầng-lắp-ráp-shaderlib-shaderchunk-include","text":"Ba tầng lắp ráp: ShaderLib, ShaderChunk, #include","depth":2},{"id":"đọc-meshphysicalglsljs-từ-trên-xuống-bản-đồ-cho-meshstandardmaterial","text":"Đọc meshphysical.glsl.js từ trên xuống: bản đồ cho MeshStandardMaterial","depth":2},{"id":"include-hoạt-động-thế-nào--và-một-cái-bẫy-về-thời-điểm","text":"#include hoạt động thế nào — và một cái bẫy về thời điểm","depth":2},{"id":"tìm-đúng-anchor-dump-shader-thật-tra-chunk-trên-github","text":"Tìm đúng anchor: dump shader thật, tra chunk trên GitHub","depth":2},{"id":"ghi-đè-toàn-cục-qua-threeshaderchunk--và-kỷ-luật-khôi-phục","text":"Ghi đè toàn cục qua THREE.ShaderChunk — và kỷ luật khôi phục","depth":2},{"id":"per-material-hay-global-bảng-quyết-định","text":"Per-material hay global: bảng quyết định","depth":2},{"id":"vì-sao-three-làm-vậy-tổ-hợp-tính-năng-bằng-ifdef--chunk","text":"Vì sao Three làm vậy: tổ hợp tính năng bằng #ifdef + chunk","depth":2}],
+    en: [{"id":"three-layers-of-assembly-shaderlib-shaderchunk-include","text":"Three Layers of Assembly: ShaderLib, ShaderChunk, #include","depth":2},{"id":"reading-meshphysicalglsljs-top-to-bottom-a-map-for-meshstandardmaterial","text":"Reading meshphysical.glsl.js Top to Bottom: A Map for MeshStandardMaterial","depth":2},{"id":"how-include-actually-works--and-a-timing-trap","text":"How #include Actually Works — and a Timing Trap","depth":2},{"id":"finding-your-anchor-dump-the-real-shader-look-up-the-chunk-on-github","text":"Finding Your Anchor: Dump the Real Shader, Look Up the Chunk on GitHub","depth":2},{"id":"overriding-globally-via-threeshaderchunk--and-the-restore-discipline","text":"Overriding Globally via THREE.ShaderChunk — and the Restore Discipline","depth":2},{"id":"per-material-or-global-a-decision-table","text":"Per-Material or Global: A Decision Table","depth":2},{"id":"why-three-does-this-combining-features-via-ifdef--chunks","text":"Why Three Does This: Combining Features via #ifdef + Chunks","depth":2}],
+  },
+  "tsl-and-webgpu-outlook": {
+    vi: [{"id":"vì-sao-webgpu-đổi-cách-viết-shader","text":"Vì sao WebGPU đổi cách viết shader","depth":2},{"id":"hình-dạng-code-tsl-import-node-nodematerial","text":"Hình dạng code TSL: import, node, NodeMaterial","depth":2},{"id":"một-hiệu-ứng-hai-ngôn-ngữ-glsl-và-tsl-cạnh-nhau","text":"Một hiệu ứng, hai ngôn ngữ: GLSL và TSL cạnh nhau","depth":2},{"id":"tsl-mang-lại-gì-và-cái-giá-phải-trả-hôm-nay","text":"TSL mang lại gì, và cái giá phải trả hôm nay","depth":2},{"id":"khi-nào-nên-bắt-đầu-dùng-tsl","text":"Khi nào nên bắt đầu dùng TSL","depth":2},{"id":"webgpurenderer-trạng-thái-và-cách-fallback","text":"WebGPURenderer: trạng thái và cách fallback","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"why-webgpu-changes-how-you-write-shaders","text":"Why WebGPU Changes How You Write Shaders","depth":2},{"id":"the-shape-of-tsl-code-imports-nodes-nodematerial","text":"The Shape of TSL Code: Imports, Nodes, NodeMaterial","depth":2},{"id":"one-effect-two-languages-glsl-and-tsl-side-by-side","text":"One Effect, Two Languages: GLSL and TSL Side by Side","depth":2},{"id":"what-tsl-buys-you-and-todays-cost","text":"What TSL Buys You, and Today's Cost","depth":2},{"id":"when-to-reach-for-tsl","text":"When to Reach for TSL","depth":2},{"id":"webgpurenderer-status-and-how-it-falls-back","text":"WebGPURenderer: Status and How It Falls Back","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -785,6 +873,14 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/demo"),
   "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/demo"),
   "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/demo"),
+  "custom-geometry-attributes": () => import("./lessons/06-custom-shaders/custom-geometry-attributes/demo"),
+  "drei-shadermaterial-helper": () => import("./lessons/06-custom-shaders/drei-shadermaterial-helper/demo"),
+  "instancedmesh-per-instance-attributes": () => import("./lessons/06-custom-shaders/instancedmesh-per-instance-attributes/demo"),
+  "onbeforecompile": () => import("./lessons/06-custom-shaders/onbeforecompile/demo"),
+  "shadermaterial-vs-rawshadermaterial": () => import("./lessons/06-custom-shaders/shadermaterial-vs-rawshadermaterial/demo"),
+  "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/demo"),
+  "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/demo"),
+  "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -871,4 +967,14 @@ export const EXERCISES_REGISTRY: Partial<
   "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/exercises"),
   "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/exercises"),
   "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/exercises"),
+  "checkpoint-enhanced-standard-material": () => import("./lessons/06-custom-shaders/checkpoint-enhanced-standard-material/exercises"),
+  "checkpoint-waving-flag": () => import("./lessons/06-custom-shaders/checkpoint-waving-flag/exercises"),
+  "custom-geometry-attributes": () => import("./lessons/06-custom-shaders/custom-geometry-attributes/exercises"),
+  "drei-shadermaterial-helper": () => import("./lessons/06-custom-shaders/drei-shadermaterial-helper/exercises"),
+  "instancedmesh-per-instance-attributes": () => import("./lessons/06-custom-shaders/instancedmesh-per-instance-attributes/exercises"),
+  "onbeforecompile": () => import("./lessons/06-custom-shaders/onbeforecompile/exercises"),
+  "shadermaterial-vs-rawshadermaterial": () => import("./lessons/06-custom-shaders/shadermaterial-vs-rawshadermaterial/exercises"),
+  "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/exercises"),
+  "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/exercises"),
+  "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/exercises"),
 };

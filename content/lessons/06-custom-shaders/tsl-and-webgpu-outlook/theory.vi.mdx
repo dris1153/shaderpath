@@ -1,0 +1,73 @@
+## Vì sao WebGPU đổi cách viết shader
+
+Track 1 đã hẹn quay lại đúng câu hỏi này: WebGL2 ép mọi thứ — kể cả tính toán thuần tuý không vẽ tam giác nào — đi qua render pipeline, giả vờ một buffer dữ liệu là texture rồi đọc lại bằng draw call (Track 9 đi sâu vào chính những mẹo đó). WebGPU không kế thừa OpenGL ES nữa; nó mô phỏng Vulkan/Metal/Direct3D 12, và hệ quả trực tiếp với người viết shader là hai điều. Một, ngôn ngữ shader đổi từ GLSL sang **WGSL** — cú pháp khác, cùng khái niệm quen thuộc (`@location` thay `varying`, `@builtin` thay biến hệ thống). Hai, **compute shader trở thành công dân hạng nhất**: `GPUComputePipeline` chạy song song ngang hàng render pipeline, không cần giả lập qua render-to-texture như WebGL2 buộc phải làm. Đây là cái trần (ceiling) Track 1 nhắc tới khi so sánh WebGL2/WebGPU — bài này không lặp lại so sánh đó, mà tập trung hệ quả cụ thể cho người viết material Three.js: phải maintain hai bản shader (GLSL cho backend cũ, WGSL cho backend mới) cho cùng một hiệu ứng, trừ khi có một lớp trừu tượng đứng giữa. TSL chính là lớp đó.
+
+## Hình dạng code TSL: import, node, NodeMaterial
+
+TSL (Three.js Shading Language) không phải một ngôn ngữ mới bạn học cú pháp — nó là một tập hàm JavaScript, mỗi hàm trả về một **node**, ghép lại thành một node graph. Import xác nhận trực tiếp trên `three@0.185.1` (bản cài trong repo này, tháng 8/2026 — số phiên bản có thể đã đổi khi bạn đọc, tự kiểm bằng `node -e "console.log(require('three/package.json').version)"`):
+
+```ts
+import { uniform, uv, sin, time, mix, color } from "three/tsl";
+import { MeshBasicNodeMaterial, WebGPURenderer } from "three/webgpu";
+```
+
+Hai điều đáng chú ý ngay từ dòng import: TSL và WebGPU sống ở **subpath export riêng** (`three/tsl`, `three/webgpu`), không nằm trong `three` gốc — gõ `import { uniform } from "three"` cho `undefined` (hoặc lỗi TypeScript), vì `three/package.json` khai `exports` tách ba entry point này. Một `NodeMaterial` (ví dụ `MeshBasicNodeMaterial`) thay thuộc tính string-based quen thuộc bằng thuộc tính node: `material.colorNode` thay `color`/`map`, `material.positionNode` thay việc tự viết `#include <begin_vertex>` như bài `onBeforeCompile`. Gán một node vào đó là xong — không cần biết nó dịch ra GLSL hay WGSL.
+
+## Một hiệu ứng, hai ngôn ngữ: GLSL và TSL cạnh nhau
+
+Demo của bài này vẽ một dải màu chuyển động theo công thức:
+
+$$
+t = \sin(u \cdot f + \tau) \cdot 0.5 + 0.5, \qquad \text{color} = \text{mix}(c_1, c_2, t)
+$$
+
+với $u$ là toạ độ UV theo trục ngang, $f$ tần số (điều khiển bằng control của demo), $\tau$ thời gian trôi qua. Viết bằng GLSL — cách bạn đã quen từ Track 2 — đúng 5 dòng thân hàm:
+
+```glsl
+void main() {
+  float t = sin(vUv.x * uFreq + uTime) * 0.5 + 0.5;
+  vec3 col = mix(colorA, colorB, t);
+  fragColor = vec4(col, 1.0);
+}
+```
+
+Cùng hiệu ứng đó bằng TSL, gán thẳng vào `colorNode` của một `MeshBasicNodeMaterial`:
+
+```ts
+const uFreq = uniform(10);
+material.colorNode = mix(
+  color(0x0ea5e9),
+  color(0xf59e0b),
+  sin(uv().x.mul(uFreq).add(time)).mul(0.5).add(0.5),
+);
+```
+
+Không có `varying vUv`, không có `uniform float uTime` khai báo tay, không có `uniforms.uTime.value = clock.elapsedTime` gọi mỗi frame trong `useFrame` như các bài `ShaderMaterial` trước — `uv()` và `time` tự lấy đúng giá trị Three vốn đã biết, mỗi lần `renderer.render()` chạy. Đoạn code TSL này chính là đoạn chạy thật trong demo bên dưới; badge trên canvas cho biết nó đang biên dịch ra GLSL hay WGSL tuỳ trình duyệt.
+
+## TSL mang lại gì, và cái giá phải trả hôm nay
+
+Bốn thứ TSL mua được: **portability giữa hai backend** (một node graph, `GLSLNodeBuilder`/`WGSLNodeBuilder` tự dịch ra đúng ngôn ngữ target); **tự động hoá plumbing uniform/varying** (khai báo, upload, đồng bộ kiểu dữ liệu CPU↔GPU không còn thủ công — thấy rõ ở ví dụ `time` trên); **composability** (một node như `noise3d` viết một lần, ghép vào bất cứ `colorNode`/`positionNode` nào khác, khác hẳn copy-paste chuỗi GLSL giữa các file); và **tree-shaking** (chỉ node bạn thực sự import mới vào bundle).
+
+Cái giá hôm nay (giữa 2026) cũng thật: TSL vẫn đổi API nhanh giữa các bản three.js patch — code viết cho `three@0.16x` không chắc chạy nguyên vẹn trên `0.185.1` cài ở đây; docs chính thức (wiki GitHub, xem Tham khảo) đủ cho case cơ bản nhưng thưa hơn hẳn kho tài liệu GLSL/WebGL đã tích luỹ hai thập kỷ; và khi debug, bạn không còn nhìn thẳng vào shader mình viết — lỗi trỏ vào GLSL/WGSL **được sinh ra** từ node graph, phải học đọc code sinh ra đó.
+
+## Khi nào nên bắt đầu dùng TSL
+
+Với dự án mới, thời gian sống dài (maintain nhiều năm, hoặc cần chạy tốt trên cả thiết bị có/không có WebGPU), bắt đầu bằng TSL hợp lý — một node graph phục vụ cả hai backend, không phải viết và đồng bộ hai bản shader tay. Với demo, prototype cần ship nhanh trong vài ngày, hoặc hiệu ứng chỉ cần chạy WebGL2 (baseline vẫn phổ cập hơn), `ShaderMaterial` + GLSL thuần từ Track 2 vẫn thực dụng hơn — ít API tra cứu, docs dày hơn, cộng đồng lớn hơn. Đây không phải lựa chọn một lần: Three.js cho trộn cả hai trong cùng scene (một mesh `ShaderMaterial` cạnh một mesh `NodeMaterial`), nên có thể học TSL dần cho phần mới trong lúc phần cũ vẫn ở GLSL.
+
+## WebGPURenderer: trạng thái và cách fallback
+
+`WebGPURenderer` (từ `three/webgpu`) không phải renderer chỉ chạy WebGPU — nó tự động fallback sang backend WebGL2 khi `navigator.gpu`/`requestAdapter()` không khả dụng, hoàn toàn trong suốt với code gọi nó (xem three.js manual ở Tham khảo). Vì khởi tạo backend bất đồng bộ, renderer bắt buộc `await renderer.init()` trước lần `.render()` đầu — thiếu bước này ném lỗi ngay (xem Callout). Muốn ép WebGL2 dù trình duyệt hỗ trợ WebGPU (debug, so sánh hiệu năng), truyền `forceWebGL: true` vào constructor. Trong React Three Fiber (v9.7.0 cài ở đây), `gl` prop của `<Canvas>` chấp nhận một hàm async trả về renderer — R3F `await` hàm đó trước khi render children, nên `renderer.init()` chạy xong trước khi mesh nào được vẽ. Demo dưới dùng chính pattern này.
+
+## Kết nối về sau
+
+Bài `onBeforeCompile` và `three-shader-chunk-system` (module này) là con đường "hack material có sẵn" bằng GLSL thuần — TSL là con đường song song, không thay thế, cho cùng mục tiêu tuỳ biến material built-in. Track 9 (GPGPU) là nơi bạn thấy compute-first của WebGPU trả giá trị thật: mô phỏng hạt hàng triệu phần tử chạy bằng `computeKernel` của TSL nhanh và đơn giản hơn hẳn mẹo FBO ping-pong của WebGL2. Track 11 (PBR) cũng có phiên bản node cho các mô hình lighting chuẩn (`MeshPhysicalNodeMaterial`) nếu bạn muốn thử pipeline TSL cho một material phức tạp hơn khối cầu đơn giản ở đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp khi bắt đầu với TSL/WebGPURenderer:
+
+1. **Import `uniform`/`WebGPURenderer` từ `"three"` thay vì `"three/tsl"`/`"three/webgpu"`.** Gói `three` khai báo ba entry point tách biệt qua `exports` trong `package.json`; core `three` không re-export bất cứ gì từ hai subpath kia. Kết quả: `undefined` lúc chạy, hoặc lỗi TypeScript "no exported member" lúc biên dịch — không phải lỗi logic, chỉ là sai đường import.
+2. **Quên `await renderer.init()` trước lần render đầu.** Vì khởi tạo backend bất đồng bộ, gọi `.render()` ngay sau `new WebGPURenderer(...)` ném thẳng `"THREE.Renderer: .render() called before the backend is initialized. Use \"await renderer.init();\" before rendering."` — thông báo lỗi đã nói rõ cách sửa, chỉ cần đọc.
+3. **Gán `.colorNode` lên một NodeMaterial nhưng vẫn dựng bằng `new THREE.WebGLRenderer()` (renderer cổ điển, không phải `WebGPURenderer`).** Pipeline cổ điển không bao giờ đọc thuộc tính node — nó chỉ hiểu material qua string shader lắp bằng `#include`. `colorNode` bị lặng lẽ bỏ qua, material render như thể chưa từng gán gì, không có lỗi hay cảnh báo nào bật lên để chỉ ra nguyên nhân.
+
+</Callout>

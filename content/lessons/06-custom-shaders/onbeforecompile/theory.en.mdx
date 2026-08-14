@@ -1,0 +1,56 @@
+## Why Hack a Built-in Material Instead of Writing a ShaderMaterial
+
+This track already gave you ShaderMaterial: write the entire vertex/fragment shader yourself, control every line. The problem is MeshStandardMaterial isn't just "a shader that paints color" — it's hundreds of lines of pre-assembled GLSL: a physically based BRDF (Cook-Torrance/GGX), support for several light types at once (directional, point, spot, hemisphere, rect area), PCF-filtered shadow maps, fog, tone mapping, color space conversion. Rewriting all of that by hand inside a ShaderMaterial just to add ONE custom effect — a twist, a color band, a dissolve — costs hundreds of hours and is extremely easy to get wrong: you'd have to copy the exact shadow-projection math, the exact light-accumulation order, the exact tone-map/gamma sequence. `onBeforeCompile` solves exactly this problem: keep MeshStandardMaterial — with its whole lighting/shadow/fog pipeline intact — and inject just the few lines of GLSL your effect actually needs, at the right spot.
+
+## The Mechanism: What onBeforeCompile Receives, and When It Runs
+
+`material.onBeforeCompile` is a callback you assign to a material; Three calls it exactly once **before** compiling the WebGL program for that material — specifically, `WebGLRenderer` calls `material.onBeforeCompile(parameters, renderer)` during program preparation, right before `programCache.acquireProgram(...)`. The first argument (conventionally named `shader` in most examples) isn't some arbitrary object — it's literally the `parameters` object `WebGLPrograms` just assembled, carrying exactly the three things you need to edit: `shader.vertexShader`, `shader.fragmentShader` (two raw GLSL strings, with every `#include` already resolved) and `shader.uniforms` (the uniform map the material will draw with). The callback runs synchronously before compilation, so any change you make to those three sticks for this compile — but the callback itself does NOT run every frame, only when Three decides it needs to compile a fresh program.
+
+## Injecting Code with String Replacement at the Right Include
+
+MeshStandardMaterial's GLSL source (`meshphysical.glsl.js` under `three/src/renderers/shaders/ShaderLib/`) is assembled from dozens of `#include <chunk_name>` lines — each one a placeholder Three swaps for the matching chunk file's contents before handing the result to `onBeforeCompile`. The standard technique is `String.prototype.replace()` targeting one still-intact include line, appending your code right after it:
+
+```js
+material.onBeforeCompile = (shader) => {
+  shader.vertexShader = shader.vertexShader.replace(
+    "#include <begin_vertex>",
+    `#include <begin_vertex>\nfloat angle = uTwist * transformed.y;\ntransformed.xz = mat2(cos(angle), sin(angle), -sin(angle), cos(angle)) * transformed.xz;`,
+  );
+};
+```
+
+`#include <begin_vertex>` is the chunk that declares `vec3 transformed = vec3( position );` — the variable every later chunk (morph targets, skinning, displacement map, projection) reads and writes further, so injecting code RIGHT AFTER this include is the correct spot to touch a vertex's position before it gets projected into clip space. Similarly, `#include <color_fragment>` (the chunk that does `diffuseColor *= vColor`) is the standard place to modify the diffuse color, after any texture/vertex color has already applied but before lighting is computed. Chunk names aren't a convention you invent — they're real file names in Three's source (`begin_vertex.glsl.js`, `color_fragment.glsl.js`), and this track's next lesson lists the full chunk map so you can look one up instead of guessing.
+
+The twist around the $y$ axis above is exactly a 2D rotation matrix applied to the $xz$ plane, with the angle proportional to vertex height:
+
+$$
+\begin{pmatrix} x' \\ z' \end{pmatrix} = \begin{pmatrix} \cos(\theta y) & -\sin(\theta y) \\ \sin(\theta y) & \cos(\theta y) \end{pmatrix} \begin{pmatrix} x \\ z \end{pmatrix}
+$$
+
+with $\theta$ standing in for `uTwist` and $y$ the vertex height — each horizontal slice at a different height rotates by a different angle, producing the twist along the vertical axis. Try this formula directly (as plain 2D, no mesh) before injecting it into onBeforeCompile:
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - 0.5) * 2.0;\n\n  float angle = 1.2 * p.y;\n  float c = cos(angle);\n  float s = sin(angle);\n  vec2 twisted = mat2(c, s, -s, c) * p;\n\n  float band = sin(twisted.y * 6.0 + uTime) * 0.5 + 0.5;\n  vec3 color = mix(vec3(0.15, 0.55, 0.9), vec3(0.95, 0.35, 0.15), band);\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Adding Uniforms and Keeping a Handle for Per-Frame Updates
+
+The injected code above references `uTwist`, but the compiler has no idea this uniform exists — you have to both declare it in the source (inject `uniform float uTwist;` right after `#include <common>`, a chunk that sits near the very top of both the vertex and fragment shader) AND register its value into `shader.uniforms`. The easy mistake: if you write `shader.uniforms.uTwist = { value: 1.2 }` directly inside the callback, you create a BRAND NEW uniform object that only this one compile knows about — outside code (say, a `useFrame` in R3F) has no reference left to change its value afterward. The correct approach is to create the uniform object FIRST, in outer scope (`const uTwist = { value: 1.2 }`), assign that exact same reference into `shader.uniforms.uTwist = uTwist`, and let everywhere else in the app just mutate `uTwist.value` — since both sides point at the same object, the GPU picks up the new value next frame with zero recompilation.
+
+## customProgramCacheKey: Why Three Can't Auto-Detect the Code You Just Changed
+
+Three doesn't recompile a WebGL program for every mesh every frame — far too expensive. It caches compiled programs under a "cache key" built from a long list of material parameters (map, light count, shadows or not, and more) plus `material.customProgramCacheKey()`. By default, `customProgramCacheKey()` returns `this.onBeforeCompile.toString()` — Three tries to tell two materials apart by comparing the **source text** of their `onBeforeCompile` function, not its actual runtime behavior. This is the easiest trap to fall into: if you build `onBeforeCompile` via a shared factory — say `makeMaterial(effectOn)` returning `(shader) => { if (effectOn) {...} }` — two materials built by calling that factory with different `effectOn` values still have identical `onBeforeCompile.toString()` output, because it's the exact same line of source code, differing only in a closed-over runtime value that `.toString()` simply can't see. The result: Three treats the two materials as "the same program," compiles only once, and the second material silently ends up reusing the first one's already-compiled program — toggling the effect by swapping materials does nothing. The fix is to override it explicitly, e.g. `material.customProgramCacheKey = () => (effectOn ? "twist-on" : "twist-off")` — returning a string that actually varies with the variant instead of relying on function text.
+
+## Limits and Fragility of This Technique
+
+`onBeforeCompile` operates on plain text strings — no AST, no syntax checking, no clear error if you typo a chunk name: the `replace()` call just silently matches nothing, your injected code vanishes without a warning, and an effect that "doesn't run" looks exactly like a logic bug. Chunk names also aren't guaranteed stable across Three versions — the `#include` structure can shift between major releases. Always pin the exact Three version in `package.json` and re-test `onBeforeCompile` after every upgrade, rather than trusting a chunk is still sitting where it used to be.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common `onBeforeCompile` mistakes:
+
+1. **Setting `shader.uniforms.uX` while forgetting to declare `uniform` in the GLSL source.** The compiler reports an undeclared identifier (or, worse, some drivers silently drop an unreferenced uniform) — always add the `uniform ...;` line at the same time you assign a value.
+2. **Forgetting `customProgramCacheKey` when the injected code depends on a runtime variable (not a constant).** Since the default cache key only compares the `onBeforeCompile` function's text via `.toString()`, two materials sharing a factory but differing only in a closed-over value can get treated as "the same program" and silently share one.
+3. **Typo-ing a chunk name inside `replace()`.** No compile error appears — the search string just doesn't match, your injected code vanishes silently, and you end up debugging the wrong thing, assuming broken logic instead of a wrong search string.
+
+</Callout>
+
+The string-replace technique here is still fairly blunt — the next lesson introduces the full map of `#include` chunks across every one of Three's built-in materials, plus how to override a chunk globally via `THREE.ShaderChunk` instead of patching one material at a time. Further out, Track 12 (Performance) revisits this exact cache-key concept from a performance angle: every distinct cache key is one more shader that has to compile — an app with many custom material variants (say, an InstancedMesh mixing several different effects) stutters harder on its first frame unless those programs are pre-warmed before anything is shown.

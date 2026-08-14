@@ -50,6 +50,13 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - ScrollTrigger inside an embedded demo card: give the demo its own scrollable `<div>` (fixed height, `overflow-y: auto`) and pass it as `scroller:` — never bind demo ScrollTriggers to the window (the lesson page's own scroll would fight it).
 - The single-render-loop rule (spec §8.4) applies to any GSAP+R3F demo: tween plain objects, read them in `useFrame` — never `gsap.ticker.add(render)`.
 
+## Custom-shader lessons (Track 6)
+
+- Demos are R3F (`DemoCanvas`) with sibling `.vert`/`.frag` raw imports — the Track 2 fullscreen-plane pattern generalizes to meshes; uniforms are memoized containers mutated in `useFrame`/`useEffect` + `invalidate()`.
+- `onBeforeCompile` demos: when a control toggles WHICH code gets injected, set `customProgramCacheKey` — otherwise Three reuses the cached program and the toggle silently does nothing.
+- NEVER mutate `THREE.ShaderChunk` globally in a demo without restoring the original in cleanup — it leaks into every other demo on the page. Prefer per-material `onBeforeCompile` string replacement; if the lesson must demonstrate the global override, save & restore the chunk.
+- Verify Three-version specifics (chunk names, TSL imports like `three/tsl` / `three/webgpu`) against `node_modules/three` before writing — chunk names shift between releases.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

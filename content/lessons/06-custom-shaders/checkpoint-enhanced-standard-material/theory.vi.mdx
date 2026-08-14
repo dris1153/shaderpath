@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build thứ hai của Track 6: không có lý thuyết mới, chỉ một sản phẩm chạy được chứng minh bạn thật sự làm chủ `onBeforeCompile` và hệ thống shader chunk từ hai bài trước — không chỉ đọc hiểu cách chèn code vào một material có sẵn, mà dùng được nó để dựng một hiệu ứng nhìn thấy, chạy thật, và không phá vỡ lighting/shadow gốc của `MeshStandardMaterial`.
+
+## Yêu cầu
+
+Nâng cấp một `MeshStandardMaterial` bằng `onBeforeCompile` thành hiệu ứng dissolve: một hàm noise 3D so sánh với ngưỡng `uProgress` để `discard` fragment, cộng thêm một dải viền phát sáng ngay tại ranh giới dissolve, màu điều khiển bằng uniform `uEdgeColor`. Cả hai uniform phải là object tạo bên ngoài `onBeforeCompile`, mutate `.value` trực tiếp — không tạo lại shader mỗi lần progress đổi. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Bóng đổ của vật thể phải dissolve theo đúng cùng ngưỡng — nghĩa là `mesh.customDepthMaterial` cũng cần một `MeshDepthMaterial` được `onBeforeCompile` với CÙNG hàm noise và CÙNG object `uProgress` (share bằng reference, không phải khởi tạo giá trị riêng). Vì nội dung shader phụ thuộc vào một tham số bake thẳng vào chuỗi GLSL, cả hai material đều cần `customProgramCacheKey` để Three không tái dùng nhầm một program đã compile cho tham số khác.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — lighting vẫn đúng như `MeshStandardMaterial` gốc, viền phát sáng rõ tại ranh giới dissolve, bóng đổ trên sàn dissolve cùng lúc với vật thể (không phải bóng đặc trong khi vật thể đã tan một nửa), `uProgress = 0` và `uProgress = 1` đều sạch (không glitch ở hai đầu), và cleanup không để lại thay đổi toàn cục nào.

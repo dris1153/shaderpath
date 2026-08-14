@@ -1,0 +1,73 @@
+## Ai cập nhật uniform built-in, và cập nhật bao lâu một lần
+
+ShaderMaterial không chỉ cấp sẵn khai báo — nó còn tự lo việc CẬP NHẬT giá trị các uniform đó mỗi frame, và tần suất cập nhật khác hẳn nhau tuỳ uniform, đọc thẳng trong `src/renderers/WebGLRenderer.js` (three@0.185.1, tag `r185`):
+
+- `modelMatrix`, `modelViewMatrix`, `normalMatrix` ghi lại **mỗi object, mỗi frame, không điều kiện** — `p_uniforms.setValue(_gl, 'modelMatrix', object.matrixWorld)` cùng hai dòng anh em (quanh L2768-2770) nằm trong khối "common matrices" chạy cho MỌI object, không kiểm tra "giá trị có đổi không" trước khi ghi.
+- `projectionMatrix`, `viewMatrix`, `cameraPosition` (và `isOrthographic`) NGƯỢC LẠI — chỉ ghi khi `refreshProgram || _currentCamera !== camera` đúng (quanh L2557): một lần mỗi khi camera/program đang hoạt động đổi, không lặp lại cho object tiếp theo dùng chung camera trong cùng frame. Một scene một camera một program: khối này chạy đúng MỘT LẦN mỗi frame dù có 1 hay 10.000 object.
+
+Bất đối xứng không ngẫu nhiên: `modelMatrix` khác nhau từng object nên không có gì để cache; camera dùng chung cho hàng loạt object nên đáng kiểm tra trước khi ghi lại. `modelViewMatrix`/`normalMatrix` "kẹt" ở nhóm mỗi-object vì phụ thuộc camera LẪN object cùng lúc (`object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld)`, quanh L2128) — không object nào share được modelViewMatrix của object khác.
+
+## normalMatrix: vì sao không thể chỉ lấy 3×3 của modelView
+
+Ngay sau phép nhân modelViewMatrix, Three gọi `object.normalMatrix.getNormalMatrix(object.modelViewMatrix)` — không lấy thẳng 3×3 góc trên-trái của modelViewMatrix. Lý do là hình học, không phải Three làm phức tạp hoá vô cớ.
+
+Pháp tuyến $\vec n$ vuông góc mặt phẳng tiếp tuyến: mọi $\vec t$ trên mặt có $\vec n \cdot \vec t = 0$. Biến đổi mesh bằng $M$ (3×3, phần tuyến tính của modelView) biến $\vec t$ thành $\vec t' = M\vec t$. Nếu cũng biến đổi $\vec n$ bằng chính $M$, tích $\vec n' \cdot \vec t'$ KHÔNG còn đảm bảo bằng 0 khi $M$ không phải phép quay/tỉ lệ đều — pháp tuyến hết vuông góc với mặt sau biến đổi.
+
+Ma trận đúng $N$ (normal matrix) phải thoả $\vec n' \cdot \vec t' = 0$ với mọi $\vec t$ thoả $\vec n \cdot \vec t = 0$ ban đầu. Đặt $\vec n' = N\vec n$, khai triển:
+
+$$
+\vec n'^{\mathsf T} \vec t' = (N\vec n)^{\mathsf T} (M\vec t) = \vec n^{\mathsf T} N^{\mathsf T} M \vec t
+$$
+
+Biểu thức bằng $\vec n^{\mathsf T} \vec t$ (đúng bằng 0) với mọi $\vec t$ khi $N^{\mathsf T} M = I$, tức $N^{\mathsf T} = M^{-1}$, tức:
+
+$$
+N = (M^{-1})^{\mathsf T} = (M^{\mathsf T})^{-1}
+$$
+
+— nghịch đảo-chuyển vị (inverse-transpose), đúng như `Matrix3.getNormalMatrix()` cài đặt (`setFromMatrix4(m).invert().transpose()`). Với phép quay/tỉ lệ đều, $M^{-1} = M^{\mathsf T}$ nên $N = M$ — đây là lý do lỗi dễ lọt qua test bằng mắt (mesh scale đều luôn trông đúng dù bỏ qua inverse-transpose). Vấn đề chỉ lộ ra khi **scale không đều**: $M = \mathrm{diag}(2, 1, 1)$ (kéo dài gấp đôi theo X), $\vec n = (\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2}, 0)$. Dùng thẳng $M\vec n = (\sqrt2, \tfrac{1}{\sqrt2}, 0)$ — nghiêng THÊM về trục vừa kéo dài, ngược trực giác (mặt càng kéo dài theo X càng phải "phẳng" ra theo X). Vì $M$ đường chéo, $M^{-1} = \mathrm{diag}(0.5, 1, 1)$ và chuyển vị của nó là chính nó, nên $N = \mathrm{diag}(0.5, 1, 1)$: $N\vec n = (\tfrac{1}{2\sqrt2}, \tfrac{1}{\sqrt2}, 0)$, sau khi normalize nghiêng đúng về trục Y — ra xa trục vừa kéo dài, khớp trực giác.
+
+## Khai báo uniform tuỳ biến: mẫu nhà — memo một lần, mutate .value mỗi frame
+
+Uniform tuỳ biến khai báo y hệt uniform built-in — `uniform float uTime;` trong GLSL, và phía JS truyền một object dạng `{ uTime: { value: 0 } }` vào prop `uniforms`. Mẫu chuẩn trong R3F (xuất hiện lặp lại ở mọi demo shader từ Track 2): tạo object đó đúng MỘT LẦN bằng `useMemo(() => ({ uTime: { value: 0 } }), [])`, rồi mỗi frame chỉ ghi đè `.value`, không bao giờ tạo lại cả object:
+
+```ts
+const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+useFrame((state) => {
+  uniforms.uTime.value = state.clock.elapsedTime; // ghi trực tiếp, không setState
+});
+```
+
+Vì sao "mutate, không setState": gọi `setState` mỗi frame buộc component React re-render, kéo theo toàn bộ cây con reconcile lại (đúng anti-pattern bài `useFrame` hooks ở Track 4 đã đo bằng render counter) — trong khi ghi thẳng `.value` là một phép gán JS đơn thuần, không chạm React. R3F cũng xử lý cẩn thận riêng cho prop này: source `applyProps` (`@react-three/fiber@9.7.0`) không ghi đè toàn bộ `material.uniforms` khi prop đổi, mà merge từng field bằng `Object.assign`, kèm comment thẳng trong code: "ShaderMaterial uniforms must keep a stable target reference" — vì `WebGLPrograms.getUniforms()` chỉ đọc lại `material.uniforms` khi shader phải biên dịch MỚI; thay hẳn object đó bằng một object khác sau khi đã compile khiến Three tiếp tục đọc object CŨ cho tới lần biên dịch lại kế tiếp.
+
+## Texture cũng là một uniform: DataTexture thủ tục làm ví dụ
+
+Texture cũng chỉ là một uniform khác — `uniform sampler2D uNoiseMap;` trong GLSL, `{ uNoiseMap: { value: texture } }` phía JS, không có cú pháp riêng cho "texture uniform". Demo bài này dùng một `THREE.DataTexture` thủ tục (không load ảnh nhị phân, đúng quy ước Track 3) làm nguồn màu thứ ba — tạo texture, set `needsUpdate = true` một lần lúc khởi tạo, rồi gán thẳng vào `.value` giống hệt một số hay mảng. Texture đó không phải object JSX nên R3F không tự dispose — phải đăng ký vào `useDisposable` như mọi resource thủ tục khác trong platform.
+
+## Luật trùng tên: khai báo lại một built-in là lỗi biên dịch
+
+Nếu bạn khai báo lại một uniform Three đã tự thêm — chẳng hạn viết nhầm `uniform mat4 modelMatrix;` ngay trong fragment shader của một ShaderMaterial — trình biên dịch GLSL báo lỗi redefinition ngay khi build chương trình, đại loại:
+
+```
+ERROR: 0:9: 'modelMatrix' : redefinition
+```
+
+(số dòng thật phụ thuộc shader của bạn — quan trọng là LOẠI lỗi: `redefinition`, không phải `undeclared identifier`.) Hệ quả trực tiếp của bài trước: prelude Three chèn vào đã có sẵn `modelMatrix`, nên dòng bạn tự thêm là khai báo TRÙNG, không phải MỚI. Luật tránh: chỉ tự khai báo những gì KHÔNG nằm trong sáu uniform + ba attribute built-in (`modelMatrix`, `modelViewMatrix`, `projectionMatrix`, `viewMatrix`, `normalMatrix`, `cameraPosition`, `position`, `normal`, `uv`) — mọi custom uniform trong bài này đều có tiền tố `u` (`uTime`, `uNoiseMap`, `uRim`) chính vì lý do đó.
+
+## Chi phí cập nhật uniform: ghi giá trị rẻ, biên dịch lại material đắt
+
+Ghi `.value` mỗi frame gần như miễn phí: `WebGLUniforms.upload()` tự cache giá trị JS cuối cùng đã gửi cho từng uniform (`setValueV3f` so `cache[0] !== v.x` trước khi gọi `gl.uniform3f`) — uniform không đổi giữa hai frame thậm chí không tốn một lệnh GL nào, chỉ một phép so sánh JS. Ngược lại, buộc Three biên dịch lại chương trình shader — đổi hẳn chuỗi `vertexShader`/`fragmentShader`, remount `<shaderMaterial>` bằng `key` mới, hoặc đổi `customProgramCacheKey` — kích hoạt `gl.compileShader` × 2, `gl.linkProgram`, và dò lại location cho từng uniform (`programCache.acquireProgram` chỉ cache theo `cacheKey`; cache miss là biên dịch thật, một trong những call đồng bộ đắt nhất của một app Three.js thực tế — Track 12 đo và bàn kỹ). Quy tắc thực dụng ngay từ bài này: đổi GIÁ TRỊ một uniform, không đổi SOURCE shader, để cập nhật theo thời gian thực.
+
+## Nền tảng này dẫn tới đâu: attribute tuỳ biến và onBeforeCompile
+
+Bài tiếp theo trong module (Attribute tuỳ biến trên geometry) mở rộng đúng ý tưởng "gắn thêm dữ liệu vào GPU" sang per-vertex thay vì per-draw-call — attribute tự khai báo sống cạnh `position`/`normal`/`uv` built-in y hệt cách uniform tự khai báo sống cạnh `modelMatrix`/`cameraPosition` ở bài này. Module hai của track (Hack material có sẵn) dùng lại chính luật trùng tên vừa học khi `onBeforeCompile` chèn code vào một prelude còn dài hơn nhiều — của `MeshStandardMaterial`.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi làm việc với uniform built-in và tuỳ biến:
+
+1. **Dùng 3×3 của modelViewMatrix thay vì `normalMatrix` khi mesh có scale không đều.** Trông đúng trên mọi mesh scale đều (hình cầu, hình lập phương chưa méo), chỉ lộ sai khi ai đó `scale.set(2, 1, 1)` — pháp tuyến nghiêng sai hướng, lighting/rim sai mà rất khó nhận ra nếu không biết chính xác triệu chứng cần tìm.
+2. **Tạo lại object `uniforms` mỗi lần component render thay vì mutate `.value`.** Ngay cả khi R3F tự merge an toàn qua `applyProps`, driving update qua state/props buộc React re-render + reconcile cả cây con mỗi frame — trong khi mutate trực tiếp là một phép gán JS, không chạm React.
+3. **Đặt tên custom uniform trùng một built-in (`color`, `normal`, `position`, `modelMatrix`, …).** Redefinition error khó đoán nếu không biết prelude đã chèn sẵn tên đó; quy ước tiền tố `u` (uTime, uColor) gần như loại bỏ hẳn rủi ro này.
+
+</Callout>

@@ -1,0 +1,99 @@
+## ShaderMaterial: bạn chỉ viết phần thân, Three viết sẵn phần đầu
+
+`THREE.ShaderMaterial` là cách nhanh nhất để có toàn quyền viết vertex/fragment shader mà vẫn nằm trong hệ sinh thái Three — camera, scene graph, render loop đều hoạt động bình thường, không phải tự dựng lại như ở Track 1. Điều khiến nó khác một shader "từ số 0": trước khi gửi hai chuỗi `vertexShader`/`fragmentShader` bạn viết sang trình biên dịch GLSL, Three tự động chèn thêm một khối code phía trước — gọi là **prelude** — chứa sẵn hàng loạt khai báo `precision`, `#define`, `attribute` và `uniform`. Bạn không viết chúng, nhưng chúng có mặt và dùng được ngay trong shader của bạn như thể bạn tự khai báo.
+
+## Prelude thật Three chèn vào: đối chiếu trực tiếp trong source
+
+Đừng đoán mò danh sách này — `src/renderers/webgl/WebGLProgram.js` (three@0.185.1, tag `r185`) là nơi Three lắp ráp chuỗi shader cuối cùng, và với một `ShaderMaterial` thường (không phải Raw), phần đầu vertex prefix luôn có đúng sáu dòng uniform sau, không đổi giữa các phiên bản gần đây:
+
+```glsl
+uniform mat4 modelMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform vec3 cameraPosition;
+```
+
+(Three còn âm thầm thêm `uniform bool isOrthographic;` ngay sau đó — ít khi cần dùng trực tiếp, nhưng cũng miễn phí.) Ngay sau khối uniform là ba attribute luôn có mặt trên mọi hình học `BufferGeometry`:
+
+```glsl
+attribute vec3 position;
+attribute vec3 normal;
+attribute vec2 uv;
+```
+
+Trước tất cả những dòng đó còn có một khối `precision highp float;` (cùng `int` và toàn bộ họ `sampler2D`/`samplerCube`/…), và hai dòng `#define SHADER_TYPE ShaderMaterial` / `#define SHADER_NAME ...` — cái mà bài học gọi chung là "common #define". Một số attribute khác (`uv1`, `uv2`, `tangent`, `color`, `skinIndex`/`skinWeight`, `instanceMatrix`) cũng được chèn, nhưng chỉ khi geometry/material thật sự cần — bọc trong `#ifdef`, không cố định như sáu uniform và ba attribute ở trên.
+
+## ShaderMaterial tối thiểu: chiếu position, tô theo uv
+
+Nhờ prelude đó, một `ShaderMaterial` hoạt động được chỉ cần đúng vài dòng thân bài:
+
+```glsl
+// vertex
+varying vec2 vUv;
+void main() {
+  vUv = uv; // "uv" chưa từng được bạn khai báo — Three đã làm hộ
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+```
+
+```glsl
+// fragment
+precision highp float;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = vec4(vUv, 0.5, 1.0);
+}
+```
+
+Không một khai báo `uniform`/`attribute` built-in nào xuất hiện — `uv`, `position`, `projectionMatrix`, `modelViewMatrix` đều có sẵn từ prelude. Demo đi kèm bài học dùng chính idiom này trên một torus knot, chỉ thêm `normalMatrix` (cũng miễn phí) để tô theo pháp tuyến.
+
+## RawShaderMaterial: prelude rỗng — khai báo TẤT CẢ
+
+`RawShaderMaterial` thực chất kế thừa `ShaderMaterial`, chỉ bật thêm cờ `isRawShaderMaterial = true`, nhưng khi cờ đó bật, nhánh build-prelude trong `WebGLProgram.js` rẽ hẳn sang một nhánh khác: không `precision`, không `attribute`, không một `uniform` built-in nào — chỉ còn `#define SHADER_TYPE`/`#define SHADER_NAME` và `defines` tuỳ biến của bạn. JSDoc của chính class này nói thẳng: nó "works just like ShaderMaterial, except that definitions of built-in uniforms and attributes are not automatically prepended". Nghĩa là cùng đoạn code ShaderMaterial ở trên, đổi sang Raw sẽ báo lỗi biên dịch ngay dòng đầu tiên dùng `uv`/`position`/`projectionMatrix` — vì chưa ai khai báo chúng cả. Bạn phải tự viết đủ:
+
+```glsl
+precision highp float;
+attribute vec3 position;
+attribute vec2 uv;
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+```
+
+## glslVersion: mặc định GLSL ES 1.00, tường minh GLSL ES 3.00
+
+`RawShaderMaterial` có property `glslVersion` (mặc định `null`). Với Raw, đây là công tắc quyết định dòng `#version` có xuất hiện hay không: để `null`, Three không chèn `#version` gì cả — WebGL2 ngầm hiểu shader không có `#version` là GLSL ES 1.00 (cú pháp `attribute`/`varying`/`gl_FragColor`, không có `in`/`out`); đặt `material.glslVersion = THREE.GLSL3`, Three chèn đúng `#version 300 es\n` lên đầu, và bạn buộc phải viết cú pháp ES 3.00 thật: `in`/`out` thay vì `attribute`/`varying`, tự khai báo biến `out vec4` cho màu xuất thay vì `gl_FragColor`. Với `ShaderMaterial` không-raw thì khác hẳn: Three luôn ép biên dịch dưới `#version 300 es` bất kể `glslVersion`, rồi tự thêm macro `#define attribute in` / `#define varying out` để cú pháp ES 1.00 quen thuộc vẫn chạy — chi tiết này giải thích vì sao inspect shader đã biên dịch trong DevTools luôn thấy `in`/`out` dù bạn gõ `attribute`/`varying`.
+
+## Khi nào Raw đúng: chia sẻ shader, tránh trùng tên, kiểm soát toàn phần
+
+Ba lý do thực dụng để chọn Raw thay vì ShaderMaterial:
+
+- **Chia sẻ shader source với một pipeline không phải Three** — ví dụ đúng chương trình WebGL2 thuần bạn viết tay ở Track 1 (`gl.createProgram`, tự `bufferData`, tự query location). Nếu shader phải chạy cả trong context Three lẫn context tự viết, nó không thể phụ thuộc một prelude chỉ Three mới chèn — Raw cho chuỗi GLSL giống hệt shader thuần, chạy được ở cả hai nơi.
+- **Tránh trùng tên** khi bạn thật sự cần một biến tên `modelMatrix` hay `normal` mang ý nghĩa khác (hiếm, nhưng xảy ra khi port shader từ engine khác).
+- **Toàn quyền kiểm soát khai báo** — biết chính xác từng `uniform`/`attribute` tồn tại trong shader, không phải đoán prelude ẩn chứa gì, hữu ích khi debug một lỗi biên dịch khó hiểu hoặc khi tối ưu số lượng varying.
+
+## Mô hình tư duy: ShaderMaterial = GLSL + header hình Three
+
+Cách nhớ gọn nhất: `ShaderMaterial` là GLSL thuần cộng với một header cố định do Three viết sẵn theo đúng hình dạng nó cần (camera, transform, geometry chuẩn) — bạn chỉ viết phần thân. `RawShaderMaterial` bỏ hẳn header đó, trả bạn về đúng một trang GLSL trắng, y hệt cảm giác viết `gl.shaderSource()` tay ở Track 1. GLSL Playground của platform này áp đúng ý tưởng đó ở quy mô nhỏ hơn: bạn chỉ gõ phần thân `void main() {...}`, còn `uTime`/`uResolution`/`uMouse`/`fragColor` đã có sẵn từ một prelude cố định riêng của playground — thử ngay dưới đây để cảm nhận "viết thân, prelude lo phần đầu" trước khi áp dụng ý tưởng đó vào ShaderMaterial thật.
+
+<Playground source={"void main() {\n  // Playground khong co varying vUv rieng nhu ShaderMaterial that,\n  // nen tu tinh mot toa do dong vai tro do tu gl_FragCoord/uResolution.\n  vec2 fakeUv = gl_FragCoord.xy / uResolution;\n  fragColor = vec4(fakeUv, 0.5, 1.0);\n}\n"} />
+
+## Nền tảng này dẫn tới đâu: onBeforeCompile và hack material có sẵn
+
+Bài tiếp theo trong module này (Uniform Three tự inject) mổ xẻ kỹ hơn từng uniform trong prelude — ai cập nhật nó, cập nhật bao lâu một lần. Xa hơn, module "Hack material có sẵn" của chính track này dùng `onBeforeCompile` để chèn code vào đúng prelude khổng lồ hơn của `MeshStandardMaterial` (hàng chục `#define USE_MAP`, `USE_ENVMAP`, … tuỳ tính năng bật) — cùng một cơ chế build-prelude bạn vừa đọc source ở trên, chỉ áp dụng cho một material phức tạp hơn nhiều.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi chọn giữa hai loại material này:
+
+1. **Copy shader ShaderMaterial nguyên xi sang RawShaderMaterial rồi ngạc nhiên vì lỗi biên dịch.** `uv`, `position`, `projectionMatrix`, `normalMatrix`, `precision` — không cái nào còn tồn tại; thiếu bất kỳ khai báo nào trong số đó Raw sẽ báo lỗi ngay dòng đầu tiên dùng đến nó.
+2. **Tưởng RawShaderMaterial "nhanh hơn" vì bỏ bớt code.** Phần prelude Three chèn không tốn chi phí runtime đáng kể — nó chỉ là text nối vào chuỗi shader trước khi biên dịch một lần duy nhất (chương trình được cache theo `cacheKey`). Chọn Raw vì lý do kiểm soát/tương thích, không phải vì hiệu năng.
+3. **Không set `precision` trong RawShaderMaterial vì quen với việc Three tự lo.** ShaderMaterial thường có sẵn khối `precision highp float;`; Raw thì không — quên dòng này thường vẫn biên dịch được trên desktop Chrome (driver tự chọn giùm) nhưng lỗi cứng trên nhiều thiết bị mobile, đúng cái bẫy bài Precision qualifier ở Track 2 đã nói.
+
+</Callout>

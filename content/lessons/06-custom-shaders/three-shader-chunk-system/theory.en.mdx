@@ -1,0 +1,43 @@
+## Three Layers of Assembly: ShaderLib, ShaderChunk, #include
+
+When you write `new THREE.MeshStandardMaterial()`, Three doesn't hand-type a complete GLSL file — it ASSEMBLES one from three layers. The outer layer is `ShaderLib` (`node_modules/three/src/renderers/shaders/ShaderLib/`), an object mapping material names ("meshphysical", "meshbasic", ...) to a `vertex`/`fragment` string pair. But those two strings don't contain full GLSL — they contain dozens of `#include <chunk_name>` lines. The middle layer is `ShaderChunk` (`ShaderChunk.js`), a flat object mapping chunk names to exactly one small GLSL snippet, each living in its own file under `ShaderChunk/` (`begin_vertex.glsl.js`, `color_fragment.glsl.js`, `lights_physical_fragment.glsl.js`, ...). The inner layer is `WebGLProgram.resolveIncludes()`, a function that scans for the `#include <...>` regex and swaps each line for the exact string looked up from `ShaderChunk` — recursively, since a chunk can `#include` another chunk itself. These three layers are why a `meshphysical.glsl.js` file is only a few hundred lines long while the shader that actually compiles ends up several times longer.
+
+## Reading meshphysical.glsl.js Top to Bottom: A Map for MeshStandardMaterial
+
+Open `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.glsl.js` directly (three@0.185.1, GitHub tag `r185`) — the `vertex` portion declares uniforms/varyings first, then inside `main()` sits a chain of includes in the EXACT order they execute: `beginnormal_vertex` computes `objectNormal` first, then `normal_vertex` writes `vNormal`, and ONLY THEN comes `begin_vertex` — a chunk that's a single line, `vec3 transformed = vec3( position );` — followed by `project_vertex`, which multiplies `transformed` by `modelViewMatrix`/`projectionMatrix` into `gl_Position` (and, when `USE_INSTANCING` is on, multiplies in `instanceMatrix` right before that). This order isn't arbitrary: `project_vertex` reads the `transformed` variable `begin_vertex` just created, so swapping the two breaks the shader immediately. The `fragment` portion follows the same logic: `normal_fragment_begin` computes a local `normal` variable, then `lights_physical_fragment` builds the `PhysicalMaterial material` struct, then the `lights_fragment_*` chunks accumulate light into `reflectedLight`, and only at the end does `opaque_fragment` write `gl_FragColor`. Reading this file once, top to bottom, against the real chunk list under `ShaderChunk/`, is the fastest way to build a mental map of MeshStandardMaterial instead of guessing.
+
+## How #include Actually Works — and a Timing Trap
+
+`resolveIncludes()` only runs INSIDE `new WebGLProgram(...)`, after `material.onBeforeCompile(parameters, renderer)` has already finished — in `WebGLRenderer.js`, the call to `material.onBeforeCompile(parameters, this)` sits before the line that actually constructs the `WebGLProgram`. The consequence: inside `onBeforeCompile`, `shader.vertexShader`/`shader.fragmentShader` STILL contain the raw `#include <chunk>` lines — nothing has been swapped for real GLSL yet. This is the most common trap when you start hacking shaders: eyeball the "assembled" GLSL (say, reading `begin_vertex.glsl.js` on GitHub and seeing `vec3 transformed = vec3( position );`) and then `.replace()` that exact string inside `onBeforeCompile` — no error is thrown, but nothing happens either, because that string doesn't exist in `shader.vertexShader` at that point. The correct `.replace()` target is the marker itself, `#include <begin_vertex>` — keep the marker intact so the original include still runs, then append your code right after it.
+
+## Finding Your Anchor: Dump the Real Shader, Look Up the Chunk on GitHub
+
+The most reliable lookup technique isn't guessing — it's printing exactly what Three sees: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. What prints is the raw `ShaderLib.meshphysical.vertex` string after Three has already added the feature `#define`s in play (`USE_MAP`, `USE_INSTANCING`, ...) but BEFORE `resolveIncludes` runs — exactly what you need to pick the right marker. Once you've spotted the marker, look up the real chunk content on GitHub at the exact tag matching the installed version (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<name>.glsl.js`), never the `dev`/`master` branch — variable names or the chunk itself may have changed between versions.
+
+## Overriding Globally via THREE.ShaderChunk — and the Restore Discipline
+
+`ShaderChunk` is just a plain JS object — assigning `THREE.ShaderChunk.emissivemap_fragment = "..."` IMMEDIATELY changes that chunk's content for EVERY material that compiles AFTER the assignment, not just the one you're working on. On a page with many demos/canvases sharing one runtime (exactly this platform's setup), a demo that overrides `ShaderChunk` without restoring it breaks whichever demo renders after it on the same page — even if the two demos are otherwise unrelated. If a lesson must demonstrate the global override, the mandatory discipline is to save the original before assigning (`const original = THREE.ShaderChunk.x`) and restore that exact original in a cleanup effect before the component unmounts.
+
+## Per-Material or Global: A Decision Table
+
+| Situation | Choice |
+| --- | --- |
+| The effect only applies to one specific material/mesh | `onBeforeCompile` + marker `.replace()` on that material's `shader.vertexShader`/`fragmentShader` |
+| Fixing a bug or changing default behavior for the entire app, applied once before any material compiles | `THREE.ShaderChunk.x = ...` once at startup, never touched again |
+| Not sure which to pick | Default to per-material `onBeforeCompile` — narrower scope, easier to reason about, easier to revert |
+
+## Why Three Does This: Combining Features via #ifdef + Chunks
+
+MeshStandardMaterial has dozens of independent features — map, normalMap, envMap, instancing, skinning, morph targets, shadows — each toggled independently by its own `#define USE_X`. Hand-writing every combination would require a combinatorial number of GLSL files to maintain — hundreds of variants. Chunks plus `#ifdef` solve exactly that problem: each chunk wraps its own logic in `#ifdef USE_X ... #endif`, and `WebGLProgram` only generates the one GLSL variant a given define combination actually needs (cached by `programCacheKey`), instead of Three having to hand-author every possible combination up front.
+
+The checkpoint right after this module (Enhanced Standard Material) reuses this exact per-material `onBeforeCompile` plus chunk-injection technique to build a complete effect; the next lesson (InstancedMesh) reuses the very same `begin_vertex` anchor for a different purpose — displacing each copy according to its own attribute. Further out, TSL (the module's last lesson) replaces the entire `#include`/`ShaderChunk` mechanism with a node graph that compiles down to both GLSL and WGSL — the same idea of splicing small pieces together, just a different representation.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when hacking shader chunks:
+
+1. **`.replace()` targeting assembled GLSL instead of the `#include` marker.** As covered above: at `onBeforeCompile` time, `shader.vertexShader` still contains the raw `#include <chunk>` line, unresolved. Replacing the wrong string throws no error — it just silently does nothing, the hardest kind of shader bug to spot.
+2. **Overriding `THREE.ShaderChunk` globally and forgetting to restore it.** It leaks into every material compiled afterward on the same page, including unrelated demos/components — a bug that's hard to reproduce because it depends on component MOUNT ORDER.
+3. **Trusting chunk names to stay stable across versions.** Plenty of older articles reference an `output_fragment` chunk — that chunk does NOT exist in the `three@0.185.1` installed in this repo (verifiable by listing the `ShaderChunk/` directory); the chunk that writes `gl_FragColor` at the end of the fragment shader in this version is named `opaque_fragment`. Always cross-check chunk names against the installed `node_modules/three`, never copy straight from a tutorial that doesn't state its version.
+
+</Callout>

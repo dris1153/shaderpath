@@ -1,0 +1,43 @@
+## Ba tầng lắp ráp: ShaderLib, ShaderChunk, #include
+
+Khi bạn viết `new THREE.MeshStandardMaterial()`, Three không gõ tay ra một file GLSL hoàn chỉnh — nó LẮP RÁP file đó từ ba tầng. Tầng ngoài cùng là `ShaderLib` (`node_modules/three/src/renderers/shaders/ShaderLib/`), một object map tên material ("meshphysical", "meshbasic", ...) sang một cặp string `vertex`/`fragment`. Nhưng hai string đó không chứa GLSL đầy đủ — chúng chứa hàng chục dòng `#include <tên_chunk>`. Tầng giữa là `ShaderChunk` (`ShaderChunk.js`), một object phẳng map tên chunk sang đúng một đoạn GLSL nhỏ, mỗi đoạn nằm trong một file riêng dưới `ShaderChunk/` (`begin_vertex.glsl.js`, `color_fragment.glsl.js`, `lights_physical_fragment.glsl.js`, ...). Tầng trong cùng là `WebGLProgram.resolveIncludes()`, hàm quét regex `#include <...>` và thay từng dòng đó bằng đúng string tra được từ `ShaderChunk` — đệ quy, vì một chunk có thể tự `#include` chunk khác. Ba tầng này là lý do một file `meshphysical.glsl.js` chỉ dài vài trăm dòng nhưng shader thật compile ra dài gấp nhiều lần.
+
+## Đọc meshphysical.glsl.js từ trên xuống: bản đồ cho MeshStandardMaterial
+
+Mở thẳng `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.glsl.js` (three@0.185.1, tag GitHub `r185`) — phần `vertex` khai báo uniform/varying trước, rồi bên trong `main()` là một chuỗi include theo ĐÚNG thứ tự thực thi: `beginnormal_vertex` tính `objectNormal` trước, rồi `normal_vertex` ghi `vNormal`, RỒI MỚI tới `begin_vertex` — chunk chỉ vỏn vẹn một dòng, `vec3 transformed = vec3( position );` — tiếp theo `project_vertex` nhân `transformed` với `modelViewMatrix`/`projectionMatrix` ra `gl_Position` (và, nếu `USE_INSTANCING` bật, nhân thêm `instanceMatrix` ngay trước đó). Thứ tự này không tuỳ tiện: `project_vertex` đọc biến `transformed` mà `begin_vertex` vừa tạo, đảo hai chunk là vỡ shader ngay lập tức. Phần `fragment` cũng vậy: `normal_fragment_begin` tính biến cục bộ `normal`, rồi `lights_physical_fragment` dựng struct `PhysicalMaterial material`, rồi các chunk `lights_fragment_*` cộng dồn ánh sáng vào `reflectedLight`, và cuối cùng `opaque_fragment` mới ghi `gl_FragColor`. Đọc file này một lần từ trên xuống dưới, đối chiếu với danh sách chunk thật trong thư mục `ShaderChunk/`, là cách nhanh nhất để có "bản đồ" của MeshStandardMaterial trong đầu thay vì đoán mò.
+
+## #include hoạt động thế nào — và một cái bẫy về thời điểm
+
+`resolveIncludes()` chỉ chạy BÊN TRONG `new WebGLProgram(...)`, sau khi `material.onBeforeCompile(parameters, renderer)` đã chạy xong — trong `WebGLRenderer.js`, dòng gọi `material.onBeforeCompile(parameters, this)` nằm trước dòng dựng `WebGLProgram` thật sự. Hệ quả: bên trong `onBeforeCompile`, `shader.vertexShader`/`shader.fragmentShader` VẪN còn nguyên các dòng `#include <chunk>` — chưa hề được thay bằng GLSL thật. Đây là cái bẫy phổ biến nhất khi mới hack shader: tìm bằng mắt đoạn GLSL "đã lắp ráp" (ví dụ đọc `begin_vertex.glsl.js` trên GitHub, thấy `vec3 transformed = vec3( position );`) rồi `.replace()` đúng chuỗi đó bên trong `onBeforeCompile` — không báo lỗi gì, nhưng cũng không có tác dụng gì, vì chuỗi đó chưa tồn tại trong `shader.vertexShader` ở thời điểm đó. Mục tiêu `.replace()` đúng phải là chính marker `#include <begin_vertex>` — giữ nguyên marker để include gốc vẫn chạy, rồi nối thêm code ngay sau nó.
+
+## Tìm đúng anchor: dump shader thật, tra chunk trên GitHub
+
+Cách tra cứu đáng tin cậy nhất không phải đoán mà là in ra chính xác những gì Three đang thấy: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. Chuỗi in ra là bản RAW của `ShaderLib.meshphysical.vertex` sau khi Three đã thêm các `#define` theo tính năng đang bật (`USE_MAP`, `USE_INSTANCING`, ...) nhưng TRƯỚC khi `resolveIncludes` chạy — đúng những gì bạn cần để chọn marker chính xác. Sau khi thấy marker, tra nội dung chunk thật trên GitHub theo đúng tag phiên bản đang cài (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<tên>.glsl.js`), không phải branch `dev`/`master` — tên biến hay tên chunk có thể đã đổi giữa các phiên bản.
+
+## Ghi đè toàn cục qua THREE.ShaderChunk — và kỷ luật khôi phục
+
+`ShaderChunk` chỉ là một object JS thường — gán `THREE.ShaderChunk.emissivemap_fragment = "..."` thay đổi NGAY LẬP TỨC nội dung chunk đó cho MỌI material nào compile SAU thời điểm gán, không chỉ material bạn đang thao tác. Trên một trang có nhiều demo/canvas dùng chung runtime (đúng bối cảnh nền tảng này), một demo ghi đè `ShaderChunk` mà không khôi phục sẽ làm hỏng demo khác render sau nó trên cùng trang — dù hai demo không hề liên quan tới nhau. Nếu buộc phải minh hoạ global override, kỷ luật bắt buộc là lưu bản gốc trước khi gán (`const original = THREE.ShaderChunk.x`) và khôi phục đúng bản gốc đó trong cleanup effect trước khi component unmount.
+
+## Per-material hay global: bảng quyết định
+
+| Tình huống | Chọn |
+| --- | --- |
+| Hiệu ứng chỉ áp dụng cho một material/mesh cụ thể | `onBeforeCompile` + `.replace()` marker trên `shader.vertexShader`/`fragmentShader` của material đó |
+| Sửa lỗi hoặc đổi hành vi mặc định cho toàn bộ app, áp dụng một lần trước khi bất kỳ material nào compile | `THREE.ShaderChunk.x = ...` lúc khởi động, không đụng lại sau đó |
+| Không chắc nên chọn gì | Mặc định `onBeforeCompile` per-material — phạm vi hẹp hơn, dễ dự đoán, dễ revert |
+
+## Vì sao Three làm vậy: tổ hợp tính năng bằng #ifdef + chunk
+
+MeshStandardMaterial có hàng chục tính năng độc lập — map, normalMap, envMap, instancing, skinning, morph target, shadow — mỗi tính năng bật/tắt riêng bằng một `#define USE_X`. Nếu viết tay từng tổ hợp, số file GLSL cần bảo trì là tổ hợp (combinatorial) của toàn bộ tính năng — hàng trăm biến thể. Chunk cộng `#ifdef` giải quyết đúng vấn đề đó: mỗi chunk tự bọc logic riêng trong `#ifdef USE_X ... #endif`, và `WebGLProgram` chỉ generate đúng một bản GLSL cho mỗi tổ hợp define thực sự cần dùng (cache theo `programCacheKey`), thay vì Three phải viết sẵn tất cả tổ hợp có thể xảy ra.
+
+Checkpoint ngay sau module này (MeshStandardMaterial nâng cấp) dùng lại chính kỹ thuật per-material `onBeforeCompile` cộng chèn chunk ở đây để build một hiệu ứng hoàn chỉnh; bài kế tiếp (InstancedMesh) tái sử dụng đúng anchor `begin_vertex` cho một mục đích khác — dịch chuyển từng bản sao theo attribute riêng của nó. Xa hơn, TSL (bài cuối module) thay thế toàn bộ cơ chế `#include`/`ShaderChunk` bằng một node graph biên dịch ra cả GLSL lẫn WGSL — cùng ý tưởng ghép mảnh nhỏ lại, chỉ khác cách biểu diễn.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi hack shader chunk:
+
+1. **`.replace()` nhắm vào GLSL đã lắp ráp thay vì marker `#include`.** Ở thời điểm `onBeforeCompile`, `shader.vertexShader` vẫn còn nguyên `#include <chunk>`, chưa resolve. Replace nhắm sai chuỗi không ném lỗi — chỉ âm thầm không làm gì, khó phát hiện nhất trong mọi lỗi shader.
+2. **Ghi đè `THREE.ShaderChunk` toàn cục rồi quên khôi phục.** Rò rỉ sang mọi material compile sau đó trên cùng trang, kể cả demo/component khác không liên quan — bug khó tái hiện vì phụ thuộc thứ tự mount các component.
+3. **Tin tên chunk ổn định giữa các phiên bản.** Nhiều bài viết cũ nhắc tới chunk `output_fragment` — chunk đó KHÔNG tồn tại trong `three@0.185.1` cài trong repo này (xác nhận được bằng cách liệt kê thư mục `ShaderChunk/`); chunk ghi `gl_FragColor` cuối fragment ở bản này tên là `opaque_fragment`. Luôn đối chiếu tên chunk với `node_modules/three` đang cài, không copy nguyên từ tutorial không ghi rõ version.
+
+</Callout>

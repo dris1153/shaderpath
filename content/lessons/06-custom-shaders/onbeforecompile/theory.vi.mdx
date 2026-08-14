@@ -1,0 +1,56 @@
+## Vì sao phải "hack" material có sẵn thay vì tự viết ShaderMaterial
+
+Track này đã cho bạn ShaderMaterial: tự viết toàn bộ vertex/fragment shader, kiểm soát từng dòng. Vấn đề là MeshStandardMaterial không đơn giản là "một shader tô màu" — nó là hàng trăm dòng GLSL lắp sẵn: BRDF vật lý (Cook-Torrance/GGX), tối đa nhiều loại ánh sáng cùng lúc (directional, point, spot, hemisphere, rect area), shadow map lọc PCF, fog, tone mapping, chuyển đổi không gian màu. Viết lại toàn bộ đống đó bằng tay trong một ShaderMaterial chỉ để thêm MỘT hiệu ứng tuỳ biến — một phép xoắn, một dải màu, một hiệu ứng dissolve — là công việc tốn hàng trăm giờ và cực dễ sai: bạn phải chép đúng công thức chiếu bóng, đúng cách tích luỹ ánh sáng, đúng thứ tự tone-map/gamma. `onBeforeCompile` giải quyết đúng bài toán này: giữ nguyên MeshStandardMaterial — với toàn bộ lighting/shadow/fog pipeline có sẵn — và chỉ chèn thêm vài dòng GLSL cho hiệu ứng của riêng bạn vào đúng chỗ.
+
+## Cơ chế: onBeforeCompile nhận gì, chạy khi nào
+
+`material.onBeforeCompile` là một callback bạn gán vào material; Three gọi nó đúng một lần **trước khi** biên dịch chương trình WebGL cho material đó — cụ thể, `WebGLRenderer` gọi `material.onBeforeCompile(parameters, renderer)` bên trong bước chuẩn bị chương trình, ngay trước khi gọi `programCache.acquireProgram(...)`. Tham số đầu (quy ước đặt tên `shader` trong hầu hết ví dụ) không phải một object tuỳ ý — nó chính là `parameters` mà `WebGLPrograms` vừa lắp ráp, mang đúng ba thứ bạn cần sửa: `shader.vertexShader`, `shader.fragmentShader` (hai chuỗi GLSL thô, đã gộp sẵn mọi `#include`) và `shader.uniforms` (map uniform material sẽ dùng để vẽ). Callback chạy đồng bộ trước compile, nên mọi thay đổi lên ba thứ đó có hiệu lực ngay trong lần compile này — nhưng bản thân callback KHÔNG chạy lại mỗi frame, chỉ chạy lại khi Three quyết định phải compile một chương trình mới.
+
+## Chèn code bằng string replace vào đúng include
+
+Source GLSL của MeshStandardMaterial (`meshphysical.glsl.js` trong `three/src/renderers/shaders/ShaderLib/`) lắp từ hàng chục dòng `#include <ten_chunk>` — mỗi dòng là placeholder Three tự thay bằng nội dung file chunk tương ứng trước khi đưa cho `onBeforeCompile`. Kỹ thuật chuẩn là `String.prototype.replace()` nhắm đúng một dòng include còn nguyên vẹn, nối thêm code của bạn ngay sau nó:
+
+```js
+material.onBeforeCompile = (shader) => {
+  shader.vertexShader = shader.vertexShader.replace(
+    "#include <begin_vertex>",
+    `#include <begin_vertex>\nfloat angle = uTwist * transformed.y;\ntransformed.xz = mat2(cos(angle), sin(angle), -sin(angle), cos(angle)) * transformed.xz;`,
+  );
+};
+```
+
+`#include <begin_vertex>` là chunk khai báo `vec3 transformed = vec3( position );` — biến `transformed` mà mọi chunk sau đó (morph target, skinning, displacement map, phép chiếu) đều đọc và ghi tiếp, nên chèn code NGAY SAU dòng include này là đúng chỗ để can thiệp vị trí đỉnh trước khi nó bị chiếu lên clip space. Tương tự, `#include <color_fragment>` (chunk nhân `diffuseColor *= vColor`) là điểm chèn chuẩn để sửa màu diffuse sau khi texture/vertex color đã áp xong nhưng trước khi ánh sáng được tính. Tên chunk không phải quy ước tự đặt — chúng là tên file thật trong mã nguồn Three (`begin_vertex.glsl.js`, `color_fragment.glsl.js`), và bài tiếp theo của track này liệt kê đầy đủ bản đồ chunk để tra cứu thay vì đoán mò.
+
+Phép xoắn quanh trục $y$ ở trên chính là ma trận xoay 2D áp lên mặt phẳng $xz$, góc tỉ lệ theo độ cao đỉnh:
+
+$$
+\begin{pmatrix} x' \\ z' \end{pmatrix} = \begin{pmatrix} \cos(\theta y) & -\sin(\theta y) \\ \sin(\theta y) & \cos(\theta y) \end{pmatrix} \begin{pmatrix} x \\ z \end{pmatrix}
+$$
+
+với $\theta$ là `uTwist`, $y$ là độ cao đỉnh — mỗi lát cắt ngang ở độ cao khác nhau xoay một góc khác nhau, tạo hiệu ứng vặn xoắn dọc trục đứng. Thử trực tiếp công thức này (dạng 2D thuần, không mesh) trước khi chèn nó vào onBeforeCompile:
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - 0.5) * 2.0;\n\n  float angle = 1.2 * p.y;\n  float c = cos(angle);\n  float s = sin(angle);\n  vec2 twisted = mat2(c, s, -s, c) * p;\n\n  float band = sin(twisted.y * 6.0 + uTime) * 0.5 + 0.5;\n  vec3 color = mix(vec3(0.15, 0.55, 0.9), vec3(0.95, 0.35, 0.15), band);\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Thêm uniform và giữ handle để cập nhật mỗi frame
+
+Code chèn ở trên tham chiếu `uTwist`, nhưng compiler không tự biết uniform này tồn tại — bạn phải khai báo nó trong source (chèn `uniform float uTwist;` ngay sau `#include <common>`, chunk gần như luôn nằm ở đầu cả vertex lẫn fragment shader) VÀ đăng ký giá trị vào `shader.uniforms`. Điểm dễ bỏ sót: nếu bạn viết `shader.uniforms.uTwist = { value: 1.2 }` trực tiếp bên trong callback, bạn tạo một object uniform MỚI mà chỉ compile này biết tới — code bên ngoài (ví dụ trong `useFrame` của R3F) không còn tham chiếu nào để đổi giá trị sau đó. Cách đúng là tạo object uniform TRƯỚC, ở scope ngoài (`const uTwist = { value: 1.2 }`), gán y hệt tham chiếu đó vào `shader.uniforms.uTwist = uTwist`, rồi mọi chỗ khác trong ứng dụng chỉ cần đổi `uTwist.value` — vì hai bên trỏ cùng một object, GPU nhận giá trị mới ngay khung hình kế tiếp mà không cần compile lại bất cứ thứ gì.
+
+## customProgramCacheKey: vì sao Three không tự phát hiện code bạn vừa đổi
+
+Three không compile lại một chương trình WebGL cho mỗi mesh mỗi frame — quá đắt. Nó cache chương trình đã compile theo một "cache key" tổng hợp từ hàng loạt tham số material (map, số ánh sáng, có shadow hay không...) cộng với `material.customProgramCacheKey()`. Mặc định, `customProgramCacheKey()` trả về `this.onBeforeCompile.toString()` — Three cố phân biệt hai material bằng cách so **văn bản mã nguồn** của hàm `onBeforeCompile`, không phải hành vi thực tế của nó lúc chạy. Đây là chỗ dễ sập bẫy nhất: nếu bạn tạo `onBeforeCompile` bằng một factory dùng chung — ví dụ `makeMaterial(effectOn)` trả về `(shader) => { if (effectOn) {...} }` — thì hai material gọi factory với `effectOn` khác nhau vẫn có `onBeforeCompile.toString()` giống hệt nhau, vì đó là cùng một dòng mã nguồn, chỉ khác giá trị biến đóng gói (closure) tại runtime, thứ mà `.toString()` không nhìn thấy. Kết quả: Three coi hai material là "cùng một chương trình", chỉ compile một lần, và material còn lại âm thầm dùng lại đúng chương trình đã compile của material kia — bật/tắt hiệu ứng bằng cách đổi material không còn tác dụng gì. Cách sửa là tự ghi đè, ví dụ `material.customProgramCacheKey = () => (effectOn ? "twist-on" : "twist-off")` — trả về một chuỗi phân biệt rõ biến thể thay vì dựa vào văn bản hàm.
+
+## Giới hạn & sự mong manh của kỹ thuật này
+
+`onBeforeCompile` thao tác trên chuỗi text thuần — không có AST, không kiểm tra cú pháp, không gợi ý lỗi rõ ràng nếu bạn gõ sai tên chunk: dòng `replace()` chỉ lặng lẽ không khớp gì, code của bạn biến mất mà không cảnh báo, và hiệu ứng "không chạy" trông y hệt một bug logic. Tên chunk cũng không được đảm bảo ổn định qua các phiên bản Three — cấu trúc `#include` có thể đổi giữa các bản major. Luôn ghim đúng version Three trong `package.json` và test lại `onBeforeCompile` sau mỗi lần nâng cấp, đừng tin rằng chunk vẫn còn nguyên chỗ cũ.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng `onBeforeCompile`:
+
+1. **Set `shader.uniforms.uX` mà quên khai báo `uniform` trong source GLSL.** Trình biên dịch báo lỗi biến chưa khai báo (hoặc tệ hơn, một số driver âm thầm bỏ qua uniform không được tham chiếu) — luôn thêm dòng `uniform ...;` cùng lúc với việc gán giá trị.
+2. **Quên `customProgramCacheKey` khi code chèn phụ thuộc một biến runtime (không phải hằng số).** Vì default cache key chỉ so văn bản hàm `onBeforeCompile` qua `.toString()`, hai material dùng chung factory nhưng khác biến đóng gói có thể bị Three coi là "cùng chương trình" và âm thầm dùng chung.
+3. **Gõ sai tên chunk trong `replace()`.** Không có lỗi biên dịch nào xuất hiện — chuỗi tìm không khớp, code chèn biến mất trong im lặng, và bạn debug nhầm hướng vì tưởng logic sai chứ không nghĩ tới chuỗi tìm sai.
+
+</Callout>
+
+Kỹ thuật string-replace ở đây còn khá thô — bài tiếp theo giới thiệu bản đồ đầy đủ các chunk `#include` trong mọi material built-in của Three, và cách ghi đè một chunk toàn cục qua `THREE.ShaderChunk` thay vì chỉ vá riêng từng material. Xa hơn, Track 12 (Performance) quay lại đúng khái niệm cache key này dưới góc độ hiệu năng: mỗi cache key riêng biệt là một lần shader phải compile — ứng dụng có nhiều biến thể material tuỳ biến (ví dụ InstancedMesh với nhiều loại hiệu ứng khác nhau) càng dễ giật khung hình đầu nếu không pre-warm chương trình trước khi hiển thị.

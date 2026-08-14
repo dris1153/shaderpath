@@ -1,0 +1,51 @@
+## Draw call tốn gì, và vì sao gộp lại thành một đáng giá
+
+Mỗi lần `renderer.render()` chạy, với MỖI mesh riêng biệt trong scene, WebGL thực hiện tối thiểu một lệnh `gl.drawElements`/`gl.drawArrays` — một draw call. Trước khi lệnh đó chạy, driver phải đảm bảo toàn bộ trạng thái GPU (chương trình shader đang bind, buffer đang bind, texture unit, blend mode, ...) khớp với thứ mesh đó cần — bài "Đọc source Three.js" ở Track 3 đã chỉ ra `WebGLState.js` cache lại trạng thái để tránh gọi lặp `gl.enable`/`gl.disable` không cần thiết, nhưng bản thân lệnh draw vẫn có phí cố định trên CPU cho MỖI lần gọi (dựng command, kiểm tra hợp lệ, chuyển qua driver) — ước lượng, phí này gần như KHÔNG phụ thuộc số tam giác trong mesh, chỉ phụ thuộc SỐ LẦN gọi. Vẽ 2000 hộp giống hệt nhau bằng 2000 `THREE.Mesh` riêng là 2000 lần trả phí cố định đó mỗi frame; `InstancedMesh` gộp cả 2000 bản sao vào ĐÚNG MỘT lệnh `gl.drawElementsInstanced` — driver chỉ trả phí cố định một lần, còn 2000 bộ transform khác nhau được đọc thẳng từ một buffer duy nhất ngay trên GPU. Đây chính là chủ đề "Draw Call, Batching & Instancing" ở Track 12; bài này đi sâu vào một trong các kỹ thuật đó — InstancedMesh — với đủ cơ chế bên dưới để dùng đúng, không chỉ dùng được.
+
+## Dựng InstancedMesh: constructor, setMatrixAt, instanceMatrix.needsUpdate
+
+`new THREE.InstancedMesh(geometry, material, count)` (`src/objects/InstancedMesh.js`) nhận đúng geometry và material bạn dùng cho một `THREE.Mesh` thường, cộng thêm `count` — số bản sao tối đa. Constructor tự cấp phát `this.instanceMatrix = new InstancedBufferAttribute(new Float32Array(count * 16), 16)`, tức một buffer 4×4-ma-trận cho MỖI bản sao, mặc định gán identity cho tất cả. Để đặt transform riêng cho bản sao thứ `i`, cách chuẩn là dùng một `THREE.Object3D` "dummy" làm máy tính ma trận:
+
+```js
+const dummy = new THREE.Object3D();
+for (let i = 0; i < count; i++) {
+  dummy.position.set(Math.random() * 10 - 5, 0, Math.random() * 10 - 5);
+  dummy.updateMatrix(); // dummy không nằm trong scene nên không tự update
+  mesh.setMatrixAt(i, dummy.matrix);
+}
+mesh.instanceMatrix.needsUpdate = true; // MỘT lần, sau vòng lặp
+```
+
+`setMatrixAt(i, matrix)` chỉ đơn giản `matrix.toArray(this.instanceMatrix.array, i * 16)` — ghi thẳng 16 số vào đúng vị trí trong buffer, hoàn toàn trên CPU, KHÔNG tự động báo GPU biết buffer đã đổi. `needsUpdate = true` mới là tín hiệu đó; quên dòng này là lỗi phổ biến nhất — code chạy không lỗi, console sạch, nhưng mọi bản sao đứng yên ở gốc toạ độ vì GPU vẫn đang đọc buffer identity ban đầu.
+
+## Tô riêng từng bản sao: instanceColor
+
+`setColorAt(i, color)` hoạt động y hệt `setMatrixAt` nhưng cho màu — gọi lần đầu tự tạo `this.instanceColor` (một `InstancedBufferAttribute` 3 kênh), cũng cần `mesh.instanceColor.needsUpdate = true` sau vòng lặp. Điểm dễ bỏ sót nhất: đọc thẳng `color_fragment.glsl.js` trong `meshphysical.glsl.js` (three@0.185.1) cho thấy nó chỉ nhân `diffuseColor *= vColor` khi `USE_COLOR`/`USE_COLOR_ALPHA` được định nghĩa — điều kiện đó chỉ bật khi bạn set `material.vertexColors = true`, KHÔNG tự bật chỉ vì `instanceColor` tồn tại. Thiếu dòng đó, `setColorAt` vẫn chạy, buffer vẫn có dữ liệu đúng, nhưng vertex shader ghi `vColor` mà fragment shader không bao giờ đọc — mọi bản sao vẫn hiện cùng một màu `material.color`.
+
+## Đi xa hơn: InstancedBufferAttribute cho dữ liệu tuỳ ý
+
+`instanceMatrix`/`instanceColor` chỉ là hai trường hợp built-in của một cơ chế tổng quát hơn: bất kỳ `InstancedBufferAttribute` nào gắn vào geometry đều tự động lặp lại theo TỪNG INSTANCE thay vì từng vertex. Muốn mỗi hộp có một pha dao động riêng (`aPhase`), tạo một `Float32Array` dài `count`, bọc trong `new THREE.InstancedBufferAttribute(array, 1)`, gắn bằng `geometry.setAttribute('aPhase', ...)`, rồi khai báo đúng tên đó trong vertex shader: `attribute float aPhase;`. Cách khai báo này chạy y hệt trong một `ShaderMaterial` viết tay LẪN trong một material có sẵn bị hack qua `onBeforeCompile` — chính là tổng hợp của module này: gắn `aPhase` vào geometry, rồi `.replace()` marker `#include <begin_vertex>` (bài trước) để đọc `aPhase` ngay trong chunk đó. Một lựa chọn khác không tốn buffer: `gl_InstanceID`, biến built-in của WebGL2 cho draw call instanced, cho chỉ số instance miễn phí — đủ dùng khi giá trị per-instance suy ra được thuần bằng công thức từ chỉ số (hash, `sin(float(gl_InstanceID))`), nhưng vô dụng khi giá trị cần là dữ liệu bạn TỰ đặt (trạng thái, health, màu do designer chọn tay) không thể tính lại từ mỗi index.
+
+## Frustum culling: một bounding sphere cho cả field
+
+`computeBoundingSphere()` (`src/objects/InstancedMesh.js`) tính bounding sphere của InstancedMesh bằng cách hợp (`union`) bounding sphere GỐC của geometry, biến đổi qua TỪNG ma trận đã `setMatrixAt` — hoàn toàn trên CPU, dựa trên vị trí bạn ĐẶT, không biết gì về displacement bạn thêm sau đó trong vertex shader (như `aPhase` bob ở trên). Đúng caveat mà bài "Đọc source Three.js" đã nêu cho `frustumCulled` nói chung: nếu biên độ displacement đủ lớn, một số bản sao có thể bị cull nhầm dù vẫn "nhìn thấy được" nhờ hiệu ứng GPU. Cách xử lý: tự nới `boundingSphere.radius` thêm đúng biên độ tối đa sau khi gọi `computeBoundingSphere()`, hoặc tắt hẳn `frustumCulled` nếu field luôn nằm trong khung hình.
+
+## Cập nhật: set-once vs mỗi-frame, và chi phí CPU
+
+Với field tĩnh (đặt một lần lúc khởi tạo), gọi `setMatrixAt` trong vòng lặp rồi `needsUpdate = true` đúng MỘT LẦN là đủ. Với field đổi transform MỖI FRAME (mô phỏng vật lý riêng từng bản sao), vòng lặp JS cộng `matrix.toArray()` cho hàng nghìn instance tốn CPU tỉ lệ thuận với `count`, và mặc định `needsUpdate = true` upload LẠI TOÀN BỘ buffer (`gl.bufferSubData` với toàn bộ mảng — xác nhận trong `WebGLAttributes.js`) dù chỉ vài instance thật sự đổi. `instanceMatrix.addUpdateRange(start, count)` (có sẵn trong `BufferAttribute.js` bản này) giới hạn phần upload lại đúng dải byte đã đổi — đáng cân nhắc khi field lớn nhưng mỗi frame chỉ vài instance thật sự động.
+
+## Khi nào instancing thắng, khi nào không
+
+InstancedMesh thắng khi: cùng một geometry + material, cần TRUYỀN transform/attribute riêng cho từng bản sao, số lượng đủ lớn để phí draw call thật sự đáng kể (hàng trăm tới hàng chục nghìn). Object KHÔNG BAO GIỜ di chuyển riêng lẻ sau khi dựng cảnh và không cần phân biệt attribute thì gộp hẳn geometry bằng `BufferGeometryUtils.mergeGeometries` (Track 12) rẻ hơn — không cần buffer instance. Object chỉ cần hiển thị dạng chấm/billboard chứ không cần khối 3D thật (particle nhỏ, sao trên trời) thì `THREE.Points` với một `BufferGeometry` chứa hàng trăm nghìn vị trí trong MỘT draw call còn rẻ hơn cả InstancedMesh, đánh đổi lấy khả năng xoay/hình dạng độc lập từng hạt.
+
+Checkpoint cuối module (MeshStandardMaterial nâng cấp) có thể kết hợp thẳng kỹ thuật ở đây với `onBeforeCompile` của hai bài trước để build một hiệu ứng hoàn chỉnh trên hàng nghìn bản sao cùng lúc; Track 9 (GPGPU) đẩy ý tưởng "hàng nghìn instance" này lên hàng triệu bằng cách encode transform vào texture thay vì buffer, cập nhật hoàn toàn trên GPU.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với InstancedMesh:
+
+1. **Quên `instanceMatrix.needsUpdate = true` sau vòng lặp `setMatrixAt`.** Mesh compile sạch, console không báo lỗi gì, nhưng mọi bản sao đứng yên ở gốc toạ độ (ma trận identity) vì GPU chưa từng nhận buffer mới.
+2. **Set `instanceColor` mà quên `material.vertexColors = true`.** Buffer màu có dữ liệu đúng, vertex shader thậm chí ghi `vColor` đúng, nhưng fragment shader không bao giờ đọc nó vì `USE_COLOR` chưa bật — mọi bản sao vẫn hiện đúng một màu `material.color`.
+3. **Update toàn bộ `instanceMatrix` mỗi frame cho hàng nghìn instance mà không cân nhắc `addUpdateRange`.** Kết quả vẫn đúng, nhưng mỗi frame re-upload nguyên buffer lên GPU dù phần lớn instance không đổi — dễ thành bottleneck CPU→GPU trước cả khi bản thân GPU bận.
+
+</Callout>

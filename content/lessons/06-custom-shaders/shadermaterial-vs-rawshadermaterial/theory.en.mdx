@@ -1,0 +1,99 @@
+## ShaderMaterial: You Write the Body, Three Writes the Header
+
+`THREE.ShaderMaterial` is the fastest way to get full control over your vertex/fragment shaders while staying inside Three's ecosystem — camera, scene graph, and the render loop all keep working, no need to rebuild them by hand like in Track 1. What sets it apart from a shader written "from zero": before your `vertexShader`/`fragmentShader` strings are handed to the GLSL compiler, Three silently prepends a block of code — a **prelude** — packed with `precision`, `#define`, `attribute` and `uniform` declarations. You never write them, but they're available in your shader exactly as if you'd declared them yourself.
+
+## The Real Prelude Three Injects: Verified Straight From Source
+
+Don't take this list on faith — `src/renderers/webgl/WebGLProgram.js` (three@0.185.1, tag `r185`) is where Three assembles the final shader string, and for a regular `ShaderMaterial` (not Raw), the vertex prefix always carries these exact six uniform lines, unchanged across recent releases:
+
+```glsl
+uniform mat4 modelMatrix;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat3 normalMatrix;
+uniform vec3 cameraPosition;
+```
+
+(Three also quietly adds `uniform bool isOrthographic;` right after — rarely used directly, but free all the same.) Right after the uniform block come three attributes present on every `BufferGeometry`:
+
+```glsl
+attribute vec3 position;
+attribute vec3 normal;
+attribute vec2 uv;
+```
+
+Ahead of all of that sits a `precision highp float;` block (plus `int` and the entire `sampler2D`/`samplerCube`/… family), and two lines — `#define SHADER_TYPE ShaderMaterial` / `#define SHADER_NAME ...` — what this lesson lumps together as "common #define". A handful of other attributes (`uv1`, `uv2`, `tangent`, `color`, `skinIndex`/`skinWeight`, `instanceMatrix`) get injected too, but only when the geometry/material actually needs them — wrapped in `#ifdef`, unlike the six uniforms and three attributes above, which are always there.
+
+## A Minimal ShaderMaterial: Project Position, Color by UV
+
+Thanks to that prelude, a working `ShaderMaterial` needs only a handful of body lines:
+
+```glsl
+// vertex
+varying vec2 vUv;
+void main() {
+  vUv = uv; // "uv" was never declared by you — Three already did it
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+```
+
+```glsl
+// fragment
+precision highp float;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = vec4(vUv, 0.5, 1.0);
+}
+```
+
+Not a single built-in `uniform`/`attribute` declaration shows up — `uv`, `position`, `projectionMatrix`, `modelViewMatrix` all arrive courtesy of the prelude. This lesson's demo uses the exact same idiom on a torus knot, adding only `normalMatrix` (also free) to color by the surface normal.
+
+## RawShaderMaterial: Zero Prelude — You Declare EVERYTHING
+
+`RawShaderMaterial` actually extends `ShaderMaterial`, flipping on nothing more than an `isRawShaderMaterial = true` flag — but when that flag is set, the prelude-building branch inside `WebGLProgram.js` takes a completely different path: no `precision`, no `attribute`, not a single built-in `uniform` — just `#define SHADER_TYPE`/`#define SHADER_NAME` and your own custom `defines`. The class's own JSDoc says it plainly: it "works just like ShaderMaterial, except that definitions of built-in uniforms and attributes are not automatically prepended." Take the exact same ShaderMaterial snippet above, switch it to Raw, and it fails to compile on the very first line that touches `uv`/`position`/`projectionMatrix` — because nobody declared them. You have to write the whole thing yourself:
+
+```glsl
+precision highp float;
+attribute vec3 position;
+attribute vec2 uv;
+uniform mat4 projectionMatrix;
+uniform mat4 modelViewMatrix;
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+```
+
+## glslVersion: Implicit GLSL ES 1.00 vs Explicit GLSL ES 3.00
+
+`RawShaderMaterial` exposes a `glslVersion` property (default `null`). On Raw, this is the switch that decides whether a `#version` line shows up at all: leave it `null` and Three inserts no `#version` — WebGL2 silently treats a shader with no `#version` as GLSL ES 1.00 (`attribute`/`varying`/`gl_FragColor` syntax, no `in`/`out`); set `material.glslVersion = THREE.GLSL3` and Three inserts `#version 300 es\n` up top, forcing you into real ES 3.00 syntax — `in`/`out` instead of `attribute`/`varying`, your own `out vec4` output variable instead of `gl_FragColor`. Non-raw `ShaderMaterial` behaves quite differently: Three always compiles it under `#version 300 es` regardless of `glslVersion`, then quietly adds macros — `#define attribute in` / `#define varying out` — so the familiar ES 1.00 syntax keeps working. That's exactly why inspecting a compiled shader in DevTools always shows `in`/`out`, even when you typed `attribute`/`varying`.
+
+## When Raw Is Right: Sharing Shaders, Avoiding Collisions, Full Control
+
+Three practical reasons to reach for Raw instead of ShaderMaterial:
+
+- **Sharing shader source with a pipeline that isn't Three** — the exact raw WebGL2 program you hand-wrote in Track 1 (`gl.createProgram`, your own `bufferData`, your own location queries). If a shader must run both inside Three and inside a hand-rolled context, it can't depend on a prelude only Three injects — Raw gives you GLSL identical to a plain shader, runnable in both places.
+- **Avoiding name collisions** when you genuinely need a variable named `modelMatrix` or `normal` to mean something else (rare, but it happens when porting a shader from another engine).
+- **Full control over every declaration** — knowing exactly which `uniform`/`attribute` exists in the shader instead of guessing what a hidden prelude contains, useful when debugging a confusing compile error or trimming the varying count.
+
+## The Mental Model: ShaderMaterial = GLSL Plus a Three-Shaped Header
+
+The tightest way to remember it: `ShaderMaterial` is plain GLSL plus a fixed header Three writes for you, shaped exactly like what it needs (camera, transforms, standard geometry) — you only write the body. `RawShaderMaterial` drops that header entirely, handing you a blank GLSL page, the same feeling as hand-writing `gl.shaderSource()` in Track 1. This platform's GLSL Playground applies the exact same idea at a smaller scale: you only type the body, `void main() {...}`, while `uTime`/`uResolution`/`uMouse`/`fragColor` already exist courtesy of the playground's own fixed prelude — try it below to feel "you write the body, the prelude handles the header" before applying that same idea to a real ShaderMaterial.
+
+<Playground source={"void main() {\n  // The playground has no vertex-stage varying vUv like a real ShaderMaterial,\n  // so fake one from gl_FragCoord/uResolution instead.\n  vec2 fakeUv = gl_FragCoord.xy / uResolution;\n  fragColor = vec4(fakeUv, 0.5, 1.0);\n}\n"} />
+
+## Where This Leads: onBeforeCompile and Hacking Built-in Materials
+
+The next lesson in this module (Three's Built-in Injected Uniforms) digs deeper into every uniform in that prelude — who updates it, and how often. Further out, this track's "Hacking Built-in Materials" module uses `onBeforeCompile` to inject code into `MeshStandardMaterial`'s far larger prelude (dozens of `#define USE_MAP`, `USE_ENVMAP`, … depending which features are enabled) — the exact same prelude-building mechanism you just read straight from source, just applied to a much more complex material.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when choosing between these two material types:
+
+1. **Copying a ShaderMaterial shader verbatim into RawShaderMaterial and being surprised by compile errors.** `uv`, `position`, `projectionMatrix`, `normalMatrix`, `precision` — none of them exist anymore; missing any one of these declarations makes Raw fail on the very first line that touches it.
+2. **Assuming RawShaderMaterial is "faster" because it skips code.** The prelude Three prepends carries no meaningful runtime cost — it's just text concatenated onto the shader string before a single compile pass (programs are cached by `cacheKey`). Reach for Raw for control/compatibility reasons, not for performance.
+3. **Forgetting to set `precision` in RawShaderMaterial out of habit from ShaderMaterial handling it automatically.** Regular ShaderMaterial ships with a `precision highp float;` block built in; Raw doesn't — skipping this line often still compiles on desktop Chrome (the driver picks a default for you) but hard-fails on many mobile drivers, exactly the trap the Track 2 precision-qualifier lesson warned about.
+
+</Callout>
