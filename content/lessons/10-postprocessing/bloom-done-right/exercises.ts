@@ -36,19 +36,14 @@ Without running any code, explain which sphere the bloom pass actually "sees" as
         en: "I identify saturate()/clamp inside the tonemapping curve as the mechanism, not just a vague 'A looks dimmer' explanation",
       },
     ],
-    solutionCode: `// Sphere A (toneMapped: true, mặc định):
-// toneMapping hiệu lực = material.toneMapped ? renderer.toneMapping : NoToneMapping
-//                       = true ? ACESFilmicToneMapping : ...
-//                       = ACESFilmicToneMapping
-// -> fragment shader gọi ACESFilmicToneMapping(color), hàm này return saturate(color)
-// -> luminance 2.4 bị clamp về xấp xỉ ~1.0 trước khi ghi vào readBuffer
-// -> UnrealBloomPass đọc luminance ~1.0 < threshold 1.3 -> KHÔNG bloom
+    solutionNote: {
+      vi: `Sphere A (\`toneMapped: true\`, mặc định): toneMapping hiệu lực $=$ \`material.toneMapped ? renderer.toneMapping : NoToneMapping\` $=$ \`true ? ACESFilmicToneMapping : ...\` $=$ \`ACESFilmicToneMapping\`. Fragment shader gọi \`ACESFilmicToneMapping(color)\`, hàm này trả về \`saturate(color)\`, nên luminance $2.4$ bị clamp về xấp xỉ $1.0$ trước khi ghi vào \`readBuffer\`. \`UnrealBloomPass\` đọc được luminance $\\approx 1.0 < 1.3$ (threshold), nên KHÔNG bloom.
 
-// Sphere B (toneMapped: false):
-// toneMapping hiệu lực = false ? ... : NoToneMapping = NoToneMapping
-// -> #if defined(TONE_MAPPING) là false cho riêng material này -> không saturate
-// -> luminance 2.4 đi thẳng vào buffer HalfFloat, nguyên vẹn
-// -> UnrealBloomPass đọc luminance 2.4 > threshold 1.3 -> CÓ bloom`,
+Sphere B (\`toneMapped: false\`): toneMapping hiệu lực $=$ \`false ? ... : NoToneMapping\` $=$ \`NoToneMapping\`. \`#if defined(TONE_MAPPING)\` là false cho riêng material này nên không có bước saturate — luminance $2.4$ đi thẳng vào buffer HalfFloat, nguyên vẹn. \`UnrealBloomPass\` đọc được luminance $2.4 > 1.3$ (threshold), nên CÓ bloom.`,
+      en: `Sphere A (\`toneMapped: true\`, the default): the effective toneMapping $=$ \`material.toneMapped ? renderer.toneMapping : NoToneMapping\` $=$ \`true ? ACESFilmicToneMapping : ...\` $=$ \`ACESFilmicToneMapping\`. The fragment shader calls \`ACESFilmicToneMapping(color)\`, which returns \`saturate(color)\`, so a luminance of $2.4$ gets clamped down to approximately $1.0$ before it's written into \`readBuffer\`. \`UnrealBloomPass\` reads a luminance of $\\approx 1.0 < 1.3$ (the threshold), so it does NOT bloom.
+
+Sphere B (\`toneMapped: false\`): the effective toneMapping $=$ \`false ? ... : NoToneMapping\` $=$ \`NoToneMapping\`. \`#if defined(TONE_MAPPING)\` is false for that specific material, so there's no saturate step — the luminance $2.4$ goes straight into the HalfFloat buffer untouched. \`UnrealBloomPass\` reads a luminance of $2.4 > 1.3$ (the threshold), so it DOES bloom.`,
+    },
   },
   {
     id: "write-emitter-vs-surface-materials",

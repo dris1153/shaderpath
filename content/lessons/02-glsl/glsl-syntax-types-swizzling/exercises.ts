@@ -52,13 +52,14 @@ Then explain line (e) specifically: why its error has nothing to do with int/flo
         en: "I correctly explained that (e) fails because .z doesn't exist on a vec2 — a swizzle-out-of-range error, a completely different mechanism from the (a)/(b) type-cast errors",
       },
     ],
-    solutionCode: `// (a) LỖI — 1 là literal int, không gán thẳng được cho float (không ép kiểu ngầm)
-// (b) LỖI — 2.0 là literal float, không gán thẳng được cho int
-// (c) OK  — vec3(1.0) là splat constructor: 1 số lặp vào cả 3 thành phần
-// (d) OK  — .xy đọc 2 trong 3 thành phần của vec3, cả x và y đều tồn tại
-// (e) LỖI — vec2(0.1, 0.2) chỉ có x và y; .xyz đòi hỏi thành phần z không
-//     tồn tại trên vector nguồn -> lỗi "swizzle vượt phạm vi", KHÔNG liên
-//     quan gì tới ép kiểu int/float như (a)/(b).`,
+    solutionNote: {
+      vi: `(a) LỖI — \`1\` là literal \`int\`, không gán thẳng được cho \`float\` (không ép kiểu ngầm). (b) LỖI — \`2.0\` là literal \`float\`, không gán thẳng được cho \`int\`. (c) OK — \`vec3(1.0)\` là splat constructor: 1 số lặp vào cả 3 thành phần. (d) OK — \`.xy\` đọc 2 trong 3 thành phần của \`vec3\`, cả \`x\` và \`y\` đều tồn tại.
+
+(e) LỖI — \`vec2(0.1, 0.2)\` chỉ có \`x\` và \`y\`; \`.xyz\` đòi hỏi thành phần \`z\` không tồn tại trên vector nguồn → lỗi "swizzle vượt phạm vi", KHÔNG liên quan gì tới ép kiểu int/float như (a)/(b).`,
+      en: `(a) FAILS — \`1\` is an \`int\` literal, it can't be assigned directly to a \`float\` (no implicit casting). (b) FAILS — \`2.0\` is a \`float\` literal, it can't be assigned directly to an \`int\`. (c) OK — \`vec3(1.0)\` is a splat constructor: one number repeated into all 3 components. (d) OK — \`.xy\` reads 2 of the 3 components of a \`vec3\`, and both \`x\` and \`y\` exist.
+
+(e) FAILS — \`vec2(0.1, 0.2)\` only has \`x\` and \`y\`; \`.xyz\` demands a \`z\` component that doesn't exist on the source vector → a "swizzle out of range" error, which has NOTHING to do with the int/float casting mechanism behind (a)/(b).`,
+    },
   },
   {
     id: "swizzle-color-channels",

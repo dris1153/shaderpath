@@ -40,15 +40,14 @@ Then explain: why does the DevTools FPS counter usually still read ~60fps even w
         en: "I identified that this wasted time shows up in the \"Rendering\"/GPU block in DevTools Performance, not in the FPS number itself",
       },
     ],
-    solutionCode: `// 60 frame/giây × 1 lệnh render thừa/frame × 3ms/lệnh = 180ms lãng phí MỖI GIÂY.
-// Tính theo % ngân sách: 3ms thừa trên 16.67ms ngân sách mỗi frame ≈ 18% mỗi frame.
-//
-// FPS đếm số lần trình duyệt hoàn tất một RAF tick và composite lên màn hình —
-// chừng nào tổng công việc trong tick đó (bao gồm cả 2 lệnh render) còn dưới
-// 16.67ms, trình duyệt vẫn kịp 60 tick/giây, nên FPS không đổi. Thời gian lãng
-// phí không "biến mất" — nó cộng dồn vào khối Rendering/GPU trong tab
-// Performance, và chỉ khi tổng công việc mỗi frame VƯỢT 16.67ms (scene phức
-// tạp hơn, hoặc GPU yếu hơn) thì FPS mới thực sự tụt xuống nhìn thấy được.`,
+    solutionNote: {
+      vi: `60 frame/giây × 1 lệnh render thừa/frame × 3ms/lệnh = 180ms lãng phí MỖI GIÂY. Tính theo % ngân sách: 3ms thừa trên 16.67ms ngân sách mỗi frame ≈ 18% mỗi frame.
+
+FPS đếm số lần trình duyệt hoàn tất một RAF tick và composite lên màn hình — chừng nào tổng công việc trong tick đó (bao gồm cả 2 lệnh render) còn dưới 16.67ms, trình duyệt vẫn kịp 60 tick/giây, nên FPS không đổi. Thời gian lãng phí không "biến mất" — nó cộng dồn vào khối Rendering/GPU trong tab Performance, và chỉ khi tổng công việc mỗi frame VƯỢT 16.67ms (scene phức tạp hơn, hoặc GPU yếu hơn) thì FPS mới thực sự tụt xuống nhìn thấy được.`,
+      en: `60 frames/second × 1 extra render call/frame × 3ms/call = 180ms wasted PER SECOND. As a percentage of budget: 3ms extra out of a 16.67ms per-frame budget ≈ 18% per frame.
+
+FPS counts how many times the browser completes a RAF tick and composites to the screen — as long as the total work in that tick (including both render calls) stays under 16.67ms, the browser still manages 60 ticks/second, so FPS doesn't change. The wasted time doesn't "disappear" — it accumulates in the Rendering/GPU block of the Performance tab, and only once the per-frame work actually EXCEEDS 16.67ms (a more complex scene, or a weaker GPU) does FPS visibly drop.`,
+    },
   },
   {
     id: "fix-competing-render-loops",
@@ -69,8 +68,8 @@ interface FakeScrollTrigger {
   onUpdate: (fn: (progress: number) => void) => void;
 }
 
-// SAI: hàm này vừa ghi progress, vừa tự gọi render qua ticker — hai
-// nguồn render cạnh tranh cho cùng một cảnh.
+// WRONG: this function both writes progress AND calls render itself via
+// ticker — two render sources competing for the same scene.
 function wireCamera(
   scrollTrigger: FakeScrollTrigger,
   ticker: FakeTicker,
@@ -80,7 +79,7 @@ function wireCamera(
   scrollTrigger.onUpdate((p) => {
     progress.value = p;
   });
-  // TODO: xoá render loop thứ hai này — R3F đã tự render qua useFrame
+  // TODO: remove this second render loop — R3F already renders via useFrame
   ticker.add(() => render());
   return progress;
 }`,
@@ -92,8 +91,8 @@ interface FakeScrollTrigger {
   onUpdate: (fn: (progress: number) => void) => void;
 }
 
-// Đúng: ScrollTrigger chỉ mutate progress — không có lệnh render nào ở
-// đây cả. useFrame bên R3F đọc progress.value và tự quyết định khi render.
+// Correct: ScrollTrigger only mutates progress — no render call anywhere
+// here. useFrame on the R3F side reads progress.value and decides when to render.
 function wireCamera(scrollTrigger: FakeScrollTrigger): Progress {
   const progress: Progress = { value: 0 };
   scrollTrigger.onUpdate((p) => {

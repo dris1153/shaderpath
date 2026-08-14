@@ -18,7 +18,7 @@ Suggested structure: a \`hand(angle, length)\` helper returning the hand's endpo
     },
     starterCode: `const canvas = document.querySelector("canvas")!;
 const ctx = canvas.getContext("2d")!;
-const R = 140; // bán kính mặt đồng hồ / clock face radius
+const R = 140; // clock face radius
 
 function draw() {
   const { width: W, height: H } = canvas;
@@ -26,16 +26,16 @@ function draw() {
   const cx = W / 2, cy = H / 2;
   const now = new Date();
 
-  // TODO 1: vẽ 12 vạch giờ — góc thứ i là i * (Math.PI / 6)
-  // TODO 2: tính góc 3 kim (chú ý: kim giờ trôi theo phút!)
-  // TODO 3: vẽ kim = đoạn thẳng từ (cx, cy) đến điểm cuối vector
+  // TODO 1: draw 12 hour marks — angle for mark i is i * (Math.PI / 6)
+  // TODO 2: compute the angles of the 3 hands (careful: the hour hand drifts with the minutes!)
+  // TODO 3: draw each hand as a line from (cx, cy) to the vector's endpoint
 
   requestAnimationFrame(draw);
 }
 draw();`,
     solutionCode: `function hand(cx: number, cy: number, angle: number, len: number) {
-  // Góc 0 ở hướng 12h, quay theo chiều kim đồng hồ:
-  // x = sin, y = -cos (trục y canvas hướng xuống)
+  // Angle 0 points to 12 o'clock, rotating clockwise:
+  // x = sin, y = -cos (canvas y axis points down)
   return [cx + Math.sin(angle) * len, cy - Math.cos(angle) * len] as const;
 }
 
@@ -57,9 +57,9 @@ function draw() {
   const hr = (now.getHours() % 12) + min / 60;
 
   const hands: [number, number, number][] = [
-    [hr * (Math.PI / 6), R * 0.5, 4],   // giờ: 2π/12 mỗi giờ
-    [min * (Math.PI / 30), R * 0.75, 2], // phút: 2π/60 mỗi phút
-    [sec * (Math.PI / 30), R * 0.85, 1], // giây
+    [hr * (Math.PI / 6), R * 0.5, 4],   // hour: 2π/12 per hour
+    [min * (Math.PI / 30), R * 0.75, 2], // minute: 2π/60 per minute
+    [sec * (Math.PI / 30), R * 0.85, 1], // second
   ];
   for (const [angle, len, width] of hands) {
     const [x, y] = hand(cx, cy, angle, len);

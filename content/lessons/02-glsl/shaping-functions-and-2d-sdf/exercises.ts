@@ -36,14 +36,14 @@ Then: to draw an outline with total thickness $0.01$ units using \`smoothstep(w,
         en: "I can explain why the outline thickness is $2w$ (symmetric across both sides of the boundary)",
       },
     ],
-    solutionCode: `// d(p1) = |(0,0)| - 0.3 = -0.3        -> trong hình (âm)
-// d(p2) = |(0.3,0)| - 0.3 = 0.3 - 0.3 = 0 -> đúng trên biên
-// d(p3) = |(0.5,0.2)| - 0.3 = sqrt(0.25+0.04) - 0.3
-//       = sqrt(0.29) - 0.3 ≈ 0.5385 - 0.3 ≈ 0.2385 -> ngoài hình (dương)
-//
-// w = 0.005: smoothstep(w, 0.0, abs(d)) bật lên (giá trị ~1) khi abs(d) < w,
-// tức khi -w < d < w — một dải rộng 2w = 0.01 đơn vị bao quanh d = 0,
-// đối xứng vào TRONG hình lẫn ra NGOÀI hình, không chỉ một phía.`,
+    solutionNote: {
+      vi: `$d(p_1) = \\|(0,0)\\| - 0.3 = -0.3$ → trong hình (âm). $d(p_2) = \\|(0.3,0)\\| - 0.3 = 0.3-0.3 = 0$ → đúng trên biên. $d(p_3) = \\|(0.5,0.2)\\| - 0.3 = \\sqrt{0.25+0.04}-0.3 = \\sqrt{0.29}-0.3 \\approx 0.5385-0.3 \\approx 0.2385$ → ngoài hình (dương).
+
+Với $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` bật lên (giá trị $\\approx 1$) khi $|d| < w$, tức khi $-w < d < w$ — một dải rộng $2w = 0.01$ đơn vị bao quanh $d = 0$, đối xứng vào TRONG hình lẫn ra NGOÀI hình, không chỉ một phía.`,
+      en: `$d(p_1) = \\|(0,0)\\| - 0.3 = -0.3$ → inside the shape (negative). $d(p_2) = \\|(0.3,0)\\| - 0.3 = 0.3-0.3 = 0$ → exactly on the boundary. $d(p_3) = \\|(0.5,0.2)\\| - 0.3 = \\sqrt{0.25+0.04}-0.3 = \\sqrt{0.29}-0.3 \\approx 0.5385-0.3 \\approx 0.2385$ → outside the shape (positive).
+
+With $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` turns on (value $\\approx 1$) when $|d| < w$, i.e. when $-w < d < w$ — a band $2w = 0.01$ units wide surrounding $d = 0$, symmetric both INSIDE and OUTSIDE the shape, not just one side.`,
+    },
   },
   {
     id: "mouse-circle-with-glow",
@@ -57,17 +57,17 @@ Then: to draw an outline with total thickness $0.01$ units using \`smoothstep(w,
   vec2 p = uv - uMouse;
   float r = 0.15;
 
-  // TODO 1: SDF hình tròn tâm chuột
+  // TODO 1: circle SDF centred on the mouse
   float d = 0.0;
 
-  // TODO 2: mask mượt quanh d = 0 (dải rộng ~0.01: dùng smoothstep(-0.005, 0.005, d))
+  // TODO 2: smooth mask around d = 0 (band ~0.01 wide: use smoothstep(-0.005, 0.005, d))
   float mask = 0.0;
 
   vec3 shapeColor = vec3(0.98, 0.45, 0.2);
   vec3 bg = vec3(0.05, 0.06, 0.1);
   vec3 color = mix(shapeColor, bg, mask);
 
-  // TODO 3: cộng glow phía ngoài hình bằng exp(-k * max(d, 0.0))
+  // TODO 3: add an outer glow with exp(-k * max(d, 0.0))
   color += vec3(0.3, 0.6, 1.0) * 0.0;
 
   fragColor = vec4(color, 1.0);

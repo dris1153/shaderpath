@@ -40,18 +40,18 @@ Explain in words: what does a positive divergence at this cell say about the flo
         en: "Can explain positive divergence as a local source (net outflow), not a 'calculation error'",
       },
     ],
-    solutionCode: `// div = 0.5 * ((0.30 - (-0.10)) + (0.15 - (-0.05)))
-//     = 0.5 * (0.40 + 0.20) = 0.5 * 0.60 = 0.30
-//
-// p = (0.10 + 0.05 + 0.0 + 0.02 - 0.30) * 0.25
-//   = (0.17 - 0.30) * 0.25 = (-0.13) * 0.25 = -0.0325
-//
-// Divergence dương = ô này là "nguồn" cục bộ (dòng ra > dòng vào theo phép
-// đo sai phân). Project sẽ trừ gradient áp suất khỏi vận tốc; để việc trừ
-// đó ĐẨY dòng chảy quay ngược vào ô (triệt tiêu nguồn giả này), áp suất
-// quanh ô phải THẤP hơn các ô xung quanh — nên dù 4 áp suất hàng xóm đều
-// không âm, kết quả Jacobi vẫn âm: đó chính là cách nghiệm "kéo" divergence
-// về 0 sau đủ vòng lặp.`,
+    solutionNote: {
+      vi: `$\\text{div} = 0.5 \\times ((0.30 - (-0.10)) + (0.15 - (-0.05))) = 0.5 \\times (0.40 + 0.20) = 0.30$
+
+$p = (0.10 + 0.05 + 0.0 + 0.02 - 0.30) \\times 0.25 = (0.17 - 0.30) \\times 0.25 = -0.0325$
+
+Divergence dương nghĩa là ô này là một "nguồn" cục bộ (dòng ra nhiều hơn dòng vào theo phép đo sai phân). Bước project sẽ trừ gradient áp suất khỏi vận tốc; để phép trừ đó đẩy dòng chảy quay ngược vào ô (triệt tiêu nguồn giả này), áp suất quanh ô phải thấp hơn các ô xung quanh — nên dù bốn áp suất hàng xóm đều không âm, kết quả Jacobi vẫn ra âm: đó chính là cách nghiệm "kéo" divergence về 0 sau đủ vòng lặp.`,
+      en: `$\\text{div} = 0.5 \\times ((0.30 - (-0.10)) + (0.15 - (-0.05))) = 0.5 \\times (0.40 + 0.20) = 0.30$
+
+$p = (0.10 + 0.05 + 0.0 + 0.02 - 0.30) \\times 0.25 = (0.17 - 0.30) \\times 0.25 = -0.0325$
+
+A positive divergence means this cell is a local "source" (more outflow than inflow by the finite-difference measure). The project step subtracts the pressure gradient from velocity; for that subtraction to push flow back into the cell (canceling out this fake source), the pressure around it must be lower than its neighbors — so even with all four neighbor pressures non-negative, the Jacobi result still comes out negative: that's exactly how the solution "pulls" divergence toward 0 over enough iterations.`,
+    },
   },
   {
     id: "jacobi-pressure-step-ts",

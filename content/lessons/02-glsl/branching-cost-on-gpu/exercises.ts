@@ -36,14 +36,14 @@ Question: in this 32-lane warp, how many lanes take the heavy branch, and how ma
         en: "I can explain the total cost ≈ heavy branch cost + light branch cost, for the WHOLE warp — not just the heavy branch's cost for 16 lanes",
       },
     ],
-    solutionCode: `// 32 lane liên tiếp, chẵn/lẻ xen kẽ từng pixel một → đúng 16 lane chẵn,
-// 16 lane lẻ. Vì cả hai nhóm cùng tồn tại trong MỘT warp, warp này phân kỳ.
-//
-// Chi phí thực thi: phần cứng chạy nhánh nặng cho cả 32 lane (chỉ 16 lane
-// ghi kết quả, 16 lane còn lại bị execution-mask tắt), rồi chạy tiếp nhánh
-// nhẹ cho cả 32 lane (đảo lại mask). Tổng chi phí ≈ cost(nặng) + cost(nhẹ)
-// cho toàn warp — tệ hơn nhiều so với một warp không phân kỳ, nơi chi phí
-// chỉ là cost(một nhánh duy nhất) vì không cần chạy nhánh còn lại.`,
+    solutionNote: {
+      vi: `32 lane liên tiếp, chẵn/lẻ xen kẽ từng pixel một → đúng 16 lane chẵn, 16 lane lẻ. Vì cả hai nhóm cùng tồn tại trong MỘT warp, warp này phân kỳ (divergent).
+
+Chi phí thực thi: phần cứng chạy nhánh nặng cho cả 32 lane (chỉ 16 lane ghi kết quả, 16 lane còn lại bị execution-mask tắt), rồi chạy tiếp nhánh nhẹ cho cả 32 lane (đảo lại mask). Tổng chi phí xấp xỉ chi phí nhánh nặng cộng chi phí nhánh nhẹ, cho toàn bộ warp — tệ hơn nhiều so với một warp không phân kỳ, nơi chi phí chỉ là chi phí của một nhánh duy nhất vì không cần chạy nhánh còn lại.`,
+      en: `32 consecutive lanes, even/odd alternating every pixel → exactly 16 even lanes, 16 odd lanes. Since both groups exist within a SINGLE warp, this warp is divergent.
+
+Execution cost: the hardware runs the heavy branch for all 32 lanes (only 16 lanes write results, the other 16 are masked off by the execution mask), then runs the light branch for all 32 lanes (mask flipped). Total cost is roughly the heavy branch's cost plus the light branch's cost, for the whole warp — far worse than a non-divergent warp, where the cost is just a single branch's cost, since the other branch never needs to run.`,
+    },
   },
   {
     id: "rewrite-radial-mask-branchless",
@@ -57,8 +57,8 @@ Question: in this 32-lane warp, how many lanes take the heavy branch, and how ma
   float d = distance(uv, vec2(0.5));
 
   vec3 color;
-  // TODO: thay khối if/else dưới đây bằng MỘT biểu thức branchless
-  // dùng step (hoặc mix) — giữ nguyên kết quả hình ảnh, không dùng if.
+  // TODO: replace the if/else block below with ONE branchless expression
+  // using step (or mix) — keep the visual result identical, no if.
   if (d < 0.3) {
     color = vec3(0.95, 0.6, 0.2);
   } else {

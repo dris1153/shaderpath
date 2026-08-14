@@ -36,14 +36,14 @@ Compute the estimated total VRAM (RGBA8, with the ×4/3 mip chain) for all four 
         en: "Explains that VRAM holds decoded data while disk size is compressed data — the two aren't directly related",
       },
     ],
-    solutionCode: `// Một texture: 1024 * 1024 * 4 byte = 4,194,304 byte (base level)
-// Có mip chain: 4,194,304 * 4/3 ≈ 5,592,405 byte ≈ 5.6MB
-// Bốn texture cùng cấu hình: 5.6MB * 4 ≈ 22.4MB VRAM
-//
-// So với 1.8MB trên đĩa: gấp hơn 12 lần. Lý do trong một câu: dung lượng
-// đĩa là dữ liệu JPG/PNG đã NÉN, còn VRAM luôn lưu ảnh đã GIẢI MÃ hoàn
-// toàn cộng mip chain — hai con số đo hai giai đoạn khác nhau của cùng
-// một texture, không tỉ lệ thuận với nhau.`,
+    solutionNote: {
+      vi: `Một texture: 1024 × 1024 × 4 byte = 4,194,304 byte (base level). Có mip chain: 4,194,304 × 4/3 ≈ 5,592,405 byte ≈ 5.6MB. Bốn texture cùng cấu hình: 5.6MB × 4 ≈ 22.4MB VRAM.
+
+So với 1.8MB trên đĩa: gấp hơn 12 lần. Lý do trong một câu: dung lượng đĩa là dữ liệu JPG/PNG đã NÉN, còn VRAM luôn lưu ảnh đã GIẢI MÃ hoàn toàn cộng mip chain — hai con số đo hai giai đoạn khác nhau của cùng một texture, không tỉ lệ thuận với nhau.`,
+      en: `One texture: 1024 × 1024 × 4 bytes = 4,194,304 bytes (base level). With the mip chain: 4,194,304 × 4/3 ≈ 5,592,405 bytes ≈ 5.6MB. Four textures at the same size: 5.6MB × 4 ≈ 22.4MB VRAM.
+
+Compared to the 1.8MB on disk: more than 12x larger. The reason in one sentence: the on-disk size is COMPRESSED JPG/PNG data, while VRAM always holds the fully DECODED image plus its mip chain — the two numbers measure two different stages of the same texture, with no direct proportional relationship.`,
+    },
   },
   {
     id: "configure-tiling-road-texture",
@@ -56,11 +56,11 @@ Compute the estimated total VRAM (RGBA8, with the ×4/3 mip chain) for all four 
   texture: THREE.CanvasTexture,
   renderer: THREE.WebGLRenderer,
 ): THREE.CanvasTexture {
-  // TODO: wrapS = ClampToEdge (không lặp ngang), wrapT = Repeat (lặp dọc)
-  // TODO: texture.repeat.set(u, v) — 1 theo u, 30 theo v
-  // TODO: minFilter/magFilter cho trilinear mipmap đầy đủ
-  // TODO: anisotropy = mức tối đa GPU hỗ trợ, đọc từ renderer.capabilities
-  // TODO: needsUpdate = true để áp dụng mọi thay đổi ở trên
+  // TODO: wrapS = ClampToEdge (no horizontal repeat), wrapT = Repeat (vertical repeat)
+  // TODO: texture.repeat.set(u, v) — 1 along u, 30 along v
+  // TODO: minFilter/magFilter for full trilinear mipmap filtering
+  // TODO: anisotropy = the max the GPU supports, read from renderer.capabilities
+  // TODO: needsUpdate = true to apply every change above
   return texture;
 }`,
     solutionCode: `function makeRoadTexture(

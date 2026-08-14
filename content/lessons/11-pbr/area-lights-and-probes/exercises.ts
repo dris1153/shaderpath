@@ -36,14 +36,18 @@ Then, keeping that same \`intensity\`, double BOTH width and height (to $8\\text
         en: "I can explain why power scales with AREA (width × height), not linearly with either edge alone",
       },
     ],
-    solutionCode: `// intensity = power / (width * height * Math.PI)
-// intensity = 2000 / (4 * 1.5 * Math.PI) = 2000 / 18.8496 ≈ 106.1
+    solutionNote: {
+      vi: `$intensity = 2000 / (4 \\times 1.5 \\times \\pi) = 2000 / 18.8496 \\approx 106.1$.
 
-// Doubling width AND height: new area = 8 * 3 = 24 (was 4 * 1.5 = 6, exactly 4×)
-// newPower = intensity * newArea * Math.PI = 106.1 * 24 * Math.PI ≈ 8000
-//
-// Power scales with AREA, and area is the PRODUCT of two dimensions — doubling
-// both multiplies area (and therefore power, at fixed intensity) by 2 * 2 = 4.`,
+Nhân đôi cả width và height: diện tích mới $= 8 \\times 3 = 24$ (trước đó $4 \\times 1.5 = 6$, đúng gấp 4 lần). $newPower = intensity \\times newArea \\times \\pi = 106.1 \\times 24 \\times \\pi \\approx 8000$.
+
+Power tỉ lệ với DIỆN TÍCH, và diện tích là TÍCH của hai chiều — nhân đôi cả hai chiều nhân diện tích (và do đó power, ở intensity cố định) lên $2 \\times 2 = 4$ lần.`,
+      en: `$intensity = 2000 / (4 \\times 1.5 \\times \\pi) = 2000 / 18.8496 \\approx 106.1$.
+
+Doubling both width and height: new area $= 8 \\times 3 = 24$ (was $4 \\times 1.5 = 6$, exactly 4×). $newPower = intensity \\times newArea \\times \\pi = 106.1 \\times 24 \\times \\pi \\approx 8000$.
+
+Power scales with AREA, and area is the PRODUCT of two dimensions — doubling both multiplies area (and therefore power, at fixed intensity) by $2 \\times 2 = 4$.`,
+    },
   },
   {
     id: "lerp-spherical-harmonics",
@@ -53,8 +57,8 @@ Then, keeping that same \`intensity\`, double BOTH width and height (to $8\\text
       en: `Write a \`lerpSH\` function that linearly interpolates between two "flattened" Spherical Harmonics coefficient arrays (each 27 numbers: 9 RGB coefficients laid end to end, exactly the format \`SphericalHarmonics3.toArray()\` returns), by a factor $\\alpha \\in [0, 1]$. This is the exact operation behind \`SphericalHarmonics3.lerp(sh, alpha)\`, which this lesson uses to interpolate between two light probes.`,
     },
     starterCode: `function lerpSH(a: number[], b: number[], alpha: number): number[] {
-  // TODO: mỗi phần tử kết quả = a[i] + (b[i] - a[i]) * alpha
-  // (đúng 27 phần tử vào, 27 phần tử ra — không cần biết ý nghĩa từng phần tử)
+  // TODO: each result element = a[i] + (b[i] - a[i]) * alpha
+  // (exactly 27 elements in, 27 elements out — no need to know what each one means)
   return a;
 }`,
     solutionCode: `function lerpSH(a: number[], b: number[], alpha: number): number[] {

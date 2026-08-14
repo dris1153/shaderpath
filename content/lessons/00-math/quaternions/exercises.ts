@@ -36,16 +36,18 @@ Then answer: which rotation does $-q$ (all four components negated) describe com
         en: "I can explain that $-q$ describes the SAME rotation as $q$, and slerp picks $-q_2$ when $q_1 \\cdot q_2 < 0$",
       },
     ],
-    solutionCode: `// theta/2 = 60°, sin(60°) ≈ 0.866, cos(60°) = 0.5
-// q = ((0,0,1) * 0.866, 0.5) = (0, 0, 0.866, 0.5)
-// ||q|| = sqrt(0^2 + 0^2 + 0.866^2 + 0.5^2) = sqrt(0.75 + 0.25) = 1  ✓
-//
-// -q = (0, 0, -0.866, -0.5) mo ta CUNG mot phep xoay voi q (double cover:
-// R(q) = R(-q), vi ma tran xoay chi chua tich tung cap thanh phan).
-//
-// slerp(q1, q2, t) di qua -q2 thay vi q2 khi dot(q1, q2) < 0 — tuc goc do
-// truc tiep giua hai quaternion lon hon 90°, nen dao dau mot cai truoc khi
-// slerp moi ra duong ngan nhat tren mat cau S^3.`,
+    solutionNote: {
+      vi: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = ((0,0,1)\\times 0.866,\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
+
+$-q = (0, 0, -0.866, -0.5)$ mô tả CÙNG một phép xoay với $q$ (double cover: $R(q) = R(-q)$, vì ma trận xoay chỉ chứa tích từng cặp thành phần).
+
+$\\mathrm{slerp}(q_1, q_2, t)$ đi qua $-q_2$ thay vì $q_2$ khi $\\mathrm{dot}(q_1, q_2) < 0$ — tức góc đo trực tiếp giữa hai quaternion lớn hơn $90^\\circ$, nên đảo dấu một cái trước khi slerp mới ra đường ngắn nhất trên mặt cầu $S^3$.`,
+      en: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = ((0,0,1)\\times 0.866,\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
+
+$-q = (0, 0, -0.866, -0.5)$ describes the SAME rotation as $q$ (double cover: $R(q) = R(-q)$, since the rotation matrix only contains products of pairs of components).
+
+$\\mathrm{slerp}(q_1, q_2, t)$ goes through $-q_2$ instead of $q_2$ when $\\mathrm{dot}(q_1, q_2) < 0$ — meaning the angle directly between the two quaternions exceeds $90^\\circ$, so one needs to be negated before slerp takes the shortest path on the $S^3$ sphere.`,
+    },
   },
   {
     id: "axis-angle-to-quaternion-code",
@@ -58,9 +60,9 @@ Then answer: which rotation does $-q$ (all four components negated) describe com
 interface Vec3 { x: number; y: number; z: number }
 
 function axisAngleToQuaternion(axis: Vec3, angleRad: number): Quat {
-  // TODO 1: tính length(axis); nếu quá nhỏ, dùng trục mặc định (0,0,1) để tránh chia cho 0
+  // TODO 1: compute length(axis); if it's too small, fall back to the default axis (0,0,1) to avoid dividing by 0
   // TODO 2: normalize axis
-  // TODO 3: half = angleRad / 2; áp công thức q = (axis * sin(half), cos(half))
+  // TODO 3: half = angleRad / 2; apply the formula q = (axis * sin(half), cos(half))
   return { x: 0, y: 0, z: 0, w: 1 };
 }`,
     solutionCode: `interface Quat { x: number; y: number; z: number; w: number }

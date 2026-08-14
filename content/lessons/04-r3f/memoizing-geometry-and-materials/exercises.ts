@@ -74,25 +74,22 @@ Without running the code — identify exactly which geometry in \`ShapeB\` gets 
         en: "Correctly explains the mechanism: per-element !== comparison, not whole-array reference comparison",
       },
     ],
-    solutionCode: `// boxGeometry: args = [1, 1, 1] — ba number. Mỗi render, R3F so
-// newArgs[i] !== oldArgs[i] theo GIÁ TRỊ: 1 !== 1 là false ở cả ba chỉ số
-// -> không có chỉ số nào đổi -> geometry giữ nguyên, dù ShapeB re-render.
-//
-// circleGeometry: args = [1, 32, 0, Math.PI * 2] — cũng toàn number/hằng
-// số, cùng lý do -> không bị dựng lại.
-//
-// shapeGeometry: args = [new THREE.Shape().absarc(cx, cy, 1, 0, PI*2, false)]
-// -- MỖI lần ShapeB chạy lại, "new THREE.Shape()" tạo một object THAM CHIẾU
-// MỚI, dù cx/cy không đổi và hình dạng logic giống hệt lần trước. So sánh
-// newArgs[0] !== oldArgs[0] dùng !== trên OBJECT là so sánh THAM CHIẾU (JS
-// semantics, không phải quyết định của R3F) -> hai Shape instance khác
-// nhau luôn !== nhau -> geometry bị huỷ và dựng lại ở MỌI lần re-render,
-// dù tick là prop duy nhất thực sự đổi.
-//
-// Kết luận: "so sánh args" luôn là so !== theo TỪNG PHẦN TỬ; kết quả của
-// phép so sánh đó phụ thuộc KIỂU của phần tử — number/string/boolean so
-// theo giá trị (ổn định), object so theo tham chiếu (chỉ ổn định nếu bạn
-// tự giữ ổn định tham chiếu đó, ví dụ bằng useMemo).`,
+    solutionNote: {
+      vi: `\`boxGeometry\`: \`args = [1, 1, 1]\` — ba number. Mỗi render, R3F so \`newArgs[i] !== oldArgs[i]\` theo GIÁ TRỊ: \`1 !== 1\` là false ở cả ba chỉ số, nên không có chỉ số nào đổi và geometry giữ nguyên, dù \`ShapeB\` re-render.
+
+\`circleGeometry\`: \`args = [1, 32, 0, Math.PI * 2]\` — cũng toàn number/hằng số, cùng lý do nên không bị dựng lại.
+
+\`shapeGeometry\`: \`args = [new THREE.Shape().absarc(cx, cy, 1, 0, PI*2, false)]\`. MỖI lần \`ShapeB\` chạy lại, \`new THREE.Shape()\` tạo một object THAM CHIẾU MỚI, dù \`cx\`/\`cy\` không đổi và hình dạng logic giống hệt lần trước. So sánh \`newArgs[0] !== oldArgs[0]\` dùng \`!==\` trên OBJECT là so sánh THAM CHIẾU (ngữ nghĩa JS, không phải quyết định của R3F), nên hai instance \`Shape\` khác nhau luôn \`!==\` nhau — geometry bị huỷ và dựng lại ở MỌI lần re-render, dù \`tick\` là prop duy nhất thực sự đổi.
+
+Kết luận: "so sánh args" luôn là so \`!==\` theo TỪNG PHẦN TỬ; kết quả của phép so sánh đó phụ thuộc KIỂU của phần tử — number/string/boolean so theo giá trị (ổn định), object so theo tham chiếu (chỉ ổn định nếu bạn tự giữ ổn định tham chiếu đó, ví dụ bằng \`useMemo\`).`,
+      en: `\`boxGeometry\`: \`args = [1, 1, 1]\` — three numbers. On every render, R3F compares \`newArgs[i] !== oldArgs[i]\` BY VALUE: \`1 !== 1\` is false at all three indices, so nothing changes and the geometry stays put, even though \`ShapeB\` re-renders.
+
+\`circleGeometry\`: \`args = [1, 32, 0, Math.PI * 2]\` — also all numbers/constants, same reason it never gets rebuilt.
+
+\`shapeGeometry\`: \`args = [new THREE.Shape().absarc(cx, cy, 1, 0, PI*2, false)]\`. EVERY time \`ShapeB\` runs again, \`new THREE.Shape()\` creates a brand-new REFERENCE object, even though \`cx\`/\`cy\` haven't changed and the logical shape is identical to last time. Comparing \`newArgs[0] !== oldArgs[0]\` with \`!==\` on an OBJECT is a REFERENCE comparison (plain JS semantics, not an R3F decision), so two different \`Shape\` instances are always \`!==\` each other — the geometry gets destroyed and rebuilt on EVERY re-render, even though \`tick\` is the only prop that actually changed.
+
+Conclusion: "comparing args" always means a per-element \`!==\` comparison; the outcome of that comparison depends on the element's TYPE — numbers/strings/booleans compare by value (stable), objects compare by reference (only stable if you keep that reference stable yourself, e.g. with \`useMemo\`).`,
+    },
   },
   {
     id: "dispose-on-color-change",
@@ -105,13 +102,14 @@ Without running the code — identify exactly which geometry in \`ShapeB\` gets 
 import * as THREE from "three";
 
 function useStableMaterial(color: string): THREE.MeshStandardMaterial {
-  // TODO 1: useMemo tạo material mới mỗi khi "color" đổi — dependency đúng,
-  // không phải [] (đóng băng) và không phải thiếu color trong deps.
+  // TODO 1: useMemo creates a new material whenever "color" changes -- the
+  // correct dependency, not [] (frozen) and not missing color from deps.
   const material = /* ... */;
 
-  // TODO 2: useEffect cleanup — dispose material CŨ mỗi khi tham chiếu
-  // "material" đổi (nghĩa là color vừa đổi), và dispose material cuối cùng
-  // khi component unmount. Dependency của effect này quyết định điều đó.
+  // TODO 2: useEffect cleanup -- dispose the OLD material whenever the
+  // "material" reference changes (meaning color just changed), and dispose
+  // the final material on component unmount. This effect's dependency is
+  // what decides that.
   useEffect(() => {
     // ...
   }, []);
@@ -128,9 +126,10 @@ function useStableMaterial(color: string): THREE.MeshStandardMaterial {
   );
 
   useEffect(() => {
-    // Cleanup chạy TRƯỚC lần effect kế tiếp (mỗi khi "material" đổi tham
-    // chiếu, tức mỗi khi color đổi) VÀ khi component unmount — dispose
-    // đúng material vừa bị thay thế, không đợi tới unmount mới dọn.
+    // Cleanup runs BEFORE the next effect (whenever the "material" reference
+    // changes, i.e. whenever color changes) AND on component unmount --
+    // disposes exactly the material that just got replaced, not deferred
+    // until unmount.
     return () => material.dispose();
   }, [material]);
 

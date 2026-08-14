@@ -46,24 +46,22 @@ Compare (B) and (C) — both involve a "x4" somewhere in the pipeline, but how d
         en: "Correctly computed (C): both sky'' and sun'' clamp to 1.0 — can explain this is why post-brightness 'flattens' the scene while real exposure doesn't",
       },
     ],
-    solutionCode: `// (A) E = 1
-// sky' = (1*1.0)/(1+1*1.0)   = 1/2    = 0.5
-// sun' = (1*50.0)/(1+1*50.0) = 50/51  ~ 0.9804
+    solutionNote: {
+      vi: `(A) $E = 1$: $c'_{sky} = (1 \\times 1.0)/(1 + 1 \\times 1.0) = 1/2 = 0.5$; $c'_{sun} = (1 \\times 50.0)/(1 + 1 \\times 50.0) = 50/51 \\approx 0.9804$.
 
-// (B) E = 4 (+2 stops)
-// sky' = (4*1.0)/(1+4*1.0)   = 4/5    = 0.8
-// sun' = (4*50.0)/(1+4*50.0) = 200/201 ~ 0.9950
-// -> sky va sun van la HAI gia tri khac nhau, cach nhau ~0.195
+(B) $E = 4$ (+2 stop): $c'_{sky} = (4 \\times 1.0)/(1 + 4 \\times 1.0) = 4/5 = 0.8$; $c'_{sun} = (4 \\times 50.0)/(1 + 4 \\times 50.0) = 200/201 \\approx 0.9950$ — sky và sun vẫn là HAI giá trị khác nhau, cách nhau khoảng 0.195.
 
-// (C) E = 1 (dung ket qua (A)), roi nhan hau ky x4, clamp [0,1]
-// sky'' = min(1, 0.5   * 4) = min(1, 2.0)  = 1.0
-// sun'' = min(1, 0.9804* 4) = min(1, 3.92) = 1.0
-// -> CA HAI deu clamp ve dung 1.0 -> khong con phan biet duoc nua
+(C) $E = 1$ (dùng kết quả (A)), rồi nhân hậu kỳ ×4, clamp $[0,1]$: $c''_{sky} = \\min(1, 0.5 \\times 4) = \\min(1, 2.0) = 1.0$; $c''_{sun} = \\min(1, 0.9804 \\times 4) = \\min(1, 3.92) = 1.0$ — CẢ HAI đều clamp về đúng 1.0, không còn phân biệt được nữa.
 
-// Vi sao khac nhau: (B) nhan E TRUOC ham Reinhard, nen ham van con
-// "chay" va nen hai input thanh hai output khac nhau (van tren duong cong).
-// (C) nhan SAU khi Reinhard da chay xong (da nam trong [0,1]) - phep nhan
-// chi day pixel len roi CLAMP cung mot muc tran, xoa sach chenh lech goc.`,
+Vì sao khác nhau: (B) nhân $E$ TRƯỚC hàm Reinhard, nên hàm vẫn còn "chạy" và nén hai input thành hai output khác nhau (vẫn nằm trên đường cong). (C) nhân SAU khi Reinhard đã chạy xong (đã nằm trong $[0,1]$) — phép nhân chỉ đẩy pixel lên rồi CLAMP cùng một mức trần, xoá sạch chênh lệch gốc.`,
+      en: `(A) $E = 1$: $c'_{sky} = (1 \\times 1.0)/(1 + 1 \\times 1.0) = 1/2 = 0.5$; $c'_{sun} = (1 \\times 50.0)/(1 + 1 \\times 50.0) = 50/51 \\approx 0.9804$.
+
+(B) $E = 4$ (+2 stops): $c'_{sky} = (4 \\times 1.0)/(1 + 4 \\times 1.0) = 4/5 = 0.8$; $c'_{sun} = (4 \\times 50.0)/(1 + 4 \\times 50.0) = 200/201 \\approx 0.9950$ — sky and sun are still TWO distinct values, about 0.195 apart.
+
+(C) $E = 1$ (using (A)'s results), then a post-hoc ×4 multiply, clamped to $[0,1]$: $c''_{sky} = \\min(1, 0.5 \\times 4) = \\min(1, 2.0) = 1.0$; $c''_{sun} = \\min(1, 0.9804 \\times 4) = \\min(1, 3.92) = 1.0$ — BOTH clamp to exactly 1.0, no longer distinguishable.
+
+Why they differ: (B) multiplies $E$ BEFORE the Reinhard function, so the function is still "running" and compresses the two inputs into two different outputs (both still on the curve). (C) multiplies AFTER Reinhard already ran (already inside $[0,1]$) — the multiply just pushes pixels up and then CLAMPS them to the same ceiling, erasing the original difference.`,
+    },
   },
   {
     id: "snapshot-and-restore-renderer-tone-state",

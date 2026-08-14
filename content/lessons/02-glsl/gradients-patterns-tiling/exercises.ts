@@ -36,17 +36,18 @@ Then: keeping $uv = (0.3, 0.6)$ fixed but changing $N$ to $8$, recompute the par
         en: "I can explain that parity depends on BOTH uv and N, not a fixed property of a point on the canvas",
       },
     ],
-    solutionCode: `// N = 4: grid = (0.3*4, 0.6*4) = (1.2, 2.4)
-// id = floor(1.2, 2.4) = (1, 2); local = fract(1.2, 2.4) = (0.2, 0.4)
-// parity = mod(1 + 2, 2) = mod(3, 2) = 1 -> màu thứ hai
-//
-// N = 8: grid = (0.3*8, 0.6*8) = (2.4, 4.8)
-// id = floor(2.4, 4.8) = (2, 4)
-// parity = mod(2 + 4, 2) = mod(6, 2) = 0 -> màu thứ nhất (đổi hẳn so với N=4)
-//
-// id là chỉ số Ô, không phải toạ độ tuyệt đối — đổi N nén lại số ô trên
-// cùng bề mặt, nên cùng một uv rơi vào một ô khác (id khác), và vì
-// checker chỉ nhìn vào tính chẵn/lẻ của id, parity đổi theo.`,
+    solutionNote: {
+      vi: `Với $N=4$: $\\mathrm{grid} = (0.3\\times 4,\\ 0.6\\times 4) = (1.2, 2.4)$, $\\mathrm{id} = \\mathrm{floor}(1.2, 2.4) = (1, 2)$, $\\mathrm{local} = \\mathrm{fract}(1.2, 2.4) = (0.2, 0.4)$, $\\mathrm{parity} = \\mathrm{mod}(1+2, 2) = \\mathrm{mod}(3,2) = 1$ → màu thứ hai.
+
+Với $N=8$: $\\mathrm{grid} = (0.3\\times 8,\\ 0.6\\times 8) = (2.4, 4.8)$, $\\mathrm{id} = \\mathrm{floor}(2.4, 4.8) = (2, 4)$, $\\mathrm{parity} = \\mathrm{mod}(2+4, 2) = \\mathrm{mod}(6,2) = 0$ → màu thứ nhất (đổi hẳn so với $N=4$).
+
+$\\mathrm{id}$ là chỉ số Ô, không phải toạ độ tuyệt đối — đổi $N$ nén lại số ô trên cùng bề mặt, nên cùng một $uv$ rơi vào một ô khác ($\\mathrm{id}$ khác), và vì checker chỉ nhìn vào tính chẵn/lẻ của $\\mathrm{id}$, parity đổi theo.`,
+      en: `At $N=4$: $\\mathrm{grid} = (0.3\\times 4,\\ 0.6\\times 4) = (1.2, 2.4)$, $\\mathrm{id} = \\mathrm{floor}(1.2, 2.4) = (1, 2)$, $\\mathrm{local} = \\mathrm{fract}(1.2, 2.4) = (0.2, 0.4)$, $\\mathrm{parity} = \\mathrm{mod}(1+2, 2) = \\mathrm{mod}(3,2) = 1$ → the second color.
+
+At $N=8$: $\\mathrm{grid} = (0.3\\times 8,\\ 0.6\\times 8) = (2.4, 4.8)$, $\\mathrm{id} = \\mathrm{floor}(2.4, 4.8) = (2, 4)$, $\\mathrm{parity} = \\mathrm{mod}(2+4, 2) = \\mathrm{mod}(6,2) = 0$ → the first color (completely flipped from $N=4$).
+
+$\\mathrm{id}$ is the cell INDEX, not an absolute coordinate — changing $N$ compresses how many cells fit on the same surface, so the same $uv$ lands in a different cell (a different $\\mathrm{id}$), and since the checker only looks at whether $\\mathrm{id}$ is even or odd, parity flips along with it.`,
+    },
   },
   {
     id: "dot-grid-with-checker-tint",
@@ -59,14 +60,14 @@ Then: keeping $uv = (0.3, 0.6)$ fixed but changing $N$ to $8$, recompute the par
   vec2 uv = gl_FragCoord.xy / uResolution;
   float N = 5.0;
 
-  // TODO 1: tách uv thành id (ô nào) và cell (toạ độ cục bộ đã căn giữa -0.5..0.5)
+  // TODO 1: split uv into id (which cell) and cell (local coords, centered -0.5..0.5)
   vec2 id = vec2(0.0);
   vec2 cell = vec2(0.0);
 
-  // TODO 2: SDF hình tròn bán kính 0.3 trên toạ độ cell
+  // TODO 2: circle SDF of radius 0.3 in cell-local coordinates
   float d = 0.0;
 
-  // TODO 3: parity theo id để chọn 1 trong 2 màu nền
+  // TODO 3: pick one of 2 background colors based on id parity
   float parity = 0.0;
   vec3 bg = mix(vec3(0.06, 0.07, 0.1), vec3(0.12, 0.05, 0.16), parity);
 

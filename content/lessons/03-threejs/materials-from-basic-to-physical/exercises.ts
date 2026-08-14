@@ -36,19 +36,18 @@ Then answer: why does this near-metal material show almost no visible diffuse co
         en: "I can explain that at high metalness, most light energy goes into F0 (colored specular) rather than the shrunken diffuseColor",
       },
     ],
-    solutionCode: `// diffuseColor = (0.8, 0.2, 0.2) * (1 - 0.7) = (0.8, 0.2, 0.2) * 0.3
-//              ≈ (0.24, 0.06, 0.06)
-//
-// F0 = mix(0.04, (0.8, 0.2, 0.2), 0.7)
-//    = 0.04 * 0.3 + (0.8, 0.2, 0.2) * 0.7
-//    = 0.012 + (0.56, 0.14, 0.14)
-//    ≈ (0.572, 0.152, 0.152)
-//
-// Ở metalness = 0.7, diffuseColor đã bị thu nhỏ còn 30% cường độ gốc, và
-// phần "màu đỏ" chủ yếu chuyển sang F0 — tức là nó chỉ xuất hiện trong đốm
-// specular (phản xạ gương, hẹp, phụ thuộc góc nhìn/ánh sáng), không còn tán
-// xạ đều ra mọi hướng như diffuse thật. Nhìn từ góc không trúng highlight,
-// vật liệu trông tối và gần như mất màu.`,
+    solutionNote: {
+      vi: `diffuseColor = (0.8, 0.2, 0.2) × (1 − 0.7) = (0.8, 0.2, 0.2) × 0.3 ≈ (0.24, 0.06, 0.06).
+
+F0 = mix(0.04, (0.8, 0.2, 0.2), 0.7) = 0.04 × 0.3 + (0.8, 0.2, 0.2) × 0.7 = 0.012 + (0.56, 0.14, 0.14) ≈ (0.572, 0.152, 0.152).
+
+Ở metalness = 0.7, diffuseColor đã bị thu nhỏ còn 30% cường độ gốc, và phần "màu đỏ" chủ yếu chuyển sang F0 — tức là nó chỉ xuất hiện trong đốm specular (phản xạ gương, hẹp, phụ thuộc góc nhìn/ánh sáng), không còn tán xạ đều ra mọi hướng như diffuse thật. Nhìn từ góc không trúng highlight, vật liệu trông tối và gần như mất màu.`,
+      en: `diffuseColor = (0.8, 0.2, 0.2) × (1 − 0.7) = (0.8, 0.2, 0.2) × 0.3 ≈ (0.24, 0.06, 0.06).
+
+F0 = mix(0.04, (0.8, 0.2, 0.2), 0.7) = 0.04 × 0.3 + (0.8, 0.2, 0.2) × 0.7 = 0.012 + (0.56, 0.14, 0.14) ≈ (0.572, 0.152, 0.152).
+
+At metalness = 0.7, diffuseColor has already shrunk to 30% of its original intensity, and most of the "red" shifts into F0 — meaning it only shows up in the specular highlight (a narrow, view/light-angle-dependent mirror-like reflection), no longer scattering evenly in every direction the way real diffuse does. Viewed from an angle that misses the highlight, the material looks dark and nearly colorless.`,
+    },
   },
   {
     id: "material-ladder-factory",
@@ -63,17 +62,17 @@ type MaterialKind = "basic" | "lambert" | "phong" | "standard" | "physical";
 
 interface LadderParams {
   color: number;
-  metalness: number; // chỉ standard/physical dùng / only standard/physical use this
-  roughness: number; // chỉ standard/physical dùng / only standard/physical use this
+  metalness: number; // only standard/physical use this
+  roughness: number; // only standard/physical use this
 }
 
 function createLadderMaterial(
   kind: MaterialKind,
   params: LadderParams,
 ): THREE.Material {
-  // TODO: switch theo kind, trả về đúng Mesh*Material.
-  // Basic/Lambert/Phong chỉ truyền { color } vào constructor — truyền cả
-  // metalness/roughness vào chúng sẽ bị TypeScript báo lỗi excess property.
+  // TODO: switch on kind, return the matching Mesh*Material.
+  // Basic/Lambert/Phong only take { color } in their constructor — passing
+  // metalness/roughness into them triggers a TypeScript excess-property error.
   throw new Error("not implemented");
 }`,
     solutionCode: `function createLadderMaterial(

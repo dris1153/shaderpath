@@ -36,20 +36,18 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
         en: "I correctly identified that only `uniform mat4 modelMatrix;` and `uniform vec3 cameraPosition;` cause redefinition; `uNormalHelper` doesn't collide with any built-in name so it compiles fine",
       },
     ],
-    solutionCode: `// (a) M * n = diag(2,1,1) * (1/sqrt2, 1/sqrt2, 0) = (2/sqrt2, 1/sqrt2, 0)
-//           = (sqrt2, 1/sqrt2, 0)  -- thành phần X lớn hơn Y ~2 lần
-//           -> nghiêng THÊM về trục X vừa kéo dài (SAI về mặt hình học)
-//
-// (b) M là đường chéo -> M^-1 = diag(0.5, 1, 1), chuyển vị của ma trận
-//     đường chéo là chính nó -> N = diag(0.5, 1, 1)
-//     N * n = (0.5 * 1/sqrt2, 1/sqrt2, 0) = (1/(2·sqrt2), 1/sqrt2, 0)
-//           -> sau khi normalize, thành phần Y lớn hơn X -> nghiêng về
-//              trục Y, tức RA XA trục X vừa kéo dài (ĐÚNG: mặt càng bị
-//              kéo dài theo X thì càng "phẳng" ra theo X)
-//
-// uniform mat4 modelMatrix;    -> LỖI redefinition (Three đã chèn sẵn)
-// uniform mat3 uNormalHelper;  -> OK (tên tự đặt, không trùng built-in)
-// uniform vec3 cameraPosition; -> LỖI redefinition (Three đã chèn sẵn)`,
+    solutionNote: {
+      vi: `(a) $M\\vec n = \\mathrm{diag}(2,1,1) \\cdot (\\tfrac{1}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\tfrac{2}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\sqrt2, \\tfrac{1}{\\sqrt2}, 0)$ — thành phần X lớn hơn Y ~2 lần → nghiêng THÊM về trục X vừa kéo dài (SAI về mặt hình học).
+
+(b) $M$ là đường chéo → $M^{-1} = \\mathrm{diag}(0.5, 1, 1)$, chuyển vị của ma trận đường chéo là chính nó → $N = \\mathrm{diag}(0.5, 1, 1)$. $N\\vec n = (0.5 \\cdot \\tfrac{1}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\tfrac{1}{2\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0)$ — sau khi normalize, thành phần Y lớn hơn X → nghiêng về trục Y, tức RA XA trục X vừa kéo dài (ĐÚNG: mặt càng bị kéo dài theo X thì càng "phẳng" ra theo X).
+
+\`uniform mat4 modelMatrix;\` → LỖI redefinition (Three đã chèn sẵn). \`uniform mat3 uNormalHelper;\` → OK (tên tự đặt, không trùng built-in). \`uniform vec3 cameraPosition;\` → LỖI redefinition (Three đã chèn sẵn).`,
+      en: `(a) $M\\vec n = \\mathrm{diag}(2,1,1) \\cdot (\\tfrac{1}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\tfrac{2}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\sqrt2, \\tfrac{1}{\\sqrt2}, 0)$ — the X component is ~2x larger than Y → leans FURTHER toward the just-stretched X axis (WRONG geometrically).
+
+(b) $M$ is diagonal → $M^{-1} = \\mathrm{diag}(0.5, 1, 1)$, and a diagonal matrix's transpose is itself → $N = \\mathrm{diag}(0.5, 1, 1)$. $N\\vec n = (0.5 \\cdot \\tfrac{1}{\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0) = (\\tfrac{1}{2\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0)$ — after normalizing, the Y component is larger than X → leans toward Y, i.e. AWAY from the just-stretched X axis (CORRECT: the more a surface is stretched along X, the "flatter" it becomes along X).
+
+\`uniform mat4 modelMatrix;\` → redefinition ERROR (Three already injects it). \`uniform mat3 uNormalHelper;\` → OK (custom name, no built-in collision). \`uniform vec3 cameraPosition;\` → redefinition ERROR (Three already injects it).`,
+    },
   },
   {
     id: "fix-uniform-recreate-antipattern",
@@ -62,7 +60,7 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
   const [time, setTime] = useState(0);
 
   useFrame((state) => {
-    setTime(state.clock.elapsedTime); // TODO: bo setState, mutate truc tiep
+    setTime(state.clock.elapsedTime); // TODO: drop setState, mutate directly
   });
 
   return (
@@ -71,7 +69,7 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{ uTime: { value: time } }} // TODO: object moi moi render
+        uniforms={{ uTime: { value: time } }} // TODO: a new object every render
       />
     </mesh>
   );
@@ -80,7 +78,7 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
 
   useFrame((state) => {
-    uniforms.uTime.value = state.clock.elapsedTime; // ghi truc tiep, khong setState
+    uniforms.uTime.value = state.clock.elapsedTime; // write directly, no setState
   });
 
   return (

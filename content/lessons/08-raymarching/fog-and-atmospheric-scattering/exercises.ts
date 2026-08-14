@@ -36,11 +36,18 @@ Then: to get a visibility distance $d_{vis} = 50$ (where $T \\approx 0.05$, the 
         en: "I can explain why the formula is $\\rho = -\\ln(T)/d_{vis}$, not $\\rho = T/d_{vis}$",
       },
     ],
-    solutionCode: `// T(10) = exp(-0.08*10) = exp(-0.8)  ≈ 0.449
-// T(30) = exp(-0.08*30) = exp(-2.4)  ≈ 0.0907
-//
-// T = exp(-rho * d_vis)  ->  ln(T) = -rho * d_vis  ->  rho = -ln(T) / d_vis
-// rho = -ln(0.05) / 50 ≈ 2.996 / 50 ≈ 0.06`,
+    solutionNote: {
+      vi: `$T(10) = e^{-0.08 \\times 10} = e^{-0.8} \\approx 0.449$. $T(30) = e^{-0.08 \\times 30} = e^{-2.4} \\approx 0.0907$.
+
+Từ $T = e^{-\\rho \\cdot d_{vis}}$, lấy $\\ln$ hai vế: $\\ln(T) = -\\rho \\cdot d_{vis} \\Rightarrow \\rho = -\\ln(T) / d_{vis}$.
+
+$\\rho = -\\ln(0.05) / 50 \\approx 2.996 / 50 \\approx 0.06$.`,
+      en: `$T(10) = e^{-0.08 \\times 10} = e^{-0.8} \\approx 0.449$. $T(30) = e^{-0.08 \\times 30} = e^{-2.4} \\approx 0.0907$.
+
+From $T = e^{-\\rho \\cdot d_{vis}}$, taking the natural log of both sides: $\\ln(T) = -\\rho \\cdot d_{vis} \\Rightarrow \\rho = -\\ln(T) / d_{vis}$.
+
+$\\rho = -\\ln(0.05) / 50 \\approx 2.996 / 50 \\approx 0.06$.`,
+    },
   },
   {
     id: "playground-column-fog",

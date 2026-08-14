@@ -32,19 +32,18 @@ export const exercises: Exercise[] = [
         en: "Correctly explained why MSAA (in-tile resolve, nearly free) is unrelated to how many transparent layers stack — these are two independent problems",
       },
     ],
-    solutionCode: `// Mặt đất opaque: HSR/early-Z biết trước fragment nào bị che (vì kết quả
-// KHÔNG phụ thuộc thứ tự vẽ — 1 pixel chỉ có đúng 1 màu "đúng" bất kể thứ
-// tự), nên loại fragment che khuất TRƯỚC khi chạy fragment shader.
-//
-// 4 lớp khói transparent: mỗi lớp blend phụ thuộc lớp vẽ trước nó — GPU
-// không thể biết trước kết quả blend cuối nếu chưa chạy shader của TỪNG
-// lớp theo đúng thứ tự back-to-front. Không có cách "bỏ qua" lớp nào —
-// đúng 4x chi phí fragment shading, không hơn không kém.
-//
-// MSAA chỉ thay đổi cách RESOLVE nhiều sample trong CÙNG một lần shade
-// (anti-alias cạnh hình học) — nó không giảm số LẦN shader phải chạy do
-// có nhiều lớp đối tượng khác nhau che nhau theo chiều sâu. Overdraw do
-// transparency và cost của MSAA là hai trục hoàn toàn độc lập.`,
+    solutionNote: {
+      vi: `Mặt đất opaque: HSR/early-Z biết trước fragment nào bị che (vì kết quả KHÔNG phụ thuộc thứ tự vẽ — 1 pixel chỉ có đúng 1 màu "đúng" bất kể thứ tự), nên loại fragment che khuất TRƯỚC khi chạy fragment shader.
+
+4 lớp khói transparent: mỗi lớp blend phụ thuộc lớp vẽ trước nó — GPU không thể biết trước kết quả blend cuối nếu chưa chạy shader của TỪNG lớp theo đúng thứ tự back-to-front. Không có cách "bỏ qua" lớp nào — đúng 4x chi phí fragment shading, không hơn không kém.
+
+MSAA chỉ thay đổi cách RESOLVE nhiều sample trong CÙNG một lần shade (anti-alias cạnh hình học) — nó không giảm số LẦN shader phải chạy do có nhiều lớp đối tượng khác nhau che nhau theo chiều sâu. Overdraw do transparency và chi phí của MSAA là hai trục hoàn toàn độc lập.`,
+      en: `Opaque ground: HSR/early-Z knows ahead of time which fragments are occluded (because the result does NOT depend on draw order — one pixel has exactly one "correct" color regardless of order), so it rejects occluded fragments BEFORE running the fragment shader.
+
+4 transparent smoke layers: each layer's blend depends on the layer drawn before it — the GPU cannot know the final blended result without running EACH layer's shader in the correct back-to-front order. There's no way to "skip" any layer — exactly 4x the fragment-shading cost, no more, no less.
+
+MSAA only changes how multiple samples from the SAME shading pass are RESOLVED (anti-aliasing geometric edges) — it doesn't reduce how many TIMES the shader has to run because of multiple depth-overlapping object layers. Overdraw from transparency and MSAA's cost are two completely independent axes.`,
+    },
   },
   {
     id: "quad-overdraw-area-multiplier",
@@ -54,7 +53,7 @@ export const exercises: Exercise[] = [
       en: `Write a function \`quadOverdrawMultiplier(tightSidePx, looseSidePx)\` returning how many times more fragment-shading area a "loose" quad (large, wasting many transparent pixels) costs compared to a "tight" quad (fitted closely to the sprite's content), for the same visible circular sprite. Both quads only differ in their side length in screen pixels. Then compute \`quadOverdrawMultiplier(24, 96)\` and interpret the result in one sentence.`,
     },
     starterCode: `function quadOverdrawMultiplier(tightSidePx: number, looseSidePx: number): number {
-  // TODO: diện tích quad tỉ lệ với BÌNH PHƯƠNG cạnh — trả về tỉ số diện tích
+  // TODO: quad area scales with the SQUARE of the side — return the area ratio
   return 0;
 }
 
@@ -65,9 +64,10 @@ console.log(quadOverdrawMultiplier(24, 96));`,
   return looseArea / tightArea;
 }
 
-console.log(quadOverdrawMultiplier(24, 96)); // 16 — quad loose tốn gấp 16 lần
-// diện tích fragment shading dù hình tròn hiển thị giống hệt nhau, vì chi
-// phí tỉ lệ theo bình phương cạnh quad, không theo diện tích sprite thật.`,
+console.log(quadOverdrawMultiplier(24, 96)); // 16 — the loose quad costs 16x
+// the fragment-shading area even though the visible circle looks identical,
+// because the cost scales with the SQUARE of the quad's side, not the real
+// sprite's area.`,
     hints: [
       {
         vi: "Diện tích một quad vuông cạnh $s$ là $s^2$ — tỉ số diện tích giữa hai quad chính là $(looseSidePx / tightSidePx)^2$.",

@@ -36,21 +36,22 @@ Then: the player selects $5$ of those $3000$ rocks as targets, and the selected 
         en: "I explained why this stays 1 draw call: the same gl.drawElementsInstanced call reads the now-updated color buffer — no new draw command is added",
       },
     ],
-    solutionCode: `// 3000 THREE.Mesh riêng  -> 3000 draw call mỗi frame
-// InstancedMesh(...,3000) -> 1 draw call mỗi frame (toàn bộ 3000 bản sao)
-//
-// Đổi màu 5 viên được target, KHÔNG thêm draw call:
-function highlightSelected(mesh, selectedIndices, normalColor, hitColor) {
+    solutionCode: `function highlightSelected(mesh, selectedIndices, normalColor, hitColor) {
   const color = new THREE.Color();
   for (let i = 0; i < mesh.count; i++) {
     const isSelected = selectedIndices.includes(i);
     mesh.setColorAt(i, isSelected ? hitColor : normalColor);
   }
-  mesh.instanceColor.needsUpdate = true; // vẫn cùng 1 InstancedMesh, 1 draw call
-}
-// setColorAt chỉ ghi lại dữ liệu trong instanceColor buffer đã tồn tại sẵn.
-// Draw call vẫn là gl.drawElementsInstanced(..., 3000) y hệt trước đó —
-// GPU đọc buffer màu MỚI trong CÙNG một lệnh vẽ, không lệnh nào được thêm.`,
+  mesh.instanceColor.needsUpdate = true; // still the same 1 InstancedMesh, 1 draw call
+}`,
+    solutionNote: {
+      vi: `3000 \`THREE.Mesh\` riêng → 3000 draw call mỗi frame. \`InstancedMesh(...,3000)\` → 1 draw call mỗi frame (toàn bộ 3000 bản sao).
+
+Đổi màu 5 viên được target mà KHÔNG thêm draw call, như đoạn code bên dưới: \`setColorAt\` chỉ ghi lại dữ liệu trong \`instanceColor\` buffer đã tồn tại sẵn. Draw call vẫn là \`gl.drawElementsInstanced(..., 3000)\` y hệt trước đó — GPU đọc buffer màu MỚI trong CÙNG một lệnh vẽ, không lệnh nào được thêm.`,
+      en: `3000 separate \`THREE.Mesh\` objects → 3000 draw calls per frame. \`InstancedMesh(...,3000)\` → 1 draw call per frame (all 3000 copies at once).
+
+Recoloring the 5 targeted rocks WITHOUT adding a draw call, as in the code below: \`setColorAt\` just writes data into the already-existing \`instanceColor\` buffer. The draw call is still the same \`gl.drawElementsInstanced(..., 3000)\` as before — the GPU reads the NEW color buffer within that SAME draw command, no extra command added.`,
+    },
   },
   {
     id: "build-field-of-boxes",

@@ -48,11 +48,12 @@ Explain precisely why the \`uTexture\` sampler in the shader doesn't automatical
         en: "I can state why this bug often 'accidentally works' when there's only one texture on unit 0",
       },
     ],
-    solutionCode: `// gl.uniform1i cho sampler biết đọc từ unit nào — bắt buộc, không suy ra tự động
-gl.uniform1i(uTextureLoc, 1);
-
-// Với một texture duy nhất ở unit 0 (mặc định của sampler), bug này ẩn đi vì
-// unit 0 tình cờ đúng — chỉ lộ ra khi có từ 2 texture trở lên trong cùng shader.`,
+    solutionCode: `// gl.uniform1i tells the sampler which unit to read from — mandatory, never inferred automatically
+gl.uniform1i(uTextureLoc, 1);`,
+    solutionNote: {
+      vi: `Với một texture duy nhất ở unit 0 (mặc định của sampler), bug này ẩn đi vì unit 0 tình cờ đúng — chỉ lộ ra khi có từ 2 texture trở lên trong cùng shader.`,
+      en: `With a single texture on unit 0 (the sampler's default), this bug stays hidden because unit 0 happens to be correct — it only surfaces once a shader uses 2 or more textures.`,
+    },
   },
   {
     id: "configure-texture-params",

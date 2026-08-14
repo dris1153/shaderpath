@@ -13,10 +13,11 @@ Nhiệm vụ: biến nó thành mobile-ready bằng đúng kỹ thuật đã h�
 Task: make it mobile-ready using Track 12's actual techniques. Technical requirements: (1) a tier config object \`low\`/\`mid\`/\`high\` plus a detection benchmark for the starting tier; (2) a frame-time watchdog **with hysteresis** that switches tiers at runtime without flip-flopping; (3) particle geometry/material disposed correctly through \`useDisposable\` — \`renderer.info.memory.geometries\` must return to baseline after every mount/unmount cycle; (4) DPR capped per tier; (5) measurably reduced overdraw at low tier (lower opacity, bloom disabled); (6) a verification procedure using DevTools CPU throttle 4× and 6×, written as a comment right in the code; (7) a complete before/after table at the end of the file.`,
     },
     starterCode: `"use client";
-// Cảnh "desktop-maxed" — chạy mượt trên máy dev, gục trên thiết bị tầm
-// trung. Việc của bạn: biến nó thành mobile-ready bằng MỌI kỹ thuật đã học
-// ở Track 12 (tier config, disposal, DPR cap, overdraw trim) — và CHỨNG
-// MINH bằng số đo trước/sau, cả không throttle lẫn throttle CPU 4×/6×.
+// A "desktop-maxed" scene — runs smoothly on a dev machine, collapses on a
+// mid-range device. Your job: make it mobile-ready using EVERY technique
+// learned in Track 12 (tier config, disposal, DPR cap, overdraw trim) — and
+// PROVE it with before/after measurements, both unthrottled and under 4x/6x
+// CPU throttling.
 
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -25,9 +26,9 @@ import { EffectComposer, Bloom } from "@react-three/postprocessing";
 
 const PARTICLE_COUNT = 200_000;
 
-// TODO 1: không có tier nào cả — luôn 200k particle, mọi thiết bị.
-// TODO 5: geometry/material dựng bằng \`new\` trong useMemo, không bao giờ
-// dispose khi unmount.
+// TODO 1: no tiers at all — always 200k particles, on every device.
+// TODO 5: geometry/material built with \`new\` inside useMemo, never disposed
+// on unmount.
 function ParticleField() {
   const geometry = useMemo(() => {
     const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -48,8 +49,8 @@ function ParticleField() {
         color: "#7dd3fc",
         transparent: true,
         opacity: 0.6,
-        // TODO 2: additive blending trên 200k particle chồng lấp = overdraw
-        // cực nặng trên GPU tile-based (mỗi tile phải blend lại nhiều lần).
+        // TODO 2: additive blending across 200k overlapping particles = brutal
+        // overdraw on a tile-based GPU (each tile has to re-blend many times).
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
@@ -68,7 +69,7 @@ function Lights() {
   return (
     <>
       <ambientLight intensity={0.3} />
-      {/* TODO 3: 4096x4096 shadow map cố định, không tier hoá, mọi thiết bị */}
+      {/* TODO 3: fixed 4096x4096 shadow map, not tiered, on every device */}
       <directionalLight
         position={[5, 8, 5]}
         intensity={1.2}
@@ -82,8 +83,8 @@ function Lights() {
 export function DesktopMaxedApp() {
   return (
     <Canvas
-      // TODO 4: DPR không giới hạn — điện thoại DPR 3 render gấp 9 lần số
-      // fragment so với DPR 1, không hề kiểm soát.
+      // TODO 4: uncapped DPR — a phone at DPR 3 renders 9x the fragments of
+      // DPR 1, with zero control over it.
       dpr={[1, 3]}
       camera={{ position: [0, 0, 8], fov: 50 }}
       shadows
@@ -101,23 +102,25 @@ export function DesktopMaxedApp() {
   );
 }
 
-// TODO 6: viết quy trình xác nhận NGAY TẠI ĐÂY sau khi sửa xong — DevTools
-// Performance tab → CPU throttle 4× → record 5s → đọc FPS; lặp lại ở 6×; và
-// 10 chu kỳ mount/unmount trong khi theo dõi renderer.info.memory.geometries.
+// TODO 6: write the verification procedure RIGHT HERE once you're done fixing
+// — DevTools Performance tab -> CPU throttle 4x -> record 5s -> read FPS;
+// repeat at 6x; and 10 mount/unmount cycles while watching
+// renderer.info.memory.geometries.
 
-// TODO 7: bảng before/after (đo trên máy dev + throttled qua DevTools):
-// | Chỉ số                                             | Trước | Sau |
-// |-------------------------------------------------------|-------|-----|
-// | FPS (máy dev, không throttle)                         |       |     |
-// | FPS (CPU throttle 4×)                                  |       |     |
-// | FPS (CPU throttle 6×)                                  |       |     |
-// | DPR effective ở tier thấp nhất                         |       |     |
-// | renderer.info.memory.geometries sau 10 chu kỳ mount/unmount |  |     |`,
+// TODO 7: before/after table (measured on the dev machine + throttled via
+// DevTools):
+// | Metric                                                     | Before | After |
+// |-----------------------------------------------------------------|--------|-------|
+// | FPS (dev machine, unthrottled)                                   |        |       |
+// | FPS (CPU throttle 4x)                                             |        |       |
+// | FPS (CPU throttle 6x)                                             |        |       |
+// | Effective DPR at the lowest tier                                  |        |       |
+// | renderer.info.memory.geometries after 10 mount/unmount cycles     |        |       |`,
     solutionCode: `"use client";
-// MOBILE-READY — cùng cảnh, tier hoá theo thiết bị + benchmark khởi động,
-// watchdog frame-time có hysteresis, disposal đúng qua useDisposable, DPR
-// cap theo tier, overdraw giảm ở tier thấp. Quy trình xác nhận + bảng đo ở
-// cuối file.
+// MOBILE-READY — same scene, tiered by device + a startup benchmark, a
+// frame-time watchdog with hysteresis, correct disposal via useDisposable,
+// DPR capped per tier, overdraw reduced at low tier. Verification procedure +
+// measurement table at the end of the file.
 
 import { useMemo, useRef, useState } from "react";
 import * as THREE from "three";
@@ -126,8 +129,8 @@ import { PerformanceMonitor } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { useDisposable } from "@/lib/hooks/use-disposable";
 
-// Fix 1: MỘT nơi duy nhất định nghĩa "thiết bị yếu được cắt gì" — pattern
-// từ bài adaptive-quality-tiers, tái sử dụng nguyên xi ở đây.
+// Fix 1: ONE single place defining "what gets cut for a weak device" — the
+// pattern from the adaptive-quality-tiers lesson, reused verbatim here.
 type Tier = "low" | "mid" | "high";
 
 interface TierConfig {
@@ -144,10 +147,10 @@ const TIERS: Record<Tier, TierConfig> = {
   high: { particleCount: 200_000, dpr: [1, 2], shadowMapSize: 2048, bloom: true, opacity: 0.6 },
 };
 
-// Benchmark khởi động: heuristic RẺ chạy một lần trước khi cảnh nặng mount
-// — không đo frame time thật (chưa có gì để đo), chỉ ước lượng nhóm thiết
-// bị để chọn tier XUẤT PHÁT hợp lý; watchdog bên dưới điều chỉnh tiếp lúc
-// chạy dựa trên frame time thật.
+// Startup benchmark: a CHEAP heuristic run once before the heavy scene mounts
+// — it doesn't measure real frame time (there's nothing to measure yet), it
+// only estimates a device bucket to pick a reasonable STARTING tier; the
+// watchdog below keeps adjusting at runtime based on real frame time.
 function detectStartingTier(): Tier {
   if (typeof navigator === "undefined") return "mid";
   const cores = navigator.hardwareConcurrency ?? 4;
@@ -157,9 +160,10 @@ function detectStartingTier(): Tier {
   return "high";
 }
 
-// Fix 5: geometry/material đăng ký qua useDisposable — dispose đúng lúc
-// unmount, renderer.info.memory quay về baseline mỗi chu kỳ. Đổi tier tạo
-// lại geometry (particleCount đổi) nên tier cũng nằm trong dependency.
+// Fix 5: geometry/material registered via useDisposable — disposed correctly
+// on unmount, renderer.info.memory returns to baseline every cycle. Changing
+// tier rebuilds the geometry (particleCount changes) so tier is also in the
+// dependency array.
 function ParticleField({ tier }: { tier: Tier }) {
   const disposables = useDisposable();
   const config = TIERS[tier];
@@ -176,9 +180,9 @@ function ParticleField({ tier }: { tier: Tier }) {
     return disposables.register(geo);
   }, [config.particleCount, disposables]);
 
-  // Fix 2: KHÔNG dùng AdditiveBlending nữa (blend cộng dồn nhiều lớp là
-  // đúng nguồn overdraw nặng nhất ở đây) — blending mặc định (Normal) rẻ
-  // hơn nhiều trên GPU tile-based; opacity còn giảm thêm theo tier.
+  // Fix 2: no more AdditiveBlending (cumulative multi-layer blending is
+  // exactly the heaviest overdraw source here) — default (Normal) blending is
+  // much cheaper on a tile-based GPU; opacity is also further reduced per tier.
   const material = useMemo(
     () =>
       disposables.register(
@@ -201,7 +205,7 @@ function ParticleField({ tier }: { tier: Tier }) {
   return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
-// Fix 3: shadow map size đi theo tier thay vì cố định 4096.
+// Fix 3: shadow map size follows the tier instead of being fixed at 4096.
 function Lights({ tier }: { tier: Tier }) {
   const size = TIERS[tier].shadowMapSize;
   return (
@@ -217,10 +221,11 @@ function Lights({ tier }: { tier: Tier }) {
   );
 }
 
-// Fix 6: watchdog frame-time VỚI HYSTERESIS — drei PerformanceMonitor thay
-// vì tự viết bộ đếm. flipflops={3} cho phép tối đa 3 lần đảo hướng trước
-// khi coi là không ổn định và rơi hẳn về onFallback — tránh tier nhảy qua
-// lại liên tục mỗi khi frame time dập dềnh quanh ngưỡng.
+// Fix 6: frame-time watchdog WITH HYSTERESIS — drei's PerformanceMonitor
+// instead of a hand-rolled counter. flipflops={3} allows up to 3 direction
+// reversals before it's considered unstable and falls all the way to
+// onFallback — this prevents the tier from flip-flopping every time frame
+// time hovers near a threshold.
 function TierWatchdog({
   tier,
   setTier,
@@ -244,7 +249,7 @@ export function MobileReadyApp() {
 
   return (
     <Canvas
-      dpr={config.dpr} // Fix 4: DPR giới hạn theo tier, không còn [1, 3] cố định
+      dpr={config.dpr} // Fix 4: DPR capped per tier, no longer a fixed [1, 3]
       camera={{ position: [0, 0, 8], fov: 50 }}
       shadows
     >
@@ -264,27 +269,29 @@ export function MobileReadyApp() {
   );
 }
 
-// QUY TRÌNH XÁC NHẬN (phần bắt buộc của bài build này):
-// 1. Không throttle: mount MobileReadyApp trên máy dev, ghi FPS ổn định 5s.
-// 2. DevTools → tab Performance → biểu tượng bánh răng → CPU: 4x slowdown
-//    → Record → 5s → Stop → đọc FPS trung bình từ frame chart.
-// 3. Lặp lại bước 2 ở CPU: 6x slowdown.
-// 4. Mount/unmount MobileReadyApp 10 lần liên tiếp trong khi theo dõi
-//    renderer.info.memory.geometries — con số phải quay về đúng 1 (baseline)
-//    sau MỖI lần unmount, không tăng dần, nhờ useDisposable ở ParticleField.
-// 5. Trong lúc throttle 4×/6×, quan sát tier: không được nhảy qua lại liên
-//    tục — flipflops={3} của PerformanceMonitor phải hấp thụ nhiễu ngắn hạn
-//    trước khi thật sự đổi tier.
+// VERIFICATION PROCEDURE (a required part of this build exercise):
+// 1. Unthrottled: mount MobileReadyApp on the dev machine, record a stable
+//    5s FPS reading.
+// 2. DevTools -> Performance tab -> gear icon -> CPU: 4x slowdown -> Record
+//    -> 5s -> Stop -> read the average FPS from the frame chart.
+// 3. Repeat step 2 at CPU: 6x slowdown.
+// 4. Mount/unmount MobileReadyApp 10 times in a row while watching
+//    renderer.info.memory.geometries — the number must return to exactly 1
+//    (baseline) after EVERY unmount, not creep up, thanks to useDisposable in
+//    ParticleField.
+// 5. While throttled at 4x/6x, watch the tier: it must not flip-flop
+//    continuously — the PerformanceMonitor's flipflops={3} must absorb
+//    short-term noise before actually changing tier.
 
-// Before/After (đo trên máy dev — một GPU laptop tầm trung; "throttled" là
-// CPU slowdown qua DevTools, không phải thiết bị di động thật):
-// | Chỉ số                                             | Trước (desktop-maxed) | Sau (mobile-ready) |
-// |-------------------------------------------------------|-------------------------|----------------------|
-// | FPS, không throttle                                    | ~55                     | ~60                  |
-// | FPS, CPU throttle 4×                                    | ~9                      | ~42                  |
-// | FPS, CPU throttle 6×                                    | ~4                      | ~27                  |
-// | DPR effective ở tier thấp nhất                          | tới 3×                  | cố định 1×           |
-// | renderer.info.memory.geometries sau 10 chu kỳ mount/unmount | tăng dần, không giảm | quay về đúng 1 mỗi lần |`,
+// Before/After (measured on a dev machine — a mid-range laptop GPU;
+// "throttled" is CPU slowdown via DevTools, not a real mobile device):
+// | Metric                                                         | Before (desktop-maxed)  | After (mobile-ready) |
+// |---------------------------------------------------------------------|----------------------------|--------------------------|
+// | FPS, unthrottled                                                     | ~55                        | ~60                      |
+// | FPS, CPU throttle 4x                                                  | ~9                         | ~42                      |
+// | FPS, CPU throttle 6x                                                  | ~4                         | ~27                      |
+// | Effective DPR at the lowest tier                                      | up to 3x                   | fixed at 1x              |
+// | renderer.info.memory.geometries after 10 mount/unmount cycles         | keeps climbing, no drop    | returns to exactly 1 every time |`,
     hints: [
       {
         vi: "Trước khi viết dòng code sửa nào, mount DesktopMaxedApp và benchmark trước — CPU throttle 4× rồi 6×, ghi lại FPS gốc. Không có số 'trước' thì bảng before/after ở cuối không có gì để so sánh.",

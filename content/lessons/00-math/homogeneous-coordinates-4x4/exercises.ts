@@ -36,13 +36,18 @@ Without multiplying all 16 numbers, use the "linear combination of columns" idea
         en: "I can explain why $w$ alone is what makes the two results diverge",
       },
     ],
-    solutionCode: `// T*p (w=1): 3 cột đầu (identity) giữ nguyên x,y,z; cột 4 = (5,-2,0,1)
-// được cộng vào NGUYÊN VẸN vì trọng số = w = 1
-// → (1+5, 1-2, 1+0, 1) = (6, -1, 1, 1)
-//
-// T*d (w=0): cột 4 được nhân với w=0 → không cộng gì → (1, 1, 1, 0), y hệt d
-//
-// w chính là "công tắc" bật/tắt cột translation: w=1 bật (điểm), w=0 tắt (hướng)`,
+    solutionNote: {
+      vi: `$Tp$ (với $w=1$): ba cột đầu (identity) giữ nguyên $x,y,z$; cột 4 $= (5,-2,0,1)$ được cộng vào NGUYÊN VẸN vì trọng số bằng $w=1$ → $(1+5,\\ 1-2,\\ 1+0,\\ 1) = (6, -1, 1, 1)$.
+
+$Td$ (với $w=0$): cột 4 được nhân với $w=0$ → không cộng gì cả → $(1, 1, 1, 0)$, y hệt $d$.
+
+$w$ chính là "công tắc" bật/tắt cột translation: $w=1$ bật (điểm), $w=0$ tắt (hướng).`,
+      en: `$Tp$ (with $w=1$): the first three columns (identity) leave $x,y,z$ unchanged; column 4 $= (5,-2,0,1)$ gets added in FULL because its weight is $w=1$ → $(1+5,\\ 1-2,\\ 1+0,\\ 1) = (6, -1, 1, 1)$.
+
+$Td$ (with $w=0$): column 4 is multiplied by $w=0$ → nothing gets added → $(1, 1, 1, 0)$, identical to $d$.
+
+$w$ is exactly the "switch" that toggles the translation column: $w=1$ turns it on (a point), $w=0$ turns it off (a direction).`,
+    },
   },
   {
     id: "translate-mat4-point-vs-direction",
@@ -55,7 +60,7 @@ Without multiplying all 16 numbers, use the "linear combination of columns" idea
 interface Mat4 { col0: Vec4; col1: Vec4; col2: Vec4; col3: Vec4 }
 
 function translationMat4(tx: number, ty: number, tz: number): Mat4 {
-  // TODO: 3 cột đầu là identity, cột thứ 4 chứa (tx, ty, tz, 1)
+  // TODO: the first 3 columns are identity, the 4th column holds (tx, ty, tz, 1)
   return {
     col0: { x: 1, y: 0, z: 0, w: 0 },
     col1: { x: 0, y: 1, z: 0, w: 0 },
@@ -65,7 +70,7 @@ function translationMat4(tx: number, ty: number, tz: number): Mat4 {
 }
 
 function mat4MulVec4(m: Mat4, v: Vec4): Vec4 {
-  // TODO: tổ hợp tuyến tính của 4 cột, trọng số lần lượt là v.x, v.y, v.z, v.w
+  // TODO: linear combination of the 4 columns, weighted by v.x, v.y, v.z, v.w respectively
   return { x: 0, y: 0, z: 0, w: 0 };
 }`,
     solutionCode: `interface Vec4 { x: number; y: number; z: number; w: number }
@@ -90,8 +95,8 @@ function mat4MulVec4(m: Mat4, v: Vec4): Vec4 {
 }
 
 const T = translationMat4(5, -2, 0);
-mat4MulVec4(T, { x: 1, y: 1, z: 1, w: 1 }); // { x: 6, y: -1, z: 1, w: 1 } — điểm bị dịch
-mat4MulVec4(T, { x: 1, y: 1, z: 1, w: 0 }); // { x: 1, y: 1, z: 1, w: 0 } — hướng giữ nguyên`,
+mat4MulVec4(T, { x: 1, y: 1, z: 1, w: 1 }); // { x: 6, y: -1, z: 1, w: 1 } — the point gets translated
+mat4MulVec4(T, { x: 1, y: 1, z: 1, w: 0 }); // { x: 1, y: 1, z: 1, w: 0 } — the direction stays unchanged`,
     hints: [
       {
         vi: "col3 chính là nơi $(tx, ty, tz)$ sống — ba cột đầu giữ nguyên identity, không cần đụng vào.",

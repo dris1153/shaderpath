@@ -36,18 +36,14 @@ For each scenario, pick Draco or meshopt, and justify it with the actual mechani
         en: "I explained the actual trade-off mechanism (file size vs. decode speed), not just a vague preference",
       },
     ],
-    solutionCode: `// Catalog cuộn liên tục 40 model -> chọn meshopt.
-// Bottleneck là tổng thời gian decode cộng dồn mỗi lần model mới xuất hiện,
-// không phải băng thông một lần -- meshopt decode nhanh hơn Draco đáng kể
-// (theo benchmark của meshoptimizer, ước lượng) nên giữ UI mượt khi cuộn.
-// loader.setMeshoptDecoder(MeshoptDecoder);
+    solutionNote: {
+      vi: `Catalog cuộn liên tục 40 model → chọn meshopt (\`loader.setMeshoptDecoder(MeshoptDecoder)\`). Bottleneck là tổng thời gian decode cộng dồn mỗi lần model mới xuất hiện, không phải băng thông một lần — meshopt decode nhanh hơn Draco đáng kể (theo benchmark của meshoptimizer, ước lượng) nên giữ UI mượt khi cuộn.
 
-// Model kiến trúc nặng, tải một lần trên mạng di động chậm -> chọn Draco.
-// Bottleneck là băng thông tải về đúng một lần -- Draco thường nén hình học
-// nhỏ hơn (nguồn: Draco README), và chi phí decode WASM một lần chấp nhận
-// được vì chỉ xảy ra đúng 1 lần trong đời trang.
-// dracoLoader.setDecoderPath("/draco/");
-// loader.setDRACOLoader(dracoLoader);`,
+Model kiến trúc nặng, tải một lần trên mạng di động chậm → chọn Draco (\`dracoLoader.setDecoderPath("/draco/")\` rồi \`loader.setDRACOLoader(dracoLoader)\`). Bottleneck là băng thông tải về đúng một lần — Draco thường nén hình học nhỏ hơn (nguồn: Draco README), và chi phí decode WASM một lần chấp nhận được vì chỉ xảy ra đúng 1 lần trong đời trang.`,
+      en: `For the continuously-scrolling 40-model catalog → pick meshopt (\`loader.setMeshoptDecoder(MeshoptDecoder)\`). The bottleneck is the cumulative decode time each time a new model appears, not a one-time bandwidth cost — meshopt decodes noticeably faster than Draco (per meshoptimizer's own benchmarks, roughly), keeping the UI smooth while scrolling.
+
+For the heavy architectural model loaded once on a slow mobile connection → pick Draco (\`dracoLoader.setDecoderPath("/draco/")\` then \`loader.setDRACOLoader(dracoLoader)\`). The bottleneck is the one-time download bandwidth — Draco typically compresses geometry smaller (source: the Draco README), and the one-time WASM decode cost is acceptable since it happens exactly once in the page's lifetime.`,
+    },
   },
   {
     id: "dispose-gltf-hierarchy",
@@ -58,11 +54,11 @@ For each scenario, pick Draco or meshopt, and justify it with the actual mechani
     },
     starterCode: `function disposeHierarchy(root: THREE.Object3D) {
   root.traverse((obj) => {
-    // TODO 1: bỏ qua nếu obj không phải Mesh
+    // TODO 1: skip if obj isn't a Mesh
     // TODO 2: obj.geometry.dispose()
-    // TODO 3: material có thể là một mảng -- chuẩn hoá về mảng trước khi lặp
-    // TODO 4: với mỗi material, quét MỌI property để tìm texture (isTexture)
-    //         và dispose nó, rồi dispose chính material đó
+    // TODO 3: material can be an array -- normalize to an array before iterating
+    // TODO 4: for each material, scan EVERY property to find textures (isTexture)
+    //         and dispose them, then dispose the material itself
   });
 }`,
     solutionCode: `function disposeHierarchy(root: THREE.Object3D) {

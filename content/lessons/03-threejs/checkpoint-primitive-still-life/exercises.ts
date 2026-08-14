@@ -35,26 +35,26 @@ const camera = new THREE.PerspectiveCamera(
 const geometries: THREE.BufferGeometry[] = [];
 const materials: THREE.Material[] = [];
 
-// TODO 1: tạo >=4 mesh từ geometry built-in khác nhau (Box/Sphere/Cone/Torus/Cylinder...).
-// Mỗi lần tạo, push geometry và material của mesh đó vào 2 mảng trên (để dispose sau này),
-// và đặt position/scale/rotation có chủ đích — đừng xếp chồng lên nhau ở gốc toạ độ.
+// TODO 1: create >=4 meshes from different built-in geometries (Box/Sphere/Cone/Torus/Cylinder...).
+// Each time you create one, push its geometry and material into the two arrays above (for
+// disposal later), and give it a deliberate position/scale/rotation — don't stack them at the origin.
 
-// TODO 2: dùng >=3 loại material khác nhau trong số các mesh trên; ít nhất một mesh dùng
-// MeshStandardMaterial với metalness/roughness được canh chủ đích (không để mặc định —
-// chọn một cặp có ý nghĩa, ví dụ kim loại đánh bóng hoặc sứ mờ).
+// TODO 2: use >=3 different material types across the meshes above; at least one mesh should use
+// MeshStandardMaterial with a deliberately tuned metalness/roughness (don't leave the defaults —
+// pick a meaningful pair, e.g. polished metal or matte porcelain).
 
-// TODO 3: thêm đúng 1 AmbientLight (fill nhẹ) và 1 DirectionalLight (nguồn sáng chính) vào scene.
+// TODO 3: add exactly 1 AmbientLight (soft fill) and 1 DirectionalLight (key light) to the scene.
 
 let raf = 0;
 function render(t: number) {
-  // TODO 4: camera trôi nhẹ quanh composition (dùng sin/cos theo t), rồi camera.lookAt về tâm cảnh.
+  // TODO 4: drift the camera gently around the composition (using sin/cos of t), then camera.lookAt the scene's center.
   renderer.render(scene, camera);
   raf = requestAnimationFrame(render);
 }
 raf = requestAnimationFrame(render);
 
 function dispose() {
-  // TODO 5: dừng render loop, dispose từng geometry/material trong 2 mảng trên, dispose renderer.
+  // TODO 5: stop the render loop, dispose each geometry/material in the two arrays above, dispose the renderer.
 }
 window.addEventListener("beforeunload", dispose, { once: true });`,
     solutionCode: `import * as THREE from "three";
@@ -76,7 +76,7 @@ const camera = new THREE.PerspectiveCamera(
 const geometries: THREE.BufferGeometry[] = [];
 const materials: THREE.Material[] = [];
 
-// tấm nền — dielectric mờ, KHÔNG kim loại
+// ground slab — matte dielectric, NOT metal
 const groundGeo = new THREE.BoxGeometry(6, 0.2, 6);
 const groundMat = new THREE.MeshStandardMaterial({
   color: 0x33363f,
@@ -89,7 +89,7 @@ const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.position.y = -0.6;
 scene.add(ground);
 
-// quả cầu kim loại đánh bóng — metalness/roughness canh chủ đích
+// polished metal sphere — metalness/roughness deliberately tuned
 const sphereGeo = new THREE.SphereGeometry(0.9, 48, 48);
 const sphereMat = new THREE.MeshStandardMaterial({
   color: 0xd8dde6,
@@ -102,7 +102,7 @@ const sphere = new THREE.Mesh(sphereGeo, sphereMat);
 sphere.position.set(-1.4, 0.3, 0);
 scene.add(sphere);
 
-// hình nón — Phong, specular gọn
+// cone — Phong, tight specular
 const coneGeo = new THREE.ConeGeometry(0.7, 1.6, 32);
 const coneMat = new THREE.MeshPhongMaterial({ color: 0xe0663d, shininess: 80 });
 geometries.push(coneGeo);
@@ -112,7 +112,7 @@ cone.position.set(1.3, 0.4, -0.4);
 cone.rotation.z = Math.PI * 0.04;
 scene.add(cone);
 
-// hình xuyến — Lambert, khuếch tán rẻ
+// torus — Lambert, cheap diffuse
 const torusGeo = new THREE.TorusGeometry(0.55, 0.2, 24, 48);
 const torusMat = new THREE.MeshLambertMaterial({ color: 0x5fb37a });
 geometries.push(torusGeo);

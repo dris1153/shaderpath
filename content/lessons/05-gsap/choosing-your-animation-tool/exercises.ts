@@ -36,16 +36,22 @@ Without writing code, pick one of the three tools (\`css\`, \`motion\`, \`gsap\`
         en: "I noted GSAP's Flip plugin could do this too but requires manually calling Flip.getState/Flip.from — a better fit outside React, not wrong here but more work for this exact context",
       },
     ],
-    solutionCode: `// Công cụ đúng: Motion, dùng prop "layout".
-//
-// - Truc "do phuc tap bien dao": day la bai toan FLIP (vi tri/kich thuoc
-//   A -> B khi layout doi) -- khong phai hai trang thai tinh nen CSS
-//   transition thuan khong du (no khong biet toa do dich).
-// - Truc "team/framework": ung dung React noi bo -- Motion hieu vong doi
-//   component, animate duoc ca AnimatePresence luc the khac roi DOM.
-// - GSAP Flip.getState()/Flip.from() giai duoc CHINH XAC bai toan nay,
-//   nhung doi tu goi do luong thu cong quanh moi lan layout doi -- hop ly
-//   hon khi app khong phai React; o day Motion it code hon cho cung ket qua.`,
+    solutionNote: {
+      vi: `Công cụ đúng: Motion, dùng prop \`layout\`.
+
+Trục "độ phức tạp biến đổi": đây là bài toán FLIP (vị trí/kích thước A → B khi layout đổi) — không phải hai trạng thái tĩnh nên CSS transition thuần không đủ (nó không biết toạ độ đích).
+
+Trục "team/framework": ứng dụng React nội bộ — Motion hiểu vòng đời component, animate được cả \`AnimatePresence\` lúc thẻ khác rời DOM.
+
+GSAP \`Flip.getState()\`/\`Flip.from()\` giải được CHÍNH XÁC bài toán này, nhưng đòi tự gọi đo lường thủ công quanh mỗi lần layout đổi — hợp lý hơn khi app không phải React; ở đây Motion ít code hơn cho cùng kết quả.`,
+      en: `The right tool: Motion, using the \`layout\` prop.
+
+The "change complexity" axis: this is a FLIP problem (position/size A → B when layout changes) — not a two static-state transition, so a plain CSS transition isn't enough (it doesn't know the destination coordinates).
+
+The "team/framework" axis: an internal React app — Motion understands the component lifecycle, and can even animate \`AnimatePresence\` as other elements leave the DOM.
+
+GSAP's \`Flip.getState()\`/\`Flip.from()\` solves this EXACTLY too, but requires manually calling measurement code around every layout change — a better fit when the app isn't React; here Motion needs less code for the same result.`,
+    },
   },
   {
     id: "pick-animation-tool-fn",

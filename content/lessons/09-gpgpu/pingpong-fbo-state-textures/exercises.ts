@@ -36,16 +36,14 @@ Then explain with a concrete mechanism: what happens at the driver level if you 
         en: "I stated why a correct result on one GPU doesn't prove the code is correct on another",
       },
     ],
-    solutionCode: `// 1 texture 128×128 RGBA16F = 128 × 128 × 4 kênh × 2 byte = 131,072 byte
-// Cặp A + B (ping-pong) = 131,072 × 2 = 262,144 byte ≈ 256KB
-//
-// Render vào A trong khi sample A: đặc tả OpenGL/WebGL gọi đây là feedback
-// loop — thứ tự đọc/ghi giữa các fragment invocation chạy song song không
-// được đảm bảo. Driver có thể trả giá trị cũ cho một số texel, giá trị mới
-// cho số khác, tuỳ cách nó lập lịch warp/wavefront — hành vi này phụ thuộc
-// kiến trúc GPU cụ thể, nên "chạy đúng" trên một máy test không phải bằng
-// chứng nó đúng theo spec, chỉ là driver đó tình cờ chọn một thứ tự che
-// giấu được lỗi; đổi GPU, đổi driver version, kết quả có thể khác ngay.`,
+    solutionNote: {
+      vi: `Một texture $128 \\times 128$ RGBA16F $= 128 \\times 128 \\times 4 \\times 2 = 131{,}072$ byte. Cặp A + B (ping-pong) $= 131{,}072 \\times 2 = 262{,}144$ byte $\\approx 256$KB.
+
+Render vào A trong khi cũng sample chính A: đặc tả OpenGL/WebGL gọi đây là feedback loop — thứ tự đọc/ghi giữa các fragment invocation chạy song song không được đảm bảo. Driver có thể trả giá trị cũ cho một số texel, giá trị mới cho số khác, tuỳ cách nó lập lịch warp/wavefront — hành vi này phụ thuộc kiến trúc GPU cụ thể, nên "chạy đúng" trên một máy test không phải là bằng chứng nó đúng theo spec, chỉ là driver đó tình cờ chọn một thứ tự che giấu được lỗi; đổi GPU hoặc đổi phiên bản driver, kết quả có thể khác ngay lập tức.`,
+      en: `One $128 \\times 128$ RGBA16F texture $= 128 \\times 128 \\times 4 \\times 2 = 131{,}072$ bytes. The A + B ping-pong pair $= 131{,}072 \\times 2 = 262{,}144$ bytes $\\approx 256$KB.
+
+Rendering into A while also sampling that same A: the OpenGL/WebGL spec calls this a feedback loop — the read/write order across parallel fragment invocations is never guaranteed. The driver may return the old value for some texels and the new value for others, depending on how it schedules warps/wavefronts — this behavior depends on the specific GPU architecture, so "working correctly" on one test machine isn't proof it's correct per spec, it just means that driver happened to pick an ordering that hides the bug; swap the GPU or driver version and the result can differ immediately.`,
+    },
   },
   {
     id: "ping-pong-swap",

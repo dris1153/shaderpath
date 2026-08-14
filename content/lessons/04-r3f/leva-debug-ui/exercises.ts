@@ -32,22 +32,22 @@ export const exercises: Exercise[] = [
         en: "I proposed a concrete way to avoid shipping leva to production (e.g. a NODE_ENV condition, dynamic import)",
       },
     ],
-    solutionCode: `// Khác biệt về VAI TRÒ (không phải giao diện):
-// 1. Ai thiết kế nó: control panel của Demo do lập trình viên NỀN TẢNG
-//    thiết kế trước, cố định, cho NGƯỜI HỌC dùng — là UI chính thức của
-//    sản phẩm. leva do chính lập trình viên tự thêm để HỌ tinh chỉnh khi
-//    code, không phải UI dành cho người dùng cuối.
-// 2. Vòng đời: control panel của Demo SỐNG CÙNG sản phẩm mãi mãi (mọi
-//    người học đều thấy nó). leva chỉ sống trong lúc phát triển — gần
-//    như luôn bị xoá hoặc tắt sau khi tìm ra con số cuối cùng.
-//
-// Gắn <Leva /> thẳng vào production sai vì: <Leva hidden /> chỉ ẩn UI,
-// code JS của leva (và mọi state nó theo dõi) vẫn nằm trong bundle, vẫn
-// tốn băng thông tải về dù người dùng cuối không bao giờ thấy panel đó.
-// Cách khắc phục: tách code path theo môi trường, ví dụ
-//   const DevPanel = process.env.NODE_ENV !== "production"
-//     ? dynamic(() => import("./DevPanel")) : () => null;
-// để bundler loại hẳn leva khỏi chunk production, không chỉ ẩn nó.`,
+    solutionNote: {
+      vi: `Khác biệt về VAI TRÒ (không phải giao diện):
+
+1. Ai thiết kế nó: control panel của \`Demo\` do lập trình viên NỀN TẢNG thiết kế trước, cố định, cho NGƯỜI HỌC dùng — là UI chính thức của sản phẩm. \`leva\` do chính lập trình viên tự thêm để HỌ tinh chỉnh khi code, không phải UI dành cho người dùng cuối.
+
+2. Vòng đời: control panel của \`Demo\` SỐNG CÙNG sản phẩm mãi mãi (mọi người học đều thấy nó). \`leva\` chỉ sống trong lúc phát triển — gần như luôn bị xoá hoặc tắt sau khi tìm ra con số cuối cùng.
+
+Gắn \`<Leva />\` thẳng vào production là sai vì \`<Leva hidden />\` chỉ ẩn UI — code JS của leva (và mọi state nó theo dõi) vẫn nằm trong bundle, vẫn tốn băng thông tải về dù người dùng cuối không bao giờ thấy panel đó. Cách khắc phục là tách code path theo môi trường, ví dụ \`const DevPanel = process.env.NODE_ENV !== "production" ? dynamic(() => import("./DevPanel")) : () => null;\`, để bundler loại hẳn leva khỏi chunk production, không chỉ ẩn nó.`,
+      en: `Role differences (not appearance):
+
+1. Who designs it: \`Demo\`'s control panel is pre-designed, fixed, by this PLATFORM's engineers for LEARNERS to use — it's the product's official UI. \`leva\` is added by the engineer themselves to tune values while coding — it's not UI meant for end users.
+
+2. Lifecycle: \`Demo\`'s control panel lives WITH the product forever (every learner sees it). \`leva\` only lives during development — it's almost always removed or disabled once the final numbers are locked in.
+
+Wiring \`<Leva />\` straight into production is wrong because \`<Leva hidden />\` only hides the UI — leva's JS code (and every piece of state it tracks) still sits in the bundle, still costs download bandwidth even though end users never see that panel. The fix is splitting the code path by environment, e.g. \`const DevPanel = process.env.NODE_ENV !== "production" ? dynamic(() => import("./DevPanel")) : () => null;\`, so the bundler strips leva out of the production chunk entirely, not just hides it.`,
+    },
   },
   {
     id: "build-transient-tuner",
@@ -62,9 +62,9 @@ export const exercises: Exercise[] = [
 }
 
 function createTuner<T extends Record<string, number>>(initial: T): Tuner<T> {
-  // TODO: giữ giá trị hiện tại trong một biến (KHÔNG phải React state) —
-  // get đọc trực tiếp từ biến đó tại thời điểm gọi, set merge patch vào
-  // biến đó — không bước nào gọi setState hay trigger re-render.
+  // TODO: keep the current value in a plain variable (NOT React state) --
+  // get reads directly from that variable at call time, set merges the patch
+  // into that variable -- no step calls setState or triggers a re-render.
   throw new Error("not implemented");
 }`,
     solutionCode: `function createTuner<T extends Record<string, number>>(initial: T): Tuner<T> {
@@ -77,10 +77,10 @@ function createTuner<T extends Record<string, number>>(initial: T): Tuner<T> {
   };
 }
 
-// dùng trong render loop, giống hệt cách get/set của leva tránh re-render:
+// used inside a render loop, exactly how leva's get/set avoids re-renders:
 // const tuner = createTuner({ intensity: 1.2 });
 // function animate() {
-//   light.intensity = tuner.get("intensity"); // đọc mới nhất, không re-render
+//   light.intensity = tuner.get("intensity"); // reads the latest value, no re-render
 //   requestAnimationFrame(animate);
 // }`,
     hints: [

@@ -36,19 +36,18 @@ Then explain: why is the result from step (3) — even though it's computed with
         en: "I can explain that the result has both a lightly-tinted reflectance (not a pure gray 0.04 like plastic) AND leftover diffuse (real metals have none) — matching no real material",
       },
     ],
-    solutionCode: `// m = 0: F0 = (0.04, 0.04, 0.04)              diffuse = (0.8, 0.5, 0.2)
-// m = 1: F0 = (0.8, 0.5, 0.2)                  diffuse = (0, 0, 0)
-//
-// m = 0.5, per channel: F0 = 0.04*0.5 + albedo*0.5, diffuse = albedo*0.5
-// F0.r = 0.02 + 0.40 = 0.42   diffuse.r = 0.40
-// F0.g = 0.02 + 0.25 = 0.27   diffuse.g = 0.25
-// F0.b = 0.02 + 0.10 = 0.12   diffuse.b = 0.10
-//
-// Ket qua nay vua phan xa mau dong nhat (tinted, khong xam 0.04 nhu nhua
-// that) vua con diffuse du (kim loai that = 0) -- khong khop bat ky vat
-// lieu don le nao. Chi hop ly khi day la MOT PIXEL o ranh gioi mask giua
-// vung kim loai sach va vung son/ri set ben canh, khong phai gia tri co
-// dinh cho toan bo be mat lon.`,
+    solutionNote: {
+      vi: `$m = 0$: $F_0 = (0.04, 0.04, 0.04)$, diffuse $= (0.8, 0.5, 0.2)$. $m = 1$: $F_0 = (0.8, 0.5, 0.2)$, diffuse $= (0, 0, 0)$.
+
+$m = 0.5$, theo từng kênh: $F_0 = 0.04 \\times 0.5 + \\text{albedo} \\times 0.5$, diffuse $= \\text{albedo} \\times 0.5$. $F_0.r = 0.02 + 0.40 = 0.42$, diffuse.r $= 0.40$; $F_0.g = 0.02 + 0.25 = 0.27$, diffuse.g $= 0.25$; $F_0.b = 0.02 + 0.10 = 0.12$, diffuse.b $= 0.10$.
+
+Kết quả này vừa có phản xạ màu đồng nhất (tinted, không xám 0.04 thuần như nhựa thật) vừa còn diffuse dư (kim loại thật = 0) — không khớp bất kỳ vật liệu đơn lẻ nào. Chỉ hợp lý khi đây là MỘT PIXEL ở ranh giới mask giữa vùng kim loại sạch và vùng sơn/rỉ sét bên cạnh, không phải giá trị cố định cho toàn bộ bề mặt lớn.`,
+      en: `$m = 0$: $F_0 = (0.04, 0.04, 0.04)$, diffuse $= (0.8, 0.5, 0.2)$. $m = 1$: $F_0 = (0.8, 0.5, 0.2)$, diffuse $= (0, 0, 0)$.
+
+$m = 0.5$, per channel: $F_0 = 0.04 \\times 0.5 + \\text{albedo} \\times 0.5$, diffuse $= \\text{albedo} \\times 0.5$. $F_0.r = 0.02 + 0.40 = 0.42$, diffuse.r $= 0.40$; $F_0.g = 0.02 + 0.25 = 0.27$, diffuse.g $= 0.25$; $F_0.b = 0.02 + 0.10 = 0.12$, diffuse.b $= 0.10$.
+
+This result has both a uniformly-tinted reflectance (not a pure gray 0.04 like real plastic) AND leftover diffuse (real metals have none) — matching no single real material. It's only sensible as ONE PIXEL at a mask boundary between a clean metal region and an adjacent paint/rust region, not a fixed value across a large surface.`,
+    },
   },
   {
     id: "resolve-material-inputs",

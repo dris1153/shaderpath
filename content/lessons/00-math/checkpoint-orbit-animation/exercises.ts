@@ -23,8 +23,8 @@ const bodies = [
   { radius: 40, speed: 2.0, phase: 4.7, size: 5 },
 ];
 
-const colorA = [0.9, 0.15, 0.15]; // đỏ / red, sRGB 0..1
-const colorB = [0.15, 0.75, 0.95]; // lam / blue, sRGB 0..1
+const colorA = [0.9, 0.15, 0.15]; // red, sRGB 0..1
+const colorB = [0.15, 0.75, 0.95]; // blue, sRGB 0..1
 
 const mouse = { x: CENTER.x, y: CENTER.y };
 canvas.addEventListener("pointermove", (e) => {
@@ -36,9 +36,9 @@ canvas.addEventListener("pointermove", (e) => {
 let aimAngle = 0;
 let lastT = performance.now();
 
-// TODO 1: srgbToLinear(c) / linearToSrgb(c) dùng Math.pow(c, 2.2) và Math.pow(c, 1 / 2.2)
-// TODO 2: linearBlend(a, b, t) — decode cả a và b, trộn từng kênh, encode lại, trả về "rgb(r,g,b)"
-// TODO 3: angleDiff(target, current) — đưa hiệu góc về [-PI, PI] để tránh đuổi vòng xa
+// TODO 1: srgbToLinear(c) / linearToSrgb(c) using Math.pow(c, 2.2) and Math.pow(c, 1 / 2.2)
+// TODO 2: linearBlend(a, b, t) — decode both a and b, blend each channel, encode back, return "rgb(r,g,b)"
+// TODO 3: angleDiff(target, current) — wrap the angle difference into [-PI, PI] to avoid chasing the long way around
 
 function draw(now: number) {
   const dt = Math.min((now - lastT) / 1000, 0.1);
@@ -48,12 +48,12 @@ function draw(now: number) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   for (const b of bodies) {
-    // TODO 4: tính góc quỹ đạo từ t, b.speed, b.phase; suy ra vị trí bằng cos/sin
-    // TODO 5: tính mixT dao động theo góc (vd. (sin(angle)+1)/2), trộn màu bằng linearBlend, vẽ hình tròn
+    // TODO 4: compute the orbit angle from t, b.speed, b.phase; derive position via cos/sin
+    // TODO 5: compute mixT oscillating with the angle (e.g. (sin(angle)+1)/2), blend color with linearBlend, draw the circle
   }
 
-  // TODO 6: targetAngle = atan2(mouse - CENTER); cập nhật aimAngle bằng decay đúng dt
-  // TODO 7: vẽ một đoạn thẳng từ CENTER theo hướng aimAngle
+  // TODO 6: targetAngle = atan2(mouse - CENTER); update aimAngle with a dt-correct decay
+  // TODO 7: draw a line segment from CENTER along the aimAngle direction
 
   requestAnimationFrame(draw);
 }
@@ -69,8 +69,8 @@ const bodies = [
   { radius: 40, speed: 2.0, phase: 4.7, size: 5 },
 ];
 
-const colorA = [0.9, 0.15, 0.15]; // đỏ / red, sRGB 0..1
-const colorB = [0.15, 0.75, 0.95]; // lam / blue, sRGB 0..1
+const colorA = [0.9, 0.15, 0.15]; // red, sRGB 0..1
+const colorB = [0.15, 0.75, 0.95]; // blue, sRGB 0..1
 
 const mouse = { x: CENTER.x, y: CENTER.y };
 canvas.addEventListener("pointermove", (e) => {
@@ -97,8 +97,8 @@ function linearBlend(a: number[], b: number[], t: number) {
   return \`rgb(\${rgb[0]}, \${rgb[1]}, \${rgb[2]})\`;
 }
 
-// Khoảng cách góc ngắn nhất, đưa về [-PI, PI] — tránh aimAngle "chạy vòng xa"
-// khi target vượt qua ranh giới -PI/PI.
+// Shortest angular distance, wrapped into [-PI, PI] — avoids aimAngle spinning
+// the long way around when target crosses the -PI/PI boundary.
 function angleDiff(target: number, current: number) {
   const twoPi = Math.PI * 2;
   return ((target - current + Math.PI) % twoPi + twoPi) % twoPi - Math.PI;
@@ -124,7 +124,7 @@ function draw(now: number) {
   }
 
   const targetAngle = Math.atan2(mouse.y - CENTER.y, mouse.x - CENTER.x);
-  const rate = 8; // decay lớn hơn = đuổi kịp nhanh hơn
+  const rate = 8; // a larger decay rate = catches up faster
   aimAngle += angleDiff(targetAngle, aimAngle) * (1 - Math.exp(-rate * dt));
 
   ctx.strokeStyle = "white";

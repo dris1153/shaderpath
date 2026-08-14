@@ -36,23 +36,26 @@ Recall that \`RenderPass\` always sets \`needsSwap = false\` itself and renders 
         en: "I correctly concluded that OutputPass reads composer.readBuffer = B (the original scene, WITHOUT the effect) — the viewer sees the screen as if EffectPass never existed, even though it computed and wrote correct data",
       },
     ],
-    solutionCode: `// Truoc RenderPass:      writeBuffer=A, readBuffer=B
-// RenderPass.render(_, A, B): ghi canh vao B (tham so readBuffer no nhan).
-//   needsSwap=false (RenderPass tu set) -> KHONG swap.
-//   Sau buoc nay: writeBuffer=A (trong), readBuffer=B (co canh)
-//
-// EffectPass.render(_, A, B): doc dung B.texture (co canh), cong hieu ung,
-//   ghi ket qua HOP LE vao A (tham so writeBuffer no nhan).
-//   needsSwap=false (LOI) -> KHONG swap.
-//   Sau buoc nay: writeBuffer=A (co canh+hieu ung, nhung khong ai biet),
-//                 readBuffer=B (VAN la canh goc, khong doi)
-//
-// OutputPass.render(_, A, B): doc B.texture (canh GOC, khong co hieu ung).
-//   La pass cuoi cung con enabled -> renderToScreen=true.
-//
-// Ket qua: man hinh hien canh goc da tone map, KHONG co hieu ung cua
-// EffectPass — du EffectPass tinh toan va ghi du lieu hoan toan dung.
-// Buffer A tro thanh "du lieu chet": dung nhung khong bao gio duoc doc.`,
+    solutionNote: {
+      vi: `Trước RenderPass: \`writeBuffer=A\`, \`readBuffer=B\`.
+
+\`RenderPass.render(_, A, B)\`: ghi cảnh vào B (tham số \`readBuffer\` nó nhận). \`needsSwap=false\` (RenderPass tự set) nên không swap. Sau bước này: \`writeBuffer=A\` (trống), \`readBuffer=B\` (có cảnh).
+
+\`EffectPass.render(_, A, B)\`: đọc đúng \`B.texture\` (có cảnh), cộng hiệu ứng, ghi kết quả hợp lệ vào A (tham số \`writeBuffer\` nó nhận). \`needsSwap=false\` (lỗi) nên không swap. Sau bước này: \`writeBuffer=A\` (có cảnh + hiệu ứng, nhưng không ai biết), \`readBuffer=B\` (vẫn là cảnh gốc, không đổi).
+
+\`OutputPass.render(_, A, B)\`: đọc \`B.texture\` (cảnh gốc, không có hiệu ứng). Là pass cuối cùng còn \`enabled\` nên \`renderToScreen=true\`.
+
+Kết quả: màn hình hiện cảnh gốc đã tone map, KHÔNG có hiệu ứng của EffectPass — dù EffectPass đã tính toán và ghi dữ liệu hoàn toàn đúng. Buffer A trở thành "dữ liệu chết": đúng nhưng không bao giờ được đọc.`,
+      en: `Before RenderPass: \`writeBuffer=A\`, \`readBuffer=B\`.
+
+\`RenderPass.render(_, A, B)\`: writes the scene into B (the \`readBuffer\` parameter it receives). \`needsSwap=false\` (RenderPass always sets this itself) so it never swaps. After this step: \`writeBuffer=A\` (empty), \`readBuffer=B\` (holds the scene).
+
+\`EffectPass.render(_, A, B)\`: correctly reads \`B.texture\` (holding the scene), adds its effect, writes a valid result into A (the \`writeBuffer\` parameter it receives). \`needsSwap=false\` (the bug) so it never swaps. After this step: \`writeBuffer=A\` (holds scene + effect, but nobody knows), \`readBuffer=B\` (still the original scene, unchanged).
+
+\`OutputPass.render(_, A, B)\`: reads \`B.texture\` (the original scene, no effect). It's the last enabled pass, so \`renderToScreen=true\`.
+
+Result: the screen shows the original, tone-mapped scene, WITHOUT EffectPass's effect — even though EffectPass computed and wrote entirely correct data. Buffer A becomes "dead data": correct, but never read.`,
+    },
   },
   {
     id: "shimmer-warp-in-playground",
@@ -64,7 +67,7 @@ Recall that \`RenderPass\` always sets \`needsSwap = false\` itself and renders 
     starterCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
 
-  // TODO: warped = uv, roi cong sin(uv.y * 14.0 + uTime) * 0.03 vao warped.x
+  // TODO: warped = uv, then add sin(uv.y * 14.0 + uTime) * 0.03 to warped.x
   vec2 warped = uv;
 
   float stripes = step(0.5, fract(warped.x * 10.0));

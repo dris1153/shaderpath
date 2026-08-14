@@ -36,18 +36,18 @@ Then answer: what is the $R:G:B$ ratio before tone mapping (simplified), and wha
         en: "I explained that the desaturation comes from x/(1+x) heavily compressing large values toward 1 regardless of their original spread, not from any separate blending step in the formula",
       },
     ],
-    solutionCode: `// R' = 6.0 / (1 + 6.0) = 6/7      ~ 0.857
-// G' = 1.5 / (1 + 1.5) = 1.5/2.5  = 0.6
-// B' = 0.2 / (1 + 0.2) = 0.2/1.2  ~ 0.167
-//
-// Ti le truoc: 6.0 : 1.5 : 0.2  = 30 : 7.5 : 1
-// Ti le sau:   0.857 : 0.6 : 0.167  ~ 5.13 : 3.59 : 1
-//
-// x/(1+x) la ham TIEM CAN 1 rat nhanh khi x lon: dao ham giam theo 1/(1+x)^2,
-// nen hai input rat khac nhau (vd 6.0 va 60.0) deu bi keo gan sat 1 nhu nhau.
-// Vi tone map tung KENH doc lap (khong qua luminance chung), kenh cang manh
-// cang bi nen ti le mach hon kenh yeu -> khoang cach giua cac kenh thu hep,
-// mau bac dan ve trang o vung rat sang - dung nhu "desaturates highlights".`,
+    solutionNote: {
+      vi: `$R' = 6.0/(1+6.0) = 6/7 \\approx 0.857$, $G' = 1.5/(1+1.5) = 1.5/2.5 = 0.6$, $B' = 0.2/(1+0.2) = 0.2/1.2 \\approx 0.167$.
+
+Tỉ lệ trước: $6.0 : 1.5 : 0.2 = 30 : 7.5 : 1$. Tỉ lệ sau: $0.857 : 0.6 : 0.167 \\approx 5.13 : 3.59 : 1$.
+
+$x/(1+x)$ là hàm tiệm cận $1$ rất nhanh khi $x$ lớn: đạo hàm giảm theo $1/(1+x)^2$, nên hai input rất khác nhau (ví dụ $6.0$ và $60.0$) đều bị kéo gần sát $1$ như nhau. Vì tone map từng kênh độc lập (không qua luminance chung), kênh càng mạnh càng bị nén tỉ lệ mạnh hơn kênh yếu, khiến khoảng cách giữa các kênh thu hẹp lại — màu bạc dần về trắng ở vùng rất sáng, đúng như hiện tượng "desaturates highlights".`,
+      en: `$R' = 6.0/(1+6.0) = 6/7 \\approx 0.857$, $G' = 1.5/(1+1.5) = 1.5/2.5 = 0.6$, $B' = 0.2/(1+0.2) = 0.2/1.2 \\approx 0.167$.
+
+Ratio before: $6.0 : 1.5 : 0.2 = 30 : 7.5 : 1$. Ratio after: $0.857 : 0.6 : 0.167 \\approx 5.13 : 3.59 : 1$.
+
+$x/(1+x)$ is a function that approaches $1$ very quickly as $x$ grows: its derivative falls off as $1/(1+x)^2$, so two very different inputs (say $6.0$ and $60.0$) both get pulled nearly as close to $1$ as each other. Because tone mapping runs per channel independently (not through a shared luminance), the stronger a channel is, the more its ratio gets compressed relative to a weaker channel — the spread between channels narrows, and color drains toward white in very bright regions, exactly what "desaturates highlights" describes.`,
+    },
   },
   {
     id: "half-texel-lut-lookup",
@@ -64,7 +64,7 @@ Then answer: what is the $R:G:B$ ratio before tone mapping (simplified), and wha
   return [0, 0, 0];
 }
 
-// Ki vong: lutSampleCoord([0, 0, 0], 16) => [1/32, 1/32, 1/32] (~0.03125 moi truc)
+// Expected: lutSampleCoord([0, 0, 0], 16) => [1/32, 1/32, 1/32] (~0.03125 per axis)
 console.log(lutSampleCoord([0, 0, 0], 16));`,
     solutionCode: `function lutSampleCoord(
   rgb: [number, number, number],

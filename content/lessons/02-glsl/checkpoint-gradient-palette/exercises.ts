@@ -16,7 +16,7 @@ Requirements: a \`palette(t, a, b, c, d)\` function implementing \`pal(t) = a + 
 
 Suggested structure: write \`palette()\` once, call it twice with two parameter sets, then \`mix\` the two results.`,
     },
-    starterCode: `// Công thức cosine palette của Inigo Quilez:
+    starterCode: `// Inigo Quilez's cosine palette formula:
 // pal(t) = a + b * cos(2*PI * (c*t + d))
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
   return a + b * cos(6.28318 * (c * t + d));
@@ -25,17 +25,17 @@ vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) {
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
 
-  // TODO 1: khai báo 2 bộ tham số (a, b, c, d) khác nhau — 2 preset palette
+  // TODO 1: declare 2 different (a, b, c, d) parameter sets — 2 palette presets
   vec3 a1 = vec3(0.5), b1 = vec3(0.5), c1 = vec3(1.0), d1 = vec3(0.0, 0.33, 0.67);
   vec3 a2 = vec3(0.5), b2 = vec3(0.5), c2 = vec3(1.0), d2 = vec3(0.0, 0.1, 0.2);
 
-  // TODO 2: t nên trộn uv.x (dải màu ngang) với uTime (chuyển động theo thời gian)
+  // TODO 2: t should combine uv.x (horizontal color band) with uTime (motion over time)
   float t = 0.0;
 
   vec3 left = palette(t, a1, b1, c1, d1);
   vec3 right = palette(t, a2, b2, c2, d2);
 
-  // TODO 3: chọn preset theo NỬA màn hình bằng step() trên uv.x — KHÔNG dùng if
+  // TODO 3: pick a preset by screen HALF using step() on uv.x — do NOT use if
   vec3 color = left;
 
   fragColor = vec4(color, 1.0);

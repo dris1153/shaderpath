@@ -32,15 +32,18 @@ export const exercises: Exercise[] = [
         en: "Correctly explains 32× = 16× (area, from a 4× side ratio) × 2× (half-float vs RGBA8), not a single guessed number",
       },
     ],
-    solutionCode: `// (1) RGBA8 1024²: base = 1024*1024*4 = 4,194,304 B = 4 MB; ×4/3 ≈ 5.33 MB
-// (2) half-float 4096²: base = 4096*4096*8 = 134,217,728 B = 128 MB; ×4/3 ≈ 170.67 MB
-//
-// ratio = 170.67 / 5.33 ≈ 32
-//
-// The 4/3 mip factor is IDENTICAL on both sides, so it cancels out of the
-// ratio entirely. What's left: (4096/1024)^2 = 4^2 = 16 (area scales with
-// the SQUARE of the side ratio) times (8/4) = 2 (half-float bytes vs
-// RGBA8) = 16 * 2 = 32.`,
+    solutionNote: {
+      vi: `(1) RGBA8 $1024^2$: \`base = 1024 * 1024 * 4 = 4,194,304 bytes = 4 MB\`; ×4/3 ≈ 5.33 MB. (2) half-float $4096^2$: \`base = 4096 * 4096 * 8 = 134,217,728 bytes = 128 MB\`; ×4/3 ≈ 170.67 MB.
+
+Tỉ lệ $= 170.67 / 5.33 \\approx 32$.
+
+Hệ số mip $4/3$ GIỐNG HỆT NHAU ở cả hai bên nên triệt tiêu hoàn toàn khỏi tỉ lệ. Còn lại: $(4096/1024)^2 = 4^2 = 16$ (diện tích tăng theo BÌNH PHƯƠNG tỉ lệ cạnh) nhân với $8/4 = 2$ (half-float so với RGBA8) $= 16 \\times 2 = 32$.`,
+      en: `(1) RGBA8 $1024^2$: \`base = 1024 * 1024 * 4 = 4,194,304 bytes = 4 MB\`; ×4/3 ≈ 5.33 MB. (2) half-float $4096^2$: \`base = 4096 * 4096 * 8 = 134,217,728 bytes = 128 MB\`; ×4/3 ≈ 170.67 MB.
+
+Ratio $= 170.67 / 5.33 \\approx 32$.
+
+The 4/3 mip factor is IDENTICAL on both sides, so it cancels out of the ratio entirely. What's left: $(4096/1024)^2 = 4^2 = 16$ (area scales with the SQUARE of the side ratio) times $8/4 = 2$ (half-float bytes vs. RGBA8) $= 16 \\times 2 = 32$.`,
+    },
   },
   {
     id: "implement-texture-footprint-formula",

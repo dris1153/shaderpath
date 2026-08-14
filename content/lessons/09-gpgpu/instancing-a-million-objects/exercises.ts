@@ -36,12 +36,22 @@ Compute the total texture reads per second for placement alone (not fragment sha
         en: "States the correct 4x reduction, exactly matching the 12:3 vertex-count ratio",
       },
     ],
-    solutionCode: `// reads/sec = N * verticesPerInstance * readsPerVertex * fps
-// original (tetrahedron, 12 verts): 500_000 * 12 * 2 * 60 = 720,000,000
-// LOD (triangle, 3 verts):          500_000 *  3 * 2 * 60 = 180,000,000
-// ratio = 720M / 180M = 4x, exactly the 12:3 vertex-count ratio —
-// the other three factors (N, readsPerVertex, fps) are identical in both
-// and cancel out of the ratio.`,
+    solutionNote: {
+      vi: `$\\text{reads/sec} = N \\times \\text{verticesPerInstance} \\times \\text{readsPerVertex} \\times \\text{fps}$.
+
+Bản gốc (tứ diện, 12 đỉnh): $500{,}000 \\times 12 \\times 2 \\times 60 = 720{,}000{,}000$.
+
+Bản LOD (tam giác, 3 đỉnh): $500{,}000 \\times 3 \\times 2 \\times 60 = 180{,}000{,}000$.
+
+Tỉ lệ $= 720\\text{M} / 180\\text{M} = 4$ lần, đúng bằng tỉ lệ số đỉnh 12:3 — ba số hạng còn lại ($N$, readsPerVertex, fps) giống hệt nhau ở cả hai trường hợp nên triệt tiêu khi lấy tỉ lệ.`,
+      en: `$\\text{reads/sec} = N \\times \\text{verticesPerInstance} \\times \\text{readsPerVertex} \\times \\text{fps}$.
+
+Original (tetrahedron, 12 verts): $500{,}000 \\times 12 \\times 2 \\times 60 = 720{,}000{,}000$.
+
+LOD (triangle, 3 verts): $500{,}000 \\times 3 \\times 2 \\times 60 = 180{,}000{,}000$.
+
+Ratio $= 720\\text{M} / 180\\text{M} = 4\\times$, exactly the 12:3 vertex-count ratio — the other three factors ($N$, readsPerVertex, fps) are identical in both and cancel out of the ratio.`,
+    },
   },
   {
     id: "instance-uv-attribute",

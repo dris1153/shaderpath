@@ -36,16 +36,18 @@ Using $s_{\\text{px}} \\approx \\dfrac{H \\cdot r}{d \\cdot \\tan(\\theta/2)}$, 
         en: "Correctly computed the distance where object A hits the threshold: $d \\approx 8.15$m",
       },
     ],
-    solutionCode: `// s_px^A = (900 * 0.15) / (6 * 0.4142) = 135 / 2.4852 ≈ 54.3px
-// s_px^B = (900 * 0.6)  / (6 * 0.4142) = 540 / 2.4852 ≈ 217.3px
-//
-// Cả 54.3px và 217.3px đều > 40px → CHƯA object nào nên chuyển sang
-// billboard ở d=6m (dùng chung một ngưỡng "distance" cố định cho cả hai sẽ
-// sai: nếu chuyển cả hai ở d=6m, object B mất chi tiết SỚM dù đang chiếm
-// tới 217px màn hình — vẫn còn rất rõ).
-//
-// Giải d khi s_px = 40 cho object A (r=0.15):
-// d = (900 * 0.15) / (40 * 0.4142) = 135 / 16.568 ≈ 8.15m`,
+    solutionNote: {
+      vi: `$s_{px}^A = (900 \\times 0.15)/(6 \\times 0.4142) = 135/2.4852 \\approx 54.3$px. $s_{px}^B = (900 \\times 0.6)/(6 \\times 0.4142) = 540/2.4852 \\approx 217.3$px.
+
+Cả 54.3px và 217.3px đều > 40px → CHƯA object nào nên chuyển sang billboard ở $d=6$m (dùng chung một ngưỡng "distance" cố định cho cả hai sẽ sai: nếu chuyển cả hai ở $d=6$m, object B mất chi tiết SỚM dù đang chiếm tới 217px màn hình — vẫn còn rất rõ).
+
+Giải $d$ khi $s_{px} = 40$ cho object A ($r=0.15$): $d = (900 \\times 0.15)/(40 \\times 0.4142) = 135/16.568 \\approx 8.15$m.`,
+      en: `$s_{px}^A = (900 \\times 0.15)/(6 \\times 0.4142) = 135/2.4852 \\approx 54.3$px. $s_{px}^B = (900 \\times 0.6)/(6 \\times 0.4142) = 540/2.4852 \\approx 217.3$px.
+
+Both 54.3px and 217.3px are > 40px → NEITHER object should switch to billboard at $d=6$m (sharing a single fixed "distance" threshold for both would be wrong: switching both at $d=6$m would drop object B's detail TOO EARLY even though it still covers 217px on screen — still very much visible).
+
+Solving for $d$ when $s_{px} = 40$ for object A ($r=0.15$): $d = (900 \\times 0.15)/(40 \\times 0.4142) = 135/16.568 \\approx 8.15$m.`,
+    },
   },
   {
     id: "pick-lod-level-by-coverage",
@@ -61,9 +63,9 @@ Using $s_{\\text{px}} \\approx \\dfrac{H \\cdot r}{d \\cdot \\tan(\\theta/2)}$, 
   viewportHeight: number,
   thresholdsPx: readonly [number, number],
 ): 0 | 1 | 2 {
-  // TODO 1: đổi fovDeg sang radian, tính s_px theo công thức
+  // TODO 1: convert fovDeg to radians, compute s_px using the formula
   //   s_px = (viewportHeight * radius) / (distance * tan(fovRad / 2))
-  // TODO 2: so s_px với thresholdsPx[0] và thresholdsPx[1], trả về 0/1/2
+  // TODO 2: compare s_px against thresholdsPx[0] and thresholdsPx[1], return 0/1/2
   return 0;
 }`,
     solutionCode: `function pickLodLevel(

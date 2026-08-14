@@ -16,7 +16,7 @@ Requirements: a vertical sky gradient across \`uv.y\` (horizon brighter than zen
 
 Suggested structure: fill in the five TODOs in the starter code, in order — sky gradient, two parallel-drifting FBM layers, coordinate warp, density shaping via smoothstep, then sun-distance edge glow.`,
     },
-    starterCode: `// Hash, noise và fbm() đã dựng sẵn — dùng chúng, không cần viết lại.
+    starterCode: `// Hash, noise and fbm() are already built — use them, no need to rewrite.
 float hash21(vec2 p) {
   p = fract(p * vec2(123.34, 456.21));
   p += dot(p, p + 45.32);
@@ -45,7 +45,7 @@ float fbm(vec2 p) {
   return sum;
 }
 
-// Hằng số hình dạng mây: coverage cao = nhiều mây hơn, softness = biên mềm hơn.
+// Cloud shape constants: higher coverage = more cloud, higher softness = softer edges.
 const float COVERAGE = 0.55;
 const float SOFTNESS = 0.15;
 const vec2 SUN_POS = vec2(0.75, 0.8);
@@ -54,23 +54,23 @@ void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   vec2 p = uv * 3.0;
 
-  // TODO 1: sky gradient dọc — mix 2 màu theo uv.y (chân trời sáng hơn đỉnh trời)
+  // TODO 1: vertical sky gradient — mix 2 colors by uv.y (horizon brighter than zenith)
   vec3 sky = vec3(0.1, 0.2, 0.5);
 
-  // TODO 2: hai lớp fbm() trôi theo uTime ở 2 tốc độ khác nhau, trộn lại làm mật độ thô
+  // TODO 2: two fbm() layers drifting on uTime at 2 different speeds, blended into raw density
   float raw = fbm(p);
 
-  // TODO 3: warp nhẹ toạ độ p trước khi lấy fbm cuối, để mây không phải khối tròn đều
-  // (gợi ý: vec2 warp = vec2(fbm(...), fbm(...)); rồi mix raw với fbm(p + warp * strength))
+  // TODO 3: lightly warp coordinate p before the final fbm sample, so clouds aren't uniform round blobs
+  // (hint: vec2 warp = vec2(fbm(...), fbm(...)); then mix raw with fbm(p + warp * strength))
 
-  // TODO 4: định hình mật độ mây bằng smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)
+  // TODO 4: shape cloud density with smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)
   float density = raw;
 
   vec3 cloudColor = vec3(1.0);
   vec3 color = mix(sky, cloudColor, density);
 
-  // TODO 5: viền sáng ấm hơn gần SUN_POS — dùng distance(uv, SUN_POS) và density*(1.0-density)
-  // để quầng sáng chỉ xuất hiện đúng ở dải biên mây, không tràn vào lõi hay bầu trời trống
+  // TODO 5: warmer edge glow near SUN_POS — use distance(uv, SUN_POS) and density*(1.0-density)
+  // so the glow only appears right at the cloud's edge band, not bleeding into the core or clear sky
 
   fragColor = vec4(color, 1.0);
 }`,

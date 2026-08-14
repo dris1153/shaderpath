@@ -36,14 +36,10 @@ Predict: how many WebGL programs will Three compile for \`mat\` across both rend
         en: "States that both programs are stored in the same `materialProperties.programs` (Map) belonging to `mat`, neither overwriting the other",
       },
     ],
-    solutionCode: `// Two programs. getProgramCacheKey() folds numPointLights (among other
-// light-state parameters) into the key BEFORE appending
-// material.customProgramCacheKey() - so the SAME "mat" object produces two
-// different cache keys depending on which scene/light context it's drawn
-// under. Three stores both compiled WebGLPrograms in
-// materialProperties.programs, a Map keyed by cache key, living inside
-// properties.get(mat) - neither compile overwrites the other; "mat" simply
-// accumulates one program per distinct context it has ever been drawn in.`,
+    solutionNote: {
+      vi: `Hai chương trình. \`getProgramCacheKey()\` gộp \`numPointLights\` (cùng các tham số trạng thái ánh sáng khác) vào cache key TRƯỚC KHI nối thêm \`material.customProgramCacheKey()\` — nên CÙNG một object \`mat\` tạo ra hai cache key khác nhau tuỳ vào scene/ngữ cảnh ánh sáng nó được vẽ trong đó. Three lưu cả hai \`WebGLProgram\` đã compile trong \`materialProperties.programs\`, một \`Map\` khoá theo cache key, nằm bên trong \`properties.get(mat)\` — không cái nào ghi đè cái nào; \`mat\` chỉ đơn giản tích luỹ thêm một chương trình cho mỗi ngữ cảnh khác nhau mà nó từng được vẽ.`,
+      en: `Two programs. \`getProgramCacheKey()\` folds \`numPointLights\` (among other light-state parameters) into the key BEFORE appending \`material.customProgramCacheKey()\` — so the SAME \`mat\` object produces two different cache keys depending on which scene/light context it's drawn under. Three stores both compiled \`WebGLProgram\`s in \`materialProperties.programs\`, a \`Map\` keyed by cache key, living inside \`properties.get(mat)\` — neither compile overwrites the other; \`mat\` simply accumulates one program per distinct context it has ever been drawn in.`,
+    },
   },
   {
     id: "count-worst-case-variants",

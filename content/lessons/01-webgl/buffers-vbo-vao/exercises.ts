@@ -32,13 +32,18 @@ export const exercises: Exercise[] = [
         en: "I computed uv's starting byte at vertex 10 as 344 (= 10×32 + 24) correctly",
       },
     ],
-    solutionCode: `// position: 3 float × 4B = 12B  -> offset 0
-// normal:   3 float × 4B = 12B  -> offset 12
-// uv:       2 float × 4B = 8B   -> offset 24
-// stride = 12 + 12 + 8 = 32 byte / vertex
-//
-// vertex i=10 bắt đầu tại byte 10 * 32 = 320
-// uv của vertex 10 bắt đầu tại 320 + 24 = 344`,
+    solutionNote: {
+      vi: `position: 3 số thực × 4B = 12B → offset 0. normal: 3 số thực × 4B = 12B → offset 12. uv: 2 số thực × 4B = 8B → offset 24.
+
+stride = 12 + 12 + 8 = 32 byte/vertex.
+
+vertex i=10 bắt đầu tại byte 10 × 32 = 320. uv của vertex 10 bắt đầu tại 320 + 24 = 344.`,
+      en: `position: 3 floats × 4B = 12B → offset 0. normal: 3 floats × 4B = 12B → offset 12. uv: 2 floats × 4B = 8B → offset 24.
+
+stride = 12 + 12 + 8 = 32 bytes/vertex.
+
+vertex i=10 starts at byte 10 × 32 = 320. uv for vertex 10 starts at 320 + 24 = 344.`,
+    },
   },
   {
     id: "compute-attrib-layout-fn",
@@ -49,7 +54,7 @@ export const exercises: Exercise[] = [
     },
     starterCode: `interface AttribSpec {
   name: string;
-  components: number; // số thành phần float / number of float components
+  components: number; // number of float components
 }
 
 interface Layout {
@@ -58,8 +63,8 @@ interface Layout {
 }
 
 function computeLayout(attribs: AttribSpec[]): Layout {
-  // TODO: mỗi component là 4 byte (Float32). Cộng dồn offset theo thứ tự
-  // khai báo, stride = tổng số byte của mọi thuộc tính.
+  // TODO: each component is 4 bytes (Float32). Accumulate the offset in
+  // declaration order; stride = the total bytes of every attribute.
   return { stride: 0, offsets: {} };
 }`,
     solutionCode: `interface AttribSpec {

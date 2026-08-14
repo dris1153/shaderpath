@@ -21,13 +21,13 @@ const gl = canvas.getContext("webgl2", { alpha: false })!;
 if (!gl) throw new Error("WebGL2 not supported");
 
 function resizeCanvasToDisplaySize(dprCap = 2) {
-  // TODO 1: dpr = min(devicePixelRatio hiện tại, dprCap)
+  // TODO 1: dpr = min(current devicePixelRatio, dprCap)
   // TODO 2: width/height = round(clientWidth/clientHeight * dpr)
-  // TODO 3: chỉ gán canvas.width/height và gọi gl.viewport khi kích thước thực sự đổi
+  // TODO 3: only assign canvas.width/height and call gl.viewport when the size actually changed
 }
 
 function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-  // TODO 4: chuyển HSL sang RGB, trả về từng kênh trong [0, 1]
+  // TODO 4: convert HSL to RGB, return each channel in [0, 1]
   return [0, 0, 0];
 }
 
@@ -36,8 +36,8 @@ let lastT = performance.now();
 function draw(t: number) {
   resizeCanvasToDisplaySize();
 
-  // TODO 5: tính delta time, tăng hue theo tốc độ cố định (độ/giây), giữ trong [0, 360)
-  // TODO 6: chuyển hue -> rgb, gọi gl.clearColor rồi gl.clear
+  // TODO 5: compute delta time, advance hue at a fixed rate (degrees/second), keep it within [0, 360)
+  // TODO 6: convert hue -> rgb, call gl.clearColor then gl.clear
 
   requestAnimationFrame(draw);
 }

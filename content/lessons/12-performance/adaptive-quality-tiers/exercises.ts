@@ -32,16 +32,14 @@ export const exercises: Exercise[] = [
         en: "Named at least one concrete reason (weak integrated GPU, drivers, wrong GPU selected, thermal throttling...) for the mismatch",
       },
     ],
-    solutionCode: `// Tín hiệu quyết định: benchmark (28ms EMA đo trực tiếp trên cảnh thật),
-// KHÔNG PHẢI deviceMemory/hardwareConcurrency.
-//
-// Lý do: deviceMemory và hardwareConcurrency chỉ mô tả RAM và số lõi CPU —
-// một máy có RAM/CPU dồi dào vẫn có thể mang GPU tích hợp yếu (phổ biến ở
-// laptop văn phòng cấu hình cao về CPU nhưng GPU tối thiểu), hoặc trình
-// duyệt/OS chọn nhầm GPU tích hợp thay vì GPU rời có sẵn trên máy, hoặc máy
-// đang throttle nhiệt tại thời điểm đo. Không API tĩnh nào phản ánh được
-// những yếu tố này — chỉ một benchmark render THẬT mới đo trực tiếp kết quả
-// cuối cùng mà người dùng sẽ trải nghiệm.`,
+    solutionNote: {
+      vi: `Tín hiệu quyết định: benchmark (28ms EMA đo trực tiếp trên cảnh thật), KHÔNG PHẢI \`deviceMemory\`/\`hardwareConcurrency\`.
+
+Lý do: \`deviceMemory\` và \`hardwareConcurrency\` chỉ mô tả RAM và số lõi CPU — một máy có RAM/CPU dồi dào vẫn có thể mang GPU tích hợp yếu (phổ biến ở laptop văn phòng cấu hình cao về CPU nhưng GPU tối thiểu), hoặc trình duyệt/OS chọn nhầm GPU tích hợp thay vì GPU rời có sẵn trên máy, hoặc máy đang throttle nhiệt tại thời điểm đo. Không API tĩnh nào phản ánh được những yếu tố này — chỉ một benchmark render THẬT mới đo trực tiếp kết quả cuối cùng mà người dùng sẽ trải nghiệm.`,
+      en: `The deciding signal: the benchmark (28ms EMA measured directly on the real scene), NOT \`deviceMemory\`/\`hardwareConcurrency\`.
+
+Why: \`deviceMemory\` and \`hardwareConcurrency\` only describe system RAM and CPU core count — a machine with plenty of RAM/CPU can still carry a weak integrated GPU (common on office laptops with a strong CPU spec but minimal GPU), or the browser/OS might pick the wrong integrated GPU instead of an available discrete one, or the machine could be thermal-throttling at the moment of measurement. No static API reflects any of these factors — only a REAL render benchmark directly measures the final outcome the user will actually experience.`,
+    },
   },
   {
     id: "thermostat-tier-watchdog",
@@ -64,9 +62,9 @@ function nextTierIndex(
   holdSamples: number,
   maxIndex: number,
 ): { index: number; streak: TierStreak } {
-  // TODO 1: xác định direction của mẫu này: -1 (xấu, > dropMs), 1 (tốt, < riseMs), 0 (trung tính)
-  // TODO 2: nếu direction khác streak.direction hiện tại (hoặc bằng 0) -> reset streak về { direction, count: direction === 0 ? 0 : 1 }
-  // TODO 3: nếu direction giống streak.direction VÀ khác 0 -> tăng count; nếu count đạt holdSamples -> đổi index (clamp 0..maxIndex) và reset count về 0
+  // TODO 1: determine this sample's direction: -1 (bad, > dropMs), 1 (good, < riseMs), 0 (neutral)
+  // TODO 2: if direction differs from streak.direction (or is 0) -> reset streak to { direction, count: direction === 0 ? 0 : 1 }
+  // TODO 3: if direction matches streak.direction AND is nonzero -> increment count; if count reaches holdSamples -> change index (clamp 0..maxIndex) and reset count to 0
   return { index: currentIndex, streak };
 }`,
     solutionCode: `interface TierStreak {

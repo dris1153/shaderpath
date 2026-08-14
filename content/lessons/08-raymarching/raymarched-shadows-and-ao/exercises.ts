@@ -36,19 +36,18 @@ Then, without recomputing from scratch: what would the shadow value be at $k = 1
         en: "I correctly explained that h=0.0005 triggers the early-return 0.0, independent of k, because that branch sits before the ratio calculation",
       },
     ],
-    solutionCode: `// k = 8:
-// buoc 1: 8*0.1/1 = 0.8
-// buoc 2: 8*0.3/2 = 1.2
-// buoc 3: 8*0.05/3 = 0.4/3 ~ 0.1333
-// res = min(0.8, 1.2, 0.1333) = 0.1333  (da nam trong [0,1], khong can clamp them)
-//
-// k = 16: moi ti so nhan doi (k la he so nhan chung) -> min moi = 2 * 0.1333 ~ 0.2667
-// (khong can tinh lai ca ba so hang, chi nhan doi gia tri min cu)
-//
-// h = 0.0005 tai buoc 3: nho hon nguong 0.0008 -> nhanh
-//   "if (h < 0.0008) return 0.0;" thoat ham NGAY, tra ve 0.0
-// -> bong = 0.0, KHONG phu thuoc k vi nhanh early-return nam truoc
-//    moi phep tinh k*d/(t-y) trong code.`,
+    solutionNote: {
+      vi: `Với $k = 8$: bước 1 $8 \\times 0.1/1 = 0.8$; bước 2 $8 \\times 0.3/2 = 1.2$; bước 3 $8 \\times 0.05/3 = 0.4/3 \\approx 0.1333$. $\\text{res} = \\min(0.8, 1.2, 0.1333) = 0.1333$ (đã nằm trong $[0,1]$, không cần clamp thêm).
+
+Với $k = 16$: mọi tỉ số nhân đôi (vì $k$ là hệ số nhân chung), nên giá trị min mới $= 2 \\times 0.1333 \\approx 0.2667$ — không cần tính lại cả ba số hạng, chỉ nhân đôi giá trị min cũ.
+
+Với $h = 0.0005$ tại bước 3: nhỏ hơn ngưỡng $0.0008$, nên nhánh \`if (h < 0.0008) return 0.0;\` thoát hàm ngay, trả về $0.0$. Bóng $= 0.0$, không phụ thuộc $k$ vì nhánh early-return nằm trước mọi phép tính $k \\cdot h/t$ trong code.`,
+      en: `At $k = 8$: step 1 $8 \\times 0.1/1 = 0.8$; step 2 $8 \\times 0.3/2 = 1.2$; step 3 $8 \\times 0.05/3 = 0.4/3 \\approx 0.1333$. $\\text{res} = \\min(0.8, 1.2, 0.1333) = 0.1333$ (already inside $[0,1]$, no extra clamp needed).
+
+At $k = 16$: every ratio doubles (since $k$ is a shared multiplying constant), so the new min $= 2 \\times 0.1333 \\approx 0.2667$ — no need to recompute all three terms, just double the previous min.
+
+At $h = 0.0005$ on step 3: below the $0.0008$ threshold, so the \`if (h < 0.0008) return 0.0;\` branch exits the function immediately, returning $0.0$. The shadow value is $0.0$, independent of $k$, because the early-return branch sits before any $k \\cdot h/t$ computation in the code.`,
+    },
   },
   {
     id: "ao-ambient-only-playground",
@@ -87,11 +86,11 @@ float raymarch(vec3 ro, vec3 rd) {
 }
 
 float calcAO(vec3 p, vec3 n) {
-  // TODO: 5-tap AO - voi i tu 0 den 4:
+  // TODO: 5-tap AO - with i from 0 to 4:
   //   h = 0.01 + 0.12 * float(i) / 4.0
   //   occ += (h - map(p + n * h)) * sca
   //   sca *= 0.95
-  // tra ve clamp(1.0 - 2.5 * occ, 0.0, 1.0)
+  // return clamp(1.0 - 2.5 * occ, 0.0, 1.0)
   return 1.0;
 }
 
@@ -114,7 +113,7 @@ void main() {
     float ao = calcAO(p, n);
     vec3 albedo = vec3(0.85, 0.45, 0.25);
 
-    // TODO: color = ambient*ao + diffuse -- AO nhan vao DUNG mot minh phan ambient
+    // TODO: color = ambient*ao + diffuse -- AO multiplies ONLY the ambient term
     color = albedo * diff;
   }
 

@@ -36,18 +36,14 @@ Then list at least 5 things WebGL does *not* provide at the API level — for ea
         en: "I listed at least 5 things WebGL doesn't provide, each with a concrete way to fill the gap",
       },
     ],
-    solutionCode: `// 4 lớp, đúng thứ tự:
-// JavaScript (gl.drawArrays) → WebGL implementation của trình duyệt (validate
-// tham số) → driver đồ hoạ hệ điều hành (trên Windows: ANGLE dịch GL sang
-// Direct3D 11 / Vulkan) → GPU thực thi lệnh và ghi framebuffer.
-//
-// 5+ thứ WebGL không cung cấp sẵn, và cách bù đắp thường dùng:
-// 1. Scene graph          → tự viết cây transform, hoặc dùng THREE.Object3D
-// 2. Ánh sáng              → tự viết Lambertian/Phong trong fragment shader
-// 3. Loader model (glTF)  → tự parse binary, hoặc dùng GLTFLoader của Three.js
-// 4. Vật lý                → dùng physics engine riêng (Rapier, Cannon-es)
-// 5. Text rendering        → tự dựng texture atlas, hoặc dùng SDF font
-// 6. Picking/raycasting    → tự tính giao tia-hình học, hoặc THREE.Raycaster`,
+    solutionNote: {
+      vi: `Bốn lớp, đúng thứ tự: JavaScript (\`gl.drawArrays\`) → WebGL implementation của trình duyệt (validate tham số) → driver đồ hoạ hệ điều hành (trên Windows: ANGLE dịch GL sang Direct3D 11 / Vulkan) → GPU thực thi lệnh và ghi framebuffer.
+
+Năm+ thứ WebGL không cung cấp sẵn, và cách bù đắp thường dùng: 1) scene graph — tự viết cây transform, hoặc dùng \`THREE.Object3D\`; 2) ánh sáng — tự viết Lambertian/Phong trong fragment shader; 3) loader model (glTF) — tự parse binary, hoặc dùng \`GLTFLoader\` của Three.js; 4) vật lý — dùng physics engine riêng (Rapier, Cannon-es); 5) text rendering — tự dựng texture atlas, hoặc dùng SDF font; 6) picking/raycasting — tự tính giao tia-hình học, hoặc \`THREE.Raycaster\`.`,
+      en: `Four layers, in order: JavaScript (\`gl.drawArrays\`) → the browser's WebGL implementation (parameter validation) → the OS graphics driver (on Windows: ANGLE translating GL to Direct3D 11 / Vulkan) → the GPU executing the commands and writing the framebuffer.
+
+Five-plus things WebGL doesn't provide out of the box, and the usual way to fill each gap: 1) scene graph — write your own transform tree, or use \`THREE.Object3D\`; 2) lighting — write your own Lambertian/Phong in the fragment shader; 3) model loading (glTF) — parse the binary yourself, or use Three.js's \`GLTFLoader\`; 4) physics — use a dedicated physics engine (Rapier, Cannon-es); 5) text rendering — build your own texture atlas, or use an SDF font; 6) picking/raycasting — compute ray-geometry intersection yourself, or use \`THREE.Raycaster\`.`,
+    },
   },
   {
     id: "safe-webgl2-context",
@@ -58,8 +54,9 @@ Then list at least 5 things WebGL does *not* provide at the API level — for ea
     },
     starterCode: `function getWebGL2Context(canvas: HTMLCanvasElement): WebGL2RenderingContext {
   const gl = canvas.getContext("webgl2");
-  // TODO: gl có thể là null ở đây — đây là cú \`as\` "lừa" compiler mà bài
-  // học cảnh báo. Thay dòng dưới bằng: kiểm tra null rồi throw Error rõ ràng.
+  // TODO: gl can be null here — this \`as\` cast "tricks" the compiler, exactly
+  // what the lesson warns against. Replace the line below with a null check
+  // that throws a clear Error.
   return gl as WebGL2RenderingContext;
 }`,
     solutionCode: `function getWebGL2Context(canvas: HTMLCanvasElement): WebGL2RenderingContext {

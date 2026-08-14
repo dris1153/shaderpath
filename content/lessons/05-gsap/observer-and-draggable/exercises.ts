@@ -36,15 +36,14 @@ Suppose a hand-rolled component computes velocity as \`(x2 - x1) / (t2 - t1)\` f
         en: "I stated that this is why InertiaPlugin is preferable to hand-rolled deltaX/deltaTime for a throw effect",
       },
     ],
-    solutionCode: `// Δx gần như không đổi nhưng Δt tăng đột biến (frame giật) → Δx/Δt TỤT
-// xuống bất thường thấp, không phải tăng — một cú throw nhanh thật sẽ bị
-// tính ra thành throw yếu, cảm giác "hụt" ngay lúc thả tay.
-//
-// Lấy trung bình trên một cửa sổ N mẫu gần nhất khiến MỘT khoảng Δt bất
-// thường chỉ đóng góp 1/N vào kết quả cuối, thay vì một mình nó quyết định
-// toàn bộ vận tốc — đây chính xác là cách InertiaPlugin làm, và là lý do
-// throw của Draggable ổn định hơn nhiều so với deltaX/deltaTime tự viết
-// từ đúng 2 điểm cuối.`,
+    solutionNote: {
+      vi: `$\\Delta x$ gần như không đổi nhưng $\\Delta t$ tăng đột biến (frame giật) → $\\Delta x / \\Delta t$ TỤT xuống bất thường thấp, không phải tăng — một cú throw nhanh thật sẽ bị tính ra thành throw yếu, cảm giác "hụt" ngay lúc thả tay.
+
+Lấy trung bình trên một cửa sổ N mẫu gần nhất khiến MỘT khoảng $\\Delta t$ bất thường chỉ đóng góp $1/N$ vào kết quả cuối, thay vì một mình nó quyết định toàn bộ vận tốc — đây chính xác là cách InertiaPlugin làm, và là lý do throw của Draggable ổn định hơn nhiều so với deltaX/deltaTime tự viết từ đúng 2 điểm cuối.`,
+      en: `$\\Delta x$ barely changes but $\\Delta t$ spikes (a dropped frame) → $\\Delta x / \\Delta t$ drops abnormally LOW, not higher — a genuinely fast throw ends up computed as a weak one, feeling like it "stumbles" right at release.
+
+Averaging over a window of the N most recent samples means ONE abnormal $\\Delta t$ interval only contributes $1/N$ to the final result, instead of single-handedly determining the whole velocity — this is exactly what InertiaPlugin does, and why Draggable's throw is far more stable than a hand-rolled deltaX/deltaTime from just the last 2 points.`,
+    },
   },
   {
     id: "compute-snap-angle",
@@ -54,8 +53,8 @@ Suppose a hand-rolled component computes velocity as \`(x2 - x1) / (t2 - t1)\` f
       en: `Write a \`computeSnapAngle(rotation, step)\` function that mirrors the \`snap\` logic Draggable uses for \`type: "rotation"\`: return the \`rotation\` angle (degrees) rounded to the nearest multiple of \`step\` degrees. Special case: \`step <= 0\` means no snapping — return \`rotation\` unchanged, and never divide by zero.`,
     },
     starterCode: `function computeSnapAngle(rotation: number, step: number): number {
-  // TODO: step <= 0 → trả nguyên rotation (không snap)
-  // TODO: ngược lại, làm tròn rotation về bội số gần nhất của step
+  // TODO: step <= 0 → return rotation unchanged (no snap)
+  // TODO: otherwise, round rotation to the nearest multiple of step
   return rotation;
 }`,
     solutionCode: `function computeSnapAngle(rotation: number, step: number): number {

@@ -24,8 +24,8 @@ Structure hint: \`Slot({ index, active })\` containing a pedestal (prop-assigned
 import * as THREE from "three";
 import { useLoader } from "@react-three/fiber";
 
-// TODO 1: pedestal geometry + material Ở MODULE SCOPE — tạo đúng 1 lần,
-// dùng chung cho cả 3 slot (không tạo trong component nào cả)
+// TODO 1: pedestal geometry + material AT MODULE SCOPE -- created exactly
+// once, shared by all 3 slots (not created inside any component)
 
 class DelayedLoader<T> extends THREE.Loader<T> {
   constructor(
@@ -51,25 +51,25 @@ const EXHIBIT_BUILDERS: (() => THREE.BufferGeometry)[] = [
   () => new THREE.SphereGeometry(0.5, 32, 16),
   () => new THREE.TorusKnotGeometry(0.35, 0.14, 96, 12),
 ];
-// TODO 3: tạo 3 loader instance Ở MODULE SCOPE, một cho mỗi slot (mỗi
-// DelayedLoader cần build+delayMs riêng nên KHÔNG thể dùng chung 1 instance)
+// TODO 3: create 3 loader instances AT MODULE SCOPE, one per slot (each
+// DelayedLoader needs its own build+delayMs, so they CANNOT share 1 instance)
 
 function Exhibit({ index }: { index: number }) {
-  // TODO 4: useLoader(loader tương ứng slot "index", \`exhibit://slot-\${index}\`)
-  // rồi render <mesh geometry={...}><meshStandardMaterial .../></mesh>
+  // TODO 4: useLoader(the loader for slot "index", \`exhibit://slot-\${index}\`)
+  // then render <mesh geometry={...}><meshStandardMaterial .../></mesh>
   return null;
 }
 
 function PlaceholderMesh() {
-  // TODO 5: mesh wireframe đơn giản làm fallback (không cần animate)
+  // TODO 5: a simple wireframe mesh as the fallback (no need to animate it)
   return null;
 }
 
 function Slot({ index, active }: { index: number; active: boolean }) {
   return (
     <group position={[(index - 1) * 2, 0, 0]}>
-      {/* TODO 6: pedestal — gán geometry/material module-scope qua PROP,
-          không phải JSX con */}
+      {/* TODO 6: pedestal -- assign the module-scope geometry/material via
+          PROP, not as JSX children */}
       <Suspense fallback={<PlaceholderMesh />}>
         {active && <Exhibit index={index} />}
       </Suspense>

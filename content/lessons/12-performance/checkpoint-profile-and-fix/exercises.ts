@@ -17,9 +17,10 @@ Three bottlenecks (deliberately not telling you which code maps to which — fin
 Technical requirements: draw calls after the fix must land around 5; no repeated geometry \`new\`/dispose inside \`useFrame\` anymore; the secondary light's shadow map must be shrunk or disabled, with a stated reason; the final visuals (positions, colors, throb effect, key-light shadow) stay unchanged.`,
     },
     starterCode: `"use client";
-// Cảnh cố tình dựng CHẬM cho bài profile-and-fix — 3 bottleneck cài sẵn.
-// Profiler (renderer.info + đồng hồ frame-time) đã có sẵn và CHẠY ĐÚNG bên
-// dưới — đừng viết lại nó, chỉ cần ĐỌC nó trước khi sửa bất cứ dòng nào.
+// A scene deliberately built SLOW for the profile-and-fix exercise — 3
+// bottlenecks planted on purpose. The profiler (renderer.info + a frame-time
+// clock) below is complete and CORRECT — don't rewrite it, just READ it
+// before changing any other line.
 
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -34,7 +35,7 @@ interface Stats {
   textures: number;
 }
 
-// Đã hoàn chỉnh — profiler thật, gọi onStats ~4 lần/giây (EMA frame time).
+// Already complete — a real profiler, calling onStats ~4 times/second (EMA frame time).
 function PerfMeter({ onStats }: { onStats: (s: Stats) => void }) {
   const gl = useThree((s) => s.gl);
   const avgMs = useRef(16.7);
@@ -59,8 +60,8 @@ function PerfMeter({ onStats }: { onStats: (s: Stats) => void }) {
 const boxGeometry = new THREE.BoxGeometry(0.16, 0.16, 0.16);
 const baseMaterial = new THREE.MeshStandardMaterial({ roughness: 0.55 });
 
-// TODO 1: mỗi box tự .clone() material RIÊNG chỉ để có màu khác nhau — 800
-// material instance khác nhau dù cùng loại shader.
+// TODO 1: each box .clone()s its OWN material just to get a different color —
+// 800 distinct material instances despite sharing the same shader type.
 function SlowField() {
   const hues = useMemo(() => Array.from({ length: COUNT }, (_, i) => i / COUNT), []);
   const materials = useMemo(
@@ -87,7 +88,7 @@ function SlowField() {
   );
 }
 
-// TODO 2: rebuild TOÀN BỘ geometry mỗi frame chỉ để làm hiệu ứng "phập phồng".
+// TODO 2: rebuilds the ENTIRE geometry every frame just for a "throbbing" effect.
 function ThrobbingBlob() {
   const meshRef = useRef<THREE.Mesh>(null);
 
@@ -114,8 +115,8 @@ function ThrobbingBlob() {
   );
 }
 
-// TODO 3: ánh sáng PHỤ (chỉ soften bóng của key light) mang shadow map to
-// nhất cảnh — ngân sách shadow đặt sai chỗ.
+// TODO 3: the SECONDARY light (only softening the key light's shadow) carries
+// the scene's biggest shadow map — the shadow budget is misplaced.
 function Lights() {
   return (
     <>
@@ -137,17 +138,18 @@ export function SlowScene({ onStats }: { onStats: (s: Stats) => void }) {
   );
 }
 
-// TODO 4: sau khi sửa xong, điền bảng before/after vào đây (đo trên máy dev,
-// nhãn rõ "ước lượng" nếu không đo chính xác được):
-// | Chỉ số                          | Trước | Sau |
-// |----------------------------------|-------|-----|
-// | renderer.info.render.calls       |       |     |
-// | Frame time (ms, EMA)             |       |     |
-// | renderer.info.memory.geometries  |       |     |
-// | Shadow map ánh sáng phụ          |       |     |`,
+// TODO 4: after fixing, fill in a before/after table here (measured on your
+// dev machine, label clearly as "estimated" if you can't measure precisely):
+// | Metric                              | Before | After |
+// |----------------------------------------|--------|-------|
+// | renderer.info.render.calls             |        |       |
+// | Frame time (ms, EMA)                   |        |       |
+// | renderer.info.memory.geometries        |        |       |
+// | Secondary light's shadow map           |        |       |`,
     solutionCode: `"use client";
-// ĐÃ SỬA — cùng hình ảnh, 3 bottleneck gốc bị loại bỏ bằng đúng kỹ thuật đã
-// học ở draw-calls-batching-instancing (Track 12). Bảng đo ở cuối file.
+// FIXED — same visuals, the 3 original bottlenecks removed using the exact
+// techniques from draw-calls-batching-instancing (Track 12). Measurement
+// table at the end of the file.
 
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
@@ -183,8 +185,9 @@ function PerfMeter({ onStats }: { onStats: (s: Stats) => void }) {
   return null;
 }
 
-// Fix 1: MỘT InstancedMesh — một draw call, một material, màu riêng từng
-// instance qua setColorAt (instanceColor) thay vì 800 material.clone().
+// Fix 1: ONE InstancedMesh — a single draw call, a single material, each
+// instance's color set via setColorAt (instanceColor) instead of 800
+// material.clone() calls.
 function InstancedField() {
   const meshRef = useRef<THREE.InstancedMesh>(null);
 
@@ -212,8 +215,9 @@ function InstancedField() {
   );
 }
 
-// Fix 2: geometry tạo ĐÚNG MỘT LẦN (useMemo); mỗi frame chỉ MUTATE attribute
-// position tại chỗ từ toạ độ gốc đã lưu — không new, không dispose, không GC.
+// Fix 2: geometry is created EXACTLY ONCE (useMemo); every frame only MUTATES
+// the position attribute in place from the saved base coordinates — no new,
+// no dispose, no GC pressure.
 function ThrobbingBlob() {
   const geometry = useMemo(() => new THREE.SphereGeometry(1.1, 32, 32), []);
   const basePositions = useMemo(
@@ -245,8 +249,9 @@ function ThrobbingBlob() {
   );
 }
 
-// Fix 3: fill light KHÔNG cast shadow nữa — nó chỉ tồn tại để soften bóng
-// của key light, không cần tự đổ bóng riêng; key light giữ 1024 (đủ dùng).
+// Fix 3: the fill light no longer casts a shadow — it only exists to soften
+// the key light's shadow, it doesn't need to cast its own; the key light
+// keeps 1024 (plenty).
 function Lights() {
   return (
     <>
@@ -268,16 +273,18 @@ export function FixedScene({ onStats }: { onStats: (s: Stats) => void }) {
   );
 }
 
-// Before/After (đo trên máy dev — GPU laptop tầm trung, trung bình trong 4s ổn định):
-// | Chỉ số                          | Trước                              | Sau  |
-// |----------------------------------|-------------------------------------|------|
-// | renderer.info.render.calls       | ~803                                | ~4   |
-// | Frame time (ms, EMA)             | ~34.6                               | ~7.9 |
-// | FPS tương ứng (ước lượng)        | ~29                                 | ~126 |
-// | renderer.info.memory.geometries  | 2 (ổn định — churn, không leak)     | 2    |
-// | Shadow map ánh sáng phụ          | 4096×4096                          | tắt (castShadow=false) |
-// Hình ảnh: 800 khối cùng vị trí/màu dải HSL, quả cầu phập phồng cùng biên độ,
-// bóng đổ từ key light không đổi — chỉ chi phí render thay đổi, không phải kết quả.`,
+// Before/After (measured on a dev machine — mid-range laptop GPU, averaged
+// over a stable 4s window):
+// | Metric                              | Before                                | After |
+// |----------------------------------------|------------------------------------------|-------|
+// | renderer.info.render.calls             | ~803                                     | ~4    |
+// | Frame time (ms, EMA)                   | ~34.6                                    | ~7.9  |
+// | Corresponding FPS (estimated)          | ~29                                      | ~126  |
+// | renderer.info.memory.geometries        | 2 (stable — churn, not a leak)           | 2     |
+// | Secondary light's shadow map           | 4096x4096                                | off (castShadow=false) |
+// Visuals: 800 boxes at the same positions/HSL color band, the sphere throbs
+// with the same amplitude, the key light's shadow is unchanged — only render
+// cost changed, not the result.`,
     hints: [
       {
         vi: "Đọc `renderer.info.render.calls` TRƯỚC KHI đổi bất cứ dòng code nào — con số đó cho biết chính xác bottleneck nào đang chiếm phần lớn draw call, không cần đoán.",

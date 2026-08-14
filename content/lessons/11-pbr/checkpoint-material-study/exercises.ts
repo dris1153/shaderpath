@@ -27,8 +27,8 @@ import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
 const GRID_SIZE = 6;
 const SPACING = 1.3;
 const RADIUS = 0.5;
-// Kim loại "màu" (không trắng) — hàng metalness=1 phải nhuốm đúng màu này,
-// hàng metalness=0 phải KHÔNG nhuốm màu (F0 dielectric trung tính ~0.04).
+// A "colored" (non-white) metal — the metalness=1 row must tint exactly this
+// color, the metalness=0 row must NOT tint at all (neutral dielectric F0 ~0.04).
 const BASE_COLOR = "#b8813a";
 
 function levelAt(i: number) {
@@ -40,14 +40,14 @@ function gridOffset(i: number) {
 }
 
 function MaterialGrid() {
-  // TODO 1: MỘT SphereGeometry dùng chung, tạo bằng useMemo (Track 4 pattern)
-  // — dispose trong cleanup effect vì geometry tạo bằng \`new\` ngoài JSX
-  // không được R3F tự dispose.
+  // TODO 1: ONE shared SphereGeometry, built with useMemo (Track 4 pattern)
+  // — dispose it in a cleanup effect, since geometry created with \`new\`
+  // outside JSX isn't auto-disposed by R3F.
 
-  // TODO 2: nested loop row (roughness) x col (metalness), GRID_SIZE x
-  // GRID_SIZE. metalness = levelAt(col), roughness = levelAt(row), vị trí =
-  // [gridOffset(col), gridOffset(row), 0]. Mỗi quả cầu dùng chung geometry
-  // (qua prop geometry=) nhưng có MeshStandardMaterial RIÊNG.
+  // TODO 2: nested loop over row (roughness) x col (metalness), GRID_SIZE x
+  // GRID_SIZE. metalness = levelAt(col), roughness = levelAt(row), position =
+  // [gridOffset(col), gridOffset(row), 0]. Every sphere shares the geometry
+  // (via the geometry= prop) but gets its OWN MeshStandardMaterial.
 
   return <group />;
 }
@@ -55,17 +55,17 @@ function MaterialGrid() {
 function StudioEnvironment() {
   const { gl, scene } = useThree();
   useEffect(() => {
-    // TODO 3: new THREE.PMREMGenerator(gl) + new RoomEnvironment(), rồi
-    // pmrem.fromScene(room).texture -> scene.environment. Dispose room ngay
-    // sau khi build xong PMREM. Return cleanup: scene.environment = null,
-    // dispose render target + pmrem.
+    // TODO 3: new THREE.PMREMGenerator(gl) + new RoomEnvironment(), then
+    // pmrem.fromScene(room).texture -> scene.environment. Dispose room right
+    // after the PMREM build finishes. Return a cleanup: scene.environment =
+    // null, dispose the render target + pmrem.
   }, [gl, scene]);
   return null;
 }
 
 function AxisLabels() {
-  // TODO 4: hai <Text> của drei — "metalness: 0 -> 1" dọc theo cạnh dưới,
-  // "roughness: 0 -> 1" dọc theo cạnh trái (xoay 90 độ).
+  // TODO 4: two drei <Text> elements — "metalness: 0 -> 1" along the bottom
+  // edge, "roughness: 0 -> 1" along the left edge (rotated 90 degrees).
   return null;
 }
 
@@ -82,8 +82,8 @@ export default function MaterialStudyGrid() {
   );
 }
 
-// TODO 5: sau khi lưới chạy đúng, viết observation ở đây đối chiếu với lý
-// thuyết Fresnel/microfacet (xem yêu cầu ở phần prompt).`,
+// TODO 5: once the grid runs correctly, write the observations here
+// cross-checking against the Fresnel/microfacet theory (see the prompt).`,
     solutionCode: `"use client";
 
 import { useEffect, useMemo } from "react";

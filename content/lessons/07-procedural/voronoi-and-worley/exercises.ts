@@ -36,15 +36,18 @@ Without running code, compute the Euclidean distance from the pixel to its own c
         en: "I concluded: skipping the neighbor reports F1 ≈ 0.757 instead of the true ≈ 0.304 — nearly 2.5x off, right at the region near the cell border",
       },
     ],
-    solutionCode: `// r0 = h0 - f = (0.15 - 0.9, 0.6 - 0.5) = (-0.75, 0.1)
-// |r0| = sqrt(0.75^2 + 0.1^2) = sqrt(0.5725) ≈ 0.7566
-//
-// r1 = (1,0) + h1 - f = (1 + 0.2 - 0.9, 0.55 - 0.5) = (0.3, 0.05)
-// |r1| = sqrt(0.3^2 + 0.05^2) = sqrt(0.0925) ≈ 0.3041
-//
-// Điểm ô hàng xóm gần hơn HẲN (0.304 < 0.757). Một shader chỉ quét ô
-// (0,0) sẽ báo F1 ≈ 0.757 — sai gần 2.5 lần so với F1 đúng ≈ 0.304 —
-// đúng loại lỗi tạo ra đường ráp nối lởm chởm dọc mọi biên ô.`,
+    solutionNote: {
+      vi: `$r_0 = h_0 - f = (0.15 - 0.9,\\ 0.6 - 0.5) = (-0.75,\\ 0.1)$, nên $|r_0| = \\sqrt{0.75^2 + 0.1^2} = \\sqrt{0.5725} \\approx 0.7566$.
+
+$r_1 = (1,0) + h_1 - f = (1 + 0.2 - 0.9,\\ 0.55 - 0.5) = (0.3,\\ 0.05)$, nên $|r_1| = \\sqrt{0.3^2 + 0.05^2} = \\sqrt{0.0925} \\approx 0.3041$.
+
+Điểm ô hàng xóm gần hơn hẳn ($0.304 < 0.757$). Một shader chỉ quét ô $(0,0)$ sẽ báo $F_1 \\approx 0.757$ — sai gần 2.5 lần so với $F_1$ đúng $\\approx 0.304$ — đúng loại lỗi tạo ra đường ráp nối lởm chởm dọc mọi biên ô.`,
+      en: `$r_0 = h_0 - f = (0.15 - 0.9,\\ 0.6 - 0.5) = (-0.75,\\ 0.1)$, so $|r_0| = \\sqrt{0.75^2 + 0.1^2} = \\sqrt{0.5725} \\approx 0.7566$.
+
+$r_1 = (1,0) + h_1 - f = (1 + 0.2 - 0.9,\\ 0.55 - 0.5) = (0.3,\\ 0.05)$, so $|r_1| = \\sqrt{0.3^2 + 0.05^2} = \\sqrt{0.0925} \\approx 0.3041$.
+
+The neighbor's point is clearly closer ($0.304 < 0.757$). A shader that only scans cell $(0,0)$ would report $F_1 \\approx 0.757$ — nearly 2.5x off from the true $F_1 \\approx 0.304$ — exactly the kind of error that produces jagged seams along every cell border.`,
+    },
   },
   {
     id: "worley-f1-in-playground",

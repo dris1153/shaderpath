@@ -36,17 +36,18 @@ Then compare: how many times larger is $F(60°)$ than $F_0$? What does that rati
         en: "I can explain why $F_0$ alone doesn't describe reflectance at every angle — the $(1-\\cos\\theta)^5$ term scaling by actual angle is required too",
       },
     ],
-    solutionCode: `// F0 = ((1 - 1.77) / (1 + 1.77))^2 = (-0.77 / 2.77)^2 ≈ (-0.2780)^2 ≈ 0.0773
+    solutionNote: {
+      vi: `$F_0 = \\left(\\dfrac{1 - 1.77}{1 + 1.77}\\right)^2 = \\left(\\dfrac{-0.77}{2.77}\\right)^2 \\approx (-0.2780)^2 \\approx 0.0773$.
 
-// F(60°) = F0 + (1 - F0) * (1 - cos60°)^5
-//         = 0.0773 + (1 - 0.0773) * (0.5)^5
-//         = 0.0773 + 0.9227 * 0.03125
-//         = 0.0773 + 0.02884
-//        ≈ 0.1061  (≈ 10.6%)
+$F(60^\\circ) = F_0 + (1 - F_0)(1 - \\cos 60^\\circ)^5 = 0.0773 + (1 - 0.0773)(0.5)^5 = 0.0773 + 0.9227 \\times 0.03125 = 0.0773 + 0.02884 \\approx 0.1061$ (≈ 10.6%).
 
-// Ti le tang: 0.1061 / 0.0773 ≈ 1.37x — moi o goc 60° (chua phai grazing
-// that su), phan xa da tang hon 37%. F0 chi la DIEM XUAT PHAT (theta = 0),
-// khong phai gia tri co dinh cho toan bo be mat.`,
+Tỉ lệ tăng: $0.1061 / 0.0773 \\approx 1.37$ lần — mới ở góc $60^\\circ$ (chưa phải grazing thật sự), phản xạ đã tăng hơn 37%. $F_0$ chỉ là ĐIỂM XUẤT PHÁT (tại $\\theta = 0$), không phải giá trị cố định cho toàn bộ bề mặt.`,
+      en: `$F_0 = \\left(\\dfrac{1 - 1.77}{1 + 1.77}\\right)^2 = \\left(\\dfrac{-0.77}{2.77}\\right)^2 \\approx (-0.2780)^2 \\approx 0.0773$.
+
+$F(60^\\circ) = F_0 + (1 - F_0)(1 - \\cos 60^\\circ)^5 = 0.0773 + (1 - 0.0773)(0.5)^5 = 0.0773 + 0.9227 \\times 0.03125 = 0.0773 + 0.02884 \\approx 0.1061$ (≈ 10.6%).
+
+Growth ratio: $0.1061 / 0.0773 \\approx 1.37\\times$ — already at just $60^\\circ$ (not even true grazing), reflectance has climbed over 37%. $F_0$ is only the STARTING POINT (at $\\theta = 0$), not a fixed value across the whole surface.`,
+    },
   },
   {
     id: "schlick-rim-in-playground",

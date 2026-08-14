@@ -36,11 +36,14 @@ Without multiplying row-by-column, read the two columns directly to state where 
         en: "I correctly computed $M(3,2) = 3(0,1) + 2(-1,0) = (-2, 3)$",
       },
     ],
-    solutionCode: `// Đọc trực tiếp 2 cột của M = [[0,-1],[1,0]]:
-// cột 1 = (0,1) = ảnh của î, cột 2 = (-1,0) = ảnh của ĵ
-// î xoay lên trục y dương, ĵ xoay sang trục x âm → xoay 90° ngược kim đồng hồ
-//
-// M(3,2) = 3*(0,1) + 2*(-1,0) = (0,3) + (-2,0) = (-2,3)`,
+    solutionNote: {
+      vi: `Đọc trực tiếp hai cột của $M = \\begin{pmatrix}0&-1\\\\1&0\\end{pmatrix}$: cột 1 $= (0,1) = $ ảnh của $\\hat i$, cột 2 $= (-1,0) = $ ảnh của $\\hat j$. $\\hat i$ xoay lên trục $y$ dương, $\\hat j$ xoay sang trục $x$ âm → đây là phép xoay $90^\\circ$ ngược chiều kim đồng hồ.
+
+$M(3,2) = 3(0,1) + 2(-1,0) = (0,3) + (-2,0) = (-2,3)$.`,
+      en: `Read the two columns of $M = \\begin{pmatrix}0&-1\\\\1&0\\end{pmatrix}$ directly: column 1 $= (0,1) = $ the image of $\\hat i$, column 2 $= (-1,0) = $ the image of $\\hat j$. $\\hat i$ rotates onto the positive $y$ axis, $\\hat j$ rotates onto the negative $x$ axis → this is a $90^\\circ$ counter-clockwise rotation.
+
+$M(3,2) = 3(0,1) + 2(-1,0) = (0,3) + (-2,0) = (-2,3)$.`,
+    },
   },
   {
     id: "compose-2d-matrices",
@@ -53,12 +56,12 @@ Without multiplying row-by-column, read the two columns directly to state where 
 interface Vec2 { x: number; y: number }
 
 function matVec2(m: Mat2, v: Vec2): Vec2 {
-  // TODO: v.x * cột 1 (a,c) + v.y * cột 2 (b,d)
+  // TODO: v.x * column 1 (a,c) + v.y * column 2 (b,d)
   return { x: 0, y: 0 };
 }
 
 function matMul2(m1: Mat2, m2: Mat2): Mat2 {
-  // TODO: cột mới = matVec2(m1, cột tương ứng của m2) — tái dùng matVec2 ở trên
+  // TODO: each new column = matVec2(m1, the matching column of m2) — reuse matVec2 above
   return { a: 1, b: 0, c: 0, d: 1 };
 }`,
     solutionCode: `interface Mat2 { a: number; b: number; c: number; d: number }
@@ -74,12 +77,12 @@ function matMul2(m1: Mat2, m2: Mat2): Mat2 {
   return { a: col1.x, b: col2.x, c: col1.y, d: col2.y };
 }
 
-// R = xoay 90°, S = diag(2,1)
+// R = 90° rotation, S = diag(2,1)
 const R: Mat2 = { a: 0, b: -1, c: 1, d: 0 };
 const S: Mat2 = { a: 2, b: 0, c: 0, d: 1 };
 
 matVec2(matMul2(S, R), { x: 1, y: 0 }); // { x: 0, y: 1 }
-matVec2(matMul2(R, S), { x: 1, y: 0 }); // { x: 0, y: 2 } — khác kết quả trên`,
+matVec2(matMul2(R, S), { x: 1, y: 0 }); // { x: 0, y: 2 } — different from the result above`,
     hints: [
       {
         vi: "matVec2 chỉ là công thức \"tổ hợp tuyến tính của cột\" viết bằng code: kết quả.x = m.a*v.x + m.b*v.y, kết quả.y = m.c*v.x + m.d*v.y.",

@@ -36,19 +36,22 @@ Then: suppose the demo's scene \`map()\` (sphere + box + torus, combined with tw
         en: "I correctly computed the 8 sub-evaluation difference (24 for central-diff vs 16 for tetrahedron)",
       },
     ],
-    solutionCode: `// Truc y: f(0,2.02,0) = 2.02 - 2 = 0.02 ; f(0,1.98,0) = 1.98 - 2 = -0.02
-// diff_y = 0.02 - (-0.02) = 0.04
-//
-// Truc x: f(0.02,2,0) = sqrt(0.02^2 + 2^2) - 2 ~ (2 + 0.0001) - 2 = 0.0001
-//         f(-0.02,2,0) cho cung gia tri ~0.0001 (doi xung qua truc y)
-// diff_x = 0.0001 - 0.0001 ~ 0 (tuong tu cho truc z)
-//
-// Vector chua chuan hoa ~ (0, 0.04, 0) -> chuan hoa -> (0, 1, 0)
-// Dung: dinh cau tai (0,2,0) co normal huong thang len +y.
-//
-// Sub-evaluation: central-diff = 6 lan goi map() * 4 = 24
-//                 tetrahedron  = 4 lan goi map() * 4 = 16
-// Chenh lech = 24 - 16 = 8 sub-evaluation moi normal (dung 33% ty le da neu trong ly thuyet).`,
+    solutionNote: {
+      vi: `Trục y: $f(0,2.02,0) = 2.02 - 2 = 0.02$; $f(0,1.98,0) = 1.98 - 2 = -0.02$. $\\text{diff}_y = 0.02 - (-0.02) = 0.04$.
+
+Trục x: $f(0.02,2,0) = \\sqrt{0.02^2 + 2^2} - 2 \\approx (2 + 0.0001) - 2 = 0.0001$; $f(-0.02,2,0)$ cho cùng giá trị $\\approx 0.0001$ (đối xứng qua trục y). $\\text{diff}_x = 0.0001 - 0.0001 \\approx 0$ (tương tự cho trục z).
+
+Vector chưa chuẩn hoá $\\approx (0, 0.04, 0)$, chuẩn hoá ra $(0, 1, 0)$. Đúng: đỉnh cầu tại $(0,2,0)$ có normal hướng thẳng lên $+y$.
+
+Sub-evaluation: central-diff $= 6$ lần gọi \`map()\` $\\times 4 = 24$. Tetrahedron $= 4$ lần gọi \`map()\` $\\times 4 = 16$. Chênh lệch $= 24 - 16 = 8$ sub-evaluation mỗi normal (đúng tỉ lệ 33% đã nêu trong lý thuyết).`,
+      en: `y-axis: $f(0,2.02,0) = 2.02 - 2 = 0.02$; $f(0,1.98,0) = 1.98 - 2 = -0.02$. $\\text{diff}_y = 0.02 - (-0.02) = 0.04$.
+
+x-axis: $f(0.02,2,0) = \\sqrt{0.02^2 + 2^2} - 2 \\approx (2 + 0.0001) - 2 = 0.0001$; $f(-0.02,2,0)$ gives the same $\\approx 0.0001$ (symmetric across the y-axis). $\\text{diff}_x = 0.0001 - 0.0001 \\approx 0$ (same for the z-axis).
+
+The un-normalized vector $\\approx (0, 0.04, 0)$, normalizing to $(0, 1, 0)$. Correct: the sphere's top at $(0,2,0)$ has a normal pointing straight up $+y$.
+
+Sub-evaluations: central-diff $= 6$ \`map()\` calls $\\times 4 = 24$. Tetrahedron $= 4$ \`map()\` calls $\\times 4 = 16$. Difference $= 24 - 16 = 8$ sub-evaluations per normal (matching the 33% figure from the theory).`,
+    },
   },
   {
     id: "tetrahedron-lambert-playground",
@@ -66,7 +69,7 @@ float map(vec3 p) {
 }
 
 vec3 calcNormal(vec3 p) {
-  // TODO: ky thuat tetrahedron - 4 mau, k = vec2(1.0, -1.0), eps = 0.001
+  // TODO: tetrahedron technique - 4 samples, k = vec2(1.0, -1.0), eps = 0.001
   return vec3(0.0, 1.0, 0.0);
 }
 

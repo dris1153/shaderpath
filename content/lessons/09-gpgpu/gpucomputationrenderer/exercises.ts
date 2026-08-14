@@ -36,19 +36,14 @@ Explain precisely what happens: does the shader compile, and if so, how do parti
         en: "I distinguish this from the case where the shader references no texture at all (particles freeze, forever re-reading the same seed frame)",
       },
     ],
-    solutionCode: `// Không có setVariableDependencies() → init() không có gì để prepend, nên
-// KHÔNG có dòng "uniform sampler2D texturePosition;" nào được chèn vào
-// velocity.frag. Dòng texture2D(texturePosition, uv) trong shader của bạn
-// tham chiếu một identifier chưa từng được khai báo ở bất kỳ đâu trong
-// chương trình — trình biên dịch GLSL báo lỗi "texturePosition: undeclared
-// identifier" ngay khi compile. gl.getShaderInfoLog sẽ chứa lỗi này; nếu
-// project không tự bắt lỗi compile, tuỳ engine mà bạn nhận về console.error
-// hoặc simulation không chạy gì cả vì program không link được.
-//
-// Nếu shader KHÔNG tham chiếu texture nào (không cần dependency), nó vẫn
-// biên dịch OK nhưng chỉ đọc được texture khởi tạo ban đầu (initialValueTexture
-// đã render một lần vào cả hai render target lúc init()) — không bao giờ đọc
-// được kết quả frame trước, nên trạng thái coi như đứng yên mãi mãi.`,
+    solutionNote: {
+      vi: `Không có \`setVariableDependencies()\` thì \`init()\` không có gì để chèn vào đầu shader, nên KHÔNG có dòng \`uniform sampler2D texturePosition;\` nào được thêm vào \`velocity.frag\`. Dòng \`texture2D(texturePosition, uv)\` trong shader của bạn tham chiếu một identifier chưa từng được khai báo ở bất kỳ đâu trong chương trình — trình biên dịch GLSL báo lỗi "texturePosition: undeclared identifier" ngay khi compile. \`gl.getShaderInfoLog\` sẽ chứa lỗi này; tuỳ vào việc project có tự bắt lỗi compile hay không, bạn sẽ thấy \`console.error\` hoặc simulation không chạy gì cả vì program không link được.
+
+Nếu shader KHÔNG tham chiếu texture nào (không cần dependency), nó vẫn biên dịch bình thường nhưng chỉ đọc được texture khởi tạo ban đầu (\`initialValueTexture\` đã render một lần vào cả hai render target lúc \`init()\`) — không bao giờ đọc được kết quả của frame trước, nên trạng thái coi như đứng yên mãi mãi.`,
+      en: `Without \`setVariableDependencies()\`, \`init()\` has nothing to prepend, so NO \`uniform sampler2D texturePosition;\` line ever gets injected into \`velocity.frag\`. The \`texture2D(texturePosition, uv)\` line in your shader references an identifier that was never declared anywhere in the program — the GLSL compiler fails with "texturePosition: undeclared identifier" right at compile time. \`gl.getShaderInfoLog\` will contain that error; depending on whether the project catches compile errors itself, you'll see a \`console.error\` or the simulation simply won't run because the program failed to link.
+
+If the shader references NO texture at all (no dependency needed), it compiles fine but only ever reads the initial seed texture (\`initialValueTexture\`, rendered once into both render targets at \`init()\`) — it never reads the previous frame's result, so the state is effectively frozen forever.`,
+    },
   },
   {
     id: "wire-a-life-variable",
@@ -69,11 +64,11 @@ Explain precisely what happens: does the shader compile, and if so, how do parti
 \`;
 
 const dtLife = gpuCompute.createTexture();
-// TODO: điền dtLife.image.data — kênh R (mỗi 4 số) = 1.0, còn lại tuỳ ý
+// TODO: fill dtLife.image.data — the R channel (every 4th value) = 1.0, the rest don't matter
 
 // TODO: addVariable("textureLife", lifeShader, dtLife)
-// TODO: setVariableDependencies — biến này chỉ phụ thuộc chính nó
-// TODO: gán uniform uDecay (ví dụ { value: 0.01 }) vào material.uniforms của biến`,
+// TODO: setVariableDependencies — this variable depends only on itself
+// TODO: assign the uDecay uniform (e.g. { value: 0.01 }) onto the variable's material.uniforms`,
     solutionCode: `const lifeShader = \`
   uniform float uDecay;
   void main() {

@@ -36,18 +36,18 @@ Then: you need 3 independent random values per pixel (say, 3 dice rolls). Using 
         en: "Explained why an offset matching the grid step (a small round number) makes the two channels accidentally correlated instead of independent",
       },
     ],
-    solutionCode: `// hash21(p) phải thuần vì GPU chạy song song, không thứ tự cố định, không
-// bộ nhớ chung giữa các invocation — chỉ có toạ độ p là thông tin đáng tin.
-//
-// 3 kênh độc lập từ cùng một hash:
-// r1 = hash21(p);
-// r2 = hash21(p + 17.13);
-// r3 = hash21(p + 91.7);
-//
-// 17.13 và 91.7 lẻ, không phải bội số của bước lưới (thường là số nguyên
-// nhỏ) — dịch đúng 1.0 chỉ trỏ sang ô kế bên, một ô đã tồn tại sẵn trong
-// chính trường hash gốc, nên hai "kênh" sẽ chỉ là bản dịch của nhau, không
-// độc lập theo đúng nghĩa thống kê.`,
+    solutionNote: {
+      vi: `\`hash21(p)\` phải là hàm thuần vì GPU chạy song song, không có thứ tự cố định, không có bộ nhớ chung giữa các invocation — chỉ toạ độ $p$ là thông tin đáng tin cậy.
+
+3 kênh độc lập từ cùng một hash: \`r1 = hash21(p)\`, \`r2 = hash21(p + 17.13)\`, \`r3 = hash21(p + 91.7)\`.
+
+$17.13$ và $91.7$ là số lẻ, không phải bội số của bước lưới (thường là số nguyên nhỏ) — dịch đúng $1.0$ chỉ trỏ sang ô kế bên, một ô đã tồn tại sẵn trong chính trường hash gốc, nên hai "kênh" chỉ là bản dịch của nhau, không độc lập theo đúng nghĩa thống kê.`,
+      en: `\`hash21(p)\` must be a pure function because the GPU runs in parallel, with no fixed execution order and no shared memory between invocations — only the coordinate $p$ is trustworthy information.
+
+3 independent channels from the same hash: \`r1 = hash21(p)\`, \`r2 = hash21(p + 17.13)\`, \`r3 = hash21(p + 91.7)\`.
+
+$17.13$ and $91.7$ are odd numbers, not multiples of the grid step (usually a small integer) — an offset of exactly $1.0$ would simply point at the neighboring cell, which already exists within the original hash field itself, so the two "channels" would just be translations of each other, not independent in the statistical sense.`,
+    },
   },
   {
     id: "no-sine-hash-in-playground",
@@ -61,8 +61,8 @@ Then: you need 3 independent random values per pixel (say, 3 dice rolls). Using 
   float density = 24.0;
   vec2 cell = floor(uv * density);
 
-  // TODO: hash "không dùng sin" (Dave Hoskins style) biến cell thành một
-  // giá trị giả ngẫu nhiên trong [0, 1)
+  // TODO: a sine-free hash (Dave Hoskins style) turning cell into a
+  // pseudo-random value in [0, 1)
   float h = 0.0;
 
   fragColor = vec4(vec3(h), 1.0);

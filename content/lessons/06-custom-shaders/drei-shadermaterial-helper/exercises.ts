@@ -44,20 +44,18 @@ export const exercises: Exercise[] = [
         en: "I explained why 600 times does NOT automatically mean 'slow' — a real profiler (Track 12) must measure it before concluding, since the raw count alone doesn't say whether it blows the frame budget (16.6ms at 60fps)",
       },
     ],
-    solutionCode: `// (a) 60 fps * 10 s = 600 re-render, 600 lần applyProps so khớp lại TOÀN BỘ
-//     object props (không chỉ uTime) mỗi lần.
-//
-// (b) 0. materialRef.current.uTime = value là một phép gán thuộc tính JS
-//     thuần trong callback useFrame — không setState, không re-render,
-//     không đi qua reconciler/applyProps của R3F.
-//
-// (c) Không tự động. 600 lần diff/10 giây nghe nhiều nhưng "nhiều" không
-//     phải đơn vị đo hiệu năng — phải so với ngân sách frame (16.6ms ở
-//     60fps) bằng profiler thật (Spector.js, React DevTools Profiler,
-//     Track 12) mới biết applyProps của MỘT uniform có thực sự đáng lo hay
-//     không. Với một vài material, khả năng cao vẫn nằm dưới ngưỡng cảm
-//     nhận được; nhân lên hàng chục material cùng cập nhật mỗi frame mới là
-//     lúc ref-mutation thật sự tạo khác biệt đo được.`,
+    solutionNote: {
+      vi: `(a) $60 \\text{fps} \\times 10\\text{s} = 600$ re-render, 600 lần \`applyProps\` so khớp lại TOÀN BỘ object props (không chỉ \`uTime\`) mỗi lần.
+
+(b) 0. \`materialRef.current.uTime = value\` là một phép gán thuộc tính JS thuần trong callback \`useFrame\` — không \`setState\`, không re-render, không đi qua reconciler/\`applyProps\` của R3F.
+
+(c) Không tự động. 600 lần diff/10 giây nghe nhiều nhưng "nhiều" không phải đơn vị đo hiệu năng — phải so với ngân sách frame ($16.6\\text{ms}$ ở 60fps) bằng profiler thật (Spector.js, React DevTools Profiler, Track 12) mới biết \`applyProps\` của MỘT uniform có thực sự đáng lo hay không. Với một vài material, khả năng cao vẫn nằm dưới ngưỡng cảm nhận được; nhân lên hàng chục material cùng cập nhật mỗi frame mới là lúc ref-mutation thật sự tạo khác biệt đo được.`,
+      en: `(a) $60 \\text{fps} \\times 10\\text{s} = 600$ re-renders, 600 \`applyProps\` calls reconciling the ENTIRE props object (not just \`uTime\`) each time.
+
+(b) 0. \`materialRef.current.uTime = value\` is a plain JS property assignment inside the \`useFrame\` callback — no \`setState\`, no re-render, no pass through R3F's reconciler/\`applyProps\`.
+
+(c) Not automatically. 600 diffs/10 seconds sounds like a lot, but "a lot" isn't a performance unit — you have to compare it against the frame budget ($16.6\\text{ms}$ at 60fps) with a real profiler (Spector.js, React DevTools Profiler, Track 12) to know whether \`applyProps\` for ONE uniform is actually a concern. With a handful of materials, it likely stays well under the perceptible threshold; multiply that by dozens of materials all updating every frame, and that's when ref-mutation starts making a measurable difference.`,
+    },
   },
   {
     id: "type-a-custom-shader-element",
@@ -72,9 +70,9 @@ import { shaderMaterial } from "@react-three/drei";
 
 const GlowMaterial = shaderMaterial({ uIntensity: 1 }, vertexShader, fragmentShader);
 
-// TODO 1: đăng ký GlowMaterial vào catalogue của R3F
+// TODO 1: register GlowMaterial into R3F's catalogue
 
-// TODO 2: augment ThreeElements để <glowMaterial uIntensity={2} /> type-check`,
+// TODO 2: augment ThreeElements so <glowMaterial uIntensity={2} /> type-checks`,
     solutionCode: `import { extend } from "@react-three/fiber";
 import type { ThreeElement } from "@react-three/fiber";
 import { shaderMaterial } from "@react-three/drei";

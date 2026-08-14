@@ -52,20 +52,26 @@ Without running the code, compute the start time (in seconds, from the timeline'
         en: "I correctly computed .d running 1.6 → 2.0 and derived a total timeline duration of 2.0 seconds",
       },
     ],
-    solutionCode: `// .a: không có position -> mặc định bắt đầu tại t=0 (tween đầu tiên).
-//     duration 1 -> chạy 0 -> 1.
-//
-// .b: "-=0.2" neo vào lúc KẾT THÚC của .a (t=1), lùi lại 0.2s -> bắt đầu
-//     ở t=0.8. duration 0.6 -> chạy 0.8 -> 1.4.
-//
-// .c: "<" neo vào lúc BẮT ĐẦU của .b (t=0.8), không phải lúc .b kết thúc
-//     -> .c cũng bắt đầu ở t=0.8. duration 0.5 -> chạy 0.8 -> 1.3.
-//
-// .d: "+=0.3" neo vào lúc KẾT THÚC của .c (t=1.3), cộng thêm 0.3s
-//     -> bắt đầu ở t=1.6. duration 0.4 -> chạy 1.6 -> 2.0.
-//
-// Tổng thời lượng timeline = thời điểm KẾT THÚC MUỘN NHẤT trong 4 tween
-// = max(1.0, 1.4, 1.3, 2.0) = 2.0 giây.`,
+    solutionNote: {
+      vi: `\`.a\`: không có position -> mặc định bắt đầu tại $t=0$ (tween đầu tiên). duration 1 -> chạy $0 \\to 1$.
+
+\`.b\`: \`"-=0.2"\` neo vào lúc KẾT THÚC của \`.a\` ($t=1$), lùi lại $0.2$s -> bắt đầu ở $t=0.8$. duration 0.6 -> chạy $0.8 \\to 1.4$.
+
+\`.c\`: \`"<"\` neo vào lúc BẮT ĐẦU của \`.b\` ($t=0.8$), không phải lúc \`.b\` kết thúc -> \`.c\` cũng bắt đầu ở $t=0.8$. duration 0.5 -> chạy $0.8 \\to 1.3$.
+
+\`.d\`: \`"+=0.3"\` neo vào lúc KẾT THÚC của \`.c\` ($t=1.3$), cộng thêm $0.3$s -> bắt đầu ở $t=1.6$. duration 0.4 -> chạy $1.6 \\to 2.0$.
+
+Tổng thời lượng timeline = thời điểm KẾT THÚC MUỘN NHẤT trong 4 tween = $\\max(1.0, 1.4, 1.3, 2.0) = 2.0$ giây.`,
+      en: `\`.a\`: no position -> defaults to starting at $t=0$ (the first tween). duration 1 -> runs $0 \\to 1$.
+
+\`.b\`: \`"-=0.2"\` anchors to the END of \`.a\` ($t=1$), pulled back $0.2$s -> starts at $t=0.8$. duration 0.6 -> runs $0.8 \\to 1.4$.
+
+\`.c\`: \`"<"\` anchors to the START of \`.b\` ($t=0.8$), not to when \`.b\` ends -> \`.c\` also starts at $t=0.8$. duration 0.5 -> runs $0.8 \\to 1.3$.
+
+\`.d\`: \`"+=0.3"\` anchors to the END of \`.c\` ($t=1.3$), plus $0.3$s -> starts at $t=1.6$. duration 0.4 -> runs $1.6 \\to 2.0$.
+
+Total timeline duration = the LATEST end time among the 4 tweens = $\\max(1.0, 1.4, 1.3, 2.0) = 2.0$ seconds.`,
+    },
   },
   {
     id: "build-staggered-entrance",
@@ -77,11 +83,11 @@ Without running the code, compute the start time (in seconds, from the timeline'
     starterCode: `import gsap from "gsap";
 
 function buildEntrance(items: HTMLElement[]): gsap.core.Timeline {
-  // TODO: tạo timeline với defaults { duration: 0.6, ease: "power2.out" }
+  // TODO: create a timeline with defaults { duration: 0.6, ease: "power2.out" }
   const tl = gsap.timeline();
 
-  // TODO: from() trên items: opacity 0 -> 1, y: 24 -> 0, stagger dạng
-  // object toả từ giữa (from: "center", each: 0.08)
+  // TODO: from() on items: opacity 0 -> 1, y: 24 -> 0, object-form stagger
+  // fanning out from the middle (from: "center", each: 0.08)
 
   return tl;
 }`,

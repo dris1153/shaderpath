@@ -50,9 +50,9 @@ Then, suppose you're building a public 3D portfolio site aiming to reach as many
 }
 
 function pickBestContext(canvas: HTMLCanvasElement): ContextPick {
-  // TODO 1: thử webgl2 trước, trả về ngay nếu thành công
-  // TODO 2: fallback webgl, rồi experimental-webgl
-  // TODO 3: throw Error rõ ràng nếu cả ba lần thử đều null
+  // TODO 1: try webgl2 first, return immediately if it succeeds
+  // TODO 2: fall back to webgl, then experimental-webgl
+  // TODO 3: throw a clear Error if all three attempts return null
   throw new Error("not implemented");
 }`,
     solutionCode: `interface ContextPick {

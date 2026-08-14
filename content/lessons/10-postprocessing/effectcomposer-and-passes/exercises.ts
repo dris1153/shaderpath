@@ -36,19 +36,26 @@ Without running any code, trace through the real \`render()\` loop (each pass: r
         en: "I explain that enabling ShaderPass B doesn't change the final answer because it just adds one MORE swap (write then swap back), landing on target1 again — the swap count's parity decides the outcome, not the pass count",
       },
     ],
-    solutionCode: `// RenderPass: renderToScreen=false -> ghi vào readBuffer (target2), needsSwap=false -> không swap
-// readBuffer=target2, writeBuffer=target1 (không đổi)
+    solutionNote: {
+      vi: `RenderPass: \`renderToScreen=false\` nên ghi vào \`readBuffer\` (target2), \`needsSwap=false\` nên không swap. Sau bước này: \`readBuffer=target2\`, \`writeBuffer=target1\` (không đổi).
 
-// ShaderPass A (enabled): đọc tDiffuse=target2.texture, ghi vào writeBuffer=target1
-// needsSwap=true (mặc định) -> swap: readBuffer=target1, writeBuffer=target2
+ShaderPass A (enabled): đọc \`tDiffuse=target2.texture\`, ghi vào \`writeBuffer=target1\`. \`needsSwap=true\` (mặc định) nên swap: \`readBuffer=target1\`, \`writeBuffer=target2\`.
 
-// ShaderPass B (enabled:false): composer "continue" ngay đầu vòng lặp, không render, không swap
+ShaderPass B (\`enabled:false\`): composer "continue" ngay đầu vòng lặp, không render, không swap.
 
-// OutputPass: đọc tDiffuse = readBuffer.texture = target1.texture -> ĐÁP ÁN: target1
+OutputPass: đọc \`tDiffuse = readBuffer.texture = target1.texture\` — đáp án: \`target1\`.
 
-// Nếu bật ShaderPass B: nó đọc target1, ghi vào target2 (writeBuffer hiện tại),
-// rồi swap -> readBuffer quay lại target1. OutputPass vẫn đọc target1 — không đổi,
-// vì swap có tính CHẴN/LẺ: hai swap liên tiếp quay lại đúng vai trò ban đầu.`,
+Nếu bật ShaderPass B: nó đọc \`target1\`, ghi vào \`target2\` (writeBuffer hiện tại), rồi swap, khiến \`readBuffer\` quay lại \`target1\`. OutputPass vẫn đọc \`target1\` — không đổi, vì swap có tính chẵn/lẻ: hai swap liên tiếp quay lại đúng vai trò ban đầu.`,
+      en: `RenderPass: \`renderToScreen=false\` so it writes into \`readBuffer\` (target2), \`needsSwap=false\` so it never swaps. After this step: \`readBuffer=target2\`, \`writeBuffer=target1\` (unchanged).
+
+ShaderPass A (enabled): reads \`tDiffuse=target2.texture\`, writes into \`writeBuffer=target1\`. \`needsSwap=true\` (the default) triggers a swap: \`readBuffer=target1\`, \`writeBuffer=target2\`.
+
+ShaderPass B (\`enabled:false\`): the composer \`continue\`s right at the top of the loop, never renders, never swaps.
+
+OutputPass: reads \`tDiffuse = readBuffer.texture = target1.texture\` — the answer: \`target1\`.
+
+If ShaderPass B were enabled: it reads \`target1\`, writes into \`target2\` (the current writeBuffer), then swaps, sending \`readBuffer\` back to \`target1\`. OutputPass still reads \`target1\` — unchanged, because swaps behave by parity: two consecutive swaps land back on the original assignment.`,
+    },
   },
   {
     id: "write-grayscale-shader-pass",
@@ -74,7 +81,7 @@ Without running any code, trace through the real \`render()\` loop (each pass: r
     varying vec2 vUv;
     void main() {
       vec4 texel = texture2D(tDiffuse, vUv);
-      // TODO: tính luminance Y = 0.2126*R + 0.7152*G + 0.0722*B
+      // TODO: compute luminance Y = 0.2126*R + 0.7152*G + 0.0722*B
       // TODO: gl_FragColor = vec4(vec3(Y), texel.a)
       gl_FragColor = texel;
     }

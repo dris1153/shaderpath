@@ -32,16 +32,14 @@ export const exercises: Exercise[] = [
         en: "I can connect this to the vanilla code shown in this lesson's demo (hand-written raycaster + intersectObject)",
       },
     ],
-    solutionCode: `// R3F's <Canvas> mounts ONE PointerEvents manager (see the Hooks/Events
-// docs cited in references.ts). On every pointermove it raycasts against
-// the whole scene graph ONCE and dispatches onPointerOver/Out/Move to
-// whichever JSX meshes registered a handler.
-//
-// The cost is NOT eliminated: 50 meshes still get checked against the
-// ray. It's just centralized in one well-tested place instead of being
-// hand-rolled (and possibly duplicated or buggy) 50 times across your
-// own event listeners — exactly what the vanilla source in this lesson's
-// demo has to do explicitly.`,
+    solutionNote: {
+      vi: `\`<Canvas>\` của R3F chỉ mount đúng MỘT PointerEvents manager (xem tài liệu Hooks/Events trích dẫn trong \`references.ts\`). Mỗi khi \`pointermove\` bắn ra, manager đó raycast vào toàn bộ scene graph ĐÚNG MỘT LẦN, rồi tự phát \`onPointerOver\`/\`onPointerOut\`/\`onPointerMove\` cho bất kỳ mesh JSX nào có đăng ký handler.
+
+Chi phí raycast KHÔNG hề biến mất: cả 50 mesh vẫn phải được kiểm tra va chạm với tia. Nó chỉ được tập trung vào đúng một chỗ đã được kiểm định kỹ, thay vì bị viết tay (và có thể trùng lặp hoặc sai) tới 50 lần rải rác trong các event listener của riêng bạn — đúng chính xác việc mà đoạn code vanilla trong demo của bài này phải làm tường minh.`,
+      en: `R3F's \`<Canvas>\` mounts exactly ONE PointerEvents manager (see the Hooks/Events docs cited in \`references.ts\`). On every \`pointermove\` it raycasts against the whole scene graph ONCE and dispatches \`onPointerOver\`/\`onPointerOut\`/\`onPointerMove\` to whichever JSX meshes registered a handler.
+
+The cost is NOT eliminated: 50 meshes still get checked against the ray. It's just centralized in one well-tested place instead of being hand-rolled (and possibly duplicated or buggy) 50 times across your own event listeners — exactly what the vanilla source in this lesson's demo has to do explicitly.`,
+    },
   },
   {
     id: "hand-roll-hover-raycast",
@@ -57,8 +55,8 @@ function isMeshHovered(
   camera: THREE.PerspectiveCamera,
   mesh: THREE.Mesh,
 ): boolean {
-  // TODO: tạo THREE.Raycaster, gọi setFromCamera với pointerNDC (dạng
-  // Vector2) và camera, rồi kiểm tra intersectObject(mesh) có phần tử nào không.
+  // TODO: create a THREE.Raycaster, call setFromCamera with pointerNDC (as a
+  // Vector2) and camera, then check whether intersectObject(mesh) has any hits.
   return false;
 }`,
     solutionCode: `import * as THREE from "three";

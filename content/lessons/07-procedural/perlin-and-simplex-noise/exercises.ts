@@ -40,16 +40,22 @@ Finally: one Perlin-style 4D noise call samples $2^4$ grid corners; a Simplex-st
         en: "I correctly computed $2^4=16$ Perlin-style corners vs $4+1=5$ Simplex-style corners in 4D, a $16/5=3.2\\times$ ratio",
       },
     ],
-    solutionCode: `// fade_1985(0.25) = 3(0.0625) - 2(0.015625) = 0.1875 - 0.03125 = 0.15625
-// fade_2002(0.25) = 6(0.0009765625) - 15(0.00390625) + 10(0.015625)
-//                  = 0.005859375 - 0.05859375 + 0.15625 ≈ 0.103516
-//
-// fade_1985''(t) = 6 - 12t  -> fade''(0) = 6, fade''(1) = -6   (khac 0 -> chi C1)
-// fade_2002''(t) = 120t^3 - 180t^2 + 60t -> fade''(0) = 0, fade''(1) = 0  (C2)
-//
-// 4D grid corners (Perlin-style): 2^4 = 16
-// 4D simplex vertices (n+1):      4+1 = 5
-// ratio = 16 / 5 = 3.2x more corner evaluations for the square-grid approach`,
+    solutionNote: {
+      vi: `$\\mathrm{fade}_{1985}(0.25) = 3(0.0625) - 2(0.015625) = 0.1875 - 0.03125 = 0.15625$.
+
+$\\mathrm{fade}_{2002}(0.25) = 6(0.0009765625) - 15(0.00390625) + 10(0.015625) = 0.005859375 - 0.05859375 + 0.15625 \\approx 0.103516$.
+
+$\\mathrm{fade}_{1985}''(t) = 6 - 12t \\Rightarrow \\mathrm{fade}''(0) = 6,\\ \\mathrm{fade}''(1) = -6$ (khác 0 → chỉ $C^1$). $\\mathrm{fade}_{2002}''(t) = 120t^3 - 180t^2 + 60t \\Rightarrow \\mathrm{fade}''(0) = 0,\\ \\mathrm{fade}''(1) = 0$ ($C^2$).
+
+Số góc lưới 4D kiểu Perlin: $2^4 = 16$. Số đỉnh simplex 4D ($n+1$): $4+1 = 5$. Tỉ lệ $16/5 = 3.2$ lần — cách tiếp cận lưới vuông cần đánh giá nhiều góc hơn hẳn.`,
+      en: `$\\mathrm{fade}_{1985}(0.25) = 3(0.0625) - 2(0.015625) = 0.1875 - 0.03125 = 0.15625$.
+
+$\\mathrm{fade}_{2002}(0.25) = 6(0.0009765625) - 15(0.00390625) + 10(0.015625) = 0.005859375 - 0.05859375 + 0.15625 \\approx 0.103516$.
+
+$\\mathrm{fade}_{1985}''(t) = 6 - 12t \\Rightarrow \\mathrm{fade}''(0) = 6,\\ \\mathrm{fade}''(1) = -6$ (nonzero → only $C^1$). $\\mathrm{fade}_{2002}''(t) = 120t^3 - 180t^2 + 60t \\Rightarrow \\mathrm{fade}''(0) = 0,\\ \\mathrm{fade}''(1) = 0$ ($C^2$).
+
+4D Perlin-style grid corners: $2^4 = 16$. 4D simplex vertices ($n+1$): $4+1 = 5$. Ratio $16/5 = 3.2\\times$ — the square-grid approach needs far more corner evaluations.`,
+    },
   },
   {
     id: "complete-perlin2d-corners",
@@ -79,11 +85,11 @@ float perlin2D(vec2 p) {
 
   float a = dot(perlinGradient(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0));
   float b = dot(perlinGradient(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
-  // TODO 1: dot product cho hai góc con lai (0,1) va (1,1)
+  // TODO 1: dot product for the two remaining corners (0,1) and (1,1)
   float c = 0.0;
   float d = 0.0;
 
-  // TODO 2: dung perlinFade(f) lam trong so thay vi f tho
+  // TODO 2: use perlinFade(f) as the interpolation weight instead of raw f
   vec2 u = f;
 
   return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
@@ -93,7 +99,7 @@ void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   float n = perlin2D(uv * 6.0);
 
-  // TODO 3: chuan hoa n (khoang uoc luong [-0.7, 0.7]) ve [0, 1]
+  // TODO 3: normalize n (roughly in [-0.7, 0.7]) into [0, 1]
   float v = 0.0;
 
   fragColor = vec4(vec3(v), 1.0);

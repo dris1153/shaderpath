@@ -56,22 +56,22 @@ At the moment your \`material.onBeforeCompile\` runs, is \`shader.vertexShader\`
         en: "I can state the correct fix: target .replace() at the #include <begin_vertex> marker itself, keeping the marker intact and appending code after it",
       },
     ],
-    solutionCode: `// shader.vertexShader tại thời điểm onBeforeCompile vẫn CHỨA nguyên văn:
-//   #include <begin_vertex>
-// KHÔNG chứa "vec3 transformed = vec3( position );" — dòng đó chỉ xuất
-// hiện sau khi resolveIncludes() chạy, và điều đó xảy ra TRONG WebGLProgram,
-// tức là SAU khi onBeforeCompile đã hoàn tất.
-//
-// .replace('vec3 transformed = vec3( position );', '...') không tìm thấy
-// chuỗi khớp -> JS trả về y nguyên shader.vertexShader, không lỗi, không
-// thay đổi -> hiệu ứng "biến mất": mesh vẫn render, lighting vẫn đúng,
-// nhưng hiệu ứng tuỳ biến bạn viết không bao giờ xuất hiện.
-//
-// Sửa đúng:
-shader.vertexShader = shader.vertexShader.replace(
+    solutionCode: `shader.vertexShader = shader.vertexShader.replace(
   "#include <begin_vertex>",
-  "#include <begin_vertex>\\n  transformed.y += 0.1;", // marker giữ nguyên
+  "#include <begin_vertex>\\n  transformed.y += 0.1;", // marker stays intact
 );`,
+    solutionNote: {
+      vi: `\`shader.vertexShader\` tại thời điểm \`onBeforeCompile\` vẫn CHỨA nguyên văn \`#include <begin_vertex>\`, KHÔNG chứa \`vec3 transformed = vec3( position );\` — dòng đó chỉ xuất hiện sau khi \`resolveIncludes()\` chạy, và điều đó xảy ra TRONG \`WebGLProgram\`, tức là SAU khi \`onBeforeCompile\` đã hoàn tất.
+
+\`.replace('vec3 transformed = vec3( position );', '...')\` không tìm thấy chuỗi khớp → JS trả về y nguyên \`shader.vertexShader\`, không lỗi, không thay đổi → hiệu ứng "biến mất": mesh vẫn render, lighting vẫn đúng, nhưng hiệu ứng tuỳ biến bạn viết không bao giờ xuất hiện.
+
+Sửa đúng: nhắm \`.replace()\` vào chính marker \`#include <begin_vertex>\`, như đoạn code bên dưới.`,
+      en: `At the moment \`onBeforeCompile\` runs, \`shader.vertexShader\` still literally CONTAINS \`#include <begin_vertex>\`, and does NOT contain \`vec3 transformed = vec3( position );\` — that line only appears after \`resolveIncludes()\` runs, which happens INSIDE \`WebGLProgram\`, i.e. AFTER \`onBeforeCompile\` has already finished.
+
+\`.replace('vec3 transformed = vec3( position );', '...')\` finds no matching string → JS returns \`shader.vertexShader\` completely unchanged, no error, no effect → the "vanishing" symptom: the mesh still renders, lighting still looks correct, but the custom effect you wrote never shows up.
+
+The correct fix: target \`.replace()\` at the \`#include <begin_vertex>\` marker itself, as in the code below.`,
+    },
   },
   {
     id: "chunk-splice-tint",

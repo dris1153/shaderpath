@@ -36,16 +36,22 @@ Then answer: if the \`fbm()\` octave count goes from $N=5$ to $N=8$ for smoother
         en: "I correctly computed 5×8=40 calls at N=8, and can explain why cost scales with the PRODUCT of warp-layer count and octave count, not their sum",
       },
     ],
-    solutionCode: `// So lan goi fbm() cho warp 2 lop: q(2) + r(2) + f(1) = 5 lan fbm(), co dinh
-// bat ke octave count N la bao nhieu.
-//
-// Moi fbm() goi noise() dung N lan -> tong noise() calls = 5 * N.
-//
-// N = 5:  5 * 5  = 25 lan noise() moi pixel
-// N = 8:  5 * 8  = 40 lan noise() moi pixel
-//
-// Tang tu 25 len 40 (them 15 lan, +60%) — chi phi warp nhan theo CA hai truc
-// (so lop warp x so octave), khong phai chi cong them mot luong co dinh.`,
+    solutionNote: {
+      vi: `Tổng số lần gọi \`fbm()\` cho warp hai lớp là cố định, không phụ thuộc octave: $q$ cần 2 lần, $r$ cần 2 lần, $f$ cần 1 lần, tổng $2+2+1=5$ lần.
+
+Mỗi lần gọi \`fbm()\` gọi \`noise()\` đúng $N$ lần, nên tổng số lần gọi \`noise()\` mỗi pixel là $5N$.
+
+Với $N=5$: $5 \\times 5 = 25$ lần. Với $N=8$: $5 \\times 8 = 40$ lần.
+
+Tăng từ 25 lên 40 (thêm 15 lần, tăng 60%) — chi phí warp nhân theo tích của số lớp warp và số octave, không phải tổng của chúng.`,
+      en: `The total number of \`fbm()\` calls for a two-layer warp is fixed, independent of octave count: $q$ needs 2 calls, $r$ needs 2 calls, $f$ needs 1 call, totaling $2+2+1=5$.
+
+Every \`fbm()\` call invokes \`noise()\` exactly $N$ times, so the total \`noise()\` calls per pixel is $5N$.
+
+At $N=5$: $5 \\times 5 = 25$ calls. At $N=8$: $5 \\times 8 = 40$ calls.
+
+Going from 25 to 40 (15 more calls, a 60% increase) — warp cost scales with the PRODUCT of warp-layer count and octave count, not their sum.`,
+    },
   },
   {
     id: "implement-single-layer-warp",
@@ -89,10 +95,10 @@ void main() {
   vec2 p = uv * 3.0;
 
   // TODO 1: q = vec2(fbm(p + offsetA), fbm(p + offsetB))
-  // offsetA va offsetB phai cach nhau >= 3 don vi (vd (0.0,0.0) va (5.2,1.3))
+  // offsetA and offsetB must be >= 3 units apart (e.g. (0.0,0.0) and (5.2,1.3))
   vec2 q = vec2(0.0);
 
-  // TODO 2: f = fbm(p + STRENGTH * q) — nhan STRENGTH vao q TRUOC khi cong vao p
+  // TODO 2: f = fbm(p + STRENGTH * q) — multiply STRENGTH into q BEFORE adding to p
   float f = fbm(p);
 
   vec3 colorA = vec3(0.05, 0.08, 0.2);

@@ -36,15 +36,18 @@ Explain: what does outputting \`length(v)\` as gray via \`vec3(length(v))\` reve
         en: "I identified: output darker than white (e.g. gray 0.3) is evidence length(v) < 1, meaning v is NOT normalized",
       },
     ],
-    solutionCode: `// vec3(length(v)) đổ CẢ 3 kênh bằng đúng 1 số → xám đồng đều, dễ đọc "độ lớn"
-// mà không cần trộn/so sánh giữa các kênh khác nhau như vec3(v, 0.0).
-//
-// Nếu v đã normalize: length(v) = 1.0 luôn đúng → output PHẢI là trắng tuyệt đối
-// (1.0, 1.0, 1.0) trên toàn vùng kiểm tra.
-//
-// Output ra xám tối hơn trắng (vd 0.3 thay vì 1.0) là bằng chứng trực tiếp,
-// định lượng được: length(v) ≈ 0.3, tức v chưa normalize — không cần đoán,
-// chỉ cần đọc đúng mức xám.`,
+    solutionNote: {
+      vi: `\`vec3(length(v))\` đổ CẢ 3 kênh bằng đúng 1 số → xám đồng đều, dễ đọc "độ lớn" mà không cần trộn/so sánh giữa các kênh khác nhau như \`vec3(v, 0.0)\`.
+
+Nếu $v$ đã normalize: $\\mathrm{length}(v) = 1.0$ luôn đúng → output PHẢI là trắng tuyệt đối $(1.0, 1.0, 1.0)$ trên toàn vùng kiểm tra.
+
+Output ra xám tối hơn trắng (ví dụ $0.3$ thay vì $1.0$) là bằng chứng trực tiếp, định lượng được: $\\mathrm{length}(v) \\approx 0.3$, tức $v$ chưa normalize — không cần đoán, chỉ cần đọc đúng mức xám.`,
+      en: `\`vec3(length(v))\` pours the same single number into all 3 channels → an even gray, easy to read as "magnitude" without mixing/comparing different channels the way \`vec3(v, 0.0)\` does.
+
+If $v$ is properly normalized: $\\mathrm{length}(v) = 1.0$ always holds → the output MUST be pure white $(1.0, 1.0, 1.0)$ across the whole test region.
+
+An output darker than white (e.g. $0.3$ instead of $1.0$) is direct, quantifiable evidence: $\\mathrm{length}(v) \\approx 0.3$, meaning $v$ isn't normalized — no guessing needed, just read the gray level.`,
+    },
   },
   {
     id: "probe-and-fix-signed-wave",
@@ -57,21 +60,21 @@ Explain: what does outputting \`length(v)\` as gray via \`vec3(length(v))\` reve
   vec2 uv = gl_FragCoord.xy / uResolution;
   float wave = sin(uv.x * 10.0 + uTime);
 
-  // TODO 1: them mot dong PROBE xuat step(0.0, wave) de xac nhan
-  // dung mot nua man hinh co wave < 0.0 (khong phai loi tinh toan khac)
+  // TODO 1: add exactly one PROBE line outputting step(0.0, wave) to confirm
+  // exactly half the screen has wave < 0.0 (not some other calculation bug)
 
-  // TODO 2: sua bang cach remap wave ve [0,1] truoc khi xuat mau
+  // TODO 2: fix it by remapping wave to [0,1] before outputting the color
   fragColor = vec4(vec3(wave), 1.0);
 }`,
     solutionCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
   float wave = sin(uv.x * 10.0 + uTime);
 
-  // PROBE: step(0.0, wave) phai la dai soc den/trang ro rang neu wave
-  // thuc su dao dau qua 0 -- xac nhan day khong phai loi tinh toan khac
+  // PROBE: step(0.0, wave) must show a clean black/white stripe pattern if wave
+  // genuinely oscillates through 0 -- confirms this isn't some other calculation bug
   // fragColor = vec4(vec3(step(0.0, wave)), 1.0); return;
 
-  float remapped = wave * 0.5 + 0.5; // -1..1 -> 0..1, khong con clip am
+  float remapped = wave * 0.5 + 0.5; // -1..1 -> 0..1, no more negative clipping
   fragColor = vec4(vec3(remapped), 1.0);
 }`,
     hints: [

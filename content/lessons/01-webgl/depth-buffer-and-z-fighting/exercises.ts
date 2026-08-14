@@ -36,19 +36,14 @@ Then answer: if $n$ were changed to $0.001$ while $f$ stays at $500$, where does
         en: "I can explain why objects at 5-50 units always land in the remaining half of the depth range — where resolution is extremely low — once near is too small",
       },
     ],
-    solutionCode: `// d = 2nf / (n+f)
-// n=0.05, f=500 → d = 2*0.05*500 / 500.05 = 50 / 500.05 ≈ 0.09999
-// n=0.001, f=500 → d = 2*0.001*500 / 500.001 = 1 / 500.001 ≈ 0.002
+    solutionNote: {
+      vi: `$d = \\dfrac{2nf}{n+f}$. Với $n=0.05, f=500$: $d = \\dfrac{2 \\times 0.05 \\times 500}{500.05} = \\dfrac{50}{500.05} \\approx 0.09999$. Với $n=0.001, f=500$: $d = \\dfrac{2 \\times 0.001 \\times 500}{500.001} = \\dfrac{1}{500.001} \\approx 0.002$.
 
-// In both cases d sits right next to n: half the depth buffer's range
-// [0, 0.5] only covers the stretch from near out to roughly 2n — an
-// extremely thin slice right against the camera. The remaining half
-// [0.5, 1] has to carry everything else, from ~2n out to f. As n shrinks,
-// that near slice gets thinner in absolute terms but still eats half the
-// resolution — so objects at 5-50 units (deep inside the "overloaded"
-// half) are left sharing whatever scraps of precision remain, making it
-// easy for two surfaces a few centimeters apart to quantize to the same
-// depth value: z-fighting.`,
+Cả hai trường hợp $d$ đều nằm sát ngay $n$: nửa dải giá trị depth buffer $[0, 0.5]$ chỉ phủ đúng đoạn từ near ra tới khoảng $2n$ — một lát cực mỏng ngay sát camera. Nửa còn lại $[0.5, 1]$ phải gánh mọi thứ khác, từ khoảng $2n$ ra tới far. Khi $n$ càng nhỏ, lát gần đó càng mỏng về giá trị tuyệt đối nhưng vẫn chiếm nửa độ phân giải — nên các vật ở khoảng 5-50 đơn vị (nằm sâu trong nửa "quá tải" kia) phải chia nhau phần độ chính xác còn sót lại, khiến hai bề mặt cách nhau vài centimet dễ dàng bị lượng tử hoá về cùng một giá trị depth: z-fighting.`,
+      en: `$d = \\dfrac{2nf}{n+f}$. For $n=0.05, f=500$: $d = \\dfrac{2 \\times 0.05 \\times 500}{500.05} = \\dfrac{50}{500.05} \\approx 0.09999$. For $n=0.001, f=500$: $d = \\dfrac{2 \\times 0.001 \\times 500}{500.001} = \\dfrac{1}{500.001} \\approx 0.002$.
+
+In both cases $d$ sits right next to $n$: half the depth buffer's range $[0, 0.5]$ only covers the stretch from near out to roughly $2n$ — an extremely thin slice right against the camera. The remaining half $[0.5, 1]$ has to carry everything else, from $2n$ out to far. As $n$ shrinks, that near slice gets thinner in absolute terms but still eats half the resolution — so objects at 5-50 units, deep inside the "overloaded" half, are left sharing whatever precision scraps remain, making it easy for two surfaces a few centimeters apart to quantize to the same depth value: z-fighting.`,
+    },
   },
   {
     id: "fix-depth-state-decal",

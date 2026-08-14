@@ -36,18 +36,18 @@ Then answer: why does stacking three pure-red $(1,0,0)$ layers with additive ble
         en: "I can explain that alpha blend is a convex combination (the two factors sum to 1, so the result is always trapped between the two source colors) while additive keeps summing unbounded until it clamps",
       },
     ],
-    solutionCode: `// blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA), src=(1,0,0,0.4), dst=(0,0,1)
-// out = src*0.4 + dst*(1-0.4) = (0.4,0,0) + (0,0,0.6) = (0.4, 0, 0.6)
+    solutionNote: {
+      vi: `\`blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA)\`, src=(1,0,0,0.4), dst=(0,0,1): $\\text{out} = src \\times 0.4 + dst \\times (1-0.4) = (0.4,0,0) + (0,0,0.6) = (0.4, 0, 0.6)$.
 
-// blendFunc(ONE, ONE), same src/dst colors (alpha ignored by the ONE factor)
-// out = src*1 + dst*1 = (1,0,0) + (0,0,1) = (1, 0, 1)
+\`blendFunc(ONE, ONE)\`, cùng màu src/dst (alpha bị bỏ qua bởi factor ONE): $\\text{out} = src \\times 1 + dst \\times 1 = (1,0,0) + (0,0,1) = (1, 0, 1)$.
 
-// Alpha blending is a WEIGHTED AVERAGE (a convex combination — the two
-// factors sum to exactly 1), so the result can never leave the range
-// spanned by src and dst. Additive has no such constraint: every draw
-// just adds more energy, so three overlapping red layers sum toward
-// (3,0,0), clamped per-channel to (1,0,0) — and combined with any other
-// channel activity, additive layers trend toward white as they stack.`,
+Alpha blending là một TRUNG BÌNH CÓ TRỌNG SỐ (tổ hợp lồi — hai hệ số cộng lại đúng bằng 1), nên kết quả không bao giờ vượt ra ngoài khoảng giữa src và dst. Additive không có ràng buộc đó: mỗi lượt vẽ chỉ cộng thêm năng lượng, nên ba lớp đỏ chồng nhau cộng dồn về $(3,0,0)$, bị kẹp từng kênh về $(1,0,0)$ — kết hợp với hoạt động ở các kênh khác, các lớp additive chồng lên nhau có xu hướng ngả dần về màu trắng.`,
+      en: `\`blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA)\`, src=(1,0,0,0.4), dst=(0,0,1): $\\text{out} = src \\times 0.4 + dst \\times (1-0.4) = (0.4,0,0) + (0,0,0.6) = (0.4, 0, 0.6)$.
+
+\`blendFunc(ONE, ONE)\`, same src/dst colors (alpha ignored by the ONE factor): $\\text{out} = src \\times 1 + dst \\times 1 = (1,0,0) + (0,0,1) = (1, 0, 1)$.
+
+Alpha blending is a WEIGHTED AVERAGE (a convex combination — the two factors sum to exactly 1), so the result can never leave the range spanned by src and dst. Additive has no such constraint: every draw just adds more energy, so three overlapping red layers sum toward $(3,0,0)$, clamped per-channel to $(1,0,0)$ — combined with any other channel activity, additive layers trend toward white as they stack.`,
+    },
   },
   {
     id: "fix-transparent-draw-order-and-depth",

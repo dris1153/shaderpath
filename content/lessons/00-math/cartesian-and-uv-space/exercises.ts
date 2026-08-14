@@ -36,13 +36,14 @@ Then answer: if you drop the half-pixel term $0.5$, how large is the error in $u
         en: "I can state why half a texel becomes invisible as textures grow",
       },
     ],
-    solutionCode: `// u = (256 + 0.5) / 512  = 256.5 / 512 ≈ 0.500977
-// v = (192 + 0.5) / 384  = 192.5 / 384 ≈ 0.501302
-//
-// Bỏ 0.5 → u' = 0.5 đúng ranh giới giữa 2 texel, lệch 0.5/W = 1/1024
-// (nửa texel). Trên texture 8×8, nửa texel = 1/16 UV — lệch hẳn sang màu
-// texel bên cạnh khi lọc NEAREST. Trên 4096×4096, nửa texel = 1/8192 UV,
-// nhỏ hơn 1 pixel màn hình nên mắt không phân biệt được.`,
+    solutionNote: {
+      vi: `$u = \\frac{256 + 0.5}{512} = \\frac{256.5}{512} \\approx 0.500977$, $v = \\frac{192 + 0.5}{384} = \\frac{192.5}{384} \\approx 0.501302$.
+
+Bỏ $0.5$ → $u' = 0.5$ đúng ranh giới giữa 2 texel, lệch $0.5/W = 1/1024$ (nửa texel). Trên texture $8\\times 8$, nửa texel $= 1/16$ UV — lệch hẳn sang màu texel bên cạnh khi lọc NEAREST. Trên $4096\\times 4096$, nửa texel $= 1/8192$ UV, nhỏ hơn 1 pixel màn hình nên mắt không phân biệt được.`,
+      en: `$u = \\frac{256 + 0.5}{512} = \\frac{256.5}{512} \\approx 0.500977$, $v = \\frac{192 + 0.5}{384} = \\frac{192.5}{384} \\approx 0.501302$.
+
+Dropping $0.5$ gives $u' = 0.5$, exactly on the boundary between 2 texels — an error of $0.5/W = 1/1024$ (half a texel). On an $8\\times 8$ texture, half a texel is $1/16$ UV — enough to shift squarely into the neighboring texel's color under NEAREST filtering. On $4096\\times 4096$, half a texel is $1/8192$ UV, smaller than one screen pixel, so the eye can't tell the difference.`,
+    },
   },
   {
     id: "normalize-canvas-coords",
@@ -52,7 +53,7 @@ Then answer: if you drop the half-pixel term $0.5$, how large is the error in $u
       en: `Write a \`normalizeMouse\` function taking a mouse event and a canvas, returning coordinates in **two** spaces: \`uv\` in $[0, 1]^2$ (bottom-left origin, v pointing up like WebGL) and \`ndc\` in $[-1, 1]^2$. It must stay correct when the canvas is CSS-scaled (use \`getBoundingClientRect\`, not \`canvas.width\`).`,
     },
     starterCode: `interface Normalized {
-  uv: [number, number];   // [0,1]², v hướng lên / v points up
+  uv: [number, number];   // [0,1]², v points up
   ndc: [number, number];  // [-1,1]²
 }
 
@@ -61,7 +62,7 @@ function normalizeMouse(
   canvas: HTMLCanvasElement,
 ): Normalized {
   const rect = canvas.getBoundingClientRect();
-  // TODO: tính u, v (nhớ lật trục y!) rồi suy ra ndc từ uv
+  // TODO: compute u, v (remember to flip the y axis!), then derive ndc from uv
   return { uv: [0, 0], ndc: [0, 0] };
 }`,
     solutionCode: `function normalizeMouse(
@@ -70,9 +71,9 @@ function normalizeMouse(
 ): Normalized {
   const rect = canvas.getBoundingClientRect();
   const u = (e.clientX - rect.left) / rect.width;
-  // clientY tăng XUỐNG dưới, còn v của WebGL tăng LÊN trên → lật trục
+  // clientY increases DOWNWARD, but WebGL's v increases UPWARD → flip the axis
   const v = 1 - (e.clientY - rect.top) / rect.height;
-  // NDC là phép remap tuyến tính [0,1] → [-1,1]: nhân 2 trừ 1
+  // NDC is a linear remap [0,1] → [-1,1]: multiply by 2, subtract 1
   return { uv: [u, v], ndc: [u * 2 - 1, v * 2 - 1] };
 }`,
     hints: [

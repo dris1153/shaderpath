@@ -36,20 +36,22 @@ Compute $D_{\\text{peak}}$ for two cases: roughness $=0.1$ (remember $\\alpha = 
         en: "I can explain that this >6500x gap is exactly why D must be scaled down before being displayed as a color",
       },
     ],
-    solutionCode: `// D_peak = 1 / (PI * alpha^2), alpha = roughness^2
-//
-// roughness = 0.1 -> alpha = 0.01   -> alpha^2 = 0.0001
-//   D_peak = 1 / (PI * 0.0001) = 1 / 0.00031416 ~= 3183.1
-//
-// roughness = 0.9 -> alpha = 0.81   -> alpha^2 = 0.6561
-//   D_peak = 1 / (PI * 0.6561) = 1 / 2.0611 ~= 0.4852
-//
-// Ty le 3183.1 / 0.4852 ~= 6560x -- be mat nham vua bien D thanh mot con
-// so ban qua nho de nhin thay, be mat nhan (roughness thap) lai lam D
-// nhon vot len hang nghin. Neu ve thang D len man hinh nhu mot mau
-// (0..1), gan nhu moi gia tri roughness thap se cho ra mot cham trang
-// chay sang (clip ve 1.0) tru khi nhan D voi mot he so scale rat nho
-// truoc khi gan vao gl_FragColor.`,
+    solutionNote: {
+      vi: `$D_{peak} = \\dfrac{1}{\\pi\\alpha^2}$, với $\\alpha = \\text{roughness}^2$.
+
+roughness $= 0.1 \\Rightarrow \\alpha = 0.01 \\Rightarrow \\alpha^2 = 0.0001 \\Rightarrow D_{peak} = 1/(\\pi \\times 0.0001) = 1/0.00031416 \\approx 3183.1$.
+
+roughness $= 0.9 \\Rightarrow \\alpha = 0.81 \\Rightarrow \\alpha^2 = 0.6561 \\Rightarrow D_{peak} = 1/(\\pi \\times 0.6561) = 1/2.0611 \\approx 0.4852$.
+
+Tỉ lệ $3183.1 / 0.4852 \\approx 6560$ lần — bề mặt nhám biến $D$ thành một con số bé quá nhỏ để nhìn thấy, còn bề mặt nhẵn (roughness thấp) lại làm $D$ nhọn vọt lên hàng nghìn. Nếu vẽ thẳng $D$ lên màn hình như một màu (0..1), gần như mọi giá trị roughness thấp sẽ cho ra một chấm trắng cháy sáng (clip về 1.0) trừ khi nhân $D$ với một hệ số scale rất nhỏ trước khi gán vào \`gl_FragColor\`.`,
+      en: `$D_{peak} = \\dfrac{1}{\\pi\\alpha^2}$, where $\\alpha = \\text{roughness}^2$.
+
+roughness $= 0.1 \\Rightarrow \\alpha = 0.01 \\Rightarrow \\alpha^2 = 0.0001 \\Rightarrow D_{peak} = 1/(\\pi \\times 0.0001) = 1/0.00031416 \\approx 3183.1$.
+
+roughness $= 0.9 \\Rightarrow \\alpha = 0.81 \\Rightarrow \\alpha^2 = 0.6561 \\Rightarrow D_{peak} = 1/(\\pi \\times 0.6561) = 1/2.0611 \\approx 0.4852$.
+
+Ratio $3183.1 / 0.4852 \\approx 6560\\times$ — a rough surface turns $D$ into a number too small to see, while a smooth surface (low roughness) spikes $D$ into the thousands. Plotting $D$ directly on screen as a color (0..1), almost every low-roughness value would blow out to a white dot (clipped to 1.0) unless $D$ is multiplied by a very small scale factor before being written to \`gl_FragColor\`.`,
+    },
   },
   {
     id: "ggx-distribution-2d-plot",

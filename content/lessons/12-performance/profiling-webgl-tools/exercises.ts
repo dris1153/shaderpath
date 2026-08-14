@@ -36,18 +36,14 @@ Based only on these numbers (no code to run), answer: is this CPU-bound or GPU-b
         en: "I correctly explained why geometries=4 and calls=812 don't conflict (shared geometry, redrawn many times with different transforms)",
       },
     ],
-    solutionCode: `// CPU-bound: Main thread kín "Scripting" trong khi GPU phần lớn rảnh là
-// đúng chữ ký của nghẽn CPU (driver submit 812 draw call + JS xung quanh nó),
-// không phải GPU. Phép thử DPR 0.5 xác nhận thêm: giảm số pixel GPU phải tô
-// không đổi lượng JS/draw-call nào, nên nếu bottleneck thật sự là GPU, giảm
-// DPR PHẢI mượt hơn rõ rệt — ở đây không, nên GPU không phải nút thắt.
-//
-// geometries=4 và calls=812 không mâu thuẫn: geometries đếm số BufferGeometry
-// KHÁC NHAU đang resident trên GPU (chỉ 4 hình dạng cơ sở khác nhau, có thể
-// đang dùng chung như pattern SHARED_GEOMETRY trong demo), còn calls đếm số
-// lệnh gl.drawElements/drawArrays đã phát ra — với 812 mesh riêng biệt dùng
-// lại cùng 4 geometry đó (mỗi mesh một transform khác nhau), driver vẫn phải
-// submit 812 lệnh vẽ độc lập dù chỉ có 4 hình dạng cơ sở.`,
+    solutionNote: {
+      vi: `CPU-bound: track Main kín "Scripting" trong khi GPU phần lớn rảnh đúng là chữ ký của nghẽn CPU (driver submit 812 draw call cộng JS xung quanh nó), không phải GPU. Phép thử DPR 0.5 xác nhận thêm: giảm số pixel GPU phải tô không đổi lượng JS/draw-call nào, nên nếu bottleneck thật sự là GPU, giảm DPR PHẢI mượt hơn rõ rệt — ở đây không, nên GPU không phải nút thắt.
+
+\`geometries=4\` và \`calls=812\` không mâu thuẫn nhau: \`geometries\` đếm số \`BufferGeometry\` KHÁC NHAU đang resident trên GPU (chỉ 4 hình dạng cơ sở khác nhau, có thể đang dùng chung như pattern SHARED_GEOMETRY trong demo), còn \`calls\` đếm số lệnh \`gl.drawElements\`/\`drawArrays\` đã phát ra — với 812 mesh riêng biệt dùng lại cùng 4 geometry đó (mỗi mesh một transform khác nhau), driver vẫn phải submit 812 lệnh vẽ độc lập dù chỉ có 4 hình dạng cơ sở.`,
+      en: `CPU-bound: the Main track packed with "Scripting" while the GPU sits mostly idle is exactly the signature of a CPU bottleneck (the driver submitting 812 draw calls plus the JS around it), not a GPU one. The DPR 0.5 test confirms it further: reducing the pixel count the GPU has to shade doesn't change the amount of JS/draw-call work, so if the bottleneck were truly the GPU, dropping DPR SHOULD smooth things out noticeably — it didn't here, so the GPU isn't the bottleneck.
+
+\`geometries=4\` and \`calls=812\` don't contradict each other: \`geometries\` counts DISTINCT \`BufferGeometry\` objects resident on the GPU (just 4 different base shapes, likely shared via the demo's SHARED_GEOMETRY pattern), while \`calls\` counts the number of \`gl.drawElements\`/\`drawArrays\` commands issued — with 812 separate meshes reusing those same 4 geometries (each mesh with its own transform), the driver still has to submit 812 independent draw commands despite there being only 4 base shapes.`,
+    },
   },
   {
     id: "frame-time-tracker",
@@ -69,11 +65,11 @@ function createFrameTimeTracker(historyLen: number, alpha: number) {
 
   return {
     push(deltaMs: number) {
-      // TODO: cập nhật ema bằng công thức EMA, đẩy deltaMs vào history,
-      // và cắt bớt phần tử cũ nhất nếu history dài hơn historyLen
+      // TODO: update ema with the EMA formula, push deltaMs into history,
+      // and trim the oldest element if history grows past historyLen
     },
     snapshot(): FrameStats {
-      // TODO: trả về { ema, fps (suy từ ema), maxMs (lớn nhất trong history), history }
+      // TODO: return { ema, fps (derived from ema), maxMs (largest in history), history }
       return { ema, fps: 0, maxMs: 0, history: [] };
     },
   };

@@ -22,7 +22,7 @@ uniform float uTime;
 out vec3 vColor;
 
 void main() {
-  // TODO 3: tính góc xoay từ uTime, dựng mat2, nhân vào aPosition
+  // TODO 3: compute the rotation angle from uTime, build a mat2, multiply it into aPosition
   vColor = aColor;
   gl_Position = vec4(aPosition, 0.0, 1.0);
 }\`;
@@ -61,8 +61,8 @@ const vertices = new Float32Array([
   -0.5, -0.5, 1, 1, 0.3,   // bottom-left
 ]);
 
-// TODO 1: tạo Uint16Array chỉ số cho 2 tam giác từ 4 đỉnh trên
-// (không lặp toạ độ đỉnh — chỉ lặp CHỈ SỐ)
+// TODO 1: create a Uint16Array of indices for 2 triangles from the 4 vertices above
+// (don't repeat vertex coordinates — only repeat INDICES)
 const indices = new Uint16Array([/* TODO */]);
 
 const vao = gl.createVertexArray();
@@ -72,7 +72,7 @@ const vbo = gl.createBuffer();
 gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
 gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
 
-// TODO 2: tạo ELEMENT_ARRAY_BUFFER, bind, bufferData với "indices"
+// TODO 2: create an ELEMENT_ARRAY_BUFFER, bind it, bufferData with "indices"
 
 const aPosition = gl.getAttribLocation(program, "aPosition");
 gl.enableVertexAttribArray(aPosition);
@@ -89,10 +89,10 @@ function draw(t: number) {
   gl.clearColor(0.06, 0.07, 0.1, 1);
   gl.clear(gl.COLOR_BUFFER_BIT);
 
-  // TODO 4: gửi t (giây) vào uTime bằng đúng hàm gl.uniform* cho float
+  // TODO 4: send t (seconds) into uTime using the correct gl.uniform* function for a float
 
   gl.bindVertexArray(vao);
-  // TODO 5: vẽ bằng gl.drawElements — 6 chỉ số, kiểu UNSIGNED_SHORT
+  // TODO 5: draw with gl.drawElements — 6 indices, type UNSIGNED_SHORT
 
   requestAnimationFrame((ms) => draw(ms / 1000));
 }

@@ -36,16 +36,14 @@ If only \`x\` changes (keeping \`key="cube-a"\`), does the reconciler MUTATE the
         en: "I can state the practical consequence: changing the key between renders loses any state attached via ref to the old mesh",
       },
     ],
-    solutionCode: `// x đổi, key="cube-a" không đổi:
-// → reconciler khớp node theo key, thấy CÙNG identity → mutate mesh.position
-//   trực tiếp, không gọi new THREE.Mesh() lần nào. Object trong bộ nhớ vẫn
-//   là cùng một instance suốt các lần render.
-//
-// key đổi thành "cube-b" ở lần render kế tiếp:
-// → identity đổi → reconciler unmount node "cube-a" (dispose geometry/
-//   material, gỡ khỏi scene.children), rồi mount node "cube-b" như một
-//   node hoàn toàn mới (new THREE.Mesh()). Mọi state gắn qua ref vào mesh
-//   cũ (ví dụ một rotation đang animate dở) bị mất.`,
+    solutionNote: {
+      vi: `\`x\` đổi, \`key="cube-a"\` giữ nguyên: reconciler khớp node theo key, thấy CÙNG identity, nên chỉ mutate \`mesh.position\` trực tiếp — không gọi \`new THREE.Mesh()\` lần nào. Object trong bộ nhớ vẫn là cùng một instance suốt các lần render.
+
+Nếu \`key\` đổi thành \`"cube-b"\` ở lần render kế tiếp: identity đổi, reconciler unmount node \`"cube-a"\` (dispose geometry/material, gỡ khỏi \`scene.children\`), rồi mount node \`"cube-b"\` như một node hoàn toàn mới (\`new THREE.Mesh()\`). Mọi state gắn qua ref vào mesh cũ (ví dụ một rotation đang animate dở) đều bị mất.`,
+      en: `\`x\` changes while \`key="cube-a"\` stays the same: the reconciler matches the node by key, sees the SAME identity, so it just mutates \`mesh.position\` directly — never calling \`new THREE.Mesh()\`. The object in memory stays the same instance across every render.
+
+If \`key\` changes to \`"cube-b"\` on the next render: identity changes, the reconciler unmounts node \`"cube-a"\` (disposing its geometry/material, removing it from \`scene.children\`), then mounts node \`"cube-b"\` as a completely new node (\`new THREE.Mesh()\`). Any state attached via ref to the old mesh (e.g. a rotation mid-animation) is lost.`,
+    },
   },
   {
     id: "plan-reconcile-diff",

@@ -36,13 +36,14 @@ Which one is more expensive performance-wise, and exactly what happens underneat
         en: "I can explain that changing scale-x only mutates a number in an existing Vector3, with no object created or destroyed",
       },
     ],
-    solutionCode: `// w qua args: mỗi lần kéo → new THREE.BoxGeometry(w, h, d) chạy lại từ
-// đầu, geometry cũ bị .dispose(), buffer vertex/index mới được upload lên
-// GPU. 60 lần/giây × 3 giây = 180 lần huỷ + dựng + upload.
-//
-// sx qua scale-x (pierced prop): mỗi lần kéo → mesh.scale.x = sx, chỉ ghi
-// một number vào Vector3 ĐÃ tồn tại trên mesh. Không object nào bị tạo hay
-// huỷ, không buffer GPU nào bị đụng tới — rẻ hơn nhiều bậc so với args.`,
+    solutionNote: {
+      vi: `\`w\` qua \`args\`: mỗi lần kéo, \`new THREE.BoxGeometry(w, h, d)\` chạy lại từ đầu — geometry cũ bị \`.dispose()\`, buffer vertex/index mới được upload lên GPU. Với 60 lần/giây trong 3 giây, đó là $60 \\times 3 = 180$ lần huỷ + dựng + upload.
+
+\`sx\` qua \`scale-x\` (pierced prop): mỗi lần kéo chỉ ghi \`mesh.scale.x = sx\`, tức ghi một number vào \`Vector3\` ĐÃ tồn tại sẵn trên mesh. Không object nào bị tạo hay huỷ, không buffer GPU nào bị đụng tới — rẻ hơn nhiều bậc so với \`args\`.`,
+      en: `\`w\` via \`args\`: on every drag tick, \`new THREE.BoxGeometry(w, h, d)\` runs again from scratch — the old geometry gets \`.dispose()\`d, and a fresh vertex/index buffer gets uploaded to the GPU. At 60 ticks/second for 3 seconds, that's $60 \\times 3 = 180$ destroy-rebuild-upload cycles.
+
+\`sx\` via \`scale-x\` (a pierced prop): each drag tick only writes \`mesh.scale.x = sx\`, i.e. a single number into a \`Vector3\` that ALREADY exists on the mesh. No object gets created or destroyed, no GPU buffer gets touched — many orders of magnitude cheaper than \`args\`.`,
+    },
   },
   {
     id: "resolve-pierced-prop-path",

@@ -36,14 +36,14 @@ Then explain: if you moved (a)'s alpha into a \`uniform\` instead of an \`attrib
         en: "I can state that moving (a) into a uniform would leave the whole triangle with one single alpha, with no transition",
       },
     ],
-    solutionCode: `// (a) alpha riêng theo đỉnh, nằm trong buffer trước khi vẽ -> attribute
-// (b) alpha đọc trong fragment shader tại 1 điểm giữa tam giác, đã bị
-//     nội suy từ giá trị 3 đỉnh -> varying (out ở vertex, in ở fragment)
-// (c) hệ số áp như nhau cho toàn draw call, không đổi theo đỉnh/fragment -> uniform
-//
-// Đổi (a) thành uniform: chỉ còn 1 con số duy nhất cho toàn tam giác, không
-// còn 3 giá trị khác nhau để rasterizer nội suy -> gradient biến mất, tam
-// giác chỉ có alpha đồng nhất (bất kể set 1.0, 0.2 hay giá trị nào khác).`,
+    solutionNote: {
+      vi: `(a) alpha riêng theo đỉnh, nằm trong buffer trước khi vẽ → \`attribute\`. (b) alpha đọc trong fragment shader tại một điểm giữa tam giác, đã bị nội suy từ giá trị ba đỉnh → varying (\`out\` ở vertex, \`in\` ở fragment). (c) hệ số áp như nhau cho toàn draw call, không đổi theo đỉnh hay fragment → \`uniform\`.
+
+Đổi (a) thành uniform: chỉ còn một con số duy nhất cho toàn tam giác, không còn ba giá trị khác nhau để rasterizer nội suy → gradient biến mất, tam giác chỉ có alpha đồng nhất (bất kể set 1.0, 0.2 hay giá trị nào khác).`,
+      en: `(a) the per-vertex alpha, living in the buffer before drawing → \`attribute\`. (b) the alpha read in the fragment shader at a point inside the triangle, already interpolated from the three vertex values → varying (\`out\` in the vertex shader, \`in\` in the fragment shader). (c) the multiplier applied identically across the whole draw call, unchanged per vertex or fragment → \`uniform\`.
+
+Moving (a) into a uniform: the whole triangle is left with a single number, with no three distinct values left for the rasterizer to interpolate → the gradient disappears, and the triangle gets one flat alpha (whatever value you set — 1.0, 0.2, or anything else).`,
+    },
   },
   {
     id: "wire-attribute-through-varying",
@@ -56,22 +56,22 @@ Then explain: if you moved (a)'s alpha into a \`uniform\` instead of an \`attrib
 #version 300 es
 in vec2 aPosition;
 in float aAlpha;
-// TODO 1: khai báo một out float truyền alpha sang fragment shader
+// TODO 1: declare an out float to pass alpha to the fragment shader
 
 void main() {
-  // TODO 2: gán varying = aAlpha
+  // TODO 2: assign the varying = aAlpha
   gl_Position = vec4(aPosition, 0.0, 1.0);
 }
 
 // fragment shader
 #version 300 es
 precision highp float;
-// TODO 3: khai báo in float khớp tên và kiểu với vertex shader
+// TODO 3: declare an in float matching the vertex shader's name and type
 uniform float uGlobalOpacity;
 out vec4 outColor;
 
 void main() {
-  // TODO 4: nhân alpha đã nội suy với uGlobalOpacity, gán vào outColor.a
+  // TODO 4: multiply the interpolated alpha by uGlobalOpacity, assign to outColor.a
   outColor = vec4(1.0, 1.0, 1.0, 1.0);
 }`,
     solutionCode: `// vertex shader

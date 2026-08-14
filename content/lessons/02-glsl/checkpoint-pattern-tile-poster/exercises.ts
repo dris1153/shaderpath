@@ -28,7 +28,7 @@ float sdBox(vec2 p, vec2 b) {
 mat2 rotate2d(float a) {
   float c = cos(a);
   float s = sin(a);
-  // TODO 1: tra ve dung constructor cot: cot 0 = (c, s), cot 1 = (-s, c)
+  // TODO 1: return the correct column constructor: column 0 = (c, s), column 1 = (-s, c)
   return mat2(1.0, 0.0, 0.0, 1.0);
 }
 
@@ -41,24 +41,24 @@ void main() {
 
   const float GRID = 6.0;
   vec2 gridUv = uv * GRID;
-  // TODO 2: tinh cellId = floor(gridUv) va cellUv = fract(gridUv) - 0.5
+  // TODO 2: compute cellId = floor(gridUv) and cellUv = fract(gridUv) - 0.5
   vec2 cellId = vec2(0.0);
   vec2 cellUv = uv;
 
   float h = hash(cellId);
 
-  // TODO 3: xoay cellUv bang rotate2d(uTime * 0.6 + h * 6.2831853)
+  // TODO 3: rotate cellUv with rotate2d(uTime * 0.6 + h * 6.2831853)
   vec2 p = cellUv;
 
-  // TODO 4: chon motif theo parity cua cellId (circle hay box), tinh SDF d
+  // TODO 4: pick a motif by cellId parity (circle or box), compute the SDF d
   float parity = mod(cellId.x + cellId.y, 2.0);
   float d = sdCircle(p, 0.3);
 
-  // TODO 5: chuyen d thanh mask anti-alias bang smoothstep (bien mem, khong rang cua)
+  // TODO 5: turn d into an anti-aliased mask with smoothstep (soft edge, no jaggies)
   float mask = 1.0;
 
   vec3 bg = vec3(0.06, 0.07, 0.11);
-  // TODO 6: dung mix(tintA, tintB, uv.x) lam gradient tint toan cuc, tron voi mask
+  // TODO 6: use mix(tintA, tintB, uv.x) as the global gradient tint, blended with mask
   vec3 color = bg;
 
   fragColor = vec4(color, 1.0);

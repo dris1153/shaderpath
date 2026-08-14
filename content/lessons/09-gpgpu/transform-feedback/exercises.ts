@@ -32,22 +32,14 @@ export const exercises: Exercise[] = [
         en: "I connect this to why ping-pong FBO textures also need two separate render targets, not one target that both reads and writes",
       },
     ],
-    solutionCode: `// Một draw call chạy vertex shader song song cho hàng nghìn particle CÙNG
-// LÚC, không theo thứ tự tuần tự nào cả. Nếu buffer vừa là nguồn đọc (qua
-// VAO) vừa là đích ghi transform feedback, particle #5 có thể đọc dữ liệu
-// của particle #3 ở một thời điểm KHÔNG XÁC ĐỊNH — có thể là giá trị CŨ
-// (trước khi #3 ghi), có thể là giá trị MỚI (sau khi #3 ghi), tuỳ vào GPU
-// lập lịch hai invocation đó ra sao. Đây đúng là race condition: kết quả
-// phụ thuộc vào thời điểm thực thi, không xác định (undefined behavior),
-// và khác nhau giữa các lần chạy hoặc giữa các driver.
-//
-// Double-buffer loại bỏ race này hoàn toàn: bộ A (đọc) và bộ B (ghi) là hai
-// WebGLBuffer VẬT LÝ khác nhau. Không invocation nào đọc từ đúng ô nhớ mà
-// một invocation khác đang ghi vào — driver không cần đồng bộ hoá gì thêm,
-// mọi particle vẫn tính song song hoàn toàn độc lập. Đây chính xác là lý do
-// ping-pong FBO cũng cần hai WebGLRenderTarget: fragment shader sample
-// texture "đọc" trong khi framebuffer đang "ghi" phải là hai texture khác
-// nhau, cùng một nguyên nhân, khác cấp độ (texel thay vì attribute).`,
+    solutionNote: {
+      vi: `Một draw call chạy vertex shader song song cho hàng nghìn particle CÙNG LÚC, không theo thứ tự tuần tự nào cả. Nếu buffer vừa là nguồn đọc (qua VAO) vừa là đích ghi transform feedback, particle #5 có thể đọc dữ liệu của particle #3 ở một thời điểm không xác định — có thể là giá trị cũ (trước khi #3 ghi), có thể là giá trị mới (sau khi #3 ghi), tuỳ vào GPU lập lịch hai invocation đó ra sao. Đây đúng là race condition: kết quả phụ thuộc vào thời điểm thực thi, không xác định (undefined behavior), và khác nhau giữa các lần chạy hoặc giữa các driver.
+
+Double-buffer loại bỏ race này hoàn toàn: bộ A (đọc) và bộ B (ghi) là hai \`WebGLBuffer\` vật lý khác nhau. Không invocation nào đọc từ đúng ô nhớ mà một invocation khác đang ghi vào — driver không cần đồng bộ hoá gì thêm, mọi particle vẫn tính song song hoàn toàn độc lập. Đây chính xác là lý do ping-pong FBO cũng cần hai \`WebGLRenderTarget\`: texture mà fragment shader đang "đọc" và texture mà framebuffer đang "ghi" phải là hai texture khác nhau — cùng một nguyên nhân, chỉ khác cấp độ (texel thay vì attribute).`,
+      en: `A single draw call runs the vertex shader in parallel across thousands of particles AT ONCE, with no sequential ordering at all. If a buffer is both the read source (via a VAO) and the transform feedback write target, particle #5 could read particle #3's data at an undefined moment — it might get the OLD value (before #3 wrote) or the NEW value (after #3 wrote), depending entirely on how the GPU schedules those two invocations. That's exactly a race condition: the result depends on execution timing, is undefined behavior, and can differ between runs or between drivers.
+
+Double-buffering eliminates this race entirely: set A (read) and set B (write) are two physically separate \`WebGLBuffer\`s. No invocation ever reads from the exact memory another invocation is writing to — the driver needs no extra synchronization, and every particle still computes fully independently in parallel. This is exactly why ping-pong FBOs also need two \`WebGLRenderTarget\`s: the texture the fragment shader is "reading" and the texture the framebuffer is "writing" must be two different textures — the same root cause, just at a different level (texels instead of attributes).`,
+    },
   },
   {
     id: "wire-a-transform-feedback-pass",

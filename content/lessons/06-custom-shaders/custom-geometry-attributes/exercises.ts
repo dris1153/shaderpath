@@ -44,18 +44,18 @@ export const exercises: Exercise[] = [
         en: "I correctly answered 65 position-matching pairs along the seam (one pair per row, heightSegments + 1 rows)",
       },
     ],
-    solutionCode: `// (a) (64 + 1) * (64 + 1) = 65 * 65 = 4225 vertex
-//
-// (b) uniform: đúng 1 giá trị — mọi lần vertex shader chạy trong draw call đó
-//     đọc CÙNG một số từ bộ nhớ uniform, không đổi cho tới draw call sau.
-//     attribute: tối đa 4225 giá trị khác nhau — mỗi lần vertex shader chạy
-//     (mỗi vertex) đọc đúng một dòng riêng trong buffer, độc lập với các
-//     lần chạy khác. Đây chính là "data-rate triangle" của Track 1, chỉ
-//     thay context từ WebGL thuần sang Three.js.
-//
-// (c) heightSegments + 1 = 65 cặp — mỗi hàng iy (0..64) có một vertex tại
-//     cột ix=0 (u=0) và một vertex khác tại ix=64 (u=1) cùng toạ độ (x,y,z)
-//     nhưng hai INDEX riêng biệt trong mảng position/attribute.`,
+    solutionNote: {
+      vi: `(a) $(64 + 1) \\times (64 + 1) = 65 \\times 65 = 4225$ vertex.
+
+(b) uniform: đúng 1 giá trị — mọi lần vertex shader chạy trong draw call đó đọc CÙNG một số từ bộ nhớ uniform, không đổi cho tới draw call sau. attribute: tối đa 4225 giá trị khác nhau — mỗi lần vertex shader chạy (mỗi vertex) đọc đúng một dòng riêng trong buffer, độc lập với các lần chạy khác. Đây chính là "data-rate triangle" của Track 1, chỉ thay context từ WebGL thuần sang Three.js.
+
+(c) $\\text{heightSegments} + 1 = 65$ cặp — mỗi hàng \`iy\` (0..64) có một vertex tại cột \`ix=0\` (\`u=0\`) và một vertex khác tại \`ix=64\` (\`u=1\`) cùng toạ độ (x,y,z) nhưng hai INDEX riêng biệt trong mảng position/attribute.`,
+      en: `(a) $(64 + 1) \\times (64 + 1) = 65 \\times 65 = 4225$ vertices.
+
+(b) uniform: exactly 1 value — every vertex shader invocation in that draw call reads the SAME number from uniform memory, unchanged until the next draw call. attribute: up to 4225 different values — every vertex shader invocation (each vertex) reads its own separate row in the buffer, independent of every other invocation. This is exactly Track 1's "data-rate triangle", just moved from raw WebGL into Three.js.
+
+(c) $\\text{heightSegments} + 1 = 65$ pairs — each row \`iy\` (0..64) has one vertex at column \`ix=0\` (\`u=0\`) and another at \`ix=64\` (\`u=1\`) sharing the same (x,y,z) position but two separate INDICES in the position/attribute arrays.`,
+    },
   },
   {
     id: "playground-per-fragment-hash",
@@ -69,15 +69,15 @@ export const exercises: Exercise[] = [
 This is the inverse technique from the lesson: instead of uploading a precomputed random array (an attribute) from the CPU, the GPU "invents" the random number on the fly, inside the fragment shader, purely from the input coordinate. Once it works, ask yourself: could this technique replace \`aWeight\` (the hand-painted weight) in the demo — why or why not?`,
     },
     starterCode: `float hash21(vec2 p) {
-  // TODO 1: trộn p thành một số giả-ngẫu-nhiên trong [0,1)
-  // gợi ý kinh điển: fract(sin(dot(p, vec2(a, b))) * c) với a,b,c là hằng số lớn, lẻ
+  // TODO 1: mix p into a pseudo-random number in [0,1)
+  // classic hint: fract(sin(dot(p, vec2(a, b))) * c) with a,b,c large, odd constants
   return 0.0;
 }
 
 void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
 
-  // TODO 2: chia uv thành lưới 8x8, lấy toạ độ Ô (không phải toạ độ pixel)
+  // TODO 2: divide uv into an 8x8 grid, get the CELL coordinate (not the pixel coordinate)
   vec2 cell = vec2(0.0);
 
   float g = hash21(cell);
@@ -130,13 +130,13 @@ void main() {
     starterCode: `import * as THREE from "three";
 
 function addRandomAttribute(geometry: THREE.BufferGeometry, name: string) {
-  // TODO 1: lấy số vertex từ geometry.attributes.position.count (đừng hardcode)
+  // TODO 1: get the vertex count from geometry.attributes.position.count (don't hardcode)
   const count = 0;
 
-  // TODO 2: tạo Float32Array đúng độ dài, điền Math.random() cho mỗi phần tử
+  // TODO 2: create a Float32Array of the right length, fill it with Math.random() per element
   const data = new Float32Array(0);
 
-  // TODO 3: gói data thành BufferAttribute (itemSize 1) và setAttribute vào geometry
+  // TODO 3: wrap data into a BufferAttribute (itemSize 1) and setAttribute it on geometry
 }`,
     solutionCode: `import * as THREE from "three";
 

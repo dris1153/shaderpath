@@ -36,16 +36,26 @@ Then: a material has a base characteristic size (octave 0) of $8$ world-space un
         en: "I can explain that from octave $i=9$ onward, adding more octaves only costs extra computation, adding no visible detail (below the resolution's Nyquist limit)",
       },
     ],
-    solutionCode: `// max amplitude (N=4, g=0.5): sum = (1 - 0.5^4) / (1 - 0.5)
-//   = (1 - 0.0625) / 0.5 = 0.9375 / 0.5 = 1.875
-// normalized fbm = raw / maxAmplitude = 0.9 / 1.875 = 0.48
-//
-// pixel size = 8 / 256 = 0.03125 world units
-// period(i) = 8 / 2^i
-//   i=8: 8/256   = 0.03125   -> exactly 1 pixel (boundary, still borderline useful)
-//   i=9: 8/512   = 0.015625  -> half a pixel -> BELOW the display's resolvable size
-// From i=9 on, each extra octave only adds compute cost and unresolvable
-// high-frequency noise (aliasing risk under motion), no visible detail gain.`,
+    solutionNote: {
+      vi: `Biên độ tối đa ($N=4$, $g=0.5$): $\\sum = (1 - 0.5^4) / (1 - 0.5) = (1 - 0.0625) / 0.5 = 0.9375 / 0.5 = 1.875$.
+
+FBM đã chuẩn hoá $= \\text{raw} / \\text{maxAmplitude} = 0.9 / 1.875 = 0.48$.
+
+Kích thước 1 pixel $= 8 / 256 = 0.03125$ đơn vị world-space. Chu kỳ octave $i$: $\\text{period}(i) = 8 / 2^i$.
+
+$i=8$: $8/256 = 0.03125$ — đúng bằng 1 pixel (biên giới hạn, vẫn còn hữu ích ở mức biên). $i=9$: $8/512 = 0.015625$ — nửa pixel, dưới kích thước có thể phân giải của màn hình.
+
+Từ $i=9$ trở đi, mỗi octave thêm vào chỉ tốn thêm chi phí tính toán và tạo noise tần số cao không thể phân giải (rủi ro aliasing khi chuyển động), không thêm chi tiết nhìn thấy được.`,
+      en: `Max amplitude ($N=4$, $g=0.5$): $\\sum = (1 - 0.5^4) / (1 - 0.5) = (1 - 0.0625) / 0.5 = 0.9375 / 0.5 = 1.875$.
+
+Normalized fbm $= \\text{raw} / \\text{maxAmplitude} = 0.9 / 1.875 = 0.48$.
+
+Pixel size $= 8 / 256 = 0.03125$ world-space units. Octave $i$'s period: $\\text{period}(i) = 8 / 2^i$.
+
+$i=8$: $8/256 = 0.03125$ — exactly 1 pixel (the boundary case, still borderline useful). $i=9$: $8/512 = 0.015625$ — half a pixel, below the display's resolvable size.
+
+From $i=9$ on, each extra octave only adds compute cost and unresolvable high-frequency noise (an aliasing risk under motion), with no visible detail gain.`,
+    },
   },
   {
     id: "complete-fbm-loop-and-ridged",
@@ -82,15 +92,15 @@ float fbm(vec2 p) {
 
   for (int i = 0; i < OCTAVES; i++) {
     float n = noise(p * frequency);
-    // TODO 1: neu RIDGED > 0.5, doi n thanh 1.0 - abs(n); nguoc lai giu nguyen n
+    // TODO 1: if RIDGED > 0.5, turn n into 1.0 - abs(n); otherwise leave n unchanged
 
     sum += amplitude * n;
     maxAmplitude += amplitude;
 
-    // TODO 2: cap nhat amplitude *= gain (0.5) va frequency *= lacunarity (2.0)
+    // TODO 2: update amplitude *= gain (0.5) and frequency *= lacunarity (2.0)
   }
 
-  // TODO 3: chia sum cho maxAmplitude de chuan hoa, roi return
+  // TODO 3: divide sum by maxAmplitude to normalize, then return
   return sum;
 }
 

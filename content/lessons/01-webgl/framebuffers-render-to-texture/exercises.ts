@@ -36,13 +36,13 @@ Explain precisely what happens to the geometry drawn in this pass: does it get s
         en: "I wrote the correct gl.viewport(0, 0, 256, 256) before pass 1's draw call",
       },
     ],
-    solutionCode: `// Viewport phải khớp kích thước attachment TRƯỚC khi vẽ vào FBO
+    solutionCode: `// Viewport must match the attachment's size BEFORE drawing into the FBO
 gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-gl.viewport(0, 0, 256, 256); // dòng còn thiếu
-
-// Không có dòng này: rasterizer chiếu clip space lên vùng 1200x800 tưởng
-// tượng, nhưng texture chỉ có 256x256 texel thật — phần ngoài 256x256 (góc
-// dưới-trái) không được ghi vào đâu cả, kết quả là hình bị crop, không scale.`,
+gl.viewport(0, 0, 256, 256); // the missing line`,
+    solutionNote: {
+      vi: `Không có dòng này: rasterizer chiếu clip space lên vùng $1200 \\times 800$ tưởng tượng, nhưng texture chỉ có $256 \\times 256$ texel thật — phần ngoài $256 \\times 256$ (góc dưới-trái) không được ghi vào đâu cả, kết quả là hình bị crop, không scale.`,
+      en: `Without this line, the rasterizer projects clip space onto an imagined $1200 \\times 800$ area, but the texture only has $256 \\times 256$ real texels — everything outside that $256 \\times 256$ region (the bottom-left corner) has nowhere to be written, so the result is cropped, not scaled.`,
+    },
   },
   {
     id: "create-color-framebuffer",

@@ -36,22 +36,18 @@ Then answer: if $d = 1$ instead of $0.98$ (no damping), does the Verlet integrat
         en: "I can state the real reason: constraint relaxation each frame nudges positions in a way that isn't perfectly energy-conserving (especially Jacobi with a finite iteration count), so $d < 1$ is needed to bleed off that extra energy — the Verlet formula itself isn't the source of instability",
       },
     ],
-    solutionCode: `// implicit velocity: x_t - x_(t-1) = 2.000 - 2.020 = -0.020
-// damped velocity term: -0.020 * 0.98 = -0.0196
-// dt^2 = (1/60)^2 ~= 0.00027778
-// accel term: -9.8 * 0.00027778 ~= -0.0027222
-//
-// x_(t+1).y = 2.000 + (-0.0196) + (-0.0027222) ~= 1.9776778
-//           ~= 1.9777 (4 decimal places)
-//
-// With d = 1, the integration step alone is energy-neutral: it just
-// carries the previous step's implicit velocity forward unchanged aside
-// from acceleration. The actual energy gain comes from constraint
-// relaxation nudging positions afterward — a finite-iteration Jacobi pass
-// isn't a perfectly energy-conserving operation, so each frame's
-// relaxation can inject a small amount of numerical energy. d < 1 bleeds
-// that leftover energy back out, which is why cloth settles instead of
-// slowly gaining energy and oscillating forever.`,
+    solutionNote: {
+      vi: `Vận tốc ngầm: $x_t - x_{t-1} = 2.000 - 2.020 = -0.020$. Số hạng vận tốc có damping: $-0.020 \\times 0.98 = -0.0196$. $\\Delta t^2 = (1/60)^2 \\approx 0.00027778$. Số hạng gia tốc: $-9.8 \\times 0.00027778 \\approx -0.0027222$.
+
+$x_{t+1}.y = 2.000 + (-0.0196) + (-0.0027222) \\approx 1.9776778 \\approx 1.9777$ (4 chữ số thập phân).
+
+Với $d = 1$, riêng bước tích hợp Verlet là trung tính về năng lượng: nó chỉ mang vận tốc ngầm của bước trước tiếp tục, chỉ thay đổi bởi gia tốc. Năng lượng thực sự tăng lên đến từ bước constraint relaxation nắn lại vị trí sau đó — một vòng Jacobi với số lần lặp hữu hạn không phải là một phép toán bảo toàn năng lượng hoàn hảo, nên mỗi frame relaxation có thể bơm vào một chút năng lượng số học dư thừa. $d < 1$ rò rỉ bớt phần năng lượng dư đó ra ngoài, đó là lý do vải lắng xuống ổn định thay vì tăng dần năng lượng và dao động mãi mãi.`,
+      en: `Implicit velocity: $x_t - x_{t-1} = 2.000 - 2.020 = -0.020$. Damped velocity term: $-0.020 \\times 0.98 = -0.0196$. $\\Delta t^2 = (1/60)^2 \\approx 0.00027778$. Acceleration term: $-9.8 \\times 0.00027778 \\approx -0.0027222$.
+
+$x_{t+1}.y = 2.000 + (-0.0196) + (-0.0027222) \\approx 1.9776778 \\approx 1.9777$ (4 decimal places).
+
+With $d = 1$, the integration step alone is energy-neutral: it just carries the previous step's implicit velocity forward unchanged aside from acceleration. The actual energy gain comes from constraint relaxation nudging positions afterward — a finite-iteration Jacobi pass isn't a perfectly energy-conserving operation, so each frame's relaxation can inject a small amount of numerical energy. $d < 1$ bleeds that leftover energy back out, which is why cloth settles instead of slowly gaining energy and oscillating forever.`,
+    },
   },
   {
     id: "add-bend-constraints",

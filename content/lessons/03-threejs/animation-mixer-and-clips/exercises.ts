@@ -60,23 +60,21 @@ Explain precisely why the object doesn't move even though \`action.play()\` ran 
         en: "I correctly answer: the call order of animate()/play() doesn't matter — both only set state, so the result is still frozen due to the missing update(delta)",
       },
     ],
-    solutionCode: `// Thiếu dòng: mixer.update(delta) bên trong animate().
-// action.play() chỉ đổi action._startTime / cờ nội bộ của action — nó
-// không đọc/ghi mesh.position hay mesh.quaternion. Việc GHI giá trị chỉ
-// xảy ra bên trong mixer.update(delta), advance theo delta rồi nội suy
-// track. Không gọi update() => object giữ nguyên pose ban đầu mãi mãi.
-//
-// Đổi thứ tự animate()/play() không thay đổi gì: cả hai chỉ set state,
-// bug nằm ở việc THIẾU một lệnh gọi (update), không phải thứ tự các
-// lệnh đã có.
-
-const clock = new THREE.Clock();
+    solutionCode: `const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const delta = clock.getDelta();
-  mixer.update(delta); // dòng còn thiếu
+  mixer.update(delta); // the missing line
   renderer.render(scene, camera);
 }`,
+    solutionNote: {
+      vi: `Thiếu dòng \`mixer.update(delta)\` bên trong \`animate()\`. \`action.play()\` chỉ đổi \`action._startTime\` / cờ nội bộ của action — nó không đọc/ghi \`mesh.position\` hay \`mesh.quaternion\`. Việc GHI giá trị chỉ xảy ra bên trong \`mixer.update(delta)\`, advance theo delta rồi nội suy track. Không gọi \`update()\` thì object giữ nguyên pose ban đầu mãi mãi.
+
+Đổi thứ tự \`animate()\`/\`play()\` không thay đổi gì: cả hai chỉ set state, bug nằm ở việc THIẾU một lệnh gọi (update), không phải thứ tự các lệnh đã có.`,
+      en: `The missing line is \`mixer.update(delta)\` inside \`animate()\`. \`action.play()\` only changes \`action._startTime\` / the action's internal flag — it never reads or writes \`mesh.position\` or \`mesh.quaternion\`. Actually writing the value only happens inside \`mixer.update(delta)\`, which advances by delta and interpolates the track. Without calling \`update()\`, the object keeps its original pose forever.
+
+Swapping the order of \`animate()\`/\`play()\` changes nothing: both calls only set state — the bug is a MISSING call (update), not the order of the calls that already exist.`,
+    },
   },
   {
     id: "build-fade-clip",
@@ -88,17 +86,17 @@ function animate() {
     starterCode: `import * as THREE from "three";
 
 function buildFadeClip(duration: number): THREE.AnimationClip {
-  // TODO 1: mảng times với 3 mốc — 0, duration/2, duration
-  // TODO 2: mảng values tương ứng — 1, 0, 1 (mỗi keyframe đúng 1 số vì opacity là scalar)
-  // TODO 3: tạo NumberKeyframeTrack nhắm ".material.opacity"
-  // TODO 4: bọc track vào AnimationClip tên "fade", dài duration giây
+  // TODO 1: times array with 3 marks — 0, duration/2, duration
+  // TODO 2: matching values array — 1, 0, 1 (exactly 1 number per keyframe since opacity is scalar)
+  // TODO 3: create a NumberKeyframeTrack targeting ".material.opacity"
+  // TODO 4: wrap the track in an AnimationClip named "fade", duration seconds long
   throw new Error("not implemented");
 }`,
     solutionCode: `import * as THREE from "three";
 
 function buildFadeClip(duration: number): THREE.AnimationClip {
   const times = [0, duration / 2, duration];
-  const values = [1, 0, 1]; // 1 số/keyframe: opacity là scalar, không phải vector/quaternion
+  const values = [1, 0, 1]; // 1 number/keyframe: opacity is scalar, not a vector/quaternion
 
   const track = new THREE.NumberKeyframeTrack(
     ".material.opacity",

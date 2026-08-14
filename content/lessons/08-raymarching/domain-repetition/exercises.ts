@@ -36,22 +36,14 @@ Then: if the radius becomes $r = 1.1$ (diameter $2.2$ exceeds $c = 2$), explain 
         en: "I explained why d(p) gets inflated near cell borders, causing a march step to jump too far and pass through the real surface",
       },
     ],
-    solutionCode: `// q.x = mod(2.6 + 1.0, 2.0) - 1.0 = mod(3.6, 2.0) - 1.0 = 1.6 - 1.0 = 0.6
-// q.y = mod(0.0 + 1.0, 2.0) - 1.0 = mod(1.0, 2.0) - 1.0 = 1.0 - 1.0 = 0.0
-// q.z = same as q.y = 0.0
-// q = (0.6, 0.0, 0.0)  ->  d(p) = |q| - r = 0.6 - 0.4 = 0.2
+    solutionNote: {
+      vi: `$q_x = \\mathrm{mod}(2.6 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(3.6, 2.0) - 1.0 = 1.6 - 1.0 = 0.6$. $q_y = \\mathrm{mod}(0.0 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(1.0, 2.0) - 1.0 = 1.0 - 1.0 = 0.0$. $q_z$ giống $q_y$, bằng $0.0$. $q = (0.6, 0.0, 0.0) \\Rightarrow d(p) = |q| - r = 0.6 - 0.4 = 0.2$.
 
-// With r = 1.1: half the cell is 0.5c = 1.0, and the sphere's radius (1.1)
-// already exceeds it — the sphere overlaps into the neighboring cell before
-// you even query anything near the border. At a query point close to a cell
-// edge, the copy in the ADJACENT cell can be genuinely nearer than the
-// "home" copy the fold formula returns — but map() only ever evaluates the
-// home copy, so d(p) comes back LARGER than the true nearest-surface
-// distance. Sphere tracing's step size assumes d(p) is a safe (Lipschitz-1)
-// lower bound on that true distance; an inflated d(p) breaks that guarantee,
-// so a step computed from it can jump straight past the real surface at the
-// seam between two cells — the ray overshoots, producing a hole or a jagged
-// edge exactly along the grid line instead of a clean, continuous surface.`,
+Với $r = 1.1$: nửa ô là $0.5c = 1.0$, và bán kính quả cầu ($1.1$) đã vượt quá mức đó — quả cầu tràn sang ô lân cận trước cả khi ta truy vấn gần biên. Tại một điểm truy vấn gần cạnh ô, bản sao ở ô LÂN CẬN có thể thực sự gần hơn bản sao "gốc" mà công thức fold trả về — nhưng \`map()\` chỉ bao giờ đánh giá bản gốc, nên $d(p)$ trả về LỚN HƠN khoảng cách thật tới bề mặt gần nhất. Sphere tracing giả định $d(p)$ là một cận dưới an toàn (Lipschitz-1) của khoảng cách thật đó; một $d(p)$ bị thổi phồng phá vỡ đảm bảo đó, nên bước tính từ nó có thể nhảy thẳng qua bề mặt thật ngay tại đường nối giữa hai ô — tia bị overshoot, tạo ra lỗ hổng hoặc cạnh răng cưa đúng dọc theo đường lưới thay vì một bề mặt liền mạch, sạch sẽ.`,
+      en: `$q_x = \\mathrm{mod}(2.6 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(3.6, 2.0) - 1.0 = 1.6 - 1.0 = 0.6$. $q_y = \\mathrm{mod}(0.0 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(1.0, 2.0) - 1.0 = 1.0 - 1.0 = 0.0$. $q_z$ matches $q_y$, also $0.0$. $q = (0.6, 0.0, 0.0) \\Rightarrow d(p) = |q| - r = 0.6 - 0.4 = 0.2$.
+
+With $r = 1.1$: half the cell is $0.5c = 1.0$, and the sphere's radius ($1.1$) already exceeds it — the sphere overlaps into the neighboring cell before you even query anything near the border. At a query point close to a cell edge, the copy in the ADJACENT cell can be genuinely nearer than the "home" copy the fold formula returns — but \`map()\` only ever evaluates the home copy, so $d(p)$ comes back LARGER than the true nearest-surface distance. Sphere tracing's step size assumes $d(p)$ is a safe (Lipschitz-1) lower bound on that true distance; an inflated $d(p)$ breaks that guarantee, so a step computed from it can jump straight past the real surface at the seam between two cells — the ray overshoots, producing a hole or a jagged edge exactly along the grid line instead of a clean, continuous surface.`,
+    },
   },
   {
     id: "repeated-spheres-with-cell-color",

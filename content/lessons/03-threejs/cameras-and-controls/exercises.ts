@@ -36,13 +36,14 @@ Then answer in one sentence: why should you avoid clamping to exactly \`minPolar
         en: "Connected this to why controls tend to jitter right at the clamp boundary",
       },
     ],
-    solutionCode: `// 0.15 rad × (180/π) ≈ 8.6°
-// (π - 0.15) rad × (180/π) ≈ 171.4°
-//
-// Đặt biên đúng 0° hoặc 180° đưa camera tới đúng cực xoay — tại đó hướng
-// "lên" của camera không còn xác định duy nhất (giống gimbal lock ở Track 0),
-// nên OrbitControls dễ giật/nhảy hướng khi người dùng chạm sát biên. Chừa
-// một khoảng đệm nhỏ (ở đây ~8.6°) tránh hoàn toàn vùng suy biến đó.`,
+    solutionNote: {
+      vi: `0.15 rad × (180/π) ≈ 8.6°, và (π − 0.15) rad × (180/π) ≈ 171.4°.
+
+Đặt biên đúng 0° hoặc 180° đưa camera tới đúng cực xoay — tại đó hướng "lên" của camera không còn xác định duy nhất (giống gimbal lock ở Track 0), nên \`OrbitControls\` dễ giật/nhảy hướng khi người dùng chạm sát biên. Chừa một khoảng đệm nhỏ (ở đây ~8.6°) tránh hoàn toàn vùng suy biến đó.`,
+      en: `0.15 rad × (180/π) ≈ 8.6°, and (π − 0.15) rad × (180/π) ≈ 171.4°.
+
+Clamping exactly at 0° or 180° puts the camera right at the rotation pole — where the camera's "up" direction stops being uniquely defined (the same gimbal-lock issue from Track 0), so \`OrbitControls\` tends to jitter/snap when the user gets close to the boundary. Leaving a small margin (here ~8.6°) avoids that degenerate region entirely.`,
+    },
   },
   {
     id: "sync-camera-aspect",

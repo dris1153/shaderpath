@@ -36,15 +36,14 @@ That $F_0$ is tiny — so why does a lake still reflect the sky clearly at a nea
         en: "I connected this to the Schlick approximation: reflectance climbs toward 1.0 at grazing angles regardless of a low F0",
       },
     ],
-    solutionCode: `// F0 = ((1.33 - 1) / (1.33 + 1))^2 = (0.33 / 2.33)^2 ≈ (0.1416)^2 ≈ 0.02
+    solutionNote: {
+      vi: `$F_0 = \\left(\\dfrac{1.33 - 1}{1.33 + 1}\\right)^2 = \\left(\\dfrac{0.33}{2.33}\\right)^2 \\approx (0.1416)^2 \\approx 0.02$.
 
-// F0 = 0.02 is the reflectance ONLY at a 0° (straight-down) viewing angle.
-// The Schlick approximation, F(theta) = F0 + (1 - F0) * (1 - cos(theta))^5,
-// shows the SECOND term dominating as theta -> 90°: (1 - cos(theta))^5 -> 1,
-// so F(theta) -> F0 + (1 - F0) * 1 = 1, regardless of how small F0 started.
-// That's exactly why a lake reflects almost nothing looking straight down
-// (theta ≈ 0°, F ≈ F0 ≈ 0.02) but mirrors the sky at a grazing angle
-// (theta ≈ 90°, F ≈ 1.0) — the SAME F0, just evaluated at a different angle.`,
+$F_0 = 0.02$ chỉ là độ phản chiếu tại góc nhìn VUÔNG GÓC ($0^\\circ$). Xấp xỉ Schlick, $F(\\theta) = F_0 + (1 - F_0)(1 - \\cos\\theta)^5$, cho thấy số hạng THỨ HAI chiếm ưu thế khi $\\theta \\to 90^\\circ$: $(1 - \\cos\\theta)^5 \\to 1$, nên $F(\\theta) \\to F_0 + (1 - F_0) \\times 1 = 1$, bất kể $F_0$ ban đầu nhỏ đến đâu. Đó chính xác là lý do một mặt hồ gần như không phản chiếu gì khi nhìn thẳng xuống ($\\theta \\approx 0^\\circ$, $F \\approx F_0 \\approx 0.02$) nhưng lại phản chiếu rõ bầu trời ở góc xiên gần mặt nước ($\\theta \\approx 90^\\circ$, $F \\approx 1.0$) — CÙNG một $F_0$, chỉ khác góc đánh giá.`,
+      en: `$F_0 = \\left(\\dfrac{1.33 - 1}{1.33 + 1}\\right)^2 = \\left(\\dfrac{0.33}{2.33}\\right)^2 \\approx (0.1416)^2 \\approx 0.02$.
+
+$F_0 = 0.02$ is the reflectance ONLY at a straight-on ($0^\\circ$) viewing angle. The Schlick approximation, $F(\\theta) = F_0 + (1 - F_0)(1 - \\cos\\theta)^5$, shows the SECOND term dominating as $\\theta \\to 90^\\circ$: $(1 - \\cos\\theta)^5 \\to 1$, so $F(\\theta) \\to F_0 + (1 - F_0) \\times 1 = 1$, regardless of how small $F_0$ started. That's exactly why a lake reflects almost nothing looking straight down ($\\theta \\approx 0^\\circ$, $F \\approx F_0 \\approx 0.02$) but mirrors the sky at a grazing angle ($\\theta \\approx 90^\\circ$, $F \\approx 1.0$) — the SAME $F_0$, just evaluated at a different angle.`,
+    },
   },
   {
     id: "diagnose-plastic-checklist",

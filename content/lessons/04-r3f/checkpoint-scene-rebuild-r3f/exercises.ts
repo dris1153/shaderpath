@@ -57,8 +57,8 @@ function Product({
   const meshRef = useRef<Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
-  // TODO 1: trong useFrame, nếu "selected" thì xoay meshRef.current.rotation.y
-  // theo delta -- KHÔNG setState, guard meshRef.current trước khi dùng
+  // TODO 1: in useFrame, if "selected" is true, rotate meshRef.current.rotation.y
+  // by delta -- NO setState, guard meshRef.current before using it
 
   return (
     <group position={[def.x, 0, 0]}>
@@ -69,13 +69,13 @@ function Product({
         position={[0, 0.9, 0]}
         castShadow
         receiveShadow
-        // TODO 3: onPointerOver/onPointerOut set "hovered" (nhớ e.stopPropagation())
-        // TODO 4: onClick toggle "selected" qua onSelect(...) (nhớ e.stopPropagation())
+        // TODO 3: onPointerOver/onPointerOut set "hovered" (remember e.stopPropagation())
+        // TODO 4: onClick toggle "selected" via onSelect(...) (remember e.stopPropagation())
       >
         <ProductGeometry kind={def.kind} />
         <meshStandardMaterial
           color={def.color}
-          // TODO 5: emissive sáng hơn khi selected, sáng nhẹ hơn khi hovered, đen khi bình thường
+          // TODO 5: emissive brighter when selected, slightly brighter when hovered, black normally
         />
       </mesh>
     </group>
@@ -89,13 +89,13 @@ function Showroom() {
     <>
       {/* TODO 6: ambientLight + directionalLight -- directionalLight castShadow */}
 
-      {/* TODO 7: sàn -- planeGeometry lớn, rotation -PI/2, receiveShadow */}
+      {/* TODO 7: floor -- large planeGeometry, rotation -PI/2, receiveShadow */}
 
       {PRODUCTS.map((p) => (
         <Product key={p.id} def={p} selected={selected === p.id} onSelect={setSelected} />
       ))}
 
-      {/* TODO 8: <OrbitControls> với minDistance/maxDistance/maxPolarAngle */}
+      {/* TODO 8: <OrbitControls> with minDistance/maxDistance/maxPolarAngle */}
     </>
   );
 }

@@ -36,16 +36,14 @@ Explain why the number is 900, not 300. Then: if you convert those 300 meshes in
         en: "I explained why 3 is still a massive improvement over 900, even though it isn't the theoretical absolute minimum",
       },
     ],
-    solutionCode: `// 900 = 300 mesh × 3 pass render: 1 pass chính (camera chính) + 2 pass
-// shadow map (mỗi shadow-casting light render lại toàn bộ vật thể đổ bóng
-// từ góc nhìn RIÊNG của nó). Mỗi mesh riêng lẻ vẫn cần một draw call cho
-// MỖI pass nó xuất hiện trong, nên tổng là 300 × 3 = 900, không phải 300.
-//
-// Chuyển sang MỘT InstancedMesh: nó vẫn là MỘT object phải được vẽ trong
-// CẢ 3 pass đó (1 chính + 2 shadow) — mỗi pass giờ chỉ cần ĐÚNG MỘT lệnh
-// gl.drawElementsInstanced thay vì 300 lệnh riêng lẻ. Kết quả kỳ vọng:
-// render.calls = 3 (1 + 2), không phải 1, vì số PASS không đổi — chỉ số
-// draw call TRONG mỗi pass giảm từ 300 xuống 1. Vẫn là cải thiện 300x.`,
+    solutionNote: {
+      vi: `$900 = 300$ mesh × 3 pass render: 1 pass chính (camera chính) + 2 pass shadow map (mỗi đèn đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn RIÊNG của nó). Mỗi mesh riêng lẻ vẫn cần một draw call cho MỖI pass nó xuất hiện trong, nên tổng là $300 \\times 3 = 900$, không phải 300.
+
+Chuyển sang MỘT \`InstancedMesh\`: nó vẫn là MỘT object phải được vẽ trong CẢ 3 pass đó (1 chính + 2 shadow) — mỗi pass giờ chỉ cần ĐÚNG MỘT lệnh \`gl.drawElementsInstanced\` thay vì 300 lệnh riêng lẻ. Kết quả kỳ vọng: \`render.calls = 3\` (1 + 2), không phải 1, vì số PASS không đổi — chỉ số draw call TRONG mỗi pass giảm từ 300 xuống 1. Vẫn là cải thiện 300 lần.`,
+      en: `$900 = 300$ meshes × 3 render passes: 1 main pass (the main camera) + 2 shadow-map passes (each shadow-casting light re-renders every shadow-casting object from ITS OWN view). Each individual mesh still needs one draw call for EVERY pass it appears in, so the total is $300 \\times 3 = 900$, not 300.
+
+Converting to a SINGLE \`InstancedMesh\`: it's still ONE object that must be drawn in ALL 3 of those passes (1 main + 2 shadow) — each pass now needs EXACTLY ONE \`gl.drawElementsInstanced\` call instead of 300 separate ones. Expected result: \`render.calls = 3\` (1 + 2), not 1, because the number of PASSES doesn't change — only the draw-call count WITHIN each pass drops from 300 to 1. Still a 300x improvement.`,
+    },
   },
   {
     id: "estimate-draw-calls",

@@ -36,18 +36,18 @@ Then answer: why does the red (R) channel stay exactly $1$ under both blends, wh
         en: "I can explain why the R channel doesn't change while G and B are brighter in the correct blend",
       },
     ],
-    solutionCode: `// Naive sRGB blend (SAI): mix từng kênh trực tiếp trên giá trị hiển thị
-// R: mix(1,1,0.5) = 1
-// G: mix(0,1,0.5) = 0.5
-// B: mix(1,0,0.5) = 0.5
-// -> (1, 0.5, 0.5): một màu hồng nhạt, xỉn
-//
-// Đúng cách: decode -> trung bình trong linear -> encode (xấp xỉ pow 2.2)
-// R: 1^2.2=1, 1^2.2=1 -> avg 1 -> encode 1^(1/2.2) = 1 (không đổi: 0/1 là điểm bất động)
-// G: 0^2.2=0, 1^2.2=1 -> avg 0.5 -> encode 0.5^(1/2.2) ~ 0.730
-// B: 1^2.2=1, 0^2.2=0 -> avg 0.5 -> encode 0.5^(1/2.2) ~ 0.730
-// -> (1, ~0.730, ~0.730): một màu hồng sáng, bão hoà hơn hẳn -
-// đúng về vật lý vì ánh sáng cộng tuyến tính trong linear, không phải trên giá trị đã gamma-encode.`,
+    solutionNote: {
+      vi: `Trộn ngây thơ trên sRGB (SAI): mix từng kênh trực tiếp trên giá trị hiển thị. $R:\\ \\mathrm{mix}(1,1,0.5)=1$, $G:\\ \\mathrm{mix}(0,1,0.5)=0.5$, $B:\\ \\mathrm{mix}(1,0,0.5)=0.5$ → $(1, 0.5, 0.5)$: một màu hồng nhạt, xỉn.
+
+Đúng cách: decode $\\to$ lấy trung bình trong linear $\\to$ encode lại (xấp xỉ luỹ thừa $2.2$). $R:\\ 1^{2.2}=1,\\ 1^{2.2}=1 \\to$ trung bình $1 \\to$ encode $1^{1/2.2}=1$ (không đổi, vì $0$ và $1$ là điểm bất động). $G:\\ 0^{2.2}=0,\\ 1^{2.2}=1 \\to$ trung bình $0.5 \\to$ encode $0.5^{1/2.2} \\approx 0.730$. $B$ tính tương tự $G$, cũng ra $\\approx 0.730$.
+
+Kết quả đúng: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — một màu hồng sáng, bão hoà hơn hẳn bản ngây thơ, và đúng về vật lý vì ánh sáng cộng tuyến tính trong không gian linear, không phải trên giá trị đã gamma-encode.`,
+      en: `Naive sRGB blend (WRONG): mix each channel directly on the display values. $R:\\ \\mathrm{mix}(1,1,0.5)=1$, $G:\\ \\mathrm{mix}(0,1,0.5)=0.5$, $B:\\ \\mathrm{mix}(1,0,0.5)=0.5$ → $(1, 0.5, 0.5)$: a dull, washed-out pink.
+
+Correct way: decode $\\to$ average in linear space $\\to$ encode back (approximated with a power of $2.2$). $R:\\ 1^{2.2}=1,\\ 1^{2.2}=1 \\to$ average $1 \\to$ encode $1^{1/2.2}=1$ (unchanged, since $0$ and $1$ are fixed points). $G:\\ 0^{2.2}=0,\\ 1^{2.2}=1 \\to$ average $0.5 \\to$ encode $0.5^{1/2.2} \\approx 0.730$. $B$ works out the same way as $G$, also $\\approx 0.730$.
+
+Correct result: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — a brighter, noticeably more saturated pink than the naive blend, and physically correct because light adds linearly in linear space, not on gamma-encoded values.`,
+    },
   },
   {
     id: "write-linear-blend-glsl",
@@ -61,10 +61,10 @@ So với \`mix(a, b, t)\` ngây thơ, kết quả tại $t = 0.5$ phải sáng h
 Compared to the naive \`mix(a, b, t)\`, the result at $t = 0.5$ must be noticeably brighter when \`a\`, \`b\` are two saturated, opposing colors — matching what the theory section just computed by hand.`,
     },
     starterCode: `vec3 linearBlend(vec3 a, vec3 b, float t) {
-  // TODO 1: decode a, b về linear bằng pow(., 2.2)
-  // TODO 2: mix trong linear
-  // TODO 3: encode kết quả về sRGB bằng pow(., 1.0 / 2.2)
-  return mix(a, b, t); // placeholder — đây chính là bản NGÂY THƠ cần sửa
+  // TODO 1: decode a, b to linear with pow(., 2.2)
+  // TODO 2: mix in linear space
+  // TODO 3: encode the result back to sRGB with pow(., 1.0 / 2.2)
+  return mix(a, b, t); // placeholder — this is exactly the NAIVE version to fix
 }`,
     solutionCode: `vec3 linearBlend(vec3 a, vec3 b, float t) {
   vec3 aLinear = pow(a, vec3(2.2));

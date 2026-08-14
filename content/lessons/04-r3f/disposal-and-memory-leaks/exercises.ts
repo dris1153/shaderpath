@@ -36,16 +36,14 @@ Without running code: compute \`renderer.info.memory.geometries\` after those 6 
         en: "I can distinguish 'auto-disposed because R3F itself created it from JSX' from 'needs manual disposal because the object was merely passed in via primitive'",
       },
     ],
-    solutionCode: `// Bản <primitive>, không cleanup:
-// mỗi chu kỳ mount +8 geometry, unmount không trừ gì → G(n) = 8n
-// G(6) = 8 * 6 = 48
+    solutionNote: {
+      vi: `Bản \`<primitive>\`, không cleanup: mỗi chu kỳ mount cộng thêm 8 geometry, unmount không trừ đi gì cả, nên $G(n) = 8n$. Vậy $G(6) = 8 \\times 6 = 48$.
 
-// Bản JSX thuần (<mesh><sphereGeometry/></mesh>):
-// R3F tự tạo geometry từ tag <sphereGeometry>, nên nó nằm trong cây
-// instance mà reconciler theo dõi — mỗi unmount tự gọi .dispose() cho
-// đúng 8 geometry vừa mount. Sau chu kỳ thứ 6 (kết thúc ở trạng thái
-// unmounted), số geometries quay lại đúng 0 — không tích luỹ qua các
-// chu kỳ, vì đây thuộc đúng trường hợp "R3F tự lo".`,
+Bản JSX thuần (\`<mesh><sphereGeometry/></mesh>\`): R3F tự tạo geometry từ tag \`<sphereGeometry>\`, nên nó nằm trong cây instance mà reconciler theo dõi — mỗi lần unmount tự gọi \`.dispose()\` cho đúng 8 geometry vừa mount. Sau chu kỳ thứ 6 (kết thúc ở trạng thái đã unmount), số geometries quay lại đúng 0 — không tích luỹ qua các chu kỳ, vì đây thuộc đúng trường hợp "R3F tự lo".`,
+      en: `The \`<primitive>\` version, with no cleanup: each cycle's mount adds 8 geometries, and unmount subtracts nothing, so $G(n) = 8n$. That gives $G(6) = 8 \\times 6 = 48$.
+
+The plain-JSX version (\`<mesh><sphereGeometry/></mesh>\`): R3F itself creates the geometry from the \`<sphereGeometry>\` tag, so it lives in the instance tree the reconciler tracks — every unmount automatically calls \`.dispose()\` on the exact 8 geometries that were just mounted. After cycle 6 (ending in the unmounted state), the geometries count returns to exactly 0 — it never accumulates across cycles, because this is precisely the "R3F handles it" case.`,
+    },
   },
   {
     id: "fix-leaky-ring-with-use-disposable",

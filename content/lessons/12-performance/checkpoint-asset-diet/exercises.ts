@@ -52,9 +52,9 @@ function makeFloatEnvironment(size: number): THREE.DataTexture {
   tex.needsUpdate = true;
   return tex;
 }
-// TODO 1: 2048 o dinh dang Float chua nen la qua nang cho mot env map chi
-// dung de phan xa nhe -- giam kich thuoc va doi sang HalfFloatType, ghi ro
-// ly do bang comment
+// TODO 1: 2048 in uncompressed Float format is way too heavy for an env map
+// only used for light reflections -- shrink the size and switch to
+// HalfFloatType, document the reason in a comment
 const envTexture = makeFloatEnvironment(2048);
 scene.environment = envTexture;
 
@@ -78,9 +78,9 @@ function makeNoiseTexture(size: number): THREE.CanvasTexture {
 
 const props: THREE.Mesh[] = [];
 for (let i = 0; i < 3; i++) {
-  // TODO 2: prop nay rong ~0.3 don vi the gioi, hiem khi chiem qua vai chuc
-  // pixel man hinh o khoang cach camera binh thuong -- 4096 la lang phi,
-  // rightsize xuong bao nhieu? ghi ro ly do bang comment
+  // TODO 2: this prop is ~0.3 world units wide, rarely covering more than a
+  // few dozen screen pixels at a normal camera distance -- 4096 is wasteful,
+  // rightsize it to how much? document the reason in a comment
   const texture = makeNoiseTexture(4096);
   const geometry = new THREE.IcosahedronGeometry(0.15, 3);
   const material = new THREE.MeshStandardMaterial({ map: texture });
@@ -93,8 +93,8 @@ for (let i = 0; i < 3; i++) {
 // --- filler objects, far more segments than their screen size ever needs ---
 const fillers: THREE.Mesh[] = [];
 for (let i = 0; i < 12; i++) {
-  // TODO 3: 128x128 segment cho mot sphere ban kinh 0.3 dat cach camera
-  // 10-15 don vi -- giam xuong bao nhieu la du, ghi ro cong thuc/ly do
+  // TODO 3: 128x128 segments for a radius-0.3 sphere sitting 10-15 units from
+  // the camera -- how far down is enough, document the formula/reasoning
   const geometry = new THREE.SphereGeometry(0.3, 128, 128);
   const material = new THREE.MeshStandardMaterial({ color: 0x88aabb });
   const mesh = new THREE.Mesh(geometry, material);
@@ -113,16 +113,16 @@ const heroMaterial = new THREE.MeshStandardMaterial({
 const hero = new THREE.Mesh(heroGeometry, heroMaterial);
 hero.position.set(0, 1.2, -2);
 scene.add(hero);
-// TODO 4: hero khong co LOD -- luon render o do chi tiet cao nhat du camera
-// dung xa co nao. Dung THREE.LOD voi it nhat hai muc chi tiet thap hon roi
-// scene.add(lod) thay vi scene.add(hero) truc tiep.
+// TODO 4: the hero has no LOD -- always rendered at full detail no matter how
+// far the camera stands. Use THREE.LOD with at least two lower-detail levels,
+// then scene.add(lod) instead of scene.add(hero) directly.
 
 // --- somebody set this thinking it would help. it didn't. ---
 for (const obj of [...props, ...fillers, hero]) {
   obj.frustumCulled = false;
 }
-// TODO 5: bo vong lap tren (hoac tra frustumCulled ve true) -- giai thich
-// trong comment vi sao tat culling o day khong giup gi, co khi con hai
+// TODO 5: remove the loop above (or restore frustumCulled to true) -- explain
+// in a comment why disabling culling here doesn't help, and may even hurt
 
 function animate() {
   renderer.render(scene, camera);
@@ -130,15 +130,15 @@ function animate() {
 }
 requestAnimationFrame(animate);
 
-// TODO 6: viet dispose() goi .dispose() tren MOI geometry/material/texture
-// da tao (bao gom envTexture va moi level cua LOD tu TODO 4), cong
+// TODO 6: write dispose() calling .dispose() on EVERY geometry/material/texture
+// created (including envTexture and every LOD level from TODO 4), plus
 // renderer.dispose()
 
-// TODO 7: viet logSceneStats(label) doc renderer.info.memory.geometries,
-// renderer.info.memory.textures va renderer.info.render.calls (goi sau it
-// nhat mot lan renderer.render()) -- goi mot lan TRUOC khi ap cac TODO tren,
-// mot lan SAU khi ap xong, dung hai lan doc do lam cot "do song" trong bang
-// deliverable`,
+// TODO 7: write logSceneStats(label) reading renderer.info.memory.geometries,
+// renderer.info.memory.textures and renderer.info.render.calls (call it after
+// at least one renderer.render()) -- call it once BEFORE applying the TODOs
+// above, once AFTER, and use those two readings as the "measured live" column
+// in the deliverable table`,
     solutionCode: `import * as THREE from "three";
 
 const canvas = document.querySelector("canvas")!;
@@ -164,10 +164,11 @@ const geometries: THREE.BufferGeometry[] = [];
 const materials: THREE.Material[] = [];
 const textures: THREE.Texture[] = [];
 
-// Env map: 512 thay vi 2048, HalfFloatType thay vi FloatType -- nhe hon
-// khoang (2048/512)^2 * 2 = 32 lan (giam ca do phan giai lan so byte moi
-// kenh), du muot cho phan xa nhe tren vat lieu khong guong. Du an that se
-// dung RGBE that qua RGBELoader roi nen KTX2 (xem bai asset-pipeline-draco-ktx2).
+// Env map: 512 instead of 2048, HalfFloatType instead of FloatType -- roughly
+// (2048/512)^2 * 2 = 32x lighter (both resolution and bytes-per-channel drop),
+// smooth enough for soft reflections on non-mirror materials. A real project
+// would use a real RGBE loaded via RGBELoader then compressed to KTX2 (see
+// the asset-pipeline-draco-ktx2 lesson).
 function makeFloatEnvironment(size: number): THREE.DataTexture {
   const data = new Float32Array(size * size * 4);
   for (let i = 0; i < size * size; i++) {
@@ -203,10 +204,10 @@ function makeNoiseTexture(size: number): THREE.CanvasTexture {
   return new THREE.CanvasTexture(c);
 }
 
-// Prop cao ~0.3 don vi the gioi, o khoang cach camera 8-10 don vi chiem uoc
-// luong duoi 40px chieu cao man hinh -- 512 da vuot xa nhu cau, con 4096 chi
-// ton VRAM khong doi nao ve chat luong nhin thay. Du an that: KTX2/ETC1S cho
-// texture nay (mau don gian, khong can giu chi tiet cao tan).
+// Prop is ~0.3 world units tall, at a camera distance of 8-10 units it covers
+// an estimated under 40px of screen height -- 512 already exceeds the need,
+// while 4096 only burns VRAM with no visible quality gain. Real project:
+// KTX2/ETC1S for this texture (simple colors, no need for high-frequency detail).
 const PROP_TEXTURE_SIZE = 512;
 const props: THREE.Mesh[] = [];
 for (let i = 0; i < 3; i++) {
@@ -222,10 +223,11 @@ for (let i = 0; i < 3; i++) {
   textures.push(texture);
 }
 
-// Sphere ban kinh 0.3, dat cach camera ~10-15 don vi -- ban kinh man hinh uoc
-// luong duoi 15px o do phan giai binh thuong. 16 kinh tuyen x 12 vi tuyen (192
-// quad) da du muot cho kich thuoc do; 128x128 (16384 quad) la lang phi hon 85
-// lan so vertex ma mat khong bao gio phan biet duoc o khoang cach nay.
+// Radius-0.3 sphere sitting ~10-15 units from the camera -- an estimated
+// under-15px screen radius at normal resolution. 16 longitude x 12 latitude
+// segments (192 quads) is already smooth enough for that size; 128x128
+// (16384 quads) is over 85x more vertices than the eye could ever tell apart
+// at this distance.
 const FILLER_SEGMENTS = 16;
 const fillers: THREE.Mesh[] = [];
 for (let i = 0; i < 12; i++) {
@@ -239,11 +241,12 @@ for (let i = 0; i < 12; i++) {
   materials.push(material);
 }
 
-// Hero: LOD 3 muc -- gan camera dung geometry goc, xa hon chuyen dan sang
-// mesh nhe hon. Nguong khoang cach chon theo kich thuoc hero (ban kinh ~1.35
-// don vi): duoi 6 don vi hero con chiem phan lon khung hinh nen giu full
-// detail; 6-14 don vi giam segment mot nua; qua 14 chi con la mot khoi mo ta
-// hinh dang, khong ai nhin ra khac biet segment o khoang cach do.
+// Hero: 3-level LOD -- close to the camera uses the original geometry, farther
+// away steps down to lighter meshes. Distance thresholds picked from the
+// hero's size (radius ~1.35 units): under 6 units the hero still fills most
+// of the frame so it keeps full detail; 6-14 units halves the segment count;
+// past 14 it's just a shape-describing blob, nobody can tell segments apart
+// at that distance.
 const heroGeometryHigh = new THREE.TorusKnotGeometry(1, 0.35, 400, 64);
 const heroGeometryMid = new THREE.TorusKnotGeometry(1, 0.35, 120, 24);
 const heroGeometryLow = new THREE.TorusKnotGeometry(1, 0.35, 40, 8);
@@ -262,9 +265,10 @@ scene.add(heroLod);
 geometries.push(heroGeometryHigh, heroGeometryMid, heroGeometryLow);
 materials.push(heroMaterial);
 
-// frustumCulled tra ve mac dinh (true) -- khong co ly do gi de tat no o day:
-// scene nay khong dung custom bounding volume nao lech voi hinh hoc that, nen
-// tat culling chi khien GPU ve them nhung object dang nam ngoai khung hinh.
+// frustumCulled restored to its default (true) -- there's no reason to
+// disable it here: this scene doesn't use any custom bounding volume that
+// diverges from the real geometry, so disabling culling only makes the GPU
+// draw extra objects that are outside the frustum.
 
 function animate() {
   renderer.render(scene, camera);
@@ -280,9 +284,9 @@ function dispose() {
   renderer.dispose();
 }
 
-// Doc renderer.info NGAY SAU it nhat mot lan renderer.render() -- goi ham nay
-// mot lan tren ban build "beo" (starterCode) va mot lan tren ban diet nay de
-// lay cot "do song" cua bang deliverable.
+// Read renderer.info RIGHT AFTER at least one renderer.render() -- call this
+// once on the "fat" build (starterCode) and once on this diet build to get
+// the "measured live" column of the deliverable table.
 function logSceneStats(label: string) {
   const { memory, render } = renderer.info;
   console.table({
@@ -294,16 +298,17 @@ function logSceneStats(label: string) {
   });
 }
 
-// Bang deliverable mau -- dien so do that tu logSceneStats("before"/"after")
-// va so uoc luong tu cong thuc bai asset-pipeline-draco-ktx2 vao day:
+// Sample deliverable table -- fill in the real measurements from
+// logSceneStats("before"/"after") and the formula-based estimates from the
+// asset-pipeline-draco-ktx2 lesson here:
 //
-// | Asset            | Quyet dinh                          | File uoc luong truoc | File uoc luong sau |
-// |-------------------|--------------------------------------|-----------------------|----------------------|
-// | env map           | 2048 Float -> 512 HalfFloat           | ... MB (uoc luong)    | ... MB (uoc luong)   |
-// | prop texture x3   | 4096 -> 512, du kien nen KTX2/ETC1S    | ... MB                | ... MB               |
-// | filler geometry    | 128x128 -> 16x12 segment              | -                     | -                    |
-// | hero               | them THREE.LOD 3 muc                  | -                     | -                    |
-// VRAM (renderer.info.memory) va draw calls (renderer.info.render.calls): tu logSceneStats`,
+// | Asset              | Decision                                 | File size before (est.) | File size after (est.) |
+// |----------------------|---------------------------------------------|----------------------------|----------------------------|
+// | env map              | 2048 Float -> 512 HalfFloat                  | ... MB                     | ... MB                     |
+// | prop texture x3      | 4096 -> 512, planned KTX2/ETC1S                | ... MB                     | ... MB                     |
+// | filler geometry       | 128x128 -> 16x12 segments                      | -                          | -                          |
+// | hero                  | added a 3-level THREE.LOD                      | -                          | -                          |
+// VRAM (renderer.info.memory) and draw calls (renderer.info.render.calls): from logSceneStats`,
     hints: [
       {
         vi: "Bắt đầu từ texel density: hỏi asset đó thực sự chiếm bao nhiêu pixel trên màn hình ở khoảng cách bình thường, rồi mới chọn kích thước texture — đây luôn là khoản tiết kiệm lớn nhất trong bài này.",

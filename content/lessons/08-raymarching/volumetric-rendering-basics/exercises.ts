@@ -36,13 +36,14 @@ Then: if the loop early-exits once $T < 0.01$, which step is the FIRST one to sa
         en: "I can explain why early-exiting at step 29 saves marching compared to always running a fixed budget of 64 or 96 steps",
       },
     ],
-    solutionCode: `// T(n) = 0.85^n
-// T(5)  = 0.85^5  ≈ 0.4437
-// T(15) = 0.85^15 ≈ 0.0874
-//
-// Smallest n with 0.85^n < 0.01:
-// n > ln(0.01) / ln(0.85) = (-4.6052) / (-0.16252) ≈ 28.33
-// -> n = 29 (step 28 still has T ≈ 0.0106, which is still > 0.01)`,
+    solutionNote: {
+      vi: `$T(n) = 0.85^n$. $T(5) = 0.85^5 \\approx 0.4437$. $T(15) = 0.85^{15} \\approx 0.0874$.
+
+$n$ nhỏ nhất thoả $0.85^n < 0.01$: $n > \\ln(0.01) / \\ln(0.85) = (-4.6052) / (-0.16252) \\approx 28.33$, nên $n = 29$ (bước 28 vẫn còn $T \\approx 0.0106$, vẫn lớn hơn $0.01$).`,
+      en: `$T(n) = 0.85^n$. $T(5) = 0.85^5 \\approx 0.4437$. $T(15) = 0.85^{15} \\approx 0.0874$.
+
+Smallest $n$ with $0.85^n < 0.01$: $n > \\ln(0.01) / \\ln(0.85) = (-4.6052) / (-0.16252) \\approx 28.33$, so $n = 29$ (step 28 still has $T \\approx 0.0106$, still above $0.01$).`,
+    },
   },
   {
     id: "playground-volume-march",

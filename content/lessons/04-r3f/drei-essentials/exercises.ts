@@ -36,22 +36,18 @@ Without running code: explain how (A)'s per-frame raycast cost scales with $n$ (
         en: "I can identify at least one situation where generic (A) is still worth using over hand-written (B)",
       },
     ],
-    solutionCode: `// (A) 40x <Html occlude>: mỗi instance tự raycast từ camera tới điểm neo
-// của NÓ, kiểm tra va chạm với các mesh trong scene — n marker × m mesh
-// occluder ⇒ chi phí ~O(n·m) raycast test mỗi frame, không chia sẻ được
-// giữa các marker dù chúng cùng bị một quả cầu duy nhất che.
+    solutionNote: {
+      vi: `(A) 40× \`<Html occlude>\`: mỗi instance tự raycast từ camera tới đúng điểm neo của NÓ, kiểm tra va chạm với các mesh trong scene — $n$ marker × $m$ mesh occluder nên chi phí xấp xỉ $O(n \\cdot m)$ raycast test mỗi frame, không chia sẻ được giữa các marker dù chúng cùng bị một quả cầu duy nhất che.
 
-// (B) Occluder là một quả cầu tâm C, bán kính r. Marker tại vị trí P bị
-// che khi nó nằm ở nửa hướng ra xa camera:
-//
-//   toMarker = normalize(P - C)
-//   toCamera = normalize(camera.position - C)
-//   visible  = dot(toMarker, toCamera) > 0
-//
-// Một dot product mỗi marker, không raycast, không phụ thuộc số mesh
-// khác trong scene ⇒ O(n) thay vì O(n·m). Vẫn nên dùng (A) khi occluder
-// không phải hình đơn giản (mesh bất kỳ, nhiều lớp che nhau) hoặc số
-// marker quá ít để chênh lệch hiệu năng còn đáng để viết code riêng.`,
+(B) Occluder là một quả cầu tâm $C$, bán kính $r$. Marker tại vị trí $P$ bị che khi nó nằm ở nửa hướng ra xa camera: tính \`toMarker = normalize(P - C)\` và \`toCamera = normalize(camera.position - C)\`, marker hiển thị khi \`dot(toMarker, toCamera) > 0\`.
+
+Đây chỉ là một dot product mỗi marker, không raycast, không phụ thuộc số mesh khác trong scene, nên chi phí là $O(n)$ thay vì $O(n \\cdot m)$. Vẫn nên dùng (A) khi occluder không phải hình đơn giản (mesh bất kỳ, nhiều lớp che nhau) hoặc số marker quá ít để chênh lệch hiệu năng còn đáng để viết code riêng.`,
+      en: `(A) 40× \`<Html occlude>\`: each instance raycasts from the camera to its OWN anchor point, checking against the scene's meshes — $n$ markers × $m$ occluder meshes means a per-frame cost of roughly $O(n \\cdot m)$ raycast tests, with no sharing between markers even though they're all occluded by the same single sphere.
+
+(B) The occluder is a sphere centered at $C$ with radius $r$. A marker at position $P$ is occluded when it sits on the half facing away from the camera: compute \`toMarker = normalize(P - C)\` and \`toCamera = normalize(camera.position - C)\`; the marker is visible when \`dot(toMarker, toCamera) > 0\`.
+
+That's one dot product per marker, no raycasting, with no dependency on how many other meshes are in the scene — so the cost is $O(n)$ instead of $O(n \\cdot m)$. Approach (A) is still worth using when the occluder isn't a simple shape (an arbitrary mesh, multiple overlapping occluders) or when the marker count is too small for the performance gap to be worth writing dedicated code for.`,
+    },
   },
   {
     id: "wrap-dynamic-row-in-center",

@@ -36,25 +36,22 @@ Without running code, compute each step using the exact formula three.js uses (\
         en: "Explains that hard_shadow says 'fully in shadow' but VSM returns ~56% lit — because Chebyshev only gives an UPPER BOUND on probability, not an exact answer, so when variance is large (multiple different occluders in the same texel) the result can drift far from the binary answer",
       },
     ],
-    solutionCode: `// sigma^2 = meanSquare - mu^2 = 0.27 - 0.5^2 = 0.27 - 0.25 = 0.02
-// d = z - mu = 0.6 - 0.5 = 0.1  ->  d^2 = 0.01
-// p_max = sigma^2 / (sigma^2 + d^2) = 0.02 / (0.02 + 0.01) = 0.02/0.03 ~ 0.6667
+    solutionNote: {
+      vi: `$\\sigma^2 = \\text{meanSquare} - \\mu^2 = 0.27 - 0.5^2 = 0.27 - 0.25 = 0.02$. $d = z - \\mu = 0.6 - 0.5 = 0.1 \\Rightarrow d^2 = 0.01$. $p_{max} = \\dfrac{\\sigma^2}{\\sigma^2 + d^2} = \\dfrac{0.02}{0.02 + 0.01} = 0.02/0.03 \\approx 0.6667$.
 
-// remap: clamp((p_max - 0.3) / 0.65, 0, 1)
-//      = clamp((0.6667 - 0.3) / 0.65, 0, 1)
-//      = clamp(0.3667 / 0.65, 0, 1) ~ 0.5641
+Remap: $\\text{clamp}((p_{max} - 0.3)/0.65, 0, 1) = \\text{clamp}((0.6667 - 0.3)/0.65, 0, 1) = \\text{clamp}(0.3667/0.65, 0, 1) \\approx 0.5641$.
 
-// hard_shadow = (z <= mu) ? 1 : 0  ->  0.6 <= 0.5 is false -> hard_shadow = 0
-// final shadow = max(hard_shadow, p_max_remapped) = max(0, 0.5641) = 0.5641
+$\\text{hard\\_shadow} = (z \\le \\mu)\\ ?\\ 1 : 0 \\Rightarrow 0.6 \\le 0.5$ là sai $\\Rightarrow \\text{hard\\_shadow} = 0$. Kết quả cuối, lấy giá trị $p_{max}$ đã remap ở trên: $\\max(\\text{hard\\_shadow}, 0.5641) = \\max(0, 0.5641) = 0.5641$.
 
-// Hard test says "fully occluded" (0), VSM says "~56% lit" -- they do NOT
-// agree. Chebyshev gives an UPPER BOUND on lit-probability from just two
-// moments (mean, variance), not an exact answer -- when a texel's depth
-// distribution mixes very different depths (e.g. two occluders at
-// different distances), variance inflates and the bound loosens, letting
-// partial light "leak" through in exactly this way. That leak IS light
-// bleeding: a statistical side effect of compressing a depth distribution
-// into two numbers, not a bug in the comparison itself.`,
+Phép so sánh nhị phân nói "trong bóng hoàn toàn" (0), còn VSM nói "~56% sáng" — hai kết quả KHÔNG khớp nhau. Chebyshev chỉ cho một CHẶN TRÊN xác suất từ đúng hai moment (mean, variance), không phải câu trả lời chính xác — khi phân bố độ sâu trong một texel trộn lẫn nhiều độ sâu rất khác nhau (ví dụ hai occluder ở khoảng cách khác nhau), phương sai tăng vọt và chặn trên nới lỏng ra, để một phần ánh sáng "rò rỉ" qua đúng theo cách này. Sự rò rỉ đó CHÍNH LÀ light bleeding: một hệ quả thống kê của việc nén một phân bố độ sâu thành hai con số, không phải lỗi ở phép so sánh.`,
+      en: `$\\sigma^2 = \\text{meanSquare} - \\mu^2 = 0.27 - 0.5^2 = 0.27 - 0.25 = 0.02$. $d = z - \\mu = 0.6 - 0.5 = 0.1 \\Rightarrow d^2 = 0.01$. $p_{max} = \\dfrac{\\sigma^2}{\\sigma^2 + d^2} = \\dfrac{0.02}{0.02 + 0.01} = 0.02/0.03 \\approx 0.6667$.
+
+Remap: $\\text{clamp}((p_{max} - 0.3)/0.65, 0, 1) = \\text{clamp}((0.6667 - 0.3)/0.65, 0, 1) = \\text{clamp}(0.3667/0.65, 0, 1) \\approx 0.5641$.
+
+$\\text{hard\\_shadow} = (z \\le \\mu)\\ ?\\ 1 : 0 \\Rightarrow 0.6 \\le 0.5$ is false $\\Rightarrow \\text{hard\\_shadow} = 0$. Final shadow $= \\max(\\text{hard\\_shadow}, p_{max}\\text{ remapped}) = \\max(0, 0.5641) = 0.5641$.
+
+The hard test says "fully in shadow" (0), but VSM says "~56% lit" — the two do NOT agree. Chebyshev only gives an UPPER BOUND on lit-probability from just two moments (mean, variance), not an exact answer — when a texel's depth distribution mixes very different depths (e.g. two occluders at different distances), variance inflates and the bound loosens, letting partial light "leak" through in exactly this way. That leak IS light bleeding: a statistical side effect of compressing a depth distribution into two numbers, not a bug in the comparison itself.`,
+    },
   },
   {
     id: "texel-footprint-and-mapsize",

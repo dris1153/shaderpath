@@ -36,17 +36,14 @@ From those two trajectories, explain why a specific noise "blob" never changes s
         en: "I explain that scroll rigidly translates the ENTIRE noise field (every pixel adds the same vector) so relative shapes between blobs stay fixed; slice gives a DIFFERENT 2D noise function per $t$ (a different slab), so there is no reason for a blob's shape to stay the same",
       },
     ],
-    solutionCode: `// Scroll: quỹ đạo trong không gian sample 2D là một ĐƯỜNG THẲNG hướng d,
-// đi qua chính điểm (p.x, p.y) mà ta luôn nhìn vào. Vì cả trường bị cộng
-// cùng một vector t*d tại MỌI pixel, khoảng cách và hướng tương đối giữa
-// hai đốm bất kỳ được bảo toàn tuyệt đối -> chúng trượt như một khối cứng,
-// không đốm nào đổi hình dạng.
-//
-// Slice: quỹ đạo trong không gian sample 3D là một đường thẳng SONG SONG
-// trục thứ ba (t), đi qua đúng một điểm (p.x, p.y) cố định. Mỗi t khác
-// nhau tương ứng một hàm noise2 hoàn toàn khác (một lát cắt khác của
-// khối 3D) -> không có phép "trượt cứng" nào liên kết hai lát cắt liền kề,
-// nên các đốm được tự do lớn lên, teo lại, hoặc tách đôi khi t trôi qua.`,
+    solutionNote: {
+      vi: `Scroll: quỹ đạo trong không gian sample 2D là một đường thẳng hướng $\\mathbf{d}$, đi qua chính điểm $(p_x, p_y)$ mà ta luôn nhìn vào. Vì cả trường bị cộng cùng một vector $t\\mathbf{d}$ tại mọi pixel, khoảng cách và hướng tương đối giữa hai đốm bất kỳ được bảo toàn tuyệt đối, nên chúng trượt như một khối cứng — không đốm nào đổi hình dạng.
+
+Slice: quỹ đạo trong không gian sample 3D là một đường thẳng song song trục thứ ba ($t$), đi qua đúng một điểm $(p_x, p_y)$ cố định. Mỗi $t$ khác nhau tương ứng một hàm noise 2D hoàn toàn khác (một lát cắt khác của khối 3D) — không có phép "trượt cứng" nào liên kết hai lát cắt liền kề, nên các đốm được tự do lớn lên, teo lại, hoặc tách đôi khi $t$ trôi qua.`,
+      en: `Scroll: the trajectory in 2D sample space is a straight line in direction $\\mathbf{d}$, passing through the very point $(p_x, p_y)$ we're always looking at. Since the entire field gets the same vector $t\\mathbf{d}$ added at every pixel, the relative distance and direction between any two blobs is preserved exactly, so they slide like a rigid body — no blob ever changes shape.
+
+Slice: the trajectory in 3D sample space is a straight line parallel to the third axis ($t$), passing through one fixed point $(p_x, p_y)$. Each different $t$ corresponds to a completely different 2D noise function (a different slab of the 3D volume) — there's no "rigid slide" linking adjacent slabs, so blobs are free to grow, shrink, or split as $t$ drifts.`,
+    },
   },
   {
     id: "perfect-loop-playground",

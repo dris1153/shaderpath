@@ -36,17 +36,18 @@ Without running code: using Three.js's Y-axis rotation matrix, $x' = x\\cos\\the
         en: "Recognized this as the general moving-parent-moves-children-for-free mechanism, not a special case",
       },
     ],
-    solutionCode: `// θ = π/2 → cos θ = 0, sin θ = 1
-// x' = x·cosθ + z·sinθ = 4·0 + 0·1 = 0
-// z' = -x·sinθ + z·cosθ = -4·1 + 0·0 = -4
-// y' = y = 0
-//
-// World position: (0, 0, -4)
-//
-// planet.position vẫn là (4,0,0) trong bộ nhớ — chỉ matrixWorld của nó
-// (= orbitGroup.matrixWorld × planet.matrix) đổi vì orbitGroup.matrixWorld
-// vừa đổi. Đây chính là "cha di chuyển, con được theo miễn phí": không có
-// dòng code nào đụng vào planet.position cả.`,
+    solutionNote: {
+      vi: `θ = π/2 → cos θ = 0, sin θ = 1. x' = x·cosθ + z·sinθ = 4·0 + 0·1 = 0. z' = −x·sinθ + z·cosθ = −4·1 + 0·0 = −4. y' = y = 0.
+
+World position: (0, 0, −4).
+
+\`planet.position\` vẫn là (4, 0, 0) trong bộ nhớ — chỉ \`matrixWorld\` của nó (= \`orbitGroup.matrixWorld\` × \`planet.matrix\`) đổi vì \`orbitGroup.matrixWorld\` vừa đổi. Đây chính là "cha di chuyển, con được theo miễn phí": không có dòng code nào đụng vào \`planet.position\` cả.`,
+      en: `θ = π/2 → cos θ = 0, sin θ = 1. x' = x·cosθ + z·sinθ = 4·0 + 0·1 = 0. z' = −x·sinθ + z·cosθ = −4·1 + 0·0 = −4. y' = y = 0.
+
+World position: (0, 0, −4).
+
+\`planet.position\` stays (4, 0, 0) in memory — only its \`matrixWorld\` (= \`orbitGroup.matrixWorld\` × \`planet.matrix\`) changes, because \`orbitGroup.matrixWorld\` just changed. This is exactly "parent moves, child follows for free": no line of code ever touches \`planet.position\` itself.`,
+    },
   },
   {
     id: "round-trip-local-world",

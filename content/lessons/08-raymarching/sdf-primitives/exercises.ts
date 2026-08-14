@@ -36,23 +36,18 @@ For $p_2$, state which of the three axes X, Y, Z determines $d(p_2)$'s value —
         en: "I can explain why the Y axis (not X or Z) determines $d(p_2)$",
       },
     ],
-    solutionCode: `// p1 = (0.6, 0.1, 0.0), b = (0.5, 0.3, 0.5)
-// q = |p1| - b = (0.1, -0.2, -0.5)
-// max(q, 0) = (0.1, 0, 0)         -> length = 0.1
-// max(q.x, q.y, q.z) = max(0.1, -0.2, -0.5) = 0.1 (>0)
-// min(0.1, 0) = 0
-// d(p1) = 0.1 + 0 = 0.1  -> ngoài hộp đúng 0.1 đơn vị theo trục X
-//
-// p2 = (0.2, 0.1, 0.1), b = (0.5, 0.3, 0.5)
-// q = |p2| - b = (-0.3, -0.2, -0.4)
-// max(q, 0) = (0, 0, 0)           -> length = 0
-// max(q.x, q.y, q.z) = max(-0.3, -0.2, -0.4) = -0.2  -> Y quyết định
-// min(-0.2, 0) = -0.2
-// d(p2) = 0 + (-0.2) = -0.2  -> trong hộp, cách mặt gần nhất 0.2 đơn vị
-//
-// Trục Y thắng vì còn b.y - |p2.y| = 0.3 - 0.1 = 0.2 là khoảng cách BÉ
-// NHẤT tới một mặt trong ba trục (X còn 0.3, Z còn 0.4) -- max() luôn
-// chọn đúng trục "chật" nhất, đúng định nghĩa "gần biên nhất".`,
+    solutionNote: {
+      vi: `$p_1 = (0.6, 0.1, 0.0)$, $b = (0.5, 0.3, 0.5)$: $q = |p_1| - b = (0.1, -0.2, -0.5)$. $\\max(q, 0) = (0.1, 0, 0) \\Rightarrow \\|\\max(q,0)\\| = 0.1$. $\\max(q_x,q_y,q_z) = 0.1 > 0$, nên $\\min(0.1, 0) = 0$. $d(p_1) = 0.1 + 0 = 0.1$ — ở ngoài hộp đúng $0.1$ đơn vị theo trục X.
+
+$p_2 = (0.2, 0.1, 0.1)$, $b = (0.5, 0.3, 0.5)$: $q = |p_2| - b = (-0.3, -0.2, -0.4)$. $\\max(q, 0) = (0,0,0) \\Rightarrow$ độ dài $= 0$. $\\max(q_x,q_y,q_z) = \\max(-0.3,-0.2,-0.4) = -0.2$ — trục Y quyết định. $\\min(-0.2, 0) = -0.2$, nên $d(p_2) = 0 + (-0.2) = -0.2$ — bên trong hộp, cách mặt gần nhất $0.2$ đơn vị.
+
+Trục Y thắng vì $b_y - |p_{2,y}| = 0.3 - 0.1 = 0.2$ là khoảng cách bé nhất tới một mặt trong ba trục (X còn $0.3$, Z còn $0.4$) — \`max()\` luôn chọn đúng trục "chật" nhất, đúng định nghĩa "gần biên nhất".`,
+      en: `$p_1 = (0.6, 0.1, 0.0)$, $b = (0.5, 0.3, 0.5)$: $q = |p_1| - b = (0.1, -0.2, -0.5)$. $\\max(q, 0) = (0.1, 0, 0) \\Rightarrow \\|\\max(q,0)\\| = 0.1$. $\\max(q_x,q_y,q_z) = 0.1 > 0$, so $\\min(0.1, 0) = 0$. $d(p_1) = 0.1 + 0 = 0.1$ — exactly $0.1$ units outside the box along the X axis.
+
+$p_2 = (0.2, 0.1, 0.1)$, $b = (0.5, 0.3, 0.5)$: $q = |p_2| - b = (-0.3, -0.2, -0.4)$. $\\max(q, 0) = (0,0,0) \\Rightarrow$ length $= 0$. $\\max(q_x,q_y,q_z) = \\max(-0.3,-0.2,-0.4) = -0.2$ — the Y axis determines the result. $\\min(-0.2, 0) = -0.2$, so $d(p_2) = 0 + (-0.2) = -0.2$ — inside the box, $0.2$ units from the nearest face.
+
+The Y axis wins because $b_y - |p_{2,y}| = 0.3 - 0.1 = 0.2$ is the smallest remaining distance to a face among the three axes (X has $0.3$ left, Z has $0.4$) — \`max()\` always picks the "tightest" axis, exactly matching the definition of "closest to a face."`,
+    },
   },
   {
     id: "capsule-2d-contour-follows-mouse",
@@ -66,7 +61,7 @@ For $p_2$, state which of the three axes X, Y, Z determines $d(p_2)$'s value —
   vec2 p = uv - 0.5;
 
   vec2 a = vec2(-0.25, 0.0);
-  vec2 b = uMouse - 0.5; // đầu B bám theo chuột
+  vec2 b = uMouse - 0.5; // endpoint B follows the mouse
   float r = 0.08;
 
   // TODO 1: pa = p - a, ba = b - a
@@ -74,7 +69,7 @@ For $p_2$, state which of the three axes X, Y, Z determines $d(p_2)$'s value —
   vec2 ba = vec2(0.0);
 
   // TODO 2: h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0)
-  // (đây chính là công thức chiếu từ Track 0, kẹp vào đoạn [a,b])
+  // (this is exactly the projection formula from Track 0, clamped onto segment [a,b])
   float h = 0.0;
 
   // TODO 3: d = length(pa - ba*h) - r

@@ -52,16 +52,24 @@ Then: if you move these exact five lines into a RawShaderMaterial instead, does 
         en: "I can explain why all five lines are safe on RawShaderMaterial (empty prelude, nothing to collide with)",
       },
     ],
-    solutionCode: `// Trên ShaderMaterial thường (prelude có sẵn 6 uniform + 3 attribute):
-// - uniform vec3 cameraPosition;   -> LỖI redefinition (đã có sẵn)
-// - uniform float uTime;           -> OK (không trùng tên built-in nào)
-// - attribute vec3 normal;         -> LỖI redefinition (đã có sẵn)
-// - varying vec2 vUv;              -> OK (vUv là tên tự đặt, không phải "uv")
-// - uniform mat3 normalMatrix;     -> LỖI redefinition (đã có sẵn)
-//
-// Trên RawShaderMaterial: prelude rỗng hoàn toàn, không có gì để trùng ->
-// cả 5 dòng đều biên dịch bình thường (nhưng bạn phải tự khai báo thêm
-// precision, position, uv, projectionMatrix, modelViewMatrix... nếu dùng tới).`,
+    solutionNote: {
+      vi: `Trên ShaderMaterial thường (prelude có sẵn 6 uniform + 3 attribute):
+- \`uniform vec3 cameraPosition;\` → LỖI redefinition (đã có sẵn)
+- \`uniform float uTime;\` → OK (không trùng tên built-in nào)
+- \`attribute vec3 normal;\` → LỖI redefinition (đã có sẵn)
+- \`varying vec2 vUv;\` → OK (vUv là tên tự đặt, không phải "uv")
+- \`uniform mat3 normalMatrix;\` → LỖI redefinition (đã có sẵn)
+
+Trên RawShaderMaterial: prelude rỗng hoàn toàn, không có gì để trùng → cả 5 dòng đều biên dịch bình thường (nhưng bạn phải tự khai báo thêm precision, position, uv, projectionMatrix, modelViewMatrix... nếu dùng tới).`,
+      en: `On a regular ShaderMaterial (prelude already has 6 uniforms + 3 attributes):
+- \`uniform vec3 cameraPosition;\` → redefinition ERROR (already present)
+- \`uniform float uTime;\` → OK (no built-in name collision)
+- \`attribute vec3 normal;\` → redefinition ERROR (already present)
+- \`varying vec2 vUv;\` → OK (vUv is a custom name, not "uv")
+- \`uniform mat3 normalMatrix;\` → redefinition ERROR (already present)
+
+On a RawShaderMaterial: the prelude is completely empty, nothing to collide with → all 5 lines compile fine (but you must declare precision, position, uv, projectionMatrix, modelViewMatrix, etc. yourself if you need them).`,
+    },
   },
   {
     id: "playground-fake-vuv",
@@ -71,7 +79,7 @@ Then: if you move these exact five lines into a RawShaderMaterial instead, does 
       en: `The playground has no vertex stage of its own — everything runs on one fullscreen quad, so there's no interpolated \`varying vec2 vUv;\` like a real ShaderMaterial would hand you. Write a fragment shader body that computes a \`fakeUv\` coordinate from \`gl_FragCoord.xy / uResolution\` (standing in for the \`vUv\` a ShaderMaterial's vertex stage would already provide), then color it like this lesson's demo: red channel = fakeUv.x, green channel = fakeUv.y, blue channel fixed at 0.5.`,
     },
     starterCode: `void main() {
-  // TODO: tinh fakeUv tu gl_FragCoord.xy / uResolution
+  // TODO: compute fakeUv from gl_FragCoord.xy / uResolution
   vec2 fakeUv = vec2(0.0);
 
   fragColor = vec4(fakeUv, 0.5, 1.0);

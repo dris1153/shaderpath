@@ -44,22 +44,26 @@ Which field has divergence exactly 0 at **every** point, not just at $p = (1,2)$
         en: "At p=(1,2): F_naive=(4,1) with div=4; F_curl=(1,−4) with div=0 — and I can explain div(F_curl)=0 everywhere because mixed partials always commute, independent of ψ's specific form",
       },
     ],
-    solutionCode: `// psi(x,y) = x^2 y
-// dpsi/dx = 2xy         dpsi/dy = x^2
-//
-// F_naive = (2xy, x^2)
-// F_curl  = (x^2, -2xy)     <- swap components, negate the second
-//
-// div(F_naive) = d(2xy)/dx + d(x^2)/dy = 2y + 0 = 2y   (depends on y, generally != 0)
-// div(F_curl)  = d(x^2)/dx + d(-2xy)/dy = 2x - 2x = 0  (ALWAYS 0, for any x, y)
-//
-// At p = (1, 2):
-//   F_naive = (4, 1),  div(F_naive) = 2*2 = 4   -> locally expanding here
-//   F_curl  = (1, -4), div(F_curl)  = 0          -> zero everywhere, not just here
-//
-// div(F_curl) = d^2psi/dxdy - d^2psi/dydx is a mixed-partial identity: for
-// any sufficiently smooth psi, these two are equal (Schwarz's theorem), so
-// their difference is 0 regardless of what psi actually is.`,
+    solutionNote: {
+      vi: `Với $\\psi(x,y) = x^2 y$: $\\partial\\psi/\\partial x = 2xy$, $\\partial\\psi/\\partial y = x^2$.
+
+$F_{\\text{naive}} = (2xy,\\ x^2)$. $F_{\\text{curl}} = (x^2,\\ -2xy)$ — hoán đổi hai thành phần rồi đổi dấu thành phần thứ hai.
+
+$\\nabla \\cdot F_{\\text{naive}} = \\partial(2xy)/\\partial x + \\partial(x^2)/\\partial y = 2y + 0 = 2y$ (phụ thuộc $y$, nói chung khác 0). $\\nabla \\cdot F_{\\text{curl}} = \\partial(x^2)/\\partial x + \\partial(-2xy)/\\partial y = 2x - 2x = 0$ (LUÔN bằng 0, với mọi $x, y$).
+
+Tại $p = (1, 2)$: $F_{\\text{naive}} = (4, 1)$ với $\\nabla \\cdot F_{\\text{naive}} = 2(2) = 4$ — đang giãn nở cục bộ tại đây. $F_{\\text{curl}} = (1, -4)$ với $\\nabla \\cdot F_{\\text{curl}} = 0$ — bằng 0 ở mọi nơi, không chỉ tại điểm này.
+
+$\\nabla \\cdot F_{\\text{curl}} = \\partial^2\\psi/\\partial x\\partial y - \\partial^2\\psi/\\partial y\\partial x$ là một đẳng thức đạo hàm hỗn hợp: với bất kỳ $\\psi$ đủ mượt nào, hai đạo hàm này luôn bằng nhau (định lý Schwarz), nên hiệu của chúng luôn bằng 0 bất kể $\\psi$ cụ thể là gì.`,
+      en: `Given $\\psi(x,y) = x^2 y$: $\\partial\\psi/\\partial x = 2xy$, $\\partial\\psi/\\partial y = x^2$.
+
+$F_{\\text{naive}} = (2xy,\\ x^2)$. $F_{\\text{curl}} = (x^2,\\ -2xy)$ — swap the two components, then negate the second one.
+
+$\\nabla \\cdot F_{\\text{naive}} = \\partial(2xy)/\\partial x + \\partial(x^2)/\\partial y = 2y + 0 = 2y$ (depends on $y$, generally nonzero). $\\nabla \\cdot F_{\\text{curl}} = \\partial(x^2)/\\partial x + \\partial(-2xy)/\\partial y = 2x - 2x = 0$ (ALWAYS 0, for any $x, y$).
+
+At $p = (1, 2)$: $F_{\\text{naive}} = (4, 1)$ with $\\nabla \\cdot F_{\\text{naive}} = 2(2) = 4$ — locally expanding here. $F_{\\text{curl}} = (1, -4)$ with $\\nabla \\cdot F_{\\text{curl}} = 0$ — zero everywhere, not just here.
+
+$\\nabla \\cdot F_{\\text{curl}} = \\partial^2\\psi/\\partial x\\partial y - \\partial^2\\psi/\\partial y\\partial x$ is a mixed-partial identity: for any sufficiently smooth $\\psi$, these two derivatives are always equal (Schwarz's theorem), so their difference is 0 regardless of what $\\psi$ actually is.`,
+    },
   },
   {
     id: "curl-field-in-playground",

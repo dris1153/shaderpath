@@ -59,7 +59,7 @@ function sub(a: Vec3, b: Vec3): Vec3 {
 }
 
 function triangleNormal(a: Vec3, b: Vec3, c: Vec3): Vec3 {
-  // TODO: lấy 2 vector cạnh (b-a) và (c-a), cross chúng, rồi normalize kết quả
+  // TODO: take the two edge vectors (b-a) and (c-a), cross them, then normalize
   return { x: 0, y: 0, z: 0 };
 }`,
     solutionCode: `interface Vec3 { x: number; y: number; z: number }

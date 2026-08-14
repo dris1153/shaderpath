@@ -36,15 +36,14 @@ Then answer: if this exact node graph runs on two browsers — one compiling to 
         en: "I can state that this IS what TSL's portability means, not two effects that merely happen to look alike",
       },
     ],
-    solutionCode: `// t = sin(0.25 * 6 + 1.0) * 0.5 + 0.5
-//   = sin(2.5) * 0.5 + 0.5
-//   ≈ 0.5985 * 0.5 + 0.5
-//   ≈ 0.7993 → leans heavily toward colorB (0xf59e0b, amber)
-//
-// t does not change between WGSL and GLSL: TSL compiles the SAME node
-// graph to two target languages; sin/mul/add are standard IEEE 754
-// arithmetic in both. Different input -> different t; a different
-// backend alone never changes the math result.`,
+    solutionNote: {
+      vi: `Đối số của sin là $0.25 \\times 6 + 1.0 = 2.5$ radian, nên $t = \\sin(2.5) \\times 0.5 + 0.5 \\approx 0.5985 \\times 0.5 + 0.5 \\approx 0.7993$ — màu nghiêng hẳn về \`colorB\` (0xf59e0b, hổ phách).
+
+$t$ không đổi giữa WGSL và GLSL: TSL biên dịch CÙNG một node graph ra hai ngôn ngữ đích, và \`sin\`/\`mul\`/\`add\` đều là số học IEEE 754 chuẩn ở cả hai. Đổi đầu vào thì $t$ đổi; đổi riêng backend thì không bao giờ đổi kết quả toán học.`,
+      en: `The argument to sin is $0.25 \\times 6 + 1.0 = 2.5$ radians, so $t = \\sin(2.5) \\times 0.5 + 0.5 \\approx 0.5985 \\times 0.5 + 0.5 \\approx 0.7993$ — the colour leans heavily toward \`colorB\` (0xf59e0b, amber).
+
+$t$ does not change between WGSL and GLSL: TSL compiles the SAME node graph to two target languages, and \`sin\`/\`mul\`/\`add\` are standard IEEE 754 arithmetic in both. A different input changes $t$; a different backend alone never changes the maths.`,
+    },
   },
   {
     id: "tsl-vertex-wave",
@@ -65,8 +64,8 @@ function buildWaveMaterial() {
   const uWaveFreq = uniform(4);
   const material = new MeshBasicNodeMaterial();
 
-  // TODO: gán material.positionNode = positionLocal cộng thêm một vec3
-  // lệch theo trục Y = sin(positionLocal.x * uWaveFreq + time) * uAmp
+  // TODO: assign material.positionNode = positionLocal plus a vec3
+  // offset along Y = sin(positionLocal.x * uWaveFreq + time) * uAmp
 
   return material;
 }`,

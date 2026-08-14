@@ -36,21 +36,22 @@ Then answer: this point is only 8 units from the camera while far reaches all th
         en: "I can explain why depth-buffer precision concentrates near the near plane instead of spreading evenly out to far",
       },
     ],
-    solutionCode: `// w_clip = -z_view = -(-8) = 8
-//
-// z_clip = (far+near)/(near-far) * z_view + 2*far*near/(near-far)
-//        = (100.1 / -99.9) * (-8) + (20 / -99.9)
-//        = 8.016016... - 0.200200...
-//        = 7.815816...
-//
-// z_ndc = z_clip / w_clip = 7.815816 / 8 ≈ 0.976977
-//
-// The mapping from view-space z to NDC z is z_ndc ~ 1/z (not linear).
-// A point just 8% of the way from near to far along the *linear* axis
-// already sits at ~99% of the NDC range — most of [-1,1] is spent
-// resolving depth close to the camera, and the sliver left over is
-// stretched to cover everything out near "far". This is exactly why
-// z-fighting shows up on distant geometry, not nearby geometry.`,
+    solutionNote: {
+      vi: `$w_{clip} = -z_{view} = -(-8) = 8$.
+
+$z_{clip} = \\frac{far+near}{near-far} \\cdot z_{view} + \\frac{2\\,far\\,near}{near-far} = \\frac{100.1}{-99.9}\\cdot(-8) + \\frac{20}{-99.9} \\approx 8.016016 - 0.200200 \\approx 7.815816$.
+
+$z_{ndc} = z_{clip} / w_{clip} = 7.815816 / 8 \\approx 0.976977$.
+
+Phép ánh xạ từ $z$ trong view space sang $z$ trong NDC gần đúng là $z_{ndc} \\sim 1/z$ — không tuyến tính. Một điểm chỉ đi được 8% quãng đường từ near tới far theo trục *tuyến tính* đã nằm ở khoảng 99% dải NDC — phần lớn $[-1,1]$ được dùng để phân giải độ sâu gần camera, còn phần nhỏ còn lại bị kéo dãn ra để phủ hết quãng đường tới gần "far". Đây chính là lý do z-fighting xuất hiện ở hình học ở xa, không phải ở gần.`,
+      en: `$w_{clip} = -z_{view} = -(-8) = 8$.
+
+$z_{clip} = \\frac{far+near}{near-far} \\cdot z_{view} + \\frac{2\\,far\\,near}{near-far} = \\frac{100.1}{-99.9}\\cdot(-8) + \\frac{20}{-99.9} \\approx 8.016016 - 0.200200 \\approx 7.815816$.
+
+$z_{ndc} = z_{clip} / w_{clip} = 7.815816 / 8 \\approx 0.976977$.
+
+The mapping from view-space $z$ to NDC $z$ is roughly $z_{ndc} \\sim 1/z$ — not linear. A point just 8% of the way from near to far along the *linear* axis already sits at ~99% of the NDC range: most of $[-1,1]$ is spent resolving depth close to the camera, and the sliver left over is stretched to cover everything out near "far". This is exactly why z-fighting shows up on distant geometry, not nearby geometry.`,
+    },
   },
   {
     id: "code-lookat-basis",

@@ -40,21 +40,26 @@ Compute the final specular IBL vector as $L \\times (F_0 \\cdot \\text{fab.x} + 
         en: "Explains that scale (fab.x) is the term that carries color, since it multiplies directly against the F0 vector",
       },
     ],
-    solutionCode: `// Theo channel (R, G, B):
-// specularIBL = L * (F0 * fab.x + specularF90 * fab.y)
-//
-// R: 2.0 * (1.00 * 0.9 + 1 * 0.02) = 2.0 * 0.92  = 1.84
-// G: 1.8 * (0.80 * 0.9 + 1 * 0.02) = 1.8 * 0.74  = 1.332
-// B: 1.5 * (0.35 * 0.9 + 1 * 0.02) = 1.5 * 0.335 = 0.5025
-//
-// specularIBL ≈ (1.84, 1.33, 0.50)
-//
-// bias (fab.y) nhân với specularF90 — mặc định 1 (trắng) cho hầu hết vật
-// liệu — CỘNG THẲNG vào kết quả, không nhân với F0. Ở góc nhìn xiên,
-// dotNV -> 0 khiến bias tăng mạnh (đúng dự đoán Schlick: F(theta) -> 1 khi
-// theta -> 90 độ), nên số hạng bias LẤN ÁT số hạng scale*F0 và kéo màu
-// tổng hợp về gần trắng — đó chính là viền sáng trắng ở góc xiên, xuất
-// hiện trên MỌI kim loại bất kể F0 màu gì, vì bias không hề nhân với F0.`,
+    solutionNote: {
+      vi: `Theo từng kênh màu (R, G, B): $\\text{specularIBL} = L \\times (F_0 \\times \\text{fab.x} + \\text{specularF90} \\times \\text{fab.y})$.
+
+R: $2.0 \\times (1.00 \\times 0.9 + 1 \\times 0.02) = 2.0 \\times 0.92 = 1.84$
+G: $1.8 \\times (0.80 \\times 0.9 + 1 \\times 0.02) = 1.8 \\times 0.74 = 1.332$
+B: $1.5 \\times (0.35 \\times 0.9 + 1 \\times 0.02) = 1.5 \\times 0.335 = 0.5025$
+
+$\\text{specularIBL} \\approx (1.84, 1.33, 0.50)$.
+
+Bias (fab.y) nhân với specularF90 — mặc định là 1 (trắng) cho hầu hết vật liệu — CỘNG THẲNG vào kết quả, không nhân với $F_0$. Ở góc nhìn xiên, dotNV tiến về 0 khiến bias tăng mạnh (đúng dự đoán Schlick: $F(\\theta) \\to 1$ khi $\\theta \\to 90^\\circ$), nên số hạng bias LẤN ÁT số hạng scale×$F_0$ và kéo màu tổng hợp về gần trắng — đó chính là viền sáng trắng ở góc xiên, xuất hiện trên MỌI kim loại bất kể $F_0$ màu gì, vì bias không hề nhân với $F_0$.`,
+      en: `Per color channel (R, G, B): $\\text{specularIBL} = L \\times (F_0 \\times \\text{fab.x} + \\text{specularF90} \\times \\text{fab.y})$.
+
+R: $2.0 \\times (1.00 \\times 0.9 + 1 \\times 0.02) = 2.0 \\times 0.92 = 1.84$
+G: $1.8 \\times (0.80 \\times 0.9 + 1 \\times 0.02) = 1.8 \\times 0.74 = 1.332$
+B: $1.5 \\times (0.35 \\times 0.9 + 1 \\times 0.02) = 1.5 \\times 0.335 = 0.5025$
+
+$\\text{specularIBL} \\approx (1.84, 1.33, 0.50)$.
+
+Bias (fab.y) multiplied by specularF90 — default 1 (white) for most materials — is ADDED directly into the result, never multiplied by $F_0$. At a grazing angle, dotNV approaches 0, which makes bias climb sharply (exactly Schlick's prediction: $F(\\theta) \\to 1$ as $\\theta \\to 90^\\circ$), so the bias term OVERWHELMS the scale×$F_0$ term and pulls the combined color toward white — that's exactly the white grazing-angle rim, appearing on EVERY metal regardless of its $F_0$ color, because bias is never multiplied by $F_0$.`,
+    },
   },
   {
     id: "build-environment-from-scene-or-texture",

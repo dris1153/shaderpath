@@ -36,18 +36,14 @@ Given that browsers typically cap live WebGL contexts around 8 to 16, explain wh
         en: "I named at least one cost that does NOT disappear when consolidating to 1 canvas (e.g. still N scenes/cameras in memory, still N draw calls)",
       },
     ],
-    solutionCode: `// Cách 1: context thứ 9-17 (tuỳ trình duyệt) khiến trình duyệt LOSE
-// context CŨ NHẤT đang sống (LRU) để nhường chỗ — canvas đó nhận sự kiện
-// "webglcontextlost", nội dung biến mất, phải tự bắt sự kiện để phục hồi.
-// Với 24 khung nhìn, một số canvas sẽ trắng ngay khi trang tải xong.
-//
-// Cách 2 chỉ mở đúng 1 context nên không bao giờ chạm ngưỡng đó — nhưng
-// vẫn phải gl.render() 24 lần mỗi frame (một lần mỗi View/scissor rect),
-// vẫn cần 24 scene + camera sống trong bộ nhớ JS, và nếu 24 model dùng
-// texture/geometry khác nhau thì bộ nhớ GPU cho DỮ LIỆU đó không giảm.
-// Cái được tiết kiệm là chi phí KHỞI TẠO CONTEXT (biên dịch lại shader,
-// driver overhead riêng) và khả năng CHIA SẺ tài nguyên — một texture
-// nạp một lần, dùng chung cho nhiều scene nếu nội dung trùng nhau.`,
+    solutionNote: {
+      vi: `Cách 1: context thứ 9–17 (tuỳ trình duyệt) khiến trình duyệt LOSE context CŨ NHẤT đang sống (LRU) để nhường chỗ — canvas đó nhận sự kiện \`"webglcontextlost"\`, nội dung biến mất, phải tự bắt sự kiện để phục hồi. Với 24 khung nhìn, một số canvas sẽ trắng ngay khi trang tải xong.
+
+Cách 2 chỉ mở đúng 1 context nên không bao giờ chạm ngưỡng đó — nhưng vẫn phải gọi \`gl.render()\` 24 lần mỗi frame (một lần mỗi \`View\`/scissor rect), vẫn cần 24 scene + camera sống trong bộ nhớ JS, và nếu 24 model dùng texture/geometry khác nhau thì bộ nhớ GPU cho DỮ LIỆU đó không giảm. Cái được tiết kiệm là chi phí KHỞI TẠO CONTEXT (biên dịch lại shader, driver overhead riêng) và khả năng CHIA SẺ tài nguyên — một texture nạp một lần, dùng chung cho nhiều scene nếu nội dung trùng nhau.`,
+      en: `Approach 1: the 9th–17th context (depending on the browser) makes the browser LOSE the OLDEST live context (LRU) to make room — that canvas gets a \`"webglcontextlost"\` event, its content vanishes, and recovering it requires handling that event yourself. With 24 viewports, some canvases go blank right as the page finishes loading.
+
+Approach 2 only opens exactly 1 context, so it never hits that ceiling — but it still has to call \`gl.render()\` 24 times per frame (once per \`View\`/scissor rect), still needs 24 scenes + cameras alive in JS memory, and if the 24 models use different textures/geometry, the GPU memory for that DATA doesn't shrink. What gets saved is the cost of CONTEXT INITIALIZATION (recompiling shaders, separate driver overhead) and the ability to SHARE resources — a texture loaded once, reused across multiple scenes if the content is the same.`,
+    },
   },
   {
     id: "raw-scissor-loop",
@@ -63,9 +59,9 @@ Given that browsers typically cap live WebGL contexts around 8 to 16, explain wh
 }
 
 function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
-  // TODO 1: tắt scissor test, dọn sạch toàn bộ canvas MỘT LẦN
-  // TODO 2: với mỗi viewport — bật scissor test, setViewport + setScissor
-  //         theo rect, rồi renderer.render(scene, camera)
+  // TODO 1: disable scissor test, clear the whole canvas ONCE
+  // TODO 2: for each viewport -- enable scissor test, setViewport + setScissor
+  //         to rect, then renderer.render(scene, camera)
 }`,
     solutionCode: `function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
   renderer.setScissorTest(false);

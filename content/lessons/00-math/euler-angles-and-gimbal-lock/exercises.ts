@@ -40,18 +40,30 @@ Then answer in one sentence: do these two Euler triples describe the same rotati
         en: "I can explain why two different angle triples describe the same orientation at $\\beta=90°$",
       },
     ],
-    solutionCode: `// (60°, 25°): alpha - gamma = 35°
-// (10°, -25°): alpha - gamma = 10° - (-25°) = 35°  <- same difference
-//
-// sin(35°) ≈ 0.574, cos(35°) ≈ 0.819 for both pairs, so both plug into
-// R(alpha, 90°, gamma) and produce the identical matrix:
-//   [ 0     0.574   0.819]
-//   [ 0     0.819  -0.574]
-//   [-1     0       0    ]
-//
-// Cùng một hướng xoay, dù alpha/gamma riêng lẻ khác hẳn nhau — đúng là
-// gimbal lock: ở beta=90°, chỉ (alpha - gamma) còn mang thông tin, một
-// bậc tự do đã biến mất.`,
+    solutionNote: {
+      vi: `$(60^\\circ, 25^\\circ)$: $\\alpha - \\gamma = 35^\\circ$. $(10^\\circ, -25^\\circ)$: $\\alpha - \\gamma = 10^\\circ - (-25^\\circ) = 35^\\circ$ — cùng một hiệu số.
+
+$\\sin 35^\\circ \\approx 0.574$, $\\cos 35^\\circ \\approx 0.819$ cho cả hai cặp, nên cả hai đều cho ra đúng cùng một ma trận khi thay vào $R(\\alpha, 90^\\circ, \\gamma)$:
+
+\`\`\`
+[ 0     0.574   0.819]
+[ 0     0.819  -0.574]
+[-1     0       0    ]
+\`\`\`
+
+Cùng một hướng xoay, dù $\\alpha$/$\\gamma$ riêng lẻ khác hẳn nhau — đúng là gimbal lock: ở $\\beta=90^\\circ$, chỉ $(\\alpha - \\gamma)$ còn mang thông tin, một bậc tự do đã biến mất.`,
+      en: `$(60^\\circ, 25^\\circ)$: $\\alpha - \\gamma = 35^\\circ$. $(10^\\circ, -25^\\circ)$: $\\alpha - \\gamma = 10^\\circ - (-25^\\circ) = 35^\\circ$ — the same difference.
+
+$\\sin 35^\\circ \\approx 0.574$, $\\cos 35^\\circ \\approx 0.819$ for both pairs, so both plug into $R(\\alpha, 90^\\circ, \\gamma)$ and produce the exact same matrix:
+
+\`\`\`
+[ 0     0.574   0.819]
+[ 0     0.819  -0.574]
+[-1     0       0    ]
+\`\`\`
+
+Same rotation, even though $\\alpha$ and $\\gamma$ individually differ completely — this is gimbal lock: at $\\beta=90^\\circ$, only $(\\alpha - \\gamma)$ still carries information; one degree of freedom has vanished.`,
+    },
   },
   {
     id: "compose-euler-xyz-vs-zyx",
@@ -66,7 +78,7 @@ Run both with \`v = [1, 0, 0]\` and \`x = y = z = Math.PI / 2\`, and confirm the
     },
     starterCode: `type Vec3 = [number, number, number];
 
-// đã có sẵn / already given
+// already given
 function rotateX(v: Vec3, a: number): Vec3 {
   const [x, y, z] = v;
   return [x, y * Math.cos(a) - z * Math.sin(a), y * Math.sin(a) + z * Math.cos(a)];
@@ -77,17 +89,17 @@ function rotateY(v: Vec3, a: number): Vec3 {
 }
 
 function rotateZ(v: Vec3, a: number): Vec3 {
-  // TODO: theo mẫu rotateX/rotateY, nhưng z giữ nguyên, x/y trộn với nhau
+  // TODO: follow the rotateX/rotateY pattern, but z stays put, x/y mix together
   return v;
 }
 
 function applyEulerXYZ(v: Vec3, x: number, y: number, z: number): Vec3 {
-  // TODO: xoay X trước (lồng trong cùng), rồi Y, rồi Z (ngoài cùng)
+  // TODO: rotate X first (innermost call), then Y, then Z (outermost)
   return v;
 }
 
 function applyEulerZYX(v: Vec3, x: number, y: number, z: number): Vec3 {
-  // TODO: thứ tự ngược lại: Z trước, rồi Y, rồi X
+  // TODO: reverse order: Z first, then Y, then X
   return v;
 }`,
     solutionCode: `type Vec3 = [number, number, number];

@@ -36,15 +36,18 @@ Then answer: how many pixels does the dpr $2$ buffer have compared to a dpr $1$ 
         en: "I can explain why the ratio is dpr² — both width and height are each multiplied by dpr",
       },
     ],
-    solutionCode: `// buffer.width  = round(800 * 2) = 1600
-// buffer.height = round(450 * 2) = 900
-//
-// Tổng pixel dpr=2: 1600 * 900 = 1.440.000
-// Tổng pixel dpr=1:  800 * 450 =   360.000
-// Tỉ lệ: 1.440.000 / 360.000 = 4 = 2²
-//
-// dpr nhân riêng từng chiều (width *= dpr, height *= dpr), nên diện tích
-// (width * height) nhân dpr * dpr = dpr² — không phải dpr đơn thuần.`,
+    solutionNote: {
+      vi: `\`buffer.width = round(800 × 2) = 1600\`, \`buffer.height = round(450 × 2) = 900\`.
+
+Tổng pixel ở dpr=2: \`1600 × 900 = 1.440.000\`. Tổng pixel ở dpr=1: \`800 × 450 = 360.000\`. Tỉ lệ: \`1.440.000 / 360.000 = 4 = 2²\`.
+
+dpr nhân riêng từng chiều (width *= dpr, height *= dpr), nên diện tích (width × height) nhân dpr × dpr = dpr² — không phải dpr đơn thuần.`,
+      en: `\`buffer.width = round(800 × 2) = 1600\`, \`buffer.height = round(450 × 2) = 900\`.
+
+Total pixels at dpr=2: \`1600 × 900 = 1,440,000\`. Total pixels at dpr=1: \`800 × 450 = 360,000\`. Ratio: \`1,440,000 / 360,000 = 4 = 2²\`.
+
+dpr is multiplied into each dimension separately (width *= dpr, height *= dpr), so the area (width × height) gets multiplied by dpr × dpr = dpr² — not a plain dpr.`,
+    },
   },
   {
     id: "correct-resize-routine",
@@ -58,10 +61,10 @@ Then answer: how many pixels does the dpr $2$ buffer have compared to a dpr $1$ 
   gl: WebGL2RenderingContext,
   dprCap: number,
 ): boolean {
-  // TODO 1: dpr = min(devicePixelRatio hiện tại, dprCap) — nhớ fallback || 1
+  // TODO 1: dpr = min(current devicePixelRatio, dprCap) — remember the || 1 fallback
   // TODO 2: width/height = round(clientWidth/clientHeight * dpr)
-  // TODO 3: chỉ gán canvas.width/height + gọi gl.viewport khi size đổi
-  // TODO 4: trả về true nếu đã resize, false nếu không
+  // TODO 3: only assign canvas.width/height + call gl.viewport when size changed
+  // TODO 4: return true if resized, false otherwise
   return false;
 }`,
     solutionCode: `function resizeCanvasToDisplaySize(

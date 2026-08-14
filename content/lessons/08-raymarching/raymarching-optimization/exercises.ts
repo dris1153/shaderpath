@@ -36,17 +36,18 @@ Without running code, compute $t_{near}$ and $t_{far}$ via the slab method for E
         en: "I correctly concluded overall tNear = max(-∞,-∞,2) = 2, tFar = min(∞,∞,8) = 8, and since tFar ≥ max(tNear,0) the ray DOES march, starting at t=2 rather than t=0",
       },
     ],
-    solutionCode: `// x: rd.x=0 -> invD.x=+Inf -> [t0s.x,t1s.x] = [-Inf, +Inf] (no constraint)
-// y: rd.y=0 -> invD.y=+Inf -> [t0s.y,t1s.y] = [-Inf, +Inf] (no constraint)
-// z: rd.z=-1 -> invD.z=-1
-//    t0s.z = (bmin.z - ro.z) * invD.z = (-3 - 5) * -1 = 8
-//    t1s.z = (bmax.z - ro.z) * invD.z = ( 3 - 5) * -1 = 2
-//    tsm.z = min(8,2) = 2, tbg.z = max(8,2) = 8
-//
-// tNear = max(-Inf, -Inf, 2) = 2
-// tFar  = min( Inf,  Inf, 8) = 8
-// tFar (8) >= max(tNear, 0) (2) -> the ray HITS the box.
-// March starts at t=2 (box entry), stops at t=8 (box exit) — NOT from t=0.`,
+    solutionNote: {
+      vi: `Trục x: $rd_x=0 \\Rightarrow invD_x=+\\infty \\Rightarrow [t0s_x, t1s_x] = [-\\infty, +\\infty]$ (không giới hạn gì). Trục y tương tự.
+
+Trục z: $rd_z=-1 \\Rightarrow invD_z=-1$. $t0s_z = (bmin_z - ro_z) \\times invD_z = (-3-5) \\times -1 = 8$. $t1s_z = (bmax_z - ro_z) \\times invD_z = (3-5) \\times -1 = 2$. $tsm_z = \\min(8,2) = 2$, $tbg_z = \\max(8,2) = 8$.
+
+$t_{near} = \\max(-\\infty,-\\infty,2) = 2$. $t_{far} = \\min(\\infty,\\infty,8) = 8$. Vì $t_{far}\\ (8) \\ge \\max(t_{near},0)\\ (2)$, tia trúng box. March bắt đầu tại $t=2$ (điểm vào box), dừng tại $t=8$ (điểm ra) — không phải từ $t=0$.`,
+      en: `x-axis: $rd_x=0 \\Rightarrow invD_x=+\\infty \\Rightarrow [t0s_x, t1s_x] = [-\\infty, +\\infty]$ (no constraint). The y-axis is the same.
+
+z-axis: $rd_z=-1 \\Rightarrow invD_z=-1$. $t0s_z = (bmin_z - ro_z) \\times invD_z = (-3-5) \\times -1 = 8$. $t1s_z = (bmax_z - ro_z) \\times invD_z = (3-5) \\times -1 = 2$. $tsm_z = \\min(8,2) = 2$, $tbg_z = \\max(8,2) = 8$.
+
+$t_{near} = \\max(-\\infty,-\\infty,2) = 2$. $t_{far} = \\min(\\infty,\\infty,8) = 8$. Since $t_{far}\\ (8) \\ge \\max(t_{near},0)\\ (2)$, the ray hits the box. The march starts at $t=2$ (box entry), stops at $t=8$ (box exit) — NOT from $t=0$.`,
+    },
   },
   {
     id: "bounded-scaled-epsilon-march",

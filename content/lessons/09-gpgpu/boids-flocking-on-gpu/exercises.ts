@@ -40,19 +40,18 @@ With $k = 8$: compute the reads per boid, the total reads per frame for the whol
         en: "Describes a situation where too large a k leaves a specific region of the grid rarely sampled by any boid, causing patchy/desynced flocking there",
       },
     ],
-    solutionCode: `// samples per boid = N / k = 65536 / 8 = 8192
-// total reads/frame  = N * (N / k) = 65536 * 8192 = 536,870,912 (~536.9M)
-// full scan          = N * N       = 65536 * 65536 = 4,294,967,296 (~4.295B)
-// reduction ratio     = N^2 / (N * N/k) = k = 8x
-//
-// Texel INDEX has no relationship to spatial position (two boids next to
-// each other in index space can be at opposite ends of the flock), so a
-// fixed index stride still lands on a pseudo-random spread of boids across
-// the whole grid — flocking rules only need an approximate local average,
-// not an exact neighbor set, so that noise doesn't visibly break the result.
-// Failure mode: if k is close to N (very few samples), a boid's stride
-// might skip every texel actually near it in space for several frames in a
-// row, making flocking look patchy/desynced in whichever region got unlucky.`,
+    solutionNote: {
+      vi: `Số lần đọc mỗi boid $= N/k = 65536/8 = 8192$. Tổng số lần đọc mỗi frame $= N \\times (N/k) = 65536 \\times 8192 = 536{,}870{,}912$ ($\\approx 536.9$ triệu). Quét đầy đủ $= N \\times N = 65536 \\times 65536 = 4{,}294{,}967{,}296$ ($\\approx 4.295$ tỷ). Tỉ lệ giảm $= N^2 / (N \\times N/k) = k = 8$ lần.
+
+Chỉ số texel không liên quan gì đến vị trí không gian (hai boid liền kề nhau trong không gian chỉ số có thể nằm ở hai đầu đối lập của cả đàn), nên một stride chỉ số cố định vẫn cho một mẫu trải giả-ngẫu-nhiên trên toàn lưới — quy tắc flocking chỉ cần một trung bình cục bộ ước lượng, không cần tập hàng xóm chính xác, nên nhiễu đó không phá vỡ kết quả một cách rõ rệt.
+
+Tình huống lỗi: nếu $k$ gần bằng $N$ (rất ít mẫu), stride của một boid có thể bỏ lỡ mọi texel thực sự gần nó trong không gian suốt nhiều frame liên tiếp, khiến flocking trông loang lổ/mất đồng bộ ở bất kỳ vùng nào xui xẻo gặp phải điều đó.`,
+      en: `Samples per boid $= N/k = 65536/8 = 8192$. Total reads/frame $= N \\times (N/k) = 65536 \\times 8192 = 536{,}870{,}912$ ($\\approx 536.9$M). Full scan $= N \\times N = 65536 \\times 65536 = 4{,}294{,}967{,}296$ ($\\approx 4.295$B). Reduction ratio $= N^2 / (N \\times N/k) = k = 8\\times$.
+
+Texel INDEX has no relationship to spatial position (two boids next to each other in index space can be at opposite ends of the flock), so a fixed index stride still lands on a pseudo-random spread of boids across the whole grid — flocking rules only need an approximate local average, not an exact neighbor set, so that noise doesn't visibly break the result.
+
+Failure mode: if $k$ is close to $N$ (very few samples), a boid's stride might skip every texel actually near it in space for several frames in a row, making flocking look patchy or desynced in whichever region got unlucky.`,
+    },
   },
   {
     id: "flocking-steering-in-ts",

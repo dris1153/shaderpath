@@ -36,16 +36,18 @@ Briefly explain the mechanism behind each answer.`,
         en: "I know that if the code checks neither status, the canvas just shows the clear color, with no exception pointing at the actual bug",
       },
     ],
-    solutionCode: `// (a) gl.compileShader KHÔNG ném exception dù GLSL sai cú pháp — nó chỉ
-//     đặt COMPILE_STATUS = false bên trong shader object.
-// (b) gl.linkProgram SẼ tự fail (LINK_STATUS = false): theo spec, link
-//     yêu cầu MỌI shader đính kèm phải compile thành công trước đó.
-// (c) Nếu code không kiểm tra cả hai status, useProgram trên một program
-//     link-fail sinh lỗi GL_INVALID_OPERATION (không phải JS exception) và
-//     không đổi chương trình đang active; drawArrays sau đó không vẽ gì
-//     hợp lệ -> canvas chỉ hiện đúng màu clearColor, không một dòng log
-//     nào chỉ thẳng vào dòng GLSL sai, trừ khi tự gọi
-//     getShaderInfoLog/getProgramInfoLog.`,
+    solutionNote: {
+      vi: `(a) \`gl.compileShader\` KHÔNG ném exception dù GLSL sai cú pháp — nó chỉ đặt \`COMPILE_STATUS = false\` bên trong shader object.
+
+(b) \`gl.linkProgram\` SẼ tự fail (\`LINK_STATUS = false\`): theo spec, link yêu cầu MỌI shader đính kèm phải compile thành công trước đó.
+
+(c) Nếu code không kiểm tra cả hai status, \`useProgram\` trên một program link-fail sinh lỗi \`GL_INVALID_OPERATION\` (không phải JS exception) và không đổi chương trình đang active; \`drawArrays\` sau đó không vẽ gì hợp lệ, nên canvas chỉ hiện đúng màu clearColor, không một dòng log nào chỉ thẳng vào dòng GLSL sai, trừ khi tự gọi \`getShaderInfoLog\`/\`getProgramInfoLog\`.`,
+      en: `(a) \`gl.compileShader\` does NOT throw an exception even with broken GLSL syntax — it only sets \`COMPILE_STATUS = false\` inside the shader object.
+
+(b) \`gl.linkProgram\` WILL fail on its own (\`LINK_STATUS = false\`): per spec, linking requires EVERY attached shader to have already compiled successfully.
+
+(c) If the code checks neither status, calling \`useProgram\` on a link-failed program raises a \`GL_INVALID_OPERATION\` error (not a JS exception) and leaves the active program unchanged; the subsequent \`drawArrays\` draws nothing valid, so the canvas just shows the clear color, with no log line pointing at the actual broken GLSL line unless you call \`getShaderInfoLog\`/\`getProgramInfoLog\` yourself.`,
+    },
   },
   {
     id: "fix-broken-attribute-wiring",
@@ -62,8 +64,8 @@ gl.enableVertexAttribArray(aPosition);
 gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 20, 0);
 
 gl.enableVertexAttribArray(aColor);
-// BUG: chỉ đọc 2 component màu (thiếu kênh B) và offset trùng với
-// offset của aPosition thay vì trỏ đúng vào chỗ màu bắt đầu
+// BUG: only reads 2 color components (missing the B channel) and the offset
+// matches aPosition's offset instead of pointing at where color actually starts
 gl.vertexAttribPointer(aColor, 2, gl.FLOAT, false, 20, 0);`,
     solutionCode: `const aPosition = gl.getAttribLocation(program, "aPosition");
 const aColor = gl.getAttribLocation(program, "aColor");
@@ -72,7 +74,7 @@ gl.enableVertexAttribArray(aPosition);
 gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 20, 0);
 
 gl.enableVertexAttribArray(aColor);
-// 3 component (r,g,b); offset 8 = sau 2 float (x,y) = 2 * 4 byte
+// 3 components (r,g,b); offset 8 = after 2 floats (x,y) = 2 * 4 bytes
 gl.vertexAttribPointer(aColor, 3, gl.FLOAT, false, 20, 8);`,
     hints: [
       {

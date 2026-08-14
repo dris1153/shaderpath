@@ -36,19 +36,22 @@ Does the loop stop right at step 1 with $\\epsilon = 0.01$? Then explain briefly
         en: "I can explain why a ray tilted near the silhouette needs far more steps, even from the same distance to the center",
       },
     ],
-    solutionCode: `// t0 = 0, p0 = ro = (0,0,4)
-// f(p0) = |(0,0,4)| - 1 = 4 - 1 = 3  ->  t1 = t0 + 3 = 3
-// p1 = ro + t1*rd = (0,0,4) + 3*(0,0,-1) = (0,0,1)
-// f(p1) = |(0,0,1)| - 1 = 1 - 1 = 0 < epsilon (0.01)  ->  HIT ngay ở bước 1
-//
-// rd nhắm thẳng vào tâm nên quãng đường còn lại tới bề mặt CHÍNH XÁC bằng
-// f(ro) -- trường hợp lý tưởng, hội tụ trong đúng 1 bước.
-//
-// Một tia lệch gần rìa silhouette không có may mắn đó: bề mặt gần nhất nằm
-// LỆCH SANG BÊN so với hướng tia, nên f(p) tuy vẫn nhỏ (có bề mặt ở gần)
-// nhưng mỗi bước t += f(p) chỉ đẩy t tiến một chút DỌC THEO TIA, trong khi
-// điểm chạm thật còn cách rất xa theo đúng hướng đó -- cần hàng chục bước
-// nhỏ dần mới hội tụ, thay vì 1 bước duy nhất.`,
+    solutionNote: {
+      vi: `$t_0 = 0$, $p_0 = ro = (0,0,4)$. $f(p_0) = \\|(0,0,4)\\| - 1 = 4 - 1 = 3$, nên $t_1 = t_0 + 3 = 3$.
+
+$p_1 = ro + t_1 \\cdot rd = (0,0,4) + 3(0,0,-1) = (0,0,1)$. $f(p_1) = \\|(0,0,1)\\| - 1 = 1 - 1 = 0 < \\epsilon\\ (0.01)$ — chạm đích ngay ở bước 1.
+
+$rd$ nhắm thẳng vào tâm nên quãng đường còn lại tới bề mặt CHÍNH XÁC bằng $f(ro)$ — trường hợp lý tưởng, hội tụ trong đúng 1 bước.
+
+Một tia lệch gần rìa silhouette không có may mắn đó: bề mặt gần nhất nằm lệch sang bên so với hướng tia, nên $f(p)$ tuy vẫn nhỏ (có bề mặt ở gần) nhưng mỗi bước $t \\mathrel{+}= f(p)$ chỉ đẩy $t$ tiến một chút dọc theo tia, trong khi điểm chạm thật còn cách rất xa theo đúng hướng đó — cần hàng chục bước nhỏ dần mới hội tụ, thay vì 1 bước duy nhất.`,
+      en: `$t_0 = 0$, $p_0 = ro = (0,0,4)$. $f(p_0) = \\|(0,0,4)\\| - 1 = 4 - 1 = 3$, so $t_1 = t_0 + 3 = 3$.
+
+$p_1 = ro + t_1 \\cdot rd = (0,0,4) + 3(0,0,-1) = (0,0,1)$. $f(p_1) = \\|(0,0,1)\\| - 1 = 1 - 1 = 0 < \\epsilon\\ (0.01)$ — the ray hits right at step 1.
+
+$rd$ aims straight at the center, so the remaining distance to the surface EXACTLY equals $f(ro)$ — the ideal case, converging in exactly 1 step.
+
+A ray tilted near the silhouette doesn't get that luck: the nearest surface sits off to the side of the ray's direction, so $f(p)$ is still small (there's surface nearby) but each step $t \\mathrel{+}= f(p)$ only pushes $t$ forward a little along the ray, while the true hit point is still far away in that exact direction — it takes dozens of shrinking steps to converge, instead of just one.`,
+    },
   },
   {
     id: "1d-sphere-tracing-step-visualizer",
@@ -59,28 +62,28 @@ Does the loop stop right at step 1 with $\\epsilon = 0.01$? Then explain briefly
     },
     starterCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
-  float x = uv.x * 4.0; // trục hoành biểu diễn t trong [0, 4]
+  float x = uv.x * 4.0; // the horizontal axis represents t in [0, 4]
 
   float t = 0.0;
   float target = 2.0;
   vec3 color = vec3(0.08, 0.08, 0.12);
 
   for (int i = 0; i < 8; i++) {
-    // TODO 1: f(t) = khoảng cách 1D tới target, bán kính an toàn 0.15
+    // TODO 1: f(t) = 1D distance to target, safe radius 0.15
     float d = 0.0;
 
-    // TODO 2: nếu pixel này (x) đủ gần vị trí t hiện tại (abs(x - t) < 0.02),
-    // tô sáng nó bằng mix(màu xanh, màu đỏ, float(i) / 8.0)
+    // TODO 2: if this pixel (x) is close enough to the current t position (abs(x - t) < 0.02),
+    // light it up with mix(blue, red, float(i) / 8.0)
 
-    if (d < 0.01) break; // hit: dừng vòng lặp, không march thêm
-    t += d; // TODO 3: bước tới theo đúng công thức sphere tracing
+    if (d < 0.01) break; // hit: stop the loop, don't march further
+    t += d; // TODO 3: step forward using the sphere tracing formula
   }
 
   fragColor = vec4(color, 1.0);
 }`,
     solutionCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
-  float x = uv.x * 4.0; // trục hoành biểu diễn t trong [0, 4]
+  float x = uv.x * 4.0; // the horizontal axis represents t in [0, 4]
 
   float t = 0.0;
   float target = 2.0;

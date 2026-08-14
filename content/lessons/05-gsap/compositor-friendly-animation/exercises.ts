@@ -36,17 +36,18 @@ Compute the estimated total layout cost for one frame when all 150 rows animate 
         en: "I explained why transform: translateX removes nearly all of this cost: the GPU just translates an already-rasterized layer bitmap, with no need to know about any of the 40 sibling nodes — the cost stays roughly constant whether 1 or 1000 elements animate",
       },
     ],
-    solutionCode: `// Chi phí layout ước lượng = số hàng animate × số node bị chạm mỗi lần × chi phí/node
-// = 150 × 40 × 0.02ms = 120ms mỗi frame
-//
-// Ngân sách 60fps = 1000/60 ≈ 16.7ms → 120ms gấp ~7.2 lần ngân sách,
-// tương đương tụt xuống dưới 10fps trong lúc animation chạy — jank rõ rệt,
-// không phải chỉ "hơi giật".
-//
-// Đổi sang transform: translateX(...) loại gần hết chi phí layout: GPU chỉ
-// dịch layer bitmap đã raster sẵn, không cần biết đến 40 node anh em nào cả
-// — chi phí gần như hằng số dù animate 1 hay 1000 phần tử cùng lúc, vì
-// compositor không lan invalidation qua containing block như layout engine.`,
+    solutionNote: {
+      vi: `Chi phí layout ước lượng = số hàng animate × số node bị chạm mỗi lần × chi phí/node $= 150 \\times 40 \\times 0.02\\text{ms} = 120\\text{ms}$ mỗi frame.
+
+Ngân sách 60fps $= 1000/60 \\approx 16.7\\text{ms}$ → 120ms gấp ~7.2 lần ngân sách, tương đương tụt xuống dưới 10fps trong lúc animation chạy — jank rõ rệt, không phải chỉ "hơi giật".
+
+Đổi sang \`transform: translateX(...)\` loại gần hết chi phí layout: GPU chỉ dịch layer bitmap đã raster sẵn, không cần biết đến 40 node anh em nào cả — chi phí gần như hằng số dù animate 1 hay 1000 phần tử cùng lúc, vì compositor không lan invalidation qua containing block như layout engine.`,
+      en: `Estimated layout cost = number of animating rows × nodes touched per change × cost/node $= 150 \\times 40 \\times 0.02\\text{ms} = 120\\text{ms}$ per frame.
+
+60fps budget $= 1000/60 \\approx 16.7\\text{ms}$ → 120ms is ~7.2x over budget, equivalent to dropping below 10fps while the animation runs — clearly visible jank, not just "a bit choppy".
+
+Switching to \`transform: translateX(...)\` removes nearly all of that layout cost: the GPU just translates an already-rasterized layer bitmap, with no need to know about any of those 40 sibling nodes — the cost stays roughly constant whether 1 or 1000 elements animate simultaneously, since the compositor never propagates invalidation through the containing block the way the layout engine does.`,
+    },
   },
   {
     id: "scalex-progress-bar",
@@ -56,13 +57,13 @@ Compute the estimated total layout cost for one frame when all 150 rows animate 
       en: `Write two functions for a purely compositor-driven progress bar: \`initProgressBar(el)\` sets the scale anchor exactly once, and \`setProgressCompositor(el, ratio)\` updates the completed ratio on every call. Never set \`el.style.width\` anywhere — that's the layout path, not the compositor one.`,
     },
     starterCode: `function initProgressBar(el: HTMLElement): void {
-  // TODO: set transform-origin một lần duy nhất, đặt neo bên trái
-  // (mặc định là 50% 50% — tâm — không phải mép trái)
+  // TODO: set transform-origin exactly once, anchored to the left
+  // (default is 50% 50% — center — not the left edge)
 }
 
 function setProgressCompositor(el: HTMLElement, ratio: number): void {
-  // TODO: clamp ratio về [0, 1] rồi set el.style.transform = scaleX(...)
-  // KHÔNG set el.style.width ở đây
+  // TODO: clamp ratio to [0, 1] then set el.style.transform = scaleX(...)
+  // Do NOT set el.style.width here
 }`,
     solutionCode: `function initProgressBar(el: HTMLElement): void {
   el.style.transformOrigin = "left center";

@@ -40,13 +40,14 @@ export const exercises: Exercise[] = [
         en: "I computed the fragment shader runs roughly 80,000 times (400×400/2) and labeled it as an estimate",
       },
     ],
-    solutionCode: `// (a) V = 0.5*(1,0,0) + 0.3*(0,1,0) + 0.2*(0,0,1)
-//       = (0.5, 0, 0) + (0, 0.3, 0) + (0, 0, 0.2)
-//       = (0.5, 0.3, 0.2)
-//
-// (b) vertex shader: đúng 3 lần (3 đỉnh, không phụ thuộc kích thước)
-//     fragment shader: ước lượng ~ (400 * 400) / 2 = 80,000 lần
-//     (diện tích tam giác trong pixel ~ số fragment được sinh ra)`,
+    solutionNote: {
+      vi: `(a) $V = 0.5(1,0,0) + 0.3(0,1,0) + 0.2(0,0,1) = (0.5, 0, 0) + (0, 0.3, 0) + (0, 0, 0.2) = (0.5, 0.3, 0.2)$.
+
+(b) vertex shader: đúng 3 lần (3 đỉnh, không phụ thuộc kích thước tam giác). fragment shader: ước lượng khoảng $(400 \\times 400) / 2 = 80.000$ lần (diện tích tam giác tính theo pixel xấp xỉ số fragment được sinh ra).`,
+      en: `(a) $V = 0.5(1,0,0) + 0.3(0,1,0) + 0.2(0,0,1) = (0.5, 0, 0) + (0, 0.3, 0) + (0, 0, 0.2) = (0.5, 0.3, 0.2)$.
+
+(b) vertex shader: exactly 3 times (3 vertices, independent of triangle size). fragment shader: roughly $(400 \\times 400) / 2 = 80,000$ times (the triangle's pixel area approximates the number of fragments generated).`,
+    },
   },
   {
     id: "compute-barycentric-coords",
@@ -61,8 +62,8 @@ export const exercises: Exercise[] = [
 }
 
 function barycentric(p: Point, a: Point, b: Point, c: Point): [number, number, number] {
-  // TODO: dùng công thức toạ độ trọng tâm chuẩn (Cramer's rule cho 2D).
-  // Gợi ý: tính "denom" dùng chung cho cả l0 và l1 trước.
+  // TODO: use the standard barycentric coordinate formula (2D Cramer's rule).
+  // Hint: compute "denom" shared by both l0 and l1 first.
   return [0, 0, 0];
 }`,
     solutionCode: `interface Point {
@@ -78,9 +79,9 @@ function barycentric(p: Point, a: Point, b: Point, c: Point): [number, number, n
   return [l0, l1, l2];
 }
 
-// barycentric(centroid, A, B, C) luôn ra (1/3, 1/3, 1/3)
-// Một thành phần âm nghĩa là P nằm NGOÀI tam giác — đúng phép kiểm tra
-// coverage mà rasterizer dùng trước khi sinh fragment.`,
+// barycentric(centroid, A, B, C) always returns (1/3, 1/3, 1/3)
+// A negative component means P lies OUTSIDE the triangle — exactly the
+// coverage check a rasterizer uses before generating a fragment.`,
     hints: [
       {
         vi: "$\\lambda_0 + \\lambda_1 + \\lambda_2 = 1$ luôn đúng — tính $\\lambda_0$ và $\\lambda_1$ trước rồi suy ra $\\lambda_2 = 1 - \\lambda_0 - \\lambda_1$, đỡ một phép tính.",

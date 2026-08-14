@@ -36,17 +36,18 @@ Then recompute $f$ for fov $= 100°$. State whether $f$ goes up or down, and whe
         en: "Correctly answered: without updateProjectionMatrix(), the frame still uses the old f",
       },
     ],
-    solutionCode: `// f(50°)  = 1 / tan(25°) ≈ 1 / 0.4663 ≈ 2.144
-// f(100°) = 1 / tan(50°) ≈ 1 / 1.1918 ≈ 0.839
-//
-// f giảm khi fov tăng — ma trận P "phóng to" toạ độ clip ít hơn, cùng một
-// điểm view-space chiếu ra gần tâm màn hình hơn → vật trông nhỏ và xa hơn.
-// Đây chính xác là ống kính góc rộng: nhìn được nhiều hơn, mỗi vật chiếm ít
-// pixel hơn.
-//
-// camera.fov chỉ là property JS thường. projectionMatrix KHÔNG tự cập nhật
-// khi field này đổi — thiếu updateProjectionMatrix() thì renderer.render()
-// vẫn dùng đúng ma trận P cũ, tính từ f(50°), dù camera.fov đã đọc ra 100.`,
+    solutionNote: {
+      vi: `f(50°) = 1 / tan(25°) ≈ 1 / 0.4663 ≈ 2.144, và f(100°) = 1 / tan(50°) ≈ 1 / 1.1918 ≈ 0.839.
+
+f giảm khi fov tăng — ma trận P "phóng to" toạ độ clip ít hơn, cùng một điểm view-space chiếu ra gần tâm màn hình hơn → vật trông nhỏ và xa hơn. Đây chính xác là ống kính góc rộng: nhìn được nhiều hơn, mỗi vật chiếm ít pixel hơn.
+
+\`camera.fov\` chỉ là property JS thường. \`projectionMatrix\` KHÔNG tự cập nhật khi field này đổi — thiếu \`updateProjectionMatrix()\` thì \`renderer.render()\` vẫn dùng đúng ma trận P cũ, tính từ f(50°), dù \`camera.fov\` đã đọc ra 100.`,
+      en: `f(50°) = 1 / tan(25°) ≈ 1 / 0.4663 ≈ 2.144, and f(100°) = 1 / tan(50°) ≈ 1 / 1.1918 ≈ 0.839.
+
+f decreases as fov increases — the P matrix "scales up" clip coordinates less, so the same view-space point projects closer to the screen's center → objects look smaller and farther away. This is exactly a wide-angle lens: you see more, but each object takes up fewer pixels.
+
+\`camera.fov\` is just an ordinary JS property. \`projectionMatrix\` does NOT update itself when this field changes — without \`updateProjectionMatrix()\`, \`renderer.render()\` keeps using the old P matrix, computed from f(50°), even though \`camera.fov\` now reads 100.`,
+    },
   },
   {
     id: "responsive-three-app",
@@ -65,9 +66,9 @@ function createResponsiveApp(canvas: HTMLCanvasElement) {
   function resize() {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    // TODO: renderer.setSize(w, h, false) — không ghi đè CSS
-    // TODO: cập nhật camera.aspect
-    // TODO: gọi camera.updateProjectionMatrix()
+    // TODO: renderer.setSize(w, h, false) — don't overwrite CSS
+    // TODO: update camera.aspect
+    // TODO: call camera.updateProjectionMatrix()
   }
 
   resize();
@@ -83,11 +84,11 @@ function createResponsiveApp(canvas: HTMLCanvasElement) {
   function resize() {
     const w = canvas.clientWidth;
     const h = canvas.clientHeight;
-    // updateStyle=false: canvas đã được định kích thước bằng CSS, không cần
-    // renderer ghi đè inline style.
+    // updateStyle=false: the canvas is already sized via CSS, no need for
+    // the renderer to overwrite the inline style.
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    // Bắt buộc: aspect chỉ là field JS, ma trận P không tự tính lại.
+    // Required: aspect is just a JS field, the P matrix doesn't recompute itself.
     camera.updateProjectionMatrix();
   }
 

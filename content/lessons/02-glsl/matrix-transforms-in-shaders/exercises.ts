@@ -50,14 +50,14 @@ Then: if someone MEANT to rotate $90°$ counter-clockwise but listed $R(90°)$'s
         en: "I showed that the row-typo mistake yields mat2(0,-1,1,0) = R(-90°), rotating the OPPOSITE direction from intended",
       },
     ],
-    solutionCode: `// p2 = m * vec2(1,0) = cột 0 của m = (0.0, 1.0)
-// So khớp cột 0 của R(θ) = (cosθ, sinθ): cosθ = 0, sinθ = 1 → θ = 90°
-// → m chính là R(90°): xoay 90° NGƯỢC kim đồng hồ (X phải, Y lên)
-//
-// Gõ nhầm hàng-thành-cột cho R(90°): liệt kê 4 số theo thứ tự đọc trên giấy
-// (cos90, -sin90, sin90, cos90) = (0, -1, 1, 0), nhét thẳng vào mat2()
-// → mat2(0.0, -1.0, 1.0, 0.0) — GLSL đọc thành cột 0=(0,-1), cột 1=(1,0)
-// → đây chính là R(-90°): xoay 90° THEO chiều kim đồng hồ — NGƯỢC hướng dự định.`,
+    solutionNote: {
+      vi: `$p_2 = m \\times \\mathrm{vec2}(1,0) = $ cột 0 của $m$ $= (0.0, 1.0)$. So khớp với cột 0 của $R(\\theta) = (\\cos\\theta, \\sin\\theta)$: $\\cos\\theta = 0$, $\\sin\\theta = 1$ → $\\theta = 90^\\circ$ → $m$ chính là $R(90^\\circ)$: xoay $90^\\circ$ NGƯỢC chiều kim đồng hồ (X phải, Y lên).
+
+Gõ nhầm hàng-thành-cột cho $R(90^\\circ)$: liệt kê 4 số theo thứ tự đọc trên giấy $(\\cos 90^\\circ, -\\sin 90^\\circ, \\sin 90^\\circ, \\cos 90^\\circ) = (0, -1, 1, 0)$, nhét thẳng vào \`mat2()\` → \`mat2(0.0, -1.0, 1.0, 0.0)\` — GLSL đọc thành cột 0$=(0,-1)$, cột 1$=(1,0)$ → đây chính là $R(-90^\\circ)$: xoay $90^\\circ$ THEO chiều kim đồng hồ — NGƯỢC hướng dự định.`,
+      en: `$p_2 = m \\times \\mathrm{vec2}(1,0) = $ column 0 of $m$ $= (0.0, 1.0)$. Matching that against column 0 of $R(\\theta) = (\\cos\\theta, \\sin\\theta)$: $\\cos\\theta = 0$, $\\sin\\theta = 1$ → $\\theta = 90^\\circ$ → $m$ is exactly $R(90^\\circ)$: a $90^\\circ$ counter-clockwise rotation (X right, Y up).
+
+The row-typed-as-column mistake for $R(90^\\circ)$: listing the 4 numbers in paper reading order $(\\cos 90^\\circ, -\\sin 90^\\circ, \\sin 90^\\circ, \\cos 90^\\circ) = (0, -1, 1, 0)$ and typing that straight into \`mat2()\` → \`mat2(0.0, -1.0, 1.0, 0.0)\` — GLSL reads that as column 0$=(0,-1)$, column 1$=(1,0)$ → that's exactly $R(-90^\\circ)$: a $90^\\circ$ CLOCKWISE rotation — the OPPOSITE of what was intended.`,
+    },
   },
   {
     id: "rotate-uv-around-pivot",
@@ -69,14 +69,14 @@ Then: if someone MEANT to rotate $90°$ counter-clockwise but listed $R(90°)$'s
     starterCode: `mat2 rotate2d(float a) {
   float c = cos(a);
   float s = sin(a);
-  // TODO 1: tra ve dung constructor cot: cot 0 = (c, s), cot 1 = (-s, c)
+  // TODO 1: return the correct column constructor: column 0 = (c, s), column 1 = (-s, c)
   return mat2(1.0, 0.0, 0.0, 1.0);
 }
 
 vec2 rotateAroundPivot(vec2 uv, vec2 pivot, float angle) {
-  vec2 p = uv; // TODO 2: dich p ve goc bang cach tru pivot
-  p = rotate2d(angle) * p; // TODO 3: ap ma tran xoay (da co san)
-  return p; // TODO 4: dich p ve lai vi tri cu bang cach cong pivot
+  vec2 p = uv; // TODO 2: shift p to the origin by subtracting pivot
+  p = rotate2d(angle) * p; // TODO 3: apply the rotation matrix (already given)
+  return p; // TODO 4: shift p back to its original position by adding pivot
 }
 
 void main() {

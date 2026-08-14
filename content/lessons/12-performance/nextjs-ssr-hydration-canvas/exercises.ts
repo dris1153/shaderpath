@@ -44,22 +44,18 @@ Snippet C — inside a \`useEffect\`: \`useEffect(() => { const ctx = canvasRef.
         en: "I correctly identified: Snippet C is completely fine — it's inside an effect so it only runs on the client, touching nothing during server render",
       },
     ],
-    solutionCode: `// A: SẬP SERVER. "const MAX_DPR = window.devicePixelRatio" chạy ngay khi
-// module được import — Node.js không có \`window\`, nên đây là
-// "ReferenceError: window is not defined" ngay tại thời điểm import, trước
-// khi component kịp render dòng nào. Sửa: đọc devicePixelRatio bên trong
-// effect/callback, không phải module scope.
+    solutionNote: {
+      vi: `A: SẬP SERVER. \`const MAX_DPR = window.devicePixelRatio\` chạy ngay khi module được import — Node.js không có \`window\`, nên đây là \`ReferenceError: window is not defined\` ngay tại thời điểm import, trước khi component kịp render dòng nào. Sửa: đọc \`devicePixelRatio\` bên trong effect/callback, không phải module scope.
 
-// B: CHỈ CẢNH BÁO. useLayoutEffect không chạy trong lúc server render — React
-// chỉ ghi lịch nó cho lần chạy trên client. Component vẫn render ra HTML
-// bình thường, KHÔNG sập, nhưng React in cảnh báo dev "useLayoutEffect does
-// nothing on the server" vì phát hiện component này bị đưa vào cây SSR.
-// (Cách R3F tự tránh cảnh báo này: dùng useIsomorphicLayoutEffect, tự chọn
-// useEffect trên server, useLayoutEffect trên client.)
+B: CHỈ CẢNH BÁO. \`useLayoutEffect\` không chạy trong lúc server render — React chỉ ghi lịch nó cho lần chạy trên client. Component vẫn render ra HTML bình thường, KHÔNG sập, nhưng React in cảnh báo dev "useLayoutEffect does nothing on the server" vì phát hiện component này bị đưa vào cây SSR. (Cách R3F tự tránh cảnh báo này: dùng \`useIsomorphicLayoutEffect\`, tự chọn \`useEffect\` trên server, \`useLayoutEffect\` trên client.)
 
-// C: HOÀN TOÀN ỔN. Toàn bộ thân effect chỉ chạy sau khi component đã mount
-// thật trên trình duyệt (post-hydration) — không bao giờ chạy trong lúc
-// React render trên Node.js, dù nội dung bên trong đụng WebGL trực tiếp.`,
+C: HOÀN TOÀN ỔN. Toàn bộ thân effect chỉ chạy sau khi component đã mount thật trên trình duyệt (post-hydration) — không bao giờ chạy trong lúc React render trên Node.js, dù nội dung bên trong đụng WebGL trực tiếp.`,
+      en: `A: CRASHES THE SERVER. \`const MAX_DPR = window.devicePixelRatio\` runs the instant the module is imported — Node.js has no \`window\`, so this throws \`ReferenceError: window is not defined\` right at import time, before the component even gets to render a single line. Fix: read \`devicePixelRatio\` inside an effect/callback, not at module scope.
+
+B: ONLY A WARNING. \`useLayoutEffect\` doesn't run during server rendering — React only schedules it for the client run. The component still renders normal HTML, it does NOT crash, but React logs a dev warning "useLayoutEffect does nothing on the server" because it detects this component being included in the SSR tree. (How R3F avoids this warning itself: \`useIsomorphicLayoutEffect\`, which picks \`useEffect\` on the server and \`useLayoutEffect\` on the client.)
+
+C: COMPLETELY FINE. The entire effect body only runs after the component has actually mounted in the browser (post-hydration) — it never runs during React's render on Node.js, even though its contents touch WebGL directly.`,
+    },
   },
   {
     id: "gate-client-only-quality-badge",

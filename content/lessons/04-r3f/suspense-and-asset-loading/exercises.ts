@@ -64,8 +64,8 @@ class DelayedLoader<T> extends THREE.Loader<T> {
     onProgress?: (event: ProgressEvent) => void,
     onError?: (err: unknown) => void,
   ) {
-    // TODO: setTimeout(delayMs), gọi build() bên trong try/catch,
-    // onLoad(...) khi thành công, onError(...) khi build() throw
+    // TODO: setTimeout(delayMs), call build() inside a try/catch,
+    // onLoad(...) on success, onError(...) when build() throws
   }
 }`,
     solutionCode: `import * as THREE from "three";
@@ -94,9 +94,10 @@ class DelayedLoader<T> extends THREE.Loader<T> {
   }
 }
 
-// Constructor cần "build" + "delayMs" nên useLoader không thể tự "new" nó
-// (useLoader chỉ new Proto() KHÔNG tham số khi bạn truyền một class) — tạo
-// MỘT instance ở module scope rồi truyền instance đó vào useLoader:
+// The constructor needs "build" + "delayMs", so useLoader can't just "new"
+// it itself (useLoader only does new Proto() with NO arguments when you pass
+// it a class) -- create ONE instance at module scope and pass that instance
+// into useLoader instead:
 const exhibitLoader = new DelayedLoader(
   () => new THREE.IcosahedronGeometry(0.9, 1),
   1500,

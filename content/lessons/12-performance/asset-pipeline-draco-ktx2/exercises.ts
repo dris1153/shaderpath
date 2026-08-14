@@ -36,13 +36,14 @@ Then consider a different case: a small icon whose raw geometry is only $8\\text
         en: "I explained the reasoning using the actual measure-first mechanism (network time vs. decode time), not a vague statement",
       },
     ],
-    solutionCode: `// 18MB * (1 - 0.9) = 1.8MB -- geometry size after Draco compression (estimate)
+    solutionNote: {
+      vi: `$18\\text{MB} \\times (1 - 0.9) = 1.8\\text{MB}$ — dung lượng hình học sau khi nén Draco (ước lượng).
 
-// Small icon: network time (~3ms) < decode time (~15ms) -> do NOT compress.
-// The WASM decoder's one-time init cost is roughly fixed regardless of file
-// size, so for an asset that's already tiny, adding a Draco step INCREASES
-// total time-to-usable -- exactly the measure-first rule: compress only
-// when network time vs decode time proves a real win, never by reflex.`,
+Icon nhỏ: network time (~3ms) < decode time (~15ms) → KHÔNG nên nén. Chi phí khởi tạo một lần của decoder WASM gần như cố định bất kể kích thước file, nên với một asset vốn đã rất nhỏ, thêm bước Draco lại LÀM TĂNG tổng thời gian đến khi dùng được — đúng quy tắc đo trước khi tối ưu: chỉ nén khi network time so với decode time chứng minh được một lợi ích thật sự, không bao giờ nén theo phản xạ.`,
+      en: `$18\\text{MB} \\times (1 - 0.9) = 1.8\\text{MB}$ — geometry size after Draco compression (estimate).
+
+Small icon: network time (~3ms) < decode time (~15ms) → do NOT compress. The WASM decoder's one-time init cost is roughly fixed regardless of file size, so for an asset that's already tiny, adding a Draco step INCREASES total time-to-usable — exactly the measure-first rule: compress only when network time vs. decode time proves a real win, never by reflex.`,
+    },
   },
   {
     id: "wire-compressed-gltf-loader",
@@ -61,10 +62,10 @@ function createCompressedGltfLoader(
   dracoPath: string,
   basisPath: string,
 ): GLTFLoader {
-  // TODO 1: tao DRACOLoader, setDecoderPath(dracoPath)
-  // TODO 2: tao KTX2Loader, setTranscoderPath(basisPath), roi detectSupport(renderer)
-  // TODO 3: tao GLTFLoader, dang ky ca hai loader phu o tren (setDRACOLoader/setKTX2Loader)
-  // TODO 4: return loader da cau hinh day du
+  // TODO 1: create a DRACOLoader, setDecoderPath(dracoPath)
+  // TODO 2: create a KTX2Loader, setTranscoderPath(basisPath), then detectSupport(renderer)
+  // TODO 3: create a GLTFLoader, register both loaders above (setDRACOLoader/setKTX2Loader)
+  // TODO 4: return the fully configured loader
   throw new Error("TODO");
 }`,
     solutionCode: `function createCompressedGltfLoader(

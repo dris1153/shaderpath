@@ -36,18 +36,24 @@ Without running any code, compute the four values Flip's Invert step uses to bui
         en: "I can explain why this transform exactly cancels the layout change that already happened, so the eye never sees a jump",
       },
     ],
-    solutionCode: `// Δx = x_first - x_last = 24 - 320 = -296
-// Δy = y_first - y_last = 40 - 40 = 0
-// s_x = w_first / w_last = 160 / 480 ≈ 0.333
-// s_y = h_first / h_last = 120 / 320 = 0.375
-//
-// transform: translate(-296px, 0px) scale(0.333, 0.375) đặt phần tử
-// đúng vào vị trí/kích thước First về mặt hình ảnh — dịch nó lùi lại
-// 296px theo x và co nhỏ đúng theo tỉ lệ width/height cũ-trên-mới.
-// DOM/layout bên dưới đã ở Last (x=320, w=480) từ trước khi transform
-// này được áp, nhưng transform là hiệu ứng THỊ GIÁC thuần tuý (không
-// ảnh hưởng box model), nên trình duyệt vẫn coi phần tử "chiếm chỗ"
-// đúng như Last, chỉ có VẺ NGOÀI của nó bị dịch/co để trông giống First.`,
+    solutionNote: {
+      vi: `$\\Delta x = x_{first} - x_{last} = 24 - 320 = -296$
+$\\Delta y = y_{first} - y_{last} = 40 - 40 = 0$
+$s_x = w_{first} / w_{last} = 160 / 480 \\approx 0.333$
+$s_y = h_{first} / h_{last} = 120 / 320 = 0.375$
+
+\`transform: translate(-296px, 0px) scale(0.333, 0.375)\` đặt phần tử đúng vào vị trí/kích thước First về mặt hình ảnh — dịch nó lùi lại 296px theo x và co nhỏ đúng theo tỉ lệ width/height cũ-trên-mới.
+
+DOM/layout bên dưới đã ở Last ($x=320, w=480$) từ trước khi transform này được áp, nhưng transform là hiệu ứng THỊ GIÁC thuần tuý (không ảnh hưởng box model), nên trình duyệt vẫn coi phần tử "chiếm chỗ" đúng như Last, chỉ có VẺ NGOÀI của nó bị dịch/co để trông giống First.`,
+      en: `$\\Delta x = x_{first} - x_{last} = 24 - 320 = -296$
+$\\Delta y = y_{first} - y_{last} = 40 - 40 = 0$
+$s_x = w_{first} / w_{last} = 160 / 480 \\approx 0.333$
+$s_y = h_{first} / h_{last} = 120 / 320 = 0.375$
+
+\`transform: translate(-296px, 0px) scale(0.333, 0.375)\` places the element exactly at the First position/size visually — shifting it back 296px on x and shrinking it by the old-over-new width/height ratio.
+
+The underlying DOM/layout is already at Last ($x=320, w=480$) before this transform is applied, but transform is a purely VISUAL effect (it doesn't affect the box model), so the browser still treats the element as "occupying" exactly the Last box — only its APPEARANCE is shifted/scaled to look like First.`,
+    },
   },
   {
     id: "flip-compute-delta-fn",
@@ -71,8 +77,8 @@ interface FlipDelta {
 }
 
 function computeFlipDelta(first: Rect, last: Rect): FlipDelta {
-  // TODO: dx/dy = độ lệch vị trí First - Last
-  // TODO: sx/sy = tỉ lệ kích thước First / Last
+  // TODO: dx/dy = position offset First - Last
+  // TODO: sx/sy = size ratio First / Last
   return { dx: 0, dy: 0, sx: 1, sy: 1 };
 }`,
     solutionCode: `interface Rect {

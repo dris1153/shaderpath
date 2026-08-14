@@ -36,12 +36,14 @@ Then answer: if $\\omega$ changes from $2$ to $4$ while $A$ and $\\phi$ stay fix
         en: "I can explain why doubling $\\omega$ halves $T$ instead of doubling it",
       },
     ],
-    solutionCode: `// y(0) = 4*sin(2*0 + π/2) = 4*sin(π/2) = 4*1 = 4
-// T = 2π/ω = 2π/2 = π ≈ 3.14159 giây
-//
-// Đổi ω: 2 → 4 (gấp đôi), T mới = 2π/4 = π/2 — bằng ĐÚNG MỘT NỬA
-// chu kỳ cũ. ω và T tỉ lệ NGHỊCH (T = 2π/ω), không tỉ lệ thuận:
-// tăng tần số góc làm chu kỳ giảm, không phải tăng.`,
+    solutionNote: {
+      vi: `$y(0) = 4\\sin(2\\times 0 + \\pi/2) = 4\\sin(\\pi/2) = 4\\times 1 = 4$. $T = 2\\pi/\\omega = 2\\pi/2 = \\pi \\approx 3.14159$ giây.
+
+Đổi $\\omega$: $2 \\to 4$ (gấp đôi), $T$ mới $= 2\\pi/4 = \\pi/2$ — bằng ĐÚNG MỘT NỬA chu kỳ cũ. $\\omega$ và $T$ tỉ lệ NGHỊCH ($T = 2\\pi/\\omega$), không tỉ lệ thuận: tăng tần số góc làm chu kỳ giảm, không phải tăng.`,
+      en: `$y(0) = 4\\sin(2\\times 0 + \\pi/2) = 4\\sin(\\pi/2) = 4\\times 1 = 4$. $T = 2\\pi/\\omega = 2\\pi/2 = \\pi \\approx 3.14159$ seconds.
+
+Changing $\\omega$: $2 \\to 4$ (doubling it), the new $T = 2\\pi/4 = \\pi/2$ — EXACTLY HALF the old period. $\\omega$ and $T$ are INVERSELY proportional ($T = 2\\pi/\\omega$), not directly: raising the angular frequency shrinks the period, it never grows it.`,
+    },
   },
   {
     id: "orbit-position-from-time",
@@ -58,8 +60,8 @@ function orbitPosition(
   omega: number,
   elapsedSeconds: number,
 ): Point {
-  // TODO: góc = omega * elapsedSeconds (KHÔNG cộng dồn qua từng frame),
-  // rồi trả về center + radius * (cos(góc), sin(góc))
+  // TODO: angle = omega * elapsedSeconds (do NOT accumulate it across frames),
+  // then return center + radius * (cos(angle), sin(angle))
   return { x: center.x, y: center.y };
 }`,
     solutionCode: `interface Point { x: number; y: number }

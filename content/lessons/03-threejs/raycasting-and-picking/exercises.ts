@@ -36,15 +36,18 @@ Compute the **correct** NDC (with the $y$ flip) for this point. Then compute the
         en: "I correctly explain: the wrong point is mirrored from the correct one across the screen's horizontal center line (NDC's y=0, the canvas's middle pixel row)",
       },
     ],
-    solutionCode: `// u = x / width = 100 / 400 = 0.25
-// v = y / height = 100 / 400 = 0.25
-//
-// NDC đúng (lật trục y):   x = 2u - 1 = -0.5,  y = 1 - 2v =  0.5  ->  (-0.5,  0.5)
-// NDC sai (quên lật trục): x = 2u - 1 = -0.5,  y = 2v - 1  = -0.5  ->  (-0.5, -0.5)
-//
-// Hai điểm cùng x, đối nhau dấu y => đối xứng qua trục hoành (NDC y=0),
-// tức hàng pixel chính giữa canvas theo chiều dọc. Click ở phần TRÊN màn
-// hình bị raycast nhầm sang vị trí ĐỐI XỨNG ở phần DƯỚI, và ngược lại.`,
+    solutionNote: {
+      vi: `u = x/width = 100/400 = 0.25 và v = y/height = 100/400 = 0.25.
+
+NDC đúng (có lật trục y): x = 2u − 1 = −0.5, y = 1 − 2v = 0.5, tức (−0.5, 0.5). NDC sai (quên lật trục y): x = 2u − 1 = −0.5, y = 2v − 1 = −0.5, tức (−0.5, −0.5).
+
+Hai điểm cùng toạ độ x, chỉ khác dấu y, nên đối xứng nhau qua trục hoành (NDC y = 0) — tức hàng pixel chính giữa canvas theo chiều dọc. Vì vậy, click ở phần TRÊN màn hình bị raycast nhầm sang vị trí ĐỐI XỨNG ở phần DƯỚI, và ngược lại.`,
+      en: `u = x/width = 100/400 = 0.25 and v = y/height = 100/400 = 0.25.
+
+Correct NDC (with the y flip): x = 2u − 1 = −0.5, y = 1 − 2v = 0.5, i.e. (−0.5, 0.5). Wrong NDC (missing the y flip): x = 2u − 1 = −0.5, y = 2v − 1 = −0.5, i.e. (−0.5, −0.5).
+
+The two points share the same x and differ only in the sign of y, so they're mirrored across the horizontal axis (NDC y = 0) — the canvas's middle pixel row. A click in the TOP half of the screen therefore gets raycast to the MIRRORED position in the BOTTOM half, and vice versa.`,
+    },
   },
   {
     id: "update-hover-target",
@@ -61,9 +64,9 @@ function updateHover(
   camera: THREE.Camera,
   pickables: THREE.Object3D[],
 ): THREE.Object3D | null {
-  // TODO 1: dựng tia bằng raycaster.setFromCamera(ndc, camera)
-  // TODO 2: intersectObjects CHỈ trên pickables, recursive = false
-  // TODO 3: trả về object của kết quả gần nhất (phần tử đầu), hoặc null nếu mảng rỗng
+  // TODO 1: build the ray with raycaster.setFromCamera(ndc, camera)
+  // TODO 2: intersectObjects ONLY against pickables, recursive = false
+  // TODO 3: return the object of the nearest hit (first element), or null if the array is empty
   return null;
 }`,
     solutionCode: `import * as THREE from "three";
@@ -76,7 +79,7 @@ function updateHover(
 ): THREE.Object3D | null {
   raycaster.setFromCamera(ndc, camera);
   const hits = raycaster.intersectObjects(pickables, false);
-  // intersectObjects sắp sẵn theo distance tăng dần: hits[0] luôn gần nhất
+  // intersectObjects returns results already sorted by increasing distance: hits[0] is always the nearest
   return hits.length > 0 ? hits[0].object : null;
 }`,
     hints: [

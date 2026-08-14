@@ -36,17 +36,14 @@ Without running any code, and based on exactly what you just read in \`Object3D.
         en: "I can explain why the position jump in (a) always equals the new parent's world position",
       },
     ],
-    solutionCode: `// (a) parent.add(cube):
-//     cube.position vẫn là (5, 0, 0) -- add() không đụng tới nó.
-//     Nhưng giờ (5,0,0) là toạ độ LOCAL trong hệ quy chiếu của parent,
-//     nên world position thật = parent world (2,0,0) + local (5,0,0)
-//                             = (7, 0, 0)  -- cube nhảy +2 trên trục X.
-//
-// (b) parent.attach(cube):
-//     attach() tính world position hiện tại của cube (5,0,0), rồi TRỪ ĐI
-//     world position của parent (2,0,0) để ra local mới: (3, 0, 0).
-//     cube.position trở thành (3, 0, 0), nhưng world position KHÔNG đổi,
-//     vẫn là (5, 0, 0) -- đúng như tên gọi "giữ world transform".`,
+    solutionNote: {
+      vi: `(a) \`parent.add(cube)\`: \`cube.position\` vẫn là (5, 0, 0) — \`add()\` không đụng tới nó. Nhưng giờ (5, 0, 0) là toạ độ LOCAL trong hệ quy chiếu của parent, nên world position thật = parent world (2, 0, 0) + local (5, 0, 0) = (7, 0, 0) — cube nhảy +2 trên trục X.
+
+(b) \`parent.attach(cube)\`: \`attach()\` tính world position hiện tại của cube (5, 0, 0), rồi TRỪ ĐI world position của parent (2, 0, 0) để ra local mới: (3, 0, 0). \`cube.position\` trở thành (3, 0, 0), nhưng world position KHÔNG đổi, vẫn là (5, 0, 0) — đúng như tên gọi "giữ world transform".`,
+      en: `(a) \`parent.add(cube)\`: \`cube.position\` stays (5, 0, 0) — \`add()\` never touches it. But now (5, 0, 0) is a LOCAL coordinate in the parent's frame, so the actual world position = parent world (2, 0, 0) + local (5, 0, 0) = (7, 0, 0) — the cube jumps +2 on the X axis.
+
+(b) \`parent.attach(cube)\`: \`attach()\` computes the cube's current world position (5, 0, 0), then SUBTRACTS the parent's world position (2, 0, 0) to get the new local value: (3, 0, 0). \`cube.position\` becomes (3, 0, 0), but the world position does NOT change — it stays (5, 0, 0), exactly matching the name "keep world transform".`,
+    },
   },
   {
     id: "reparent-keep-world-position",

@@ -36,17 +36,18 @@ Explain the mechanism behind BOTH symptoms using exactly one root cause (not two
         en: "Proposes normalBias, or small incremental bias steps, instead of one large arbitrary jump",
       },
     ],
-    solutionCode: `// Cùng một nguyên nhân gốc: shadow map lưu 1 depth/texel, đại diện cho
-// một VÙNG bề mặt, không phải một điểm.
-// bias = 0 -> so sánh depth quá "khắt khe": sai số nội suy/góc nghiêng
-// giữa depth thật và depth đã lưu bị đọc thành tự-che-chính-mình -> acne.
-// bias = 0.02 quá lớn -> điểm tiếp xúc THẬT giữa quả cầu và sàn cũng bị
-// đẩy qua ngưỡng "không bị che" -> bóng tách khỏi chân quả cầu -> peter-panning.
-//
-// Hướng sửa tốt hơn: tăng bias dần từng bước nhỏ (0.001 -> 0.002 -> ...)
-// và dừng lại ngay khi acne vừa biến mất — không tăng thêm "cho chắc".
-// Hoặc ưu tiên normalBias: dịch điểm lấy mẫu theo pháp tuyến bề mặt thay
-// vì dịch depth, giảm acne ở bề mặt cong mà giữ điểm tiếp xúc gần đúng vị trí.`,
+    solutionNote: {
+      vi: `Cùng một nguyên nhân gốc: shadow map lưu 1 depth/texel, đại diện cho một VÙNG bề mặt, không phải một điểm.
+
+\`bias = 0\` → so sánh depth quá "khắt khe": sai số nội suy/góc nghiêng giữa depth thật và depth đã lưu bị đọc thành tự-che-chính-mình → acne. \`bias = 0.02\` quá lớn → điểm tiếp xúc THẬT giữa quả cầu và sàn cũng bị đẩy qua ngưỡng "không bị che" → bóng tách khỏi chân quả cầu → peter-panning.
+
+Hướng sửa tốt hơn: tăng bias dần từng bước nhỏ (0.001 → 0.002 → ...) và dừng lại ngay khi acne vừa biến mất — không tăng thêm "cho chắc". Hoặc ưu tiên \`normalBias\`: dịch điểm lấy mẫu theo pháp tuyến bề mặt thay vì dịch depth, giảm acne ở bề mặt cong mà giữ điểm tiếp xúc gần đúng vị trí.`,
+      en: `Both trace back to the same root cause: the shadow map stores one depth value per texel, representing an AREA of surface, not a point.
+
+\`bias = 0\` → the depth comparison is too "strict": interpolation/grazing-angle error between the real depth and the stored depth gets read as self-occlusion → acne. \`bias = 0.02\` is too large → the REAL contact point between the sphere and the ground also gets pushed past the "not occluded" threshold → the shadow detaches from the sphere's base → peter-panning.
+
+A better fix: raise bias in small increments (0.001 → 0.002 → ...) and stop the moment the acne disappears — don't add extra "just to be safe." Or prefer \`normalBias\`: it shifts the sample point along the surface normal instead of shifting depth, reducing acne on curved surfaces while keeping the contact point close to its real position.`,
+    },
   },
   {
     id: "wire-up-shadow-casting-scene",
@@ -75,10 +76,10 @@ const ground = new THREE.Mesh(
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// TODO: bật shadow map trên renderer
-// TODO: cho sun và sphere biết chúng tham gia đổ bóng (cast)
-// TODO: cho ground biết nó nhận bóng (receive)
-// TODO: cấu hình mapSize và frustum của sun.shadow.camera, rồi cập nhật ma trận`,
+// TODO: enable the shadow map on the renderer
+// TODO: tell sun and sphere they cast shadows
+// TODO: tell ground it receives shadows
+// TODO: configure sun.shadow.camera's mapSize and frustum, then update its matrix`,
     solutionCode: `renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 

@@ -36,12 +36,14 @@ Then answer in one sentence: if $a$ and $b$ are two points, which point does $\\
         en: "I can explain that $\\vec a - \\vec b$ points from point B to point A",
       },
     ],
-    solutionCode: `// a + b = (3 + -1, 4 + 2)  = (2, 6)
-// a - b = (3 - -1, 4 - 2)  = (4, 2)
-// 2a    = (2*3, 2*4)       = (6, 8)
-//
-// Nếu a và b là hai điểm A, B: (a - b) có tail tại B, tip tại A —
-// nó là vector "đi từ B đến A", không phải ngược lại.`,
+    solutionNote: {
+      vi: `$\\vec a + \\vec b = (3 + (-1),\\ 4 + 2) = (2, 6)$, $\\vec a - \\vec b = (3 - (-1),\\ 4 - 2) = (4, 2)$, và $2\\vec a = (2\\times 3,\\ 2\\times 4) = (6, 8)$.
+
+Nếu $a$ và $b$ là hai điểm $A$, $B$: $\\vec a - \\vec b$ có tail tại $B$, tip tại $A$ — nó là vector "đi từ $B$ đến $A$", không phải ngược lại.`,
+      en: `$\\vec a + \\vec b = (3 + (-1),\\ 4 + 2) = (2, 6)$, $\\vec a - \\vec b = (3 - (-1),\\ 4 - 2) = (4, 2)$, and $2\\vec a = (2\\times 3,\\ 2\\times 4) = (6, 8)$.
+
+If $a$ and $b$ are two points $A$, $B$: $\\vec a - \\vec b$ has its tail at $B$ and tip at $A$ — it's the vector "going from $B$ to $A$", not the other way around.`,
+    },
   },
   {
     id: "vector2-length-and-normalize",
@@ -58,7 +60,7 @@ function length(v: Vec2): number {
 }
 
 function normalize(v: Vec2): Vec2 {
-  // TODO: dùng length(v); nếu length gần 0, trả về (0,0) thay vì chia cho 0
+  // TODO: use length(v); if length is near 0, return (0,0) instead of dividing by 0
   return { x: 0, y: 0 };
 }`,
     solutionCode: `interface Vec2 { x: number; y: number }

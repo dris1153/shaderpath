@@ -36,17 +36,22 @@ Then explain: if this number is only a tiny fraction of the available bandwidth,
         en: "I named at least two JS-side causes of stutter even when the bus has bandwidth to spare",
       },
     ],
-    solutionCode: `// byte/frame = 250,000 × 3 × 4 = 3,000,000 bytes ≈ 2.86 MB (quy ước 1MB = 1024²)
-// byte/s   = 2.86 MB × 60 ≈ 171.6 MB/s
-//
-// So với PCIe Gen3 x16 ≈ 16 GB/s một chiều: 171.6 MB/s chỉ ≈ 1% băng thông
-// khả dụng → bus không phải nút thắt.
-//
-// Giật thực tế đến từ phía JS, không phải bus:
-// (1) GC pause khi loop tạo allocation ẩn (Vector3 tạm, spread mảng...)
-// (2) overhead cố định của mỗi lần gọi bufferSubData, lặp lại mỗi frame
-// (3) tất cả chạy chung main thread với React re-render/input, cộng dồn
-//     đúng vào ngân sách 16.6ms cần cho 60fps.`,
+    solutionNote: {
+      vi: `$\\text{byte/frame} = 250{,}000 \\times 3 \\times 4 = 3{,}000{,}000$ byte $\\approx 2.86$ MB (quy ước $1\\text{MB} = 1024^2$ byte).
+
+$\\text{byte/s} = 2.86 \\times 60 \\approx 171.6$ MB/s.
+
+So với PCIe Gen3 x16 $\\approx 16$ GB/s một chiều: $171.6$ MB/s chỉ chiếm khoảng $1\\%$ băng thông khả dụng, nên bus không phải là nút thắt.
+
+Giật thực tế đến từ phía JS, không phải từ bus: (1) GC pause khi vòng lặp tạo ra các allocation ẩn (Vector3 tạm, spread mảng...); (2) overhead cố định của mỗi lần gọi bufferSubData, lặp lại mỗi frame; (3) tất cả chạy chung main thread với việc React re-render và xử lý input, cộng dồn đúng vào ngân sách 16.6ms cần cho 60fps.`,
+      en: `$\\text{bytes/frame} = 250{,}000 \\times 3 \\times 4 = 3{,}000{,}000$ bytes $\\approx 2.86$ MB (using $1\\text{MB} = 1024^2$ bytes).
+
+$\\text{bytes/s} = 2.86 \\times 60 \\approx 171.6$ MB/s.
+
+Against PCIe Gen3 x16 $\\approx 16$ GB/s one-way: $171.6$ MB/s is only about $1\\%$ of the available bandwidth, so the bus isn't the bottleneck.
+
+The actual stutter comes from the JS side, not the bus: (1) GC pauses when the loop creates hidden allocations (temporary Vector3s, array spreads...); (2) the fixed overhead of every bufferSubData call, repeated every frame; (3) everything shares the main thread with React re-renders and input handling, all competing for the same 16.6ms budget needed for 60fps.`,
+    },
   },
   {
     id: "estimate-cpu-gpu-threshold",
@@ -71,7 +76,7 @@ function estimateStrategy(
 ): StrategyEstimate {
   // TODO: costMs = (particleCount / 1000) * msPerThousandParticles
   // TODO: frameBudgetMs = 1000 / targetFps
-  // TODO: recommendation = "gpu" nếu costMs > frameBudgetMs * 0.3, ngược lại "cpu"
+  // TODO: recommendation = "gpu" if costMs > frameBudgetMs * 0.3, otherwise "cpu"
   return { costMs: 0, recommendation: "cpu" };
 }`,
     solutionCode: `interface StrategyEstimate {

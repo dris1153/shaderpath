@@ -36,18 +36,22 @@ Without writing code, identify what this animation violates from the lesson (bot
         en: "I explained why a large amplitude works for a hero moment (plays once) but becomes annoying for an action repeated dozens of times per session",
       },
     ],
-    solutionCode: `// Vi pham: ca thang thoi gian lan bien do.
-//
-// - 400ms gan voi dai "hero moment" (400-700ms, chi nen dung cho thu chay
-//   DUNG MOT LAN), trong khi bam "Luu" la phan hoi tuc thoi thuc su --
-//   dai dung la 100-150ms.
-// - Bien do scale 1.15 la muc gay chu y manh, hop ly cho mot khoanh khac
-//   an tuong duy nhat, khong hop ly cho hanh dong lap lai ~30 lan/phien
-//   (Loi hay gap #1: bien do lon cho thao tac lap lai gay kho chiu).
-//
-// De xuat: duration ~120-150ms, scale dinh ~1.04-1.06, ease "power1.out"
-// -- van la mot tin hieu phan hoi ro rang, nhung khong con la mot "man
-// trinh dien" moi lan nguoi dung lam dung viec ho lam hang chuc lan/ngay.`,
+    solutionNote: {
+      vi: `Vi phạm: cả thang thời gian lẫn biên độ.
+
+400ms gần với dải "hero moment" (400-700ms, chỉ nên dùng cho thứ chạy ĐÚNG MỘT LẦN), trong khi bấm "Lưu" là phản hồi tức thời thực sự — dải đúng là 100-150ms.
+
+Biên độ scale 1.15 là mức gây chú ý mạnh, hợp lý cho một khoảnh khắc ấn tượng duy nhất, không hợp lý cho hành động lặp lại ~30 lần/phiên (Lỗi hay gặp #1: biên độ lớn cho thao tác lặp lại gây khó chịu).
+
+Đề xuất: duration ~120-150ms, scale đỉnh ~1.04-1.06, ease "power1.out" — vẫn là một tín hiệu phản hồi rõ ràng, nhưng không còn là một "màn trình diễn" mỗi lần người dùng làm đúng việc họ làm hàng chục lần/ngày.`,
+      en: `Violation: both the timing scale and the amplitude.
+
+400ms sits near the "hero moment" band (400-700ms, which should only be used for something that plays EXACTLY ONCE), while clicking "Save" is genuinely instant feedback — the correct band is 100-150ms.
+
+A 1.15 scale amplitude reads as a strong attention grab, reasonable for a single impressive moment, not for an action repeated ~30 times a session (Mistake #1: a large amplitude on a repeated action becomes annoying).
+
+Proposal: duration ~120-150ms, peak scale ~1.04-1.06, ease "power1.out" — still a clear feedback signal, but no longer a "performance" every time the user does something they already do dozens of times a day.`,
+    },
   },
   {
     id: "stagger-is-overlap-fn",

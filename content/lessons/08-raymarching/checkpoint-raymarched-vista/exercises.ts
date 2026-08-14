@@ -85,7 +85,7 @@ vec3 terrainNormal(vec2 p) {
   return normalize(vec3(hL - hR, 2.0 * e.x, hD - hU));
 }
 
-// Penumbra-ratio soft shadow (bài raymarched-shadows-and-ao), adapted for a
+// Penumbra-ratio soft shadow (the raymarched-shadows-and-ao lesson), adapted for a
 // heightfield: k*h/t where h is the ray's clearance above the terrain.
 float terrainShadow(vec3 ro, vec3 rd, float tMax) {
   float shadow = 1.0;

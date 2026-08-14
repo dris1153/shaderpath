@@ -36,15 +36,14 @@ Then, splitting the same sentence by \`"chars"\` — does the character \`à\` (
         en: "I explained why \"à\" doesn't get split in half when splitting by chars (precomposed NFC)",
       },
     ],
-    solutionCode: `// split.words = ["Chào", "bạn"] — 2 phần tử, vì SplitText mặc định
-// cắt theo khoảng trắng (wordDelimiter), không phân tích ngữ nghĩa.
-//
-// "à" trong "Chào" là U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — một
-// code point Unicode DUY NHẤT ở dạng NFC (precomposed). SplitText lặp
-// qua chuỗi theo code point, nên "à" luôn nằm trọn trong một <div> ký
-// tự, không bao giờ bị cắt thành "a" + dấu huyền riêng — trừ khi input
-// gốc đã ở dạng NFD (combining mark tách rời), trường hợp hiếm gặp khi
-// gõ tiếng Việt qua bàn phím/OS chuẩn.`,
+    solutionNote: {
+      vi: `\`split.words = ["Chào", "bạn"]\` — 2 phần tử, vì SplitText mặc định cắt theo khoảng trắng (\`wordDelimiter\`), không phân tích ngữ nghĩa.
+
+"à" trong "Chào" là U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — một code point Unicode DUY NHẤT ở dạng NFC (precomposed). SplitText lặp qua chuỗi theo code point, nên "à" luôn nằm trọn trong một \`<div>\` ký tự, không bao giờ bị cắt thành "a" + dấu huyền riêng — trừ khi input gốc đã ở dạng NFD (combining mark tách rời), trường hợp hiếm gặp khi gõ tiếng Việt qua bàn phím/OS chuẩn.`,
+      en: `\`split.words = ["Chào", "bạn"]\` — 2 elements, since SplitText's default splits on whitespace (\`wordDelimiter\`), it never analyzes semantics.
+
+"à" in "Chào" is U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — a SINGLE Unicode code point in NFC (precomposed) form. SplitText iterates the string by code point, so "à" always stays inside one character \`<div>\`, never getting split into "a" plus a separate grave-accent mark — unless the source input is already in NFD form (a separated combining mark), a rare case with standard Vietnamese keyboards/OS input.`,
+    },
   },
   {
     id: "splittext-idempotent-reveal",
@@ -59,10 +58,10 @@ import { SplitText } from "gsap/SplitText";
 gsap.registerPlugin(SplitText);
 
 function createCharReveal(el: HTMLElement, stagger: number): () => void {
-  // TODO 1: tạo split theo chars (aria: "auto")
-  // TODO 2: set trạng thái ẩn ban đầu, rồi animate reveal có stagger
-  // TODO 3: trả về cleanup — gọi tween.kill() + split.revert(),
-  //         an toàn khi bị gọi nhiều lần liên tiếp
+  // TODO 1: create the split by chars (aria: "auto")
+  // TODO 2: set the initial hidden state, then animate the staggered reveal
+  // TODO 3: return a cleanup — call tween.kill() + split.revert(),
+  //         safe to call multiple times in a row
 
   return () => {};
 }`,

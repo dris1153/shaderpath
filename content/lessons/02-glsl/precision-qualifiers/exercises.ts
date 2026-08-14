@@ -36,19 +36,22 @@ A shader computes \`sin(uTime * 10000.0)\` using \`mediump float\`, where \`uTim
         en: "I connected that to the observed symptom: the phase fed into sin() jumps across increasingly coarse steps, even though the output stays smooth within [-1,1]",
       },
     ],
-    solutionCode: `// mediump có độ chính xác TƯƠNG ĐỐI 2^-10: sai số tuyệt đối gần một giá
-// trị độ lớn M xấp xỉ M * 2^-10, KHÔNG phải một hằng số cố định.
-//
-// sin(uTime * 10000.0) luôn trả về [-1, 1] gọn gàng, nhưng độ chính xác
-// tương đối không áp dụng lên kết quả đó -- nó áp dụng lên chính BIỂU
-// THỨC TRUNG GIAN "uTime * 10000.0" TRƯỚC KHI đưa vào sin().
-//
-// uTime = 10s    -> M ~ 100,000      -> bước nhảy ~ 100,000 * 2^-10 ~ 97.7
-// uTime = 10000s -> M ~ 100,000,000  -> bước nhảy ~ 10^8 * 2^-10 ~ 97,656
-//
-// Bước nhảy càng lớn nghĩa là pha đưa vào sin() nhảy qua càng nhiều giá
-// trị liên tiếp bị "gộp" lại thành một -- animation mượt lúc đầu, giật
-// dần theo thời gian chạy, đúng như triệu chứng jitter mô tả trong lý thuyết.`,
+    solutionNote: {
+      vi: `\`mediump\` có độ chính xác TƯƠNG ĐỐI $2^{-10}$: sai số tuyệt đối gần một giá trị độ lớn $M$ xấp xỉ $M \\times 2^{-10}$, KHÔNG phải một hằng số cố định.
+
+\`sin(uTime * 10000.0)\` luôn trả về $[-1, 1]$ gọn gàng, nhưng độ chính xác tương đối không áp dụng lên kết quả đó — nó áp dụng lên chính biểu thức trung gian \`uTime * 10000.0\` TRƯỚC KHI đưa vào \`sin()\`.
+
+$uTime = 10s \\to M \\sim 100{,}000 \\to$ bước nhảy $\\sim 100{,}000 \\times 2^{-10} \\sim 97.7$. $uTime = 10000s \\to M \\sim 100{,}000{,}000 \\to$ bước nhảy $\\sim 10^8 \\times 2^{-10} \\sim 97{,}656$.
+
+Bước nhảy càng lớn nghĩa là pha đưa vào \`sin()\` nhảy qua càng nhiều giá trị liên tiếp bị "gộp" lại thành một — animation mượt lúc đầu, giật dần theo thời gian chạy, đúng như triệu chứng jitter mô tả trong lý thuyết.`,
+      en: `\`mediump\` has RELATIVE precision of $2^{-10}$: the absolute error near a value of magnitude $M$ is roughly $M \\times 2^{-10}$, NOT a fixed constant.
+
+\`sin(uTime * 10000.0)\` always returns a tidy $[-1, 1]$, but relative precision doesn't apply to that result — it applies to the intermediate expression \`uTime * 10000.0\` itself, BEFORE it reaches \`sin()\`.
+
+$uTime = 10s \\to M \\sim 100{,}000 \\to$ step size $\\sim 100{,}000 \\times 2^{-10} \\sim 97.7$. $uTime = 10000s \\to M \\sim 100{,}000{,}000 \\to$ step size $\\sim 10^8 \\times 2^{-10} \\sim 97{,}656$.
+
+A larger step means the phase fed into \`sin()\` jumps across more and more consecutive values getting "collapsed" into one — smooth animation at first, progressively more jittery over runtime, exactly matching the jitter symptom described in the theory.`,
+    },
   },
   {
     id: "quantize-gradient-banding",

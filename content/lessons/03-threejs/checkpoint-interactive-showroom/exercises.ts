@@ -21,7 +21,7 @@ import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
 const canvas = document.querySelector("canvas")!;
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-// TODO 1: bật shadow map trên renderer (renderer.shadowMap.enabled, .type)
+// TODO 1: enable the shadow map on the renderer (renderer.shadowMap.enabled, .type)
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(
@@ -33,13 +33,13 @@ const camera = new THREE.PerspectiveCamera(
 camera.position.set(4, 3, 6);
 
 const controls = new OrbitControls(camera, renderer.domElement);
-// TODO 2: enableDamping, minDistance/maxDistance, maxPolarAngle (không cho lộn xuống sàn)
+// TODO 2: enableDamping, minDistance/maxDistance, maxPolarAngle (don't let it dip below the floor)
 controls.target.set(0, 0.5, 0);
 
-// TODO 3: rig ánh sáng -- AmbientLight + DirectionalLight (castShadow = true,
+// TODO 3: light rig -- AmbientLight + DirectionalLight (castShadow = true,
 // shadow.mapSize, shadow.camera.left/right/top/bottom, shadow.bias)
 
-// TODO 4: sàn -- PlaneGeometry lớn, MeshStandardMaterial, rotation.x = -PI/2,
+// TODO 4: floor -- large PlaneGeometry, MeshStandardMaterial, rotation.x = -PI/2,
 // receiveShadow = true
 
 interface Product {
@@ -48,8 +48,8 @@ interface Product {
 }
 
 function createProduct(geometry: THREE.BufferGeometry, color: number, x: number): Product {
-  // TODO 5: pedestal (CylinderGeometry) tại (x, ~0.2, 0), castShadow + receiveShadow
-  // TODO 6: sản phẩm dùng "geometry" + MeshStandardMaterial(color), tại (x, ~0.9, 0),
+  // TODO 5: pedestal (CylinderGeometry) at (x, ~0.2, 0), castShadow + receiveShadow
+  // TODO 6: product using "geometry" + MeshStandardMaterial(color), at (x, ~0.9, 0),
   // castShadow + receiveShadow
   throw new Error("TODO: return { pedestal, item }");
 }
@@ -72,8 +72,8 @@ function setPointer(event: PointerEvent) {
   pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 }
 
-// TODO 7: pointermove -- raycast "items", highlight object under cursor
-// (vd đổi material.emissive), bỏ highlight object cũ khi rời khỏi
+// TODO 7: pointermove -- raycast "items", highlight the object under the cursor
+// (e.g. change material.emissive), clear the old highlighted object when leaving it
 
 // TODO 8: pointerdown -- raycast "items", set/toggle "selected"
 
@@ -82,7 +82,7 @@ function animate(now: number) {
   const delta = (now - last) / 1000;
   last = now;
 
-  // TODO 9: nếu có "selected", xoay nó theo delta mỗi frame
+  // TODO 9: if there's a "selected" item, rotate it by delta every frame
 
   controls.update();
   renderer.render(scene, camera);
@@ -90,7 +90,7 @@ function animate(now: number) {
 }
 requestAnimationFrame(animate);
 
-// TODO 10: hàm dispose() -- gọi .dispose() trên MỌI geometry/material đã tạo,
+// TODO 10: dispose() function -- call .dispose() on EVERY geometry/material created,
 // controls.dispose(), renderer.dispose()`,
     solutionCode: `import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";

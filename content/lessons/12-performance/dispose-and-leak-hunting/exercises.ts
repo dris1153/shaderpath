@@ -36,17 +36,14 @@ Without running code: compute how many bytes of VRAM go orphaned on **each** suc
         en: "I can state the correct fix: call texture.dispose() independently, ideally via useDisposable.register() right where the texture is created",
       },
     ],
-    solutionCode: `// Mỗi chu kỳ: 256 * 256 * 4 = 262,144 byte = 256 KiB mồ côi (texture không
-// bao giờ được dispose, chỉ material bị dispose).
-// 20 chu kỳ: 262,144 * 20 = 5,242,880 byte = 5 MiB — cộng dồn tuyến tính,
-// không giảm dù gọi lại material.dispose() thêm bao nhiêu lần.
-//
-// Lý do material.dispose() vô dụng ở đây: nó chỉ dispatchEvent({type:
-// 'dispose'}) trên CHÍNH nó. WebGLTextures (manager dọn texture bên trong
-// WebGLRenderer) chỉ gắn listener lên sự kiện 'dispose' của từng Texture
-// RIÊNG LẺ khi texture đó được render lần đầu — nó không hề biết, và không
-// quan tâm, material nào đang tham chiếu texture đó. Texture chỉ được dọn
-// khi CHÍNH texture.dispose() được gọi.`,
+    solutionNote: {
+      vi: `Mỗi chu kỳ: \`256 * 256 * 4 = 262,144 byte = 256 KiB\` mồ côi (texture không bao giờ được dispose, chỉ material bị dispose). 20 chu kỳ: \`262,144 * 20 = 5,242,880 byte = 5 MiB\` — cộng dồn tuyến tính, không giảm dù gọi lại \`material.dispose()\` thêm bao nhiêu lần.
+
+Lý do \`material.dispose()\` vô dụng ở đây: nó chỉ \`dispatchEvent({type: 'dispose'})\` trên CHÍNH nó. \`WebGLTextures\` (manager dọn texture bên trong \`WebGLRenderer\`) chỉ gắn listener lên sự kiện 'dispose' của từng \`Texture\` RIÊNG LẺ khi texture đó được render lần đầu — nó không hề biết, và không quan tâm, material nào đang tham chiếu texture đó. Texture chỉ được dọn khi CHÍNH \`texture.dispose()\` được gọi.`,
+      en: `Each cycle: \`256 * 256 * 4 = 262,144 bytes = 256 KiB\` orphaned (the texture is never disposed, only the material is). 20 cycles: \`262,144 * 20 = 5,242,880 bytes = 5 MiB\` — accumulates linearly, and doesn't shrink no matter how many more times \`material.dispose()\` is called.
+
+Why \`material.dispose()\` is useless here: it only \`dispatchEvent({type: 'dispose'})\` on ITSELF. \`WebGLTextures\` (the texture-cleanup manager inside \`WebGLRenderer\`) only attaches a listener to each individual \`Texture\`'s own 'dispose' event, the first time that texture gets rendered — it has no idea, and doesn't care, which material references that texture. A texture only gets cleaned up when \`texture.dispose()\` itself is called.`,
+    },
   },
   {
     id: "fix-leaky-preview-panel",

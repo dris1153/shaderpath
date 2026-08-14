@@ -36,16 +36,18 @@ Then answer: if $hp$ suddenly exceeds 200 (a temporary buff, say $hp=250$), what
         en: "I can explain the need for `clamp(alpha, 0.2, 1)` right after remap to prevent an invalid display value",
       },
     ],
-    solutionCode: `// invLerp(0, 200, 65) = 65/200 = 0.325
-// alpha = lerp(0.2, 1, 0.325) = 0.2 + 0.8*0.325 = 0.2 + 0.26 = 0.46
-//
-// Khi hp = 250 (vượt biên trên 200):
-// invLerp(0, 200, 250) = 1.25
-// alpha = lerp(0.2, 1, 1.25) = 0.2 + 0.8*1.25 = 1.2  -- vượt quá 1, vô nghĩa
-// cho một hệ số alpha (driver sẽ hiểu 1.2 như thế nào là không xác định).
-//
-// Sửa: luôn clamp(alpha, 0.2, 1) (hoặc clamp t về [0,1] trước khi lerp ra
-// alpha) ngay sau remap, bất kể input hp có vượt biên gốc hay không.`,
+    solutionNote: {
+      vi: `$\\mathrm{invLerp}(0, 200, 65) = 65/200 = 0.325$. $\\alpha = \\mathrm{lerp}(0.2, 1, 0.325) = 0.2 + 0.8\\times 0.325 = 0.46$.
+
+Khi $hp = 250$ (vượt biên trên $200$): $\\mathrm{invLerp}(0, 200, 250) = 1.25$, $\\alpha = \\mathrm{lerp}(0.2, 1, 1.25) = 0.2 + 0.8\\times 1.25 = 1.2$ — vượt quá $1$, vô nghĩa cho một hệ số alpha (driver sẽ hiểu $1.2$ như thế nào là không xác định).
+
+Sửa: luôn \`clamp(alpha, 0.2, 1)\` (hoặc clamp $t$ về $[0,1]$ trước khi lerp ra alpha) ngay sau remap, bất kể input $hp$ có vượt biên gốc hay không.`,
+      en: `$\\mathrm{invLerp}(0, 200, 65) = 65/200 = 0.325$. $\\alpha = \\mathrm{lerp}(0.2, 1, 0.325) = 0.2 + 0.8\\times 0.325 = 0.46$.
+
+At $hp = 250$ (past the upper bound of $200$): $\\mathrm{invLerp}(0, 200, 250) = 1.25$, $\\alpha = \\mathrm{lerp}(0.2, 1, 1.25) = 0.2 + 0.8\\times 1.25 = 1.2$ — over $1$, meaningless for an alpha coefficient (undefined behavior for whatever consumes $1.2$).
+
+Fix: always \`clamp(alpha, 0.2, 1)\` (or clamp $t$ to $[0,1]$ before lerping into alpha) right after the remap, regardless of whether the input $hp$ exceeds the source range.`,
+    },
   },
   {
     id: "frame-rate-independent-damping",
@@ -55,7 +57,7 @@ Then answer: if $hp$ suddenly exceeds 200 (a temporary buff, say $hp=250$), what
       en: `Write a function \`dampTowards(value, target, lambda, dt)\` that smooths \`value\` toward \`target\` using an exponential-decay form that is **dt-correct** — not frame-rate dependent like \`value += (target-value)*k\` every frame.`,
     },
     starterCode: `function dampTowards(value: number, target: number, lambda: number, dt: number): number {
-  // TODO: tra ve gia tri moi hoi tu ve target theo
+  // TODO: return the new value converging toward target via
   // value + (target - value) * (1 - e^(-lambda * dt))
   return value;
 }`,

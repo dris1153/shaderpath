@@ -36,16 +36,18 @@ Compute how much rotation gets added per callback invocation on each display. Th
         en: `I can explain why dropping \`delta\` makes a 144Hz display spin $144/60 = 2.4$ times faster than a 60Hz display`,
       },
     ],
-    solutionCode: `// 60Hz:  2 * 0.01667 ≈ 0.0333 rad/lần gọi × 60 lần gọi/giây  = 2 rad/giây
-// 144Hz: 2 * 0.00694 ≈ 0.01389 rad/lần gọi × 144 lần gọi/giây = 2 rad/giây
-//
-// → tốc độ thật (rad/giây) giống hệt nhau vì delta bù đúng phần chênh lệch
-// framerate: delta nhỏ hơn ở màn hình nhanh hơn, nhưng callback cũng chạy
-// nhiều lần hơn đúng theo tỉ lệ nghịch.
-//
-// Bỏ delta: += 2 mỗi LẦN GỌI, số lần gọi/giây = framerate của máy, nên tốc
-// độ quay (rad/giây) tỉ lệ thuận với framerate — 144Hz quay nhanh gấp
-// 144/60 = 2.4 lần so với 60Hz, animation không còn nhất quán giữa các máy.`,
+    solutionNote: {
+      vi: `Ở màn hình 60Hz: $2 \\times 0.01667 \\approx 0.0333$ rad mỗi lần gọi, nhân với 60 lần gọi/giây ra đúng $2$ rad/giây. Ở màn hình 144Hz: $2 \\times 0.00694 \\approx 0.01389$ rad mỗi lần gọi, nhân với 144 lần gọi/giây cũng ra đúng $2$ rad/giây.
+
+Tốc độ quay thực (rad/giây) giống hệt nhau ở cả hai màn hình, vì delta bù đúng phần chênh lệch framerate: delta nhỏ hơn ở màn hình nhanh hơn, nhưng callback lại chạy nhiều lần hơn đúng theo tỉ lệ nghịch.
+
+Nếu bỏ delta, mỗi lần gọi cộng đúng 2 rad, mà số lần gọi mỗi giây bằng đúng framerate của máy — nên tốc độ quay (rad/giây) tỉ lệ thuận với framerate. Màn hình 144Hz khi đó sẽ quay nhanh gấp $144/60 = 2.4$ lần màn hình 60Hz, và animation không còn nhất quán giữa các máy.`,
+      en: `On a 60Hz display: $2 \\times 0.01667 \\approx 0.0333$ rad per call, times 60 calls/second, gives exactly $2$ rad/second. On a 144Hz display: $2 \\times 0.00694 \\approx 0.01389$ rad per call, times 144 calls/second, also gives exactly $2$ rad/second.
+
+The real rotation speed (rad/second) is identical on both displays, because delta exactly compensates for the framerate difference: delta is smaller on the faster display, but the callback runs proportionally more often.
+
+If delta is dropped, each call adds exactly 2 radians, and the number of calls per second equals the machine's framerate — so rotation speed (rad/second) becomes directly proportional to framerate. A 144Hz display would then spin $144/60 = 2.4$ times faster than a 60Hz one, and the animation would no longer be consistent across machines.`,
+    },
   },
   {
     id: "orbiting-light-ref-mutation",
@@ -63,9 +65,9 @@ function OrbitingLight({ radius, speed }: { radius: number; speed: number }) {
   const angleRef = useRef(0);
 
   useFrame((state, delta) => {
-    // TODO 1: return sớm nếu lightRef.current chưa gắn
-    // TODO 2: cộng dồn angleRef.current theo speed * delta
-    // TODO 3: gán thẳng light.position.x/z = cos/sin(angle) * radius -- không setState
+    // TODO 1: return early if lightRef.current isn't attached yet
+    // TODO 2: accumulate angleRef.current by speed * delta
+    // TODO 3: assign light.position.x/z = cos/sin(angle) * radius directly -- no setState
   });
 
   return <pointLight ref={lightRef} intensity={2} position={[radius, 2, 0]} />;

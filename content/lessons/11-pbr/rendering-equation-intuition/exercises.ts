@@ -36,17 +36,14 @@ Using exactly the $(n \\cdot \\omega_i) = \\cos\\theta$ term in $L_o = L_e + \\i
         en: "I can explain why this is a geometric consequence (projected area), not the sun emitting less light",
       },
     ],
-    solutionCode: `// Ti le nang luong = cos(theta_4pm) / cos(theta_noon)
-// cos(0deg)  = 1.0
-// cos(60deg) = 0.5
-// ratio = 0.5 / 1.0 = 0.5 -> tam pin nhan dung 50% nang luong so voi truot trua
-//
-// Su sut giam nay den tu so hang (n . omega_i) = cos(theta) trong phuong
-// trinh -- KHONG phai Le (mat troi khong doi cach phat sang) va cung
-// khong phai Li (do choi cua mat troi khong doi theo gia thiet de bai).
-// Cung mot chum sang, khi chieu xien hon, trai nang luong cua no len mot
-// dien tich be mat LON HON (dA_perp = dA * cos(theta)) -- mat do nang
-// luong tren moi don vi dien tich panel giam dung theo ty le cosine do.`,
+    solutionNote: {
+      vi: `Tỉ lệ năng lượng $= \\cos 60^\\circ / \\cos 0^\\circ = 0.5 / 1.0 = 50\\%$: tấm pin lúc 16h nhận đúng 50% năng lượng so với lúc trưa.
+
+Sự sụt giảm này đến từ số hạng $(n\\cdot\\omega_i) = \\cos\\theta$ trong phương trình — KHÔNG phải $L_e$ (mặt trời không đổi cách phát sáng) và cũng không phải $L_i$ (độ chói mặt trời không đổi theo giả thiết đề bài). Cùng một chùm sáng, khi chiếu xiên hơn, trải năng lượng của nó lên một diện tích bề mặt LỚN HƠN ($dA_\\perp = dA\\cos\\theta$) — mật độ năng lượng trên mỗi đơn vị diện tích panel giảm đúng theo tỉ lệ cosine đó.`,
+      en: `Energy ratio $= \\cos 60^\\circ / \\cos 0^\\circ = 0.5 / 1.0 = 50\\%$: the panel receives exactly 50% of noon's energy at 4pm.
+
+This drop comes from the $(n\\cdot\\omega_i) = \\cos\\theta$ term in the equation — NOT from $L_e$ (the sun's emission mechanism doesn't change) and not from $L_i$ (the sun's radiance stays constant per the problem's assumption). The same beam, arriving at a shallower angle, spreads its energy over a LARGER surface area ($dA_\\perp = dA\\cos\\theta$) — the energy density per unit panel area drops exactly by that cosine ratio.`,
+    },
   },
   {
     id: "discrete-sum-lambert-multilight",

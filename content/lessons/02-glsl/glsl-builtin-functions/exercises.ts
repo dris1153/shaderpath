@@ -36,14 +36,14 @@ Then explain: why doesn't \`clamp\` on a \`vec3\` need three separate \`if\` lin
         en: "I can explain the component-wise property and why it replaces a per-channel repeated if",
       },
     ],
-    solutionCode: `// step(0.5, 0.3) = 0.0   (0.3 < 0.5)
-// step(0.5, 0.7) = 1.0   (0.7 >= 0.5)
-// clamp(vec3(-0.2, 0.5, 1.4), 0.0, 1.0) = vec3(0.0, 0.5, 1.0)
-//   -0.2 bị kẹp xuống 0.0, 0.5 nằm trong khoảng nên giữ nguyên, 1.4 bị kẹp lên 1.0
-//
-// clamp/step/mix... đều "component-wise": khi nhận vec3, GLSL áp phép toán
-// độc lập lên TỪNG thành phần, tương đương gọi bản float ba lần rồi ghép lại
-// thành vec3 — không có ý nghĩa "vector" đặc biệt nào chen vào giữa.`,
+    solutionNote: {
+      vi: `\`step(0.5, 0.3) = 0.0\` (vì $0.3 < 0.5$), \`step(0.5, 0.7) = 1.0\` (vì $0.7 \\ge 0.5$). \`clamp(vec3(-0.2, 0.5, 1.4), 0.0, 1.0) = vec3(0.0, 0.5, 1.0)\`: $-0.2$ bị kẹp lên $0.0$, $0.5$ nằm trong khoảng nên giữ nguyên, $1.4$ bị kẹp xuống $1.0$.
+
+\`clamp\`/\`step\`/\`mix\`... đều "component-wise": khi nhận \`vec3\`, GLSL áp phép toán độc lập lên TỪNG thành phần, tương đương gọi bản \`float\` ba lần rồi ghép lại thành \`vec3\` — không có ý nghĩa "vector" đặc biệt nào chen vào giữa.`,
+      en: `\`step(0.5, 0.3) = 0.0\` (since $0.3 < 0.5$), \`step(0.5, 0.7) = 1.0\` (since $0.7 \\ge 0.5$). \`clamp(vec3(-0.2, 0.5, 1.4), 0.0, 1.0) = vec3(0.0, 0.5, 1.0)\`: $-0.2$ gets clamped up to $0.0$, $0.5$ stays as-is since it's already in range, $1.4$ gets clamped down to $1.0$.
+
+\`clamp\`/\`step\`/\`mix\`... are all "component-wise": when given a \`vec3\`, GLSL applies the operation independently to EACH component, exactly like calling the \`float\` version three times and reassembling a \`vec3\` — there's no special "vector" meaning inserted in between.`,
+    },
   },
   {
     id: "compose-pulse-train",
@@ -61,8 +61,8 @@ Requirement: each of the \`n\` repeating cells must show a pulse with a flat pla
   float n = 6.0;
   float t = fract(uv.x * n);
 
-  // TODO 1: chọn 4 mốc edge cho 1 xung nằm giữa mỗi ô — ví dụ rising ở
-  // [0.3, 0.4] và falling ở [0.6, 0.7]
+  // TODO 1: pick 4 edge values for one pulse centered in each cell — e.g. rising at
+  // [0.3, 0.4] and falling at [0.6, 0.7]
   // TODO 2: pulse = smoothstep(rising) - smoothstep(falling)
   float pulse = 0.0;
 

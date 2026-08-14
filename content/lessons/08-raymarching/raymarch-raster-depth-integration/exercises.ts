@@ -36,19 +36,18 @@ Without running code: (1) use $d = \\dfrac{nf}{f - \\text{depth}(f-n)}$ to compu
         en: "I correctly computed the absolute error ≈ 0.79 if the division is skipped, and can explain why rd_view.z → -1 at screen center makes the error vanish",
       },
     ],
-    solutionCode: `// d = (n*f) / (f - depth*(f-n))
-//   = (0.5*20) / (20 - 0.92*19.5)
-//   = 10 / (20 - 17.94)
-//   = 10 / 2.06
-//   ~= 4.854
-//
-// t_bound = d / (-rd_view.z) = 4.854 / 0.86 ~= 5.644
-//
-// Skipping the division: error = t_bound - d ~= 5.644 - 4.854 = 0.79
-// At screen center rd_view.z -> -1, so -rd_view.z -> 1 and t_bound -> d
-// (error -> 0). Toward the edges the ray tilts away from the view axis,
-// -rd_view.z shrinks toward 0, and d/(-rd_view.z) grows relative to d —
-// the exact "sinking near the border" artifact described in the theory.`,
+    solutionNote: {
+      vi: `$d = \\dfrac{nf}{f - \\text{depth}(f-n)} = \\dfrac{0.5 \\times 20}{20 - 0.92 \\times 19.5} = \\dfrac{10}{20 - 17.94} = \\dfrac{10}{2.06} \\approx 4.854$.
+
+$t_{bound} = \\dfrac{d}{-rd_{view,z}} = \\dfrac{4.854}{0.86} \\approx 5.644$.
+
+Nếu bỏ qua phép chia: sai số $= t_{bound} - d \\approx 5.644 - 4.854 = 0.79$. Ở tâm màn hình $rd_{view,z} \\to -1$, nên $-rd_{view,z} \\to 1$ và $t_{bound} \\to d$ (sai số $\\to 0$). Càng ra rìa, tia càng lệch khỏi trục nhìn, $-rd_{view,z}$ càng nhỏ dần về $0$, khiến $d/(-rd_{view,z})$ lớn hơn hẳn $d$ — đúng hiện tượng "chìm dần gần biên" được mô tả trong lý thuyết.`,
+      en: `$d = \\dfrac{nf}{f - \\text{depth}(f-n)} = \\dfrac{0.5 \\times 20}{20 - 0.92 \\times 19.5} = \\dfrac{10}{20 - 17.94} = \\dfrac{10}{2.06} \\approx 4.854$.
+
+$t_{bound} = \\dfrac{d}{-rd_{view,z}} = \\dfrac{4.854}{0.86} \\approx 5.644$.
+
+Skipping the division: error $= t_{bound} - d \\approx 5.644 - 4.854 = 0.79$. At screen center $rd_{view,z} \\to -1$, so $-rd_{view,z} \\to 1$ and $t_{bound} \\to d$ (error $\\to 0$). Toward the edges, the ray tilts away from the view axis, $-rd_{view,z}$ shrinks toward $0$, so $d/(-rd_{view,z})$ grows well past $d$ — exactly the "sinking near the border" artifact described in the theory.`,
+    },
   },
   {
     id: "depth-sample-to-march-bound-ts",

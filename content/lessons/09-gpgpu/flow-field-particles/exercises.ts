@@ -40,18 +40,14 @@ export const exercises: Exercise[] = [
         en: "Recognized this as a visibly noticeable bug (a periodic whole-screen 'blink'), not a harmless implementation detail",
       },
     ],
-    solutionCode: `// (a) Average respawn rate:
-// each particle respawns once every T seconds on average
-// -> rate per particle = 1 / T
-// -> system rate = N / T = 65536 / 4.5 ~= 14,563.6 particles/second
-//
-// (b) Without staggering, age(t) = t mod T is IDENTICAL for every particle
-// (they all started at age 0 at the same t=0). So the condition
-// "age > uLifetime" becomes true for ALL 65536 texels on the exact same
-// frame, at t = T, 2T, 3T, ... Every particle jumps to a new random
-// position simultaneously -> the entire cloud visibly "blinks" or
-// "resets" once every T seconds, a hard-to-miss artifact, instead of the
-// smooth, continuous trickle of respawns the staggered version produces.`,
+    solutionNote: {
+      vi: `(a) Tốc độ tái sinh trung bình: mỗi particle tái sinh trung bình một lần sau mỗi $T$ giây, nên tốc độ mỗi particle là $1/T$. Tốc độ toàn hệ là $N/T = 65536 / 4.5 \\approx 14{,}563.6$ particle/giây.
+
+(b) Nếu không so le, $\\text{age}(t) = t \\bmod T$ giống hệt nhau cho mọi particle, vì tất cả đều bắt đầu ở tuổi 0 tại cùng $t=0$. Vậy điều kiện "age > uLifetime" trở thành đúng cho TOÀN BỘ 65536 texel ở đúng cùng một frame, tại $t = T, 2T, 3T, \\dots$. Mọi particle đồng loạt nhảy tới một vị trí ngẫu nhiên mới cùng lúc — cả đám mây particle "nháy" hoặc "reset" rõ rệt mỗi $T$ giây, một lỗi rất dễ nhận ra, thay vì dòng tái sinh trải đều liên tục mà phiên bản so le tạo ra.`,
+      en: `(a) Average respawn rate: each particle respawns once every $T$ seconds on average, so the rate per particle is $1/T$. The system rate is $N/T = 65536 / 4.5 \\approx 14{,}563.6$ particles/second.
+
+(b) Without staggering, $\\text{age}(t) = t \\bmod T$ is identical for every particle, since they all started at age 0 at the same $t=0$. So the condition "age > uLifetime" becomes true for ALL 65536 texels on the exact same frame, at $t = T, 2T, 3T, \\dots$. Every particle jumps to a new random position simultaneously — the entire cloud visibly "blinks" or "resets" once every $T$ seconds, a hard-to-miss artifact, instead of the smooth, continuous trickle of respawns the staggered version produces.`,
+    },
   },
   {
     id: "build-reference-attribute",

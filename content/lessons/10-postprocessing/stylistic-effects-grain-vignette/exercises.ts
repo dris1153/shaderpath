@@ -56,19 +56,26 @@ Then answer: why does the formula use \`smoothstep\` instead of a simple linear 
         en: "I can explain that smoothstep avoids a visible ring/mach-band right at radius $r$, since its derivative is 0 at both ends — a linear mix has an abrupt derivative kink exactly at $r$",
       },
     ],
-    solutionCode: `// p = ((0.9 - 0.5) * 1.778, 0.5 - 0.5) = (0.711, 0)
-// dist = length(p) = 0.711 (p.y = 0, so dist = |p.x|)
-//
-// t = clamp((0.711 - 0.3) / (1 - 0.3), 0, 1) = clamp(0.411 / 0.7, 0, 1) = 0.587
-// smoothstep = t*t*(3 - 2*t) = 0.587^2 * (3 - 1.174) = 0.345 * 1.826 ≈ 0.630
-//
-// vig = 1 - 0.4 * 0.630 ≈ 1 - 0.252 = 0.748
-//
-// smoothstep is used instead of mix() because it's C1-continuous at both
-// r and 1: its derivative is exactly 0 at the edges, so the transition
-// blends in/out smoothly. A linear mix has a sharp derivative discontinuity
-// right at dist = r — visible as a faint ring where the darkening "starts",
-// a classic mach-band artifact the eye is very sensitive to.`,
+    solutionNote: {
+      vi: `$p = ((0.9 - 0.5) \\times 1.778,\\ 0.5 - 0.5) = (0.711, 0)$, nên $\\text{dist} = \\lVert p \\rVert = 0.711$ (vì $p.y = 0$).
+
+$t = \\mathrm{clamp}((0.711 - 0.3) / (1 - 0.3), 0, 1) = \\mathrm{clamp}(0.411 / 0.7, 0, 1) = 0.587$.
+
+$\\mathrm{smoothstep} = t^2(3 - 2t) = 0.587^2 \\times (3 - 1.174) = 0.345 \\times 1.826 \\approx 0.630$.
+
+$\\text{vig} = 1 - 0.4 \\times 0.630 \\approx 1 - 0.252 = 0.748$.
+
+\`smoothstep\` được dùng thay vì \`mix()\` vì nó liên tục $C^1$ ở cả hai đầu $r$ và $1$: đạo hàm của nó bằng đúng 0 ở hai biên, nên quá trình chuyển tiếp mượt mà cả lúc vào lẫn lúc ra. Một phép trộn tuyến tính có một điểm gãy đạo hàm đột ngột đúng tại $\\text{dist} = r$ — nhìn thấy được như một vòng mờ nơi vùng tối "bắt đầu", một artifact mach-band kinh điển mà mắt người rất nhạy cảm với nó.`,
+      en: `$p = ((0.9 - 0.5) \\times 1.778,\\ 0.5 - 0.5) = (0.711, 0)$, so $\\text{dist} = \\lVert p \\rVert = 0.711$ (since $p.y = 0$).
+
+$t = \\mathrm{clamp}((0.711 - 0.3) / (1 - 0.3), 0, 1) = \\mathrm{clamp}(0.411 / 0.7, 0, 1) = 0.587$.
+
+$\\mathrm{smoothstep} = t^2(3 - 2t) = 0.587^2 \\times (3 - 1.174) = 0.345 \\times 1.826 \\approx 0.630$.
+
+$\\text{vig} = 1 - 0.4 \\times 0.630 \\approx 1 - 0.252 = 0.748$.
+
+\`smoothstep\` is used instead of \`mix()\` because it's C1-continuous at both $r$ and $1$: its derivative is exactly 0 at the edges, so the transition blends in and out smoothly. A linear mix has a sharp derivative discontinuity right at $\\text{dist} = r$ — visible as a faint ring where the darkening "starts", a classic mach-band artifact the eye is very sensitive to.`,
+    },
   },
   {
     id: "chromatic-aberration-offset-fn",

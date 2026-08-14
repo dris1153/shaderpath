@@ -36,16 +36,20 @@ Then answer: at $t=0.3$ (only $30\\%$ of the time elapsed), what percentage of t
         en: "I can explain why ease_out is far ahead of ease_in at the same t=0.3, matching the in/out naming",
       },
     ],
-    solutionCode: `// ease_in(0.3)  = 0.3^2 = 0.09              -> mới đi được 9% quãng đường
-// ease_out(0.3) = 1 - (1 - 0.3)^2
-//               = 1 - 0.7^2 = 1 - 0.49 = 0.51 -> đã đi được 51% quãng đường
-//
-// Tại t=0.3 (30% thời gian trôi qua):
-// - ease_in chỉ đạt 9% quãng đường  (9% < 30%)  -> khởi động CHẬM, đúng "in"
-// - ease_out đã đạt 51% quãng đường (51% > 30%) -> xuất phát NHANH, đúng "out"
-//
-// Hai đường cong là ảnh phản chiếu của nhau qua điểm (0.5, 0.5): ease_out
-// "mượn" tốc độ mà ease_in để dành ở đoạn cuối, dùng ngay từ đầu.`,
+    solutionNote: {
+      vi: `$ease_{in}(0.3) = 0.3^2 = 0.09$ — mới đi được $9\\%$ quãng đường.
+$ease_{out}(0.3) = 1 - (1-0.3)^2 = 1 - 0.7^2 = 1 - 0.49 = 0.51$ — đã đi được $51\\%$ quãng đường.
+
+Tại $t=0.3$ ($30\\%$ thời gian trôi qua): \`ease_in\` chỉ đạt $9\\%$ quãng đường ($9\\% < 30\\%$) → khởi động CHẬM, đúng "in". \`ease_out\` đã đạt $51\\%$ quãng đường ($51\\% > 30\\%$) → xuất phát NHANH, đúng "out".
+
+Hai đường cong là ảnh phản chiếu của nhau qua điểm $(0.5, 0.5)$: \`ease_out\` "mượn" tốc độ mà \`ease_in\` để dành ở đoạn cuối, dùng ngay từ đầu.`,
+      en: `$ease_{in}(0.3) = 0.3^2 = 0.09$ — only $9\\%$ of the distance covered.
+$ease_{out}(0.3) = 1 - (1-0.3)^2 = 1 - 0.7^2 = 1 - 0.49 = 0.51$ — already $51\\%$ of the distance covered.
+
+At $t=0.3$ ($30\\%$ of time elapsed): \`ease_in\` only reaches $9\\%$ of the distance ($9\\% < 30\\%$) → starts SLOW, matching "in". \`ease_out\` already reaches $51\\%$ of the distance ($51\\% > 30\\%$) → starts FAST, matching "out".
+
+The two curves are mirror images of each other around $(0.5, 0.5)$: \`ease_out\` "borrows" the speed \`ease_in\` saves for its final stretch, and spends it right at the start.`,
+    },
   },
   {
     id: "pick-ease-by-intent",
@@ -57,11 +61,11 @@ Then answer: at $t=0.3$ (only $30\\%$ of the time elapsed), what percentage of t
     starterCode: `type MotionContext = "entrance" | "exit" | "feedback" | "ambient";
 
 function pickEase(context: MotionContext): string {
-  // TODO: trả về ease đúng ý đồ cho từng ngữ cảnh:
-  // - entrance: ease-out mạnh vừa
-  // - exit: ease-in TƯƠNG ỨNG với entrance (không phải ease-out lặp lại)
-  // - feedback: ngắn, dứt khoát
-  // - ambient: mượt, không giật ở hai đầu
+  // TODO: return the ease matching each context's intent:
+  // - entrance: moderately strong ease-out
+  // - exit: ease-in that MATCHES entrance (not a repeated ease-out)
+  // - feedback: short, decisive
+  // - ambient: smooth, no snap at either end
   return "power1.out";
 }`,
     solutionCode: `type MotionContext = "entrance" | "exit" | "feedback" | "ambient";

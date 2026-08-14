@@ -36,24 +36,26 @@ Compare the result to $\\min(d_A, d_B) = 0.05$: is \`smin\` larger, smaller, or 
         en: "Explained that the $-k h(1-h)$ term is the 'dip' that carves the rounded fillet at the seam, not a rounding error",
       },
     ],
-    solutionCode: `// h = clamp(0.5 + 0.5*(dB-dA)/k, 0, 1)
-//   = clamp(0.5 + 0.5*(0.08-0.05)/0.1, 0, 1)
-//   = clamp(0.5 + 0.15, 0, 1) = 0.65
+    solutionNote: {
+      vi: `$h = \\mathrm{clamp}(0.5 + 0.5(d_B-d_A)/k, 0, 1) = \\mathrm{clamp}(0.5 + 0.5(0.08-0.05)/0.1, 0, 1) = \\mathrm{clamp}(0.5 + 0.15, 0, 1) = 0.65$.
 
-// mix(dB, dA, h) = dB + (dA-dB)*h = 0.08 + (0.05-0.08)*0.65
-//                = 0.08 - 0.0195 = 0.0605
+$\\mathrm{mix}(d_B, d_A, h) = d_B + (d_A-d_B)h = 0.08 + (0.05-0.08)(0.65) = 0.08 - 0.0195 = 0.0605$.
 
-// k*h*(1-h) = 0.1 * 0.65 * 0.35 = 0.02275
+$kh(1-h) = 0.1 \\times 0.65 \\times 0.35 = 0.02275$.
 
-// smin(dA,dB,k) = 0.0605 - 0.02275 = 0.03775
+$\\mathrm{smin}(d_A,d_B,k) = 0.0605 - 0.02275 = 0.03775$.
 
-// min(dA,dB) = 0.05
-// 0.03775 < 0.05: smin dips BELOW the plain min. The subtracted term
-// k*h*(1-h) is what creates that dip — geometrically it's the concave
-// fillet that rounds the seam between the two shapes instead of a crease.
-// It's largest when h is near 0.5 (the two distances are nearly equal,
-// right at the crossover) and vanishes as h saturates to 0 or 1 away
-// from the blend zone.`,
+$\\min(d_A,d_B) = 0.05$. Vì $0.03775 < 0.05$, \`smin\` lún xuống dưới cả \`min\` thường. Số hạng bị trừ $kh(1-h)$ chính là thứ tạo ra độ lún đó — về mặt hình học đó là nét bo lõm làm mềm đường nối giữa hai hình, thay vì một góc gấp. Số hạng này lớn nhất khi $h$ gần $0.5$ (hai khoảng cách gần bằng nhau, đúng điểm giao) và triệt tiêu khi $h$ bão hoà về $0$ hoặc $1$, ra khỏi vùng pha trộn.`,
+      en: `$h = \\mathrm{clamp}(0.5 + 0.5(d_B-d_A)/k, 0, 1) = \\mathrm{clamp}(0.5 + 0.5(0.08-0.05)/0.1, 0, 1) = \\mathrm{clamp}(0.5 + 0.15, 0, 1) = 0.65$.
+
+$\\mathrm{mix}(d_B, d_A, h) = d_B + (d_A-d_B)h = 0.08 + (0.05-0.08)(0.65) = 0.08 - 0.0195 = 0.0605$.
+
+$kh(1-h) = 0.1 \\times 0.65 \\times 0.35 = 0.02275$.
+
+$\\mathrm{smin}(d_A,d_B,k) = 0.0605 - 0.02275 = 0.03775$.
+
+$\\min(d_A,d_B) = 0.05$. Since $0.03775 < 0.05$, \`smin\` dips BELOW the plain min. The subtracted term $kh(1-h)$ is what creates that dip — geometrically it's the concave fillet that rounds the seam between the two shapes instead of a crease. It's largest when $h$ is near $0.5$ (the two distances are nearly equal, right at the crossover) and vanishes as $h$ saturates to $0$ or $1$, away from the blend zone.`,
+    },
   },
   {
     id: "implement-smooth-union-raymarch",

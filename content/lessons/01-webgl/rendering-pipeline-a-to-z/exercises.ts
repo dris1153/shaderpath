@@ -40,18 +40,18 @@ Then explain in words: if \`uW\` increases while \`aPosition\` stays fixed, whic
         en: "I explained why increasing w pulls the point closer to screen center (dividing by a larger number → smaller-magnitude NDC)",
       },
     ],
-    solutionCode: `// Clip space: (x, y, 0, w) = (0.4, -0.2, 0, 2.0)
-// NDC: chia x, y, z cho w → (0.4/2, -0.2/2, 0/2) = (0.2, -0.1, 0)
-// Viewport (canvas 640x360, quy ước OpenGL gốc dưới-trái):
-//   x_px = (0.2 * 0.5 + 0.5) * 640 = 0.6 * 640 = 384
-//   y_px = (-0.1 * 0.5 + 0.5) * 360 = 0.45 * 360 = 162
-//   → (384, 162) px
-//
-// Tăng uW trong khi x, y không đổi làm NDC = (x/w, y/w) nhỏ lại về độ lớn
-// (tiến gần 0) → điểm chiếu di chuyển về TÂM màn hình. Đây chính là cơ chế
-// phối cảnh: một vertex càng xa camera càng có w lớn (thường w ≈ độ sâu),
-// nên bị chia mạnh hơn, trông nhỏ và gần đường chân trời hơn — "phối cảnh"
-// không phải hiệu ứng vẽ tay, mà chỉ là một phép chia số học.`,
+    solutionNote: {
+      vi: `Clip space: $(x, y, 0, w) = (0.4, -0.2, 0, 2.0)$. NDC: chia $x, y, z$ cho $w$ → $(0.4/2, -0.2/2, 0/2) = (0.2, -0.1, 0)$.
+
+Viewport (canvas $640 \\times 360$, quy ước OpenGL gốc dưới-trái): $x_{px} = (0.2 \\times 0.5 + 0.5) \\times 640 = 0.6 \\times 640 = 384$, $y_{px} = (-0.1 \\times 0.5 + 0.5) \\times 360 = 0.45 \\times 360 = 162$ → $(384, 162)$ px.
+
+Tăng \`uW\` trong khi $x, y$ không đổi làm NDC $= (x/w, y/w)$ nhỏ lại về độ lớn (tiến gần 0) → điểm chiếu di chuyển về TÂM màn hình. Đây chính là cơ chế phối cảnh: một vertex càng xa camera càng có $w$ lớn (thường $w \\approx$ độ sâu), nên bị chia mạnh hơn, trông nhỏ và gần đường chân trời hơn — "phối cảnh" không phải hiệu ứng vẽ tay, mà chỉ là một phép chia số học.`,
+      en: `Clip space: $(x, y, 0, w) = (0.4, -0.2, 0, 2.0)$. NDC: divide $x, y, z$ by $w$ → $(0.4/2, -0.2/2, 0/2) = (0.2, -0.1, 0)$.
+
+Viewport (canvas $640 \\times 360$, OpenGL bottom-left origin convention): $x_{px} = (0.2 \\times 0.5 + 0.5) \\times 640 = 0.6 \\times 640 = 384$, $y_{px} = (-0.1 \\times 0.5 + 0.5) \\times 360 = 0.45 \\times 360 = 162$ → $(384, 162)$ px.
+
+Increasing \`uW\` while $x, y$ stay fixed shrinks NDC $= (x/w, y/w)$ in magnitude (toward 0) → the projected point moves toward the screen CENTER. This is exactly the perspective mechanism: the farther a vertex is from the camera, the larger its $w$ (typically $w \\approx$ depth), so it gets divided down harder, ending up smaller and closer to the vanishing point — "perspective" isn't a hand-drawn effect, just plain arithmetic division.`,
+    },
   },
   {
     id: "is-vertex-clipped",
@@ -62,8 +62,8 @@ Then explain in words: if \`uW\` increases while \`aPosition\` stays fixed, whic
     },
     starterCode: `function isVertexClipped(clip: [number, number, number, number]): boolean {
   const [x, y, z, w] = clip;
-  // TODO: một trục bị clip khi giá trị của nó vượt quá +w hoặc dưới -w —
-  // so sánh với w, KHÔNG phải với 1, vì phép chia phối cảnh chưa xảy ra.
+  // TODO: an axis is clipped when its value exceeds +w or goes below -w —
+  // compare against w, NOT against 1, since the perspective divide hasn't happened yet.
   return false;
 }`,
     solutionCode: `function isVertexClipped(clip: [number, number, number, number]): boolean {

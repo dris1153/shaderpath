@@ -36,22 +36,18 @@ Then explain: why $f(0.5)$ comes out identical across all three functions but $f
         en: "Explained that $f'(0) \\neq 0$ makes the noise's derivative depend on the fade's own rate of change, which differs between adjacent cells; $f'(0) = 0$ removes that dependency, so adjacent cells match derivatives at the boundary",
       },
     ],
-    solutionCode: `// f(0.5): tất cả bằng 0.5 vì cả ba hàm đối xứng qua t=0.5
-// linear:     f(0.5) = 0.5
-// smoothstep: f(0.5) = 3(0.25) - 2(0.125) = 0.75 - 0.25 = 0.5
-// quintic:    f(0.5) = 6(0.03125) - 15(0.0625) + 10(0.125)
-//                    = 0.1875 - 0.9375 + 1.25 = 0.5
-//
-// f'(0):
-// linear:     f'(t) = 1              -> f'(0) = 1   (khác 0!)
-// smoothstep: f'(t) = 6t(1-t)        -> f'(0) = 0
-// quintic:    f'(t) = 30t^2(t-1)^2   -> f'(0) = 0
-//
-// f'(0) != 0 (linear) nghĩa là độ dốc của n(p) tại biên ô phụ thuộc vào
-// chính "tốc độ nội suy" tại t=0 — hai ô liền kề có 4 góc khác nhau nên
-// tốc độ đó (và giá trị dốc kết quả) khác nhau, gây gián đoạn đạo hàm.
-// f'(0) = 0 xoá hẳn thành phần đó khỏi công thức đạo hàm tại biên, chỉ
-// còn phụ thuộc các giá trị góc mà hai ô liền kề chia sẻ chung.`,
+    solutionNote: {
+      vi: `$f(0.5)$ bằng $0.5$ ở cả ba hàm vì chúng đối xứng qua $t=0.5$: tuyến tính $f(0.5)=0.5$; smoothstep $f(0.5) = 3(0.25) - 2(0.125) = 0.75 - 0.25 = 0.5$; quintic $f(0.5) = 6(0.03125) - 15(0.0625) + 10(0.125) = 0.1875 - 0.9375 + 1.25 = 0.5$.
+
+$f'(0)$: tuyến tính $f'(t) = 1 \\Rightarrow f'(0) = 1$ (khác 0!); smoothstep $f'(t) = 6t(1-t) \\Rightarrow f'(0) = 0$; quintic $f'(t) = 30t^2(t-1)^2 \\Rightarrow f'(0) = 0$.
+
+$f'(0) \\neq 0$ (tuyến tính) nghĩa là độ dốc của $n(p)$ tại biên ô phụ thuộc vào chính "tốc độ nội suy" tại $t=0$ — hai ô liền kề có 4 góc khác nhau nên tốc độ đó (và giá trị dốc kết quả) khác nhau, gây gián đoạn đạo hàm. $f'(0) = 0$ xoá hẳn thành phần đó khỏi công thức đạo hàm tại biên, chỉ còn phụ thuộc các giá trị góc mà hai ô liền kề chia sẻ chung.`,
+      en: `$f(0.5)$ equals $0.5$ for all three because they're symmetric around $t=0.5$: linear $f(0.5)=0.5$; smoothstep $f(0.5) = 3(0.25) - 2(0.125) = 0.75 - 0.25 = 0.5$; quintic $f(0.5) = 6(0.03125) - 15(0.0625) + 10(0.125) = 0.1875 - 0.9375 + 1.25 = 0.5$.
+
+$f'(0)$: linear $f'(t) = 1 \\Rightarrow f'(0) = 1$ (nonzero!); smoothstep $f'(t) = 6t(1-t) \\Rightarrow f'(0) = 0$; quintic $f'(t) = 30t^2(t-1)^2 \\Rightarrow f'(0) = 0$.
+
+$f'(0) \\neq 0$ (linear) means the slope of $n(p)$ at the cell boundary depends on the "interpolation rate" itself at $t=0$ — two adjacent cells have 4 different corner values, so that rate (and the resulting slope) differs between them, causing a derivative discontinuity. $f'(0) = 0$ removes that term entirely from the boundary derivative formula, leaving only the corner values the two adjacent cells share in common.`,
+    },
   },
   {
     id: "fade-toggle-in-playground",

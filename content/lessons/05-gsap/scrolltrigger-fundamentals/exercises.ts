@@ -32,20 +32,25 @@ Briefly explain the mechanism behind each answer.`,
         en: "I know the animation won't update while scrolling inside the div if scroller is missing, since no listener is attached to that actual element",
       },
     ],
-    solutionCode: `// (a) Mặc định, ScrollTrigger lắng nghe sự kiện cuộn của window — nó
-//     KHÔNG tự dò tìm div overflow-y:auto lồng bên trong.
-// (b) KHÔNG. Vì listener gắn vào window, cuộn bên trong div không sinh ra
-//     sự kiện scroll nào trên window, nên progress/trigger-state không bao
-//     giờ được tính lại — animation đứng yên cho tới khi trang ngoài
-//     tình cờ cuộn.
-// (c) Truyền scroller trỏ đúng vào phần tử cuộn thật:
-ScrollTrigger.create({
+    solutionCode: `ScrollTrigger.create({
   trigger,
-  scroller: scrollerDiv, // phần tử có overflow-y: auto thật sự đang cuộn
+  scroller: scrollerDiv, // the actual element with overflow-y: auto that scrolls
   start: "top 80%",
   end: "bottom 20%",
   scrub: true,
 });`,
+    solutionNote: {
+      vi: `(a) Mặc định, ScrollTrigger lắng nghe sự kiện cuộn của \`window\` — nó KHÔNG tự dò tìm div \`overflow-y: auto\` lồng bên trong.
+
+(b) KHÔNG. Vì listener gắn vào window, cuộn bên trong div không sinh ra sự kiện scroll nào trên window, nên progress/trigger-state không bao giờ được tính lại — animation đứng yên cho tới khi trang ngoài tình cờ cuộn.
+
+(c) Truyền \`scroller\` trỏ đúng vào phần tử cuộn thật, như đoạn code bên dưới.`,
+      en: `(a) By default, ScrollTrigger listens to \`window\`'s scroll events — it does NOT automatically detect a nested \`overflow-y: auto\` div.
+
+(b) NO. Since the listener is attached to window, scrolling inside the div fires no scroll event on window, so progress/trigger-state is never recalculated — the animation stays frozen until the outer page happens to scroll.
+
+(c) Pass \`scroller\` pointing at the actual scrolling element, as in the code below.`,
+    },
   },
   {
     id: "fix-toggle-actions-length",
@@ -65,8 +70,8 @@ ScrollTrigger.create({
     scroller: scrollerDiv,
     start: "top 80%",
     end: "bottom 20%",
-    // BUG: chỉ 2 từ khoá — onEnterBack và onLeaveBack tự rơi về "none",
-    // nên section không bao giờ ẩn lại khi cuộn ngược lên
+    // BUG: only 2 keywords — onEnterBack and onLeaveBack silently fall back
+    // to "none", so the section never hides again when scrolling back up
     toggleActions: "play none",
   },
 });`,
@@ -81,7 +86,7 @@ ScrollTrigger.create({
     scroller: scrollerDiv,
     start: "top 80%",
     end: "bottom 20%",
-    // 4 từ khoá đúng thứ tự onEnter/onLeave/onEnterBack/onLeaveBack
+    // 4 keywords in the correct onEnter/onLeave/onEnterBack/onLeaveBack order
     toggleActions: "play reverse play reverse",
   },
 });`,
