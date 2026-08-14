@@ -1,0 +1,11 @@
+## Goal
+
+This mini-build closes out the "Grading & Custom Passes" module: design a post-processing chain with a DISTINCT VISUAL SIGNATURE for a scene, applying the exact pass-order discipline and fillrate budget from the pass-order-and-fillrate lesson. The graded skill isn't "call the bloom API correctly" — it's deciding for yourself which passes you need, where each sits in the chain, and proving with a real measurement that the choice still fits inside a frame-time budget.
+
+## Requirements
+
+The sample solution ships a complete signature called "neon-noir": HDR bloom on glowing accent meshes, a hand-written custom pass that drifts a scanline pattern over time, a teal-orange grade, and a heavy vignette plus fine animated grain — but you're explicitly encouraged to swap the colors, tune the parameters, or replace the stylistic effect entirely with your own signature. The chain needs at least 4 post-processing passes in the correct canonical order (bloom → tone mapping → grade → stylistic effect), with at least one pass being a hand-written `class` extending `Pass` (not just a `ShaderPass` wrapping a pre-made shader object). Measure `composer.render()`'s frame time with `performance.now()` (EMA-smoothed) behind an on/off flag, and state a concrete budget (e.g. ~4ms at 1080p on a mid-range GPU). Every pass and the composer must be `dispose()`d correctly on unmount. Full details live in the Exercises section below.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the look is distinct and intentional, the pass order can be justified by reasoning (not just copied), the custom pass works cleanly when tested in isolation, the budget is proven with a real measurement, nothing leaks across repeated mounts, and the key parameters (colors, intensities) are tunable rather than hardcoded.

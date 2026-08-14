@@ -1,0 +1,63 @@
+## Vì sao ảnh HDR không thể chiếu thẳng lên màn hình
+
+Mọi phép tính ánh sáng đúng — cộng nhiều nguồn sáng, specular highlight, vật liệu emissive — diễn ra trong không gian **linear**, và linear light không hề bị chặn trên ở 1.0. Một mặt kim loại phản chiếu thẳng một điểm sáng có thể cho giá trị vài chục; một vật liệu emissive tự phát sáng gấp 5-6 lần trắng chuẩn. Track 11 (PBR) sẽ đào sâu những con số này đến từ đâu; bài này chỉ cần biết kết quả render thô nằm ở dải **HDR** — không giới hạn trên.
+
+Màn hình thì có giới hạn: mỗi kênh hiển thị đúng $[0,1]$. Cách đơn giản nhất, `clamp(color, 0.0, 1.0)`, cắt cụt mọi thứ trên 1.0 về đúng 1.0 — một vùng 1.05 và một vùng 40.0 nhìn giống hệt nhau, trắng phẳng lì, mất sạch chi tiết. Đó là lý do cần một phép biến đổi có chủ đích, **tone mapping**, nén cả dải HDR về $[0,1]$ mà vẫn giữ thứ tự tương đối, thay vì cắt cụt.
+
+## Các toán tử tone mapping: nén có chủ đích
+
+### Reinhard: đường cong tiệm cận đơn giản nhất
+
+$$
+c' = \frac{E \cdot c}{1 + E \cdot c}
+$$
+
+với $c$ là giá trị linear từng kênh, $E$ là `toneMappingExposure`. Hàm $x/(1+x)$ tiệm cận 1 nhưng không bao giờ chạm — không có điểm cắt cứng. Nhưng three.js áp công thức này **theo từng kênh độc lập**, không qua luminance chung: một màu bão hoà rất sáng (đỏ 6.0, xanh dương 0.2) bị nén về gần 1.0 ở cả hai kênh một khi $c \gg 1$, khoảng cách tương đối giữa các kênh co lại — ảnh nhạt màu dần ở vùng rất sáng. Đó chính là "desaturates highlights": hệ quả toán học của nén tiệm cận theo kênh, không phải một bước pha xám riêng.
+
+### ACES Filmic: đường cong đã fit, chuẩn công nghiệp
+
+`ACESFilmicToneMapping` trong three.js không chạy toàn bộ pipeline ACES gốc (nhiều LUT theo chuẩn Academy) — nó dùng một xấp xỉ đã fit: nhân qua ma trận `ACESInputMat` sang không gian AP1, áp một đường cong hữu tỉ mô phỏng RRT+ODT tham chiếu, rồi nhân ngược `ACESOutputMat` về sRGB. Kết quả có "vai" (shoulder) rõ và tương phản mạnh hơn Reinhard — vùng sáng cong mượt về trắng thay vì tiệm cận đơn điệu. Đây là lý do ACES là mặc định trong hầu hết game engine hiện đại.
+
+### AgX: nén trong không gian log, ít "rực" hơn
+
+Three 0.185 có `AgXToneMapping`: chuyển màu qua ma trận inset, nén trong không gian mã hoá dạng log, trả lại qua ma trận outset. Xuất phát từ view transform AgX của Blender, mục đích là tránh hiện tượng "cháy màu HDR game" mà ACES đôi khi mắc — AgX kiềm chế saturation ở vùng cực sáng thay vì để nó bùng nổ. (Three cũng có `NeutralToneMapping` — chuẩn Khronos PBR Neutral — cho nhu cầu trung tính tuyệt đối, ngoài phạm vi demo này.)
+
+### Shoulder và toe
+
+Vay mượn từ nhiếp ảnh phim: **toe** là đoạn cong ở vùng tối, nén nhẹ để giữ chi tiết bóng đổ; **shoulder** là đoạn cong ở vùng sáng, nén mạnh dần để tránh cắt cụt đột ngột. Một đường cong tốt gần tuyến tính ở giữa và chỉ bẻ cong ở hai đầu — đúng hình dạng ACES/AgX, khác đường cong đơn điệu của Reinhard.
+
+## Kiến trúc: tone mapping nằm ở đâu trong EffectComposer
+
+Chi tiết dễ hiểu lầm nhất: `RenderPass` render scene vào một `WebGLRenderTarget` nội bộ, không phải màn hình. Đọc thẳng `WebGLRenderer.js`: khi render target hiện tại khác `null`, renderer tự ép `toneMapping = NoToneMapping` và color space về không gian linear — bất kể `renderer.toneMapping` đang set gì. Mọi render target trung gian trong composer luôn chứa dữ liệu linear HDR thô, chưa tone map.
+
+Tone map thật sự chỉ xảy ra ở `OutputPass` — đọc `renderer.toneMapping`/`toneMappingExposure`, áp đúng công thức, rồi encode sang sRGB, gộp cả hai bước trong một lần chạy. Comment trong `OutputPass.js` nói rõ: pass này nên đặt cuối chuỗi, và pass nào cần input đã ở sRGB phải nằm sau nó. Composer giữ HDR linear càng lâu càng tốt, chỉ "đổ khuôn" về LDR hiển thị đúng một lần, ở cuối.
+
+## LUT 3D: bảng tra màu cho color grading
+
+LUT 3D là lưới $N^3$ ô, mỗi ô lưu RGB đầu ra cho RGB đầu vào tương ứng — $N=16$ nghĩa là $4096$ điểm neo phủ đều không gian màu. Màu không rơi đúng điểm neo được GPU nội suy **trilinear** — trung bình có trọng số 8 ô lân cận trên 3 trục — tự động khi texture 3D dùng `LinearFilter`. LUT thật thường "bake" từ công cụ chỉnh màu chuyên nghiệp thành file `.cube`; bài này sinh LUT bằng code vì repo không chứa asset nhị phân — `lut-generator.ts` tính công thức teal-orange và bleach-bypass, đóng gói thành `THREE.Data3DTexture`.
+
+Có hai cách lưu LUT trên GPU. **Texture 3D thật** (`sampler3D`, WebGL2) là cách hiện đại — GPU tự trilinear, sample chỉ một dòng `texture(lut, uvw)`. Trước khi texture 3D phổ biến, kỹ thuật cũ dùng **strip 2D**: LUT $32^3$ trải phẳng thành ảnh $1024 \times 32$ (32 lát $32\times32$ xếp ngang), giả lập trục thứ ba bằng cách tính hai lát liền kề theo kênh blue, sample cả hai bằng `texture2D` thường rồi tự lerp — nhiều toán hơn hẳn nhưng chạy được khi không có texture 3D. Demo bài này dùng `Data3DTexture` thật.
+
+Dù chọn cách nào, phép sample luôn cần **inset nửa-texel** — giống lý do Track 0 cộng $0.5$ khi map pixel sang UV, mở rộng ra ba trục: $uvw = rgb \cdot (1 - \frac1N) + \frac{1}{2N}$, đảm bảo $rgb=0$ và $rgb=1$ rơi đúng tâm ô góc thay vì mép ngoài texture.
+
+## Trật tự bắt buộc: grading sau tone mapping
+
+Một LUT grading — bake từ máy quay thật hay tự viết như teal-orange — được thiết kế cho ảnh **display-referred**: giá trị đã tone map, nằm gọn $[0,1]$, nơi "0.2" thực sự là "vùng tối". Grade thẳng lên dữ liệu linear HDR (có thể là 40.0), LUT $16^3$ chỉ phủ $[0,1]$ sẽ kẹp nó vào ô biên gần nhất — mọi vùng sáng, dù chênh lệch bao nhiêu, rơi vào đúng một ô, và "vai" tone mapping đáng lẽ tạo ra chưa từng xảy ra trước khi grading kịp thấy nó.
+
+Đó là lý do `GradingPipeline` trong demo xếp `OutputPass` TRƯỚC pass LUT: `RenderPass` (linear HDR) → `OutputPass` (tone map + encode sRGB) → LUT pass (đọc ảnh đã display-referred). Tài liệu Filament về tone mapping xác nhận đúng thứ tự này cho mọi pipeline hiện đại.
+
+## LUT neutral: bài kiểm tra sanity bắt buộc
+
+LUT "neutral" trong demo là ánh xạ đồng nhất — nghe vô dụng nhưng là công cụ debug quan trọng nhất: nếu chọn neutral mà ảnh vẫn đổi màu, lỗi chắc chắn nằm ở toán sample (sai trục, quên inset), không phải nội dung LUT.
+
+Bài sau mổ xẻ chính xác `Pass` mà `OutputPass`/`ShaderPass` kế thừa, tự viết một pass từ đầu. Nắm chắc trật tự RenderPass → OutputPass → grading ở đây là nền để hiểu vì sao thứ tự pass quan trọng khi tự thêm một bước xử lý mới vào giữa chuỗi.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với tone mapping và LUT:
+
+1. **Grade trước khi tone map (LUT pass trước OutputPass).** LUT $16^3$ chỉ phủ $[0,1]$; feed giá trị linear HDR (có thể 40.0) khiến mọi vùng sáng kẹp vào cùng một ô biên bất kể chênh lệch — hiệu ứng teal-orange chưa kịp chạm highlight thật, vì "highlight" theo nghĩa display-referred chưa tồn tại ở bước đó.
+2. **Quên inset nửa-texel khi sample LUT.** Sample thẳng `rgb` chưa qua $rgb \cdot (1-\frac1N) + \frac1{2N}$ khiến cực trị (đen/trắng tuyệt đối) rơi ra ngoài rìa lưới ô — với `ClampToEdgeWrapping` bị kẹp vào một ô không phải ô góc thật, sai lệch nhẹ nhưng có hệ thống toàn ảnh.
+3. **Coi neutral LUT là trang trí, không phải test.** Một lỗi đảo trục (R và B sample nhầm chỗ) hay sai công thức inset vẫn có thể cho ảnh "gần đúng" khi dùng LUT có màu — chỉ neutral LUT bắt lỗi này ngay, vì đó là trường hợp duy nhất bắt buộc tái tạo pixel gốc y hệt.
+
+</Callout>

@@ -1,0 +1,51 @@
+## Thứ tự pass đổi Ý NGHĨA, không chỉ hình ảnh
+
+Đổi thứ tự hai pass trong composer không chỉ đổi "trông có khác chút" — nó đổi hẳn pass đó đang tính toán trên CÁI GÌ. Ví dụ rõ nhất: bloom đặt trước hay sau tone mapping. Trong Three.js, tone mapping không phải một bước tách rời chạy cuối cùng — nó được nướng thẳng vào fragment shader của material, bật hay tắt tuỳ `renderer.toneMapping` đang là gì tại đúng thời điểm `RenderPass` vẽ cảnh (`WebGLProgram` thêm cờ `TONE_MAPPING` dựa trên `material.toneMapped ? renderer.toneMapping : NoToneMapping`). Nếu buffer HDR mà `RenderPass` ghi ra đã bị nén bởi đường cong tone map, MỌI pass chạy sau đó — kể cả bloom — đều làm việc trên dữ liệu đã nén, không phải ánh sáng thật.
+
+Bloom trước tone mapping: `UnrealBloomPass` trích các vùng sáng từ buffer HDR còn nguyên (giá trị có thể vượt xa 1.0, đúng bằng năng lượng ánh sáng thật), blur rồi cộng ngược lại — quầng sáng tỉ lệ thuận với độ chói thật của nguồn sáng. Bloom sau tone mapping: nó trích sáng từ ảnh đã nén về gần $[0,1]$, nơi một vật rất chói và một vật chỉ hơi sáng trông gần như nhau — quầng sáng mất hẳn sự phân biệt cường độ, nhìn bẹt và nhạt. JSDoc của `UnrealBloomPass` cảnh báo thẳng: "tone mapping must be enabled in the renderer settings" — PHẢI có một đường cong tone map chạy ở đâu đó, nếu không tổng HDR (cảnh + bloom cộng dồn) sẽ bị cắt cứng khi ép về khung hình 8-bit thay vì nén mượt.
+
+## Trật tự chuẩn: từ cảnh HDR đến màn hình
+
+Chuỗi chuẩn, mỗi bước có lý do vật lý hoặc kỹ thuật riêng: **cảnh (HDR) → AO → bloom → tone mapping → grade/LUT → hiệu ứng phong cách (vignette, grain, chromatic aberration) → màn hình**.
+
+AO đứng ngay sau cảnh vì occlusion là một phần của PHÉP TÍNH ÁNH SÁNG — nó phải nhân vào giá trị chói còn ở dạng linear HDR, y hệt cách bóng đổ thật ăn bớt ánh sáng trước khi ánh sáng đó tới mắt. Nhân AO vào ảnh đã tone-map hoặc đã grade là nhân lên một ảnh đã "diễn giải nghệ thuật" — bóng tiếp xúc lúc đó không còn đúng vật lý, chỉ còn là lớp làm tối tuỳ tiện. Bloom đứng trước tone mapping vì lý do đã nói ở trên. Tone mapping đứng ngay sau bloom vì nó là bước DUY NHẤT nén dải HDR không giới hạn về $[0,1]$ — `OutputPass` của Three.js (gộp tone mapping lẫn chuyển không gian màu sRGB) theo đúng tài liệu chính thức "nên được đặt ở cuối mỗi chuỗi pass". Grade/LUT chạy sau tone mapping vì một LUT 3D được build cho ảnh display-referred — tra theo toạ độ RGB, kỳ vọng dữ liệu đã nằm gọn trong $[0,1]$; HDR chưa nén sẽ tra sai ô lưới. Cuối cùng, grain/vignette/chromatic aberration chạy SAU CÙNG vì đây là hiệu ứng mô phỏng ống kính và film — ánh sáng đi qua thấu kính (méo màu ở rìa — chromatic aberration), qua khẩu độ (tối góc — vignette), rồi mới chạm lớp film có hạt (grain) — đúng những thứ CUỐI CÙNG ánh sáng "đi qua" trước khi thành ảnh, nên về hậu kỳ chúng cũng là bước cuối.
+
+## Chi phí fillrate: mỗi pass là một lượt đọc và ghi toàn màn hình
+
+Mỗi fullscreen pass là một hình chữ nhật phủ kín màn hình được rasterize — GPU chạy fragment shader cho từng texel, đọc ít nhất một texture nguồn và ghi ít nhất một render target đích. Với buffer HDR nửa-float (`HalfFloatType`, 8 byte/texel RGBA), một pass đơn giản (1 lần đọc, 1 lần ghi) di chuyển xấp xỉ:
+
+$$
+\text{bytes} \approx W \times H \times 8_{\text{đọc}} + W \times H \times 8_{\text{ghi}} = W \times H \times 16
+$$
+
+| Độ phân giải | Số texel | 1 pass đơn giản | Chuỗi 5 pass |
+|---|---|---|---|
+| 1080p (1920×1080) | ~2.07 triệu | ~33 MB | ~166 MB/frame |
+| 1440p (2560×1440) | ~3.69 triệu | ~59 MB | ~295 MB/frame |
+| 4K (3840×2160) | ~8.29 triệu | ~133 MB | ~664 MB/frame |
+
+Đây là ước lượng thô (bỏ qua texture cache của GPU hiện đại) nhưng đủ để thấy quy mô: ở 1080p, 60fps, một chuỗi 5 pass tốn khoảng $166\text{MB} \times 60 \approx 10\text{GB/s}$ băng thông riêng cho hậu kỳ — đặt cạnh băng thông bộ nhớ thật của GPU (hàng trăm GB/s trên desktop, thường dưới 30GB/s trên di động) để biết còn "ngân sách" cho phần còn lại của frame.
+
+Đếm pass thấy được trong `composer.passes` KHÔNG phải chi phí thật. `UnrealBloomPass` (xác nhận trong mã nguồn) chạy nội bộ khoảng một chục draw call: 1 lần trích sáng, 5 mip level × 2 hướng blur, cộng một lần composite — nhưng bốn trong năm mip chạy ở một-phần-tư, một-phần-mười-sáu độ phân giải trở xuống (mỗi mip giảm nửa độ phân giải mip trước), nên tổng texel thực chạm tới chỉ tương đương khoảng **2 pass đầy đủ độ phân giải**, dù số draw call gấp sáu lần. Đếm "bloom = 1 pass" đánh giá thấp; đếm "bloom = 12 pass full-res" đánh giá quá cao. Kế toán trung thực nghĩa là tính theo texel × độ phân giải thật của từng draw call, không phải số dòng gọi `addPass`.
+
+## DPR: số nhân ẩn của fillrate
+
+`devicePixelRatio` nhân trực tiếp vào cả chiều rộng lẫn chiều cao của mọi render target trong composer — nên chi phí fillrate tăng theo BÌNH PHƯƠNG của DPR, không phải tuyến tính: DPR từ 1 lên 2 tăng gấp **4 lần** số texel mỗi pass phải xử lý; một số điện thoại báo DPR 3 kéo chi phí lên gấp **9 lần** so với DPR 1. Đây là số nhân dễ quên nhất vì nó không nằm trong code chuỗi pass — nó nằm trong cấu hình canvas. Với cảnh nặng hậu kỳ, kẹp DPR ở khoảng 1–1.5 thay vì thả tự do theo màn hình vật lý là cách rẻ nhất để lấy lại ngân sách frame time, thường không nhận ra được bằng mắt vì hậu kỳ vốn đã làm mờ các cạnh sắc nét mà DPR cao mới hữu ích.
+
+## Tối ưu: gộp, giảm độ phân giải, bỏ khi không cần
+
+Ba hiệu ứng chỉ đọc một input (vignette, grain, chromatic aberration) không cần ba pass riêng — gộp cả ba vào MỘT fragment shader, một lần đọc, một lần ghi, đúng kỹ thuật bài hiệu ứng phong cách trước đó trong track này đã dùng. Với hiệu ứng thuộc lớp blur (bloom, DOF, SSAO blur), chạy ở nửa độ phân giải rồi upsample khi composite giảm chi phí xấp xỉ 4 lần mà mắt gần như không phân biệt được, vì blur vốn đã làm mất chi tiết tần số cao — đây chính là lý do `UnrealBloomPass` tự làm điều này ở mọi mip. Pass nào có cường độ bằng 0 nên được `enabled = false` để composer bỏ qua hẳn, thay vì vẫn chạy full shader rồi nhân kết quả với 0 — bỏ qua một pass tiết kiệm toàn bộ băng thông của nó, nhân với 0 chỉ tiết kiệm phép nhân cuối cùng.
+
+Cách đo trung thực nhất không phải đọc tài liệu rồi cộng số liệu — là bật/tắt TỪNG pass một, đo `performance.now()` (làm mượt EMA) quanh `composer.render()`, và nhìn hiệu số. Ở tầng kiến trúc, thư viện `postprocessing` của pmndrs (nền của `@react-three/postprocessing`) giải quyết bài toán gộp pass tự động: `EffectPass` của nó gộp bất kỳ tổ hợp effect nào thành một shader duy nhất, giảm số lần render xuống mức tối thiểu mà không cần tự tay gộp shader như trên — đánh đổi là ít kiểm soát thứ tự thủ công hơn so với tự xếp `EffectComposer`.
+
+Bài checkpoint tiếp theo yêu cầu tự thiết kế một chuỗi hiệu ứng mang phong cách riêng, áp đúng nguyên tắc thứ tự và ngân sách fillrate của bài này. Track Hiệu năng ở phần sau chương trình sẽ quay lại đo `performance.now()`/GPU timer một cách hệ thống hơn, khi ngân sách frame time không chỉ tính riêng hậu kỳ mà tính cho toàn bộ pipeline render.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với thứ tự pass và fillrate:
+
+1. **Đặt bloom sau tone mapping (hoặc sau grade).** Bloom lúc đó trích sáng từ ảnh đã bị nén về gần $[0,1]$ thay vì từ giá trị HDR thật — quầng sáng mất hẳn sự phân biệt cường độ, trông bẹt và nhạt thay vì rực rỡ theo đúng năng lượng nguồn sáng.
+2. **Đếm chi phí theo số lệnh `addPass()` thay vì texel thực sự bị chạm.** Một "1 pass" như `UnrealBloomPass` hay `SSAOPass` giấu bên trong nhiều draw call ở nhiều độ phân giải khác nhau — coi nó ngang với một `ShaderPass` đơn giản làm ước lượng ngân sách sai lệch hẳn theo cả hai chiều tuỳ effect.
+3. **Quên bình phương DPR khi tính ngân sách.** Ước lượng fillrate ở DPR 1 rồi mặc định nó đúng luôn cho thiết bị DPR 2–3 bỏ sót một số nhân 4× đến 9× — đúng phần khiến demo mượt trên laptop dev nhưng giật trên điện thoại test thật.
+
+</Callout>

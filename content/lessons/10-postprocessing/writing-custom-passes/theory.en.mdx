@@ -1,0 +1,44 @@
+## Pass: The Minimal Contract Every Post-Effect Follows
+
+Reading `Pass.js` directly in `three/addons/postprocessing/`, the base `Pass` class has exactly four fields: `enabled` (the composer skips it if false), `needsSwap` (whether to swap the read/write buffers after this pass, defaults to `true`), `clear` (whether to clear the destination buffer before drawing, defaults to `false`), and `renderToScreen` (the composer sets this `true` automatically for the last enabled pass). And exactly one method you're required to override: `render(renderer, writeBuffer, readBuffer, deltaTime, maskActive)`. Nothing more mystical than that — every built-in three.js pass (`ShaderPass`, `OutputPass`, `UnrealBloomPass`, ...) is just a different implementation of these same four fields and one method.
+
+## FullScreenQuad Isn't Actually a Quad
+
+`Pass.js` also exports `FullScreenQuad` — a misleading name, since the geometry inside it (`FullscreenTriangleGeometry`) is a SINGLE oversized triangle covering the screen (vertices at $(-1,3)$, $(-1,-1)$, $(3,-1)$), not two triangles forming a quad. A single triangle avoids the diagonal seam a real two-triangle quad would have, and is slightly cheaper (3 vertices, no index buffer) — the classic full-screen-triangle trick. More important for the dispose section below: this geometry is a MODULE-LEVEL variable, created exactly once by `Pass.js`, and every `FullScreenQuad` in the entire app — across every pass, every composer — shares that same instance.
+
+## Building a Pass Step by Step: Heat Shimmer
+
+The demo's `HeatShimmerPass` distorts the image to look like rising heat haze by warping UV coordinates before sampling, rather than changing color directly. Four steps build it:
+
+1. **Uniforms** — an object literal `{ tDiffuse, uTime, uStrength, uScale, uSpeed, uResolution }`. `tDiffuse` is the conventional uniform name (ShaderPass uses the same one) so a pass knows where its input is coming from.
+2. **Constructor** — build a `THREE.ShaderMaterial` from the uniforms plus shader source, then wrap it in `new FullScreenQuad(material)`. No other mesh/scene/camera is needed.
+3. **render()** — assign `uniforms.tDiffuse.value = readBuffer.texture` (reading the previous pass's result), then branch: `renderToScreen` calls `setRenderTarget(null)`, otherwise `setRenderTarget(writeBuffer)` — exactly where it's easiest to typo `readBuffer` by mistake. Finally call `fsQuad.render(renderer)`.
+4. **setSize(width, height)** — update `uniforms.uResolution`. Skip this step and the effect still compiles and runs, just distorted at the wrong ratio once the canvas isn't square — a bug that only shows up on resize, never on first load.
+
+## RenderPass Is the Exception: It Writes Straight into readBuffer
+
+A detail that trips people up the first time they write a pass that comes right after `RenderPass`: `RenderPass` itself sets `needsSwap = false` in its constructor and renders straight into the `readBuffer` parameter it receives (not `writeBuffer`) — the source comment states it plainly: "Overwritten to disable the swap." Because it never swaps, `composer.readBuffer` after `RenderPass` still points at the render target that was just drawn into — the next pass reading `readBuffer.texture` correctly gets the freshly rendered scene, with no swap needed from `RenderPass` at all. This is a deliberate exception, not an oversight — understanding it is the key to tracing what any buffer holds at any point in the chain.
+
+## Test a Pass in Isolation Before Chaining It
+
+Before dropping `HeatShimmerPass` into the full composer, the cheapest way to catch a shader bug is: create a throwaway `THREE.WebGLRenderTarget`, assign `pass.uniforms.tDiffuse.value` to a static texture with known content (a black-and-white checker `DataTexture`, say), call `pass.render(renderer, target, target2, 0)` exactly once, then inspect the pixels visually or with `readRenderTargetPixels`. The unit-test mindset: isolate one pass from the entire 3D scene and composer chain so a shader bug never gets confused with a scene-setup bug or a pass-ordering bug.
+
+## When ShaderPass Suffices, and When a Custom Pass Is Worth It
+
+`HeatShimmerPass` is a simple single-input, single-output effect — in a real project, `new ShaderPass(heatShimmerShaderObject)` would be enough, no custom class needed. This lesson hand-builds exactly what `ShaderPass` already does to expose the contract underneath that convenience wrapper. Writing your own `Pass` subclass genuinely pays off when an effect needs MULTIPLE internal render targets (a separable horizontal/vertical blur, for instance), multiple non-full-screen-quad render steps (`RenderPass` itself is the prime example), or `needsSwap`/`clear` logic that diverges from the defaults.
+
+## The pmndrs Effect: A Genuinely Different Contract
+
+`@react-three/postprocessing` (installed at ^3.0.5) doesn't use three.js core's `Pass` at all — it wraps the `pmndrs/postprocessing` library, where every effect is an `Effect` declaring its GLSL as a FUNCTION, so an `EffectPass` can MERGE several effects into one compiled shader/pass instead of running N separate full-screen passes sequentially — fewer texture reads/writes, cheaper on fillrate when stacking many effects. The tradeoff: an `Effect` can't freely allocate its own render targets the way a full `Pass` can — it has to fit the mergeable contract. The two architectures serve different problems; neither replaces the other.
+
+The later `pass-order-and-fillrate` lesson quantifies exactly how much fillrate each added pass costs — the `Pass`/`ShaderPass` source-reading done here is the foundation for understanding why merging passes (the Effect approach) actually saves anything.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes writing a custom Pass:
+
+1. **Forgetting `needsSwap`, or setting it wrong for your effect.** A pass that writes a valid result into `writeBuffer` but leaves `needsSwap = false` means `composer.readBuffer` never gets updated to point at it — the next pass reads the stale old buffer instead, and the effect "disappears" even though the render code was entirely correct.
+2. **Reading `writeBuffer` instead of `readBuffer` by mistake.** `writeBuffer` is the target about to be overwritten by THIS very pass — sampling it as input means reading garbage or stale data from two frames back, depending on the driver, an inconsistent bug that's hard to track down.
+3. **Not updating a resolution-dependent uniform in `setSize()`.** Skip this and the effect is perfectly correct at the initial size, then stretches or skews the instant the window resizes — a bug that only surfaces on resize testing, easy to miss if you only ever test at one fixed size.
+
+</Callout>

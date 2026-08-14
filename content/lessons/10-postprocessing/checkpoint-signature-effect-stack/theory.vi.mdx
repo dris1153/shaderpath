@@ -1,0 +1,11 @@
+## Mục tiêu
+
+Đây là mini-build khép lại module "Grading & Pass tự viết": tự thiết kế một chuỗi hậu kỳ mang PHONG CÁCH RIÊNG cho một cảnh, áp đúng nguyên tắc thứ tự pass và ngân sách fillrate của bài pass-order-and-fillrate. Kỹ năng được chấm không phải "gọi đúng API bloom" — mà là khả năng tự quyết định: pass nào cần, đặt ở đâu trong chuỗi, và chứng minh bằng số đo rằng lựa chọn đó vẫn nằm trong ngân sách frame time.
+
+## Yêu cầu
+
+Solution mẫu dựng sẵn một signature hoàn chỉnh tên "neon-noir": bloom HDR trên các điểm nhấn phát sáng, một custom pass tự viết tạo hiệu ứng scanline trôi theo thời gian, chỉnh màu teal-orange, và vignette nặng cộng grain mịn động — nhưng bạn hoàn toàn được khuyến khích đổi màu, đổi tham số, hoặc thay hẳn hiệu ứng phong cách khác cho signature của riêng mình. Chuỗi phải có ít nhất 4 pass hậu kỳ theo đúng thứ tự chuẩn (bloom → tone mapping → grade → hiệu ứng phong cách), trong đó ít nhất một pass là một `class` tự viết kế thừa `Pass` (không phải ghép sẵn từ `ShaderPass` với shader có sẵn). Đo frame time của `composer.render()` bằng `performance.now()` (làm mượt EMA) với một cờ bật/tắt việc đo, và nêu rõ một ngân sách cụ thể (ví dụ ~4ms ở 1080p trên GPU tầm trung). Mọi pass và composer phải được `dispose()` đúng khi component unmount. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — phong cách rõ ràng và có chủ đích, thứ tự pass giải trình được bằng lý do (không chỉ chép đúng), custom pass chạy tốt khi test độc lập, ngân sách được chứng minh bằng số đo thật, không rò rỉ qua nhiều lần mount lại, và các tham số then chốt (màu, cường độ) đều chỉnh được chứ không hardcode cứng.

@@ -1,0 +1,63 @@
+## Why HDR Images Can't Hit the Screen Directly
+
+Every correct lighting calculation — summing multiple lights, specular highlights, emissive materials — happens in **linear** space, and linear light has no upper bound at 1.0. A metallic surface reflecting a point light straight-on can produce values in the dozens; an emissive material can shine 5-6x brighter than reference white. Track 11 (PBR) digs into where these numbers come from; this lesson only needs the fact that raw render output lives in the **HDR** range — unbounded above.
+
+Screens, though, are bounded: each channel displays exactly $[0,1]$. The naive approach, `clamp(color, 0.0, 1.0)`, chops everything above 1.0 down to exactly 1.0 — a region at 1.05 and a region at 40.0 look identical, flat white, all detail gone. That's why a deliberate transform is needed: **tone mapping**, which compresses the whole HDR range into $[0,1]$ while preserving relative ordering, instead of clipping.
+
+## Tone Mapping Operators: Deliberate Compression
+
+### Reinhard: The Simplest Asymptotic Curve
+
+$$
+c' = \frac{E \cdot c}{1 + E \cdot c}
+$$
+
+where $c$ is the per-channel linear value and $E$ is `toneMappingExposure`. $x/(1+x)$ approaches 1 but never reaches it — no hard clip point. But three.js applies this formula **per channel independently**, not through shared luminance: a very bright saturated color (red 6.0, blue 0.2) gets squeezed toward 1.0 on both channels once $c \gg 1$, and the relative gap between channels shrinks — the image visibly pales in very bright regions. That's the mechanism behind "desaturates highlights": a mathematical side effect of per-channel asymptotic compression, not a separate desaturation step.
+
+### ACES Filmic: A Fitted Curve, the Industry Default
+
+`ACESFilmicToneMapping` in three.js doesn't run the full reference ACES pipeline (which involves multiple Academy-standard LUTs) — it uses a fitted approximation instead: multiply through the `ACESInputMat` matrix into AP1 space, apply a rational curve approximating the reference RRT+ODT, then multiply back through `ACESOutputMat` into sRGB. The result has a pronounced shoulder and more contrast than Reinhard — highlights roll off smoothly toward white instead of a monotone asymptote. That's why ACES is the default in most modern game engines.
+
+### AgX: Compression in Log-Encoded Space, Less "Blown Out"
+
+Three 0.185 ships `AgXToneMapping`: color passes through an inset matrix, gets compressed in a log-encoded space, then passes back through an outset matrix. Originating from Blender's AgX view transform, its goal is avoiding the "blown-out HDR game" look ACES sometimes produces — AgX restrains saturation in extreme highlights instead of letting it explode. (Three also ships `NeutralToneMapping` — the Khronos PBR Neutral standard — for cases needing strict neutrality, outside this demo's scope.)
+
+### Shoulder and Toe
+
+Borrowed from film photography: the **toe** is the curve segment in shadows, compressing gently to preserve shadow detail; the **shoulder** is the segment in highlights, compressing progressively harder to avoid an abrupt cutoff. A good curve stays close to linear in the midtones and only bends at both ends — exactly the shape of ACES/AgX, unlike Reinhard's monotone curve.
+
+## Architecture: Where Tone Mapping Actually Lives in EffectComposer
+
+The most commonly misunderstood detail: `RenderPass` renders the scene into an internal `WebGLRenderTarget`, not the screen. Reading `WebGLRenderer.js` directly: whenever the current render target isn't `null`, the renderer forces `toneMapping = NoToneMapping` and the color space to the linear working space — regardless of whatever `renderer.toneMapping` is set to. Every intermediate render target inside a composer always holds raw, un-tone-mapped linear HDR data.
+
+Tone mapping actually happens only in `OutputPass` — it reads `renderer.toneMapping`/`toneMappingExposure`, applies the matching formula, then encodes to sRGB, bundling both steps into one pass. The comment in `OutputPass.js` states it plainly: this pass should sit at the end of the chain, and any pass requiring sRGB input must come after it. A composer keeps HDR linear data alive as long as possible, "casting" it down to displayable LDR exactly once, at the very end.
+
+## 3D LUTs: A Color Lookup Table for Grading
+
+A 3D LUT is an $N^3$ grid of cells, each storing an output RGB for a corresponding input RGB — $N=16$ means $4096$ anchor points spread evenly across color space. A color that doesn't land exactly on an anchor gets **trilinear** interpolation from the GPU — a weighted average of the 8 nearest neighboring cells across 3 axes — automatically, as long as the 3D texture uses `LinearFilter`. Real LUTs are usually baked from professional grading tools into `.cube` files; this lesson generates LUTs from code instead, since the repo ships no binary assets — `lut-generator.ts` computes the teal-orange and bleach-bypass formulas and packs them into a `THREE.Data3DTexture`.
+
+There are two ways to store a LUT on the GPU. A **real 3D texture** (`sampler3D`, WebGL2) is the modern approach — the GPU trilinear-interpolates automatically, sampling is a single `texture(lut, uvw)` call. Before 3D textures were reliably available, the older trick used a **2D strip**: a $32^3$ LUT flattened into a $1024 \times 32$ image (32 tiled $32\times32$ slices), faking the third axis by computing the two neighboring slices from the blue channel, sampling both with a regular `texture2D`, then lerping between them by hand — noticeably more math, but it ran on hardware without 3D textures. This lesson's demo uses a real `Data3DTexture`.
+
+Either way, sampling always needs a **half-texel inset** — the same reason Track 0 added $0.5$ when mapping a pixel to UV, just extended across three axes: $uvw = rgb \cdot (1 - \frac1N) + \frac{1}{2N}$, guaranteeing $rgb=0$ and $rgb=1$ land exactly on the corner cell's center instead of the texture's outer edge.
+
+## Order Doctrine: Grade After Tone Mapping
+
+A grading LUT — whether baked from real camera footage or hand-authored like teal-orange here — is designed for **display-referred** images: values already tone mapped, sitting neatly in $[0,1]$, where "0.2" genuinely means "shadow region." Grade directly onto linear HDR data instead (which could be 40.0), and a $16^3$ LUT covering only $[0,1]$ has nothing to do but clamp it into the nearest edge cell — every highlight, no matter how different, lands in the exact same cell, and the shoulder tone mapping was supposed to produce never happens before grading sees it.
+
+That's why the demo's `GradingPipeline` places `OutputPass` BEFORE the custom LUT pass: `RenderPass` (linear HDR) → `OutputPass` (tone map + sRGB encode) → LUT pass (reading an already-display-referred image). Filament's tone mapping documentation confirms this exact ordering for every modern pipeline.
+
+## The Neutral LUT: A Mandatory Sanity Test
+
+The "neutral" LUT in the demo is an identity mapping — sounds useless, but it's the single most important debugging tool for a LUT pipeline: pick neutral and the image still shifts color, and the bug is guaranteed to be in the sampling math (wrong axis, missing inset), not the LUT's content.
+
+The next lesson dissects the exact `Pass` class `OutputPass`/`ShaderPass` inherit from, writing one from scratch. Locking in the RenderPass → OutputPass → grading order here is the foundation for understanding why pass order matters so much once you're inserting your own processing step into the middle of a chain.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common tone mapping and LUT mistakes:
+
+1. **Grading before tone mapping (LUT pass before OutputPass).** A $16^3$ LUT covers only $[0,1]$; feed it linear HDR values (possibly 40.0) and every highlight clamps into the same edge cell regardless of how different they are — the teal-orange shift never reaches a real highlight, because "highlight" in the display-referred sense doesn't exist yet at that stage.
+2. **Forgetting the half-texel inset when sampling a LUT.** Sampling raw `rgb` without $rgb \cdot (1-\frac1N) + \frac1{2N}$ pushes the extremes (pure black/white) outside the cell grid — with `ClampToEdgeWrapping` that lands on a cell that isn't the true corner, a small but systematic error across the whole image.
+3. **Treating the neutral LUT as decoration, not a test.** A swapped-axis bug (R and B sampled in the wrong place) or a wrong inset formula can still look "close enough" with a colored LUT — only the neutral LUT catches it immediately, since it's the one case required to reproduce the original pixel exactly.
+
+</Callout>

@@ -512,6 +512,46 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/theory.vi.mdx"),
     en: () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/theory.en.mdx"),
   },
+  "bloom-done-right": {
+    vi: () => import("./lessons/10-postprocessing/bloom-done-right/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/bloom-done-right/theory.en.mdx"),
+  },
+  "checkpoint-cinematic-scene": {
+    vi: () => import("./lessons/10-postprocessing/checkpoint-cinematic-scene/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/checkpoint-cinematic-scene/theory.en.mdx"),
+  },
+  "checkpoint-signature-effect-stack": {
+    vi: () => import("./lessons/10-postprocessing/checkpoint-signature-effect-stack/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/checkpoint-signature-effect-stack/theory.en.mdx"),
+  },
+  "color-grading-lut-tonemapping": {
+    vi: () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/theory.en.mdx"),
+  },
+  "depth-of-field-and-motion-blur": {
+    vi: () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/theory.en.mdx"),
+  },
+  "effectcomposer-and-passes": {
+    vi: () => import("./lessons/10-postprocessing/effectcomposer-and-passes/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/effectcomposer-and-passes/theory.en.mdx"),
+  },
+  "pass-order-and-fillrate": {
+    vi: () => import("./lessons/10-postprocessing/pass-order-and-fillrate/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/pass-order-and-fillrate/theory.en.mdx"),
+  },
+  "ssao": {
+    vi: () => import("./lessons/10-postprocessing/ssao/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/ssao/theory.en.mdx"),
+  },
+  "stylistic-effects-grain-vignette": {
+    vi: () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/theory.en.mdx"),
+  },
+  "writing-custom-passes": {
+    vi: () => import("./lessons/10-postprocessing/writing-custom-passes/theory.vi.mdx"),
+    en: () => import("./lessons/10-postprocessing/writing-custom-passes/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -614,6 +654,14 @@ export const REFERENCES_REGISTRY: Partial<
   "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/references"),
   "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/references"),
   "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/references"),
+  "bloom-done-right": () => import("./lessons/10-postprocessing/bloom-done-right/references"),
+  "color-grading-lut-tonemapping": () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/references"),
+  "depth-of-field-and-motion-blur": () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/references"),
+  "effectcomposer-and-passes": () => import("./lessons/10-postprocessing/effectcomposer-and-passes/references"),
+  "pass-order-and-fillrate": () => import("./lessons/10-postprocessing/pass-order-and-fillrate/references"),
+  "ssao": () => import("./lessons/10-postprocessing/ssao/references"),
+  "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/references"),
+  "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -1115,6 +1163,46 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"giải-phẫu-vòng-lặp-particle-trên-cpu","text":"Giải phẫu vòng lặp particle trên CPU","depth":2},{"id":"băng-thông-không-phải-nút-thắt--vậy-đâu-mới-là-nút-thắt-thật","text":"Băng thông không phải nút thắt — vậy đâu mới là nút thắt thật?","depth":2},{"id":"ước-lượng-chi-phí-truyền-qua-bus","text":"Ước lượng chi phí truyền qua bus","depth":3},{"id":"ước-lượng-chi-phí-vòng-lặp-javascript","text":"Ước lượng chi phí vòng lặp JavaScript","depth":3},{"id":"phép-đảo-gpgpu-texture-là-bộ-nhớ-trạng-thái-fragment-shader-là-hàm-cập-nhật","text":"Phép đảo GPGPU: texture là bộ nhớ trạng thái, fragment shader là hàm cập nhật","depth":2},{"id":"ngưỡng-thực-tế-khi-nào-nên-chuyển-sang-gpu","text":"Ngưỡng thực tế: khi nào nên chuyển sang GPU","depth":2},{"id":"cái-giá-phải-trả-khi-chuyển-sang-gpu","text":"Cái giá phải trả khi chuyển sang GPU","depth":2},{"id":"bài-này-dẫn-tới-đâu","text":"Bài này dẫn tới đâu","depth":2}],
     en: [{"id":"anatomy-of-the-cpu-particle-loop","text":"Anatomy of the CPU Particle Loop","depth":2},{"id":"bandwidth-isnt-the-bottleneck--so-what-is","text":"Bandwidth Isn't the Bottleneck — So What Is?","depth":2},{"id":"estimating-the-bus-transfer-cost","text":"Estimating the Bus Transfer Cost","depth":3},{"id":"estimating-the-javascript-loop-cost","text":"Estimating the JavaScript Loop Cost","depth":3},{"id":"the-gpgpu-inversion-textures-as-state-fragment-shaders-as-the-update-function","text":"The GPGPU Inversion: Textures as State, Fragment Shaders as the Update Function","depth":2},{"id":"real-world-thresholds-when-moving-to-the-gpu-pays-off","text":"Real-World Thresholds: When Moving to the GPU Pays Off","depth":2},{"id":"what-you-lose-by-moving-to-the-gpu","text":"What You Lose by Moving to the GPU","depth":2},{"id":"where-this-lesson-leads","text":"Where This Lesson Leads","depth":2}],
   },
+  "bloom-done-right": {
+    vi: [{"id":"bloom-là-gì-về-mặt-vật-lý","text":"Bloom là gì, về mặt vật lý","depth":2},{"id":"vì-sao-bloom-mặc-định-trông-rẻ-tiền","text":"Vì sao bloom mặc định trông rẻ tiền","depth":2},{"id":"bên-trong-unrealbloompass-đọc-thẳng-từ-mã-nguồn","text":"Bên trong UnrealBloomPass: đọc thẳng từ mã nguồn","depth":2},{"id":"bước-1--luminance-high-pass-ai-được-coi-là-đủ-sáng","text":"Bước 1 — luminance high-pass: ai được coi là \"đủ sáng\"","depth":3},{"id":"bước-2--chuỗi-mip-blur-giảm-dần","text":"Bước 2 — chuỗi mip blur giảm dần","depth":3},{"id":"bước-3--composite-theo-trọng-số-strength-và-radius","text":"Bước 3 — composite theo trọng số strength và radius","depth":3},{"id":"hdr-buffer-nửa-float-chưa-chắc-đã-đủ","text":"HDR: buffer nửa-float chưa chắc đã đủ","depth":2},{"id":"cái-bẫy-tonemapping-clamp-trước-khi-bloom-kịp-nhìn-thấy","text":"Cái bẫy: tonemapping clamp trước khi bloom kịp nhìn thấy","depth":3},{"id":"chọn-threshold-strength-radius-có-chủ-đích","text":"Chọn threshold, strength, radius có chủ đích","depth":2},{"id":"bloom-chọn-lọc-khi-chỉ-muốn-một-vài-vật-phát-sáng","text":"Bloom chọn lọc: khi chỉ muốn MỘT vài vật phát sáng","depth":2},{"id":"gu-thẩm-mỹ-bloom-dễ-bị-lạm-dụng","text":"Gu thẩm mỹ: bloom dễ bị lạm dụng","depth":2}],
+    en: [{"id":"what-bloom-actually-is-physically","text":"What Bloom Actually Is, Physically","depth":2},{"id":"why-default-bloom-looks-cheap","text":"Why Default Bloom Looks Cheap","depth":2},{"id":"inside-unrealbloompass-reading-straight-from-the-source","text":"Inside UnrealBloomPass: Reading Straight from the Source","depth":2},{"id":"step-1--luminance-high-pass-who-counts-as-bright-enough","text":"Step 1 — Luminance High-Pass: Who Counts as \"Bright Enough\"","depth":3},{"id":"step-2--a-progressively-downsampled-blur-chain","text":"Step 2 — A Progressively Downsampled Blur Chain","depth":3},{"id":"step-3--composite-by-strength-and-radius-weighting","text":"Step 3 — Composite by Strength and Radius Weighting","depth":3},{"id":"hdr-a-half-float-buffer-isnt-automatically-enough","text":"HDR: a Half-Float Buffer Isn't Automatically Enough","depth":2},{"id":"the-trap-tonemapping-clamps-before-bloom-ever-sees-it","text":"The Trap: Tonemapping Clamps Before Bloom Ever Sees It","depth":3},{"id":"tuning-threshold-strength-and-radius-with-intent","text":"Tuning Threshold, Strength and Radius With Intent","depth":2},{"id":"selective-bloom-when-only-a-few-objects-should-glow","text":"Selective Bloom: When Only a Few Objects Should Glow","depth":2},{"id":"taste-bloom-is-easy-to-overuse","text":"Taste: Bloom Is Easy to Overuse","depth":2}],
+  },
+  "checkpoint-cinematic-scene": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-signature-effect-stack": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "color-grading-lut-tonemapping": {
+    vi: [{"id":"vì-sao-ảnh-hdr-không-thể-chiếu-thẳng-lên-màn-hình","text":"Vì sao ảnh HDR không thể chiếu thẳng lên màn hình","depth":2},{"id":"các-toán-tử-tone-mapping-nén-có-chủ-đích","text":"Các toán tử tone mapping: nén có chủ đích","depth":2},{"id":"reinhard-đường-cong-tiệm-cận-đơn-giản-nhất","text":"Reinhard: đường cong tiệm cận đơn giản nhất","depth":3},{"id":"aces-filmic-đường-cong-đã-fit-chuẩn-công-nghiệp","text":"ACES Filmic: đường cong đã fit, chuẩn công nghiệp","depth":3},{"id":"agx-nén-trong-không-gian-log-ít-rực-hơn","text":"AgX: nén trong không gian log, ít \"rực\" hơn","depth":3},{"id":"shoulder-và-toe","text":"Shoulder và toe","depth":3},{"id":"kiến-trúc-tone-mapping-nằm-ở-đâu-trong-effectcomposer","text":"Kiến trúc: tone mapping nằm ở đâu trong EffectComposer","depth":2},{"id":"lut-3d-bảng-tra-màu-cho-color-grading","text":"LUT 3D: bảng tra màu cho color grading","depth":2},{"id":"trật-tự-bắt-buộc-grading-sau-tone-mapping","text":"Trật tự bắt buộc: grading sau tone mapping","depth":2},{"id":"lut-neutral-bài-kiểm-tra-sanity-bắt-buộc","text":"LUT neutral: bài kiểm tra sanity bắt buộc","depth":2}],
+    en: [{"id":"why-hdr-images-cant-hit-the-screen-directly","text":"Why HDR Images Can't Hit the Screen Directly","depth":2},{"id":"tone-mapping-operators-deliberate-compression","text":"Tone Mapping Operators: Deliberate Compression","depth":2},{"id":"reinhard-the-simplest-asymptotic-curve","text":"Reinhard: The Simplest Asymptotic Curve","depth":3},{"id":"aces-filmic-a-fitted-curve-the-industry-default","text":"ACES Filmic: A Fitted Curve, the Industry Default","depth":3},{"id":"agx-compression-in-log-encoded-space-less-blown-out","text":"AgX: Compression in Log-Encoded Space, Less \"Blown Out\"","depth":3},{"id":"shoulder-and-toe","text":"Shoulder and Toe","depth":3},{"id":"architecture-where-tone-mapping-actually-lives-in-effectcomposer","text":"Architecture: Where Tone Mapping Actually Lives in EffectComposer","depth":2},{"id":"3d-luts-a-color-lookup-table-for-grading","text":"3D LUTs: A Color Lookup Table for Grading","depth":2},{"id":"order-doctrine-grade-after-tone-mapping","text":"Order Doctrine: Grade After Tone Mapping","depth":2},{"id":"the-neutral-lut-a-mandatory-sanity-test","text":"The Neutral LUT: A Mandatory Sanity Test","depth":2}],
+  },
+  "depth-of-field-and-motion-blur": {
+    vi: [{"id":"mô-hình-thin-lens-và-circle-of-confusion","text":"Mô hình thin-lens và circle of confusion","depth":2},{"id":"công-thức-coc-chuẩn-và-vì-sao-game-không-dùng-thẳng-nó","text":"Công thức CoC chuẩn, và vì sao game không dùng thẳng nó","depth":3},{"id":"từ-depth-buffer-đến-blur-coc-theo-từng-pixel-gather-bán-kính-biến-thiên","text":"Từ depth buffer đến blur: CoC theo từng pixel, gather bán kính biến thiên","depth":2},{"id":"bokehpass-của-threejs-tham-số-nào-thật-sự-tồn-tại","text":"BokehPass của Three.js: tham số nào thật sự tồn tại","depth":2},{"id":"artifact-của-dof-một-lớp-rò-biên-độ-sâu-và-vấn-đề-near-field","text":"Artifact của DOF một lớp: rò biên độ sâu và vấn đề near-field","depth":2},{"id":"motion-blur-vì-sao-blend-frame-trước-là-sai","text":"Motion blur: vì sao blend frame trước là sai","depth":2},{"id":"velocity-buffer-tái-tạo-chuyển-động-từ-hai-ma-trận-camera","text":"Velocity buffer: tái tạo chuyển động từ hai ma trận camera","depth":2},{"id":"thang-chi-phí-none--camera-only--velocity-buffer-đầy-đủ","text":"Thang chi phí: none → camera-only → velocity buffer đầy đủ","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-thin-lens-model-and-the-circle-of-confusion","text":"The Thin-Lens Model and the Circle of Confusion","depth":2},{"id":"the-real-coc-formula-and-why-games-dont-use-it-directly","text":"The real CoC formula, and why games don't use it directly","depth":3},{"id":"from-depth-buffer-to-blur-per-pixel-coc-then-variable-radius-gather","text":"From Depth Buffer to Blur: Per-Pixel CoC, Then Variable-Radius Gather","depth":2},{"id":"threejss-bokehpass-the-parameters-that-actually-exist","text":"Three.js's BokehPass: The Parameters That Actually Exist","depth":2},{"id":"single-layer-dof-artifacts-depth-edge-bleeding-and-the-near-field-problem","text":"Single-Layer DOF Artifacts: Depth-Edge Bleeding and the Near-Field Problem","depth":2},{"id":"motion-blur-why-blending-previous-frames-is-wrong","text":"Motion Blur: Why Blending Previous Frames Is Wrong","depth":2},{"id":"velocity-buffers-reconstructing-motion-from-two-camera-matrices","text":"Velocity Buffers: Reconstructing Motion From Two Camera Matrices","depth":2},{"id":"the-cost-ladder-none--camera-only--full-velocity-buffer","text":"The Cost Ladder: None → Camera-Only → Full Velocity Buffer","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "effectcomposer-and-passes": {
+    vi: [{"id":"post-processing-là-render-lại-cái-vừa-render","text":"Post-processing là render lại cái vừa render","depth":2},{"id":"effectcomposer-một-chuỗi-pass-không-phải-một-lệnh-render","text":"EffectComposer: một chuỗi pass, không phải một lệnh render","depth":2},{"id":"ping-pong-readbuffer-writebuffer-swapbuffers","text":"Ping-pong: readBuffer, writeBuffer, swapBuffers","depth":3},{"id":"ba-pass-nền-tảng-renderpass-shaderpass-outputpass","text":"Ba pass nền tảng: RenderPass, ShaderPass, OutputPass","depth":2},{"id":"renderpass-viết-thẳng-vào-readbuffer-không-swap","text":"RenderPass: viết thẳng vào readBuffer, không swap","depth":3},{"id":"shaderpass-fullscreen-quad-và-quy-ước-tdiffuse","text":"ShaderPass: fullscreen quad và quy ước tDiffuse","depth":3},{"id":"outputpass-tonemapping--color-space-đúng-một-lần-ở-cuối","text":"OutputPass: tonemapping + color space, đúng một lần ở cuối","depth":3},{"id":"anatomy-của-một-pass-enabled-needsswap-rendertoscreen","text":"Anatomy của một pass: enabled, needsSwap, renderToScreen","depth":2},{"id":"chiếm-quyền-vòng-lặp-render-trong-r3f","text":"Chiếm quyền vòng lặp render trong R3F","depth":2},{"id":"cái-giá-của-một-pass-fillrate","text":"Cái giá của một pass: fillrate","depth":2},{"id":"khi-nào-không-cần-composer","text":"Khi nào KHÔNG cần composer","depth":2}],
+    en: [{"id":"post-processing-is-rendering-the-render-you-just-made","text":"Post-Processing Is Rendering the Render You Just Made","depth":2},{"id":"effectcomposer-a-chain-of-passes-not-one-render-call","text":"EffectComposer: a Chain of Passes, Not One Render Call","depth":2},{"id":"ping-pong-readbuffer-writebuffer-swapbuffers","text":"Ping-Pong: readBuffer, writeBuffer, swapBuffers","depth":3},{"id":"three-foundational-passes-renderpass-shaderpass-outputpass","text":"Three Foundational Passes: RenderPass, ShaderPass, OutputPass","depth":2},{"id":"renderpass-writes-straight-into-readbuffer-no-swap","text":"RenderPass: Writes Straight into readBuffer, No Swap","depth":3},{"id":"shaderpass-the-fullscreen-quad-and-the-tdiffuse-convention","text":"ShaderPass: the Fullscreen Quad and the tDiffuse Convention","depth":3},{"id":"outputpass-tonemapping--color-space-exactly-once-at-the-end","text":"OutputPass: Tonemapping + Color Space, Exactly Once at the End","depth":3},{"id":"anatomy-of-a-pass-enabled-needsswap-rendertoscreen","text":"Anatomy of a Pass: enabled, needsSwap, renderToScreen","depth":2},{"id":"taking-over-the-render-loop-in-r3f","text":"Taking Over the Render Loop in R3F","depth":2},{"id":"the-cost-of-a-pass-fillrate","text":"The Cost of a Pass: Fillrate","depth":2},{"id":"when-you-dont-need-a-composer","text":"When You Don't Need a Composer","depth":2}],
+  },
+  "pass-order-and-fillrate": {
+    vi: [{"id":"thứ-tự-pass-đổi-ý-nghĩa-không-chỉ-hình-ảnh","text":"Thứ tự pass đổi Ý NGHĨA, không chỉ hình ảnh","depth":2},{"id":"trật-tự-chuẩn-từ-cảnh-hdr-đến-màn-hình","text":"Trật tự chuẩn: từ cảnh HDR đến màn hình","depth":2},{"id":"chi-phí-fillrate-mỗi-pass-là-một-lượt-đọc-và-ghi-toàn-màn-hình","text":"Chi phí fillrate: mỗi pass là một lượt đọc và ghi toàn màn hình","depth":2},{"id":"dpr-số-nhân-ẩn-của-fillrate","text":"DPR: số nhân ẩn của fillrate","depth":2},{"id":"tối-ưu-gộp-giảm-độ-phân-giải-bỏ-khi-không-cần","text":"Tối ưu: gộp, giảm độ phân giải, bỏ khi không cần","depth":2}],
+    en: [{"id":"order-changes-meaning-not-just-the-picture","text":"Order Changes MEANING, Not Just the Picture","depth":2},{"id":"the-canonical-order-from-hdr-scene-to-screen","text":"The Canonical Order: From HDR Scene to Screen","depth":2},{"id":"fillrate-cost-every-pass-reads-and-writes-the-whole-screen","text":"Fillrate Cost: Every Pass Reads and Writes the Whole Screen","depth":2},{"id":"dpr-the-hidden-fillrate-multiplier","text":"DPR: The Hidden Fillrate Multiplier","depth":2},{"id":"optimizing-merge-downsample-skip","text":"Optimizing: Merge, Downsample, Skip","depth":2}],
+  },
+  "ssao": {
+    vi: [{"id":"bóng-tiếp-xúc-chỉ-từ-depth-buffer-canh-bạc-screen-space","text":"Bóng tiếp xúc chỉ từ depth buffer: canh bạc screen-space","depth":2},{"id":"thuật-toán-hemisphere-kernel-quanh-view-space-position-tái-tạo-từ-depth","text":"Thuật toán: hemisphere kernel quanh view-space position tái tạo từ depth","depth":2},{"id":"kernel-design-importance-sampling-và-random-rotation-chống-banding","text":"Kernel design: importance sampling và random rotation chống banding","depth":2},{"id":"bias-căn-bệnh-giống-hệt-shadow-mapping-ở-track-3","text":"Bias: căn bệnh giống hệt shadow mapping ở Track 3","depth":2},{"id":"ssaopass-so-với-gtaopass-cái-nào-thật-sự-có-trong-three-0185","text":"SSAOPass so với GTAOPass: cái nào thật sự có trong three 0.185","depth":2},{"id":"artifact-không-tránh-được-rìa-màn-hình-occluder-ngoài-khung-halo","text":"Artifact không tránh được: rìa màn hình, occluder ngoài khung, halo","depth":2},{"id":"nửa-độ-phân-giải-và-ssao-nằm-ở-đâu-trong-chuỗi-pass","text":"Nửa độ phân giải, và SSAO nằm ở đâu trong chuỗi pass","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"contact-shadows-from-just-a-depth-buffer-the-screen-space-bet","text":"Contact Shadows From Just a Depth Buffer: The Screen-Space Bet","depth":2},{"id":"the-algorithm-a-hemisphere-kernel-around-a-reconstructed-view-space-position","text":"The Algorithm: A Hemisphere Kernel Around a Reconstructed View-Space Position","depth":2},{"id":"kernel-design-importance-sampling-and-random-rotation-against-banding","text":"Kernel Design: Importance Sampling and Random Rotation Against Banding","depth":2},{"id":"bias-the-exact-same-disease-as-shadow-mapping-back-in-track-3","text":"Bias: The Exact Same Disease as Shadow Mapping Back in Track 3","depth":2},{"id":"ssaopass-vs-gtaopass-which-one-actually-ships-in-three-0185","text":"SSAOPass vs GTAOPass: Which One Actually Ships in Three 0.185","depth":2},{"id":"unavoidable-artifacts-screen-edges-off-screen-occluders-halos","text":"Unavoidable Artifacts: Screen Edges, Off-Screen Occluders, Halos","depth":2},{"id":"half-resolution-and-where-ssao-sits-in-the-pass-chain","text":"Half Resolution, and Where SSAO Sits in the Pass Chain","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "stylistic-effects-grain-vignette": {
+    vi: [{"id":"bộ-ba-rẻ-nhưng-đổi-cả-cảm-giác-của-cảnh","text":"Bộ ba rẻ nhưng đổi cả cảm giác của cảnh","depth":2},{"id":"film-grain-hash-noise-biến-thiên-theo-thời-gian-mạnh-trong-vùng-tối","text":"Film grain: hash noise biến thiên theo thời gian, mạnh trong vùng tối","depth":2},{"id":"vignette-tối-dần-theo-bán-kính--nguồn-gốc-quang-học-và-vai-trò-dẫn-mắt","text":"Vignette: tối dần theo bán kính — nguồn gốc quang học và vai trò dẫn mắt","depth":2},{"id":"chromatic-aberration-tán-sắc-ống-kính-và-ranh-giới-tinh-tế-với-vỡ-hình","text":"Chromatic aberration: tán sắc ống kính, và ranh giới \"tinh tế\" với \"vỡ hình\"","depth":2},{"id":"gộp-cả-ba-vào-một-shaderpass","text":"Gộp cả ba vào MỘT ShaderPass","depth":2},{"id":"liều-lượng-con-số-cụ-thể-và-khi-nào-hiệu-ứng-phá-hỏng-nội-dung","text":"Liều lượng: con số cụ thể, và khi nào hiệu ứng phá hỏng nội dung","depth":2}],
+    en: [{"id":"the-cheap-trio-that-sells-the-mood","text":"The Cheap Trio That Sells the Mood","depth":2},{"id":"film-grain-time-varying-hash-noise-strongest-in-the-shadows","text":"Film Grain: Time-Varying Hash Noise, Strongest in the Shadows","depth":2},{"id":"vignette-radial-darkening--optical-origin-and-its-job-in-composition","text":"Vignette: Radial Darkening — Optical Origin and Its Job in Composition","depth":2},{"id":"chromatic-aberration-lens-dispersion-and-the-line-between-tasteful-and-broken","text":"Chromatic Aberration: Lens Dispersion, and the Line Between \"Tasteful\" and \"Broken\"","depth":2},{"id":"combining-all-three-into-one-shaderpass","text":"Combining All Three Into ONE ShaderPass","depth":2},{"id":"dosage-concrete-numbers-and-when-the-effect-fights-the-content","text":"Dosage: Concrete Numbers, and When the Effect Fights the Content","depth":2}],
+  },
+  "writing-custom-passes": {
+    vi: [{"id":"pass-hợp-đồng-tối-thiểu-mọi-hiệu-ứng-hậu-kỳ-phải-theo","text":"Pass: hợp đồng tối thiểu mọi hiệu ứng hậu kỳ phải theo","depth":2},{"id":"fullscreenquad-không-hề-là-một-quad","text":"FullScreenQuad không hề là một quad","depth":2},{"id":"dựng-một-pass-từng-bước-heat-shimmer","text":"Dựng một pass từng bước: heat shimmer","depth":2},{"id":"renderpass-là-ngoại-lệ-ghi-thẳng-vào-readbuffer","text":"RenderPass là ngoại lệ: ghi thẳng vào readBuffer","depth":2},{"id":"test-một-pass-độc-lập-trước-khi-ghép-chuỗi","text":"Test một pass độc lập trước khi ghép chuỗi","depth":2},{"id":"shaderpass-đủ-dùng-khi-nào-và-khi-nào-cần-tự-viết-pass","text":"ShaderPass đủ dùng khi nào, và khi nào cần tự viết Pass","depth":2},{"id":"pmndrs-effect-một-hợp-đồng-khác-hẳn","text":"pmndrs Effect: một hợp đồng khác hẳn","depth":2}],
+    en: [{"id":"pass-the-minimal-contract-every-post-effect-follows","text":"Pass: The Minimal Contract Every Post-Effect Follows","depth":2},{"id":"fullscreenquad-isnt-actually-a-quad","text":"FullScreenQuad Isn't Actually a Quad","depth":2},{"id":"building-a-pass-step-by-step-heat-shimmer","text":"Building a Pass Step by Step: Heat Shimmer","depth":2},{"id":"renderpass-is-the-exception-it-writes-straight-into-readbuffer","text":"RenderPass Is the Exception: It Writes Straight into readBuffer","depth":2},{"id":"test-a-pass-in-isolation-before-chaining-it","text":"Test a Pass in Isolation Before Chaining It","depth":2},{"id":"when-shaderpass-suffices-and-when-a-custom-pass-is-worth-it","text":"When ShaderPass Suffices, and When a Custom Pass Is Worth It","depth":2},{"id":"the-pmndrs-effect-a-genuinely-different-contract","text":"The pmndrs Effect: A Genuinely Different Contract","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -1215,6 +1303,14 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/demo"),
   "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/demo"),
   "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/demo"),
+  "bloom-done-right": () => import("./lessons/10-postprocessing/bloom-done-right/demo"),
+  "color-grading-lut-tonemapping": () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/demo"),
+  "depth-of-field-and-motion-blur": () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/demo"),
+  "effectcomposer-and-passes": () => import("./lessons/10-postprocessing/effectcomposer-and-passes/demo"),
+  "pass-order-and-fillrate": () => import("./lessons/10-postprocessing/pass-order-and-fillrate/demo"),
+  "ssao": () => import("./lessons/10-postprocessing/ssao/demo"),
+  "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/demo"),
+  "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -1346,4 +1442,14 @@ export const EXERCISES_REGISTRY: Partial<
   "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/exercises"),
   "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/exercises"),
   "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/exercises"),
+  "bloom-done-right": () => import("./lessons/10-postprocessing/bloom-done-right/exercises"),
+  "checkpoint-cinematic-scene": () => import("./lessons/10-postprocessing/checkpoint-cinematic-scene/exercises"),
+  "checkpoint-signature-effect-stack": () => import("./lessons/10-postprocessing/checkpoint-signature-effect-stack/exercises"),
+  "color-grading-lut-tonemapping": () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/exercises"),
+  "depth-of-field-and-motion-blur": () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/exercises"),
+  "effectcomposer-and-passes": () => import("./lessons/10-postprocessing/effectcomposer-and-passes/exercises"),
+  "pass-order-and-fillrate": () => import("./lessons/10-postprocessing/pass-order-and-fillrate/exercises"),
+  "ssao": () => import("./lessons/10-postprocessing/ssao/exercises"),
+  "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/exercises"),
+  "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/exercises"),
 };

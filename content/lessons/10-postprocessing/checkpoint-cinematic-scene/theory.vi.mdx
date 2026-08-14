@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build khép lại module "Composer & Hiệu ứng lõi": ghép ba pass đã học riêng lẻ — SSAO, UnrealBloom, DOF (Bokeh) — vào một chuỗi composer DUY NHẤT trên một cảnh có sẵn, để tạo cảm giác "ảnh tĩnh điện ảnh". Kỹ năng được chấm ở đây không phải "gọi đúng API" — mà là sự tiết chế: biết dừng lại đúng lúc trước khi hiệu ứng lấn át nội dung.
+
+## Yêu cầu
+
+Từ một cảnh still-life có sẵn (vài primitive dưới ánh đèn ấm, một "bóng đèn" phát sáng), dựng chuỗi `RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass` đúng thứ tự đó. SSAO phải làm cảnh "bám đất" (bóng tiếp xúc dưới vật thể) mà không quầng rìa; bloom chỉ được nở đúng ở bóng đèn (threshold trên 1.0, còn phần cảnh chiếu sáng bình thường thì không); DOF phải giữ đúng chủ thể nét và làm mờ nền phía sau. Đo frame time của `composer.render()` bằng `performance.now()` (EMA-smoothed) khi bật/tắt cả chuỗi pass, và giữ mức chênh lệch trong khoảng ước lượng ~4ms trên máy tầm trung. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới — đọc kỹ trước khi bắt đầu.
+
+## Gợi ý cấu trúc
+
+Thứ tự pass không phải ngẫu nhiên: SSAO nhân bóng tiếp xúc lên đúng ảnh đang nằm trong buffer composer tại thời điểm nó chạy — chạy sau bloom thì glow của bóng đèn đã có trong buffer và bị SSAO ăn bớt một phần. `EffectComposer.dispose()` chỉ giải phóng buffer đọc/ghi của chính composer, KHÔNG dispose các pass đã add — mỗi pass phải tự gọi `.dispose()` khi unmount.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — chỉ bóng đèn phát sáng, không hiệu ứng nào "gào thét" hơn cảnh, và số đo frame time thực tế nằm trong ngân sách đã nêu.

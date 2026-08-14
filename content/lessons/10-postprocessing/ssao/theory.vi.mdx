@@ -1,0 +1,57 @@
+## Bóng tiếp xúc chỉ từ depth buffer: canh bạc screen-space
+
+Ambient occlusion "đúng" là một phép tích phân: tại mỗi điểm bề mặt, đo bao nhiêu phần bán cầu hướng ra ngoài bị hình học xung quanh che khuất, làm giảm ánh sáng gián tiếp (bounce nhiều lần từ mọi hướng) tới được điểm đó. Bài Raymarched Shadows & AO ở Track 8 đã cài đúng phép đo này bằng cách march dọc normal, lấy mẫu SDF `map()` tại 5 điểm — có sẵn toàn bộ hình học cảnh trong một hàm khoảng cách, march bao xa cũng được.
+
+SSAO đặt cược khác hẳn: không có SDF, không có hình học 3D thật lúc chạy — chỉ có một ảnh đã render (màu + depth buffer, đôi khi thêm normal buffer) của khung hình hiện tại. Mọi phép đo occlusion phải suy từ dữ liệu 2D đó. Đây là lý do gọi "screen-space": không vì thẩm mỹ, mà vì **toàn bộ input** bị giới hạn trong đúng những gì camera hiện tại thấy — hệ quả là artifact, bàn ở phần sau.
+
+## Thuật toán: hemisphere kernel quanh view-space position tái tạo từ depth
+
+Với mỗi pixel, `SSAOShader` (từ `node_modules/three/examples/jsm/shaders/SSAOShader.js`, bản 0.185.1) làm bốn việc: (1) đọc depth, dựng lại **view-space position** bằng ma trận nghịch đảo projection của camera; (2) đọc **normal** view-space tại pixel (Three render riêng một `normalRenderTarget` bằng `MeshNormalMaterial`, không dùng gradient của depth); (3) rải một tập điểm mẫu ("kernel") quanh bán cầu hướng theo normal đó, mỗi mẫu dịch ra theo `kernelRadius`; (4) với mỗi mẫu, chiếu về lại screen-space, đọc depth thật tại đó, so sánh: nếu depth thật **gần camera hơn** điểm mẫu kỳ vọng, mẫu đó tính là bị che.
+
+Tỉ lệ mẫu bị che trên tổng số mẫu, đảo dấu ($1 - \text{occlusion ratio}$), là hệ số AO cuối cùng nhân vào ánh sáng. Đây là *đúng ý tưởng* Track 8 — so sánh khoảng cách kỳ vọng với khoảng cách thật đọc được — chỉ khác nguồn dữ liệu: raymarch gọi `map()` (có toàn cảnh), SSAO gọi `texture2D(tDepth, ...)` (chỉ có những gì camera thấy).
+
+## Kernel design: importance sampling và random rotation chống banding
+
+Kernel của `SSAOShader` không rải đều tuyệt đối: mỗi mẫu là vector ngẫu nhiên trong bán cầu ($z \geq 0$) rồi normalize, sau đó **độ dài** bị scale bằng `lerp(0.1, 1, t²)` với $t = i/N$ — mẫu càng về cuối mảng kernel càng bị đẩy xa gốc. Đây là importance sampling: dồn mẫu gần điểm gốc hơn (nơi occlusion cục bộ ảnh hưởng mạnh nhất), thưa dần ra biên. (Nhiều tài liệu AO mô tả kernel "cosine-weighted" bằng công thức lượng giác khác; Three dùng trick lerp bình phương đơn giản hơn, cùng mục đích ưu tiên mẫu gần.)
+
+Với kernel cố định, xoay cùng hướng ở mọi pixel, AO sẽ có dải băng rõ (banding) theo hình dạng kernel — mắt cực nhạy với pattern lặp. Khắc phục: một texture noise $4\times4$ (từ Simplex noise) tile khắp màn hình (`noiseScale = resolution / 4.0`), dùng xoay ngẫu nhiên kernel **khác nhau ở mỗi pixel** trước khi lấy mẫu. Đánh đổi: banding biến mất, nhường chỗ cho nhiễu tần số cao — lý do `SSAOPass` luôn có một pass blur riêng (`SSAOBlurShader`, box blur $5\times5$) chạy ngay sau, làm mượt đúng loại nhiễu này.
+
+## Bias: căn bệnh giống hệt shadow mapping ở Track 3
+
+`minDistance` (mặc định $0.005$) là bias chống self-occlusion acne — comment trong source ghi rõ: "avoid artifacts caused by neighbour fragments with minimal depth difference". Thiếu nó, một bề mặt phẳng tự chấm điểm occlusion cho chính mình vì sai số làm tròn float khiến vài mẫu kernel "tưởng" mình ở sau chính bề mặt xuất phát — y hệt shadow acne (Track 3): cùng bệnh (so sánh độ sâu với chính điểm gốc, quên rằng nó không phải mặt phẳng toán học lý tưởng), khác chỗ xảy ra. `maxDistance` ($0.1$ mặc định) ngược tác dụng: chặn occlusion từ vật cản *quá xa*, không phải chống acne mà chống occlusion giả từ một bức tường xa hàng chục mét.
+
+`kernelRadius` ($8$ mặc định) là bán kính bán cầu theo **view-space unit** — cùng đơn vị thế giới cảnh, không phải pixel — càng lớn, AO càng loang rộng từ mỗi góc lõm.
+
+## `SSAOPass` so với `GTAOPass`: cái nào thật sự có trong three 0.185
+
+Cả hai tồn tại trong `three/examples/jsm/postprocessing/` ở bản 0.185.1. Docstring của `GTAOPass` tự ghi rõ quan hệ: "provides better quality than SSAOPass but is also more expensive" — GTAO (Ground Truth Ambient Occlusion) dùng horizon-based integration chặt hơn kernel rời rạc, cộng một pass denoise riêng (Poisson), đổi chất lượng mượt hơn lấy chi phí. Bài này dạy `SSAOPass` vì thuật toán khớp thẳng mô hình "hemisphere kernel + so sánh depth" vừa giải thích — nhìn code hiểu ngay, không cần lý thuyết horizon-based thêm. Dự án thật ưu tiên chất lượng nên cân nhắc `GTAOPass`; máy yếu hoặc muốn debug từng bước nên bắt đầu từ `SSAOPass`.
+
+## Artifact không tránh được: rìa màn hình, occluder ngoài khung, halo
+
+Ba giới hạn đều từ một nguyên nhân gốc — input chỉ là ảnh 2D của khung hình hiện tại:
+
+- **Screen-edge falloff**: một mẫu kernel chiếu ra ngoài $[0,1]$ UV không có gì để đọc, thường bị coi là "không che" mặc định — AO nhạt dần bất thường gần rìa dù hình học không đổi gì ở đó.
+- **Occluder ngoài khung hình bị bỏ sót**: một cột nhà sau lưng camera hay ngoài frustum không tồn tại trong depth buffer — không thể che gì trong kết quả SSAO, dù đời thực nó hoàn toàn có thể đổ bóng tiếp xúc lên cảnh.
+- **Halo quanh silhouette**: tại biên giữa vật nhỏ trước nền xa, kernel của pixel nền *gần biên* vẫn vô tình lấy mẫu trúng vùng thuộc vật phía trước — tính là bị che dù nền không hề tiếp xúc vật đó — tạo viền tối mờ quanh silhouette, rõ nhất ở kernelRadius lớn.
+
+Không kỹ thuật screen-space nào (kể cả GTAO) thoát khỏi cả ba — hệ quả trực tiếp của chỉ có một góc nhìn camera, không phải lỗi cài đặt.
+
+## Nửa độ phân giải, và SSAO nằm ở đâu trong chuỗi pass
+
+Tối ưu chuẩn nhất: tính AO ở độ phân giải thấp hơn buffer chính — `new SSAOPass(scene, camera, width, height)` nhận `width`/`height` **riêng** với renderer, độc lập hoàn toàn. Truyền nửa kích thước thật (demo bên dưới làm đúng vậy) giảm số pixel phải tính kernel còn $1/4$, còn AO (vốn mờ, tần số thấp) vẫn upsample mượt khi composite lên buffer chính — mắt gần như không phân biệt trừ khi zoom sát cạnh vật.
+
+Về vị trí: `SSAOPass` đặt ngay sau `RenderPass`, trước mọi pass tone-mapping/color-grading — nhưng cần trung thực một điểm: ở output mặc định, nó dùng `CustomBlending` **nhân thẳng** hệ số AO vào TOÀN BỘ màu đã có trong buffer (`blendSrc: DstColorFactor`) — tức nhân cả vào diffuse/specular trực tiếp đã render, không tách riêng được ambient như bài raymarch Track 8 (`ambient · AO + diffuse · shadow`, hai số hạng tách bạch ngay trong shader). `RenderPass` đã làm phẳng mọi ánh sáng thành một màu RGB duy nhất trước khi SSAOPass chạy — không còn kênh ambient riêng để nhắm vào. Đây là đánh đổi kiến trúc thật: post-process AO luôn hơi "nhân nhầm" vào ánh sáng trực tiếp một chút, trong khi kỹ thuật in-shader mới tách đúng thành phần.
+
+## Nền tảng này dẫn tới đâu
+
+SSAO dùng lại đúng khuôn "đọc depth, dựng lại view-space position, so sánh với mẫu xung quanh" mà bài Depth of Field/Motion Blur ngay trước dùng cho bài toán khác (blur thay vì occlusion) — cùng bộ công cụ, khác câu hỏi. Checkpoint đóng module (Cinematic Scene) ghép bloom, DOF và SSAO của ba bài liên tiếp vào một cảnh, đúng lúc cần tự cân bằng chi phí fillrate của cả chuỗi thay vì học từng pass riêng lẻ.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cấu hình SSAO:
+
+1. **Chỉnh `kernelRadius` bằng đơn vị pixel trong đầu, thay vì view-space unit.** Vì nó khớp thẳng đơn vị thế giới của cảnh, một cảnh scale nhỏ (đơn vị mét thật) cần `kernelRadius` nhỏ hơn hẳn mặc định $8$ — để nguyên mặc định cho cảnh cỡ 1-2 unit làm AO loang phủ gần hết khung hình, trông như sương mù thay vì bóng tiếp xúc cục bộ.
+2. **Đặt `minDistance = 0` để "cho chắc không mất chi tiết".** Đây chính là bias chống acne — bỏ nó khiến mọi bề mặt phẳng tự occlude chính nó, cả cảnh phủ một lớp AO xám xịt giả tạo dù không có góc lõm thật nào.
+3. **Nhân AO vào diffuse trong shader tự viết vì "thấy SSAOPass làm vậy".** `SSAOPass` buộc phải nhân vào buffer đã phẳng vì không còn lựa chọn nào khác ở giai đoạn post-process — nhưng tự viết AO ngay trong material shader (có quyền truy cập riêng từng thành phần ánh sáng) mà vẫn nhân vào diffuse là lặp lại đúng lỗi đã nêu ở bài raymarch Track 8: đếm occlusion hai lần cho ánh sáng trực tiếp.
+
+</Callout>

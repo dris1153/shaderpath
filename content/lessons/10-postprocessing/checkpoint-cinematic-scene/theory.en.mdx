@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build closes out the "Composer & Core Effects" module: chain three passes you learned separately — SSAO, UnrealBloom, DOF (Bokeh) — into a SINGLE composer stack on top of a provided scene, aiming for a "cinematic still" feel. The graded skill here isn't "call the right API" — it's restraint: knowing exactly when to stop before the effects overwhelm the content.
+
+## Requirements
+
+Starting from a provided still-life scene (a few primitives under warm light, one glowing "lamp"), build the chain `RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass` in that exact order. SSAO must ground the scene (contact shadows under objects) without edge haloing; bloom must bloom ONLY the lamp (threshold above 1.0, so ordinary lit surfaces never cross it); DOF must keep the subject sharp and melt the background behind it. Measure `composer.render()`'s frame time with `performance.now()` (EMA-smoothed) with the pass chain on vs. off, and keep the delta within a ~4ms estimate on a midrange machine. Full details live in the Exercises section below — read the requirements there closely before starting.
+
+## Structure Hint
+
+Pass order isn't arbitrary: SSAO multiplies contact shadows onto whatever is CURRENTLY in the composer's buffer at the moment it runs — run it after bloom and the lamp's own glow is already in that buffer, partially eaten by the AO darkening. `EffectComposer.dispose()` only frees the composer's own read/write buffers, never the passes you added — each pass needs its own `.dispose()` call on unmount.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — only the lamp glows, no single effect "shouts" over the scene, and the measured frame time sits inside the stated budget.

@@ -66,6 +66,13 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - Transform-feedback lesson: Three.js does not expose TF — that demo uses the raw-WebGL2 canvas pattern (Track 1 style: useVisibleRaf + useDisposable).
 - Mouse interaction: reuse the `uMouse` conventions from `DemoCanvas`/existing demos (pointer in plane coords), never window listeners.
 
+## Post-processing lessons (Track 10)
+
+- Theory anchors on Three's own `EffectComposer` (`three/addons/postprocessing/*`) — that's the architecture the track metadata teaches (RenderPass, ShaderPass, ping-pong read/write buffers). `@react-three/postprocessing` (pmndrs, installed ^3.0.5) is the production wrapper — mention it honestly (it MERGES effects into fewer passes, different architecture) where relevant; verify any API claims against node_modules.
+- Demo pattern for manual composer in R3F: build the composer in an effect/memo from `useThree` gl/scene/camera, take over rendering with `useFrame(({gl}) => { composer.render(); }, 1)` (priority 1 suppresses R3F's default render), `composer.setSize` on size changes, dispose composer render targets + passes on unmount. Respect demand-frameloop: call `invalidate()` per visible frame as established.
+- Half-float composer targets for HDR lessons (`new EffectComposer(gl, new WebGLRenderTarget(w, h, { type: HalfFloatType }))` — verify constructor signature in node_modules; bloom-on-HDR claims must match what the installed UnrealBloomPass actually does).
+- Keep demo scenes light (a few meshes + lights) — the EFFECT is the subject; embedded pass chains cap at ~3 passes; use half-resolution internal targets where the technique allows.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

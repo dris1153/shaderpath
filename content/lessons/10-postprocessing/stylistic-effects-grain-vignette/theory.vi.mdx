@@ -1,0 +1,68 @@
+## Bộ ba rẻ nhưng đổi cả cảm giác của cảnh
+
+Ba hiệu ứng của bài này — film grain, vignette, chromatic aberration — có một điểm chung hiếm gặp trong post-processing: chi phí gần như bằng 0 (vài phép toán mỗi pixel, không render target phụ, không cần blur đa pass như bloom hay SSAO) nhưng đổi hẳn "cảm giác" của cảnh, nhiều khi rõ hơn cả bloom hay DOF. Lý do không nằm ở độ phức tạp thuật toán — cả ba đều là phép biến đổi pixel cục bộ — mà ở việc chúng mô phỏng đúng những dấu vết vật lý mắt người đã quen nhìn suốt cả thế kỷ: hạt phim nhựa, độ tối rìa khung hình của ống kính rẻ tiền, viền màu ở mép vật thể tương phản cao. Ba dấu vết đó ăn sâu vào "ngôn ngữ hình ảnh điện ảnh" tới mức bộ não đọc chúng như tín hiệu "khung hình được quay", dù thực chất chỉ là vài phép cộng-nhân trong fragment shader.
+
+## Film grain: hash noise biến thiên theo thời gian, mạnh trong vùng tối
+
+Grain là nhiễu cộng vào màu mỗi pixel, nhưng "ngẫu nhiên" ở đây phải xác định (deterministic) vì GPU không có state — đúng nguyên lý hash function đã học ở Track 7 (bài Hash Functions on GPU). Bài này dùng lại chính hash không dùng `sin` (Dave Hoskins) đã giới thiệu ở đó:
+
+```glsl
+float hash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+```
+
+Điểm khác biệt so với dùng hash vẽ pattern tĩnh: input phải gồm CẢ toạ độ UV lẫn thời gian — `hash(uv * resolution + time)`. Chỉ hash theo `uv` cho ra đúng MỘT khung nhiễu, lặp lại y hệt mỗi frame — nhìn như một tấm nylon bẩn dán lên màn hình, không phải grain thật (phim thật lộ hạt bạc khác nhau mỗi lần chụp). Nhân `uv` với `resolution` trước khi hash cũng quan trọng: dùng `uv` thô (khoảng $[0,1]$) làm input, hai pixel liền kề có toạ độ gần trùng nhau, hash cho ra giá trị tương quan cao — nhân với `resolution` kéo input về đúng thang toạ độ pixel, đảm bảo mỗi pixel một giá trị độc lập thật sự.
+
+Grain thật trên phim không đều khắp khung hình — rõ nhất ở vùng thiếu sáng (mật độ hạt bạc-halide thấp hơn ở vùng phơi sáng thấp khiến độ nhiễu tương đối cao hơn). Bài này mô phỏng bằng cách nhân cường độ grain với hệ số giảm dần theo luminance:
+
+```glsl
+float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luminance(color));
+color += n * uGrainAmount * grainFalloff;
+```
+
+Grain cũng cố tình viết **đơn sắc** (monochrome) — cùng một giá trị nhiễu `n` cộng vào cả ba kênh R, G, B, thay vì hash ba lần độc lập. Không phải cắt góc cho rẻ: hạt bạc trên phim là biến động MẬT ĐỘ vật lý, tương quan cao giữa các lớp màu cùng một hạt, không phải nhiễu cảm biến độc lập từng kênh — grain đơn sắc trông "giống phim", grain per-channel độc lập trông giống nhiễu cảm biến kỹ thuật số (chroma noise), một cảm giác khác hẳn.
+
+## Vignette: tối dần theo bán kính — nguồn gốc quang học và vai trò dẫn mắt
+
+Vignette thật trên ống kính đến từ vật lý: optical vignetting (tia sáng xiên bị chính thân ống kính che một phần ở góc lớn), mechanical vignetting (hood/filter che một phần trường nhìn), natural vignetting (hiệu ứng $\cos^4$ hình học của quang học). Bài này không mô phỏng nguyên nhân — chỉ mô phỏng KẾT QUẢ thị giác bằng một phép tối dần theo khoảng cách tới tâm:
+
+$$
+\text{vig}(uv) = 1 - d \cdot \mathrm{smoothstep}(r,\ 1,\ \lVert p \rVert), \qquad p = (uv - 0.5) \times (\text{aspect}, 1)
+$$
+
+với $d$ là độ tối tối đa, $r$ là bán kính bắt đầu tối. Nhân `aspect` vào thành phần $x$ của $p$ trước khi tính khoảng cách là bước bắt buộc — thiếu nó, vignette tối theo hình elip kéo dài theo cạnh dài khung hình thay vì hình tròn như mắt kỳ vọng. Dùng `smoothstep` thay vì `mix` tuyến tính không tuỳ hứng: đạo hàm của nó bằng 0 ở cả hai đầu khoảng nên độ tối "vào" mượt mà — `mix` tạo một điểm gãy đạo hàm đúng tại $r$, đủ để mắt bắt như một vòng tối mờ (mach band).
+
+Ngoài tính thẩm mỹ hoài cổ, vignette có vai trò bố cục thật: làm tối các góc kéo mắt người xem về TRUNG TÂM, nơi thường đặt chủ thể — cùng nguyên lý các hoạ sĩ cổ điển dùng để dẫn ánh nhìn từ trước khi máy ảnh tồn tại.
+
+## Chromatic aberration: tán sắc ống kính, và ranh giới "tinh tế" với "vỡ hình"
+
+Ống kính thật khúc xạ các bước sóng ánh sáng khác nhau ở góc hơi khác nhau (tán sắc) — ba kênh màu "lệch" nhẹ so với nhau, rõ nhất ở rìa khung hình nơi tia sáng đi qua ống kính ở góc lớn. Mô phỏng bằng cách lấy mẫu kênh R và B ở hai offset ngược hướng nhau, độ lớn tăng theo khoảng cách tới tâm:
+
+$$
+uv_R = uv + \hat d \cdot \dfrac{s}{R_x} \cdot \lVert p \rVert, \qquad uv_B = uv - \hat d \cdot \dfrac{s}{R_x} \cdot \lVert p \rVert
+$$
+
+với $\hat d = p / \lVert p \rVert$, $s$ là độ mạnh tính bằng pixel, $R_x$ là chiều rộng canvas — chia cho $R_x$ để chuyển từ đơn vị pixel sang UV, kênh G giữ nguyên làm mốc tham chiếu. Ranh giới giữa "tinh tế" và "vỡ hình" nằm ở con số $s$: dưới khoảng 2px, mắt đọc nó như "một ống kính đắt tiền hơi cũ" — trên khoảng 4–5px, viền màu tách hẳn thành các dải R/G/B riêng biệt, đọc ngay như lỗi codec/glitch VHS chứ không phải lựa chọn thẩm mỹ có chủ đích.
+
+## Gộp cả ba vào MỘT ShaderPass
+
+Cả ba hiệu ứng đều là phép biến đổi cục bộ trên cùng một `tDiffuse` — không có lý do kỹ thuật để tách chúng thành ba `ShaderPass` riêng, mỗi pass tự sample toàn màn hình rồi ghi ra một render target trung gian. Gộp cả ba vào một fragment shader duy nhất (như `stylistic-pass.frag`) giảm số lần đọc/ghi toàn màn hình từ ba xuống một — phép tính trước cho bài "Thứ tự Pass & Chi phí Fillrate" sắp tới: mỗi pass thêm vào chuỗi composer là một lần đọc VÀ ghi toàn bộ pixel màn hình, và với hiệu ứng rẻ thế này, chi phí thật không nằm ở toán học bên trong shader mà ở số lần chạm vào từng pixel.
+
+## Liều lượng: con số cụ thể, và khi nào hiệu ứng phá hỏng nội dung
+
+Không có công thức đúng tuyệt đối — các khoảng dưới đây là ước lượng thẩm mỹ, đúc kết từ quan sát sản phẩm cinematic thực tế, không phải hằng số vật lý: grain $0.03$–$0.08$ (thang cường độ noise cộng vào màu $[0,1]$), độ tối vignette $0.3$–$0.5$, chromatic aberration $0.5$–$2\text{px}$. Vượt rõ các mốc này là lúc hiệu ứng bắt đầu LẤN nội dung thay vì tô điểm cho nó.
+
+Cả ba cũng có ngữ cảnh không nên dùng. Grain trên giao diện nhiều chữ (dashboard, bảng biểu) làm giảm tương phản cạnh chữ, chữ nhỏ trông mờ/rỗ — chữ cần độ nét tuyệt đối, không cần "cảm giác phim". Chromatic aberration trên ảnh sản phẩm thương mại gần như luôn là lỗi: khách hàng phóng to ảnh để xem MÀU THẬT sản phẩm, chỉ 1px lệch màu cũng đọc như ảnh lỗi, không phải "phong cách điện ảnh". Bài tiếp theo (Color Grading, LUT & Tone Mapping) đi vào một lớp hậu kỳ khác hẳn — biến đổi màu TOÀN CỤC thay vì cục bộ theo pixel như ba hiệu ứng bài này — còn bài "Thứ tự Pass & Chi phí Fillrate" quay lại đúng câu hỏi vừa đặt ra: gộp bao nhiêu pass là đủ, khi nào việc gộp không còn đáng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi viết grain/vignette/CA:
+
+1. **Hash grain chỉ theo `uv`, quên `time`.** Kết quả là một khung nhiễu TĨNH, lặp lại y hệt mỗi frame — nhìn như một lớp nylon bẩn dán cố định lên màn hình, dấu hiệu "amateur shader" ngay lập tức chứ không phải grain thật.
+2. **Quên nhân `aspect` vào khoảng cách tới tâm.** Vignette và CA tối/lệch theo hình ELIP kéo dài theo cạnh dài khung hình thay vì hình tròn — rõ nhất trên canvas ultra-wide hoặc portrait, dễ bị nhầm là bug hơn là hiệu ứng thẩm mỹ.
+3. **Định nghĩa offset của chromatic aberration bằng đơn vị UV thô, không chia cho `resolution.x`.** Cùng một giá trị "độ mạnh" cho ra độ lệch pixel khác nhau tuỳ độ phân giải render — hiệu ứng tinh tế ở 1x DPR bỗng vỡ hình ở màn hình retina 2x–3x DPR, dù không đổi một con số nào trong code.
+
+</Callout>

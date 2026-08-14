@@ -1,0 +1,57 @@
+## What Bloom Actually Is, Physically
+
+Bloom simulates a real optical phenomenon: when extremely bright light enters a lens or the human eye, it doesn't land only on its exact point — it scatters into the surrounding area, inside a camera lens because no lens is perfectly free of imperfections, inside an eye because of subsurface scattering under the retina. Unreal Engine's own Bloom documentation describes exactly this mechanism: the effect simulates "the effects that happen in the eye (retina subsurface scattering), when light hits the film (film subsurface scattering), or in front of the camera (milky glass filter)." The detail most often missed: that halo belongs only to things that are GENUINELY VERY BRIGHT — a light bulb, a reflected sun, a neon strip — not to anything that merely happens to be a bright color. A plain white-painted wall under normal lighting does NOT bloom in real life, even though its color looks just as "white" as a lightbulb does in an ordinary (LDR) photo.
+
+## Why Default Bloom Looks Cheap
+
+The most common trap: threshold set too low, so bloom can't tell "a genuinely light-emitting object" apart from "an object that merely has a bright color" — a white wall, a specular highlight, even the sky all end up glowing exactly like a light bulb. The result is an even white haze coating the whole scene with no focal point — precisely the "cheap bloom" symptom this lesson's track metadata names. The cause runs deeper than a badly-chosen threshold alone: if the image buffer only holds values in $[0, 1]$ (LDR), a "very bright" lightbulb and a "fairly bright" white wall both get squashed toward roughly the same value near 1.0 — there's no longer any way for a threshold to tell apart two things that are actually very far apart in real intensity.
+
+## Inside UnrealBloomPass: Reading Straight from the Source
+
+`UnrealBloomPass` (in `three/addons/postprocessing/UnrealBloomPass.js`) is not just "a blur." Reading its `render()` method directly reveals exactly three sequential steps.
+
+### Step 1 — Luminance High-Pass: Who Counts as "Bright Enough"
+
+`materialHighPassFilter` (using `LuminosityHighPassShader`) computes each pixel's luminance and applies `smoothstep(luminosityThreshold, luminosityThreshold + smoothWidth, luminance)` as an alpha — pixels below the threshold get nearly discarded (mixed toward black), pixels above it stay unchanged. `smoothWidth` defaults to `0.01` — a very narrow transition band, closer to a hard cutoff than a wide soft one.
+
+### Step 2 — A Progressively Downsampled Blur Chain
+
+That "bright areas only" image gets Gaussian-blurred across 5 successive mips (`nMips = 5`), each mip at HALF the resolution of the one before, starting from `resolution / 2`: the five mips land at roughly $1/2, 1/4, 1/8, 1/16, 1/32$ of the original resolution — a number that matches Unreal Engine's own documentation exactly ("combines multiple Gaussian blurs... at different resolutions (1/2 to 1/32 screen width)"), confirming `UnrealBloomPass` genuinely mirrors the original technique rather than just borrowing its name. Each mip's kernel size grows as it goes: `[6, 10, 14, 18, 22]` — smaller (lower-resolution) mips use a larger kernel, producing a wide-reaching glow without needing a huge kernel at full resolution.
+
+### Step 3 — Composite by Strength and Radius Weighting
+
+The five blurred mips are summed with weights from `bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2]` — the sharpest mip (mip 0) contributes the most by default. `radius` doesn't change kernel size at all (kernels are fixed at construction time) — it runs a `lerpBloomFactor` function that interpolates between the original `bloomFactors[i]` and `1.2 - bloomFactors[i]`, gradually shifting the weighting from "favor the sharp mip" (radius = 0) toward "favor the wide blurry mips" (radius = 1). `strength` simply multiplies that whole sum by a `3.0 * bloomStrength` factor (the `3.0` constant is a backward-compatibility holdover, noted directly in the source comment) and additively blends it straight into the original image — which is also why `needsSwap = false`: the pass writes its result back into `readBuffer` itself, without waiting for the composer to swap.
+
+## HDR: a Half-Float Buffer Isn't Automatically Enough
+
+The previous lesson already confirmed: `EffectComposer` in the installed three.js version (0.185.1) already defaults its two internal render targets to `HalfFloatType` — no more need to manually wrap `new WebGLRenderTarget(w, h, { type: HalfFloatType })` the way many older tutorials still recommend. But a buffer being CAPABLE of holding values above 1.0 doesn't mean it ACTUALLY holds values above 1.0 — that still depends on what writes into it.
+
+### The Trap: Tonemapping Clamps Before Bloom Ever Sees It
+
+This is the easiest detail to miss, and reading three.js's own material source makes it explicit: a material only compiles a tonemapping step into its fragment shader when `material.toneMapped` (`true` by default) AND `renderer.toneMapping !== NoToneMapping` — the two conditions combine into `toneMapping = material.toneMapped ? renderer.toneMapping : NoToneMapping`, right there in `WebGLPrograms.js`. And every standard tonemapping curve (Linear, Reinhard, ACESFilmic) ends by calling `saturate(color)` — i.e. `clamp(color, 0.0, 1.0)`. Which means: if the renderer has tonemapping enabled, EVERY default material already clamps its own output to $[0,1]$ right inside `RenderPass`, before `UnrealBloomPass` ever gets to read the buffer.
+
+That detail applies directly to this very platform: React Three Fiber's `<Canvas>` sets `gl.toneMapping = THREE.ACESFilmicToneMapping` by default (unless you pass `flat` or configure `gl.toneMapping` yourself) — and this platform's `DemoCanvas` doesn't opt out of that. So without any extra handling, a "lamp" sphere at `emissiveIntensity = 3` and an ordinary white wall would come out of `RenderPass` at NEARLY THE SAME VALUE — the pre-allocated HalfFloat buffer goes to waste regardless. The fix this demo uses: set `toneMapped={false}` on the materials that need to keep true HDR intensity, so their raw linear values (including anything above 1.0) reach the buffer unclamped — while `OutputPass` at the end of the chain still applies the real tonemapping curve exactly once, since it reads `renderer.toneMapping` independently of any individual material's `toneMapped` flag.
+
+## Tuning Threshold, Strength and Radius With Intent
+
+With real HDR data in place (thanks to `toneMapped={false}` above), setting `threshold` above 1.0 finally means something: an ordinary object never exceeds luminance 1.0 no matter how bright it looks within tonemapping's limited display range, while a deliberately light-emitting object (a lamp, a neon strip) can carry a value of 2, 3, or higher. Dragging threshold from near 0 up past 1.0 in the demo is literally the move from "everything glows" to "only genuine emitters glow." `strength` should stay conservative — the hard-coded `3.0` factor baked into the composite already makes `strength = 1` fairly strong; `radius` is a matter of taste between a glow that "hugs" the source (low) or "spreads wide" (high) — it has no bearing on which objects count as light sources in the first place.
+
+## Selective Bloom: When Only a Few Objects Should Glow
+
+Sometimes an object needs to glow even though its material value doesn't genuinely exceed 1.0 — a UI icon that should "glow" for aesthetic reasons, not physical ones. The standard technique (matching three.js's own official selective-bloom example) uses `Layers`: assign the objects that should bloom to a dedicated layer (`object.layers.enable(BLOOM_LAYER)`), render the scene TWICE per frame — once with the camera seeing only the bloom layer (every other object swapped for a temporary black material) fed through its own `UnrealBloomPass`, and once rendering the full scene normally — then composite the two results with an additive `ShaderPass` (`baseColor + bloomTexture`). This doubles the scene render cost per frame, so it's only worth it when you genuinely need to DECOUPLE "which objects bloom" from "which objects are bright" — otherwise, the `emissiveIntensity` + `toneMapped={false}` convention this lesson's demo uses is enough for most cases.
+
+## Taste: Bloom Is Easy to Overuse
+
+Three practical rules: always check bloom against a genuinely dark scene — against a bright background, the additive glow is nearly invisible, tempting you to crank strength too high and then carry that config into an actual dark scene, where it overwhelms everything; a large radius suits wide establishing shots, not close-ups on a character (the glow spreading into unrelated areas reads as fake); and strength should be just enough for the EYE to register that something is emitting light, not enough to erase the object's actual shape underneath — bloom is an accent, not a haze over the whole scene.
+
+The next lesson, `depth-of-field-and-motion-blur`, leaves bloom's "same formula across the whole screen" territory behind, moving to a pass that needs extra depth data on top of color — opening the group of effects built on auxiliary buffers rather than just `tDiffuse`.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common bloom configuration mistakes:
+
+1. **Threshold near 0, then "fixing" it by lowering strength.** Lowering strength only weakens the glow EVENLY across every object — bloom still can't tell a genuine emitter from a merely-bright-colored object, since the root cause (threshold catching everything) was never actually addressed.
+2. **Testing bloom against a bright background scene, then carrying the config into a dark one.** The same `strength`/`threshold` that looks "just right" against a bright background can completely overwhelm a dark one, since bloom's additive contribution stands out far more sharply once the surrounding scene stops competing for brightness.
+3. **Letting `renderer.toneMapping` (R3F's ACESFilmic default) clamp material values before bloom ever reads the buffer.** Even with a HalfFloat buffer, every material with `toneMapped: true` (the default) still `clamp`s its own output to $[0,1]$ right inside `RenderPass` — bloom then only ever sees an already-flattened value, and a threshold above 1.0 will never catch anything at all.
+
+</Callout>

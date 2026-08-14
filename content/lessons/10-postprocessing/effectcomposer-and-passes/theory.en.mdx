@@ -1,0 +1,79 @@
+## Post-Processing Is Rendering the Render You Just Made
+
+Every lesson from Track 3 through Track 9 ends at the same call: `renderer.render(scene, camera)` — rasterize geometry, run a shader per fragment, write color to the canvas. Post-processing inserts one more stage: instead of writing straight to the canvas, that render result lands in a **texture** (a render target), and one or more fullscreen shaders run on top of that same texture — reading every pixel of the image just rendered, transforming color, writing to another texture, repeating — before the final image ever touches the canvas. The key shift: from this point on there's no scene graph, no real camera, no depth test in the usual sense — just a screen-filling rectangle (a fullscreen quad) and a fragment shader reading the previous step's texture. "Rendering the render" is the precise way to think about it, not "an effect bolted onto the scene."
+
+## EffectComposer: a Chain of Passes, Not One Render Call
+
+`EffectComposer` (in `three/addons/postprocessing/EffectComposer.js`) manages exactly that chain. Instead of calling `renderer.render()`, you call `composer.render()` every frame; the composer walks its internal `this.passes` array and calls `pass.render(...)` on each entry in the exact order they were `addPass()`-ed. To let "the previous step's image feed the next step," the composer allocates two internal `WebGLRenderTarget`s (`renderTarget1`, `renderTarget2`) right in its constructor. Worth noting: reading the source of the installed three.js version (0.185.1) directly shows these two targets are created with `{ type: HalfFloatType }` by default — not the 8-bit `UnsignedByteType` many older tutorials still assume. That detail matters for the next lesson on bloom, where buffer precision decides whether the effect clips or not.
+
+### Ping-Pong: readBuffer, writeBuffer, swapBuffers
+
+Those two render targets get their roles through two properties: `composer.readBuffer` and `composer.writeBuffer`. The composer's `render()` loop does exactly this for every pass: call `pass.render(renderer, writeBuffer, readBuffer, ...)`, then if `pass.needsSwap === true`, call `swapBuffers()` — a function that only swaps two REFERENCES, no data copy involved:
+
+```js
+// excerpt from EffectComposer.js — the real render() loop
+for (let i = 0; i < this.passes.length; i++) {
+  const pass = this.passes[i];
+  if (!pass.enabled) continue;
+  pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
+  if (pass.needsSwap) this.swapBuffers();
+}
+```
+
+This is the exact ping-pong FBO technique from Track 9 (`pingpong-fbo-state-textures`) — two textures alternating between "currently read" and "currently written." The only difference is **purpose**: in Track 9, the two textures hold simulation state across many FRAMES (this frame's particle position depends on the previous frame's); here, the two textures hold one IMAGE being progressively transformed across many PASSES, within a single frame. Same reference-swap mechanism, completely different meaning for the data inside.
+
+## Three Foundational Passes: RenderPass, ShaderPass, OutputPass
+
+### RenderPass: Writes Straight into readBuffer, No Swap
+
+`RenderPass(scene, camera)` produces the "beauty pass" — internally it just calls `renderer.render(this.scene, this.camera)` as usual, but targets a render target instead of the canvas. Reading the source closely reveals an easy detail to miss: `renderer.setRenderTarget(this.renderToScreen ? null : readBuffer)` — RenderPass writes straight into **readBuffer**, not writeBuffer, and `this.needsSwap = false` is set permanently in the constructor. That's not an oversight: since no pass has run before it, RenderPass "primes" readBuffer so the next pass can read it immediately, with no wasted extra swap. Every "ordinary" pass after it (ShaderPass, OutputPass) reads from readBuffer, writes to writeBuffer, and only then swaps.
+
+### ShaderPass: the Fullscreen Quad and the tDiffuse Convention
+
+`ShaderPass(shader, textureID = 'tDiffuse')` wraps an arbitrary fragment shader into a pass. On every render call it auto-assigns `uniforms[textureID].value = readBuffer.texture` — meaning any shader that wants the previous step's image just needs to declare exactly one `uniform sampler2D tDiffuse;`, no manual wiring required. The quad itself doesn't use scene geometry at all — it's a shared `FullScreenQuad` filling `[-1,1]` in clip space. This lesson's demo uses that exact mold for a tint/invert pass: `tint-pass.vert` and `tint-pass.frag` (see the sibling files) — the vertex shader is close to a no-op, with all the logic sitting in the fragment stage.
+
+### OutputPass: Tonemapping + Color Space, Exactly Once at the End
+
+`OutputPass` reads `renderer.toneMapping` and `renderer.outputColorSpace` directly — not baked in at construction time — and only rebuilds its shader defines when those two values actually change (checked against an internal cache). It applies the same 6 tonemapping curves materials normally use (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral), then converts to sRGB if the color space calls for it. Skipping OutputPass (or an equivalent) at the end of the chain means the last pass writes linear data straight to the canvas — which expects sRGB-encoded bytes — and the resulting image looks washed out or too dark relative to what was intended.
+
+## Anatomy of a Pass: enabled, needsSwap, renderToScreen
+
+These three flags (defined on the base `Pass` class) are the entire contract the composer needs from every pass. `enabled = false` makes the composer skip that pass entirely in the loop — no render call spent — and the composer recomputes which pass is now the last one still enabled (`isLastEnabledPass`) to assign `renderToScreen` correctly, no manual reordering needed. `needsSwap` defaults to `true` for an ordinary pass, but is `false` for RenderPass (explained above) and for `UnrealBloomPass` (next lesson), since it writes its additive result straight into readBuffer itself. `renderToScreen` is set `true`/`false` by the composer right before each `pass.render()` call — the pass only needs to read that flag to decide between `setRenderTarget(null)` (the canvas) or an internal buffer.
+
+## Taking Over the Render Loop in R3F
+
+By default R3F calls `gl.render(scene, camera)` on its own every requested frame. To let the composer replace that call, the demo builds the composer once inside a `useEffect` (grabbing `gl`, `scene`, `camera` via `useThree`), then registers a callback with a **non-zero priority**:
+
+```tsx
+useFrame(({ gl }) => {
+  composerRef.current?.render();
+}, 1); // priority = 1: R3F skips its own default render this frame
+```
+
+Same convention as the ping-pong callback in Track 9 — the default priority is 0; any subscriber declaring a non-zero priority makes R3F hand over rendering entirely to that subscriber. The composer still needs `composer.setSize(width, height)` whenever canvas size changes (R3F auto-resizes the canvas/camera, but does NOT auto-resize the composer's internal buffers), and still follows the demand-frameloop + `invalidate()` contract like every other demo on this platform. On unmount, `composer.dispose()` only frees its own two render targets plus its internal `copyPass` — it does **not** free any pass you added yourself; `ShaderPass`/`OutputPass` need their own `.dispose()` call.
+
+## The Cost of a Pass: Fillrate
+
+This demo's canvas runs at a max DPR of 2 (`dpr={[1,2]}`, this platform's standing convention). For a canvas displaying at 960×540 CSS pixels, the composer's actual internal buffer resolution is:
+
+$$
+960 \times 540 \times 2^2 \approx 2.1 \times 10^{6}
+$$
+
+pixels per buffer. Every fullscreen pass — even a "cheap" simple tint — reads and writes that entire pixel count, regardless of how many triangles the scene has. Three passes (RenderPass, ShaderPass, OutputPass) add up to three full-screen read/write passes, BEFORE counting the cost of rasterizing RenderPass's own original geometry. This is a qualitative estimate, not accounting for real GPU memory bandwidth — the `pass-order-and-fillrate` lesson at the end of this track builds the full cost model. What matters right now: adding a pass to the composer is a fixed tax paid on EVERY pixel, independent of scene complexity — toggle the tint pass in the demo and watch the frame-time readout to see that tax directly.
+
+## When You Don't Need a Composer
+
+If all you need is exactly ONE cheap, static effect (a light vignette, a color tint that never depends on anything else), put that logic straight into your main material's fragment shader (via `onBeforeCompile`, Track 6) or a cheap fullscreen background shader — that's strictly cheaper than standing up a whole composer, which always costs two pre-allocated HalfFloat render targets plus a RenderPass round-trip even for a single-pass chain. A composer earns its keep once you need to COMBINE two or more independent effects, or when one effect needs to SEE the result of another (bloom needs the fully lit image, DOF needs both depth and color) — cases a single material simply can't express on its own.
+
+The next lesson (`bloom-done-right`) reuses this exact composer skeleton — RenderPass, then OutputPass — swapping only the tint ShaderPass for `UnrealBloomPass`, and digs into the very HalfFloat buffer just mentioned above: having a high-precision buffer isn't automatically enough for bloom to actually see light that's genuinely "very bright."
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first wiring up a composer:
+
+1. **Forgetting `OutputPass` (or any tonemapping/color-space pass) at the end of the chain.** The final pass writes linear data straight to the canvas instead of tonemapped sRGB — the image looks washed out or unexpectedly dark compared to what R3F used to render by default, even though the composer "runs without errors."
+2. **Forgetting to call `composer.setSize()` when the canvas resizes.** R3F auto-resizes the canvas and camera through a ResizeObserver, but the composer owns its OWN buffers that don't follow along — the final image ends up stretched or off-ratio relative to the actual display area, a bug easy to misdiagnose as "a shader bug."
+3. **Treating readBuffer/writeBuffer as two fixed textures instead of two swapping ROLES.** Holding onto a hard reference to `composer.renderTarget1` and assuming it's always "the latest scene image" breaks right after the first `swapBuffers()` call — only `readBuffer`/`writeBuffer` (the composer's dynamic properties) reflect the chain's actual current state.
+
+</Callout>

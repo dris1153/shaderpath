@@ -1,0 +1,51 @@
+## Order Changes MEANING, Not Just the Picture
+
+Swapping two passes in a composer doesn't just tweak "how it looks a little" — it changes what that pass is actually computing on top of. The clearest example: bloom before or after tone mapping. In Three.js, tone mapping isn't a separate step that runs last — it's baked directly into a material's fragment shader, switched on or off by whatever `renderer.toneMapping` happens to be at the exact moment `RenderPass` draws the scene (`WebGLProgram` adds the `TONE_MAPPING` define based on `material.toneMapped ? renderer.toneMapping : NoToneMapping`). If the HDR buffer `RenderPass` writes has already been compressed by a tone curve, EVERY pass running after it — bloom included — is working on already-compressed data, not real light.
+
+Bloom before tone mapping: `UnrealBloomPass` extracts bright regions from the still-intact HDR buffer (values can sit far above 1.0, matching real light energy), blurs them, and adds the result back — the glow scales with the light source's actual brightness. Bloom after tone mapping: it extracts brightness from an image already squeezed toward $[0,1]$, where a blindingly bright object and a merely bright one look nearly identical — the glow loses all sense of intensity, reading flat and washed out. `UnrealBloomPass`'s own JSDoc warns about this directly: "tone mapping must be enabled in the renderer settings" — a tone curve MUST run somewhere in the chain, or the accumulated HDR total (scene plus bloom) just hard-clips when squeezed into an 8-bit framebuffer instead of compressing smoothly.
+
+## The Canonical Order: From HDR Scene to Screen
+
+The standard chain, each step justified physically or technically: **scene (HDR) → AO → bloom → tone mapping → grade/LUT → stylistic effects (vignette, grain, chromatic aberration) → screen**.
+
+AO sits right after the scene because occlusion is part of the LIGHTING CALCULATION — it has to multiply into the still-linear HDR radiance value, exactly like a real contact shadow eats incoming light before that light reaches the eye. Multiplying AO into an already-tone-mapped or already-graded image multiplies into an "artistically interpreted" picture instead — the contact shadow stops being physically meaningful and becomes just an arbitrary darkening layer. Bloom sits before tone mapping for the reason above. Tone mapping sits right after bloom because it's the ONE step responsible for compressing the unbounded HDR range down into $[0,1]$ — Three.js's `OutputPass` (bundling tone mapping with sRGB color-space conversion) is documented to "in most cases... be included at the end of each pass chain." Grade/LUT runs after tone mapping because a 3D LUT is built for display-referred footage — a 3D LUT looks up by RGB coordinate and expects that coordinate to already sit inside $[0,1]$, so feeding it un-tone-mapped HDR samples the wrong grid cell entirely. Finally, grain/vignette/chromatic aberration run LAST because they simulate lens and film — light passes through a lens (bending color at the edges — chromatic aberration), through an aperture (darkening the corners — vignette), and only then hits grainy film stock — literally the last things light passes through before becoming an image, so in post they belong at the end too.
+
+## Fillrate Cost: Every Pass Reads and Writes the Whole Screen
+
+Every fullscreen pass is a screen-covering rectangle the GPU rasterizes — it runs the fragment shader per texel, reading at least one source texture and writing at least one destination render target. With a half-float HDR buffer (`HalfFloatType`, 8 bytes/texel RGBA), a simple pass (one read, one write) moves roughly:
+
+$$
+\text{bytes} \approx W \times H \times 8_{\text{read}} + W \times H \times 8_{\text{write}} = W \times H \times 16
+$$
+
+| Resolution | Texels | 1 simple pass | 5-pass chain |
+|---|---|---|---|
+| 1080p (1920×1080) | ~2.07M | ~33 MB | ~166 MB/frame |
+| 1440p (2560×1440) | ~3.69M | ~59 MB | ~295 MB/frame |
+| 4K (3840×2160) | ~8.29M | ~133 MB | ~664 MB/frame |
+
+This is a rough estimate (it ignores texture caching modern GPUs use), but enough to show scale: at 1080p, 60fps, a 5-pass chain costs roughly $166\text{MB} \times 60 \approx 10\text{GB/s}$ of bandwidth for post-processing alone — worth comparing against a GPU's real memory bandwidth (hundreds of GB/s on desktop, often under 30GB/s on mobile) to see how much budget is left for the rest of the frame.
+
+Counting the passes visible in `composer.passes` is NOT the real cost. `UnrealBloomPass` (confirmed from its source) issues roughly a dozen internal draw calls: one bright-pass extraction, 5 mip levels × 2 blur directions, plus one composite — but since four of the five mips run at a quarter of full resolution or smaller (each mip halves the one before it), total texel throughput adds up to only about **2 full-resolution-equivalent passes**, despite issuing six times that many draw calls. Counting "bloom = 1 pass" undercounts it; counting "bloom = 12 full-res passes" overcounts it. Honest accounting means costing by texels × the actual resolution of each draw call, not how many `addPass` calls appear in the code.
+
+## DPR: The Hidden Fillrate Multiplier
+
+`devicePixelRatio` multiplies directly into both the width and height of every render target in the composer — so fillrate cost scales with the SQUARE of DPR, not linearly: going from DPR 1 to DPR 2 **quadruples** the texel count per pass; a phone reporting DPR 3 multiplies the cost by **9x** relative to DPR 1. This is the easiest multiplier to forget, because it doesn't live in the pass-chain code — it lives in the canvas configuration. For a postfx-heavy scene, capping DPR around 1–1.5 instead of letting it float with the physical display is the cheapest way to claw back frame-time budget, and it's usually invisible anyway, since post-processing already blurs the sharp edges a high DPR exists to sharpen.
+
+## Optimizing: Merge, Downsample, Skip
+
+Three single-input effects (vignette, grain, chromatic aberration) don't need three separate passes — merge all three into ONE fragment shader, one read, one write, exactly the technique the earlier stylistic-effects lesson in this track already used. For blur-class effects (bloom, DOF, SSAO's blur step), rendering at half resolution and upsampling on composite cuts cost by roughly 4x with almost no visible difference, since blurring already destroys the high-frequency detail a full-res buffer would preserve — exactly why `UnrealBloomPass` does this at every mip level itself. A pass whose strength sits at zero should be flagged `enabled = false` so the composer skips it entirely, instead of still running the full shader and multiplying by zero — skipping a pass saves its whole bandwidth; multiplying by zero only saves the final multiply.
+
+The most honest way to measure isn't reading documentation and adding up numbers — it's toggling passes ON and OFF ONE AT A TIME, timing `performance.now()` (EMA-smoothed) around `composer.render()`, and reading the delta. At the architecture level, pmndrs's `postprocessing` library (the foundation under `@react-three/postprocessing`) solves the pass-merging problem automatically: its `EffectPass` "automatically organizes and merges any given combination of effects," cutting render operations to a minimum without hand-merging shaders the way this lesson just did — the tradeoff is less manual control over ordering than hand-assembling an `EffectComposer` gives you.
+
+The next checkpoint asks for a self-designed effect chain with a distinct visual signature, applying this exact ordering discipline and fillrate budget. The Performance track later in the curriculum returns to `performance.now()`/GPU timer measurement more systematically, once frame-time budgeting covers the whole render pipeline, not just post-processing.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common pass-order and fillrate mistakes:
+
+1. **Putting bloom after tone mapping (or after grading).** Bloom then extracts brightness from an image already squeezed toward $[0,1]$ instead of true HDR values — the glow loses all sense of intensity, reading flat and washed out instead of matching the source's real brightness.
+2. **Counting cost by the number of `addPass()` calls instead of texels actually touched.** A "single pass" like `UnrealBloomPass` or `SSAOPass` hides multiple draw calls at multiple resolutions inside it — treating it as equal to one simple `ShaderPass` skews the budget estimate in either direction depending on the effect.
+3. **Forgetting to square DPR when budgeting.** Estimating fillrate at DPR 1 and assuming it holds for a DPR 2–3 device misses a 4x–9x multiplier — exactly the gap that makes a demo feel smooth on a dev laptop and stutter on the actual test phone.
+
+</Callout>

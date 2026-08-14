@@ -1,0 +1,57 @@
+## The Thin-Lens Model and the Circle of Confusion
+
+The pinhole camera — the model used since Track 0 to project 3D points onto a screen — has no depth of field: everything is perfectly sharp, since an infinitely small hole lets only one ray through per point. A real camera uses a lens with a finite aperture instead: *many* rays leave one object point, pass through different parts of the lens, and converge again. If that point sits on the focal plane, the rays reconverge to a single point on the sensor — sharp. If not, they converge in front of or behind the sensor, landing as a disc instead of a point — that disc is the **circle of confusion** (CoC), and its diameter measures "how blurred" that point is.
+
+### The real CoC formula, and why games don't use it directly
+
+With $f$ the focal length, $N$ the f-number (physical aperture $= f/N$), $S_1$ the focus distance, and $S_2$ the actual distance of the rendered point, the CoC diameter is:
+
+$$
+c = \frac{f^2}{N} \cdot \frac{|S_2 - S_1|}{S_2 (S_1 - f)}
+$$
+
+This is physically correct but not cheap: $S_2$ comes from the depth buffer, nothing stops computing it, yet nearly every real-time engine (including `BokehPass` below) swaps in a cheaper linear approximation instead: `blur = clamp((focus - depth) * aperture, -maxblur, maxblur)`. This is **not** a rewrite of the formula above — the code's `aperture` is just a tunable scale factor (default $0.025$, no f-number units), trading optical accuracy for speed. Knowing both keeps you from mistaking that parameter for a real optical quantity.
+
+## From Depth Buffer to Blur: Per-Pixel CoC, Then Variable-Radius Gather
+
+Post-process DOF needs three steps: (1) render the scene for color, (2) render the depth buffer, (3) a full-screen fragment shader reading depth per pixel, converting it to a blur radius via the approximation above, then **gathering** — a weighted average of surrounding color texels within that radius. The radius varying per pixel ("variable-radius") is what separates this from an ordinary Gaussian blur: Gaussian treats the whole image identically; DOF reads depth first to pick a radius *specific to each pixel*.
+
+The characteristic bokeh shape (the hexagonal/round blobs an out-of-focus highlight turns into) doesn't come from simulating optics exactly — it comes from the **sampling pattern**: samples arranged in a hexagon produce hexagonal bokeh (matching a 6-blade aperture); samples spread around a circle produce smooth round bokeh. `BokehShader` takes 41 samples at 16 angles, each repeated at 4 radii ($1.0\times$, $0.9\times$, $0.7\times$, $0.4\times$), sums and divides by 41 — a cheap disc approximation, not a crisp hexagon but smooth enough for most scenes.
+
+## Three.js's `BokehPass`: The Parameters That Actually Exist
+
+Read `node_modules/three/examples/jsm/postprocessing/BokehPass.js` directly (0.185.1) instead of guessing: the constructor takes `{ focus, aperture, maxblur }`, defaulting to $1.0$, $0.025$, $1.0$. `focus` is the focus distance in world units along the camera's look direction — not raw Euclidean distance to an arbitrary point; the two only coincide on the optical axis. The pass renders its own `MeshDepthMaterial` (packed with `RGBADepthPacking`) into a private render target every frame — you never supply one. `@react-three/postprocessing` (^3.0.5, installed here) also exports `<DepthOfField>`, wrapping the `postprocessing` package's `DepthOfFieldEffect` with props like `focusDistance`/`focalLength`/`bokehScale` — that library's composer merges effects into fewer passes where it can, a different architecture from the render-target chain this lesson teaches. The demo uses `three/addons` because its pass-by-pass architecture stays debuggable step by step.
+
+## Single-Layer DOF Artifacts: Depth-Edge Bleeding and the Near-Field Problem
+
+`BokehShader` reads one depth value for its output pixel, then gathers color from *neighboring* texels without checking their own depth. Near the boundary between a sharp near object and a blurred far background, sharp pixels close to the edge accidentally gather leaking blurred background color — or the reverse, the background "borrows" the sharp object's color — producing an unnatural fringe along any large depth jump.
+
+Worse in the **near-field**: an object very close to the camera, heavily blurred, should optically spread well beyond its own sharp silhouette, covering background that would actually be visible in real life. But the source image (one layer, one camera pass) never contained information about what that object occludes in reality — nothing to spread into that region except the object's own color or a hard-clipped edge. Single-layer techniques like `BokehPass` don't solve this; layered DOF (splitting foreground/background before blurring) is the correct fix but costs more, out of scope here.
+
+## Motion Blur: Why Blending Previous Frames Is Wrong
+
+The most common wrong intuition: "blend the current frame with a few previous ones for motion blur." The result isn't motion blur — it's **ghosting**: each old frame is a sharp snapshot at one discrete instant, and alpha-blending several sharp snapshots produces several distinct overlapping copies (a double image), not a continuous streak along the real motion path. Real sensors produce motion blur because they **integrate light continuously** over the shutter's open duration, never sampling discretely and stacking layers.
+
+## Velocity Buffers: Reconstructing Motion From Two Camera Matrices
+
+The correct approach: for each pixel, compute a **screen-space velocity vector** — the current clip-space position minus the clip-space position *of that same 3D point* one frame earlier, each projection using its own frame's camera matrices. Blurring means gathering samples along that velocity vector — a genuine approximation of the continuous integral a real sensor performs, with a finite number of samples.
+
+A full velocity buffer needs every vertex's previous clip-space position (usually written to its own target) — extra attributes, extra target, correct for self-animating geometry. A much cheaper subset exists: if every mesh sits still and only the camera moves, every point's velocity can be **reconstructed from the depth buffer plus the delta between two camera matrices** — no dedicated buffer at all. From a pixel's depth, rebuild its world position using the *current* camera's inverse view-projection matrix; reproject that point through the *previous* frame's view-projection matrix (kept one frame behind); the difference between the two clip-space coordinates is the velocity. The demo below implements exactly this as a hand-written `ShaderPass`.
+
+## The Cost Ladder: None → Camera-Only → Full Velocity Buffer
+
+Three tiers: no motion blur (zero cost, fast camera motion reads as visible judder at low frame rates); camera-only (one full-screen pass plus one extra depth pre-pass, no new buffer — cheap, correct for the camera, but self-animating objects stay perfectly rigid); full velocity buffer (an extra target writing every vertex's velocity every frame — correct for both, most expensive). A cutscene with fast character action needs the full buffer; a static exploration scene with only camera pan/orbit is already convincing with camera-only.
+
+## Where This Foundation Leads
+
+Both DOF and motion blur here boil down to two full-screen fragment shaders reading depth differently — no new data structure beyond the `RenderPass`/`ShaderPass` pair from the EffectComposer lesson. The SSAO lesson right after reuses the same trick — "read depth, reconstruct view-space position, compare against nearby samples" — for a different problem: occlusion instead of blur. The Custom Pass module returns to the same `Pass` shape this demo's `CameraMotionBlurPass` already uses, so you can write your own pass from scratch.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when implementing post-process DOF and motion blur:
+
+1. **Treating `BokehPass`'s `aperture`/`maxblur` as real optical parameters.** They're tuning coefficients for the linear approximation, not an f-number or focal length — cranking `aperture` up expecting "stronger DOF" without realizing it's just a multiplier gives jumpy, hard-to-predict results compared to adjusting `focus`, which has a clear world-unit meaning.
+2. **Thinking blending previous frames equals motion blur.** A conceptual bug, not a code bug: blending produces ghosting, not a continuous streak — getting it right requires computing screen-space velocity and gathering along that vector.
+3. **Using camera-only motion blur, then wondering why self-animating objects show no blur.** This technique only derives velocity from depth plus the camera matrix delta — it assumes geometry sits still in world space; a character running through an otherwise static scene shows zero streaking regardless of camera motion, because the "previous frame" world position the pass reconstructs for it reuses the current depth, not the object's actual position one frame earlier.
+
+</Callout>

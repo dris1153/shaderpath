@@ -1,0 +1,57 @@
+## Bloom là gì, về mặt vật lý
+
+Bloom mô phỏng một hiện tượng quang học có thật: khi ánh sáng cực mạnh đi vào ống kính hoặc mắt người, nó không chỉ chiếu đúng lên đúng điểm mà còn tán xạ ra xung quanh — trong ống kính máy ảnh vì các thấu kính không hoàn hảo tuyệt đối, trong mắt vì tán xạ dưới bề mặt võng mạc. Tài liệu Bloom của Unreal Engine mô tả đúng cơ chế này: hiệu ứng giả lập "tán xạ dưới bề mặt ở võng mạc, ở lớp phim khi ánh sáng chạm phim, hoặc ở kính lọc mờ trước ống kính." Điểm mấu chốt thường bị bỏ qua: quầng sáng đó chỉ thuộc về vật THỰC SỰ RẤT SÁNG — một bóng đèn, mặt trời phản chiếu, dải neon — chứ không phải mọi vật có màu sáng. Một bức tường sơn trắng dưới ánh sáng thường KHÔNG phát bloom ngoài đời thật, dù màu của nó nhìn "trắng" y hệt bóng đèn trên ảnh chụp thường (LDR).
+
+## Vì sao bloom mặc định trông rẻ tiền
+
+Cái bẫy phổ biến nhất: threshold đặt quá thấp khiến bloom không phân biệt được "vật phát sáng thật" với "vật chỉ đơn thuần có màu sáng" — bức tường trắng, highlight specular, thậm chí nền trời cũng phát quầng sáng y hệt bóng đèn. Kết quả là một lớp sương mù trắng phủ đều toàn cảnh, không có điểm nhấn nào — chính xác là triệu chứng "bloom rẻ tiền" mà track metadata bài này nhắc tới. Nguyên nhân sâu hơn threshold sai đơn thuần: nếu buffer ảnh chỉ chứa giá trị trong khoảng $[0, 1]$ (LDR), bóng đèn "rất sáng" và tường trắng "khá sáng" đều bị nén về cùng gần giá trị 1.0 — không còn cách nào để threshold phân biệt được hai thứ vốn dĩ khác nhau rất xa về cường độ thật.
+
+## Bên trong UnrealBloomPass: đọc thẳng từ mã nguồn
+
+`UnrealBloomPass` (trong `three/addons/postprocessing/UnrealBloomPass.js`) không chỉ là "một cái blur." Đọc thẳng `render()` của nó cho thấy đúng ba bước tuần tự.
+
+### Bước 1 — luminance high-pass: ai được coi là "đủ sáng"
+
+`materialHighPassFilter` (dùng `LuminosityHighPassShader`) tính luminance mỗi pixel rồi áp `smoothstep(luminosityThreshold, luminosityThreshold + smoothWidth, luminance)` làm alpha — pixel dưới threshold gần như bị loại (mix về màu đen), pixel trên threshold giữ nguyên. `smoothWidth` mặc định `0.01` — một dải chuyển tiếp rất hẹp, gần như một ngưỡng cứng chứ không phải một dải mềm rộng.
+
+### Bước 2 — chuỗi mip blur giảm dần
+
+Ảnh "chỉ giữ vùng sáng" đó được blur Gauss theo 5 mip liên tiếp (`nMips = 5`), mỗi mip ở độ phân giải bằng NỬA mip trước, bắt đầu từ `resolution / 2`: tức năm mip lần lượt ở khoảng $1/2, 1/4, 1/8, 1/16, 1/32$ độ phân giải gốc — con số này khớp chính xác với tài liệu Unreal Engine ("kết hợp nhiều Gaussian blur ở độ phân giải 1/2 đến 1/32 chiều rộng màn hình"), xác nhận `UnrealBloomPass` mô phỏng đúng kỹ thuật gốc chứ không chỉ mượn tên. Kích thước kernel mỗi mip tăng dần: `[6, 10, 14, 18, 22]` — mip càng nhỏ (độ phân giải càng thấp) càng dùng kernel lớn hơn, tạo quầng sáng lan rộng mà không cần kernel khổng lồ ở độ phân giải gốc.
+
+### Bước 3 — composite theo trọng số strength và radius
+
+Năm mip blur được cộng lại có trọng số qua `bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2]` — mip sắc nét nhất (mip 0) đóng góp nhiều nhất mặc định. `radius` không đổi kích thước kernel (kernel đã cố định lúc khởi tạo) — nó chạy hàm `lerpBloomFactor` để nội suy giữa `bloomFactors[i]` gốc và `1.2 - bloomFactors[i]`, tức đẩy trọng số nghiêng dần từ "ưu tiên mip sắc nét" (radius = 0) sang "ưu tiên mip mờ rộng" (radius = 1). `strength` chỉ đơn giản nhân toàn bộ tổng đó với hệ số `3.0 * bloomStrength` (con số `3.0` là hằng số giữ tương thích ngược, ghi rõ trong comment mã nguồn) rồi cộng dồn (additive blend) thẳng vào ảnh gốc — đây cũng là lý do `needsSwap = false`: pass tự ghi kết quả ngược lại `readBuffer`, không đợi composer swap.
+
+## HDR: buffer nửa-float chưa chắc đã đủ
+
+Bài trước đã xác nhận: `EffectComposer` ở bản three.js đang cài (0.185.1) đã mặc định cấp `HalfFloatType` cho hai render target nội bộ — không còn cần tự bọc `new WebGLRenderTarget(w, h, { type: HalfFloatType })` như nhiều hướng dẫn cũ vẫn khuyên. Nhưng có buffer chứa được số lớn hơn 1.0 không có nghĩa là buffer đó THỰC SỰ chứa số lớn hơn 1.0 — còn phụ thuộc thứ gì ghi vào nó.
+
+### Cái bẫy: tonemapping clamp trước khi bloom kịp nhìn thấy
+
+Đây là chi tiết dễ bị bỏ sót nhất, và đọc thẳng mã nguồn material của three.js cho thấy rõ: mỗi material chỉ compile bước tonemapping vào fragment shader khi `material.toneMapped` (mặc định `true`) VÀ `renderer.toneMapping !== NoToneMapping` — hai điều kiện gộp lại thành `toneMapping = material.toneMapped ? renderer.toneMapping : NoToneMapping` ngay trong `WebGLPrograms.js`. Và mọi đường cong tonemapping tiêu chuẩn (Linear, Reinhard, ACESFilmic) đều kết thúc bằng `saturate(color)` — tức `clamp(color, 0.0, 1.0)`. Nghĩa là: nếu renderer đang bật tonemapping, MỌI material mặc định đã tự kẹp giá trị của chính nó về $[0,1]$ ngay trong `RenderPass`, trước khi `UnrealBloomPass` kịp đọc buffer.
+
+Chi tiết áp dụng trực tiếp lên chính nền tảng học này: `<Canvas>` của React Three Fiber tự đặt `gl.toneMapping = THREE.ACESFilmicToneMapping` theo mặc định (trừ khi truyền `flat` hoặc tự cấu hình `gl.toneMapping`) — và `DemoCanvas` của nền tảng không tắt hành vi đó. Vậy nên nếu không xử lý gì thêm, một quả cầu "đèn" với `emissiveIntensity = 3` và một bức tường trắng thường sẽ RA GẦN NHƯ CÙNG MỘT GIÁ TRỊ sau khi qua `RenderPass` — buffer HalfFloat có sẵn cũng vô dụng. Cách sửa demo dùng: đặt `toneMapped={false}` trên material của những vật cần giữ cường độ HDR thật, để giá trị linear gốc (kể cả lớn hơn 1.0) đi thẳng vào buffer không bị kẹp — trong khi `OutputPass` ở cuối chuỗi vẫn áp đúng đường cong tonemapping một lần duy nhất, vì nó đọc `renderer.toneMapping` độc lập với cờ `toneMapped` của từng material.
+
+## Chọn threshold, strength, radius có chủ đích
+
+Với dữ liệu HDR thật (nhờ `toneMapped={false}` ở trên), đặt `threshold` cao hơn 1.0 mới thật sự có ý nghĩa: một vật thường không bao giờ vượt luminance 1.0 dù có sáng cỡ nào trong khung nhìn hạn chế của tonemapping, còn vật phát sáng cố ý (đèn, dải neon) có thể mang giá trị 2, 3, thậm chí cao hơn. Kéo threshold từ gần 0 lên trên 1.0 trong demo là thao tác trực tiếp "đi từ mọi thứ đều phát sáng, đến chỉ vật phát sáng thật mới phát sáng." `strength` nên giữ khiêm tốn — hệ số `3.0` nhân sẵn trong composite khiến `strength = 1` đã tương đối mạnh; `radius` chọn theo cảm giác muốn quầng sáng "ôm sát" (thấp) hay "lan toả xa" (cao), không ảnh hưởng gì đến việc vật nào được coi là nguồn sáng.
+
+## Bloom chọn lọc: khi chỉ muốn MỘT vài vật phát sáng
+
+Đôi khi cần một vật phát sáng dù giá trị material của nó không thật sự vượt 1.0 — ví dụ một icon UI cần "glow" vì lý do thẩm mỹ, không vì lý do vật lý. Kỹ thuật chuẩn (theo đúng ví dụ selective bloom chính thức của three.js) dùng `Layers`: gán các vật cần bloom vào một layer riêng (`object.layers.enable(BLOOM_LAYER)`), render CẢNH HAI LẦN mỗi frame — lần một chỉ camera nhìn thấy layer bloom (các vật khác bị thay bằng vật liệu đen tạm thời) để đưa qua `UnrealBloomPass` riêng, lần hai render cảnh đầy đủ bình thường — rồi composite hai kết quả lại bằng một `ShaderPass` cộng dồn (`baseColor + bloomTexture`). Cách này tốn gấp đôi lượt render scene mỗi frame, nên chỉ đáng dùng khi thật sự cần TÁCH RIÊNG "vật nào bloom" khỏi "vật nào sáng" — còn lại, quy ước `emissiveIntensity` + `toneMapped={false}` như demo bài này đã đủ cho phần lớn trường hợp.
+
+## Gu thẩm mỹ: bloom dễ bị lạm dụng
+
+Ba quy tắc thực dụng: kiểm tra bloom LUÔN trên một cảnh đủ tối — trên nền sáng, quầng sáng cộng thêm gần như vô hình, dễ khiến ta tăng strength quá tay rồi mang config đó sang cảnh tối thật và bị ngợp; radius lớn hợp cảnh rộng, không hợp cận cảnh nhân vật (quầng sáng lan tới vùng không liên quan trông giả); và strength nên đủ để MẮT nhận ra vật đang phát sáng, không đủ để che luôn hình dạng gốc của vật — bloom là điểm nhấn, không phải lớp sương phủ toàn cảnh.
+
+Bài `depth-of-field-and-motion-blur` tiếp theo rời khỏi vùng "toàn màn hình cùng công thức" của bloom, chuyển sang một pass cần thêm dữ liệu depth ngoài màu — mở đầu cho nhóm hiệu ứng dựa trên buffer phụ thay vì chỉ `tDiffuse`.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cấu hình bloom:
+
+1. **Threshold gần 0 rồi "sửa" bằng cách hạ strength.** Hạ strength chỉ làm quầng sáng yếu đi ĐỀU trên mọi vật — bloom vẫn không phân biệt được vật phát sáng thật với vật chỉ sáng màu, vì nguyên nhân gốc (threshold không loại được gì) chưa được giải quyết.
+2. **Test bloom trên cảnh nền sáng rồi mang config sang cảnh tối.** Cùng một `strength`/`threshold` trông "vừa mắt" trên nền sáng có thể bị ngợp hoàn toàn trên nền tối, vì đóng góp additive của bloom nổi bật hẳn lên khi nền xung quanh không còn cạnh tranh độ sáng.
+3. **Để `renderer.toneMapping` (mặc định ACESFilmic của R3F) kẹp giá trị material trước khi bloom kịp đọc buffer.** Dù buffer đã là HalfFloat, mọi material `toneMapped: true` (mặc định) vẫn tự `clamp` về $[0,1]$ ngay trong `RenderPass` — bloom khi đó chỉ còn thấy giá trị đã bị nén phẳng, threshold trên 1.0 sẽ không bao giờ bắt được gì.
+
+</Callout>

@@ -1,0 +1,79 @@
+## Post-processing là render lại cái vừa render
+
+Mọi bài học từ Track 3 đến Track 9 kết thúc ở cùng một lệnh: `renderer.render(scene, camera)` — rasterize hình học, chạy shader trên từng fragment, ghi màu ra canvas. Post-processing chèn thêm một bước ở giữa: thay vì ghi thẳng ra canvas, kết quả render đó được ghi vào một **texture** (render target), rồi một hoặc nhiều fullscreen shader chạy tiếp trên chính texture đó — đọc từng pixel của ảnh vừa render, biến đổi màu, ghi ra một texture khác, lặp lại — trước khi ảnh cuối cùng mới thật sự chạm tới canvas. Điểm khác biệt cốt lõi: từ bước này trở đi không còn scene graph, không còn camera thật, không còn depth test theo nghĩa thông thường — chỉ còn một hình chữ nhật phủ kín màn hình (fullscreen quad) và một fragment shader đọc texture của bước trước. "Render lại cái render" là cách hiểu chính xác nhất, không phải "hiệu ứng thêm vào cảnh."
+
+## EffectComposer: một chuỗi pass, không phải một lệnh render
+
+`EffectComposer` (trong `three/addons/postprocessing/EffectComposer.js`) là lớp quản lý chuỗi bước đó. Thay vì gọi `renderer.render()`, bạn gọi `composer.render()` mỗi frame; composer lặp qua mảng `this.passes` nội bộ và gọi `pass.render(...)` cho từng phần tử theo đúng thứ tự đã `addPass()`. Để làm được việc "ảnh bước trước làm input cho bước sau", composer cấp sẵn hai `WebGLRenderTarget` nội bộ (`renderTarget1`, `renderTarget2`) ngay trong constructor. Đáng chú ý: đọc thẳng mã nguồn bản three.js đang cài (0.185.1) cho thấy hai target này được tạo với `{ type: HalfFloatType }` mặc định — không phải `UnsignedByteType` 8-bit như nhiều tutorial cũ vẫn giả định. Chi tiết này quan trọng cho bài bloom kế tiếp, nơi độ chính xác của buffer quyết định hiệu ứng có clip hay không.
+
+### Ping-pong: readBuffer, writeBuffer, swapBuffers
+
+Hai render target đó được gán vai trò qua hai thuộc tính `composer.readBuffer` và `composer.writeBuffer`. Vòng lặp `render()` của composer làm đúng việc này với mỗi pass: gọi `pass.render(renderer, writeBuffer, readBuffer, ...)`, rồi nếu `pass.needsSwap === true` thì gọi `swapBuffers()` — một hàm chỉ hoán đổi hai THAM CHIẾU, không copy dữ liệu:
+
+```js
+// trích từ EffectComposer.js — vòng lặp render() thật
+for (let i = 0; i < this.passes.length; i++) {
+  const pass = this.passes[i];
+  if (!pass.enabled) continue;
+  pass.render(this.renderer, this.writeBuffer, this.readBuffer, deltaTime, maskActive);
+  if (pass.needsSwap) this.swapBuffers();
+}
+```
+
+Đây chính là kỹ thuật ping-pong FBO đã học ở Track 9 (`pingpong-fbo-state-textures`) — hai texture thay phiên đóng vai "đang đọc" và "đang ghi." Khác biệt duy nhất là **mục đích**: ở Track 9, hai texture giữ trạng thái mô phỏng xuyên suốt nhiều FRAME (vị trí particle frame này phụ thuộc frame trước); ở đây, hai texture giữ một TẤM ẢNH đang được biến đổi dần qua nhiều PASS, trong đúng một frame. Cùng một cơ chế swap tham chiếu, khác hoàn toàn ý nghĩa dữ liệu bên trong.
+
+## Ba pass nền tảng: RenderPass, ShaderPass, OutputPass
+
+### RenderPass: viết thẳng vào readBuffer, không swap
+
+`RenderPass(scene, camera)` tạo "beauty pass" — bên trong nó chỉ gọi `renderer.render(this.scene, this.camera)` như bình thường, nhưng nhắm vào render target thay vì canvas. Đọc kỹ mã nguồn sẽ thấy một chi tiết dễ bị bỏ qua: `renderer.setRenderTarget(this.renderToScreen ? null : readBuffer)` — RenderPass ghi thẳng vào **readBuffer**, không phải writeBuffer, và `this.needsSwap = false` luôn được set trong constructor. Đây không phải nhầm lẫn: vì chưa có pass nào chạy trước nó, RenderPass "mồi" sẵn readBuffer để pass kế tiếp đọc ngay lập tức, không cần một lượt swap thừa. Mọi pass "bình thường" phía sau (ShaderPass, OutputPass) đọc từ readBuffer, ghi vào writeBuffer, rồi mới swap.
+
+### ShaderPass: fullscreen quad và quy ước tDiffuse
+
+`ShaderPass(shader, textureID = 'tDiffuse')` bọc một fragment shader tuỳ ý thành một pass. Mỗi lần render, nó tự gán `uniforms[textureID].value = readBuffer.texture` — nghĩa là bất kỳ shader nào muốn nhận ảnh từ bước trước chỉ cần khai báo đúng một `uniform sampler2D tDiffuse;`, không cần tự truyền tay. Bản thân quad chạy shader không dùng geometry của scene — nó là một `FullScreenQuad` dùng chung, phủ kín `[-1,1]` trong không gian clip. Demo của bài này dùng đúng khuôn mẫu này cho một pass tint/invert: `tint-pass.vert` và `tint-pass.frag` (xem file sibling) — vertex shader gần như trong suốt, toàn bộ logic nằm ở fragment.
+
+### OutputPass: tonemapping + color space, đúng một lần ở cuối
+
+`OutputPass` đọc trực tiếp `renderer.toneMapping` và `renderer.outputColorSpace` — không phải baked sẵn lúc khởi tạo — và chỉ build lại shader define khi hai giá trị đó thật sự đổi (so sánh cache nội bộ). Nó áp đúng 6 đường cong tonemapping mà material thường dùng (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral), rồi chuyển sang sRGB nếu color space yêu cầu. Bỏ qua OutputPass (hoặc tương đương) ở cuối chuỗi nghĩa là pass cuối ghi thẳng dữ liệu linear ra canvas — canvas vốn hiển thị byte theo chuẩn sRGB — ảnh nhận được sẽ nhợt nhạt hoặc quá tối so với ý đồ.
+
+## Anatomy của một pass: enabled, needsSwap, renderToScreen
+
+Ba cờ này (định nghĩa trong lớp `Pass` cơ sở) là toàn bộ hợp đồng composer cần ở mỗi pass. `enabled = false` khiến composer bỏ qua pass đó hoàn toàn trong vòng lặp — không tốn một lệnh render nào, và composer tự tính lại xem pass NÀO hiện là pass cuối cùng còn bật (`isLastEnabledPass`) để gán `renderToScreen` đúng chỗ, không cần bạn tự sắp lại thứ tự. `needsSwap` mặc định `true` cho pass thường, nhưng `false` cho RenderPass (đã giải thích ở trên) và cho `UnrealBloomPass` (bài sau) vì nó tự ghi kết quả cộng dồn thẳng vào readBuffer. `renderToScreen` do chính composer set `true`/`false` trước mỗi lệnh `pass.render()` — pass chỉ cần đọc cờ này để quyết định `setRenderTarget(null)` (canvas) hay một buffer nội bộ.
+
+## Chiếm quyền vòng lặp render trong R3F
+
+R3F mặc định tự gọi `gl.render(scene, camera)` mỗi frame được yêu cầu. Để composer thay thế lệnh đó, demo build composer một lần trong `useEffect` (lấy `gl`, `scene`, `camera` qua `useThree`), rồi đăng ký một callback với **priority khác 0**:
+
+```tsx
+useFrame(({ gl }) => {
+  composerRef.current?.render();
+}, 1); // priority = 1: R3F bỏ qua lệnh render mặc định của chính nó frame này
+```
+
+Cùng quy ước với callback ping-pong ở Track 9 — priority mặc định là 0; bất kỳ subscriber nào khai priority khác 0 khiến R3F nhường quyền render hoàn toàn cho subscriber đó. Composer vẫn cần `composer.setSize(width, height)` mỗi khi kích thước canvas đổi (R3F tự resize canvas/camera, nhưng KHÔNG tự resize buffer nội bộ của composer), và vẫn tuân thủ demand-frameloop + `invalidate()` như mọi demo khác trên nền tảng này. Khi unmount, `composer.dispose()` chỉ giải phóng đúng hai render target của chính nó cộng `copyPass` nội bộ — **không** giải phóng các pass bạn tự thêm vào; `ShaderPass`/`OutputPass` cần được `.dispose()` riêng.
+
+## Cái giá của một pass: fillrate
+
+Canvas demo này chạy ở DPR tối đa 2 (`dpr={[1,2]}`, quy ước chung của nền tảng). Với một canvas hiển thị 960×540 CSS pixel, buffer nội bộ thực tế là:
+
+$$
+960 \times 540 \times 2^2 \approx 2.1 \times 10^{6}
+$$
+
+pixel mỗi buffer. Mỗi pass fullscreen — kể cả một pass "rẻ" như tint đơn giản — đọc và ghi toàn bộ số pixel đó, không phụ thuộc cảnh có bao nhiêu tam giác. Ba pass (RenderPass, ShaderPass, OutputPass) cộng lại là ba lượt đọc/ghi full-screen, TRƯỚC KHI tính chi phí rasterize hình học gốc của RenderPass. Đây là con số ước lượng định tính, chưa tính băng thông bộ nhớ GPU thật — bài `pass-order-and-fillrate` ở cuối track này mới đưa ra mô hình chi phí đầy đủ. Điều cần nhớ ngay bây giờ: thêm một pass vào composer là một khoản thuế cố định trả trên MỌI pixel, độc lập với độ phức tạp scene — bật/tắt pass tint trong demo và quan sát số đọc frame-time để thấy trực tiếp khoản thuế đó.
+
+## Khi nào KHÔNG cần composer
+
+Nếu chỉ cần đúng MỘT hiệu ứng rẻ, tĩnh (một vignette nhẹ, một color tint không đổi theo gì khác), nhét thẳng logic đó vào fragment shader của material chính (qua `onBeforeCompile`, Track 6) hoặc một shader nền fullscreen rẻ hơn hẳn so với dựng cả composer: composer luôn tốn thêm hai render target HalfFloat cấp phát sẵn cộng một lượt round-trip RenderPass, dù chuỗi chỉ có một pass. Composer thật sự đáng giá khi cần GHÉP từ hai hiệu ứng độc lập trở lên, hoặc khi một hiệu ứng cần THẤY kết quả của hiệu ứng khác (bloom cần ảnh đã sáng tối đầy đủ, DOF cần cả depth lẫn color) — những trường hợp một material đơn lẻ không thể tự diễn đạt được.
+
+Bài tiếp theo (`bloom-done-right`) dùng đúng bộ khung composer này — RenderPass rồi OutputPass — chỉ thay ShaderPass tint bằng `UnrealBloomPass`, và đào sâu vào đúng cái buffer HalfFloat vừa nhắc ở trên: có buffer độ chính xác cao chưa chắc đã đủ để bloom nhìn thấy ánh sáng thật sự "rất sáng."
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới ráp composer:
+
+1. **Quên `OutputPass` (hoặc bất kỳ pass tonemapping/color-space nào) ở cuối chuỗi.** Pass cuối cùng ghi thẳng dữ liệu linear ra canvas thay vì sRGB đã tonemap — ảnh nhợt nhạt hoặc tối bất thường so với những gì R3F từng render mặc định, dù composer "chạy không lỗi."
+2. **Quên gọi `composer.setSize()` khi canvas đổi kích thước.** R3F tự resize canvas và camera qua ResizeObserver, nhưng composer có buffer RIÊNG, không tự theo — ảnh cuối bị kéo giãn hoặc lệch tỉ lệ so với khung hiển thị thật, một lỗi dễ bị nhầm là "bug shader."
+3. **Coi readBuffer/writeBuffer là hai texture cố định thay vì hai VAI TRÒ hoán đổi.** Giữ một tham chiếu cứng tới `composer.renderTarget1` rồi coi nó luôn là "ảnh scene mới nhất" sẽ sai ngay sau lượt `swapBuffers()` đầu tiên — chỉ `readBuffer`/`writeBuffer` (thuộc tính động trên composer) mới phản ánh đúng trạng thái hiện tại của chuỗi.
+
+</Callout>

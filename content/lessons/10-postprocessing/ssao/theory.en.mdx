@@ -1,0 +1,57 @@
+## Contact Shadows From Just a Depth Buffer: The Screen-Space Bet
+
+"Correct" ambient occlusion is an integral: at every surface point, measure how much of the outward hemisphere is blocked by nearby geometry, reducing indirect light (bouncing in from every direction) reaching that point. The Raymarched Shadows & AO lesson in Track 8 implemented exactly this by marching along the normal and sampling the SDF's `map()` at 5 points — the whole scene's geometry available in one distance function, marchable as far as needed.
+
+SSAO makes a different bet: no SDF, no real 3D geometry at runtime — only one already-rendered image (color plus a depth buffer, sometimes a normal buffer) of the current frame. Every occlusion measurement is inferred from that 2D data. That's why it's called "screen-space" — not aesthetics, but because **all its input** is limited to whatever the current camera sees — consequences show up later as artifacts.
+
+## The Algorithm: A Hemisphere Kernel Around a Reconstructed View-Space Position
+
+For every pixel, `SSAOShader` (read from `node_modules/three/examples/jsm/shaders/SSAOShader.js`, version 0.185.1) does four things: (1) reads depth and reconstructs the **view-space position** via the camera's inverse projection matrix; (2) reads the view-space **normal** at that pixel (Three renders a dedicated `normalRenderTarget` with `MeshNormalMaterial`, not depth gradients); (3) scatters sample points (a "kernel") around a hemisphere oriented by that normal, each offset by `kernelRadius`; (4) projects each sample back to screen space, reads the real depth there, and compares: if the real depth is **closer to the camera** than the expected sample, that sample counts as occluded.
+
+The ratio of occluded to total samples, inverted ($1 - \text{occlusion ratio}$), is the final AO factor multiplied into lighting. This is *exactly* the Track 8 idea — comparing an expected distance against a measured one — just a different data source: raymarching calls `map()` (the whole scene); SSAO calls `texture2D(tDepth, ...)` (only what the camera sees).
+
+## Kernel Design: Importance Sampling and Random Rotation Against Banding
+
+`SSAOShader`'s kernel isn't spread perfectly evenly: each sample is a random hemisphere vector ($z \geq 0$), normalized, then its **length** rescaled by `lerp(0.1, 1, t²)` where $t = i/N$ — later kernel entries land farther from the origin. This is importance sampling: cluster samples near the origin (where local occlusion matters most), thinning toward the edge. (Many AO references describe "cosine-weighted" kernels via different trig formulas; Three uses this simpler squared-lerp trick for the same goal — bias toward nearby samples.)
+
+With a fixed kernel oriented the same way at every pixel, AO would show obvious banding matching the kernel's shape — eyes are extremely sensitive to repeating patterns. The fix: a tiny $4\times4$ noise texture (Simplex noise) tiled across the screen (`noiseScale = resolution / 4.0`) rotates the kernel **differently per pixel** before sampling. Tradeoff: banding disappears, replaced by high-frequency noise — exactly why `SSAOPass` always runs a dedicated blur (`SSAOBlurShader`, a $5\times5$ box blur) right after, smoothing that noise.
+
+## Bias: The Exact Same Disease as Shadow Mapping Back in Track 3
+
+`minDistance` (default $0.005$) is the self-occlusion-acne bias — the source comment states it plainly: "avoid artifacts caused by neighbour fragments with minimal depth difference". Without it, a flat surface occludes itself, since float rounding makes a few kernel samples "think" they're behind the surface they started from — the exact same disease as shadow acne (Track 3): comparing a depth against its own origin point while forgetting it isn't a mathematically ideal plane, just in a different place. `maxDistance` (default $0.1$) is the opposite-purpose parameter: caps occlusion from occluders *too far away* — not an acne fix, but a guard against a distant wall registering as blocking an unrelated point.
+
+`kernelRadius` (default $8$) is the hemisphere's radius in **view-space units** — the scene's own world units, not pixels — larger values spread AO farther from every concave corner.
+
+## `SSAOPass` vs `GTAOPass`: Which One Actually Ships in Three 0.185
+
+Both exist under `three/examples/jsm/postprocessing/` in 0.185.1. `GTAOPass`'s own docstring states the relationship plainly: "provides better quality than SSAOPass but is also more expensive" — GTAO (Ground Truth Ambient Occlusion) uses a tighter horizon-based integration than a discrete kernel, plus its own Poisson denoise pass, trading cost for smoother results. This lesson teaches `SSAOPass` because its algorithm maps directly onto the "hemisphere kernel plus depth comparison" model just explained — reading the code confirms the idea immediately, no extra horizon-based theory required. Production work chasing quality should look at `GTAOPass`; weaker hardware or step-by-step debugging is better served by `SSAOPass`.
+
+## Unavoidable Artifacts: Screen Edges, Off-Screen Occluders, Halos
+
+All three trace back to the same root cause — the input is only a 2D image of the current frame:
+
+- **Screen-edge falloff**: a kernel sample projecting outside $[0,1]$ UV has nothing to read, typically treated as "not occluded" by default — AO fades unnaturally near the frame's edges even though the geometry there hasn't changed.
+- **Off-screen occluders are missed entirely**: a pillar behind the camera or outside the frustum doesn't exist in the depth buffer — it can't occlude anything in the result, even though in reality it would cast a contact shadow.
+- **Halos around silhouettes**: at the boundary between a small object and a distant background, background pixels *near that edge* accidentally sample into the object's region — counted as occluded even though the background never touches it — a soft dark fringe hugging the silhouette, most visible at large kernel radii.
+
+No screen-space technique (GTAO included) escapes all three — a direct consequence of having only one camera's view, not an implementation bug.
+
+## Half Resolution, and Where SSAO Sits in the Pass Chain
+
+The standard optimization: compute AO at a lower resolution than the main buffer — `new SSAOPass(scene, camera, width, height)` takes `width`/`height` **independently** of the renderer's size. Passing half the real size (the demo below does this) cuts the kernel's pixel count to $1/4$, and the result (already low-frequency) still upsamples smoothly onto the main buffer — the eye rarely tells the difference outside close-up inspection.
+
+On ordering: `SSAOPass` sits right after `RenderPass`, before tone-mapping or color-grading — but one point deserves honesty: in its default output mode, it uses `CustomBlending` to **multiply** the AO factor directly into WHATEVER color is already in that buffer (`blendSrc: DstColorFactor`) — including the already-rendered direct diffuse/specular contribution, with no way to isolate just ambient the way the Track 8 raymarch shader does (`ambient · AO + diffuse · shadow`, two separate terms right in the shader). `RenderPass` has already flattened every light into one RGB color before `SSAOPass` runs — no separate ambient channel left to target. A real architectural tradeoff: post-process AO always slightly over-multiplies into direct light, while in-shader techniques are the ones that can actually separate the two.
+
+## Where This Foundation Leads
+
+SSAO reuses the same shape — "read depth, reconstruct a view-space position, compare against nearby samples" — that the Depth of Field/Motion Blur lesson right before used for a different problem: same toolbox, different question. The module's closing checkpoint (Cinematic Scene) stacks bloom, DOF and SSAO from three consecutive lessons onto one scene, exactly when you need to balance the whole chain's fillrate cost.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when configuring SSAO:
+
+1. **Thinking of `kernelRadius` in pixel units instead of view-space units.** Since it matches the scene's world units directly, a small-scale scene (real-world meters) needs a `kernelRadius` far smaller than the default $8$ — leaving the default on a scene sized 1-2 units spreads AO across nearly the whole frame, reading as haze instead of localized contact shadow.
+2. **Setting `minDistance = 0` "to be safe about losing detail."** That's precisely the anti-acne bias — removing it makes every flat surface occlude itself, coating the scene in a fake gray wash with no real concave corners anywhere.
+3. **Multiplying AO into diffuse in a hand-written shader "because SSAOPass does it."** `SSAOPass` is forced to multiply into the already-flattened buffer with no other option at the post-process stage — but writing AO directly inside a material shader (with separate access to each lighting term) and still multiplying it into diffuse repeats the exact mistake flagged in the Track 8 raymarch lesson: double-counting occlusion against direct light.
+
+</Callout>

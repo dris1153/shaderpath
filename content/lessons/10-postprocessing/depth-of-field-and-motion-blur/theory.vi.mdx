@@ -1,0 +1,57 @@
+## Mô hình thin-lens và circle of confusion
+
+Camera lỗ kim (pinhole) — mô hình dùng từ Track 0 để chiếu điểm 3D lên màn hình — không có độ sâu trường ảnh: mọi thứ nét tuyệt đối, vì lỗ kim vô cực nhỏ chỉ cho một tia sáng đi qua mỗi điểm. Máy ảnh thật dùng thấu kính khẩu độ hữu hạn: từ một điểm vật thể, *nhiều* tia đi qua các phần khác nhau của thấu kính rồi hội tụ. Nếu điểm nằm đúng mặt phẳng lấy nét, các tia hội tụ lại đúng một điểm trên cảm biến — nét. Nếu không, chúng hội tụ trước hoặc sau cảm biến, tạo một đốm tròn thay vì một điểm — đốm đó là **circle of confusion** (CoC), đường kính của nó là thước đo "mờ bao nhiêu".
+
+### Công thức CoC chuẩn, và vì sao game không dùng thẳng nó
+
+Với $f$ là tiêu cự, $N$ là f-number (khẩu độ vật lý $= f/N$), $S_1$ là khoảng cách lấy nét, $S_2$ là khoảng cách thật của điểm đang render, đường kính CoC là:
+
+$$
+c = \frac{f^2}{N} \cdot \frac{|S_2 - S_1|}{S_2 (S_1 - f)}
+$$
+
+Công thức đúng vật lý nhưng không rẻ: $S_2$ đọc từ depth buffer, không có gì cản việc tính, nhưng hầu hết engine real-time (kể cả `BokehPass` bên dưới) thay bằng xấp xỉ tuyến tính rẻ hơn: `blur = clamp((focus - depth) * aperture, -maxblur, maxblur)`. Đây **không phải** công thức trên viết lại — `aperture` trong code chỉ là hệ số tỉ lệ tuỳ chỉnh (mặc định $0.025$, không phải đơn vị f-number), đổi độ chính xác quang học lấy tốc độ. Biết cả hai giúp không nhầm tham số code với đại lượng quang học thật.
+
+## Từ depth buffer đến blur: CoC theo từng pixel, gather bán kính biến thiên
+
+Pipeline DOF hậu kỳ chỉ cần ba bước: (1) render cảnh lấy màu, (2) render depth buffer, (3) một fragment shader full-screen đọc depth từng pixel, tính bán kính blur theo công thức xấp xỉ trên, rồi **gather** — trung bình có trọng số các texel màu xung quanh trong bán kính đó. Bán kính đổi theo từng pixel ("variable-radius") là điểm khác Gaussian blur thường: Gaussian xử lý toàn ảnh giống hệt nhau; DOF đọc depth trước để quyết định bán kính *riêng từng pixel*.
+
+Hình dạng bokeh (đốm sáng lục giác/tròn khi hậu cảnh out-of-focus có điểm sáng) không đến từ mô phỏng quang học chính xác mà từ **pattern lấy mẫu** dùng để gather: mẫu rải hình lục giác cho bokeh lục giác (giống khẩu độ 6 lá thật); mẫu rải tròn cho bokeh tròn mượt. `BokehShader` của Three.js lấy 41 mẫu tại 16 góc quanh tâm, mỗi góc lặp ở 4 bán kính ($1.0\times$, $0.9\times$, $0.7\times$, $0.4\times$), cộng rồi chia 41 — xấp xỉ đĩa tròn rẻ, không sắc nét thành lục giác nhưng đủ mượt cho hầu hết cảnh.
+
+## `BokehPass` của Three.js: tham số nào thật sự tồn tại
+
+Đọc thẳng `node_modules/three/examples/jsm/postprocessing/BokehPass.js` (bản 0.185.1) thay vì đoán: constructor nhận `{ focus, aperture, maxblur }`, mặc định $1.0$, $0.025$, $1.0$. `focus` là khoảng cách lấy nét theo world unit dọc hướng nhìn camera — không phải khoảng cách Euclid tới điểm bất kỳ, hai thứ chỉ trùng khi điểm nằm đúng trục quang. Pass tự render một `MeshDepthMaterial` (đóng gói `RGBADepthPacking`) vào render target riêng mỗi frame để lấy depth, không cần bạn cấp sẵn. `@react-three/postprocessing` (^3.0.5, cài trong dự án) cũng có `<DepthOfField>`, bọc `DepthOfFieldEffect` của thư viện `postprocessing` với prop `focusDistance`/`focalLength`/`bokehScale` — composer của thư viện đó gộp nhiều effect vào ít pass hơn khi có thể, khác kiến trúc render-target nối tiếp của `EffectComposer` mà bài này dạy. Demo dùng `three/addons` vì kiến trúc lộ rõ từng pass, dễ debug từng bước.
+
+## Artifact của DOF một lớp: rò biên độ sâu và vấn đề near-field
+
+`BokehShader` đọc đúng một depth cho mỗi pixel output, rồi gather màu từ texel *lân cận* mà không kiểm tra depth của chính chúng. Hệ quả: ở biên giữa vật nét (gần) và nền mờ (xa), pixel nét gần biên gather nhầm màu nền mờ tràn vào — hoặc ngược lại, nền "mượn" màu vật đứng trước — tạo viền không tự nhiên dọc mọi cạnh có chênh lệch độ sâu lớn.
+
+Nặng hơn ở **near-field**: một vật rất gần camera, mờ mạnh, về quang học phải "loang" rộng hơn hẳn hình chiếu sắc nét của chính nó — che luôn phần nền lẽ ra nhìn thấy được. Nhưng ảnh nguồn (một lớp, một camera) chưa từng chứa thông tin phần nền bị vật đó che khuất trong đời thực — không có gì để loang vào đó ngoài màu vật thể hoặc silhouette cắt cứng. Single-layer như `BokehPass` không giải quyết được; DOF layer-based (tách nền/tiền cảnh trước khi blur) là hướng đúng nhưng tốn hơn, ngoài phạm vi bài này.
+
+## Motion blur: vì sao blend frame trước là sai
+
+Trực giác sai phổ biến nhất: "muốn mờ chuyển động, trộn frame hiện tại với vài frame trước". Kết quả không phải motion blur mà là **ghosting**: mỗi frame cũ vẫn là ảnh sắc nét tại một thời điểm rời rạc, trộn alpha nhiều ảnh rời rạc cho ra nhiều bản sao chồng lớp rõ rệt (double image), không phải một vệt mờ liên tục dọc quỹ đạo chuyển động thật. Cảm biến thật tạo motion blur vì nó **tích phân liên tục** ánh sáng suốt thời gian mở màn trập, không lấy mẫu rời rạc rồi chồng lớp.
+
+## Velocity buffer: tái tạo chuyển động từ hai ma trận camera
+
+Cách đúng: với mỗi pixel, tính **vector vận tốc màn hình** — vị trí clip-space hiện tại trừ vị trí clip-space *của cùng điểm 3D đó* ở frame trước, mỗi lần chiếu dùng ma trận camera của đúng frame tương ứng. Blur là gather nhiều mẫu màu dọc vector vận tốc đó, mô phỏng đúng phép tích phân liên tục cảm biến thật làm, chỉ với hữu hạn điểm mẫu.
+
+Velocity buffer đầy đủ cần lưu vị trí clip-space frame trước của *từng vertex* (thường qua một target riêng) — tốn thêm attribute, thêm target, đúng cho vật tự chuyển động (skinning, vertex animation). Có tập con rẻ hơn hẳn: nếu hình học đứng yên tuyệt đối và chỉ camera di chuyển, vận tốc mọi điểm có thể **suy từ depth buffer sẵn có cộng chênh lệch ma trận camera** — không cần buffer riêng nào. Từ depth tại pixel, dựng lại world position bằng ma trận nghịch đảo view-projection của camera *hiện tại*; chiếu lại đúng điểm đó qua ma trận view-projection của camera *frame trước* (lưu trễ một khung hình); hiệu hai toạ độ clip-space chính là vận tốc. Demo bên dưới cài đúng biến thể này thành một `ShaderPass` tự viết.
+
+## Thang chi phí: none → camera-only → velocity buffer đầy đủ
+
+Ba mức, ba chi phí khác hẳn: không motion blur (0 chi phí, camera di chuyển nhanh nhìn giật/strobing rõ ở khung hình thấp); camera-only (một pass full-screen + một depth pre-pass phụ, không buffer mới — rẻ, đúng với camera nhưng vật tự chuyển động vẫn cứng như không có gì); velocity buffer đầy đủ (thêm target ghi vận tốc mọi vertex mỗi frame — đúng cả camera lẫn vật thể, tốn nhất). Cutscene có hành động nhanh cần velocity buffer đầy đủ; cảnh khám phá tĩnh chỉ camera pan/orbit thì camera-only đã đủ thuyết phục mắt.
+
+## Nền tảng này dẫn tới đâu
+
+Cả DOF và motion blur ở đây chỉ là hai fragment shader full-screen đọc depth theo cách khác nhau — không cấu trúc dữ liệu mới nào so với `RenderPass`/`ShaderPass` đã học ở bài EffectComposer. Bài SSAO ngay sau dùng lại chính kỹ thuật "đọc depth, dựng lại view-space position, so sánh với mẫu xung quanh" cho một bài toán khác — occlusion thay vì blur. Module Custom Pass (track sau) quay lại đúng khuôn `Pass` mà `CameraMotionBlurPass` ở demo này dùng, để bạn tự viết pass riêng từ đầu.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài DOF và motion blur hậu kỳ:
+
+1. **Coi `aperture`/`maxblur` của `BokehPass` là tham số quang học thật.** Chúng là hệ số tuỳ chỉnh cho công thức xấp xỉ tuyến tính, không phải f-number hay tiêu cự — đẩy `aperture` lên rất cao để "DOF mạnh hơn" mà không hiểu nó chỉ là hệ số nhân cho kết quả nhảy cảm, khó đoán hơn hẳn đổi `focus` (đơn vị world rõ ràng).
+2. **Tưởng blend frame trước = motion blur.** Lỗi khái niệm, không phải lỗi code: blend cho ghosting (ảnh rời rạc chồng lớp), không phải vệt mờ liên tục — muốn đúng phải tính vận tốc màn hình rồi gather dọc vector đó.
+3. **Dùng camera-only motion blur rồi thắc mắc vì sao vật tự chuyển động không bị mờ.** Kỹ thuật này chỉ suy vận tốc từ depth + delta ma trận camera, giả định hình học đứng yên trong world space — một nhân vật chạy giữa cảnh tĩnh không có vệt mờ nào dù camera đứng yên hay di chuyển, vì world position "frame trước" mà pass tái tạo lại chính là depth hiện tại, không phải vị trí thật của vật một frame trước.
+
+</Callout>

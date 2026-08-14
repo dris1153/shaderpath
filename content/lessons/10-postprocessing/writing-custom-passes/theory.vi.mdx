@@ -1,0 +1,44 @@
+## Pass: hợp đồng tối thiểu mọi hiệu ứng hậu kỳ phải theo
+
+Đọc thẳng `Pass.js` trong `three/addons/postprocessing/`, lớp cơ sở `Pass` chỉ có bốn field: `enabled` (composer bỏ qua nếu false), `needsSwap` (có tráo read/write buffer sau pass này không, mặc định `true`), `clear` (có xoá buffer đích trước khi vẽ không, mặc định `false`), `renderToScreen` (composer tự set `true` cho pass cuối cùng còn enabled). Và đúng một method bắt buộc override: `render(renderer, writeBuffer, readBuffer, deltaTime, maskActive)`. Không có gì huyền bí hơn thế — mọi pass có sẵn của three.js (`ShaderPass`, `OutputPass`, `UnrealBloomPass`...) đều chỉ là các cách hiện thực khác nhau của đúng bốn field và một method này.
+
+## FullScreenQuad không hề là một quad
+
+`Pass.js` còn export `FullScreenQuad` — cái tên gây hiểu lầm, vì hình học bên trong (`FullscreenTriangleGeometry`) là MỘT tam giác phủ quá khổ màn hình (đỉnh tại $(-1,3)$, $(-1,-1)$, $(3,-1)$), không phải hai tam giác ghép thành quad. Một tam giác tránh hẳn đường chéo seam giữa hai tam giác của một quad thật, và rẻ hơn một chút (3 vertex thay vì 4, không cần index buffer) — chi tiết kinh điển của full-screen-triangle trick. Quan trọng hơn cho phần dispose bên dưới: hình học này là biến MODULE-LEVEL, được `Pass.js` tạo đúng một lần rồi mọi `FullScreenQuad` trong toàn bộ app — của mọi pass, mọi composer — dùng chung.
+
+## Dựng một pass từng bước: heat shimmer
+
+`HeatShimmerPass` trong demo làm mờ ảnh dạng "khí nóng bốc lên" bằng cách làm méo UV trước khi sample, chứ không đổi màu trực tiếp. Bốn bước dựng:
+
+1. **Uniforms** — object literal `{ tDiffuse, uTime, uStrength, uScale, uSpeed, uResolution }`. `tDiffuse` là tên uniform quy ước (ShaderPass cũng dùng tên này) để pass biết nó đang lấy input từ đâu.
+2. **Constructor** — dựng `THREE.ShaderMaterial` từ uniforms + shader, rồi bọc vào `new FullScreenQuad(material)`. Không có mesh/scene/camera nào khác cần tạo.
+3. **render()** — gán `uniforms.tDiffuse.value = readBuffer.texture` (đọc kết quả pass trước), rồi rẽ nhánh: `renderToScreen` thì `setRenderTarget(null)`, ngược lại `setRenderTarget(writeBuffer)` — đây chính là chỗ dễ gõ nhầm `readBuffer` nhất. Cuối cùng gọi `fsQuad.render(renderer)`.
+4. **setSize(width, height)** — cập nhật `uniforms.uResolution`. Bỏ bước này thì hiệu ứng vẫn compile, vẫn chạy, chỉ méo theo tỉ lệ sai khi canvas không vuông — loại bug chỉ lộ ra lúc resize, không phải lúc load lần đầu.
+
+## RenderPass là ngoại lệ: ghi thẳng vào readBuffer
+
+Một chi tiết dễ gây nhầm khi tự viết pass đầu tiên trong chuỗi: `RenderPass` tự set `needsSwap = false` trong constructor và render thẳng vào tham số `readBuffer` nó nhận (không phải `writeBuffer`) — comment trong source ghi rõ "Overwritten to disable the swap". Vì không tráo buffer, `composer.readBuffer` sau `RenderPass` vẫn trỏ đúng vào render target vừa được vẽ — pass tiếp theo đọc `readBuffer.texture` là nhận đúng cảnh vừa render, không cần `RenderPass` tráo gì cả. Đây là ngoại lệ có chủ đích, không phải sơ suất — hiểu nó là chìa khoá để lần đúng buffer nào chứa gì ở bất kỳ điểm nào trong chuỗi.
+
+## Test một pass độc lập trước khi ghép chuỗi
+
+Trước khi thả `HeatShimmerPass` vào composer đầy đủ, cách rẻ nhất để bắt lỗi shader là: tạo một `THREE.WebGLRenderTarget` tạm, gán `pass.uniforms.tDiffuse.value` bằng một texture tĩnh biết trước nội dung (một `DataTexture` caro đen-trắng chẳng hạn), gọi `pass.render(renderer, target, target2, 0)` đúng một lần, rồi đọc pixel ra kiểm tra bằng mắt hoặc `readRenderTargetPixels`. Tư duy unit-test: cô lập một pass khỏi toàn bộ scene 3D và chuỗi composer để bug shader không bị nhầm lẫn với bug dàn dựng cảnh hay bug thứ tự pass.
+
+## ShaderPass đủ dùng khi nào, và khi nào cần tự viết Pass
+
+`HeatShimmerPass` là hiệu ứng một-input-một-output đơn giản — trong dự án thật, `new ShaderPass(heatShimmerShaderObject)` là đủ, không cần tự viết class. Bài này tự tay dựng lại đúng những gì `ShaderPass` làm sẵn để thấy rõ hợp đồng bên dưới lớp vỏ tiện lợi đó. Tự viết `Pass` riêng chỉ thật sự cần khi hiệu ứng cần NHIỀU render target nội bộ (blur tách trục ngang/dọc, ví dụ), nhiều bước render không phải full-screen-quad (chính `RenderPass` là ví dụ), hoặc logic `needsSwap`/`clear` khác quy ước mặc định.
+
+## pmndrs Effect: một hợp đồng khác hẳn
+
+`@react-three/postprocessing` (bản cài ^3.0.5) không dùng `Pass` của three.js core — nó bọc thư viện `pmndrs/postprocessing`, nơi mỗi hiệu ứng là một `Effect` khai báo đoạn GLSL của mình như một HÀM, để `EffectPass` GỘP nhiều effect vào một shader/pass biên dịch duy nhất thay vì chạy tuần tự N pass full-screen riêng biệt — ít lần đọc/ghi texture hơn, rẻ fillrate hơn khi xếp chồng nhiều hiệu ứng. Đánh đổi: một `Effect` không tự do cấp phát render target riêng như một `Pass` đầy đủ — nó phải vừa khuôn hợp đồng merge được. Hai kiến trúc phục vụ hai bài toán khác nhau, không phải cái này thay thế cái kia.
+
+Bài `pass-order-and-fillrate` sau sẽ định lượng chính xác chi phí mỗi pass thêm vào chuỗi tốn bao nhiêu fillrate — nền tảng đọc code `Pass`/`ShaderPass` ở bài này là điều kiện để hiểu vì sao gộp pass (theo kiểu Effect) lại tiết kiệm được.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tự viết Pass:
+
+1. **Quên set `needsSwap`, hoặc set sai giá trị cho hiệu ứng của mình.** Một pass ghi kết quả hợp lệ vào `writeBuffer` nhưng lỡ để `needsSwap = false` khiến `composer.readBuffer` không bao giờ được cập nhật trỏ tới nó — pass sau đọc nhầm buffer cũ, hiệu ứng "biến mất" dù code render hoàn toàn đúng.
+2. **Đọc nhầm `writeBuffer` thay vì `readBuffer`.** `writeBuffer` là đích sắp bị ghi đè trong CHÍNH pass này — sample nó làm input nghĩa là đọc dữ liệu rác hoặc dữ liệu cũ từ hai frame trước, tuỳ driver, một bug không nhất quán và khó lần ra.
+3. **Không cập nhật uniform phụ thuộc độ phân giải trong `setSize()`.** Bỏ qua bước này khiến hiệu ứng đúng hoàn toàn ở kích thước ban đầu rồi méo/lệch tỉ lệ ngay khi resize cửa sổ — lỗi chỉ lộ ra khi test resize, dễ lọt qua review nếu chỉ test ở một kích thước cố định.
+
+</Callout>

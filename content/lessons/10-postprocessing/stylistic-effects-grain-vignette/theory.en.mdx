@@ -1,0 +1,68 @@
+## The Cheap Trio That Sells the Mood
+
+The three effects in this lesson — film grain, vignette, chromatic aberration — share something rare in post-processing: their cost is essentially zero (a handful of ops per pixel, no auxiliary render targets, no multi-pass blur like bloom or SSAO from earlier lessons) yet they completely change how a scene "feels," often more decisively than bloom or DOF. The reason isn't algorithmic complexity — all three are purely local per-pixel transforms that know nothing about the scene's 3D geometry — it's that they replicate the exact physical artifacts the human eye has spent a century learning to read: silver-halide grain, the edge darkening of a cheap lens, and the color fringing at high-contrast edges. Those three artifacts are so baked into the "visual language of cinema" that the brain interprets them as "this is a captured frame, not a bare render" — even though all that's actually happening is a few adds and multiplies inside a fragment shader.
+
+## Film Grain: Time-Varying Hash Noise, Strongest in the Shadows
+
+Grain is noise added to each pixel's color, but "random" here has to mean deterministic, since the GPU has no state — the exact hash-function principle covered in Track 7 (Hash Functions on GPU). This lesson reuses that same sine-free hash (Dave Hoskins):
+
+```glsl
+float hash(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+```
+
+The difference from using a hash to draw a static pattern: the input must include BOTH the UV coordinate and time — `hash(uv * resolution + time)`. Hashing on `uv` alone produces exactly ONE noise frame that repeats identically every frame — reading as a dirty nylon sheet stuck to the screen, not real grain (real film exposes a different grain structure every single shot/frame). Multiplying `uv` by `resolution` before hashing matters just as much: feeding the raw `uv` (the $[0,1]$ range) as input means two adjacent pixels have nearly identical coordinates (off by roughly $1/R$), so the hash produces highly correlated values — multiplying by `resolution` stretches the input to the actual pixel scale, guaranteeing each pixel gets a genuinely independent value.
+
+Real film grain isn't uniform across the frame — it's most visible in underexposed regions (lower silver-halide crystal density at low exposure makes the relative noise higher). This lesson replicates that by multiplying grain strength by a falloff that fades with luminance:
+
+```glsl
+float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luminance(color));
+color += n * uGrainAmount * grainFalloff;
+```
+
+Grain is also deliberately written **monochrome** — the same noise value `n` added to all three of R, G, B, rather than hashing three independent channels. This isn't cutting corners: silver-halide grain is a physical DENSITY fluctuation, highly correlated across a single grain's color layers, not independent per-channel sensor noise — monochrome grain reads as "film," while independently-hashed per-channel grain reads as digital sensor noise (chroma noise), an entirely different feeling.
+
+## Vignette: Radial Darkening — Optical Origin and Its Job in Composition
+
+Real lens vignetting comes from physics: optical vignetting (oblique rays partially blocked by the lens barrel itself at wide apertures), mechanical vignetting (a hood or filter partially blocking the field of view), and natural vignetting (the geometric $\cos^4$ falloff of optics). This lesson doesn't simulate the cause — only the visual RESULT, via a darkening that grows with distance from center:
+
+$$
+\text{vig}(uv) = 1 - d \cdot \mathrm{smoothstep}(r,\ 1,\ \lVert p \rVert), \qquad p = (uv - 0.5) \times (\text{aspect}, 1)
+$$
+
+with $d$ the maximum darkness and $r$ the radius where darkening starts. Multiplying `aspect` into $p$'s $x$ component before computing the distance is mandatory — skip it and the vignette darkens in an ELLIPSE stretched along the frame's long edge instead of a circle the eye expects. Using `smoothstep` instead of a linear `mix` isn't arbitrary either: `smoothstep`'s derivative is exactly 0 at both ends of the range, so the darkening eases in smoothly — a linear mix has a sharp derivative kink right at $r$, just enough for the eye to catch as a faint dark ring (a mach band), even though both formulas agree at the two endpoints.
+
+Beyond its nostalgic aesthetic, vignetting has a real compositional job: darkening the frame's corners pulls the viewer's eye toward the CENTER, where the subject usually sits — the same principle classical painters used to direct the gaze long before cameras existed.
+
+## Chromatic Aberration: Lens Dispersion, and the Line Between "Tasteful" and "Broken"
+
+Real lenses refract different wavelengths of light at slightly different angles (dispersion) — the result is the three color channels ending up slightly "shifted" relative to each other, most visible at the frame's edges where rays pass through the lens at steep angles. It's replicated by sampling the R and B channels at two opposite radial offsets, magnitude growing with distance from center:
+
+$$
+uv_R = uv + \hat d \cdot \dfrac{s}{R_x} \cdot \lVert p \rVert, \qquad uv_B = uv - \hat d \cdot \dfrac{s}{R_x} \cdot \lVert p \rVert
+$$
+
+with $\hat d = p / \lVert p \rVert$, $s$ the strength in pixels, $R_x$ the canvas width — dividing by $R_x$ converts pixel units into UV units, and the G channel stays untouched as the reference point. The line between "tasteful" and "broken" sits right at the value of $s$: under roughly 2px, the eye reads it as "a slightly aged, expensive lens" — above roughly 4–5px, the color fringe visibly splits into separate R/G/B bands, read instantly as a codec error/VHS glitch rather than a deliberate aesthetic choice.
+
+## Combining All Three Into ONE ShaderPass
+
+All three effects are purely local transforms on the same `tDiffuse` — there's no technical reason to split them into three separate `ShaderPass` instances, each sampling the full screen once and writing to its own intermediate render target. Combining all three into a single fragment shader (as this lesson's `stylistic-pass.frag` does) cuts the number of full-screen reads/writes from three down to one — a preview of the upcoming "Pass Order & Fillrate Cost" lesson: every pass added to a composer chain is one full-screen read AND write, and for effects this cheap, the real cost isn't the MATH inside the shader — it's HOW MANY TIMES each pixel gets touched.
+
+## Dosage: Concrete Numbers, and When the Effect Fights the Content
+
+There's no universally correct formula — the ranges below are aesthetic estimates drawn from observing real cinematic work, not physical constants: grain $0.03$–$0.08$ (the noise-strength scale added to color in $[0,1]$), vignette darkness $0.3$–$0.5$, chromatic aberration $0.5$–$2\text{px}$. Clearly exceeding these marks is when the effect starts OVERWHELMING the content instead of accenting it.
+
+All three also have contexts where they don't belong. Grain on a text-heavy interface (a dashboard, a data table) reduces edge contrast around glyphs, making small text look soft/mushy — text needs absolute crispness, not "film feel." Chromatic aberration on a commercial product shot is nearly always a mistake: customers zoom in to see the product's TRUE color, and even a 1px color shift reads as a defective image, not "cinematic style." The next lesson (Color Grading, LUTs & Tone Mapping) moves into an entirely different post layer — a GLOBAL color transform instead of the local, per-pixel one these three effects apply — and "Pass Order & Fillrate Cost" comes back to exactly the question just raised above: how many passes is worth combining, and when does combining stop paying off.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when writing grain/vignette/CA:
+
+1. **Hashing grain only on `uv`, forgetting `time`.** The result is a STATIC noise frame, repeating identically every frame — reading as a dirty nylon sheet permanently stuck to the screen, an instant "amateur shader" tell rather than real grain.
+2. **Forgetting to multiply the distance-to-center by `aspect`.** Vignette and CA darken/shift in an ELLIPSE stretched along the frame's long edge instead of a circle — most visible on ultra-wide or portrait canvases, easy to mistake for a bug rather than an aesthetic effect.
+3. **Defining the chromatic aberration offset in raw UV units, without dividing by `resolution.x`.** The same "strength" value produces a different pixel shift depending on render resolution — an effect tasteful at 1x DPR suddenly breaks on a 2x–3x DPR retina display, without changing a single number in the code.
+
+</Callout>
