@@ -1,0 +1,64 @@
+## Ease là gì: hàm biến đổi tiến trình thời gian
+
+Ease là một hàm toán học nhận vào tiến trình tuyến tính $t \in [0, 1]$ — bao nhiêu phần trăm thời gian của tween đã trôi qua — và trả về giá trị $y = ease(t)$ dùng để nội suy giữa điểm đầu và điểm cuối animation. Không có ease (`ease: "none"`), $y = t$: giá trị đổi đều, tốc độ không đổi. Với ease, $y$ không tăng đều — nhanh đoạn này, chậm đoạn khác — và hình dạng đường cong $y = ease(t)$ đó chính là thứ mắt người đọc ra thành "cảm giác" chuyển động: nặng, nhẹ, giòn, mềm. Ease không phải lớp trang trí phủ lên animation — nó LÀ animation, theo nghĩa toán học: đạo hàm $dy/dt$ tại mỗi thời điểm chính là tốc độ cảm nhận được của chuyển động.
+
+## Các họ ease dựng sẵn và cảm xúc chúng tạo ra
+
+GSAP có sẵn một bộ ease đủ dùng cho hầu hết animation UI, chia theo họ:
+
+| Họ ease | Hình dạng đường cong | Cảm giác |
+| --- | --- | --- |
+| `power1`–`power4` | đa thức bậc 2–5 (tương ứng quad/cubic/quart/quint), số càng cao càng dốc | cơ học, trung tính — số càng cao càng "gắt" |
+| `sine` | nửa hình sin | mượt, hữu cơ, rất nhẹ nhàng |
+| `expo` | hàm mũ, gần như phẳng rồi vọt | kịch tính, tăng/giảm tốc cực nhanh |
+| `back` | vượt quá điểm đích rồi lùi lại | có "quán tính", hơi vui nhộn |
+| `elastic` | dao động tắt dần quanh điểm đích | đàn hồi, như lò xo, rất playful |
+| `bounce` | nảy nhiều lần trước khi dừng | như quả bóng rơi, vật lý rõ rệt |
+
+Mỗi họ, trừ `sine`/`expo`, còn có ba biến thể: `.in` (chậm rồi nhanh dần — như vật nặng bắt đầu rơi), `.out` (nhanh rồi chậm dần — như vật lăn bị ma sát hãm lại), `.inOut` (chậm–nhanh–chậm — như xe tăng tốc rồi phanh). `back` và `elastic` nhận thêm tham số qua cú pháp gọi hàm trong chuỗi ease: `back.out(1.7)` chỉnh độ vọt quá (mặc định $1.70158$); `elastic.out(1, 0.3)` nhận `amplitude` (biên độ, mặc định $1$) và `period` (chu kỳ tính bằng giây, mặc định $0.3$) — biên độ lớn hơn nảy mạnh hơn, chu kỳ ngắn hơn rung nhanh hơn.
+
+## Đọc đường cong ease: dốc nghĩa là nhanh
+
+Vẽ $y = ease(t)$ với trục hoành $t$, trục tung $y$: độ **dốc** của đường cong tại một điểm chính là tốc độ chuyển động lúc đó — dốc đứng nghĩa là chuyển động nhanh, gần nằm ngang nghĩa là gần như đứng yên dù thời gian vẫn trôi. `power2.out` là đường RẤT dốc lúc đầu rồi thoải dần về gần nằm ngang khi $t \to 1$ — đúng tên gọi "out". `elastic.out` phức tạp hơn: đường cong vượt lên trên $y=1$ rồi dao động quanh $y=1$ trước khi phẳng hẳn — mỗi lần cắt ngang $y=1$ là một lần vật lý "đi qua" điểm đích rồi bị kéo ngược, giống lò xo thật. Nhìn quen hình dạng quan trọng hơn nhớ tên: cùng họ `power`, số càng cao đường cong càng dốc ở hai đầu — `power4.out` "gắt" hơn hẳn `power1.out` dù cùng là ease-out.
+
+## CustomEase: từ bezier/SVG-path tới ease của riêng bạn
+
+Khi các ease dựng sẵn không đủ — ví dụ cần khớp đúng một brand motion do designer thiết kế — plugin `CustomEase` (miễn phí, cần import và đăng ký) tạo ease từ dữ liệu cubic-bezier hoặc SVG path:
+
+```js
+import { CustomEase } from "gsap/CustomEase";
+gsap.registerPlugin(CustomEase);
+
+// Chuyển thẳng một cubic-bezier(x1,y1,x2,y2) sang CustomEase — dùng đúng
+// bốn số designer đưa (ở đây là easeOutBack chuẩn của easings.net):
+CustomEase.create("signature", "M0,0 C0.34,1.56 0.64,1 1,1");
+
+gsap.to(".hero", { x: 200, duration: 0.8, ease: "signature" });
+```
+
+`CustomEase.create(id, data)` đăng ký ease dưới một tên (`id`), dùng lại được ở bất kỳ tween nào sau đó bằng đúng chuỗi đó — y hệt cách dùng `"power2.out"`. Chuỗi `data` là một path SVG cubic-bezier: `M0,0` là điểm bắt đầu cố định, theo sau là lệnh `C` với ba cặp toạ độ (control point 1, control point 2, điểm kết thúc) — dạng đơn giản nhất chính là bốn số của một `cubic-bezier()` CSS viết lại thành path; path nhiều đoạn phức tạp hơn có thể vẽ trực tiếp trong Ease Visualizer của GSAP rồi copy ra. Gọi `CustomEase.create()` đúng MỘT lần lúc app khởi động, không gọi lại trong mỗi lần render — bản thân việc tạo ease có chi phí tính toán, gọi lặp lại mỗi frame hay mỗi lần mount vô tình biến một phép tạo-một-lần thành tính lại liên tục.
+
+## Chọn ease theo ý đồ, không theo thói quen
+
+Ba mươi cái tên ease không có nghĩa gì nếu chọn theo phản xạ "cứ dùng ease mặc định". Cách chọn đúng bắt đầu từ câu hỏi: phần tử này đang LÀM GÌ về mặt ý nghĩa?
+
+- **Xuất hiện (entrance)**: dùng ease-`out` (`power2.out`, `power3.out`) — chuyển động nhanh ngay từ đầu (phản hồi tức thì, UI cảm giác nhạy) rồi giảm tốc, "đáp" nhẹ nhàng vào vị trí cuối, giống vật thể có ma sát chứ không phanh gấp.
+- **Biến mất (exit)**: dùng ease-`in` (`power2.in`) — bắt đầu chậm, TĂNG tốc dần khi rời khỏi màn hình, đúng cảm giác một vật bị đẩy đi thay vì trôi vào chỗ trống.
+- **Phản hồi tức thì (feedback)**: ví dụ nút bấm nhấn xuống — ease ngắn, dứt khoát (`power1.out`, duration $0.1$–$0.2$s), không cần kịch tính, chỉ cần xác nhận input được ghi nhận ngay.
+- **Chuyển động lặp, môi trường (ambient/looping)**: `sine.inOut` — đường cong mượt, không có điểm dừng đột ngột ở hai đầu, thích hợp cho animation lặp vô hạn (nhấp nháy, trôi nổi) vì nối liền chu kỳ mà không giật.
+
+Quy tắc tổng quát đáng nhớ nhất: **linear gần như luôn luôn SAI cho UI, và gần như luôn luôn ĐÚNG cho scrub**. Sai cho UI vì không vật thể thật nào di chuyển với tốc độ tuyệt đối không đổi — mọi chuyển động tự nhiên đều có gia tốc, nên `ease: "none"` trên animation tự chạy luôn tạo cảm giác máy móc. Đúng cho scrub (animation điều khiển trực tiếp bởi vị trí cuộn, kéo, hay input liên tục khác — chủ đề ScrollTrigger sắp tới) vì lúc đó CHÍNH input người dùng đã là đường cong tốc độ — cuộn nhanh thì chạy nhanh, dừng thì dừng theo. Thêm một ease lên trên tween scrub khiến animation "trễ" hoặc "vọt trước" so với ngón tay/con lăn chuột thật — độ trễ cảm nhận được ngay, dù chỉ vài trăm mili-giây.
+
+## Kết nối về sau
+
+Bài mini-build kế tiếp (checkpoint) buộc kết hợp timeline, stagger và ease tuỳ biến của cả hai bài học này vào một chuỗi animation hero hoàn chỉnh. Quy tắc "ease-out cho vào, ease-in cho ra" quay lại khi Flip animate phần tử đổi vị trí trong DOM; quy tắc "linear cho scrub" là nền tảng trực tiếp của bài ScrollTrigger + R3F, nơi ease sai đồng bộ với input cuộn là nguyên nhân phổ biến nhất khiến cảnh 3D "trôi" thay vì bám sát cuộn của người dùng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi chọn và dùng ease:
+
+1. **Dùng `back`/`elastic` cho mọi thứ vì "nhìn vui mắt".** Hai họ ease này có overshoot — vọt qua điểm đích rồi lùi lại — hợp cho phản hồi nhỏ (nút, badge, toast) nhưng dùng cho layout lớn hay chuyển trang khiến giao diện thiếu chuyên nghiệp, càng lớn dao động càng gây khó chịu.
+2. **Dùng chung một ease-`out` cho cả lúc xuất hiện lẫn lúc biến mất.** `power2.out` giảm tốc dần VÀO điểm cuối — hợp cho entrance vì đọc như "đang đáp xuống". Áp dụng y hệt cho exit khiến phần tử trông như đang từ từ đáp xuống chỗ biến mất thay vì bị đẩy đi; nên đảo sang ease-`in` cho exit.
+3. **Bỏ mặc `ease: "power1.out"` hoặc dùng linear cho animation scrub theo ScrollTrigger.** Scrub tween đã được điều khiển trực tiếp bởi vị trí cuộn — chồng thêm ease non-linear khiến progress hiển thị trễ hoặc vọt trước so với vị trí cuộn thật; `ease: "none"` mới giữ đúng quan hệ 1:1 giữa cuộn và animation.
+
+</Callout>

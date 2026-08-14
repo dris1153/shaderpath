@@ -280,6 +280,58 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/04-r3f/why-r3f-reconciler/theory.vi.mdx"),
     en: () => import("./lessons/04-r3f/why-r3f-reconciler/theory.en.mdx"),
   },
+  "animation-principles-for-ui": {
+    vi: () => import("./lessons/05-gsap/animation-principles-for-ui/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/animation-principles-for-ui/theory.en.mdx"),
+  },
+  "checkpoint-hero-intro-sequence": {
+    vi: () => import("./lessons/05-gsap/checkpoint-hero-intro-sequence/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/checkpoint-hero-intro-sequence/theory.en.mdx"),
+  },
+  "checkpoint-scroll-section": {
+    vi: () => import("./lessons/05-gsap/checkpoint-scroll-section/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/checkpoint-scroll-section/theory.en.mdx"),
+  },
+  "checkpoint-scrollytelling-page": {
+    vi: () => import("./lessons/05-gsap/checkpoint-scrollytelling-page/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/checkpoint-scrollytelling-page/theory.en.mdx"),
+  },
+  "choosing-your-animation-tool": {
+    vi: () => import("./lessons/05-gsap/choosing-your-animation-tool/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/choosing-your-animation-tool/theory.en.mdx"),
+  },
+  "compositor-friendly-animation": {
+    vi: () => import("./lessons/05-gsap/compositor-friendly-animation/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/compositor-friendly-animation/theory.en.mdx"),
+  },
+  "easing-in-depth": {
+    vi: () => import("./lessons/05-gsap/easing-in-depth/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/easing-in-depth/theory.en.mdx"),
+  },
+  "flip-layout-transitions": {
+    vi: () => import("./lessons/05-gsap/flip-layout-transitions/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/flip-layout-transitions/theory.en.mdx"),
+  },
+  "observer-and-draggable": {
+    vi: () => import("./lessons/05-gsap/observer-and-draggable/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/observer-and-draggable/theory.en.mdx"),
+  },
+  "scrolltrigger-fundamentals": {
+    vi: () => import("./lessons/05-gsap/scrolltrigger-fundamentals/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/scrolltrigger-fundamentals/theory.en.mdx"),
+  },
+  "scrolltrigger-plus-r3f-single-loop": {
+    vi: () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/theory.en.mdx"),
+  },
+  "splittext-typography": {
+    vi: () => import("./lessons/05-gsap/splittext-typography/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/splittext-typography/theory.en.mdx"),
+  },
+  "tweens-timelines-stagger": {
+    vi: () => import("./lessons/05-gsap/tweens-timelines-stagger/theory.vi.mdx"),
+    en: () => import("./lessons/05-gsap/tweens-timelines-stagger/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -337,6 +389,16 @@ export const REFERENCES_REGISTRY: Partial<
   "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/references"),
   "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/references"),
   "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/references"),
+  "animation-principles-for-ui": () => import("./lessons/05-gsap/animation-principles-for-ui/references"),
+  "choosing-your-animation-tool": () => import("./lessons/05-gsap/choosing-your-animation-tool/references"),
+  "compositor-friendly-animation": () => import("./lessons/05-gsap/compositor-friendly-animation/references"),
+  "easing-in-depth": () => import("./lessons/05-gsap/easing-in-depth/references"),
+  "flip-layout-transitions": () => import("./lessons/05-gsap/flip-layout-transitions/references"),
+  "observer-and-draggable": () => import("./lessons/05-gsap/observer-and-draggable/references"),
+  "scrolltrigger-fundamentals": () => import("./lessons/05-gsap/scrolltrigger-fundamentals/references"),
+  "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/references"),
+  "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/references"),
+  "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -606,6 +668,58 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"r3f-không-bọc-threejs--nó-là-một-reconciler","text":"R3F không \"bọc\" Three.js — nó là một reconciler","depth":2},{"id":"scene-khai-báo--fstate-diffing-tạo-mutate-huỷ-object-thật","text":"Scene khai báo = f(state): diffing tạo, mutate, huỷ object thật","depth":2},{"id":"composition-hook-và-context-hoạt-động-y-hệt-bên-trong-scene","text":"Composition, hook và context hoạt động y hệt bên trong scene","depth":2},{"id":"bằng-chứng-không-addremove-thủ-công-unmount-tự-dọn-dẹp","text":"Bằng chứng: không add/remove thủ công, unmount tự dọn dẹp","depth":2},{"id":"vẫn-là-three-bên-dưới-hiệu-năng-và-kiến-thức-track-3-không-đổi","text":"Vẫn là THREE bên dưới: hiệu năng và kiến thức Track 3 không đổi","depth":2},{"id":"khi-nào-tư-duy-reconciler-thực-sự-quan-trọng-danh-sách-có-key","text":"Khi nào tư duy reconciler thực sự quan trọng: danh sách có key","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-jsx--threejs-mapping-và-giới-hạn-của-mental-model","text":"Nền tảng này dẫn tới đâu: JSX ↔ Three.js mapping và giới hạn của mental model","depth":2}],
     en: [{"id":"r3f-doesnt-wrap-threejs--its-a-reconciler","text":"R3F Doesn't \"Wrap\" Three.js — It's a Reconciler","depth":2},{"id":"declarative-scene--fstate-diffing-creates-mutates-and-destroys-real-objects","text":"Declarative Scene = f(state): Diffing Creates, Mutates, and Destroys Real Objects","depth":2},{"id":"composition-hooks-and-context-work-identically-inside-the-scene","text":"Composition, Hooks, and Context Work Identically Inside the Scene","depth":2},{"id":"the-proof-no-manual-addremove-automatic-cleanup-on-unmount","text":"The Proof: No Manual add/remove, Automatic Cleanup on Unmount","depth":2},{"id":"still-three-underneath-performance-and-track-3-knowledge-carry-over","text":"Still THREE Underneath: Performance and Track 3 Knowledge Carry Over","depth":2},{"id":"when-the-reconciler-mental-model-actually-matters-keyed-lists","text":"When the Reconciler Mental Model Actually Matters: Keyed Lists","depth":2},{"id":"where-this-foundation-leads-jsx--threejs-mapping-and-the-models-limits","text":"Where This Foundation Leads: JSX ↔ Three.js Mapping and the Model's Limits","depth":2}],
   },
+  "animation-principles-for-ui": {
+    vi: [{"id":"vì-sao-nguyên-tắc-hoạt-hình-cổ-điển-vẫn-đúng-cho-ui","text":"Vì sao nguyên tắc hoạt hình cổ điển vẫn đúng cho UI","depth":2},{"id":"anticipation-cú-rướn-trước-hành-động","text":"Anticipation: cú rướn trước hành động","depth":3},{"id":"follow-through--overlapping-action-stagger-chính-là-overlap","text":"Follow-through & overlapping action: stagger chính là overlap","depth":3},{"id":"secondary-motion-chuyển-động-phụ-bán-cảm-giác-trọng-lượng","text":"Secondary motion: chuyển động phụ bán cảm giác trọng lượng","depth":3},{"id":"squash--stretch-slow-inslow-out-và-staging--ba-nguyên-tắc-còn-lại-dùng-tinh-tế","text":"Squash & stretch, slow-in/slow-out, và staging — ba nguyên tắc còn lại, dùng tinh tế","depth":3},{"id":"thang-thời-gian-cho-ui","text":"Thang thời gian cho UI","depth":2},{"id":"reduced-motion-là-yêu-cầu-bắt-buộc-không-phải-tuỳ-chọn","text":"Reduced motion là yêu cầu bắt buộc, không phải tuỳ chọn","depth":2},{"id":"nơi-kiến-thức-này-dẫn-tới","text":"Nơi kiến thức này dẫn tới","depth":2}],
+    en: [{"id":"why-classical-animation-principles-still-hold-for-ui","text":"Why Classical Animation Principles Still Hold for UI","depth":2},{"id":"anticipation-the-wind-up-before-the-action","text":"Anticipation: The Wind-Up Before the Action","depth":3},{"id":"follow-through--overlapping-action-stagger-is-overlap","text":"Follow-Through & Overlapping Action: Stagger IS Overlap","depth":3},{"id":"secondary-motion-a-reacting-detail-sells-weight","text":"Secondary Motion: A Reacting Detail Sells Weight","depth":3},{"id":"squash--stretch-slow-inslow-out-and-staging--the-remaining-three-used-subtly","text":"Squash & Stretch, Slow-In/Slow-Out, and Staging — the Remaining Three, Used Subtly","depth":3},{"id":"timing-scales-for-ui","text":"Timing Scales for UI","depth":2},{"id":"reduced-motion-is-a-hard-requirement-not-an-option","text":"Reduced Motion Is a Hard Requirement, Not an Option","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "checkpoint-hero-intro-sequence": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-scroll-section": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-scrollytelling-page": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "choosing-your-animation-tool": {
+    vi: [{"id":"ba-lớp-công-cụ-ba-mô-hình-lập-trình","text":"Ba lớp công cụ, ba mô hình lập trình","depth":2},{"id":"css-animation--transition-khai-báo-chạy-trên-compositor-không-tốn-js","text":"CSS animation & transition: khai báo, chạy trên compositor, không tốn JS","depth":3},{"id":"framer-motion--motion-react-idiomatic-layout-animation-và-gesture","text":"Framer Motion / Motion: React-idiomatic, layout animation và gesture","depth":3},{"id":"gsap-timeline-mệnh-lệnh-và-hệ-sinh-thái-scrolltrigger","text":"GSAP: timeline mệnh lệnh và hệ sinh thái ScrollTrigger","depth":3},{"id":"bốn-trục-quyết-định-chọn-công-cụ","text":"Bốn trục quyết định chọn công cụ","depth":2},{"id":"thực-tế-dùng-cả-ba-mỗi-công-cụ-ở-đúng-chỗ-mạnh-nhất","text":"Thực tế: dùng cả ba, mỗi công cụ ở đúng chỗ mạnh nhất","depth":2},{"id":"case-study-shaderpath-dùng-gì-ở-đâu","text":"Case study: Shaderpath dùng gì, ở đâu","depth":2},{"id":"nơi-kiến-thức-này-dẫn-tới","text":"Nơi kiến thức này dẫn tới","depth":2}],
+    en: [{"id":"three-tool-classes-three-programming-models","text":"Three Tool Classes, Three Programming Models","depth":2},{"id":"css-animations--transitions-declarative-compositor-friendly-zero-js-cost","text":"CSS Animations & Transitions: Declarative, Compositor-Friendly, Zero JS Cost","depth":3},{"id":"framer-motion--motion-react-idiomatic-layout-and-gesture-animation","text":"Framer Motion / Motion: React-Idiomatic Layout and Gesture Animation","depth":3},{"id":"gsap-imperative-timelines-and-the-scrolltrigger-ecosystem","text":"GSAP: Imperative Timelines and the ScrollTrigger Ecosystem","depth":3},{"id":"four-axes-for-choosing","text":"Four Axes for Choosing","depth":2},{"id":"the-real-answer-use-all-three-each-where-its-strongest","text":"The Real Answer: Use All Three, Each Where It's Strongest","depth":2},{"id":"case-study-how-shaderpath-uses-all-three","text":"Case Study: How Shaderpath Uses All Three","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "compositor-friendly-animation": {
+    vi: [{"id":"bốn-giai-đoạn-dựng-hình-style--layout--paint--composite","text":"Bốn giai đoạn dựng hình: style → layout → paint → composite","depth":2},{"id":"vì-sao-transform-và-opacity-là-cặp-đôi-vàng","text":"Vì sao transform và opacity là cặp đôi vàng","depth":2},{"id":"layout-thrash-khi-widthtopmargin-buộc-trình-duyệt-tính-lại-từ-đầu","text":"Layout thrash: khi width/top/margin buộc trình duyệt tính lại từ đầu","depth":2},{"id":"đọc-devtools-performance-để-bắt-jank","text":"Đọc DevTools Performance để bắt jank","depth":2},{"id":"will-change-và-layer-promotion-lợi-ích-và-cái-giá","text":"will-change và layer promotion: lợi ích và cái giá","depth":2},{"id":"thay-layout-animation-bằng-transform","text":"Thay layout animation bằng transform","depth":2},{"id":"gsap-viết-transform-thế-nào-và-force3d-là-gì","text":"GSAP viết transform thế nào, và force3D là gì","depth":2},{"id":"điểm-này-dẫn-tới-đâu","text":"Điểm này dẫn tới đâu","depth":2}],
+    en: [{"id":"four-stages-of-rendering-style--layout--paint--composite","text":"Four Stages of Rendering: Style → Layout → Paint → Composite","depth":2},{"id":"why-transform-and-opacity-are-the-golden-pair","text":"Why Transform and Opacity Are the Golden Pair","depth":2},{"id":"layout-thrash-when-widthtopmargin-force-a-full-recalculation","text":"Layout Thrash: When width/top/margin Force a Full Recalculation","depth":2},{"id":"reading-devtools-performance-to-catch-jank","text":"Reading DevTools Performance to Catch Jank","depth":2},{"id":"will-change-and-layer-promotion-benefits-and-the-price","text":"will-change and Layer Promotion: Benefits and the Price","depth":2},{"id":"replacing-layout-animation-with-transform","text":"Replacing Layout Animation with Transform","depth":2},{"id":"how-gsap-writes-transform-and-what-force3d-does","text":"How GSAP Writes Transform, and What force3D Does","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "easing-in-depth": {
+    vi: [{"id":"ease-là-gì-hàm-biến-đổi-tiến-trình-thời-gian","text":"Ease là gì: hàm biến đổi tiến trình thời gian","depth":2},{"id":"các-họ-ease-dựng-sẵn-và-cảm-xúc-chúng-tạo-ra","text":"Các họ ease dựng sẵn và cảm xúc chúng tạo ra","depth":2},{"id":"đọc-đường-cong-ease-dốc-nghĩa-là-nhanh","text":"Đọc đường cong ease: dốc nghĩa là nhanh","depth":2},{"id":"customease-từ-beziersvg-path-tới-ease-của-riêng-bạn","text":"CustomEase: từ bezier/SVG-path tới ease của riêng bạn","depth":2},{"id":"chọn-ease-theo-ý-đồ-không-theo-thói-quen","text":"Chọn ease theo ý đồ, không theo thói quen","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"what-ease-is-a-function-that-reshapes-progress-over-time","text":"What Ease Is: A Function That Reshapes Progress Over Time","depth":2},{"id":"built-in-ease-families-and-the-emotional-register-each-one-carries","text":"Built-in Ease Families and the Emotional Register Each One Carries","depth":2},{"id":"reading-ease-curves-steep-means-fast","text":"Reading Ease Curves: Steep Means Fast","depth":2},{"id":"customease-from-a-beziersvg-path-to-an-ease-of-your-own","text":"CustomEase: From a Bezier/SVG Path to an Ease of Your Own","depth":2},{"id":"choosing-an-ease-by-intent-not-by-habit","text":"Choosing an Ease by Intent, Not by Habit","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "flip-layout-transitions": {
+    vi: [{"id":"flip-là-bốn-bước-không-phải-bốn-dòng-code","text":"FLIP là bốn bước, không phải bốn dòng code","depth":2},{"id":"first-và-last-đo-trước-đo-sau-khi-dom-đã-đổi","text":"First và Last: đo trước, đo sau khi DOM đã đổi","depth":3},{"id":"invert-làm-cho-đã-ở-vị-trí-mới-trông-như-chưa-đổi-gì","text":"Invert: làm cho \"đã ở vị trí mới\" trông như \"chưa đổi gì\"","depth":3},{"id":"play-chỉ-animate-transform-và-opacity-về-identity","text":"Play: chỉ animate transform và opacity về identity","depth":3},{"id":"api-của-flip-getstate--mutate--from","text":"API của Flip: getState → mutate → from","depth":2},{"id":"khớp-phần-tử-giữa-hai-state-bằng-data-flip-id","text":"Khớp phần tử giữa hai state bằng data-flip-id","depth":2},{"id":"absolute-và-nested-hai-cờ-hay-bị-bỏ-quên","text":"absolute và nested: hai cờ hay bị bỏ quên","depth":2},{"id":"khi-nào-flip-thắng-animate-thủ-công","text":"Khi nào Flip thắng animate thủ công","depth":2},{"id":"giới-hạn-text-và-border-phản-ứng-lạ-khi-scale","text":"Giới hạn: text và border phản ứng lạ khi scale","depth":2}],
+    en: [{"id":"flip-is-four-steps-not-four-lines-of-code","text":"FLIP Is Four Steps, Not Four Lines of Code","depth":2},{"id":"first-and-last-measuring-before-and-after-the-dom-changes","text":"First and Last: Measuring Before and After the DOM Changes","depth":3},{"id":"invert-making-already-at-the-new-spot-look-like-nothing-changed-yet","text":"Invert: Making \"Already at the New Spot\" Look Like \"Nothing Changed Yet\"","depth":3},{"id":"play-animating-only-transform-and-opacity-back-to-identity","text":"Play: Animating Only transform and opacity Back to Identity","depth":3},{"id":"the-flip-api-getstate--mutate--from","text":"The Flip API: getState → mutate → from","depth":2},{"id":"matching-elements-across-states-with-data-flip-id","text":"Matching Elements Across States With data-flip-id","depth":2},{"id":"absolute-and-nested-two-easily-forgotten-flags","text":"absolute and nested: Two Easily-Forgotten Flags","depth":2},{"id":"when-flip-beats-a-hand-rolled-tween","text":"When Flip Beats a Hand-Rolled Tween","depth":2},{"id":"the-limits-text-and-borders-behave-oddly-under-scale","text":"The Limits: Text and Borders Behave Oddly Under Scale","depth":2}],
+  },
+  "observer-and-draggable": {
+    vi: [{"id":"observer-chuẩn-hoá-ý-định-cuộnchạmtrỏ-mà-không-cuộn-gì-cả","text":"Observer: chuẩn hoá \"ý định\" cuộn/chạm/trỏ mà không cuộn gì cả","depth":2},{"id":"onupondown-và-kỷ-luật-preventdefault","text":"onUp/onDown và kỷ luật preventDefault","depth":3},{"id":"pattern-đổi-section-toàn-màn-hình-bằng-observer","text":"Pattern: đổi section toàn màn hình bằng Observer","depth":2},{"id":"draggable-kéo-có-bounds-quán-tính-thật-và-snap","text":"Draggable: kéo có bounds, quán tính thật, và snap","depth":2},{"id":"type-xy-so-với-type-rotation","text":"type: \"x,y\" so với type: \"rotation\"","depth":3},{"id":"khi-nào-draggable-thắng-pointer-event-thủ-công","text":"Khi nào Draggable thắng pointer event thủ công","depth":2},{"id":"cạm-bẫy-hit-area-và-touch-action","text":"Cạm bẫy: hit-area và touch-action","depth":2},{"id":"kết-hợp-observer-phát-hiện-ý-định-tween-xử-lý-phản-hồi","text":"Kết hợp: Observer phát hiện ý định, tween xử lý phản hồi","depth":2},{"id":"bài-học-này-dẫn-tới-đâu","text":"Bài học này dẫn tới đâu","depth":2}],
+    en: [{"id":"observer-normalizing-scrolltouchpointer-intent-without-scrolling-anything","text":"Observer: Normalizing Scroll/Touch/Pointer \"Intent\" Without Scrolling Anything","depth":2},{"id":"onupondown-and-preventdefault-discipline","text":"onUp/onDown and preventDefault Discipline","depth":3},{"id":"pattern-fullscreen-section-swap-with-observer","text":"Pattern: Fullscreen Section Swap With Observer","depth":2},{"id":"draggable-bounded-drag-real-inertia-and-snap","text":"Draggable: Bounded Drag, Real Inertia, and Snap","depth":2},{"id":"type-xy-vs-type-rotation","text":"type: \"x,y\" vs. type: \"rotation\"","depth":3},{"id":"when-draggable-beats-hand-rolled-pointer-math","text":"When Draggable Beats Hand-Rolled Pointer Math","depth":2},{"id":"pitfalls-hit-area-and-touch-action","text":"Pitfalls: Hit-Area and touch-action","depth":2},{"id":"combining-them-observer-detects-intent-a-tween-handles-the-response","text":"Combining Them: Observer Detects Intent, a Tween Handles the Response","depth":2},{"id":"where-this-lesson-leads","text":"Where This Lesson Leads","depth":2}],
+  },
+  "scrolltrigger-fundamentals": {
+    vi: [{"id":"ba-trục-điều-khiển-của-scrolltrigger","text":"Ba trục điều khiển của ScrollTrigger","depth":2},{"id":"trigger-cú-pháp-startend-và-ý-nghĩa-hai-nửa","text":"Trigger: cú pháp start/end và ý nghĩa hai nửa","depth":3},{"id":"scrub-animation-bị-khoá-vào-vị-trí-cuộn-không-phải-thời-gian","text":"Scrub: animation bị khoá vào vị trí cuộn, không phải thời gian","depth":3},{"id":"pin-giữ-phần-tử-đứng-yên-và-lỗ-hổng-layout-nó-tạo-ra","text":"Pin: giữ phần tử đứng yên và \"lỗ hổng\" layout nó tạo ra","depth":3},{"id":"toggleactions-bốn-động-từ-cho-trigger-không-scrub","text":"toggleActions: bốn động từ cho trigger không scrub","depth":2},{"id":"markers-công-cụ-debug-nên-bật-đầu-tiên","text":"Markers: công cụ debug nên bật đầu tiên","depth":2},{"id":"snap-biến-dải-cuộn-liên-tục-thành-các-bước-rời-rạc","text":"Snap: biến dải cuộn liên tục thành các bước rời rạc","depth":2},{"id":"kỷ-luật-một-trigger-một-nhiệm-vụ-và-scrolltriggerrefresh","text":"Kỷ luật một-trigger-một-nhiệm-vụ và ScrollTrigger.refresh()","depth":2},{"id":"scroller-khi-scrolltrigger-không-lắng-nghe-window","text":"scroller: khi ScrollTrigger không lắng nghe window","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"scrolltriggers-three-control-axes","text":"ScrollTrigger's Three Control Axes","depth":2},{"id":"trigger-the-startend-syntax-and-what-its-two-halves-mean","text":"Trigger: the start/end syntax and what its two halves mean","depth":3},{"id":"scrub-the-animation-locks-to-scroll-position-not-to-time","text":"Scrub: the animation locks to scroll position, not to time","depth":3},{"id":"pin-holding-an-element-still-and-the-layout-hole-it-creates","text":"Pin: holding an element still, and the layout hole it creates","depth":3},{"id":"toggleactions-four-verbs-for-non-scrub-triggers","text":"toggleActions: four verbs for non-scrub triggers","depth":2},{"id":"markers-the-debug-tool-to-reach-for-first","text":"Markers: the debug tool to reach for first","depth":2},{"id":"snap-turning-a-continuous-scroll-range-into-discrete-steps","text":"Snap: turning a continuous scroll range into discrete steps","depth":2},{"id":"the-one-trigger-one-job-discipline-and-scrolltriggerrefresh","text":"The one-trigger-one-job discipline and ScrollTrigger.refresh()","depth":2},{"id":"scroller-when-scrolltrigger-isnt-listening-to-window","text":"scroller: when ScrollTrigger isn't listening to window","depth":2},{"id":"looking-ahead","text":"Looking ahead","depth":2}],
+  },
+  "scrolltrigger-plus-r3f-single-loop": {
+    vi: [{"id":"hai-vòng-lặp-render-trên-cùng-một-canvas-vì-sao-chúng-đánh-nhau","text":"Hai vòng lặp render trên cùng một canvas: vì sao chúng đánh nhau","depth":2},{"id":"giải-phẫu-anti-pattern","text":"Giải phẫu anti-pattern","depth":3},{"id":"quy-tắc-đúng-một-nguồn-ghi-tiến-độ-useframe-là-nguồn-render-duy-nhất","text":"Quy tắc đúng: một nguồn ghi tiến độ, useFrame là nguồn render duy nhất","depth":2},{"id":"scrub-demand-frameloop-và-invalidate","text":"scrub, demand frameloop và invalidate()","depth":2},{"id":"ai-sở-hữu-camera-proxy-object-điều-khiển-dolly","text":"Ai sở hữu camera: proxy object điều khiển dolly","depth":2},{"id":"lenis-và-smooth-scroll-một-câu-ngắn-gọn","text":"Lenis và smooth-scroll: một câu ngắn gọn","depth":2},{"id":"bài-học-này-dẫn-tới-đâu","text":"Bài học này dẫn tới đâu","depth":2}],
+    en: [{"id":"two-render-loops-one-canvas-why-they-fight","text":"Two Render Loops, One Canvas: Why They Fight","depth":2},{"id":"dissecting-the-anti-pattern","text":"Dissecting the Anti-Pattern","depth":3},{"id":"the-correct-rule-one-writer-for-progress-useframe-the-only-renderer","text":"The Correct Rule: One Writer for Progress, useFrame the Only Renderer","depth":2},{"id":"scrub-demand-frameloop-and-invalidate","text":"Scrub, Demand Frameloop, and invalidate()","depth":2},{"id":"who-owns-the-camera-a-proxy-object-drives-the-dolly","text":"Who Owns the Camera: A Proxy Object Drives the Dolly","depth":2},{"id":"lenis-and-smooth-scroll-one-short-paragraph","text":"Lenis and Smooth-Scroll: One Short Paragraph","depth":2},{"id":"where-this-lesson-leads","text":"Where This Lesson Leads","depth":2}],
+  },
+  "splittext-typography": {
+    vi: [{"id":"splittext-miễn-phí-từ-bản-313-vì-sao-điều-đó-quan-trọng","text":"SplitText miễn phí từ bản 3.13: vì sao điều đó quan trọng","depth":2},{"id":"cái-gì-thực-sự-xảy-ra-trong-dom-khi-bạn-split","text":"Cái gì thực sự xảy ra trong DOM khi bạn split","depth":2},{"id":"giữ-khả-năng-đọc-cho-screen-reader-option-aria","text":"Giữ khả năng đọc cho screen reader: option aria","depth":3},{"id":"ba-kiểu-reveal-kinh-điển","text":"Ba kiểu reveal kinh điển","depth":2},{"id":"char-rise-từng-ký-tự-bay-lên-có-stagger","text":"Char rise: từng ký tự bay lên có stagger","depth":3},{"id":"line-mask-bọc-overflow-hidden-quanh-từng-dòng","text":"Line mask: bọc overflow-hidden quanh từng dòng","depth":3},{"id":"word-cascade-cả-từ-di-chuyển-như-một-khối","text":"Word cascade: cả từ di chuyển như một khối","depth":3},{"id":"revert-là-kỷ-luật-không-phải-tuỳ-chọn","text":"revert() là kỷ luật, không phải tuỳ chọn","depth":2},{"id":"responsive-autosplit-và-tự-split-lại-khi-resize","text":"Responsive: autoSplit và tự split lại khi resize","depth":2},{"id":"hiệu-năng-hàng-trăm-div-chỉ-animate-transform","text":"Hiệu năng: hàng trăm div, chỉ animate transform","depth":2},{"id":"khi-nào-không-nên-split-văn-bản","text":"Khi nào KHÔNG nên split văn bản","depth":2}],
+    en: [{"id":"splittext-free-since-313-why-that-matters","text":"SplitText Free Since 3.13: Why That Matters","depth":2},{"id":"what-actually-happens-in-the-dom-when-you-split","text":"What Actually Happens in the DOM When You Split","depth":2},{"id":"keeping-screen-readers-working-the-aria-option","text":"Keeping Screen Readers Working: The aria Option","depth":3},{"id":"three-classic-reveal-patterns","text":"Three Classic Reveal Patterns","depth":2},{"id":"char-rise-individual-characters-rising-with-a-stagger","text":"Char Rise: Individual Characters Rising With a Stagger","depth":3},{"id":"line-mask-wrapping-each-line-in-overflow-hidden","text":"Line Mask: Wrapping Each Line in overflow-hidden","depth":3},{"id":"word-cascade-whole-words-moving-as-one-block","text":"Word Cascade: Whole Words Moving as One Block","depth":3},{"id":"revert-is-a-discipline-not-an-option","text":"revert() Is a Discipline, Not an Option","depth":2},{"id":"responsive-autosplit-and-re-splitting-on-resize","text":"Responsive: autoSplit and Re-Splitting on Resize","depth":2},{"id":"performance-hundreds-of-divs-animate-only-transforms","text":"Performance: Hundreds of Divs, Animate Only Transforms","depth":2},{"id":"when-not-to-split-text","text":"When NOT to Split Text","depth":2}],
+  },
+  "tweens-timelines-stagger": {
+    vi: [{"id":"tween-đơn-vị-nhỏ-nhất-của-gsap","text":"Tween: đơn vị nhỏ nhất của GSAP","depth":2},{"id":"điều-khiển-playback-tween-là-bộ-sinh-giá-trị-đọc-được-không-phải-bắn-rồi-quên","text":"Điều khiển playback: tween là bộ sinh giá trị đọc được, không phải \"bắn rồi quên\"","depth":2},{"id":"timeline-sắp-xếp-nhiều-tween-theo-thời-gian-tương-đối","text":"Timeline: sắp xếp nhiều tween theo thời gian tương đối","depth":2},{"id":"lồng-timeline-dàn-dựng-theo-từng-thành-phần","text":"Lồng timeline: dàn dựng theo từng thành phần","depth":2},{"id":"stagger-nhân-bản-độ-trễ-trên-nhiều-phần-tử","text":"Stagger: nhân bản độ trễ trên nhiều phần tử","depth":2},{"id":"timeline-defaults-dry-hoá-ease-và-duration","text":"Timeline defaults: DRY hoá ease và duration","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"the-tween-gsaps-smallest-building-block","text":"The Tween: GSAP's Smallest Building Block","depth":2},{"id":"playback-control-a-readable-value-generator-not-fire-and-forget","text":"Playback Control: A Readable Value Generator, Not \"Fire and Forget\"","depth":2},{"id":"timelines-sequencing-tweens-on-relative-time","text":"Timelines: Sequencing Tweens on Relative Time","depth":2},{"id":"nesting-timelines-choreography-by-component","text":"Nesting Timelines: Choreography by Component","depth":2},{"id":"stagger-fanning-delay-across-many-elements","text":"Stagger: Fanning Delay Across Many Elements","depth":2},{"id":"timeline-defaults-drying-up-ease-and-duration","text":"Timeline Defaults: DRYing Up Ease and Duration","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -661,6 +775,16 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/demo"),
   "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/demo"),
   "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/demo"),
+  "animation-principles-for-ui": () => import("./lessons/05-gsap/animation-principles-for-ui/demo"),
+  "choosing-your-animation-tool": () => import("./lessons/05-gsap/choosing-your-animation-tool/demo"),
+  "compositor-friendly-animation": () => import("./lessons/05-gsap/compositor-friendly-animation/demo"),
+  "easing-in-depth": () => import("./lessons/05-gsap/easing-in-depth/demo"),
+  "flip-layout-transitions": () => import("./lessons/05-gsap/flip-layout-transitions/demo"),
+  "observer-and-draggable": () => import("./lessons/05-gsap/observer-and-draggable/demo"),
+  "scrolltrigger-fundamentals": () => import("./lessons/05-gsap/scrolltrigger-fundamentals/demo"),
+  "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/demo"),
+  "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/demo"),
+  "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -734,4 +858,17 @@ export const EXERCISES_REGISTRY: Partial<
   "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/exercises"),
   "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/exercises"),
   "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/exercises"),
+  "animation-principles-for-ui": () => import("./lessons/05-gsap/animation-principles-for-ui/exercises"),
+  "checkpoint-hero-intro-sequence": () => import("./lessons/05-gsap/checkpoint-hero-intro-sequence/exercises"),
+  "checkpoint-scroll-section": () => import("./lessons/05-gsap/checkpoint-scroll-section/exercises"),
+  "checkpoint-scrollytelling-page": () => import("./lessons/05-gsap/checkpoint-scrollytelling-page/exercises"),
+  "choosing-your-animation-tool": () => import("./lessons/05-gsap/choosing-your-animation-tool/exercises"),
+  "compositor-friendly-animation": () => import("./lessons/05-gsap/compositor-friendly-animation/exercises"),
+  "easing-in-depth": () => import("./lessons/05-gsap/easing-in-depth/exercises"),
+  "flip-layout-transitions": () => import("./lessons/05-gsap/flip-layout-transitions/exercises"),
+  "observer-and-draggable": () => import("./lessons/05-gsap/observer-and-draggable/exercises"),
+  "scrolltrigger-fundamentals": () => import("./lessons/05-gsap/scrolltrigger-fundamentals/exercises"),
+  "scrolltrigger-plus-r3f-single-loop": () => import("./lessons/05-gsap/scrolltrigger-plus-r3f-single-loop/exercises"),
+  "splittext-typography": () => import("./lessons/05-gsap/splittext-typography/exercises"),
+  "tweens-timelines-stagger": () => import("./lessons/05-gsap/tweens-timelines-stagger/exercises"),
 };

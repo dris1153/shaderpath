@@ -1,0 +1,53 @@
+## Why Classical Animation Principles Still Hold for UI
+
+The twelve classical animation principles, codified by Ollie Johnston and Frank Thomas at Disney starting in the 1930s (in their book "The Illusion of Life"), aren't outdated rules for hand-drawn cartoons — they're observations about how humans *read* motion to infer physics, weight, and intent. A UI animation that follows a few of them "feels right" not because it's prettier, but because it matches motion expectations wired into a viewer's brain from a lifetime of watching real objects move. This lesson picks out six principles that translate directly into modern UI (Apple's Human Interface Guidelines and Google's Material Design 3 both restate this same set under different names — see references) and skips the ones that only make sense for hand-drawn animation, like pure geometric "arcs" or theatrical "exaggeration."
+
+### Anticipation: The Wind-Up Before the Action
+
+Anticipation is a small counter-motion right before the main action — an animated character crouching before it jumps. In UI, a "Submit" button shrinking slightly (scale 0.96) for 80-100ms before expanding into its success state, instead of jumping straight from state A to B, gives the user an almost-imperceptible visual cue that "something is about to happen" — the brain processes that wind-up nearly unconsciously, but without it the action feels abrupt and mechanical. Building it is a two-step timeline: an initial fast contraction (`power1.in` ease), followed by a slightly slower release (`back.out` ease).
+
+### Follow-Through & Overlapping Action: Stagger IS Overlap
+
+Follow-through is the motion that continues after the main action has stopped — hair or clothing still swaying after a character has come to rest. Overlapping action is the broader version: different parts of the same motion don't stop at the same instant, they stop out of phase with each other. This is precisely why GSAP's `stagger` exists: when five cards in a list all fly in, giving them identical start AND end times (same delay) looks stiff and artificial; giving them an increasing delay (`stagger: 0.06`) means each card "follows" the one before it — exactly the structure of overlapping action — with no extra logic beyond a delay offset, since follow-through is already baked into the same `stagger` API the tweens-timelines-stagger lesson already covered.
+
+### Secondary Motion: A Reacting Detail Sells Weight
+
+Secondary motion is a SMALLER motion that reacts LATE relative to the main one, adding physical believability without adding new meaning. A small badge icon on an avatar jiggling 50-80ms after the avatar itself has finished moving; a dropdown arrow rotating slightly slower than the container it's attached to. Secondary motion doesn't need to be big — it just needs enough TIME OFFSET for the eye to read "these are two separate things, one dragging the other along" instead of "this is one rigid block moving in perfect lockstep."
+
+### Squash & Stretch, Slow-In/Slow-Out, and Staging — the Remaining Three, Used Subtly
+
+Squash & stretch in UI should only ever be a hint, not rubber-hose animation: a card that "drops" and settles might scaleY to 0.94 for 60-80ms at the point of impact before recovering — push it further and the interface turns into a joke. Slow-in/slow-out is just easing under another name — the earlier easing-in-depth lesson in this track already covered the bezier curves in depth; it resurfaces here because every real-world motion accelerates gradually and decelerates gradually, and linear animation always "reads" as computer-generated because nothing in the physical world moves at a perfectly constant rate. Staging is the discipline of letting only ONE motion be the focal point at any given instant — two elements animating strongly at the same time splits the eye's attention in half, and the user can't tell which one matters; when several motions are genuinely needed, stagger is the tool that turns "simultaneous" into "sequential with a clear focal point."
+
+## Timing Scales for UI
+
+There's no single correct number for every case, but Nielsen Norman Group has compiled a range grounded in Model Human Processor research (see references): under 100ms registers as "instant" to the human brain, and UI animation in general should fall within 100-500ms, with small changes toward the lower half (200-350ms) and larger or bounce-heavy motion toward the upper half (400-500ms). This lesson regroups that into three practical bands by purpose, the first two sticking close to NN/g's own numbers: instant feedback (button press, toggle, hover) — 100-150ms; transitions between two states or screens (opening a modal, switching tabs, expanding a panel) — 200-350ms. The third band is a deliberate exception: hero moments — first page load, an intro sequence that plays exactly once — can stretch to 400-700ms; the 700ms figure exceeds NN/g's general 500ms ceiling for UI animation, and is this lesson's OWN estimate, justified only because a hero moment happens exactly once and the user never has to sit through it repeatedly the way the first two bands do.
+
+## Reduced Motion Is a Hard Requirement, Not an Option
+
+`prefers-reduced-motion` isn't a "nice to have" feature — for users with vestibular disorders, large unmitigated motion can trigger real dizziness and nausea, not just aesthetic annoyance. GSAP provides `gsap.matchMedia()` for exactly this: register a media query condition, and the code inside only runs while it matches, auto-reverting the moment it stops matching:
+
+```js
+gsap.matchMedia().add(
+  "(prefers-reduced-motion: reduce)",
+  () => {
+    gsap.set(".card", { clearProps: "all" }); // strip all transforms, snap straight to the end state
+    return () => {}; // cleanup if the OS setting flips while this is active
+  },
+);
+```
+
+The practical rule isn't turning animation OFF entirely — it's shrinking the amplitude and duration while keeping state-communicating feedback intact (a button still needs to respond when pressed) and dropping the large, non-essential motion (parallax, spinning/flying-away transitions).
+
+## Where This Leads
+
+Every principle in this lesson applies equally regardless of whether you implement it in CSS, Motion, or GSAP — the previous lesson already established that the tool is just how you write it. The compositor-friendly-animation lesson right after this one closes the loop: the principles here decide what an animation SHOULD look like, that lesson decides how to animate it so it actually stays smooth on a weak machine.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes applying animation principles to UI:
+
+1. **Adding squash & stretch or heavy overshoot to a frequently-repeated action.** A playful bounce feels charming the first time a button is pressed and grating by the 50th press of the day — the right amplitude for a routine action is much smaller than for a hero moment that only plays once.
+2. **Skipping `prefers-reduced-motion` because "it's just a small UI detail."** This isn't a niche aesthetic preference — it's an accessibility requirement that can cause real harm (dizziness, nausea) if ignored, on par in severity with missing alt text or poor contrast.
+3. **Letting multiple elements animate strongly at the same instant, violating staging.** The result isn't "more lively," it's a viewer who doesn't know where to look — two motions competing for attention reads as chaos, not excitement.
+
+</Callout>

@@ -1,0 +1,70 @@
+## FLIP Is Four Steps, Not Four Lines of Code
+
+Move an element in the DOM — reparent it into a different container, bump its size with a class change, reorder it in a list — and instinct says animate `top`/`left`/`width`/`height` straight from the old values to the new ones. That approach has two problems: animating layout properties forces the browser to recompute layout on nearly every frame (the Compositor-Friendly Animation lesson quantifies exactly how expensive that is), and worse — you have to KNOW the destination coordinates ahead of time to write the tween, while most real layout changes (a React re-render, CSS Grid re-flowing on its own, flex-wrap) never hand you that number explicitly; they only give you the result after the browser has already finished computing it.
+
+FLIP solves both problems by reversing the order of operations: measure, change, THEN compute the animation — the acronym stands for **First, Last, Invert, Play**.
+
+### First and Last: Measuring Before and After the DOM Changes
+
+**First** is `getBoundingClientRect()` on the element taken RIGHT BEFORE you change anything — its current position and size. **Last** is that exact same measurement, called RIGHT AFTER the change (a class swap, a reparent, a list re-render) — the DOM is already in its final state, the browser has already laid it out, but nothing has painted to the screen yet. This ordering isn't a minor detail: measure Last before the DOM has actually changed and both readings come back identical — there's nothing to invert, and the animation simply vanishes. That's the single most common mistake when picking up this technique.
+
+### Invert: Making "Already at the New Spot" Look Like "Nothing Changed Yet"
+
+With First and Last in hand, the delta between them is computable directly:
+
+$$
+\Delta x = x_{first} - x_{last}, \qquad \Delta y = y_{first} - y_{last}, \qquad s_x = \frac{w_{first}}{w_{last}}, \qquad s_y = \frac{h_{first}}{h_{last}}
+$$
+
+The Invert step applies `transform: translate(Δx, Δy) scale(sx, sy)` to the element IMMEDIATELY, with no animation. Because that transform exactly cancels the layout delta, the element visually sits at its old position and size — even though the underlying DOM/layout has already fully moved to its final state. This is the illusion at the heart of FLIP: the layout engine is already done with its work, but the eye hasn't registered any change yet.
+
+### Play: Animating Only transform and opacity Back to Identity
+
+The last step is simple: animate the transform just applied back to `none` (identity) over the given `duration`. Because transform is the only property changing — not `top`, `width`, or `grid-column` — the browser runs the entire animation on the compositor thread, without recomputing layout on a single frame in between. That's why FLIP isn't "a clever trick" so much as the ONLY way to animate an arbitrary layout change while keeping the animation as cheap as a plain transform tween — because under the hood, every FLIP animation ultimately IS just a transform tween.
+
+## The Flip API: getState → mutate → from
+
+GSAP packages those four steps into exactly two calls:
+
+```js
+import { Flip } from "gsap/Flip";
+gsap.registerPlugin(Flip);
+
+const state = Flip.getState(".card"); // First
+// ...mutate the DOM here: swap classes, reparent, re-render the list...
+Flip.from(state, {
+  duration: 0.6,
+  ease: "power2.inOut",
+  absolute: true,
+});
+```
+
+`Flip.getState(targets)` captures First for every element matching `targets` (a selector, a NodeList, or an array of elements). Between that call and `Flip.from`, you're free to do ANYTHING that changes layout — swap a CSS Grid class, move an element into a different container with `appendChild`, or simply let React re-render with a new list order. `Flip.from(state, vars)` measures Last itself, computes Invert, and runs Play — you never write out the Δx/Δy formula above yourself; GSAP handles it. Knowing the formula is about understanding why the animation looks correct, not about reimplementing it.
+
+## Matching Elements Across States With data-flip-id
+
+By default, `Flip.getState` matches First to Last by DOM element REFERENCE — whatever element got measured at First is assumed to be the same element measured at Last. That assumption holds when you're only swapping a class or moving an existing node around, but it BREAKS when a framework (React, or your own code) DESTROYS the old element and CREATES a new one somewhere else — an extremely common case when a list re-renders with new keys, or when a component sits in two different JSX branches that unmount/mount instead of moving. Tagging an element with `data-flip-id="unique-id"` gives Flip a second matching mechanism, independent of DOM identity: Flip pairs up elements sharing the same `data-flip-id` between First and Last, even if they're two physically different DOM nodes, and still computes the correct Δx/Δy/scale between them — this exact mechanism is what turns FLIP into a tool for building a "shared-element illusion" (a card visually "flying" into a detail page), even though under the hood those are two entirely separate elements.
+
+## absolute and nested: Two Easily-Forgotten Flags
+
+`absolute: true` temporarily sets `position: absolute` on the flipping elements FOR THE DURATION of the animation, pulling them out of normal document flow. This flag matters when MULTIPLE elements flip at once: leave them `position: static` and element A, mid-move, still occupies its space in the flow, nudging element B — animating right next to it — off by a fraction every frame. That's layout thrash happening in the exact moment you're trying to avoid it. `nested: true` handles a different situation: when a flipping element CONTAINS another flipping element (say, a parent card resizes while a child icon inside it carries its own `data-flip-id`) — without this flag, the parent's and child's compensating transforms stack incorrectly, and the child ends up offset by roughly double what it should be.
+
+## When Flip Beats a Hand-Rolled Tween
+
+Three situations where Flip almost always wins over a manual tween: a grid-to-detail transition (a card "expands" into a large panel as a class changes its size/position), reordering a list (drag-drop or sort, elements changing DOM order), and a shared-element transition between two otherwise unrelated layouts. The common thread: you know the START state and the END state (both already rendered correctly by ordinary CSS/HTML), but you don't want to compute the in-between coordinates yourself. When it's the other way around — you know exactly how many pixels to move something (dragging a slider, say) — a plain `gsap.to()` is usually simpler than reaching for Flip.
+
+## The Limits: Text and Borders Behave Oddly Under Scale
+
+Flip animates with `transform: scale()`, not by changing real `width`/`height`/`font-size` — meaning EVERYTHING inside the element scales along with it, including things that shouldn't: text scaled up 3x looks distorted or blurry (the browser scales the already-rendered glyph bitmap rather than re-laying out text at a new font-size), and a 1px border scales into an unnaturally thick 3px line instead of staying a crisp 1px. Two ways around it: use `scale: false` so Flip animates real `width`/`height` instead of a visual scale (more expensive since it triggers layout, but text and borders stay proportioned correctly), or design flip targets to hold only shapes or images — no load-bearing text — and let any text inside fade in separately once Play finishes.
+
+Ultimately, everything described above is just one concrete case of a broader rule: only `transform` and `opacity` run on the compositor thread without touching layout or paint. The Compositor-Friendly Animation lesson later in this module goes deep into exactly why, and how to confirm with DevTools that an animation is actually running as cheaply as FLIP promises.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when using Flip:
+
+1. **Calling `Flip.getState()` after the DOM has already been mutated.** First and Last then read out the identical value — there's no delta to invert, and the animation disappears entirely without any error being thrown.
+2. **Forgetting `data-flip-id` when an element gets destroyed and recreated (an unmount/mount in React).** Flip can't find a matching pair by the old DOM reference, treats the new element as something that just "entered" (`onEnter`) instead of flipping it — the motion is silently lost even though the before/after states are both correct.
+3. **Skipping `absolute: true` when several elements flip at once.** The elements stay in normal document flow for the whole animation, nudging each other off by a fraction every frame — the exact layout thrash FLIP exists to avoid, now happening right in the middle of Play.
+
+</Callout>

@@ -1,0 +1,80 @@
+## Two Render Loops, One Canvas: Why They Fight
+
+The browser hands out exactly one "real" `requestAnimationFrame` per frame — every registered callback runs in registration order within that same tick. GSAP doesn't spin up its own RAF per tween: the whole engine runs through one central scheduler called `gsap.ticker`, and `gsap.ticker` is the thing actually calling `requestAnimationFrame` underneath, for every active tween, timeline, and ScrollTrigger. R3F does the exact same thing on its own side — `<Canvas>` manages its own render loop, by default calling every `useFrame` callback and then drawing the scene whenever the browser allows a new frame.
+
+The problem isn't that there are two physical RAFs — the browser handles that fine, no conflict there. The problem is that **two independent systems both believe they're responsible for drawing the same scene**. Registering an extra render callback directly on `gsap.ticker`, alongside the loop `<Canvas>` already manages, doesn't produce "smoother animation" — it produces two `renderer.render(scene, camera)` calls running within the same logical frame, drawing the exact same image twice.
+
+### Dissecting the Anti-Pattern
+
+The most common broken version looks like this:
+
+```js
+// WRONG: gsap.ticker runs its own render loop, competing directly
+// with the loop R3F's <Canvas> already manages.
+gsap.ticker.add(() => {
+  renderer.render(scene, camera); // R3F is also rendering this exact scene!
+});
+```
+
+This bug doesn't announce itself — the scene still "works," still animates correctly with scroll, the demo looks fine at a glance. It only shows up once you measure. A rough estimate: a `render()` call for a mid-complexity scene costs about 3ms on a mid-tier GPU. At 60fps, the per-frame budget is:
+
+$$
+\frac{1000\text{ms}}{60} \approx 16.67\text{ms}
+$$
+
+One correct render eats roughly 3ms of that 16.67ms, leaving plenty of room for layout, script, and compositing. Two renders of the exact same, unchanged scene eat 6ms — nearly 40% of the frame budget spent redrawing something already on screen, with zero visual benefit. On weaker mobile GPUs that overhead easily blows through the remaining budget and drops the real frame rate below 60, not just in theory. It's worse still when `<Canvas>` uses `frameloop="demand"` (this track's default): the extra ticker keeps firing at full RAF speed regardless of whether anything changed, completely defeating the reason demand mode exists in the first place — continuously rendering a scene that's standing still.
+
+## The Correct Rule: One Writer for Progress, `useFrame` the Only Renderer
+
+The single-render-loop rule fits in one sentence: **ScrollTrigger and tweens are only allowed to write into a plain JavaScript object — they must never call a render function.** `useFrame` is the only place that reads that object and applies its values to the scene; the actual `renderer.render()` call stays fully owned by R3F internally, and your code never touches it.
+
+```js
+// Correct — the write side: ScrollTrigger only mutates a plain object,
+// it never touches the renderer.
+const progress = { value: 0 };
+ScrollTrigger.create({
+  trigger: sectionRef.current,
+  scrub: true,
+  onUpdate: (self) => {
+    progress.value = self.progress;
+    invalidate(); // tell R3F: new data is here, render one frame
+  },
+});
+```
+
+```js
+// Correct — the read side: useFrame only reads progress.value,
+// it never creates its own interval or ticker.
+useFrame(({ camera }) => {
+  camera.position.z = 5 - progress.value * 2.5;
+  meshRef.current.rotation.y = progress.value * Math.PI * 2;
+});
+```
+
+`progress` here is genuinely a plain object — not React state. Putting it in `useState` makes React re-render the component at exactly the rate of mouse-wheel events, layering a different kind of waste on top of the very problem this lesson is solving: you'd trade "two render loops" for "one render loop plus one reconcile loop," which isn't much of an improvement.
+
+## Scrub, Demand Frameloop, and `invalidate()`
+
+`<Canvas frameloop="demand">` (the default `DemoCanvas` uses throughout this track) draws no frames on its own — it only draws when something calls `invalidate()`. That's why the `onUpdate` callback above calls `invalidate()` right after writing `progress.value`: skip that line and `progress` still updates correctly, but the scene never redraws — a bug that looks exactly like "the demo froze" while the underlying data is perfectly accurate, nobody just asked for a repaint. Pairing `scrub: true` (progress tracks the scroll position directly instead of tweening toward a destination and stopping) with `invalidate()` gives you smooth, cheap output: one render per actual progress change, not 60 renders a second even while the user sits still.
+
+## Who Owns the Camera: A Proxy Object Drives the Dolly
+
+The "one writer" rule applies to the camera exactly like it applies to a mesh. When a scroll section needs to dolly the camera in, the camera isn't controlled directly by ScrollTrigger — it still only reads `progress.value` inside `useFrame`, the same as the mesh above. That's also why you shouldn't run `<OrbitControls>` and let ScrollTrigger write `camera.position` in the same scene: both systems think they own the camera, and whichever one runs last within that frame wins — producing a visible tug-of-war on the camera whenever the user drags and scrolls at the same time.
+
+## Lenis and Smooth-Scroll: One Short Paragraph
+
+If a page uses a smooth-scroll library (Lenis is the most common pairing with GSAP), ScrollTrigger has a dedicated API for reading a virtual scroll position instead of the browser's real `scrollTop` — `ScrollTrigger.scrollerProxy()` — keeping the two systems in sync without ScrollTrigger needing to know Lenis exists; the detailed wiring is out of scope for this lesson.
+
+## Where This Lesson Leads
+
+The single-loop principle isn't a minor detail specific to this lesson — it's a hard requirement for any R3F scene driven by something outside `useFrame`, including mouse input, WebSockets, or an audio analyser later on. Track 13's "Scroll-driven product showcase" capstone builds this exact pattern at real production scale — a GLTF model, multiple ScrollTrigger sections, and a full post-processing pass stack — while still obeying the same single rule: only `useFrame` is allowed to call render.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when combining GSAP with R3F:
+
+1. **Registering `gsap.ticker.add(() => renderer.render(...))` next to `<Canvas>`.** This is the exact anti-pattern above — worse still under `frameloop="demand"`: the extra ticker fires at full RAF speed regardless of whether anything changed, completely defeating the point of demand mode.
+2. **Running `<OrbitControls>` while ScrollTrigger also writes `camera.position` in the same scene.** Both systems believe they own the camera; whichever writes last within a frame wins, producing a visible camera tug-of-war whenever scrolling and dragging happen together.
+3. **Forgetting to call `invalidate()` inside `onUpdate` under `frameloop="demand"`.** `progress.value` still updates correctly, but nobody asked R3F to redraw — the scene looks frozen despite the underlying data being completely accurate.
+
+</Callout>

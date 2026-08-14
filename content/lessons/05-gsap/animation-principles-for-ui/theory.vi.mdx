@@ -1,0 +1,53 @@
+## Vì sao nguyên tắc hoạt hình cổ điển vẫn đúng cho UI
+
+Mười hai nguyên tắc hoạt hình cổ điển do Ollie Johnston và Frank Thomas hệ thống hoá tại Disney từ thập niên 1930 (sách "The Illusion of Life") không phải quy tắc vẽ tay lỗi thời — chúng là quan sát về cách con người *đọc* chuyển động để suy ra vật lý, trọng lượng và ý định. Một chuyển động UI tuân theo vài nguyên tắc trong số đó "cảm thấy đúng" không phải vì đẹp hơn, mà vì nó khớp với kỳ vọng vận động đã ăn sâu vào não người xem từ việc quan sát vật thể thật cả đời. Bài này chọn ra sáu nguyên tắc còn ứng dụng trực tiếp được vào UI hiện đại (Human Interface Guidelines của Apple và Material Design 3 của Google đều diễn giải lại đúng tập nguyên tắc này dưới tên khác — xem references) và bỏ qua những nguyên tắc chỉ có ý nghĩa cho animation vẽ tay như "arc" thuần hình học hay "exaggeration" quá đà cho phim hoạt hình.
+
+### Anticipation: cú rướn trước hành động
+
+Anticipation là chuyển động ngược hướng nhỏ ngay trước hành động chính — nhân vật hoạt hình khuỵu gối trước khi nhảy. Trong UI, một nút "Gửi" hơi co lại (scale 0.96) trong 80-100ms trước khi phóng to và chuyển trạng thái thành công, thay vì nhảy thẳng từ trạng thái A sang B, cho người dùng một tín hiệu thị giác cực ngắn rằng "sắp có chuyện xảy ra" — não người xử lý cú rướn đó gần như vô thức, nhưng thiếu nó hành động cảm thấy đột ngột, máy móc. Cài đặt bằng timeline hai bước: tween đầu co lại nhanh (ease `power1.in`), tween sau phóng ra chậm hơn một chút (ease `back.out`).
+
+### Follow-through & overlapping action: stagger chính là overlap
+
+Follow-through là phần chuyển động tiếp tục sau khi hành động chính đã dừng — tóc hay áo vẫn đung đưa sau khi nhân vật đã đứng yên. Overlapping action là phiên bản mở rộng: các bộ phận khác nhau của cùng một chuyển động không dừng cùng lúc, chúng dừng lệch pha nhau. Đây chính xác là lý do `stagger` của GSAP tồn tại: khi năm thẻ trong một danh sách cùng bay vào, cho chúng cùng bắt đầu VÀ cùng kết thúc một lúc (delay giống nhau) trông cứng và giả tạo; cho chúng độ trễ tăng dần (`stagger: 0.06`) nghĩa là thẻ sau "theo sau" thẻ trước, đúng cấu trúc overlapping action — không cần thêm bất kỳ logic nào ngoài đổi delay, follow-through đã có sẵn trong chính API stagger mà bài tweens-timelines-stagger đã dạy.
+
+### Secondary motion: chuyển động phụ bán cảm giác trọng lượng
+
+Secondary motion là một chuyển động NHỎ HƠN, phản ứng LỆCH SAU chuyển động chính, làm tăng cảm giác vật lý mà không cần thêm ý nghĩa mới. Một icon badge nhỏ gắn trên avatar rung nhẹ 50-80ms sau khi avatar chính đã dịch chuyển xong; một mũi tên dropdown xoay chậm hơn khung chứa nó vài chục ms. Chuyển động phụ không cần lớn — chỉ cần LỆCH THỜI GIAN đủ để mắt đọc được "đây là hai vật khác nhau, một vật kéo theo vật kia" thay vì "đây là một khối cứng nhắc di chuyển đồng bộ tuyệt đối".
+
+### Squash & stretch, slow-in/slow-out, và staging — ba nguyên tắc còn lại, dùng tinh tế
+
+Squash & stretch trong UI chỉ nên là gợi ý, không phải hoạt hình cao su: một card "rơi" xuống rồi dừng có thể scaleY 0.94 trong 60-80ms tại điểm chạm rồi phục hồi — quá tay biến giao diện thành trò đùa. Slow-in/slow-out chính là easing — bài easing-in-depth trước đó trong track này đã dạy chi tiết đường cong bezier; ở đây nó quay lại dưới một cái tên khác: mọi chuyển động thật ngoài đời tăng tốc chậm rồi giảm tốc chậm, animation linear luôn "cảm thấy" là animation máy tính vì vật thật không di chuyển đều tuyệt đối bao giờ. Staging là kỷ luật chỉ để MỘT chuyển động làm tiêu điểm tại một thời điểm — hai phần tử cùng animate mạnh cùng lúc chia sự chú ý của mắt làm đôi, người dùng không theo kịp cái nào quan trọng; khi cần nhiều chuyển động, stagger là công cụ biến "đồng thời" thành "tuần tự có tiêu điểm rõ ràng".
+
+## Thang thời gian cho UI
+
+Không có con số tuyệt đối đúng cho mọi trường hợp, nhưng Nielsen Norman Group đã tổng hợp một dải giá trị dựa trên nghiên cứu Model Human Processor (xem references): dưới 100ms được não người cảm nhận là "tức thời", còn animation UI nói chung nên nằm trong khoảng 100-500ms, phần thay đổi nhỏ nên ở nửa dưới (200-350ms), phần chuyển động lớn hoặc có bounce phức tạp ở nửa trên (400-500ms). Bài này chia lại thành ba nhóm thực dụng theo mục đích sử dụng, hai nhóm đầu bám sát số liệu NN/g: phản hồi tức thời (nút nhấn, toggle, hover) — 100-150ms; chuyển tiếp giữa hai trạng thái/màn hình (mở modal, chuyển tab, expand panel) — 200-350ms. Nhóm thứ ba là ngoại lệ có chủ đích: khoảnh khắc hero — page load lần đầu, chuỗi giới thiệu chỉ chạy một lần — có thể kéo dài 400-700ms; mốc 700ms vượt quá trần 500ms mà NN/g đề xuất cho animation UI nói chung, đây là ƯỚC LƯỢNG riêng của bài, chỉ hợp lý vì khoảnh khắc hero xảy ra đúng một lần, người dùng không phải chờ nó lặp lại ở mọi thao tác thường ngày như hai nhóm trên.
+
+## Reduced motion là yêu cầu bắt buộc, không phải tuỳ chọn
+
+`prefers-reduced-motion` không phải một tính năng "nice to have" — với người dùng bị rối loạn tiền đình (vestibular disorder), chuyển động lớn không giảm bớt có thể gây chóng mặt, buồn nôn thật sự, không phải khó chịu thẩm mỹ. GSAP cung cấp `gsap.matchMedia()` chính xác cho việc này: đăng ký một điều kiện media query, code bên trong chỉ chạy khi điều kiện khớp, và tự động revert khi hết khớp:
+
+```js
+gsap.matchMedia().add(
+  "(prefers-reduced-motion: reduce)",
+  () => {
+    gsap.set(".card", { clearProps: "all" }); // bỏ mọi transform, giữ trạng thái cuối tức thì
+    return () => {}; // cleanup nếu người dùng đổi setting hệ điều hành khi đang chạy
+  },
+);
+```
+
+Quy tắc thực dụng: không phải TẮT hoàn toàn mọi animation, mà THU NHỎ biên độ và rút ngắn thời lượng — giữ lại tín hiệu trạng thái (một nút vẫn cần phản hồi khi bấm) nhưng bỏ mọi chuyển động lớn không cần thiết (parallax, chuyển cảnh xoay/bay xa).
+
+## Nơi kiến thức này dẫn tới
+
+Toàn bộ nguyên tắc trong bài này áp dụng như nhau dù bạn chọn CSS, Motion hay GSAP để hiện thực — bài trước đã nói rõ công cụ chỉ là cách viết. Bài compositor-friendly-animation kế tiếp đóng vòng lặp: nguyên tắc ở đây quyết định animation NÊN trông như thế nào, bài đó quyết định animate thế nào để nó THỰC SỰ mượt trên máy yếu.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi áp dụng nguyên tắc animation vào UI:
+
+1. **Thêm squash & stretch hoặc overshoot quá đà cho một thao tác lặp lại nhiều lần.** Một nút hoạt hình vui mắt lần đầu bấm trở nên khó chịu ở lần bấm thứ 50 trong ngày — biên độ hợp lý cho một hành động thường xuyên nhỏ hơn nhiều so với hero moment chỉ chạy một lần.
+2. **Bỏ qua `prefers-reduced-motion` vì "chỉ là UI nhỏ".** Đây không phải sở thích thẩm mỹ của một nhóm nhỏ — nó là yêu cầu accessibility có thể gây hại thật (chóng mặt, buồn nôn) nếu bỏ qua, tương đương mức độ nghiêm trọng với thiếu alt text hay contrast kém.
+3. **Cho nhiều phần tử animate mạnh đồng thời, vi phạm staging.** Kết quả không phải "sống động hơn" mà là mắt người xem không biết nhìn đâu — hai chuyển động cạnh tranh sự chú ý gây cảm giác hỗn loạn nhiều hơn hào hứng.
+
+</Callout>

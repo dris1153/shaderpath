@@ -1,0 +1,70 @@
+## FLIP là bốn bước, không phải bốn dòng code
+
+Đổi vị trí một phần tử trong DOM — chuyển nó sang container khác, đổi class làm nó to lên, hay xếp lại thứ tự trong danh sách — theo bản năng bạn sẽ nghĩ tới việc animate trực tiếp `top`/`left`/`width`/`height` từ giá trị cũ sang giá trị mới. Cách đó có hai vấn đề: animate các thuộc tính layout buộc trình duyệt tính lại layout ở gần như mỗi frame (bài Animation thân thiện compositor sẽ định lượng chi phí này), và tệ hơn — bạn phải BIẾT trước toạ độ đích để viết ra tween, trong khi hầu hết thay đổi layout thực tế (React re-render, CSS Grid tự sắp lại, flex-wrap) không cho bạn con số đó tường minh, chỉ cho bạn kết quả sau khi trình duyệt đã tính xong.
+
+FLIP giải quyết cả hai vấn đề bằng cách lật ngược thứ tự: đo, thay đổi, rồi mới tính animation — viết tắt của bốn bước **First, Last, Invert, Play**.
+
+### First và Last: đo trước, đo sau khi DOM đã đổi
+
+**First** là `getBoundingClientRect()` của phần tử NGAY TRƯỚC khi bạn thay đổi bất cứ thứ gì — vị trí, kích thước hiện tại. **Last** là đúng phép đo đó nhưng gọi NGAY SAU khi bạn đã thực hiện thay đổi (đổi class, reparent, list re-render) — DOM đã ở trạng thái cuối, trình duyệt đã layout xong, nhưng chưa vẽ ra màn hình frame nào. Thứ tự này không phải chi tiết vặt: nếu đo Last trước khi DOM thực sự đổi, hai phép đo giống hệt nhau, không có gì để invert, animation biến mất — đây là lỗi phổ biến nhất khi mới dùng kỹ thuật này.
+
+### Invert: làm cho "đã ở vị trí mới" trông như "chưa đổi gì"
+
+Có First và Last, tính được độ lệch giữa chúng:
+
+$$
+\Delta x = x_{first} - x_{last}, \qquad \Delta y = y_{first} - y_{last}, \qquad s_x = \frac{w_{first}}{w_{last}}, \qquad s_y = \frac{h_{first}}{h_{last}}
+$$
+
+Bước Invert áp `transform: translate(Δx, Δy) scale(sx, sy)` lên phần tử NGAY LẬP TỨC, không animation. Vì phép tính bù trừ đúng bằng độ lệch layout, phần tử vẫn nằm đúng vị trí/kích thước cũ về mặt hình ảnh — dù DOM/layout bên dưới đã hoàn toàn ở trạng thái mới. Đây chính là "ảo giác": bộ máy layout đã xong việc, nhưng mắt người chưa thấy gì đổi.
+
+### Play: chỉ animate transform và opacity về identity
+
+Bước cuối chỉ đơn giản: animate transform vừa áp ở trên về `none` (identity) trong khoảng `duration` cho trước. Vì transform là thuộc tính duy nhất đang thay đổi — không phải `top`/`width`/`grid-column` — trình duyệt chạy toàn bộ animation trên compositor thread, không tính lại layout ở frame nào giữa chừng. Đây là lý do FLIP không phải "một mẹo hay", mà là cách DUY NHẤT để animate một thay đổi layout tuỳ ý mà vẫn giữ animation rẻ như animate transform thuần — vì bản chất mọi animation FLIP RỐT CUỘC chỉ là animate transform.
+
+## API của Flip: getState → mutate → from
+
+GSAP đóng gói đúng bốn bước trên thành hai lời gọi:
+
+```js
+import { Flip } from "gsap/Flip";
+gsap.registerPlugin(Flip);
+
+const state = Flip.getState(".card"); // First
+// ...mutate DOM ở đây: đổi class, reparent, re-render list...
+Flip.from(state, {
+  duration: 0.6,
+  ease: "power2.inOut",
+  absolute: true,
+});
+```
+
+`Flip.getState(targets)` chụp First cho mọi phần tử khớp `targets` (selector, NodeList, hay mảng element). Giữa lời gọi này và `Flip.from`, bạn tự do làm BẤT CỨ điều gì thay đổi layout — đổi class CSS Grid, di chuyển phần tử sang container khác (`appendChild`), hay đơn giản để React re-render với thứ tự list mới. `Flip.from(state, vars)` tự đo Last, tính Invert, rồi chạy Play — bạn không bao giờ tự viết công thức Δx/Δy ở trên, GSAP làm hộ; nắm công thức chỉ để hiểu vì sao animation trông đúng, không phải để tự implement lại.
+
+## Khớp phần tử giữa hai state bằng data-flip-id
+
+`Flip.getState` mặc định khớp First với Last bằng chính THAM CHIẾU DOM element — element nào đo ở First cũng chính là element đó đo ở Last. Giả định đó đúng khi bạn chỉ đổi class hay di chuyển node có sẵn, nhưng SAI khi framework (React, hay chính bạn) HUỶ element cũ và TẠO element mới ở vị trí khác — trường hợp cực kỳ phổ biến khi list re-render với key mới, hay một component ở hai nhánh JSX khác nhau bị unmount/mount lại. Gắn `data-flip-id="unique-id"` lên phần tử cho Flip một cách khớp thứ hai, độc lập với tham chiếu DOM: Flip tìm phần tử có cùng `data-flip-id` giữa First và Last, dù đó là hai DOM node vật lý khác nhau, và vẫn tính đúng Δx/Δy/scale giữa chúng — chính cơ chế này biến FLIP thành công cụ dựng "shared-element illusion" (ảo giác một phần tử "bay" từ card sang trang chi tiết) dù bên dưới là hai element hoàn toàn tách biệt.
+
+## absolute và nested: hai cờ hay bị bỏ quên
+
+`absolute: true` tạm đặt `position: absolute` cho các phần tử đang flip TRONG SUỐT animation, gỡ chúng khỏi luồng layout bình thường. Cần cờ này khi NHIỀU phần tử flip cùng lúc: nếu để nguyên `position: static`, phần tử A đang di chuyển vẫn chiếm chỗ trong flow, đẩy phần tử B đang animate cạnh nó lệch từng frame — layout thrash ngay giữa lúc đang cố tránh nó. `nested: true` xử lý tình huống khác: khi một phần tử flip lại CHỨA một phần tử flip khác (ví dụ card cha đổi kích thước, đồng thời icon con bên trong cũng có `data-flip-id` riêng) — không có cờ này, transform bù trừ của cha và của con cộng dồn sai, con bị lệch gấp đôi so với đáng lẽ.
+
+## Khi nào Flip thắng animate thủ công
+
+Ba tình huống Flip gần như luôn tốt hơn tween tay: chuyển đổi grid ↔ chi tiết (một card "phóng to" thành panel lớn, class thay đổi cỡ/vị trí), sắp xếp lại danh sách (drag-drop hay sort, phần tử đổi thứ tự trong DOM), và shared-element transition giữa hai layout hoàn toàn khác nhau. Điểm chung: bạn biết trạng thái ĐẦU và trạng thái CUỐI (đều đã render sẵn, đúng bởi CSS/HTML bình thường), nhưng KHÔNG muốn tự tính toạ độ trung gian. Nếu ngược lại — bạn biết chính xác cần di chuyển bao nhiêu pixel (như kéo một slider) — `gsap.to()` thường thẳng đơn giản hơn Flip.
+
+## Giới hạn: text và border phản ứng lạ khi scale
+
+Flip animate bằng `transform: scale()`, không phải đổi `width`/`height`/`font-size` thật — nghĩa là MỌI THỨ bên trong phần tử bị scale đều, kể cả những gì không nên: chữ trong phần tử scale lên 3 lần trông méo/nhoè (browser scale bitmap-rendered glyph, không re-layout text theo font-size mới), và border 1px cũng scale thành 3px dày bất thường thay vì vẫn mảnh 1px. Hai cách né: dùng `scale: false` để Flip đổi `width`/`height` thật thay vì scale ảo (đắt hơn vì kích hoạt layout, nhưng text/border giữ đúng tỉ lệ), hoặc thiết kế phần tử flip chỉ chứa hình khối/ảnh — không có text quan trọng — và để text bên trong fade in riêng sau khi Play hoàn tất.
+
+Cuối cùng: mọi animation FLIP nói ở trên chỉ là một trường hợp cụ thể của quy tắc tổng quát hơn — chỉ có `transform` và `opacity` chạy được trên compositor thread mà không đụng tới layout/paint. Bài Animation thân thiện compositor ở module sau đi sâu vào chính xác vì sao, và cách xác nhận bằng DevTools rằng một animation thật sự đang chạy rẻ như FLIP hứa hẹn.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng Flip:
+
+1. **Gọi `Flip.getState()` sau khi đã mutate DOM.** Lúc đó First và Last đo ra cùng một giá trị — không có độ lệch để Invert, animation biến mất hoàn toàn dù code không báo lỗi gì.
+2. **Quên `data-flip-id` khi phần tử bị huỷ và tạo lại (unmount/mount ở React).** Flip không tìm được cặp phần tử khớp bằng tham chiếu DOM cũ, coi phần tử mới là "vừa xuất hiện" (`onEnter`) thay vì flip — mất hẳn hiệu ứng chuyển động dù trạng thái trước/sau đều đúng.
+3. **Bỏ `absolute: true` khi nhiều phần tử flip cùng lúc.** Các phần tử vẫn nằm trong luồng layout bình thường suốt animation, đẩy nhau xê dịch ở từng frame — chính layout thrash mà FLIP sinh ra để tránh, giờ lại xảy ra ngay trong lúc Play.
+
+</Callout>

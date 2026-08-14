@@ -1,0 +1,150 @@
+## The Tween: GSAP's Smallest Building Block
+
+Every animation in GSAP, no matter how elaborate, is assembled from exactly one building block: the **tween**. A tween takes a **target** — a CSS selector, a DOM element, an array of elements, or any JavaScript object with numeric properties — and a **vars object** describing what that animation does. `gsap.to()` animates TO the values declared in vars, starting from the target's current value; `gsap.from()` does the opposite — it animates FROM the declared values back to whatever the current state already is (the go-to for entrance effects); `gsap.fromTo()` declares both the start and end explicitly, independent of the element's current CSS, which matters when an animation needs to replay identically no matter what state it's left in.
+
+```js
+gsap.to(".box", { x: 200, duration: 1, ease: "power2.out" });
+gsap.from(".box", { opacity: 0, y: 40, duration: 0.6 });
+gsap.fromTo(".box", { scale: 0.5 }, { scale: 1, duration: 0.4 });
+```
+
+Inside the vars object, GSAP doesn't distinguish "properties to animate" from "special configuration" through separate syntax — it just treats any key that isn't on its reserved list (duration, delay, ease, stagger, onComplete, …) as a property to animate. `duration` defaults to $0.5$ seconds if omitted; `delay` pushes the start time back, measured in seconds from when the tween was created (not from when a parent timeline starts — a detail that matters once timelines enter the picture below); `ease` defaults to `"power1.out"` if left unset, and it decides how the animation accelerates and decelerates throughout — the entire subject of the next lesson.
+
+## Playback Control: A Readable Value Generator, Not "Fire and Forget"
+
+A common beginner mistake: treating a tween like a one-shot side effect that fires and vanishes, the same way `setTimeout` does. In reality, `gsap.to()` returns a live **Tween instance** — an object you hold onto and control exactly like a video player:
+
+```js
+const tween = gsap.to(".box", {
+  x: 300,
+  duration: 2,
+  ease: "power1.inOut",
+  paused: true,
+});
+
+tween.play();
+tween.pause();
+tween.reverse();
+tween.restart();
+tween.progress(0.5); // jump straight to 50% through the eased motion
+tween.timeScale(2); // run twice as fast, same eased shape
+```
+
+`progress()` and `timeScale()` are the two most overlooked methods, and the most important ones later on: `progress(t)` jumps the animation directly to eased progress $t \in [0, 1]$ — not to time $t \times duration$ measured linearly — so a tween is really a **scrubbing-friendly value generator**: drive `progress` from a scroll position, a drag position, or any continuous input, and the animation always lines up exactly. This is the entire mechanism ScrollTrigger uses to sync animation to scroll in a later module — no extra magic, just `progress()` called repeatedly against the scroll position.
+
+## Timelines: Sequencing Tweens on Relative Time
+
+A timeline is a container holding many tweens (and other timelines), sequencing them on its own internal clock. The biggest difference from calling `gsap.to()` in isolation: every insert into a timeline accepts a **position parameter** — an optional third argument — describing WHERE on the timeline that animation starts, relative to the animation before it, rather than an absolute delay number:
+
+```js
+const tl = gsap.timeline();
+
+tl.to(".box-1", { x: 100, duration: 1 })
+  .to(".box-2", { x: 100, duration: 1 }, "<") // starts the SAME moment box-1 starts
+  .to(".box-3", { x: 100, duration: 1 }) // default ">": starts when the previous tween ENDS
+  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // overlap: starts 0.3s before the previous tween ends
+  .addLabel("settle")
+  .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
+```
+
+Compare that to manually stacking `delay` on separate tweens:
+
+```js
+gsap.to(".box-1", { x: 100, duration: 1, delay: 0 });
+gsap.to(".box-2", { x: 100, duration: 1, delay: 1 });
+gsap.to(".box-3", { x: 100, duration: 1, delay: 2 });
+```
+
+...position parameters survive edits, stacked delays don't. Each position is relative — to the animation right before it, or to a named label — so inserting a tween in the middle, deleting one, or just bumping box-1's `duration` from 1 to 1.5 seconds re-flows everything after it automatically, exactly as declared. With stacked delays, that same change forces hand-recomputing every number downstream — the most reliable way an animation sequence rots once someone edits its timing later.
+
+## Nesting Timelines: Choreography by Component
+
+Timelines can contain other timelines through `.add()`, which unlocks an important organizing pattern: each component or section owns a self-contained timeline that knows nothing about its surroundings; a "master" timeline one level up composes the children using the exact same position parameters covered above:
+
+```js
+function heroIntro() {
+  const tl = gsap.timeline();
+  tl.from(".hero-title", { y: 30, opacity: 0 }).from(
+    ".hero-subtitle",
+    { y: 20, opacity: 0 },
+    "-=0.4",
+  );
+  return tl;
+}
+
+function cardReveal() {
+  const tl = gsap.timeline();
+  tl.from(".card", { scale: 0.9, opacity: 0, stagger: 0.1 });
+  return tl;
+}
+
+const master = gsap.timeline();
+master.add(heroIntro()).add(cardReveal(), "-=0.2");
+```
+
+This is the animation equivalent of composing React components: `heroIntro()` doesn't need to know `cardReveal()` exists, and vice versa — the parent timeline just places both blocks on one shared clock. Without this pattern, a complex animation sequence tends to become a single 200-to-300-line function nobody wants to touch.
+
+## Stagger: Fanning Delay Across Many Elements
+
+Stagger solves one specific problem: animate the same property across many elements, but NOT all at once — each element starts a little later than the one before it. The simplest form is a single number:
+
+```js
+gsap.from(".item", { opacity: 0, y: 20, stagger: 0.08 });
+```
+
+The object form unlocks more control: which direction the delay fans out from (`from`), a separate ease applied to the delays THEMSELVES (distinct from the animation's own ease), or laying elements out as a 2D grid:
+
+```js
+gsap.from(".item", {
+  opacity: 0,
+  y: 20,
+  stagger: { each: 0.06, from: "center", grid: "auto", ease: "power1.in" },
+});
+```
+
+`from: "center"` makes the delay fan out symmetrically from the middle element(s) toward both ends, instead of running sequentially from the start; `grid` reinterprets that flat list as a row/column grid, computing delay by 2D distance from the origin instead of DOM order — useful for image galleries or tile layouts. The most powerful form is a function: it receives `(index, target, targets)` and returns whatever delay you want per element, letting you compute any formula that fits (distance to the mouse, a seeded random value, and so on):
+
+```js
+gsap.from(".item", {
+  opacity: 0,
+  y: 20,
+  stagger: (index, _target, targets) =>
+    index * 0.05 + (index === targets.length - 1 ? 0.1 : 0),
+});
+```
+
+One thing that's easy to miss: stagger MAKES the whole animation longer. With $n$ elements, a `duration` per tween, and a delay `each` between start times (the `from: "start"` case), the total time until the LAST element finishes is:
+
+$$
+T_{total} = duration + (n - 1) \cdot each
+$$
+
+Ten elements, `duration: 0.5`, `each: 0.08` gives $T_{total} = 0.5 + 9 \times 0.08 = 1.22$ seconds — $0.72$ seconds longer than a single tween, a number that's easy to forget when estimating the pacing of a whole sequence.
+
+## Timeline Defaults: DRYing Up Ease and Duration
+
+Declaring `defaults` when creating a timeline applies ease/duration (or any other vars) to EVERY child tween that doesn't explicitly declare its own value — no need to repeat `ease: "power2.out"` on every line:
+
+```js
+const tl = gsap.timeline({ defaults: { duration: 0.6, ease: "power2.out" } });
+
+tl.to(".a", { x: 100 }) // inherits duration + ease
+  .to(".b", { y: 50 }) // inherits duration + ease
+  .to(".c", { opacity: 0, duration: 0.2 }); // overrides just duration
+```
+
+Changing how the whole sequence feels becomes a one-line edit to `defaults`, instead of hunting down every tween to swap its ease — DRY applied to motion.
+
+## Where This Leads
+
+The next lesson digs into `ease` itself — how to read a curve, how to design a custom one with CustomEase, and how to choose one by intent instead of habit. This lesson's position parameters and `defaults` come back unchanged in the ScrollTrigger module, where the same kind of timeline gets driven by scroll position instead of running on its own; and `progress()`/`timeScale()` are exactly the mechanism the "one render loop" lesson uses to sync GSAP with R3F's `useFrame` without spawning two competing loops.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common tween/timeline/stagger mistakes:
+
+1. **Stacking `delay` by hand instead of using a position parameter.** `delay: 0`, `delay: 1`, `delay: 2` on three separate tweens looks fine at first, but inserting a step in the middle or bumping the first tween's `duration` forces recomputing every number downstream by hand — a position parameter (`"<"`, `"-=0.2"`, a label) is relative, so it re-flows automatically when the sequence gets edited.
+2. **Forgetting stagger extends the sequence's total length.** $T_{total} = duration + (n-1) \cdot each$, not just a single tween's `duration` — chaining the next step right after a staggered tween with the default `">"` position while forgetting to account for $(n-1) \cdot each$ makes that step fire before the last element has actually finished animating.
+3. **Mixing up `stagger: 0.1` (a number = `each`, a FIXED per-element delay) with `stagger: { amount: 0.1 }` (a FIXED total duration, where each element's delay shrinks as more are added).** Adding elements while using `each` lengthens the whole sequence; adding elements while using `amount` keeps the total the same but bunches the effect closer together — two opposite behaviors that are easy to trip over if the wrong key gets used.
+
+</Callout>

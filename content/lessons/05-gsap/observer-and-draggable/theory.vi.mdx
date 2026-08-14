@@ -1,0 +1,82 @@
+## Observer: chuẩn hoá "ý định" cuộn/chạm/trỏ mà không cuộn gì cả
+
+`wheel`, `touchmove` và `pointermove` là ba sự kiện DOM khác hẳn nhau về payload, tần suất bắn, và cả dấu của delta — trackpad, chuột có bánh xe, và ngón tay chạm màn hình đều "muốn nói" cùng một điều ("người dùng đang di chuyển theo hướng này"), nhưng viết ba nhánh xử lý riêng cho ba API là việc lặp đi lặp lại dễ sai. Observer giải quyết đúng vấn đề đó: nó lắng nghe cả ba loại sự kiện trên một `target`, chuẩn hoá chúng thành một tập callback thống nhất (`onUp`, `onDown`, `onLeft`, `onRight`, `onChangeX`, `onChangeY`...), và quan trọng nhất — **nó không tự cuộn hay di chuyển bất kỳ thứ gì**. Observer chỉ phát hiện ý định, phần phản hồi (tween, đổi section, xoay object) hoàn toàn do code của bạn quyết định.
+
+Đây là khác biệt cốt lõi so với ScrollTrigger ở bài trước: ScrollTrigger gắn animation vào một vị trí cuộn thật (scrollTop tăng dần); Observer không quan tâm gì đến scrollTop — nó chỉ đọc delta của sự kiện thô rồi báo "vừa có một cử chỉ đi xuống" hay "vừa có một cử chỉ đi lên". Đó là lý do Observer là công cụ đúng cho pattern "cuộn giả" — nơi cuộn chuột không cuộn trang, mà kích hoạt một hành động rời rạc như chuyển section toàn màn hình.
+
+### onUp/onDown và kỷ luật preventDefault
+
+```js
+Observer.create({
+  target: deckRef.current, // chỉ lắng nghe TRONG phần tử này, không phải window
+  type: "wheel,touch,pointer",
+  preventDefault: true,
+  onDown: () => goToNextCard(),
+  onUp: () => goToPreviousCard(),
+});
+```
+
+`target` là chi tiết dễ bỏ qua nhất nhưng quan trọng nhất: Observer chỉ đăng ký listener trên phần tử đó, không phải toàn `window`. `preventDefault: true` chỉ chặn hành vi mặc định (cuộn trang, pull-to-refresh) của sự kiện xảy ra bên trong `target` — cuộn trang bên ngoài phần tử đó vẫn hoạt động bình thường. Đặt `target` nhầm thành `window` cùng `preventDefault: true` là cách nhanh nhất để "khoá cứng" toàn bộ trang, một lỗi dễ mắc và khó nhận ra khi test nhanh trong lúc chỉ cuộn thử bên trong widget.
+
+## Pattern: đổi section toàn màn hình bằng Observer
+
+Ứng dụng phổ biến nhất của Observer là "cuộn giả" kiểu slide thuyết trình: mỗi lần cuộn hoặc vuốt chuyển sang đúng một section, không có vị trí cuộn trung gian nào cả. Cấu trúc chuẩn: một index hiện tại (không phải React state, chỉ cần một ref hoặc biến thường vì animation không phụ thuộc React re-render), một cờ khoá tránh chồng animation khi người dùng cuộn dồn dập, và một tween GSAP thật sự thực hiện chuyển cảnh mỗi khi Observer báo có ý định di chuyển:
+
+```js
+let current = 0;
+let animating = false;
+
+Observer.create({
+  target: deckRef.current,
+  type: "wheel,touch,pointer",
+  preventDefault: true,
+  onDown: () => {
+    if (animating || current >= sections.length - 1) return;
+    animating = true;
+    gsap.to(sections[current], { autoAlpha: 0, xPercent: -100, onComplete: () => (animating = false) });
+    current++;
+  },
+});
+```
+
+Cờ `animating` không phải chi tiết thừa — không có nó, một cử chỉ vuốt/cuộn dài sẽ bắn nhiều sự kiện `onDown` liên tiếp trước khi tween đầu tiên kịp chạy xong, khiến nhiều section bị bỏ qua cùng lúc.
+
+## Draggable: kéo có bounds, quán tính thật, và snap
+
+Draggable biến bất kỳ phần tử DOM nào thành đối tượng kéo được, với ba trục cấu hình chính: `bounds` (giới hạn vùng kéo, có thể là một phần tử khác hoặc một object `{minX, maxX, minY, maxY}`), `inertia` (thả tay vẫn "trôi" tiếp theo đúng vận tốc lúc thả, cần đăng ký thêm `InertiaPlugin` — cũng miễn phí), và `snap` (giá trị cuối cùng bị kéo về điểm gần nhất trong tập cho phép, ví dụ bội số của 45°).
+
+### type: "x,y" so với type: "rotation"
+
+`type` quyết định Draggable đọc chuyển động chuột/ngón tay thành đại lượng nào. `type: "x,y"` map trực tiếp delta pointer sang `translateX/translateY` — dùng cho kéo-thả vị trí, card kéo ra khỏi danh sách, panel trượt. `type: "rotation"` thì khác hẳn về bản chất: Draggable tính góc giữa vị trí con trỏ và tâm phần tử bằng đúng công thức lượng giác từ Track 0:
+
+$$
+\theta = \operatorname{atan2}(p_y - c_y,\ p_x - c_x)
+$$
+
+rồi theo dõi *độ thay đổi* của $\theta$ qua từng frame để cộng dồn vào giá trị rotation hiện tại — không gán lại `theta` trực tiếp mỗi frame. Sự khác biệt này quan trọng hơn nó nghe: `atan2` chỉ trả về giá trị trong khoảng $(-180°, 180°]$, nên nếu bạn tự viết code gán rotation = atan2(...) mỗi frame, góc sẽ nhảy giật gần 360° đúng lúc con trỏ đi qua ranh giới $\pm180°$. Draggable tránh lỗi này bằng cách cộng dồn delta, cho phép rotation vượt quá $360°$ hoặc xuống dưới $-360°$ một cách liền mạch — người dùng có thể xoay knob nhiều vòng mà không bao giờ thấy một cú giật nào.
+
+## Khi nào Draggable thắng pointer event thủ công
+
+Tự viết `pointerdown/pointermove/pointerup` cho vài trường hợp đơn giản không khó, nhưng ba thứ sau luôn làm bản tự viết rối và dễ sai: vận tốc throw có quán tính tự nhiên (InertiaPlugin lấy mẫu vị trí trong một cửa sổ thời gian ngắn gần nhất thay vì chỉ hai điểm cuối, nên một frame bị giật ngay trước lúc thả tay không làm sai lệch vận tốc); pointer capture khi con trỏ trôi ra ngoài phần tử giữa lúc kéo; và đồng bộ bounds khi phần tử cha resize. Draggable xử lý cả ba miễn phí. Khi bài toán chỉ là "biết pointer đang ở đâu" (raycasting, hover), tự viết vẫn đơn giản hơn — Draggable đáng dùng khi phần tử thực sự phải *di chuyển theo* pointer với cảm giác vật lý tự nhiên.
+
+## Cạm bẫy: hit-area và touch-action
+
+Hai lỗi phổ biến nhất khi đưa Draggable/Observer lên thiết bị cảm ứng thật, không phải trên desktop test bằng chuột: thứ nhất, hit-area quá nhỏ — một knob 24×24px dễ bấm bằng con trỏ chuột nhưng gần như không thể chạm chính xác bằng ngón tay (Apple khuyến nghị tối thiểu 44×44px cho vùng chạm). Thứ hai, và tinh vi hơn: quên set CSS `touch-action: none` trên phần tử kéo được. Mặc định trình duyệt vẫn coi cử chỉ chạm trên phần tử đó là ứng viên để cuộn/pan trang, nên có một khoảng trễ ngắn (hoặc tệ hơn, trang bị cuộn theo) trước khi Draggable kịp `preventDefault` sự kiện — `touch-action: none` báo cho trình duyệt biết ngay từ đầu "đừng xử lý touch này cho scroll", loại bỏ độ trễ đó hoàn toàn.
+
+## Kết hợp: Observer phát hiện ý định, tween xử lý phản hồi
+
+Pattern mạnh nhất của hai công cụ này không phải dùng riêng lẻ, mà là ghép lại đúng vai trò: Observer chỉ trả lời câu hỏi "người dùng vừa làm gì" (ý định), còn việc "làm gì với ý định đó" luôn là một tween/timeline GSAP tách biệt, không nhét logic animation vào thẳng bên trong callback của Observer. Tách hai việc này giúp phần phản hồi (easing, duration, sequencing) dễ tinh chỉnh độc lập với phần phát hiện cử chỉ — đúng tinh thần "một hệ thống ghi, một hệ thống render" đã gặp ở bài trước, chỉ đổi vai "render" thành "phản hồi cử chỉ".
+
+## Bài học này dẫn tới đâu
+
+Việc chuẩn hoá pointer/wheel/touch thành một tín hiệu ý định thống nhất còn quay lại ở quy mô lớn hơn nhiều: Capstone "GPU particle system tương tác" ở Track 13 dùng đúng kỹ thuật đọc con trỏ chuẩn hoá của bài này để điều khiển một flow field hàng triệu particle theo chuyển động chuột, còn Draggable sẽ gặp lại ở bài FLIP kế tiếp khi kéo-thả cần đồng bộ với animate layout.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với Observer và Draggable:
+
+1. **Gắn `target` của Observer vào `window` hoặc `document` cùng `preventDefault: true`.** Việc này chặn cuộn/chạm trên TOÀN trang thay vì chỉ trong widget — người dùng không cuộn được trang nữa, một lỗi dễ bị bỏ sót nếu chỉ test bằng cách cuộn ngay trong demo.
+2. **Nhầm đơn vị của `snap` giữa các `type` khác nhau.** Với `type: "rotation"`, snap tính bằng độ; với `type: "x,y"`, snap tính bằng pixel (hoặc một hàm nhận toạ độ). Truyền nhầm đơn vị khiến snap hoặc không có tác dụng gì, hoặc kéo phần tử tới vị trí vô lý.
+3. **Quên `touch-action: none` trên phần tử Draggable.** Trên thiết bị cảm ứng thật, thiếu dòng CSS này khiến cử chỉ đầu tiên bị trình duyệt "giành" để cuộn trang trước khi Draggable kịp nhận sự kiện — cảm giác kéo bị trễ hoặc giật trên mobile dù chạy mượt tuyệt đối trên desktop.
+
+</Callout>

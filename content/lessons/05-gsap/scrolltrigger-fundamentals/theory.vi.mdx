@@ -1,0 +1,49 @@
+## Ba trục điều khiển của ScrollTrigger
+
+ScrollTrigger là plugin đăng ký thêm cho GSAP (`gsap.registerPlugin(ScrollTrigger)`, idempotent nên an toàn khi Hot Module Replacement chạy lại), biến vị trí cuộn của một phần tử — mặc định là `window`, nhưng có thể là bất kỳ container nào có `overflow: auto`/`scroll` — thành input điều khiển animation. Sức mạnh của nó gói gọn trong ba trục độc lập, và bài này tách riêng từng trục trước khi để chúng phối hợp: trigger geometry (khi nào trigger được coi là "đang trong vùng"), scrub (animation có bám sát tiến trình cuộn theo thời gian thực hay không) và pin (phần tử có bị giữ đứng yên trong lúc cuộn tiếp hay không). Ba trục này trực giao — bật/tắt cái này không bắt buộc bật/tắt cái kia — nên hiểu sai một trục thường lộ ra như một bug ở trục khác.
+
+### Trigger: cú pháp `start`/`end` và ý nghĩa hai nửa
+
+Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt động", định nghĩa bằng `start` và `end`, mỗi giá trị là một chuỗi hai nửa: `"<mép của trigger> <mép của scroller>"`. Ví dụ `start: "top 80%"` nghĩa là khi mép TRÊN của trigger chạm tới điểm nằm 80% chiều cao scroller tính từ đỉnh. Mỗi nửa chấp nhận từ khoá (`top`/`center`/`bottom`) hoặc con số/phần trăm; `end: "bottom top"` (giá trị phổ biến cho trigger không pin) nghĩa là trigger kết thúc khi mép DƯỚI chạm mép TRÊN của scroller — tức đã cuộn hoàn toàn ra khỏi viewport. `getBoundingClientRect()` là cơ chế nền: ScrollTrigger đo vị trí trigger so với scroller lúc tạo/refresh, quy đổi thành hai mốc pixel cố định rồi so sánh với scroll position hiện tại mỗi frame.
+
+### Scrub: animation bị khoá vào vị trí cuộn, không phải thời gian
+
+`scrub: true` biến một tween chạy theo thời gian thành một tween chạy theo tiến trình cuộn: `duration` không còn là số giây thật mà chỉ còn ý nghĩa tỉ lệ — animation ở đúng 50% khi scroll position ở đúng giữa đoạn `start`-`end`, và dừng lại ngay khi cuộn dừng. `scrub` cũng nhận một số (giây) thay vì `true`: `scrub: 0.5` vẫn bám scroll, nhưng GSAP chèn thêm một lớp làm mượt — animation đuổi theo tiến trình thực với độ trễ tối đa xấp xỉ nửa giây, hữu ích để tránh giật khi trackpad sinh hàng trăm sự kiện scroll nhỏ liên tiếp, đánh đổi bằng một độ trễ cảm nhận được nếu cuộn giật cục.
+
+### Pin: giữ phần tử đứng yên và "lỗ hổng" layout nó tạo ra
+
+`pin: true` giữ trigger đứng yên trên màn hình (mặc định bằng `transform`, không phải `position: fixed`, nên vẫn đúng khi lồng trong container khác) suốt đoạn `start`-`end`. Vấn đề: nếu phần tử pin thoát khỏi luồng layout mà không để lại dấu vết, nội dung phía dưới sẽ nhảy lên lấp khoảng trống ngay khi pin bắt đầu — vì vậy `pinSpacing: true` (mặc định) tự chèn một khoảng đệm đúng bằng chiều cao quãng pin, giữ layout document không đổi trong khi phần tử thực tế đứng yên. Tắt `pinSpacing` xoá khoảng đệm đó — hợp lý khi tự lo layout, nhưng là bẫy nếu tắt mà không hiểu tác dụng phụ.
+
+## toggleActions: bốn động từ cho trigger không scrub
+
+Khi KHÔNG dùng `scrub`, ScrollTrigger vẫn cần biết phải làm gì với animation khi trigger vào/ra vùng hoạt động — trả lời bằng chuỗi `toggleActions`, luôn đúng bốn từ khoá theo thứ tự `onEnter onLeave onEnterBack onLeaveBack`: cuộn xuống qua start, cuộn xuống qua end, cuộn ngược lên qua end, cuộn ngược lên qua start. Mỗi từ khoá là một động từ: `play`, `pause`, `resume`, `reverse`, `restart`, `reset`, `complete`, hoặc `none`. Mặc định `"play none none none"` chỉ chạy một lần khi cuộn tới, không bao giờ tự đảo ngược — muốn hiệu ứng đối xứng (hiện khi tới, ẩn khi qua, lặp lại y hệt khi cuộn lên) cần `"play reverse play reverse"`. Thiếu từ khoá không phải lỗi cú pháp: vị trí còn thiếu tự rơi về `"none"`, khiến hiệu ứng "chỉ chạy một chiều" là bug rất dễ bỏ sót vì không có cảnh báo nào.
+
+## Markers: công cụ debug nên bật đầu tiên
+
+`markers: true` vẽ hai cặp vạch màu (start/end) vào DOM — một cặp neo theo scroller, một cặp neo theo trigger, mỗi vạch ghi rõ tên biến — khi hai cặp trùng nhau, `start`/`end` đang đúng như kỳ vọng. Đây là công cụ đầu tiên nên bật khi trigger point trông sai vị trí, trước khi đoán mò sửa số; với scroller tuỳ chỉnh (mục cuối bài), marker gắn vào ĐÚNG scroller đó thay vì `document.body`, nên vẫn cuộn cùng nội dung thay vì trôi tự do trên toàn trang.
+
+## Snap: biến dải cuộn liên tục thành các bước rời rạc
+
+`snap` (thường đi kèm `scrub`) buộc vị trí cuộn "làm tròn" về một tập giá trị cho phép ngay khi người dùng ngừng cuộn: `snapTo: 1` chỉ chấp nhận 0 hoặc 1; `snapTo: 0.25` tạo bốn bước 0, 0.25, 0.5, 0.75, 1; hoặc truyền một mảng số/nhãn label để snap về đúng các điểm đó. Cơ chế: ScrollTrigger tự tween scroll position của scroller (không phải tween của bạn) tới giá trị hợp lệ gần nhất, nên chuyển động "khớp về" luôn mượt.
+
+## Kỷ luật một-trigger-một-nhiệm-vụ và `ScrollTrigger.refresh()`
+
+Mỗi `ScrollTrigger` nên chỉ chịu trách nhiệm cho đúng MỘT hành vi hình ảnh — một trigger lo progress bar, một trigger khác lo pin, một trigger khác lo fade — thay vì nhồi nhiều hiệu ứng không liên quan vào chung một trigger. Lý do: mỗi trigger có `start`/`end`/`scrub` riêng, dễ bật `markers` để soi từng cái, và một bug không kéo theo debug cả cụm. Điểm dễ quên nhất: ScrollTrigger cache toạ độ pixel của `start`/`end` lúc tạo hoặc `refresh()`, KHÔNG tự tính lại khi layout đổi vì lý do khác ngoài resize cửa sổ — ảnh lazy-load xong đổi chiều cao, font load xong đổi cỡ chữ, accordion mở ra... đều cần gọi `ScrollTrigger.refresh()` thủ công, nếu không toạ độ cũ khiến trigger bắn sai chỗ tới lần resize tiếp theo.
+
+## `scroller`: khi ScrollTrigger không lắng nghe window
+
+Option `scroller` trỏ ScrollTrigger tới một phần tử cuộn cụ thể thay vì mặc định `window` — bắt buộc khi animation nằm trong container có `overflow-y: auto` riêng, ví dụ một demo card nhúng trong trang lesson dài: thiếu nó, ScrollTrigger vẫn lắng nghe cuộn trang ngoài trong khi người dùng chỉ cuộn bên trong card, animation không bao giờ cập nhật đúng lúc. Demo bài này dùng đúng mẫu đó — cả ba trigger đều nhận `scroller` trỏ vào một `div` cuộn nội bộ của card, tách biệt hoàn toàn khỏi cuộn trang chứa bài học.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng ScrollTrigger:
+
+1. **Quên `scroller` khi animation nằm trong container cuộn riêng.** ScrollTrigger mặc định lắng nghe `window` — thiếu `scroller` nghĩa là không có listener nào gắn vào đúng phần tử đang thực sự cuộn, nên animation "đứng hình" cho tới khi trang ngoài tình cờ cuộn.
+2. **Không gọi `ScrollTrigger.refresh()` sau khi layout đổi vì lý do khác ngoài resize.** Toạ độ `start`/`end` được cache tại thời điểm tạo/refresh gần nhất; ảnh lazy-load, font swap hay accordion mở ra đều không tự kích hoạt refresh, khiến trigger bắn sai vị trí cho tới lần resize cửa sổ tiếp theo.
+3. **`toggleActions` chỉ viết 2-3 từ khoá thay vì đúng 4.** Các vị trí còn thiếu tự rơi về `"none"` mà không có cảnh báo — hiệu ứng "chỉ chạy một chiều, không bao giờ đảo ngược khi cuộn lên" gần như luôn bắt nguồn từ đây.
+
+</Callout>
+
+## Kết nối về sau
+
+Bài ngay sau đây ghép đúng những trục vừa học vào một ngữ cảnh khó hơn: đồng bộ giá trị scrub/pin của ScrollTrigger với `useFrame` của R3F mà không tạo ra hai render loop tranh nhau — điểm mà theo track này, "ai cũng làm sai" ít nhất một lần. Xa hơn, Track 8 (Raymarching) và Track 9 (GPGPU) dùng lại đúng progress 0-1 lấy từ một ScrollTrigger đã scrub để điều khiển uniform shader theo cuộn trang, không khác cách progress bar trong demo này điều khiển `scaleX`.

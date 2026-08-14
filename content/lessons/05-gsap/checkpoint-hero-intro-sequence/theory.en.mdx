@@ -1,0 +1,15 @@
+## Goal
+
+This is the first mini-build of the "Core Animation" module: no new theory, just a working artifact that proves you actually command timelines, stagger and custom easing — not just recognizing the position parameter syntax, but using it to direct a multi-element motion sequence that reads in the order a viewer expects.
+
+## Requirements
+
+Build a hero-section intro timeline with 3 decorative shapes, a headline, a sub-line and a CTA button — all inside ONE master timeline using labels, not several tweens called one after another. Required order: the 3 shapes fly in from the screen edges with a stagger; the headline rises in with a `back` ease; the sub-line fades in at the relative position `<0.2` after the headline (not an absolute time offset); the CTA appears last with a small overshoot. A Replay button must restart that exact sequence without breaking whatever `timeScale` the user picked. Full details live in the Exercises section below.
+
+## Structure Hint
+
+The whole animation is built around one `paused: true` timeline with role-named labels (`shapes`, `headline`, `cta`), and every element must be pre-hidden with `gsap.set` RIGHT BEFORE the timeline runs to avoid a flash-of-unstyled-content (FOUC) — the element would otherwise show its raw CSS state for one frame before the first tween can run.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the order reads intentionally, no FOUC, the Replay button works correctly, the eases match each element's role, and there's cleanup when elements are removed from the DOM.

@@ -1,0 +1,150 @@
+## Tween: đơn vị nhỏ nhất của GSAP
+
+Mọi animation trong GSAP, dù đơn giản hay phức tạp tới đâu, đều được ghép từ đúng một khối xây dựng: **tween**. Một tween nhận vào một **target** — selector CSS, một DOM element, một mảng element, hay bất kỳ object JavaScript nào có thuộc tính số — và một **vars object** mô tả animation đó sẽ làm gì. `gsap.to()` animate TỚI các giá trị khai báo, tính từ giá trị hiện tại của target; `gsap.from()` làm ngược lại — animate TỪ các giá trị khai báo về đúng trạng thái hiện tại (dùng cho hiệu ứng xuất hiện); `gsap.fromTo()` khai báo tường minh cả điểm đầu lẫn cuối, không phụ thuộc CSS hiện tại — hữu ích khi animation cần chạy lại y hệt mỗi lần.
+
+```js
+gsap.to(".box", { x: 200, duration: 1, ease: "power2.out" });
+gsap.from(".box", { opacity: 0, y: 40, duration: 0.6 });
+gsap.fromTo(".box", { scale: 0.5 }, { scale: 1, duration: 0.4 });
+```
+
+Bên trong vars object, GSAP không phân biệt "thuộc tính animate" với "cấu hình đặc biệt" bằng cú pháp riêng — nó chỉ coi mọi khoá không nằm trong danh sách từ khoá dành riêng (duration, delay, ease, stagger, onComplete, …) là một thuộc tính cần animate. `duration` mặc định $0.5$ giây nếu bỏ qua; `delay` dời thời điểm bắt đầu ra sau, tính bằng giây kể từ lúc tween được tạo (không phải từ lúc timeline cha bắt đầu — chi tiết quan trọng quay lại ở phần timeline bên dưới); `ease` mặc định `"power1.out"` nếu không khai báo, quyết định cảm giác tăng/giảm tốc trong suốt animation — chủ đề trọn vẹn của bài kế tiếp.
+
+## Điều khiển playback: tween là bộ sinh giá trị đọc được, không phải "bắn rồi quên"
+
+Một sai lầm phổ biến khi mới học GSAP: coi tween như side-effect chạy một lần rồi biến mất, giống hệt `setTimeout`. Thực tế, `gsap.to()` trả về một **Tween instance** sống — một object bạn cầm trong tay, điều khiển được y hệt một video player:
+
+```js
+const tween = gsap.to(".box", {
+  x: 300,
+  duration: 2,
+  ease: "power1.inOut",
+  paused: true,
+});
+
+tween.play();
+tween.pause();
+tween.reverse();
+tween.restart();
+tween.progress(0.5); // nhảy thẳng tới đúng 50% animation đã eased
+tween.timeScale(2); // chạy nhanh gấp đôi, giữ nguyên hình dạng ease
+```
+
+`progress()` và `timeScale()` là hai method dễ bị bỏ qua nhất, nhưng lại quan trọng nhất về sau: `progress(t)` nhảy trực tiếp animation tới đúng tiến trình $t \in [0, 1]$ đã đi qua hàm ease — không phải tới thời điểm $t \times duration$ theo thời gian tuyến tính — nên tween thật sự là một **bộ sinh giá trị scrubbing-friendly**: gán `progress` từ vị trí cuộn trang, từ vị trí kéo chuột, hay từ bất kỳ input liên tục nào, animation luôn khớp chính xác. Đây chính là cơ chế ScrollTrigger dùng để đồng bộ animation với scroll ở module sau — không có phép màu nào khác, chỉ là gọi `progress()` liên tục theo vị trí cuộn.
+
+## Timeline: sắp xếp nhiều tween theo thời gian tương đối
+
+Một timeline là container chứa nhiều tween (và cả timeline con khác), sắp xếp chúng trên trục thời gian riêng của nó. Khác biệt lớn nhất so với gọi rời từng `gsap.to()`: mỗi lệnh thêm vào timeline nhận một **position parameter** — tham số thứ ba, tuỳ chọn — mô tả animation đó bắt đầu **ở đâu trên timeline**, tương đối so với animation trước nó, chứ không phải một con số delay tuyệt đối:
+
+```js
+const tl = gsap.timeline();
+
+tl.to(".box-1", { x: 100, duration: 1 })
+  .to(".box-2", { x: 100, duration: 1 }, "<") // bắt đầu CÙNG lúc box-1 bắt đầu
+  .to(".box-3", { x: 100, duration: 1 }) // mặc định ">": bắt đầu khi tween trước KẾT THÚC
+  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // chồng lấn: sớm hơn 0.3s so với lúc tween trước kết thúc
+  .addLabel("settle")
+  .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
+```
+
+So với cách cộng dồn `delay` thủ công cho từng tween rời rạc:
+
+```js
+gsap.to(".box-1", { x: 100, duration: 1, delay: 0 });
+gsap.to(".box-2", { x: 100, duration: 1, delay: 1 });
+gsap.to(".box-3", { x: 100, duration: 1, delay: 2 });
+```
+
+...position parameter sống sót qua chỉnh sửa, còn delay cộng dồn thì không. Mỗi position tính tương đối — so với animation TRƯỚC nó, hoặc so với một label — nên chèn thêm tween, xoá bớt, hay chỉ đổi `duration` của box-1, timeline tự dồn lại toàn bộ phần còn lại đúng theo quan hệ đã khai báo. Với delay cộng dồn, cùng thay đổi đó buộc tính lại tay từng con số phía sau — cách chắc chắn nhất khiến một sequence "mục ruỗng" khi có người chỉnh sửa timing sau này.
+
+## Lồng timeline: dàn dựng theo từng thành phần
+
+Timeline có thể chứa timeline khác qua `.add()`, mở ra một mẫu tổ chức code quan trọng: mỗi component hay section tự đóng gói timeline riêng, không biết gì về những gì xảy ra xung quanh; một timeline "master" ở tầng trên ghép các timeline con lại bằng đúng bộ position parameter vừa học ở trên:
+
+```js
+function heroIntro() {
+  const tl = gsap.timeline();
+  tl.from(".hero-title", { y: 30, opacity: 0 }).from(
+    ".hero-subtitle",
+    { y: 20, opacity: 0 },
+    "-=0.4",
+  );
+  return tl;
+}
+
+function cardReveal() {
+  const tl = gsap.timeline();
+  tl.from(".card", { scale: 0.9, opacity: 0, stagger: 0.1 });
+  return tl;
+}
+
+const master = gsap.timeline();
+master.add(heroIntro()).add(cardReveal(), "-=0.2");
+```
+
+Đây là tương đương của việc ghép component trong React: `heroIntro()` không cần biết `cardReveal()` tồn tại, và ngược lại — timeline cha chỉ đơn giản định vị hai khối đó trên trục thời gian chung. Không có mẫu này, một sequence animation phức tạp dễ trở thành một hàm 200–300 dòng không ai dám sửa.
+
+## Stagger: nhân bản độ trễ trên nhiều phần tử
+
+Stagger giải quyết một bài toán cụ thể: animate cùng một thuộc tính trên nhiều phần tử, nhưng KHÔNG đồng loạt cùng lúc — mỗi phần tử bắt đầu trễ hơn phần tử trước một khoảng. Dạng đơn giản nhất là một số:
+
+```js
+gsap.from(".item", { opacity: 0, y: 20, stagger: 0.08 });
+```
+
+Dạng object mở ra nhiều trục điều khiển hơn: hướng lan (`from`), ease riêng cho CHÍNH các độ trễ (khác với ease của animation), hay xếp phần tử theo lưới 2D:
+
+```js
+gsap.from(".item", {
+  opacity: 0,
+  y: 20,
+  stagger: { each: 0.06, from: "center", grid: "auto", ease: "power1.in" },
+});
+```
+
+`from: "center"` khiến độ trễ lan đối xứng từ phần tử giữa ra hai phía, thay vì chạy tuần tự từ đầu; `grid` diễn giải danh sách phẳng đó như một lưới hàng-cột, tính độ trễ theo khoảng cách 2D tới gốc thay vì thứ tự DOM — hữu ích cho gallery ảnh hay bảng ô vuông. Dạng mạnh nhất là hàm: nhận `(index, target, targets)`, trả về độ trễ tuỳ ý cho từng phần tử, cho phép tính bất kỳ công thức nào:
+
+```js
+gsap.from(".item", {
+  opacity: 0,
+  y: 20,
+  stagger: (index, _target, targets) =>
+    index * 0.05 + (index === targets.length - 1 ? 0.1 : 0),
+});
+```
+
+Một điểm hay bị bỏ sót: stagger LÀM DÀI tổng thời lượng animation. Với $n$ phần tử, `duration` mỗi tween, và độ trễ `each` giữa các lần bắt đầu (trường hợp `from: "start"`), tổng thời lượng cho tới khi phần tử CUỐI CÙNG hoàn tất là:
+
+$$
+T_{total} = duration + (n - 1) \cdot each
+$$
+
+Mười phần tử, `duration: 0.5`, `each: 0.08` cho $T_{total} = 0.5 + 9 \times 0.08 = 1.22$ giây — dài hơn một tween đơn lẻ tới $0.72$ giây, một con số dễ bị quên khi ước lượng nhịp độ của cả sequence.
+
+## Timeline defaults: DRY hoá ease và duration
+
+Khai báo `defaults` khi tạo timeline áp dụng ease/duration (hay bất kỳ vars nào khác) cho MỌI tween con không tự khai báo riêng giá trị đó — không cần lặp lại `ease: "power2.out"` trên từng dòng:
+
+```js
+const tl = gsap.timeline({ defaults: { duration: 0.6, ease: "power2.out" } });
+
+tl.to(".a", { x: 100 }) // kế thừa duration + ease
+  .to(".b", { y: 50 }) // kế thừa duration + ease
+  .to(".c", { opacity: 0, duration: 0.2 }); // override riêng duration
+```
+
+Đổi cảm giác chuyển động của cả sequence chỉ còn là sửa một dòng `defaults`, thay vì rà từng tween để đổi ease — đúng tinh thần DRY áp cho animation.
+
+## Kết nối về sau
+
+Bài kế tiếp đào sâu vào chính `ease` — cách đọc đường cong, cách thiết kế ease riêng bằng CustomEase, và cách chọn ease theo ý đồ chứ không theo thói quen. Position parameter và `defaults` của bài này quay lại nguyên vẹn ở module ScrollTrigger, nơi cùng một timeline được điều khiển bởi vị trí cuộn thay vì tự chạy; còn `progress()`/`timeScale()` chính là cơ chế bài "một render loop duy nhất" dùng để đồng bộ GSAP với `useFrame` của R3F mà không tạo ra hai vòng lặp cạnh tranh nhau.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với tween, timeline và stagger:
+
+1. **Cộng dồn `delay` thủ công thay vì dùng position parameter.** `delay: 0`, `delay: 1`, `delay: 2` trên ba tween rời rạc trông hoạt động, nhưng chèn thêm một bước ở giữa hay đổi `duration` của bước đầu buộc tính lại tay toàn bộ số phía sau — position parameter (`"<"`, `"-=0.2"`, label) tính tương đối nên tự dồn lại đúng khi sequence bị chỉnh sửa.
+2. **Quên stagger kéo dài tổng thời lượng sequence.** $T_{total} = duration + (n-1) \cdot each$, không phải bằng `duration` của một tween đơn lẻ — chèn bước tiếp theo ngay sau một tween có stagger bằng position mặc định `">"` mà quên cộng thêm $(n-1) \cdot each$ khiến bước đó chạy trước khi phần tử cuối cùng animate xong.
+3. **Nhầm `stagger: 0.1` (số = `each`, độ trễ CỐ ĐỊNH giữa các phần tử) với `stagger: { amount: 0.1 }` (tổng thời lượng CỐ ĐỊNH, độ trễ mỗi phần tử co lại khi thêm phần tử).** Thêm phần tử vào danh sách khi đang dùng `each` kéo dài cả sequence; thêm phần tử khi đang dùng `amount` giữ nguyên tổng thời lượng nhưng làm hiệu ứng "dồn" lại gần nhau hơn — hai hành vi trái ngược dễ gây bất ngờ nếu nhầm khoá.
+
+</Callout>

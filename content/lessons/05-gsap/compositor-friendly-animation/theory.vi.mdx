@@ -1,0 +1,53 @@
+## Bốn giai đoạn dựng hình: style → layout → paint → composite
+
+Mỗi khi CSS đổi trên một phần tử, trình duyệt không "vẽ lại ngay" mà chạy qua tối đa bốn giai đoạn tuần tự: **style** (tính lại giá trị CSS đã áp dụng, "Recalculate Style"), **layout** (tính lại kích thước và vị trí của mọi phần tử bị ảnh hưởng — còn gọi reflow), **paint** (rasterize từng layer thành bitmap pixel: màu nền, bóng đổ, viền, chữ), và **composite** (ghép các layer bitmap đã raster lại thành khung hình cuối, GPU đảm nhiệm bước này). Không phải thuộc tính CSS nào cũng chạy đủ bốn bước: dữ liệu công khai kiểu CSS Triggers phân loại từng thuộc tính vào một trong ba nhóm — kích hoạt cả layout+paint+composite (`width`, `height`, `top`, `left`, `margin`, `padding`, `font-size`...), chỉ paint+composite (`color`, `background`, `box-shadow`, `border-radius`), hoặc composite thuần (`transform`, `opacity`). Càng ít giai đoạn phải chạy lại, animation càng rẻ — đó là toàn bộ logic đằng sau lời khuyên "chỉ animate transform/opacity" mà bạn từng nghe.
+
+## Vì sao transform và opacity là cặp đôi vàng
+
+Compositor thread chạy độc lập với main thread — nó không cần hỏi lại JavaScript, style hay layout engine để vẽ khung hình tiếp theo, miễn là phần tử đã được promote thành một layer riêng (một bitmap raster sẵn nằm trên GPU). Animate `transform` chỉ là bảo GPU "dịch/xoay/scale cái bitmap này" — một phép nhân ma trận rẻ tiền chạy hoàn toàn trên GPU; animate `opacity` chỉ là đổi hệ số alpha khi blend layer đó vào khung hình. Cả hai đều không đụng layout (không phần tử nào đổi kích thước/vị trí trong flow) và không đụng paint (bitmap đã raster từ trước). Đó là ý nghĩa thật của "cặp đôi vàng": hai thuộc tính duy nhất animate được mà bỏ qua *cả hai* giai đoạn tốn kém nhất.
+
+## Layout thrash: khi width/top/margin buộc trình duyệt tính lại từ đầu
+
+Đổi `width`, `top`, hay `margin` không chỉ tính lại kích thước/vị trí của chính phần tử đó — layout engine lan invalidation lên containing block gần nhất rồi tính lại các anh em phía sau nó trong luồng document, vì chúng có thể phải dịch chuyển theo. Cây layout càng lớn, tập phần tử bị chạm lại càng nhiều. Ước lượng thô (không phải số chính thức của trình duyệt nào, chỉ để có cảm giác về độ lớn): mỗi node bị chạm trong một lần layout recalc tốn khoảng 0.01–0.05ms tuỳ độ phức tạp. Một hàng 200 box animate `width` mỗi frame, nếu mỗi lần đổi kéo theo layout lan sang 40 node còn lại, cho chi phí ước lượng $200 \times 40 \times 0.02\text{ms} = 160\text{ms}$ mỗi frame chỉ riêng layout. Ngân sách một frame ở 60fps là:
+
+$$
+\text{frameBudget} = \frac{1000}{60} \approx 16.7\text{ ms}
+$$
+
+160ms gấp gần 10 lần ngân sách đó, trước khi trình duyệt kịp paint hay composite gì cả — đây chính là cơ chế đằng sau cảm giác "giật" khi animate sai thuộc tính, không phải cảm tính.
+
+## Đọc DevTools Performance để bắt jank
+
+Ghi lại một animation trong tab Performance của Chrome DevTools rồi nhìn track "Main": thanh màu tím là "Recalculate Style" và "Layout" — càng rộng càng tốn thời gian; thanh xanh lá là "Paint"; hoạt động compositor nằm ở track GPU riêng, thường mảnh nếu animation chỉ dùng transform/opacity. Ở biểu đồ FPS phía trên, khung hình vượt 16.7ms bị đánh dấu vạch đỏ — đó là jank thật, không phải suy đoán. Cách chẩn đoán nhanh nhất: track Main dày đặc thanh tím lặp lại theo từng frame trong lúc animation chạy gần như chắc chắn nghĩa là animation đang đụng thuộc tính kích hoạt layout; Main gần như trống, mọi việc dồn vào GPU process, nghĩa là animation đang chạy đúng trên compositor.
+
+## will-change và layer promotion: lợi ích và cái giá
+
+`will-change: transform` báo trước cho trình duyệt "phần tử này sắp animate transform, hãy promote nó thành layer riêng ngay bây giờ" — tránh độ trễ tạo layer giữa chừng animation. Nhưng mỗi layer là một bitmap thật nằm trong bộ nhớ GPU, kích thước xấp xỉ:
+
+$$
+\text{VRAM}_{\text{layer}} \approx w \times h \times \text{dpr}^2 \times 4\ \text{byte}
+$$
+
+với $w, h$ là kích thước CSS pixel của phần tử, dpr là device pixel ratio, 4 byte cho mỗi pixel RGBA. Một hero image 1200×600 CSS px ở dpr 2 tốn xấp xỉ $2400 \times 1200 \times 4 \approx 11.5\text{MB}$ cho riêng layer đó (ước lượng dựa trên cách trình duyệt raster layer, số thật tuỳ engine). Promote vài chục phần tử lớn "cho chắc" cộng dồn thành hàng trăm MB VRAM, và trên GPU yếu — đặc biệt mobile tile-based, Track 12 sẽ đào sâu — quá nhiều layer còn khiến trình duyệt quản lý composite nhiều bitmap hơn mỗi frame: chính will-change dùng sai lại gây chậm.
+
+## Thay layout animation bằng transform
+
+Ba kỹ thuật né layout mà vẫn đạt hiệu ứng tương tự: (1) progress bar không animate `width` mà animate `transform: scaleX(tỉ lệ)` trên phần tử có `transform-origin: left` — co giãn một trục đúng như đổi width về mặt thị giác, nhưng chạy thuần compositor; (2) di chuyển phần tử dùng `transform: translate(x, y)` thay vì đổi `top`/`left` — cùng hiệu ứng dịch chuyển, khác hẳn giai đoạn dựng hình phải chạy; (3) khi thật sự cần đổi layout (phần tử đổi vị trí trong DOM, resize, reparent), kỹ thuật FLIP — đã học ở bài trước trong track này — đo trạng thái trước/sau bằng `getBoundingClientRect`, rồi animate bằng transform để giả lập một chuyển đổi layout mà không tốn chi phí layout trong lúc animate, chỉ tốn đúng hai lần đo ở đầu và cuối.
+
+## GSAP viết transform thế nào, và force3D là gì
+
+GSAP không ghi từng sub-property transform (`x`, `y`, `scale`, `rotation`...) thành nhiều lệnh `style.transform` riêng lẻ — nó gộp mọi sub-property đang animate trên một phần tử thành đúng một chuỗi `transform` rồi ghi một lần mỗi tick, tránh trình duyệt phải parse lại chuỗi transform nhiều lần trong cùng một frame. Thuộc tính `force3D` (mặc định `"auto"`) quyết định GSAP có tự thêm `translateZ(0)` để ép layer promotion hay không: ở `"auto"`, GSAP chỉ làm vậy khi phát hiện bạn dùng thuộc tính 3D thật (`z`, `rotationX`/`rotationY`, `perspective`); `force3D: true` ép mọi tween 2D cũng lên layer riêng (đánh đổi VRAM như mục will-change ở trên); `force3D: false` tắt hẳn hành vi này khi bạn cố tình muốn tránh tạo thêm layer.
+
+## Điểm này dẫn tới đâu
+
+Nguyên tắc "chỉ animate transform/opacity" không dừng ở CSS thuần — pipeline stress-test ở demo bài này quay lại trong bài checkpoint cuối track, nơi cả một trang scrollytelling phải giữ đúng nguyên tắc này xuyên suốt nhiều chapter. Xa hơn, Track 12 (Performance & Production) mở lại đúng tab DevTools Performance này để đo draw call, overdraw trên GPU tile-based của mobile, và ngân sách bộ nhớ texture — cùng một bộ kỹ năng đọc profiler, chỉ đổi đối tượng đo từ DOM layer sang WebGL draw call.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi animate CSS/GSAP mà tưởng là "chạy trên GPU":
+
+1. **Animate `top`/`left` vì nghĩ "chỉ là CSS nên chắc nhẹ".** Cả hai đều nằm trong nhóm kích hoạt layout — mỗi frame trình duyệt phải tính lại vị trí của chính phần tử đó và thường cả các anh em phía sau nó trong flow, y hệt cơ chế "layout thrash" ở trên, dù bạn không hề đổi `width`.
+2. **Quên set `transform-origin` khi dùng scaleX làm progress bar.** Mặc định `transform-origin` là `50% 50%` — scale một progress bar mà quên đặt `transform-origin: left` khiến nó phình ra từ giữa thay vì lớn dần từ mép trái như `width` vẫn làm, một lỗi thị giác rất dễ bỏ sót khi test ở tỉ lệ 100%.
+3. **Rải `will-change` lên mọi phần tử "cho chắc ăn".** Mỗi layer promote thêm là một bitmap VRAM thật (công thức ở mục trên) — quá nhiều layer nhỏ cộng dồn thành áp lực bộ nhớ GPU, và trên thiết bị yếu trình duyệt có thể phải huỷ/tạo lại layer giữa chừng để giải phóng bộ nhớ, gây đúng cái giật mà will-change sinh ra để tránh.
+
+</Callout>

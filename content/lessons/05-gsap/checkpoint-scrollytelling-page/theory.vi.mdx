@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build cuối cùng của Track GSAP: tổng hợp toàn bộ track — timeline, ScrollTrigger (pin/scrub/toggleActions), Observer, Flip và nguyên tắc compositor-safe — vào một trang scrollytelling hoàn chỉnh chạy mượt và tôn trọng `prefers-reduced-motion`.
+
+## Yêu cầu
+
+Một trang cuộn nội bộ gồm: hero timeline chạy ngay khi tải trang (không cần cuộn); ba chapter lần lượt là (a) một section ghim, scrub theo cuộn, (b) một headline tách ký tự thủ công stagger vào bằng `toggleActions` (không scrub), và (c) một lưới card đổi layout bằng Flip khi cuộn tới một điểm cố định. Mũi tên điều hướng và cử chỉ Observer (wheel/touch) đều nhảy đúng một chapter mỗi lần mà không chặn cuộn tự nhiên của chapter (a). `gsap.matchMedia()` tách rõ nhánh animation đầy đủ khỏi nhánh `prefers-reduced-motion: reduce` — nhánh rút gọn set thẳng trạng thái cuối, không tween. Toàn bộ animation chỉ dùng transform/opacity. Chi tiết đầy đủ nằm trong phần Bài tập.
+
+## Gợi ý cấu trúc
+
+Tách hẳn hai mối quan tâm: một khối `gsap.context` lo animation (hero + 3 chapter, bọc trong `gsap.matchMedia()`), một khối riêng lo điều hướng (Observer cộng một hàm `goToChapter` dùng chung cho cả mũi tên bấm lẫn cử chỉ cuộn) — gộp chung hai thứ này vào một chỗ khiến logic khó đọc và khó tách riêng khi debug từng phần.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trước khi mở solution: hero tự chạy, cả ba chapter đúng hành vi mô tả ở trên, điều hướng nhảy đúng từng chapter, bật `prefers-reduced-motion: reduce` tắt hết phần hoa mỹ, và không còn ScrollTrigger/Observer nào sống sót sau khi gọi teardown.

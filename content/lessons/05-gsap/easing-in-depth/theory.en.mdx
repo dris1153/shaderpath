@@ -1,0 +1,65 @@
+## What Ease Is: A Function That Reshapes Progress Over Time
+
+An ease is a mathematical function that takes linear progress $t \in [0, 1]$ — how much of the tween's time has elapsed, as a fraction — and returns a value $y = ease(t)$ used to interpolate between the animation's start and end. With no ease (`ease: "none"`), $y = t$: the value changes at a constant rate. With an ease, $y$ doesn't grow evenly — fast in one stretch, slower in another — and it's the SHAPE of that curve that a viewer reads as a "feel": heavy, light, snappy, soft. Ease isn't decoration layered on top of an animation — it IS the animation, in a literal mathematical sense: the derivative $dy/dt$ at any moment is exactly the perceived speed of the motion.
+
+## Built-in Ease Families and the Emotional Register Each One Carries
+
+GSAP ships a set of eases that cover almost every UI need, grouped into families:
+
+| Family | Curve shape | Feel |
+| --- | --- | --- |
+| `power1`–`power4` | polynomial degree 2–5 (quad/cubic/quart/quint respectively), steeper at higher numbers | mechanical, neutral — higher numbers feel "snappier" |
+| `sine` | half a sine wave | smooth, organic, very gentle |
+| `expo` | exponential — nearly flat, then a sudden surge | dramatic, extreme acceleration/deceleration |
+| `back` | overshoots past the target, then settles back | has "inertia," slightly playful |
+| `elastic` | oscillates around the target before settling | springy, very playful |
+| `bounce` | bounces several times before stopping | reads like a dropped ball, distinctly physical |
+
+Every family except `sine`/`expo` also comes in three variants: `.in` (slow, then accelerating — a heavy object beginning to fall), `.out` (fast, then decelerating — something rolling and slowing under friction), `.inOut` (slow-fast-slow — a car accelerating, then braking). `back` and `elastic` also accept configuration through the inline function-call syntax: `back.out(1.7)` tunes the overshoot amount (default $1.70158$); `elastic.out(1, 0.3)` takes `amplitude` (default $1$) and `period` in seconds (default $0.3$) — a bigger amplitude makes the bounce stronger, a shorter period makes it vibrate faster.
+
+## Reading Ease Curves: Steep Means Fast
+
+Plot $y = ease(t)$ with $t$ on the horizontal axis, $y$ on the vertical one: the curve's **slope** at any point is exactly the motion's speed then — steep means fast, near-flat means nearly frozen even though time keeps passing. `power2.out` starts VERY steep and flattens out as $t \to 1$ — exactly what "out" promises. `elastic.out` is more involved: the curve overshoots past $y=1$ and oscillates around it before flattening — every crossing of $y=1$ is the motion physically passing through the target and getting pulled back, like a real spring. Recognizing shapes matters more than memorizing names: within the `power` family, higher numbers mean a steeper curve at both ends — `power4.out` reads noticeably "snappier" than `power1.out` even though both are ease-outs.
+
+## CustomEase: From a Bezier/SVG Path to an Ease of Your Own
+
+When the built-in eases aren't enough — say, matching a specific brand motion a designer already spec'd — the free `CustomEase` plugin (import + register required) builds an ease from cubic bezier or SVG path data:
+
+```js
+import { CustomEase } from "gsap/CustomEase";
+gsap.registerPlugin(CustomEase);
+
+// Convert a CSS cubic-bezier(x1,y1,x2,y2) straight into a CustomEase — use
+// the same four numbers a designer hands you (here, easings.net's standard
+// easeOutBack):
+CustomEase.create("signature", "M0,0 C0.34,1.56 0.64,1 1,1");
+
+gsap.to(".hero", { x: 200, duration: 0.8, ease: "signature" });
+```
+
+`CustomEase.create(id, data)` registers the ease under a name (`id`), reusable in any tween afterward with that exact string — the same way `"power2.out"` gets used. The `data` string is an SVG cubic-bezier path: `M0,0` is the fixed start point, followed by a `C` command with three coordinate pairs (control point 1, control point 2, end point) — the simplest form is literally a CSS `cubic-bezier()`'s four numbers rewritten as a path; more elaborate multi-segment paths can be drawn directly in GSAP's Ease Visualizer and copied out. Call `CustomEase.create()` exactly ONCE, at app startup, never inside a render — creating an ease has real computational cost, and calling it repeatedly on every render or mount silently turns a one-time setup cost into ongoing recomputation.
+
+## Choosing an Ease by Intent, Not by Habit
+
+Dozens of ease names mean nothing if the reflex is "just use the default." Picking the right one starts with one question: what is this element actually DOING, semantically?
+
+- **Entrances**: reach for an ease-`out` (`power2.out`, `power3.out`) — fast right from the start (feels instantly responsive) and decelerating into a gentle landing at the end, like an object with friction rather than a hard stop.
+- **Exits**: reach for an ease-`in` (`power2.in`) — starts slow and ACCELERATES as it leaves the screen, matching how something looks pushed away rather than drifting into empty space.
+- **Immediate feedback**: a button press, for example — short, decisive (`power1.out`, $0.1$–$0.2$s duration), no drama needed, just an instant confirmation the input registered.
+- **Looping/ambient motion**: `sine.inOut` — a smooth curve with no abrupt stop at either end, well-suited to infinite loops (pulsing, floating) since consecutive cycles connect without a visible snap.
+
+The single most useful rule to remember: **linear is almost always WRONG for UI, and almost always RIGHT for scrub**. Wrong for UI because no real object moves at a perfectly constant speed — all natural motion accelerates and decelerates, so `ease: "none"` on a self-running animation always reads as mechanical. Right for scrub (animation driven directly by scroll position, drag, or other continuous input — the subject of the upcoming ScrollTrigger lessons) because the user's OWN input is already the speed curve — scroll fast, it moves fast; stop, it stops. Layering a non-linear ease on top of a scrub tween makes the animation visibly lag behind or leap ahead of the real finger or scroll wheel — a delay felt instantly, even at a few hundred milliseconds.
+
+## Where This Leads
+
+The next lesson is a mini-build (checkpoint) combining timelines, stagger, and a custom ease from this pair of lessons into one complete hero animation sequence. The "ease-out in, ease-in out" rule comes back once Flip animates an element that changes position in the DOM; the "linear for scrub" rule is the direct foundation of the ScrollTrigger + R3F lesson, where the wrong ease synced to scroll input is the single most common reason a 3D scene "drifts" instead of tracking the user's scroll exactly.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common ease mistakes:
+
+1. **Reaching for `back`/`elastic` everywhere because "it looks fun."** Both families overshoot — passing the target and settling back — which suits small feedback (buttons, badges, toasts) but makes large layout or page transitions look unprofessional, the oscillation growing more distracting as elements get bigger.
+2. **Using the same ease-`out` for both an entrance and its matching exit.** `power2.out` decelerates INTO the end value — perfect for an entrance since it reads as "landing." Applying it unchanged to an exit makes the element look like it's slowly landing into being gone rather than pushed away; flip to an ease-`in` for exits instead.
+3. **Leaving the default `ease: "power1.out"`, or using linear, on a ScrollTrigger scrub animation.** A scrub tween is already driven directly by scroll position — stacking a non-linear ease on top makes progress visibly lag behind or leap ahead of the real scroll position; `ease: "none"` is what keeps the 1:1 relationship between scroll and animation intact.
+
+</Callout>

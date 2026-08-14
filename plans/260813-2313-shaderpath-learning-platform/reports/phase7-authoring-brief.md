@@ -43,6 +43,13 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - `three/addons/*` imports are available (OrbitControls, GLTFLoader, …).
 - No binary assets in the repo: textures are procedural (`THREE.DataTexture`/`CanvasTexture`); glTF demos embed a minimal glTF 2.0 JSON (a colored cube/triangle, ~60 lines in a sibling `.ts` data file) loaded through `GLTFLoader.parse()` — the loader pipeline is identical to loading real files. KTX2/Draco/meshopt are taught in theory + wiring code; demos state that real compressed assets arrive with real projects.
 
+## GSAP lessons (Track 5)
+
+- GSAP animates DOM here — demos may put styled `<div>` content inside the `Demo` wrapper instead of a canvas (the wrapper works fine without `DemoCanvas`). gsap is installed (v3.15, ALL plugins free — ScrollTrigger, Flip, Draggable, Observer, SplitText: `import { ScrollTrigger } from "gsap/ScrollTrigger"` + `gsap.registerPlugin(...)`, idempotent so safe under HMR).
+- Cleanup: create tweens inside `gsap.context(...)` and `revert()` on unmount — the house hook `lib/hooks/use-gsap-context.ts` does exactly this; use it.
+- ScrollTrigger inside an embedded demo card: give the demo its own scrollable `<div>` (fixed height, `overflow-y: auto`) and pass it as `scroller:` — never bind demo ScrollTriggers to the window (the lesson page's own scroll would fight it).
+- The single-render-loop rule (spec §8.4) applies to any GSAP+R3F demo: tween plain objects, read them in `useFrame` — never `gsap.ticker.add(render)`.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

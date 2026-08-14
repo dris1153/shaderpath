@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build đầu tiên của module Scroll & Cử chỉ: dựng một section ghim (pin) bên trong một scroller nội bộ, nơi cuộn chuột scrub qua đúng một timeline ba giai đoạn — không có lý thuyết mới, chỉ ráp lại ScrollTrigger, timeline và nguyên tắc compositor-safe đã học trong module này thành một sản phẩm chạy thật.
+
+## Yêu cầu
+
+Panel ghim trong lúc cuộn scrub qua timeline 3 giai đoạn: headline hiện ra bằng mask reveal (`yPercent` + `autoAlpha`, không dùng `clip-path` hay `width`), một dãy shape stagger vào bằng scale/opacity, và các con số thống kê đếm lên tới giá trị đích. Scroll snap dừng đúng tại ranh giới mỗi giai đoạn bằng `snap: { snapTo: "labels" }`. Toàn bộ ScrollTrigger phải trỏ `scroller` về div cuộn nội bộ, không phải `window`. Dùng `markers: true` lúc chỉnh sửa, tắt trước khi hoàn thành. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Xây timeline trước, gắn ScrollTrigger sau: tạo một `gsap.timeline()` với ba `addLabel()` đánh dấu ranh giới headline/shapes/stats, rồi truyền timeline đó vào `animation` của một `ScrollTrigger.create()` riêng — tách timeline khỏi cấu hình scroll giúp test riêng animation trước khi gắn scrub, dễ debug hơn nhiều so với viết trực tiếp `scrollTrigger: {...}` bên trong từng `.to()`.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution: pin không gây giật layout, scrub bám sát con trỏ cuộn, snap luôn dừng đúng một trong ba phase, mọi chuyển động chỉ dùng transform/opacity, cleanup dọn sạch pin spacer, và markers debug đã tắt.

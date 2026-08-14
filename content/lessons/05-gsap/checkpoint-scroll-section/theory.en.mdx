@@ -1,0 +1,15 @@
+## Goal
+
+The first mini-build of the Scroll & Gesture module: build a pinned section inside an internal scroller, where scrolling scrubs through exactly one three-phase timeline — no new theory, just assembling ScrollTrigger, timelines and the compositor-safe rules from this module into one real, running artifact.
+
+## Requirements
+
+The panel pins while scroll scrubs through a 3-phase timeline: the headline reveals via a mask trick (`yPercent` + `autoAlpha`, never `clip-path` or `width`), a row of shapes staggers in via scale/opacity, and stat numbers count up to their target values. Scroll snap must land exactly on each phase boundary using `snap: { snapTo: "labels" }`. Every ScrollTrigger must point `scroller` at the internal scrolling div, never `window`. Use `markers: true` while tuning, then turn it off before calling it done. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Build the timeline first, attach ScrollTrigger second: create one `gsap.timeline()` with three `addLabel()` calls marking the headline/shapes/stats boundaries, then hand that timeline to the `animation` option of a standalone `ScrollTrigger.create()` — separating the timeline from the scroll wiring lets you test the animation on its own before scrub enters the picture, far easier to debug than writing `scrollTrigger: {...}` inline inside every `.to()`.
+
+## What "Done" Looks Like
+
+Check your result against the exercise checklist before opening the solution: pin doesn't cause a layout jump, scrub tracks the scrollbar tightly, snap always lands on one of the three phases, every moving element uses only transform/opacity, cleanup removes the pin spacer, and debug markers are turned off.

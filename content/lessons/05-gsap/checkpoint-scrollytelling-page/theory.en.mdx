@@ -1,0 +1,15 @@
+## Goal
+
+The final mini-build of the GSAP track: synthesize the whole track — timelines, ScrollTrigger (pin/scrub/toggleActions), Observer, Flip and the compositor-safe rules — into one complete scrollytelling page that runs smoothly and respects `prefers-reduced-motion`.
+
+## Requirements
+
+An internally-scrolling page containing: a hero timeline that plays the moment the page loads (no scroll needed); three chapters in order — (a) a pinned section scrubbed by scroll, (b) a manually character-split headline that staggers in via `toggleActions` (not scrubbed), and (c) a card grid that switches layout via Flip once scroll reaches a fixed point. Navigation arrows and Observer-driven gestures (wheel/touch) both jump exactly one chapter at a time without blocking chapter (a)'s native scrubbing scroll. `gsap.matchMedia()` cleanly separates the full animation branch from the `prefers-reduced-motion: reduce` branch — the reduced branch sets the final state directly, no tweening. Every animation uses only transform/opacity. Full details live in the Exercises section.
+
+## Structure Hint
+
+Keep two concerns fully separate: one `gsap.context` block owns the animation (hero + 3 chapters, wrapped in `gsap.matchMedia()`), a separate block owns navigation (Observer plus a shared `goToChapter` function used by both the click arrows and the scroll gesture) — merging the two into one place makes the logic harder to read and harder to debug piece by piece.
+
+## What "Done" Looks Like
+
+Check against the exercise checklist before opening the solution: the hero plays on its own, all three chapters behave as described above, navigation jumps exactly one chapter at a time, enabling `prefers-reduced-motion: reduce` strips every flourish, and no ScrollTrigger/Observer instance survives after calling teardown.

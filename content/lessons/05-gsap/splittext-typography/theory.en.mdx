@@ -1,0 +1,53 @@
+## SplitText Free Since 3.13: Why That Matters
+
+Until late 2024, `SplitText` was a paid plugin, gated behind a Club GSAP membership — splitting text into chars/words/lines to animate each piece separately meant paying for it or hand-rolling your own (easy to get wrong, especially the accessibility part). After Webflow acquired GreenSock, GSAP 3.13 (early 2025) made every "bonus" plugin — SplitText, Flip, MorphSVG, Draggable — free, including for commercial use, and rewrote `SplitText` from scratch: leaner, and most relevant to this lesson, it now handles `aria-hidden`/`aria-label` automatically instead of leaving accessibility entirely up to you. The version installed in this project is 3.15 — every API detail below matches that exact release, not older documentation from the paid era.
+
+## What Actually Happens in the DOM When You Split
+
+`SplitText.create(el, { type: "chars,words,lines" })` doesn't "draw" anything — it rewrites the element's `innerHTML`, wrapping each character/word/line in a child `<div>`, with the original text sitting inside those divs. The returned instance exposes `split.chars`, `split.words`, `split.lines` — three element arrays, usable directly as `gsap.to()` targets. Because this is a real DOM mutation (not a virtual structure), anything else that reaches into that text — CSS `::selection`, browser extensions, your own code reading `textContent` — now sees the new structure, not the original text.
+
+### Keeping Screen Readers Working: The aria Option
+
+Split a sentence into 40 separate character `<div>`s and by default a screen reader will read each character SEPARATELY instead of the whole sentence — the accessibility experience is completely broken. `aria: "auto"` (the default since 3.13) automatically adds an `aria-label` holding the full original sentence to the parent element, and `aria-hidden="true"` to every newly-created child div — screen readers skip the fragments and read only the `aria-label`. Without this flag (`aria: "none"`), accessibility is entirely on you — leaving the default `"auto"` in place is almost always the right call.
+
+## Three Classic Reveal Patterns
+
+### Char Rise: Individual Characters Rising With a Stagger
+
+The simplest pattern: `gsap.set(split.chars, {yPercent: 100, opacity: 0})` followed by `gsap.to(split.chars, {yPercent: 0, opacity: 1, stagger: 0.02})` — each character delayed 20ms behind the last, producing a "typing upward" effect. Since `split.chars` can run into the hundreds for a longer piece of text, a small stagger (0.01–0.03s) is enough to feel energetic without dragging the whole animation out.
+
+### Line Mask: Wrapping Each Line in overflow-hidden
+
+Making a line "slide up" from behind a hidden bottom edge (like film credits) needs more than char/word rise alone — it needs an `overflow: hidden` frame around each line so the part still below gets CLIPPED, never visible outside the frame before it animates into place. Setting `mask: "lines"` in the config makes SplitText build that wrapper for you automatically — each line sits inside its own `overflow: hidden` parent `<div>`, while the animation target is still `split.lines`.
+
+### Word Cascade: Whole Words Moving as One Block
+
+Splitting by `"words"` keeps each word intact as a single unit — no splitting the characters inside it — which suits a sentence that should "fall into place" word by word rather than letter by letter; fewer elements than char-splitting makes it cheaper, and better suited to a paragraph longer than a single headline.
+
+## revert() Is a Discipline, Not an Option
+
+Because a split is a real DOM mutation, you MUST call `split.revert()` to restore the original `innerHTML` before creating a new split or when the component unmounts — skip this in React (especially under Strict Mode, where effects run twice on mount) and you get layers of split `<div>`s stacked on top of each other, each wrapping the previous layer, and the second split tears apart that broken structure instead of the original text. Safe rule: any time an effect calls `SplitText.create`, that effect's first line should `revert()` a previous split if one exists, and its cleanup function should `revert()` one final time.
+
+## Responsive: autoSplit and Re-Splitting on Resize
+
+Line breaks depend on container width — resizing the window changes how many words fit on one line, leaving an old `split.lines` array pointing at lines that are no longer correct. `autoSplit: true` (3.13+) watches resize events and font loading itself, re-calling `split()` internally when needed — no hand-rolled `ResizeObserver` required. One catch: autoSplit re-splits SILENTLY, so if you've already started animating the old `split.chars`, that array reference goes stale the moment a re-split happens; re-register the animation inside the `onSplit` callback instead of animating once and forgetting about it.
+
+## Performance: Hundreds of Divs, Animate Only Transforms
+
+A 300-character paragraph split by chars produces 300 `<div>`s — sounds alarming, but it's NOT a performance problem as long as you only animate `transform` (through `x`/`y`/`yPercent`) and `opacity`, the same compositor-only rule from the Flip lesson: the browser compositing 300 tiny layers is far cheaper than animating `top`/`font-size` 300 times and triggering continuous relayout. The real performance problem shows up when you animate a layout property (say, `letter-spacing`) across all 300 elements at once — avoid that entirely, rather than trying to reduce the character count.
+
+## When NOT to Split Text
+
+Splitting makes sense for a short headline with a fixed character/word count at render time. It does NOT make sense for long body copy — too many elements for a small visual payoff — and with multilingual content, "word" boundaries differ across languages: Vietnamese uses spaces between SYLLABLES, not necessarily between whole meaningful words, and SplitText's default `"words"` split works on whitespace — breaking Vietnamese into individual syllables rather than words, which may not be what you want. One reassuring detail: Vietnamese diacritics (ă, â, ê, ô, ơ, ư and the tone marks) are precomposed Unicode (NFC) characters — each accented letter is a SINGLE code point, not a base letter plus a separately-combined mark — so splitting by `"chars"` correctly isolates each accented character whole, never dropping a diacritic or splitting one in half.
+
+The track's closing checkpoint (Mini-build: Scrollytelling Page) pairs `split.lines` with the ScrollTrigger scrub covered earlier in this module — the headline doesn't just reveal once on entering the viewport, it scrubs forward and backward with scroll position, turning this lesson's technique into one piece of a full page.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common SplitText mistakes:
+
+1. **Not calling `revert()` before splitting again.** Splitting on top of an existing split creates incorrectly nested `<div>` structures, animating into distorted, hard-to-debug results — especially easy to hit under React Strict Mode, since effects run twice on mount.
+2. **Holding onto a stale `split.chars` reference after `autoSplit` re-splits on resize.** The old element array is no longer in the DOM; animating it does nothing — grab the new targets inside the `onSplit` callback instead of caching them once and reusing forever.
+3. **Splitting a long paragraph by `"chars"` assuming finer-grained always looks better.** Thousands of `<div>`s for a long paragraph buy nothing visually over splitting by `"lines"`, only burning DOM memory and slowing down the next split/revert cycle.
+
+</Callout>

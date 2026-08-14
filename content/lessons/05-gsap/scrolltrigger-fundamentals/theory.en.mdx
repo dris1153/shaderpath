@@ -1,0 +1,49 @@
+## ScrollTrigger's Three Control Axes
+
+ScrollTrigger is a plugin you register on top of GSAP (`gsap.registerPlugin(ScrollTrigger)`, idempotent so it's safe to re-run under Hot Module Replacement), turning the scroll position of some element — `window` by default, but any container with `overflow: auto`/`scroll` works too — into an animation input. Its whole feature set boils down to three independent axes, and this lesson deliberately separates them before letting them work together: trigger geometry (when a trigger counts as "active"), scrub (whether the animation tracks real-time scroll progress or not) and pin (whether the element gets held in place while scrolling continues). The three axes are orthogonal — toggling one doesn't force you to toggle another — so misunderstanding one axis usually shows up as a bug that looks like it belongs to a different one.
+
+### Trigger: the `start`/`end` syntax and what its two halves mean
+
+A `ScrollTrigger` needs to know which scroll range counts as "active," defined by `start` and `end`, each a two-part string: `"<trigger edge> <scroller edge>"`. For example `start: "top 80%"` means: when the TOP edge of the trigger element reaches the point 80% down the scroller's height measured from the top — on an 800px-tall scroller, that is exactly the moment the trigger's top edge crosses 640px from the viewport's top. Each half accepts a keyword (`top`/`center`/`bottom`) or a number/percentage; `end: "bottom top"` (a common default for non-pinned triggers) means the trigger ends when its BOTTOM edge reaches the scroller's TOP edge — i.e. the trigger has fully scrolled out of the viewport. `getBoundingClientRect()` is the underlying mechanism for all of this: ScrollTrigger measures the trigger's real position relative to the scroller at creation/refresh time, converts it into two fixed pixel markers, then compares those against the current scroll position every frame.
+
+### Scrub: the animation locks to scroll position, not to time
+
+`scrub: true` turns a normal time-based tween into one driven by scroll progress instead: `duration` stops meaning real seconds and becomes purely proportional — the animation sits at exactly 50% whenever the scroll position sits exactly halfway between `start` and `end`, no matter how fast or slow the user scrolls, and the animation freezes the instant scrolling stops. `scrub` also accepts a number (seconds) instead of `true`: `scrub: 0.5` still tracks scroll, but GSAP inserts a smoothing layer — the animation chases the real scroll progress with up to roughly half a second of lag, useful for absorbing the burst of tiny scroll events a trackpad fires, at the cost of a perceptible delay if the user scrolls in sharp jerks.
+
+### Pin: holding an element still, and the layout hole it creates
+
+`pin: true` holds the trigger fixed on screen (by default via `transform`, not `position: fixed`, so it works correctly even nested inside other containers) for the entire `start`-`end` range, producing the "scroll continues but the element doesn't drift away" feeling. The catch: if a pinned element left the normal layout flow with no trace, everything below it would jump up to fill the gap the instant pinning begins — so `pinSpacing: true` (the default) automatically inserts a spacer exactly as tall as the pin duration, keeping the document's layout unchanged while the element itself stays visually still. Turning `pinSpacing` off removes that spacer — reasonable when you're managing layout yourself, but a trap if toggled without understanding the side effect.
+
+## toggleActions: four verbs for non-scrub triggers
+
+When you're NOT using `scrub`, ScrollTrigger still needs to know what to do with its animation as the trigger enters/exits its active range — answered by the `toggleActions` string, which is ALWAYS exactly four keywords in the order `onEnter onLeave onEnterBack onLeaveBack`: scrolling down past start, scrolling down past end, scrolling back UP past end, scrolling back up past start. Each keyword is a verb controlling the animation: `play`, `pause`, `resume`, `reverse`, `restart`, `reset`, `complete`, or `none`. The default `"play none none none"` only ever plays once on the way down and never reverses — a symmetric effect (appear on the way in, disappear on the way past, and repeat identically on the way back up) needs `"play reverse play reverse"`. Omitting keywords isn't a syntax error: missing trailing positions silently fall back to `"none"`, which makes a "one-way-only" effect an easy bug to miss since nothing warns you about it.
+
+## Markers: the debug tool to reach for first
+
+`markers: true` draws two pairs of colored lines directly into the DOM (start/end), one pair anchored to the scroller, one to the trigger, each labeled with the ScrollTrigger's variable name — when the two pairs line up, `start`/`end` are behaving exactly as expected. This is the first tool to reach for whenever a trigger point looks wrong, before guessing at numbers; with a custom scroller (the final section below), the markers are attached to THAT scroller instead of `document.body`, so they scroll along with its content instead of drifting freely across the whole page.
+
+## Snap: turning a continuous scroll range into discrete steps
+
+`snap` (usually paired with `scrub`) forces scroll position to "round" to an allowed set of values the moment the user stops scrolling: `snapTo: 1` only accepts 0 or 1 (start/end progress); `snapTo: 0.25` creates four steps at 0, 0.25, 0.5, 0.75, 1; or you can pass an array of numbers/labels directly to snap to those exact points. Mechanically, ScrollTrigger tweens the scroller's own scroll position (not one of your tweens) to the nearest allowed value, so the "snap into place" motion stays smooth instead of jumping abruptly.
+
+## The one-trigger-one-job discipline and `ScrollTrigger.refresh()`
+
+Every `ScrollTrigger` should own exactly ONE visual behavior — one trigger for a progress bar, another for a pin, another for a fade — instead of stuffing several unrelated tweens/effects into a single trigger. The practical reason: each trigger gets its own `start`/`end`/`scrub`, so you can flip on `markers` for just that one to inspect it in isolation, and one bug doesn't drag the whole cluster into the debugging session. The easiest thing to forget: ScrollTrigger caches the pixel coordinates of `start`/`end` at creation time or at the last `refresh()`, and does NOT automatically recompute them for layout changes other than a window resize — a lazy-loaded image finishing, a web font swapping in, an accordion opening... all of those need an explicit `ScrollTrigger.refresh()` call, or the stale cached coordinates keep the trigger firing at the wrong scroll offset until the next window resize happens to fix it.
+
+## `scroller`: when ScrollTrigger isn't listening to window
+
+The `scroller` option points a ScrollTrigger at a specific scrolling element instead of the default `window` — mandatory whenever the animation lives inside a container with its own `overflow-y: auto`, like a demo card embedded in a long lesson page: without it, ScrollTrigger keeps listening to the outer page's scroll while the user is only scrolling inside the card, and the animation never updates at the right moment. This lesson's demo follows exactly that pattern — all three triggers pass `scroller` pointing at the card's internal scrolling `div`, fully decoupled from the lesson page's own scroll.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when picking up ScrollTrigger:
+
+1. **Forgetting `scroller` when the animation lives inside its own scrolling container.** ScrollTrigger listens to `window` by default — without `scroller`, no listener is attached to the element that's actually scrolling, so the animation stays frozen until the outer page happens to scroll.
+2. **Not calling `ScrollTrigger.refresh()` after a layout change other than a resize.** `start`/`end` coordinates are cached at the last creation/refresh; a lazy-loaded image, a font swap, or an accordion opening none of them trigger a refresh automatically, so the trigger fires at the wrong position until the next window resize.
+3. **Writing only 2-3 keywords in `toggleActions` instead of exactly 4.** The missing trailing positions silently fall back to `"none"` with no warning — an effect that "only plays once and never reverses on scroll-up" almost always traces back to this.
+
+</Callout>
+
+## Looking ahead
+
+The very next lesson combines these same axes into a harder context: syncing ScrollTrigger's scrub/pin values with R3F's `useFrame` without creating two competing render loops — the point this track calls out as something "everyone gets wrong" at least once. Further out, Track 8 (Raymarching) and Track 9 (GPGPU) reuse the exact same 0-1 progress read off a scrubbed ScrollTrigger to drive shader uniforms by scroll, no different from how this demo's progress bar drives `scaleX`.

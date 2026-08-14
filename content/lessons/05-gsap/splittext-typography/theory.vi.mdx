@@ -1,0 +1,53 @@
+## SplitText miễn phí từ bản 3.13: vì sao điều đó quan trọng
+
+Cho tới cuối 2024, `SplitText` là plugin trả phí, chỉ có trong gói Club GSAP — muốn tách text thành char/word/line để animate riêng từng phần, bạn phải trả tiền hoặc tự viết lại (rất dễ sai, nhất là phần accessibility). Sau khi Webflow mua lại GreenSock, GSAP 3.13 (đầu 2025) đưa toàn bộ plugin "bonus" — SplitText, Flip, MorphSVG, Draggable — về miễn phí kể cả dùng thương mại, đồng thời viết lại hoàn toàn `SplitText` từ đầu: gọn nhẹ hơn, và quan trọng nhất với bài này — tự động xử lý `aria-hidden`/`aria-label` thay vì để bạn tự lo accessibility. Bản cài trong dự án là 3.15 — toàn bộ API dưới đây khớp chính xác phiên bản đó, không phải tài liệu cũ từ thời còn trả phí.
+
+## Cái gì thực sự xảy ra trong DOM khi bạn split
+
+`SplitText.create(el, { type: "chars,words,lines" })` không "vẽ" gì cả — nó viết lại `innerHTML` của phần tử, bọc mỗi ký tự/từ/dòng trong một `<div>` con, giữ nguyên text gốc bên trong các div đó. Instance trả về có `split.chars`, `split.words`, `split.lines` — ba mảng element, dùng trực tiếp làm target cho `gsap.to()`. Vì đây là MUTATION DOM thật (không phải cấu trúc ảo), mọi thứ khác đang trỏ vào text đó — CSS `::selection`, extension trình duyệt, chính code JS khác của bạn đọc `textContent` — đều thấy cấu trúc mới, không phải text gốc nữa.
+
+### Giữ khả năng đọc cho screen reader: option aria
+
+Tách một câu thành 40 `<div>` ký tự riêng biệt, mặc định trình đọc màn hình sẽ đọc RỜI RẠC từng ký tự thay vì cả câu — trải nghiệm accessibility bị phá huỷ hoàn toàn. `aria: "auto"` (mặc định từ 3.13) tự thêm `aria-label` chứa nguyên văn câu gốc lên phần tử cha, và `aria-hidden="true"` lên tất cả div con vừa tạo — trình đọc màn hình bỏ qua các mảnh vụn, chỉ đọc `aria-label`. Không có cờ này (`aria: "none"`), bạn tự chịu trách nhiệm accessibility — hầu như luôn nên để mặc định `"auto"`.
+
+## Ba kiểu reveal kinh điển
+
+### Char rise: từng ký tự bay lên có stagger
+
+Đơn giản nhất: `gsap.set(split.chars, {yPercent: 100, opacity: 0})` rồi `gsap.to(split.chars, {yPercent: 0, opacity: 1, stagger: 0.02})` — mỗi ký tự trễ nhau 20ms, tạo hiệu ứng chữ "gõ lên" theo hàng dọc. Vì `split.chars` có thể lên tới hàng trăm phần tử với đoạn text dài, stagger nhỏ (0.01–0.03s) là đủ để tạo cảm giác dồn dập mà không kéo dài animation quá lâu.
+
+### Line mask: bọc overflow-hidden quanh từng dòng
+
+Muốn dòng chữ "trượt lên" từ dưới mép ẩn (như credit cuối phim), riêng char/word rise không đủ — cần một khung `overflow: hidden` bao quanh mỗi dòng để phần đang ở dưới bị CẮT, không lộ ra ngoài khung trước khi animate tới. Đặt `mask: "lines"` trong config, SplitText tự tạo wrapper đó cho bạn — mỗi dòng nằm trong một `<div>` cha `overflow: hidden` riêng, target animate vẫn là `split.lines`.
+
+### Word cascade: cả từ di chuyển như một khối
+
+Split theo `"words"` giữ nguyên từng từ làm một khối liền — không tách rời ký tự bên trong — phù hợp khi bạn muốn cả câu "đổ" xuống theo từng cụm từ thay vì từng chữ cái; ít phần tử hơn char nên rẻ hơn, và phù hợp với đoạn văn dài hơn một dòng tiêu đề.
+
+## revert() là kỷ luật, không phải tuỳ chọn
+
+Vì split là mutation DOM thật, bạn PHẢI gọi `split.revert()` để trả `innerHTML` về nguyên trạng trước khi tạo split mới hoặc khi component unmount — bỏ qua bước này với React (đặc biệt dưới Strict Mode, effect chạy hai lần khi mount) để lại nhiều lớp `<div>` split chồng lên nhau, mỗi lớp bọc trong lớp trước, và lần split thứ hai sẽ tách theo cấu trúc đã hỏng chứ không phải text gốc. Nguyên tắc an toàn: mọi lần bạn gọi `SplitText.create` trong một effect, dòng đầu tiên của effect đó phải `revert()` split trước (nếu có), và cleanup function của effect phải `revert()` lần cuối.
+
+## Responsive: autoSplit và tự split lại khi resize
+
+Line-break phụ thuộc độ rộng container — resize cửa sổ đổi số từ trên một dòng, khiến `split.lines` cũ trỏ vào những dòng không còn đúng nữa. `autoSplit: true` (3.13+) tự theo dõi resize và font load, tự gọi lại `split()` bên trong khi cần — bạn không phải tự viết `ResizeObserver`. Cân nhắc: autoSplit tự tách lại NGẦM, nên nếu bạn đã bắt đầu animate `split.chars` cũ, tham chiếu mảng đó lập tức lỗi thời sau một lần re-split; đăng ký lại animation trong callback `onSplit` thay vì animate một lần rồi quên.
+
+## Hiệu năng: hàng trăm div, chỉ animate transform
+
+Một đoạn văn 300 ký tự split theo chars tạo ra 300 `<div>` — nghe đáng sợ, nhưng KHÔNG phải vấn đề hiệu năng nếu bạn chỉ animate `transform` (qua `x`/`y`/`yPercent`) và `opacity`, đúng quy tắc compositor-only đã nói ở bài Flip: browser composite 300 layer nhỏ rẻ hơn nhiều so với animate 300 lần `top`/`font-size` gây relayout liên tục. Vấn đề hiệu năng thật sự xuất hiện khi bạn animate một thuộc tính layout (ví dụ `letter-spacing`) trên tất cả 300 phần tử cùng lúc — tránh hoàn toàn, không phải giảm số lượng ký tự.
+
+## Khi nào KHÔNG nên split văn bản
+
+Split hợp lý cho headline ngắn, số lượng ký tự/từ cố định tại thời điểm render. KHÔNG nên split thân bài (body copy) dài — quá nhiều phần tử cho lợi ích thị giác nhỏ — và với nội dung đa ngôn ngữ, ranh giới "từ" khác nhau giữa các ngôn ngữ: tiếng Việt dùng khoảng trắng giữa âm tiết, không phải giữa từ có nghĩa, mà split theo `"words"` mặc định của SplitText tách theo khoảng trắng — cắt tiếng Việt thành từng ÂM TIẾT chứ không phải từ, có thể không phải điều bạn muốn. Một điểm đáng yên tâm: dấu tiếng Việt (ă, â, ê, ô, ơ, ư và các thanh điệu) là ký tự Unicode precomposed (NFC) — mỗi ký tự có dấu là MỘT code point duy nhất, không phải chữ cái và dấu ghép riêng — nên split theo `"chars"` tách đúng từng ký tự có dấu trọn vẹn, không làm rơi dấu hay tách đôi.
+
+Bài checkpoint đóng track (Mini-build: Trang scrollytelling) sẽ ghép `split.lines` với ScrollTrigger scrub đã học ở module trước — headline không chỉ reveal một lần khi vào viewport, mà tiến/lùi theo đúng vị trí cuộn, biến kỹ thuật của bài này thành một phần của toàn bộ trang.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với SplitText:
+
+1. **Không gọi `revert()` trước khi split lại.** Split chồng lên split cũ tạo cấu trúc `<div>` lồng nhau sai, animate ra kết quả méo mó khó debug — đặc biệt dễ gặp dưới React Strict Mode vì effect chạy hai lần lúc mount.
+2. **Giữ tham chiếu `split.chars` cũ sau khi `autoSplit` tự split lại lúc resize.** Mảng element cũ đã không còn nằm trong DOM, animate vào nó không có tác dụng gì — phải lấy target mới trong callback `onSplit`, không cache một lần rồi dùng mãi.
+3. **Split cả đoạn văn dài theo `"chars"` vì tưởng càng chi tiết càng đẹp.** Hàng nghìn `<div>` cho một đoạn văn dài không đổi lại được gì về thị giác so với split theo `"lines"`, chỉ tốn bộ nhớ DOM và làm chậm lần split/revert tiếp theo.
+
+</Callout>

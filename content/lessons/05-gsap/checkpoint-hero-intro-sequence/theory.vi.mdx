@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build đầu tiên của module "Animation lõi": không có lý thuyết mới, chỉ có một sản phẩm chạy được để chứng minh bạn thật sự làm chủ timeline, stagger và ease tuỳ biến — không chỉ đọc hiểu cú pháp position parameter mà còn dùng được nó để đạo diễn một chuỗi chuyển động nhiều phần tử, đọc đúng thứ tự mắt người mong đợi.
+
+## Yêu cầu
+
+Dựng một timeline intro cho hero section gồm 3 hình khối trang trí, headline, sub-line và nút CTA — tất cả nằm trong MỘT master timeline dùng label, không phải nhiều tween rời rạc gọi tuần tự. Thứ tự bắt buộc: 3 hình khối bay vào từ các cạnh màn hình theo stagger; headline trồi lên bằng ease `back`; sub-line mờ dần hiện ra ở vị trí tương đối `<0.2` sau headline (không phải cộng dồn thời gian tuyệt đối); CTA xuất hiện cuối cùng với một cú overshoot nhỏ. Một nút Replay phải khởi động lại đúng chuỗi đó mà không phá vỡ `timeScale` người dùng đã chọn. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Toàn bộ animation xây quanh một timeline `paused: true` với các label đặt tên theo vai trò (`shapes`, `headline`, `cta`), và mọi phần tử phải được ẩn bằng `gsap.set` NGAY TRƯỚC KHI timeline chạy để tránh flash-of-unstyled-content (FOUC) — phần tử hiện nguyên trạng CSS trong một khung hình trước khi tween đầu tiên kịp chạy.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — thứ tự đọc có chủ đích, không có FOUC, nút Replay hoạt động đúng, ease khớp với vai trò từng phần tử, và có cleanup khi phần tử bị gỡ khỏi DOM.

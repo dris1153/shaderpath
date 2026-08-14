@@ -1,0 +1,82 @@
+## Observer: Normalizing Scroll/Touch/Pointer "Intent" Without Scrolling Anything
+
+`wheel`, `touchmove`, and `pointermove` are three DOM events that differ wildly in payload shape, firing frequency, and even the sign of their delta — a trackpad, a mouse wheel, and a finger on a touchscreen are all "trying to say" the same thing ("the user is moving in this direction"), but writing three separate handlers for three separate APIs is repetitive and easy to get wrong. Observer solves exactly that problem: it listens to all three event families on one `target`, normalizes them into one unified callback set (`onUp`, `onDown`, `onLeft`, `onRight`, `onChangeX`, `onChangeY`, ...), and — most importantly — **it never scrolls or moves anything itself**. Observer only detects intent; the response (a tween, a section swap, rotating an object) is entirely up to your own code.
+
+That's the core difference from ScrollTrigger in the previous lesson: ScrollTrigger ties animation to a real scroll position (scrollTop increasing monotonically); Observer doesn't care about scrollTop at all — it just reads the raw event delta and reports "a downward gesture just happened" or "an upward gesture just happened." That makes Observer the right tool for the "fake scroll" pattern — where scrolling doesn't scroll the page at all, but triggers a discrete action like swapping a fullscreen section.
+
+### onUp/onDown and preventDefault Discipline
+
+```js
+Observer.create({
+  target: deckRef.current, // listens ONLY inside this element, not window
+  type: "wheel,touch,pointer",
+  preventDefault: true,
+  onDown: () => goToNextCard(),
+  onUp: () => goToPreviousCard(),
+});
+```
+
+`target` is the easiest detail to overlook and the most important one: Observer only registers listeners on that element, never on the whole `window`. `preventDefault: true` only suppresses the default behavior (page scroll, pull-to-refresh) of events happening inside `target` — scrolling outside that element still works normally. Setting `target` to `window` alongside `preventDefault: true` is the fastest way to lock down the entire page, an easy mistake to make and an easy one to miss if you only test by scrolling inside the widget itself.
+
+## Pattern: Fullscreen Section Swap With Observer
+
+Observer's most common use is a slide-deck-style "fake scroll": every scroll or swipe advances exactly one section, with no intermediate scroll position at all. The standard structure: a current index (not React state — just a ref or plain variable, since the animation doesn't depend on a React re-render), a lock flag to prevent overlapping animations when the user scrolls in rapid succession, and a real GSAP tween that actually performs the transition every time Observer reports movement intent:
+
+```js
+let current = 0;
+let animating = false;
+
+Observer.create({
+  target: deckRef.current,
+  type: "wheel,touch,pointer",
+  preventDefault: true,
+  onDown: () => {
+    if (animating || current >= sections.length - 1) return;
+    animating = true;
+    gsap.to(sections[current], { autoAlpha: 0, xPercent: -100, onComplete: () => (animating = false) });
+    current++;
+  },
+});
+```
+
+The `animating` flag isn't an incidental detail — without it, one long swipe or scroll gesture fires several consecutive `onDown` events before the first tween finishes, skipping several sections at once.
+
+## Draggable: Bounded Drag, Real Inertia, and Snap
+
+Draggable turns any DOM element into a draggable object, configured along three main axes: `bounds` (constrains the drag area, either another element or a `{minX, maxX, minY, maxY}` object), `inertia` (releasing the pointer keeps the element "drifting" at the velocity it had at release, which requires registering `InertiaPlugin` — also free), and `snap` (the final value gets pulled to the nearest allowed point, e.g. multiples of 45°).
+
+### type: "x,y" vs. type: "rotation"
+
+`type` decides what quantity Draggable turns pointer/touch movement into. `type: "x,y"` maps pointer delta directly to `translateX/translateY` — used for position dragging, cards pulled out of a list, sliding panels. `type: "rotation"` is fundamentally different: Draggable computes the angle between the pointer position and the element's center using the exact trigonometry formula from Track 0:
+
+$$
+\theta = \operatorname{atan2}(p_y - c_y,\ p_x - c_x)
+$$
+
+then tracks the *change* in $\theta$ frame to frame and accumulates it into the current rotation value — it never reassigns `theta` directly each frame. That distinction matters more than it sounds: `atan2` only returns values within $(-180°, 180°]$, so if you hand-roll rotation = atan2(...) every frame, the angle jumps by nearly 360° the instant the pointer crosses the $\pm180°$ boundary. Draggable avoids this by accumulating deltas, letting rotation smoothly exceed $360°$ or drop below $-360°$ — a user can spin a knob multiple full turns and never see a single jump.
+
+## When Draggable Beats Hand-Rolled Pointer Math
+
+Hand-writing `pointerdown/pointermove/pointerup` for a few simple cases isn't hard, but three things reliably turn a hand-rolled version messy and buggy: tracking velocity for a natural inertial throw (InertiaPlugin samples position over a short recent time window instead of just the last two points, so one dropped frame right before release doesn't skew the computed velocity); correctly handling pointer capture when the cursor moves outside the element mid-drag; and keeping bounds in sync when the parent element resizes. Draggable handles all three for free. When the task is just "know where the pointer is" (raycasting, hover), hand-rolled code stays simpler — Draggable earns its keep when an element actually has to *move with* the pointer and feel physically natural doing it.
+
+## Pitfalls: Hit-Area and touch-action
+
+The two most common mistakes only show up on a real touch device, not while testing on desktop with a mouse: first, a hit-area that's too small — a 24×24px knob is easy to click with a mouse cursor but nearly impossible to tap precisely with a finger (Apple recommends a minimum 44×44px touch target). Second, and more subtle: forgetting the CSS `touch-action: none` on the draggable element. By default the browser still treats a touch gesture on that element as a candidate for page scrolling/panning, so there's a short delay (or worse, the page actually scrolls) before Draggable manages to `preventDefault` the event — `touch-action: none` tells the browser upfront "don't reserve this touch for scrolling," removing that delay entirely.
+
+## Combining Them: Observer Detects Intent, a Tween Handles the Response
+
+The strongest pattern with these two tools isn't using either alone — it's pairing them by role: Observer only answers "what did the user just do" (intent), while "what to do about it" is always a separate GSAP tween/timeline, never animation logic stuffed straight into an Observer callback. Splitting these two lets the response (easing, duration, sequencing) get tuned independently from gesture detection — the same "one system writes, one system renders" spirit from the previous lesson, just with "render" swapped for "respond to a gesture."
+
+## Where This Lesson Leads
+
+Normalizing pointer/wheel/touch into one unified intent signal comes back at a much larger scale later: Track 13's "Interactive GPU particle system" capstone uses this exact normalized-pointer technique to drive a flow field of millions of particles from mouse movement, and Draggable resurfaces in the very next Flip lesson when drag-and-drop needs to stay in sync with a layout animation.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with Observer and Draggable:
+
+1. **Setting Observer's `target` to `window` or `document` alongside `preventDefault: true`.** This blocks scrolling/touch on the ENTIRE page instead of just the widget — the user can no longer scroll the page at all, an easy mistake to miss if you only test by scrolling inside the demo itself.
+2. **Mixing up `snap`'s units across different `type` values.** With `type: "rotation"`, snap is measured in degrees; with `type: "x,y"`, snap is measured in pixels (or a function receiving coordinates). Passing the wrong unit makes snap either do nothing or drag the element to a nonsensical position.
+3. **Forgetting `touch-action: none` on the Draggable element.** On a real touch device, missing this CSS lets the browser "claim" the first gesture for page scrolling before Draggable gets to handle the event — dragging feels delayed or jittery on mobile despite running perfectly smoothly on desktop.
+
+</Callout>

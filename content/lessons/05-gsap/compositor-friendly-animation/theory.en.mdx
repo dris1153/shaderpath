@@ -1,0 +1,53 @@
+## Four Stages of Rendering: Style → Layout → Paint → Composite
+
+Every time CSS changes on an element, the browser doesn't just "redraw" — it runs through up to four sequential stages: **style** (recompute applied CSS values, "Recalculate Style"), **layout** (recompute size and position for every affected element — also called reflow), **paint** (rasterize each layer into a pixel bitmap: background color, shadows, borders, text), and **composite** (merge the already-rasterized layer bitmaps into the final frame, a job the GPU handles). Not every CSS property runs all four steps: CSS-Triggers-style data buckets properties into one of three groups — triggers layout+paint+composite (`width`, `height`, `top`, `left`, `margin`, `padding`, `font-size`...), paint+composite only (`color`, `background`, `box-shadow`, `border-radius`), or composite-only (`transform`, `opacity`). The fewer stages have to re-run, the cheaper the animation — that's the entire logic behind the "only animate transform/opacity" advice you've heard before.
+
+## Why Transform and Opacity Are the Golden Pair
+
+The compositor thread runs independently of the main thread — it doesn't need to ask JavaScript, style, or the layout engine anything to paint the next frame, as long as the element has already been promoted to its own layer (a pre-rasterized bitmap sitting on the GPU). Animating `transform` just tells the GPU "translate/rotate/scale this bitmap" — a cheap matrix multiplication that runs entirely on the GPU; animating `opacity` just changes the alpha factor used when blending that layer into the frame. Neither touches layout (no element changes size/position in flow) nor paint (the bitmap is already rasterized). That's the real meaning of "golden pair": the only two properties you can animate while skipping *both* of the expensive stages.
+
+## Layout Thrash: When width/top/margin Force a Full Recalculation
+
+Changing `width`, `top`, or `margin` doesn't just recompute that one element's size/position — the layout engine propagates invalidation up to the nearest containing block, then recomputes the siblings that follow it in document flow, since they might have to shift too. The bigger the layout tree, the larger the set of elements re-touched. A rough estimate (not an official browser figure, just a sense of scale): each node touched during a layout recalc costs roughly 0.01–0.05ms depending on its complexity. A row of 200 boxes animating `width` every frame, if each change cascades layout across the other 40 following nodes, costs an estimated $200 \times 40 \times 0.02\text{ms} = 160\text{ms}$ per frame for layout alone. A single frame's budget at 60fps is:
+
+$$
+\text{frameBudget} = \frac{1000}{60} \approx 16.7\text{ ms}
+$$
+
+160ms is nearly 10x that budget, before the browser even gets to paint or composite — this is the actual mechanism behind the "janky" feeling of animating the wrong property, not a vague impression.
+
+## Reading DevTools Performance to Catch Jank
+
+Record an animation in Chrome DevTools' Performance tab and look at the "Main" track: purple bars are "Recalculate Style" and "Layout" — the wider they are, the more time that stage consumed; green bars are "Paint"; compositor work sits on its own GPU track, usually thin if the animation only uses transform/opacity. On the FPS chart above it, any frame past 16.7ms gets flagged with a red marker — that's real jank, not a guess. The fastest diagnosis: a Main track packed with wide purple bars repeating every frame during the animation almost certainly means it's touching a layout-triggering property; a nearly empty Main track with the work living on the GPU process means the animation is running on the compositor as intended.
+
+## will-change and Layer Promotion: Benefits and the Price
+
+`will-change: transform` tells the browser ahead of time, "this element is about to animate transform, promote it to its own layer right now" — avoiding the mid-animation layer-creation lag. But every layer is a real bitmap sitting in GPU memory, sized roughly:
+
+$$
+\text{VRAM}_{\text{layer}} \approx w \times h \times \text{dpr}^2 \times 4\ \text{byte}
+$$
+
+where $w, h$ are the element's CSS pixel dimensions, dpr is the device pixel ratio, and 4 bytes per RGBA pixel. A 1200×600 CSS px hero image at dpr 2 costs roughly $2400 \times 1200 \times 4 \approx 11.5\text{MB}$ for that layer alone (an estimate based on how browsers typically rasterize layers — the real number varies by engine). Promoting a few dozen large elements "just to be safe" adds up to hundreds of MB of VRAM, and on weaker GPUs — especially mobile tile-based ones, which Track 12 digs into — too many layers also means the browser has more bitmaps to composite every frame: will-change used carelessly causes the exact slowdown it exists to prevent.
+
+## Replacing Layout Animation with Transform
+
+Three techniques dodge layout while keeping the same visual result: (1) a progress bar shouldn't animate `width` — animate `transform: scaleX(ratio)` on an element with `transform-origin: left` instead, stretching one axis exactly like changing width does visually, but running purely on the compositor; (2) move an element with `transform: translate(x, y)` instead of changing `top`/`left` — same displacement effect, an entirely different set of rendering stages behind it; (3) when you genuinely need a layout change (an element moving in the DOM, resizing, reparenting), the FLIP technique — covered earlier in this track — measures the before/after state with `getBoundingClientRect`, then animates with transform to fake a layout transition without paying layout cost during the animation, only paying for two measurements at the start and end.
+
+## How GSAP Writes Transform, and What force3D Does
+
+GSAP doesn't write each transform sub-property (`x`, `y`, `scale`, `rotation`...) as separate `style.transform` calls — it merges every sub-property currently animating on an element into exactly one `transform` string and writes it once per tick, avoiding repeated transform-string parsing within the same frame. The `force3D` property (defaults to `"auto"`) decides whether GSAP adds `translateZ(0)` on its own to force layer promotion: in `"auto"` mode, GSAP only does that when it detects you're using a genuinely 3D property (`z`, `rotationX`/`rotationY`, `perspective`); `force3D: true` forces even plain 2D tweens onto their own layer (trading off the VRAM cost from the will-change section above); `force3D: false` disables this behavior entirely when you deliberately want to avoid creating another layer.
+
+## Where This Leads
+
+The "only animate transform/opacity" rule doesn't stop at plain CSS — the pipeline stress test from this lesson's demo comes back in the track's final checkpoint, where an entire scrollytelling page has to hold this rule across several chapters. Further out, Track 12 (Performance & Production) reopens this exact DevTools Performance tab to measure draw calls, mobile tile-based GPU overdraw, and texture memory budgets — the same profiler-reading skill, just pointed at WebGL draw calls instead of DOM layers.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when animating CSS/GSAP under the assumption it "runs on the GPU":
+
+1. **Animating `top`/`left` because "it's just CSS, must be cheap".** Both sit in the layout-triggering group — every frame the browser recomputes that element's position and usually the siblings following it in flow too, exactly the "layout thrash" mechanism above, even though you never touched `width`.
+2. **Forgetting to set `transform-origin` when using scaleX for a progress bar.** The default `transform-origin` is `50% 50%` — scaling a progress bar without setting `transform-origin: left` makes it grow from the center instead of the left edge the way `width` naturally does, a visual bug that's easy to miss when testing at 100%.
+3. **Slapping `will-change` on every element "just in case".** Every extra promoted layer is a real VRAM bitmap (the formula above) — too many small layers add up to real GPU memory pressure, and on weaker devices the browser may have to destroy and recreate layers mid-animation to free memory, causing exactly the stutter will-change was meant to prevent.
+
+</Callout>

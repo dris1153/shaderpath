@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P2 (highest volume, lowest per-unit risk — the platform already works)
-- **Status:** Not Started
+- **Status:** In Progress — Tracks 2–4 authored, gated & committed (2026-08-13/14); Track 5 wave running
 - **Effort:** ~220h (~110 lessons × ~2h; capstones larger)
 - **Description:** Author the remaining 12 tracks (~110 bilingual lessons) to the Track 0/1 standard. Executed as 12 independent sub-iterations, one track per session.
 
@@ -87,10 +87,10 @@ No cross-track dependencies in code; only curriculum `prerequisites` link them. 
 
 ## Todo List
 
-- [ ] Track 2 — GLSL Fundamentals (8 lessons) → lint + review + commit
-- [ ] Track 3 — Three.js Core (11)
-- [ ] Track 4 — React Three Fiber (10)
-- [ ] Track 5 — GSAP & animation (10)
+- [x] Track 2 — GLSL Fundamentals (10 units per D9) → lint + review + commit ✅
+- [x] Track 3 — Three.js Core (15 units) ✅
+- [x] Track 4 — React Three Fiber (13 units) ✅
+- [ ] Track 5 — GSAP & animation (13 units) — agents running
 - [ ] Track 6 — Custom shaders (9)
 - [ ] Track 7 — Procedural & noise (8)
 - [ ] Track 8 — Raymarching & SDF (10)
