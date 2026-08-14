@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P2 (highest volume, lowest per-unit risk — the platform already works)
-- **Status:** In Progress — Tracks 2–4 authored, gated & committed (2026-08-13/14); Track 5 wave running
+- **Status:** ✅ Complete (2026-08-14) — all 12 tracks (133 units) authored, gated & committed; full curriculum now 162/162 units
 - **Effort:** ~220h (~110 lessons × ~2h; capstones larger)
 - **Description:** Author the remaining 12 tracks (~110 bilingual lessons) to the Track 0/1 standard. Executed as 12 independent sub-iterations, one track per session.
 
@@ -90,15 +90,23 @@ No cross-track dependencies in code; only curriculum `prerequisites` link them. 
 - [x] Track 2 — GLSL Fundamentals (10 units per D9) → lint + review + commit ✅
 - [x] Track 3 — Three.js Core (15 units) ✅
 - [x] Track 4 — React Three Fiber (13 units) ✅
-- [ ] Track 5 — GSAP & animation (13 units) — agents running
-- [ ] Track 6 — Custom shaders (9)
-- [ ] Track 7 — Procedural & noise (8)
-- [ ] Track 8 — Raymarching & SDF (10)
-- [ ] Track 9 — GPGPU & particles (10)
-- [ ] Track 10 — Post-processing (10)
-- [ ] Track 11 — PBR & lighting (9)
-- [ ] Track 12 — Performance & production (11)
-- [ ] Track 13 — Capstones (4)
+- [x] Track 5 — GSAP & animation (13 units) ✅ ef2ff28
+- [x] Track 6 — Custom shaders (10 units) ✅ 2993269
+- [x] Track 7 — Procedural & noise (10 units) ✅ 079ebf8
+- [x] Track 8 — Raymarching & SDF (13 units) ✅ 3fff912
+- [x] Track 9 — GPGPU & particles (12 units) ✅ e6e1590
+- [x] Track 10 — Post-processing (10 units) ✅ 9c00add
+- [x] Track 11 — PBR & lighting (11 units) ✅ 3f48025
+- [x] Track 12 — Performance & production (13 units) ✅ d3c515e
+- [x] Track 13 — Capstones (4 units) ✅ 4b68544
+
+## Notes (post-implementation, 2026-08-14)
+
+- Executed as sequential per-track waves of 2–6 parallel fullstack-developer agents (2–2.5 units each) reading the shared brief (`reports/phase7-authoring-brief.md`, extended per track: GSAP DOM demos + internal scroller, Track 6 cache-key/ShaderChunk rules, Track 9 FBO-dispose + 256² cap, Track 10 composer takeover pattern, Track 11 KaTeX+cited-constants + procedural environments, Track 12 platform-as-case-study).
+- Gate per track: gen:registry → cumulative `lint:content --require` → typecheck → eslint → vitest (53/53) → build → e2e (18/18) → spot-read → commit. Every gate green on first or second run; only 2 manual fixes across 12 tracks (Track 4 memoizing demo hooks, Track 10 two eslint warnings).
+- Agents verified claims against installed sources (three 0.185.1, R3F 9.7.0, drei 10.7.8, gsap 3.15, Next 16 docs in node_modules); several corrected the brief itself (GPUComputationRenderer.dispose exists; PCFSoftShadowMap deprecated → remaps to PCF; sRGB-decode-skip washes out albedo, not darkens; actual hook filename `use-visible-frameloop.ts`).
+- Final registry: 162 theory / 128 references / 124 demos / 162 exercises; content lint 0 errors, 15 soft word-count warnings (1500+ vi theories — acceptable, revisit in Phase 10 only if desired).
+- Known Phase-10 sweep items: legacy exercise prompts using `**bold**` (renderer strips nothing — shows literal asterisks; includes checkpoint-waving-flag, checkpoint-raymarched-vista); `build`-kind checkpoint solutions highlight as TS even when GLSL (exercise-section.tsx limitation).
 - [ ] Final full-content lint + registry/search regen + build
 
 ## Success Criteria
