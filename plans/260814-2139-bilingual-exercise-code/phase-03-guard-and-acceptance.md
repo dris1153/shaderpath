@@ -8,7 +8,7 @@
 ## Overview
 
 - **Priority:** P1
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~1h
 - **Description:** Make the sweep permanent with a mechanical gate, then run the
   full acceptance set.
@@ -75,3 +75,29 @@
 
 Backlog item closed. Remaining phase-10 follow-ups (keyboard-less note popover,
 hardcoded "Close" in `ui/dialog.tsx`) stay open and unrelated.
+
+## Notes (post-implementation, 2026-08-14)
+
+- Rule lives beside the existing per-exercise checks in `lint-content.ts` and
+  reuses `VN_DIACRITICS`. It also errors on an empty `vi`/`en` `solutionNote`,
+  which `Localized<string>` cannot catch (the key exists, the string is blank).
+- Negative-tested: planting `// TODO: tính độ dài vector` produced
+  `ERROR ... starterCode has Vietnamese text (2 line(s), first: ...)` and a
+  non-zero exit; restored with `git checkout --`, gate clean again.
+- Final acceptance: `audit:guards` 0 errors, 70 unit tests, build, **40 e2e**.
+
+### The recurring e2e flake — identified and fixed
+
+It was **the note-only test added in phase 1**, not a pre-existing issue.
+`test-results/.last-run.json` gave the failing test id, and
+`npx playwright test --last-failed` printed its name — worth remembering, since
+the console output truncates.
+
+First diagnosis was wrong: I assumed the two-locale navigation overran the 30s
+test budget and added `test.slow()`. It still hung, now at 90s, on a single
+`locator.click` — so the element genuinely never became actionable. The real
+causes were that the locators were **page-wide** while the lesson carries two
+exercises with identical labels, and that "Xem lời giải" is `disabled` until the
+"attempted" write round-trips, so a bare click waits on a disabled button and
+reports an opaque timeout. Fixed by scoping to the card and asserting
+`toBeEnabled()` first. Two consecutive full runs green afterwards.

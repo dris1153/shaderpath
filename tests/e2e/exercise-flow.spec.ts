@@ -7,6 +7,10 @@ import { expect, test } from "@playwright/test";
 test("a note-only solution reveals and renders as prose in both locales", async ({
   page,
 }) => {
+  // Visits the lesson in BOTH locales, and the dev server compiles each route
+  // on first request — the two compiles together overrun the default 30s test
+  // budget whenever the machine is busy, which made this flaky in full runs.
+  test.slow();
   const card = page.locator("#exercise-dot-product-angle-and-facing");
 
   await page.goto("/vi/lesson/dot-and-cross-products");
@@ -14,8 +18,15 @@ test("a note-only solution reveals and renders as prose in both locales", async 
   // the playground specs do, instead of racing the default click timeout.
   await expect(card).toBeVisible({ timeout: 30_000 });
   await card.locator("button").first().click();
-  await page.getByRole("button", { name: "Tôi đã thử", exact: true }).click();
-  await page.getByRole("button", { name: "Xem lời giải" }).click();
+
+  // Scope to the card — the lesson has a second exercise carrying the same
+  // labels. And "Xem lời giải" stays disabled until the "attempted" write
+  // round-trips: clicking it bare just hangs on a disabled button and reports
+  // an opaque timeout, so assert it is enabled first.
+  await card.getByRole("button", { name: "Tôi đã thử", exact: true }).click();
+  const reveal = card.getByRole("button", { name: "Xem lời giải" });
+  await expect(reveal).toBeEnabled({ timeout: 30_000 });
+  await reveal.click();
 
   await expect(card).toContainText("được chiếu sáng");
   await expect(card.locator(".katex").first()).toBeVisible();

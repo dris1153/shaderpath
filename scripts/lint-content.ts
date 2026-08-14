@@ -198,6 +198,28 @@ async function lintLesson(trackDir: string, slug: string) {
         if (!ex.prompt[loc]?.trim()) {
           report(`${at}/${ex.id}: empty ${loc} prompt`);
         }
+        if (ex.solutionNote && !ex.solutionNote[loc]?.trim()) {
+          report(`${at}/${ex.id}: empty ${loc} solutionNote`);
+        }
+      }
+      // Code fields are single-language by design (English comments): the
+      // learner's own language belongs in prompt/hints/checklist/solutionNote,
+      // which are bilingual. Prose answers go in solutionNote, never in
+      // solutionCode where they render as syntax-highlighted code.
+      for (const [field, src] of [
+        ["starterCode", ex.starterCode],
+        ["solutionCode", ex.solutionCode],
+      ] as const) {
+        if (!src) continue;
+        const bad = src
+          .split("\n")
+          .filter((line) => VN_DIACRITICS.test(line))
+          .map((line) => line.trim());
+        if (bad.length > 0) {
+          report(
+            `${at}/${ex.id}: ${field} has Vietnamese text (${bad.length} line(s), first: "${bad[0]?.slice(0, 60)}") - translate the comment, or move prose to solutionNote`,
+          );
+        }
       }
     }
   }
