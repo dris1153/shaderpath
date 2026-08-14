@@ -138,6 +138,30 @@
   }
 }
 
+/* KaTeX sets `white-space: nowrap` on display math and ships no overflow
+   handling, so a wide formula paints outside the article and over the TOC.
+   Make it scroll instead. The paired local/scroll gradients are a scroll
+   shadow: the `local` layers travel with the content and the `scroll` layers
+   stay put, so an edge fade appears only on a side that really has more
+   formula hidden, and nothing shows when it already fits.
+   Keying the fade to --background is safe because no lesson puts display math
+   inside a Callout; one that did would fade to the wrong colour. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25rem;
+  scrollbar-width: thin;
+  background:
+    linear-gradient(to right, var(--background) 40%, transparent) left center /
+      2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--background) 40%, transparent) right center /
+      2.5rem 100% no-repeat local,
+    linear-gradient(to right, var(--border), transparent) left center / 1rem
+      100% no-repeat scroll,
+    linear-gradient(to left, var(--border), transparent) right center / 1rem
+      100% no-repeat scroll;
+}
+
 /* shiki dual-theme: swap to the dark variant when next-themes sets .dark */
 .dark .shiki,
 .dark .shiki span {
