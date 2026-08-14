@@ -22,7 +22,7 @@ export async function LessonRow({
   return (
     <Link
       href={`/lesson/${lesson.slug}`}
-      className="hover:bg-muted/50 flex items-center justify-between gap-3 rounded-md px-2 py-2"
+      className="hover:bg-muted/50 flex items-center justify-between gap-3 rounded-md px-2 py-2 no-underline! hover:underline!"
     >
       <div className="flex min-w-0 items-center gap-2">
         {!unlocked && (

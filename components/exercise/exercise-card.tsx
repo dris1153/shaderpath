@@ -97,11 +97,10 @@ export function ExerciseCard({
     saveChecklist(lessonSlug, exercise.id, next).catch(fail);
   }
 
-  const allTicked =
-    exercise.checklist.length > 0 && checklist.every(Boolean);
+  const allTicked = exercise.checklist.length > 0 && checklist.every(Boolean);
 
   return (
-    <Card id={`exercise-${exercise.id}`} className="overflow-hidden">
+    <Card id={`exercise-${exercise.id}`} className="overflow-hidden py-0">
       <Collapsible
         open={open}
         onOpenChange={(o) => {
@@ -186,7 +185,9 @@ export function ExerciseCard({
                       >
                         <Checkbox
                           checked={checklist[i] ?? false}
-                          onCheckedChange={(v) => toggleChecklist(i, v === true)}
+                          onCheckedChange={(v) =>
+                            toggleChecklist(i, v === true)
+                          }
                         />
                         <span>{item}</span>
                       </label>

@@ -42,7 +42,7 @@ function LessonLink({
       href={`/lesson/${lesson.slug}`}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+        "hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5 text-sm no-underline! hover:underline!",
         active
           ? "bg-muted text-foreground font-medium"
           : "text-muted-foreground",
