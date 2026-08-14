@@ -1,0 +1,65 @@
+## Raycasting là gì: bắn tia từ camera qua chuột
+
+Raycasting trả lời câu hỏi "chuột đang trỏ vào object 3D nào?" bằng cách dựng một tia (ray) xuất phát từ camera, xuyên qua đúng điểm trên màn hình nơi con trỏ đang đứng, rồi tìm object nào trong scene tia đó cắt qua trước tiên. Đây không phải một test 2D kiểu bounding box màn hình — tia thật sự đi qua không gian 3D, nên một object ở xa bị object khác che trước mặt sẽ không được chọn dù toạ độ 2D trên màn hình trùng nhau; đây chính là cơ chế đứng sau mọi click/hover chọn object trong game 3D hay editor.
+
+Three.js gói toàn bộ việc này vào một class duy nhất: `THREE.Raycaster`. Nhưng trước khi dựng được tia, phải có toạ độ chuột ở đúng không gian mà Raycaster hiểu — NDC.
+
+## Chuyển chuột sang NDC: công thức và bẫy lật trục Y
+
+`event.clientX/clientY` là pixel màn hình, gốc trên-trái, trục $y$ hướng xuống — đúng công thức pixel → NDC học ở Track 0, chỉ khác object nhận vào là canvas thay vì ảnh:
+
+```js
+function mouseToNDC(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / rect.height) * 2 + 1; // lật trục y
+  return new THREE.Vector2(x, y);
+}
+```
+
+Ba điểm dễ sai: dùng `canvas.width/height` thay vì `rect.width/height` của `getBoundingClientRect()` — sai khi canvas bị CSS scale, đúng lỗi DPR handling đã học ở Track 1; quên trừ `rect.left/rect.top` — sai khi canvas không nằm ở góc viewport; và **quên đảo dấu trục y**. NDC của WebGL có $y$ hướng lên, còn toạ độ chuột trên trình duyệt có $y$ hướng xuống — thiếu dấu trừ này không làm raycast lỗi hẳn, không throw, không crash console — nó chỉ khiến tia bắn lệch: hover đúng vị trí $x$ nhưng vị trí $y$ bị phản chiếu qua tâm màn hình, hit test trúng object đối xứng thay vì object dưới con trỏ. Đây là lỗi khó phát hiện nhất trong bài vì trông "gần đúng" — con trỏ ở nửa trên màn hình vẫn hit trúng gì đó, chỉ sai đối tượng.
+
+## Raycaster.setFromCamera và intersectObjects: dựng tia, đọc kết quả
+
+Có NDC rồi, `raycaster.setFromCamera(ndc, camera)` dựng tia xuất phát từ camera (perspective) hoặc từ mặt phẳng near theo hướng nhìn (orthographic), xuyên qua đúng điểm NDC đó. Gọi `raycaster.intersectObjects(objects, recursive)` để lấy danh sách giao điểm, **đã sắp theo khoảng cách tăng dần** — phần tử đầu tiên luôn là object gần camera nhất mà tia chạm phải, đúng cái người dùng "nhìn thấy" khi click. Mỗi phần tử kết quả là một object thuần chứa:
+
+```js
+{
+  object,   // Object3D/Mesh bị trúng
+  distance, // khoảng cách từ camera đến điểm chạm, theo đơn vị world
+  point,    // Vector3 — toạ độ world nơi tia chạm bề mặt
+  face,     // tam giác cụ thể bị chạm (normal, index) — null nếu không phải Mesh
+}
+```
+
+Vì kết quả đã sort sẵn, `intersects[0]` gần như luôn là câu trả lời đúng cho "object nào bị click" — không cần tự so sánh khoảng cách; chỉ khi cố tình muốn xuyên qua vật cản (ví dụ chọn object phía sau một mặt kính trong suốt) mới cần duyệt tiếp `intersects[1]`, `intersects[2]`...
+
+## Recursive flag và target list: kiểm tra đúng object cần test
+
+Tham số thứ hai của `intersectObjects` — `recursive` — quyết định có test luôn cả con cháu (children) của mỗi object trong mảng truyền vào hay không; `true` là lựa chọn phổ biến khi object thật là một nhóm mesh lồng nhau, ví dụ một GLTF nạp về vốn đã là một hierarchy. Nhưng cái quyết định hiệu năng thật sự nằm ở tham số đầu tiên: mảng `objects` truyền vào. `raycaster.intersectObjects(scene.children, true)` test **mọi thứ** trong scene kể cả ánh sáng, helper, object không cần click được — với scene lớn, đây là nguồn lag phổ biến nhất khi thêm interaction vào một demo vốn chạy mượt. Cách đúng là giữ riêng một mảng "pickable" — chỉ những object thật sự cần raycast — và luôn gọi `intersectObjects(pickable, false)` thay vì test cả scene.
+
+## Hover vs click: hai pattern dùng chung một raycaster
+
+Hai tương tác phổ biến nhất dùng chung logic raycast, khác nhau ở khi nào chạy. **Click** chỉ raycast tại đúng thời điểm sự kiện `pointerdown`/`click` xảy ra — rẻ, chạy một lần. **Hover** cần raycast mỗi khi chuột di chuyển để biết object nào đang ở dưới con trỏ ngay lúc đó, tốn hơn hẳn vì chạy liên tục theo tần suất di chuyển chuột. Pattern chuẩn cho hover: lưu object đang hover ở lần raycast trước, so sánh với object mới raycast được — chỉ đổi trạng thái visual (ví dụ set `material.emissive`) khi hai object khác nhau, tránh ghi đè thuộc tính material mỗi frame dù chuột đứng yên trên cùng một object.
+
+## Hiệu năng: layers và tần suất raycast
+
+Ngoài giới hạn mảng object cần test, `THREE.Layers` cho phép loại cả một nhóm object khỏi raycast mà không cần lọc mảng thủ công mỗi lần: gán `object.layers.set(1)` cho object không nên bị click (background, particle trang trí), rồi cấu hình `raycaster.layers` để không bật layer đó — Three tự bỏ qua chúng trong lúc traverse, hiệu năng tốt hơn lọc mảng vì không copy/allocate mảng mới mỗi frame. Với hover raycast liên tục theo `pointermove`, một tối ưu khác thường bị bỏ qua: không nhất thiết phải raycast ở tần suất y hệt sự kiện chuột — chuột DPI cao có thể bắn sự kiện tới hàng trăm lần/giây. Cách phổ biến hơn: `pointermove` chỉ lưu lại toạ độ NDC mới nhất, còn raycast thật sự chạy trong render loop, tối đa một lần mỗi frame.
+
+## Bounding volume và ngưỡng threshold cho Points/Lines
+
+Three.js không test tia cắt từng tam giác thô ngay từ đầu — `Mesh.raycast()` trước tiên test tia với `geometry.boundingSphere` (hình cầu bao toàn bộ mesh), trượt phép test rẻ này thì loại luôn cả mesh mà không cần đụng tới danh sách tam giác; chỉ khi tia thật sự cắt bounding sphere, Three mới duyệt tiếp `boundingBox` rồi mới tới từng tam giác thật. Đây là lý do raycast hàng nghìn mesh vẫn khả thi theo thời gian thực — chi phí thật chỉ rơi vào số object tia thực sự "gần trúng". `Points` và `Line` không có bề mặt để cắt theo nghĩa hình học, nên Three dùng một ngưỡng khoảng cách thay thế: `raycaster.params.Points.threshold`/`raycaster.params.Line.threshold` (đơn vị world) định nghĩa tia "trúng" một điểm hay một đoạn nếu khoảng cách vuông góc từ tia đến nó nhỏ hơn ngưỡng — threshold mặc định quá nhỏ là lý do phổ biến khiến click vào point cloud hay đường line mảnh "không trúng gì" dù con trỏ nhìn rõ ràng đang ở ngay trên điểm đó.
+
+## Từ đây tới R3F và capstone
+
+Track 4 (React Three Fiber) bọc lại đúng cơ chế này thành `onClick`/`onPointerOver` khai báo ngay trên JSX mesh — không có API mới, chỉ là `raycaster.intersectObjects` chạy ngầm mỗi frame bởi reconciler. Track 13 (capstone) dùng raycasting này để chọn object trong showroom tương tác — nắm chắc phần recursive/target-list/layers ở bài này quyết định capstone đó chạy mượt với vài trăm object hay lag dần theo số lượng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với raycasting và picking:
+
+1. **Quên lật trục Y khi map chuột sang NDC.** Không throw lỗi, không crash — chỉ khiến hit test trúng object đối xứng qua tâm màn hình theo trục dọc, trông "gần đúng" nên rất khó nhận ra ngay.
+2. **`intersectObjects(scene.children, true)` cho toàn bộ scene thay vì mảng pickable.** Hoạt động đúng lúc scene còn nhỏ nhưng lag dần khi thêm object, vì mỗi lần raycast phải test luôn cả ánh sáng, helper và object không cần tương tác.
+3. **Raycast Points/Lines với threshold mặc định quá nhỏ.** Point cloud hay line mảnh không có bề mặt hình học để "trúng" theo nghĩa thông thường — quên set `raycaster.params.Points.threshold`/`Line.threshold` cho khớp tỉ lệ scene khiến click/hover tưởng như không hoạt động.
+
+</Callout>

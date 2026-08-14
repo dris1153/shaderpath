@@ -1,0 +1,104 @@
+## TextureLoader và colorSpace: trả đúng nợ từ Track 0
+
+`THREE.TextureLoader().load(url)` nạp một ảnh bất đồng bộ và trả về một `Texture` ngay lập tức — texture rỗng cho tới khi ảnh tải xong, lúc đó Three.js tự cập nhật GPU và bạn không cần chờ thủ công (dùng `loadAsync` nếu cần `await`). Gán texture đó vào `material.map` là xong phần tải — nhưng còn một bước dễ bỏ quên: `texture.colorSpace = THREE.SRGBColorSpace`.
+
+Đây chính là khoản nợ từ bài sRGB & Gamma ở Track 0: `renderer.outputColorSpace` (mặc định `SRGBColorSpace`) lo bước **encode** cuối cùng khi ghi ra canvas, nhưng GPU cần biết phải **decode** texture nào trước khi đưa vào phép tính ánh sáng dạng linear. Texture màu (albedo, diffuse map) là ảnh lưu ở sRGB — đánh dấu `colorSpace = SRGBColorSpace` để GPU tự decode đúng lúc sample, không cần viết `pow()` tay. Texture dữ liệu (`normalMap`, `roughnessMap`, `metalnessMap`, `aoMap`) không lưu năng lượng ánh sáng — giữ nguyên mặc định `THREE.NoColorSpace`, đừng đánh dấu sRGB cho chúng:
+
+```js
+const loader = new THREE.TextureLoader();
+const albedo = loader.load("/textures/brick-albedo.jpg");
+albedo.colorSpace = THREE.SRGBColorSpace; // texture màu: cần decode trước khi tính sáng
+
+const roughness = loader.load("/textures/brick-roughness.jpg");
+// roughness giữ THREE.NoColorSpace (mặc định) — đây là dữ liệu, không phải màu
+
+const material = new THREE.MeshStandardMaterial({ map: albedo, roughnessMap: roughness });
+```
+
+## Texture không cần file: CanvasTexture và DataTexture
+
+Không phải texture nào cũng cần tải từ file. `CanvasTexture(canvasElement)` bọc trực tiếp một `<canvas>` (hoặc `OffscreenCanvas`) đang có sẵn thành texture GPU — hữu ích cho hoạ tiết vẽ bằng thuật toán (gradient, noise generative, nhãn chữ) dùng API `CanvasRenderingContext2D` quen thuộc. Vẽ lại canvas xong, phải tự đặt `texture.needsUpdate = true` — Three.js không tự động dò canvas có đổi nội dung hay không mỗi frame.
+
+`DataTexture(data, width, height, format, type)` đi thẳng từ một mảng byte thô — đúng ý tưởng `texImage2D` từ bài texture ở Track 1, chỉ khác là được bọc trong một object có sẵn API filtering/wrap quen thuộc:
+
+```js
+const size = 8;
+const data = new Uint8Array(size * size * 4);
+for (let y = 0; y < size; y++) {
+  for (let x = 0; x < size; x++) {
+    const i = (y * size + x) * 4;
+    const on = (x + y) % 2 === 0;
+    data[i] = data[i + 1] = data[i + 2] = on ? 235 : 20;
+    data[i + 3] = 255;
+  }
+}
+const checker = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+checker.needsUpdate = true; // bắt buộc một lần sau khi ghi pixel thô
+```
+
+## Filtering, mipmap, wrap: đổi tên gọi từ Track 1 sang API Three.js
+
+Mọi khái niệm ở bài texture của Track 1 vẫn còn nguyên, chỉ đổi tên thuộc tính: `TEXTURE_MAG_FILTER`/`MIN_FILTER` trở thành `texture.magFilter`/`texture.minFilter`; `gl.NEAREST`/`gl.LINEAR` trở thành `THREE.NearestFilter`/`THREE.LinearFilter`; `gl.LINEAR_MIPMAP_LINEAR` (trilinear) trở thành `THREE.LinearMipmapLinearFilter` — cũng là `minFilter` mặc định của Three. Gọi `gl.generateMipmap()` tay biến thành cờ `texture.generateMipmaps = true` (mặc định bật) — Three tự sinh mip chain lúc upload, không cần gọi gì thêm. Wrap mode giữ nguyên ý nghĩa: `TEXTURE_WRAP_S`/`_T` thành `texture.wrapS`/`texture.wrapT`, còn `gl.REPEAT`/`CLAMP_TO_EDGE`/`MIRRORED_REPEAT` thành `THREE.RepeatWrapping`/`THREE.ClampToEdgeWrapping`/`THREE.MirroredRepeatWrapping`; `texture.repeat.set(u, v)` (một `Vector2`) đặt số lần lặp, chỉ có ý nghĩa khi wrap là Repeat/MirroredRepeat.
+
+Một khác biệt đáng chú ý: Three mặc định `texture.flipY = true` — ngược hẳn giá trị mặc định `false` của raw WebGL — nên chính lỗi `UNPACK_FLIP_Y_WEBGL` từng cảnh báo ở Track 1 gần như biến mất khi làm việc trong Three, vì thư viện đã tự lật ảnh lúc upload.
+
+## Vì sao PNG/JPG vẫn nặng trên GPU: giải mã thô cộng mip chain ×1.33
+
+PNG/JPG nén tốt **trên đĩa** — file tải về nhỏ — nhưng GPU không thể sample trực tiếp dữ liệu nén đó. Trước khi lên texture, ảnh đã được giải mã hoàn toàn thành mảng pixel RGBA thô, và chính mảng thô đó nằm trong VRAM, không phải file nén ban đầu. Một texture $2048 \times 2048$ dạng RGBA8:
+
+$$
+2048 \times 2048 \times 4\text{ byte} = 16{,}777{,}216\text{ byte} \approx 16\text{ MB}
+$$
+
+— bất kể ảnh gốc là JPEG 400KB hay 4MB, số byte trên GPU như nhau. Cộng thêm mip chain: tổng cả chuỗi mip ($1 + \tfrac14 + \tfrac{1}{16} + \dots$) hội tụ về $\tfrac{4}{3}$ lần level gốc, nên texture mipmapped thực tế tốn:
+
+$$
+16\text{MB} \times \frac{4}{3} \approx 21.3\text{MB} \quad \text{(ước lượng)}
+$$
+
+Một ảnh JPEG "nhẹ" 400KB trên đĩa hoá ra chiếm hơn 21MB VRAM sau khi upload và sinh mipmap — trực giác "file nhỏ nên nhẹ" của lập trình web thông thường gây hiểu lầm nghiêm trọng ở đây.
+
+## Nén thật trên GPU: KTX2 và Basis Universal
+
+Khác PNG/JPG, KTX2 (định dạng container bọc dữ liệu Basis Universal supercompressed) chứa dữ liệu mà GPU **sample được trực tiếp ở dạng đã nén** — VRAM giữ nguyên trạng thái nén suốt vòng đời texture, không riêng lúc nằm trên đĩa. `KTX2Loader` transcode dữ liệu Basis sang đúng định dạng nén GPU-native của thiết bị đang chạy (BC7/BC1 trên desktop, ASTC trên phần lớn GPU di động, ETC2 trên một số Android, PVRTC trên iOS đời cũ) — một file `.ktx2` duy nhất, nhiều đích transcode khác nhau tuỳ máy:
+
+```js
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+
+const ktx2Loader = new KTX2Loader()
+  .setTranscoderPath("/basis/") // nơi phục vụ WASM transcoder
+  .detectSupport(renderer); // BẮT BUỘC gọi trước khi load — chọn định dạng đích
+
+const compressed = await ktx2Loader.loadAsync("/textures/brick-albedo.ktx2");
+compressed.colorSpace = THREE.SRGBColorSpace; // quy tắc colorSpace vẫn áp dụng
+```
+
+Ước lượng thực dụng: định dạng nén GPU phổ biến rơi vào khoảng 4–8 bit/pixel, so với 32 bit/pixel của RGBA8 thô — nhẹ hơn khoảng 4–8 lần so với ảnh đã giải mã, ở chất lượng hình ảnh gần tương đương (tỉ lệ thật phụ thuộc định dạng và nội dung ảnh).
+
+## Anisotropy: khi mipmap thôi chưa đủ
+
+Mipmap chọn một mức thu nhỏ đẳng hướng (isotropic) cho mỗi fragment — nhưng một texture nhìn ở góc nghiêng sâu (ví dụ mặt đường trải dài tới đường chân trời) bị nén mạnh hơn hẳn theo một hướng screen-space so với hướng còn lại. Một mip level đẳng hướng buộc phải chọn đủ nhỏ để tránh alias theo hướng bị nén nhiều, nhưng làm mờ quá tay theo hướng ít bị nén hơn. Anisotropic filtering lấy mẫu nhiều điểm dọc theo đúng hình dạng kéo dài đó thay vì một điểm — giữ chi tiết sắc nét theo trục "dài" mà vẫn tránh nhiễu theo trục "ngắn":
+
+```js
+texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+```
+
+Giá trị bị giới hạn bởi phần cứng (`getMaxAnisotropy()`, thường 16); chi phí là thêm vài lần lấy mẫu texture mỗi fragment — rẻ trên GPU hiện đại — và **không** tốn thêm VRAM, vì anisotropy chỉ đổi cách đọc các mip level sẵn có, không sinh thêm level nào.
+
+## texture.dispose(): VRAM không tự trả khi JS quên tham chiếu
+
+Garbage collector của JavaScript thu hồi object `Texture` khi không còn tham chiếu nào trỏ tới nó — nhưng bộ nhớ GPU thật mà texture đó tạo ra qua WebGL context là một tài nguyên tách biệt hoàn toàn mà GC không hề biết tới, không bao giờ tự giải phóng. Phải gọi `texture.dispose()` tường minh (như `geometry.dispose()`/`material.dispose()`) hoặc VRAM rò rỉ dần từng texture một cho tới khi tab crash hoặc driver bắt đầu evict tài nguyên khác — đúng lý do pattern `useDisposable` xuất hiện xuyên suốt mọi demo của dự án này.
+
+## Kết nối về sau
+
+Bài tiếp theo của Track 3 (Load GLTF với Draco & meshopt) làm đúng việc này cho **geometry** thay vì texture — cùng một triết lý nén ở build-time, transcode ở runtime. Track 12 (Performance) quay lại chủ đề này ở quy mô sản xuất thật với `texture-memory-budget` (ngân sách bộ nhớ cho toàn bộ scene) và `asset-pipeline-draco-ktx2` (pipeline build tự động hoá nén asset) — nắm chắc công thức bộ nhớ và cách wiring KTX2Loader ngay bây giờ nghĩa là hai bài đó chỉ còn là mở rộng quy mô, không phải học lại khái niệm.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với texture và nén:
+
+1. **Tưởng "file JPG nhẹ trên đĩa nên texture nhẹ".** GPU luôn lưu ảnh đã giải mã đầy đủ (RGBA thô cộng mip chain) — con số VRAM hoàn toàn không liên quan đến kích thước file nén trên đĩa.
+2. **Gắn `SRGBColorSpace` cho texture dữ liệu (normalMap/roughnessMap) thay vì chỉ gắn cho color map.** GPU tự decode gamma sai trên giá trị không phải màu, làm lệch toàn bộ pháp tuyến/độ nhám — lỗi shading khó nhận ra vì không trực tiếp liên quan tới màu nhìn thấy.
+3. **Gọi `KTX2Loader.load()` mà quên `detectSupport(renderer)` trước đó.** Loader không biết định dạng transcode đích của thiết bị, load lỗi hoặc throw runtime dù file `.ktx2` hoàn toàn hợp lệ.
+
+</Callout>

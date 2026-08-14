@@ -1,0 +1,82 @@
+## The Three Layers of the Animation System: Clip, Mixer, Action
+
+Animation in Three.js isn't a single API but three separate layers, each responsible for exactly one job. An **AnimationClip** is pure keyframe data — it never references any object in the scene. An **AnimationMixer** is the runtime attached to a specific root object, responsible for playing clips onto that object every frame. An **AnimationAction** is the play state of one (mixer, clip) pair — play/pause, loop mode, speed, influence.
+
+A useful analogy: an AnimationClip is like a music file on disk — just data. An AnimationMixer is like a playback device wired into one room (the root object). An AnimationAction is like a play button plus a volume fader for one specific playthrough — the same device can "play" several tracks at once at different volumes, which is exactly the crossfade mechanism covered later. The three layers stay separate for practical reasons: one clip ("walk") can replay on any root that shares the same property structure, and one root can play several clips at once to crossfade between them — folding all three responsibilities into a single object would rule out both.
+
+## AnimationClip: Pure Keyframe Data
+
+An `AnimationClip` has three main fields: `name`, `duration` (seconds), and `tracks` — an array of `KeyframeTrack`. Each track targets exactly one property on exactly one object, addressed by a string path (e.g. `".position"` or `"Bone_Head.quaternion"`), plus a `times` array (seconds, increasing) and a flat `values` array — each keyframe occupying exactly as many components as that property needs: 3 for a vector3, 4 for a quaternion. Because a clip holds no reference to a real object — only a string path — the same clip applies to any object whose property structure matches that path, which is why a "walk" clip exported from one rig plays back correctly on a different rig as long as the bone names match.
+
+## Building a Clip from KeyframeTracks with No Animated Asset Yet
+
+The course doesn't embed a GLTF asset with real animation yet (a real asset arrives in a later track) — but since an AnimationClip is just data, hand-building one in code produces an identical result at runtime. The two most common track types: `VectorKeyframeTrack` (3 numbers per keyframe — for `.position`, `.scale`) and `QuaternionKeyframeTrack` (4 numbers per keyframe — for `.quaternion`, NOT Euler angles). Quaternion values must be **normalized quaternions** (unit length): Three's interpolator assembles the four components and blends spherically between keyframes — exactly the slerp covered in Track 0 — so feeding it four arbitrary numbers that aren't a valid quaternion makes the object stretch and skew between keyframes instead of rotating cleanly:
+
+```js
+const times = [0, 1, 2]; // seconds
+const positions = [0, 0, 0, 2, 1, 0, 0, 0, 0]; // 3 numbers per keyframe
+
+const qA = new THREE.Quaternion();
+const qB = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+const qC = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI * 2);
+const quaternions = [...qA.toArray(), ...qB.toArray(), ...qC.toArray()]; // 4 numbers per keyframe
+
+const posTrack = new THREE.VectorKeyframeTrack(".position", times, positions);
+const rotTrack = new THREE.QuaternionKeyframeTrack(".quaternion", times, quaternions);
+
+const clip = new THREE.AnimationClip("spin-and-move", 2, [posTrack, rotTrack]);
+```
+
+A path starting with a dot, with no node name in front of it, means "apply directly to the root object" — the root being whatever object you pass into `AnimationMixer` next, not a child node.
+
+## AnimationMixer and mixer.update(delta) in the Render Loop
+
+`new THREE.AnimationMixer(root)` creates a runtime attached to `root`; calling `mixer.clipAction(clip)` returns an `AnimationAction`, and `.play()` starts it. `.play()` on its own only flips an internal state flag — **it never writes any value onto `root.position` or `root.quaternion`**. The actual write happens inside `mixer.update(delta)`, which must be called exactly once per frame in the render loop, with `delta` being the seconds elapsed since the previous frame:
+
+```js
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  mixer.update(delta); // advances action time, interpolates, WRITES values onto root
+  renderer.render(scene, camera);
+}
+```
+
+Missing the `mixer.update(delta)` call is the single most common bug when picking up the animation system: `action.play()` runs without error, the console stays clean, but the object sits frozen — because nothing is advancing time or writing values onto any property.
+
+## AnimationAction: Play, Loop Mode, timeScale, Weight
+
+An `AnimationAction` holds the full play state of one clip on one mixer: `.play()`/`.stop()`, `.paused` (pauses in place, keeping the current time), `.setLoop(mode, repetitions)` with three modes — `THREE.LoopOnce` (plays once then holds the last frame if `.clampWhenFinished = true`, otherwise resets to the first frame), `THREE.LoopRepeat` (loops forever, the default), `THREE.LoopPingPong` (plays forward then backward continuously). `.timeScale` is that action's own playback speed multiplier — `1` is normal speed, negative values play in reverse. The mixer also has its own `.timeScale`, applying to every action it manages at once — the Three.js docs note that setting `mixer.timeScale = 0` is the official way to pause every action without touching `.paused` on each one individually. `.weight` (in $[0, 1]$) is that action's degree of influence when the mixer combines the final value written to a property — `0` means no impact even while playing, `1` means full impact. This is exactly the variable crossfading is built on.
+
+## Crossfading Between Two Actions Using Weight
+
+Two actions targeting the same properties on the same root can play simultaneously — the mixer blends their interpolated values in proportion to each `.weight` before writing to the object, the same way an audio mixing board blends two channels through faders. The manual version (exactly the mechanism the demo's weight slider drives below): every frame, set `actionA.weight = 1 - t` and `actionB.weight = t` with `t` running from 0 to 1 — the object glides smoothly from fully following clip A to fully following clip B. Three.js also ships a convenience, `actionA.crossFadeTo(actionB, duration, warp)`, that handles the fade over `duration` seconds automatically; but understanding the underlying mechanism — "just a linear interpolation of two weight numbers every frame" — matters more than memorizing the helper's name, since the same mechanism is what lets you blend more than two clips or layer in additive motion. One condition that's easy to miss: both actions must already be `play()`ing (present in the mixer's active list) for changing `.weight` to have any effect at all.
+
+## Skinning and GLTF Animations: The Clip Slots In Identically
+
+A skinned mesh (`SkinnedMesh` + `Skeleton`) works with exactly the same three layers, differing only in how many property paths are involved: instead of one `.position`/`.quaternion` on one mesh, a skinned rig has dozens of paths like `"Bone_Head.quaternion"`, `"Bone_Spine.quaternion"`... — each bone is a child `Object3D` inside the `Skeleton`'s hierarchy, and a track targets that exact bone by name. When you load a GLTF file that contains animation, `GLTFLoader` already builds real `THREE.AnimationClip` instances (not raw data) into the `gltf.animations` array — `mixer.clipAction(gltf.animations[0])` works exactly like the hand-built clip above, with no different API:
+
+```js
+const loader = new GLTFLoader();
+loader.load("model.glb", (gltf) => {
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  mixer.clipAction(gltf.animations[0]).play();
+});
+```
+
+The course doesn't embed a GLTF asset with real animation yet — the detailed bone/rig setup returns once a real asset is available in a later track — but the mixer/action/weight mechanics learned here apply unchanged, without a single line changing between a bare mesh and a rig with dozens of bones.
+
+## From Here to R3F and the Capstone
+
+Track 4 (React Three Fiber) doesn't replace this API with something new — drei's `useAnimations` hook is a thin wrapper that calls the exact same `AnimationMixer`/`clipAction`/`mixer.update` internally, from inside `useFrame`. Track 13's capstone reuses this exact crossfade mechanism to transition smoothly between an interactive model's animation states — mastering mixer/action/weight now means that capstone is just assembly, not relearning the API.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with AnimationMixer and crossfading:
+
+1. **Forgetting to call `mixer.update(delta)` in the render loop.** `action.play()` only flips an internal state flag and writes nothing onto the object — if the render loop never calls `mixer.update(delta)` every frame, the console stays clean but the object sits perfectly frozen, easy to mistake for a broken clip instead of one missing line.
+2. **Feeding non-normalized values into a `QuaternionKeyframeTrack`.** The interpolator assumes every four numbers per keyframe form a unit quaternion and blends spherically between them; passing an arbitrary four-number array (confused with Euler angles, or simply un-normalized) makes the object stretch and skew between keyframes instead of rotating cleanly.
+3. **Setting `.weight` on an action that's never been `.play()`ed.** The mixer only blends values from actions currently active; changing `.weight` on an action that hasn't been played has no effect at all — the crossfade looks like it should be running, but the object stays fully driven by the other action.
+
+</Callout>

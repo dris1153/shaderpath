@@ -1,0 +1,82 @@
+## Ba lớp của animation system: Clip, Mixer, Action
+
+Animation trong Three.js không phải một API đơn lẻ mà là ba lớp tách biệt, mỗi lớp chỉ biết đúng một việc. **AnimationClip** là dữ liệu keyframe thuần — không tham chiếu đến bất kỳ object nào trong scene. **AnimationMixer** là runtime gắn với một root object cụ thể, có nhiệm vụ phát clip lên object đó mỗi frame. **AnimationAction** là trạng thái phát của một cặp (mixer, clip) — play/pause, loop mode, tốc độ, độ ảnh hưởng.
+
+Ví von dễ nhớ: AnimationClip giống một file nhạc trên đĩa — chỉ là dữ liệu; AnimationMixer giống một đầu phát gắn cố định trong phòng (root object); AnimationAction giống nút play cộng núm chỉnh âm lượng cho một lượt phát cụ thể — cùng một đầu phát có thể "phát" nhiều bài cùng lúc với âm lượng khác nhau, đó chính là cơ chế crossfade ở phần sau. Ba lớp tách biệt vì lý do thực dụng: một clip ("walk") phát lại được trên bất kỳ root nào có cùng cấu trúc thuộc tính, và một root phát được nhiều clip cùng lúc để crossfade — gộp cả ba trách nhiệm vào một object sẽ không cho phép cả hai việc đó.
+
+## AnimationClip: dữ liệu keyframe thuần
+
+Một `AnimationClip` chỉ có ba trường chính: `name`, `duration` (giây) và `tracks` — mảng `KeyframeTrack`. Mỗi track nhắm vào đúng một thuộc tính của đúng một object, dưới dạng path chuỗi (ví dụ `".position"` hoặc `"Bone_Head.quaternion"`), kèm mảng `times` (giây, tăng dần) và mảng `values` phẳng — mỗi keyframe chiếm đúng số component của thuộc tính đó: 3 số cho vector3, 4 số cho quaternion. Vì clip không giữ tham chiếu tới object thật — chỉ giữ path dạng chuỗi — cùng một clip áp được lên bất kỳ object nào có cấu trúc thuộc tính khớp path, đây là lý do một clip "walk" export từ một rig chạy được trên rig khác miễn tên bone khớp nhau.
+
+## Dựng clip bằng KeyframeTrack khi chưa có asset animate sẵn
+
+Khoá học chưa nhúng asset GLTF có animation thật (asset thật tới ở track sau) — nhưng vì AnimationClip chỉ là dữ liệu, dựng nó bằng tay trong code cho kết quả giống hệt về mặt runtime. Hai loại track hay dùng nhất: `VectorKeyframeTrack` (3 số/keyframe — dùng cho `.position`, `.scale`) và `QuaternionKeyframeTrack` (4 số/keyframe — dùng cho `.quaternion`, KHÔNG phải Euler). Giá trị quaternion phải là **quaternion đã chuẩn hoá** (độ dài 1): bộ nội suy của Three ghép bốn component lại rồi trộn cầu giữa hai keyframe — đúng phép slerp đã học ở Track 0 — nên đưa vào bốn số bất kỳ không phải quaternion hợp lệ làm object co giãn/méo dần thay vì xoay đều:
+
+```js
+const times = [0, 1, 2]; // giây
+const positions = [0, 0, 0, 2, 1, 0, 0, 0, 0]; // 3 số/keyframe
+
+const qA = new THREE.Quaternion();
+const qB = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI);
+const qC = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI * 2);
+const quaternions = [...qA.toArray(), ...qB.toArray(), ...qC.toArray()]; // 4 số/keyframe
+
+const posTrack = new THREE.VectorKeyframeTrack(".position", times, positions);
+const rotTrack = new THREE.QuaternionKeyframeTrack(".quaternion", times, quaternions);
+
+const clip = new THREE.AnimationClip("spin-and-move", 2, [posTrack, rotTrack]);
+```
+
+Path bắt đầu bằng dấu chấm, không có tên node phía trước, nghĩa là "áp thẳng lên root object" — root chính là object truyền vào `AnimationMixer` ở bước tiếp theo, không phải một node con.
+
+## AnimationMixer và mixer.update(delta) trong render loop
+
+`new THREE.AnimationMixer(root)` tạo runtime gắn với `root`; gọi `mixer.clipAction(clip)` để lấy về một `AnimationAction` rồi `.play()`. Bản thân `.play()` chỉ đổi cờ trạng thái nội bộ — **nó không ghi giá trị nào lên `root.position` hay `root.quaternion` cả**. Việc ghi thật sự xảy ra bên trong `mixer.update(delta)`, phải gọi đúng một lần mỗi frame trong render loop, với `delta` là số giây trôi qua kể từ frame trước:
+
+```js
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const delta = clock.getDelta();
+  mixer.update(delta); // tiến thời gian action, nội suy, GHI giá trị lên root
+  renderer.render(scene, camera);
+}
+```
+
+Thiếu dòng `mixer.update(delta)` là lỗi phổ biến nhất khi mới dùng animation system: `action.play()` chạy không lỗi, console sạch, nhưng object đứng yên tuyệt đối — vì không có gì tiến thời gian hay ghi giá trị lên thuộc tính cả.
+
+## AnimationAction: play, loop mode, timeScale, weight
+
+Một `AnimationAction` giữ toàn bộ trạng thái phát của một clip trên một mixer: `.play()`/`.stop()`, `.paused` (tạm dừng tại chỗ, giữ nguyên thời gian hiện tại), `.setLoop(mode, repetitions)` với ba mode — `THREE.LoopOnce` (chạy một lần rồi dừng ở frame cuối nếu `.clampWhenFinished = true`, ngược lại reset về frame đầu), `THREE.LoopRepeat` (lặp vô hạn, mặc định), `THREE.LoopPingPong` (chạy xuôi rồi ngược liên tục). `.timeScale` là hệ số nhân tốc độ phát của riêng action đó — `1` là tốc độ gốc, giá trị âm phát ngược. Mixer cũng có `.timeScale` riêng, áp dụng cho toàn bộ action nó quản lý cùng lúc — tài liệu Three.js còn ghi rõ đặt `mixer.timeScale = 0` là cách chính thức để tạm dừng mọi action mà không cần gọi `.paused` trên từng action một. `.weight` (khoảng $[0, 1]$) là mức ảnh hưởng của action khi mixer tổng hợp giá trị cuối cùng ghi lên thuộc tính — `0` là hoàn toàn không ảnh hưởng dù vẫn đang play, `1` là ảnh hưởng toàn phần. Đây chính là biến số dùng để crossfade ở phần tiếp theo.
+
+## Crossfade giữa hai action bằng weight
+
+Hai action nhắm cùng thuộc tính trên cùng root phát được đồng thời — mixer trộn giá trị nội suy của cả hai theo đúng tỉ lệ `.weight` trước khi ghi lên object, giống cách một bàn mixer âm thanh trộn hai kênh theo fader. Cách thủ công (đúng cơ chế slider weight ở demo bên dưới): mỗi frame set `actionA.weight = 1 - t` và `actionB.weight = t` với `t` chạy từ 0 đến 1 — object chuyển mượt từ hoàn toàn theo clip A sang hoàn toàn theo clip B. Three.js còn có tiện ích `actionA.crossFadeTo(actionB, duration, warp)` tự lo phần fade trong `duration` giây; nhưng hiểu được bản chất "chỉ là nội suy tuyến tính hai con số weight mỗi frame" quan trọng hơn nhớ tên hàm tiện ích, vì cùng cơ chế này còn dùng để trộn nhiều hơn hai clip hoặc chuyển động additive. Một điều kiện hay bị bỏ sót: cả hai action phải đang `play()` (nằm trong danh sách active của mixer) thì đổi `.weight` mới có tác dụng gì.
+
+## Skinning và animation từ GLTF: clip slot vào y hệt
+
+Mesh có skinning (`SkinnedMesh` + `Skeleton`) hoạt động với đúng ba lớp trên, chỉ khác ở số lượng property path: thay vì một `.position`/`.quaternion` trên một mesh, một rig có skinning có hàng chục path dạng `"Bone_Head.quaternion"`, `"Bone_Spine.quaternion"`... — mỗi bone là một `Object3D` con trong hierarchy của `Skeleton`, và track nhắm đúng bone đó bằng tên. Khi nạp một file GLTF có animation, `GLTFLoader` tự dựng sẵn các `THREE.AnimationClip` thật (không phải dữ liệu thô) vào mảng `gltf.animations` — dùng `mixer.clipAction(gltf.animations[0])` y hệt clip dựng tay ở trên, không có API nào khác:
+
+```js
+const loader = new GLTFLoader();
+loader.load("model.glb", (gltf) => {
+  const mixer = new THREE.AnimationMixer(gltf.scene);
+  mixer.clipAction(gltf.animations[0]).play();
+});
+```
+
+Khoá học chưa nhúng asset GLTF có animation thật — phần cấu hình bone/rig chi tiết sẽ quay lại khi có asset thật ở track sau — nhưng mixer/action/weight học ở bài này áp dụng nguyên vẹn, không đổi một dòng nào giữa mesh đơn và rig hàng chục bone.
+
+## Từ đây tới R3F và capstone
+
+Track 4 (React Three Fiber) không thay thế API này bằng thứ gì mới — hook `useAnimations` của drei chỉ là một wrapper mỏng gọi đúng `AnimationMixer`/`clipAction`/`mixer.update` bên trong `useFrame`. Track 13 (capstone) dùng lại chính cơ chế crossfade ở bài này để chuyển mượt giữa các trạng thái animation của model tương tác — nắm chắc mixer/action/weight ngay bây giờ nghĩa là capstone đó chỉ còn là lắp ráp, không phải học lại API.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với AnimationMixer và crossfade:
+
+1. **Quên gọi `mixer.update(delta)` trong render loop.** `action.play()` chỉ đổi cờ trạng thái nội bộ, không ghi giá trị nào lên object — nếu render loop không gọi `mixer.update(delta)` mỗi frame, console sạch nhưng object đứng yên tuyệt đối, dễ tưởng nhầm là clip sai thay vì thiếu một dòng update.
+2. **Nhồi giá trị không phải quaternion chuẩn hoá vào `QuaternionKeyframeTrack`.** Bộ nội suy giả định bốn số mỗi keyframe là quaternion đơn vị rồi nội suy cầu giữa chúng; truyền một mảng bốn số tuỳ ý (ví dụ nhầm với Euler hoặc quên chuẩn hoá) làm object co giãn/méo dần giữa hai keyframe thay vì xoay đều.
+3. **Set `.weight` trên một action chưa từng `.play()`.** Mixer chỉ trộn giá trị của các action đang active; đổi `.weight` của một action chưa `play()` không có tác dụng gì cả — crossfade tưởng đã chạy nhưng object vẫn hoàn toàn theo action còn lại.
+
+</Callout>

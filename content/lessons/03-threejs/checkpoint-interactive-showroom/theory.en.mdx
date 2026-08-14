@@ -1,0 +1,15 @@
+## Goal
+
+This is Track 3's capstone: no new theory, just a working artifact that combines everything you've learned — scene/camera/renderer, geometry and material, lighting and shadow maps, `OrbitControls`, raycasting, and the very `attach()`/`traverse()` you just read in source last lesson. The result is a clickable 3D showroom — this exact build gets rebuilt in R3F in Track 4, so the cleaner the structure here, the easier that "vanilla Three vs R3F" comparison becomes later.
+
+## Requirements
+
+Build a showroom with **at least 3 products** (any built-in geometry, `MeshStandardMaterial`) each on its own pedestal, under a `DirectionalLight` + `AmbientLight` rig with shadow maps enabled (both objects and floor must cast/receive shadows correctly). Drive the camera with `OrbitControls` under sane clamps (no rotating below the floor, no zooming absurdly close or far). Use a `Raycaster` to: softly highlight the product under the pointer on hover, and select it on click — the selected product gently rotates every frame (either an `AnimationClip` built in code, or a hand-rolled `requestAnimationFrame` animation, both are valid). Dispose every geometry/material/controls/renderer once no longer needed. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Write a `createProduct(geometry, color, x)` helper that builds a pedestal + product pair at position `x`, returning both meshes for later raycasting and disposal. Keep a separate `items` array holding only the product meshes (not the pedestals), so `raycaster.intersectObjects(items)` never mistakenly hits a pedestal.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — at least 3 visually distinct products, correct shadows on the floor, controls that never let the camera dip below the floor, hover and click working independently (hover shouldn't "stick" once something is already selected), the selected product rotating smoothly, and no leaked geometry/material after disposal.

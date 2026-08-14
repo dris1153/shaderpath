@@ -1,0 +1,47 @@
+## Object3D: node phổ quát của scene graph
+
+Mesh, Group, Light, Camera — mọi thứ bạn add vào scene đều kế thừa từ `Object3D`, node duy nhất và phổ quát của scene graph Three.js. Mỗi `Object3D` giữ ba thuộc tính transform độc lập: `.position` (Vector3), `.quaternion` (Quaternion, đồng bộ hai chiều với `.rotation` dạng Euler), và `.scale` (Vector3). Ba thuộc tính này không phải ma trận — chúng chỉ là dữ liệu con người đọc/ghi được; mỗi khi Three.js cần vẽ, nó gọi `updateMatrix()` để nén ba thứ đó thành một `Matrix4` duy nhất lưu ở `.matrix`, đúng theo thứ tự $T \cdot R \cdot S$ mà Track 0 đã học ở bài Model-View-Projection: scale trước, xoay sau, rồi mới dịch chuyển.
+
+`.matrix` chỉ là transform **cục bộ**, tính riêng object đó với chính nó — nó không biết gì về cha. Khi object nằm trong một hierarchy (qua `parent.add(child)`), Three.js còn tính thêm `.matrixWorld`, ma trận thật sự dùng để vẽ, bằng cách nhân dồn: `matrixWorld = parent.matrixWorld × this.matrix`. Đây chính là "chuỗi nhân ma trận cha-con" Track 0 đã nhắc tới nhưng chưa có object thật để minh hoạ — Three.js đi từ root scene xuống, tính `matrixWorld` từng object theo đúng thứ tự đó trong `updateMatrixWorld()`, đệ quy xuống từng child.
+
+## Local space vs world space: cha di chuyển, con "được" theo miễn phí
+
+`.position`/`.quaternion`/`.scale` của một object luôn được hiểu **tương đối với cha trực tiếp** — không bao giờ là toạ độ world tuyệt đối, trừ khi object đó chính là con trực tiếp của `scene` (cha có transform identity). Hệ quả quan trọng nhất: dịch chuyển hoặc xoay một object cha tự động kéo theo mọi object con di chuyển đúng theo world space — dù không đụng một dòng code nào vào transform của con — vì `matrixWorld` của con được tính lại mỗi frame từ chuỗi nhân với `matrixWorld` cha mới. Đây là lý do "nhóm rồi xoay cả nhóm" luôn rẻ và đúng hơn tính lại vị trí world cho từng object riêng lẻ bằng tay.
+
+Muốn đọc vị trí world thật sự (không phải local) của một object, dùng `object.getWorldPosition(target)` — hàm này trích phần dịch chuyển từ `matrixWorld` ra một `Vector3` bạn tự cấp trước (API không cấp phát bộ nhớ mỗi lần gọi, cố tình thiết kế để chạy hàng nghìn lần một frame không tạo garbage). Đọc thẳng `object.position` ở đây là lỗi phổ biến — nó chỉ trả về toạ độ local, sai hoàn toàn nếu object nằm sâu trong hierarchy.
+
+## add() vs attach(): giữ nguyên world transform khi đổi cha
+
+`parent.add(child)` chỉ đơn thuần nối `child` vào cây `parent.children`, giữ nguyên **local** transform của `child` không đổi — nghĩa là nếu `child` trước đó thuộc một cha khác (hoặc thuộc `scene` trực tiếp) ở một world position nào đó, sau khi `add()` sang cha mới nó sẽ "nhảy" tới world position mới, vì cùng một `.position` cục bộ giờ được diễn giải qua một `matrixWorld` cha khác.
+
+`parent.attach(child)` giải quyết đúng vấn đề đó: trước khi đổi cha, nó tính `matrixWorld` hiện tại của `child`, sau khi gắn vào cha mới, nó nhân ngược `matrixWorld` mới của cha để suy ra `.position`/`.quaternion`/`.scale` **local** mới sao cho `matrixWorld` cuối cùng — tức world position/rotation/scale thật sự nhìn thấy — không đổi một chút nào. Nói cách khác: `add()` giữ số local, đổi world; `attach()` giữ world, đổi số local. Lưu ý từ chính source Three.js: `attach()` không hỗ trợ đúng khi cha (cũ hoặc mới) có scale không đều (non-uniform) — trường hợp hiếm nhưng cần biết nếu hierarchy có object bị scale méo theo từng trục khác nhau.
+
+## Duyệt scene graph: traverse() và getObjectByName()
+
+`object.traverse(callback)` chạy `callback` cho chính `object` rồi đệ quy xuống toàn bộ descendant theo thứ tự depth-first — cách chuẩn để làm một việc gì đó cho *mọi* node trong một subtree, ví dụ dispose toàn bộ geometry/material sau khi load một model GLTF, hoặc bật `castShadow = true` hàng loạt. `traverseVisible()` bỏ qua nhánh có `visible = false`; `traverseAncestors()` đi ngược lên phía cha thay vì xuống con.
+
+`object.getObjectByName(name)` tìm trong subtree một object có `.name` khớp, trả về kết quả đầu tiên tìm thấy — hữu ích khi load GLTF và cần lấy đúng mesh theo tên đặt trong Blender. Đây là phép tìm kiếm tuyến tính trên cây, không có index — gọi nó mỗi frame trong render loop trên một scene lớn là lãng phí; cache kết quả vào một biến ngay sau khi load thay vì gọi lại liên tục.
+
+## matrixAutoUpdate: khi nào Three.js tự tính lại, khi nào phải tự gọi
+
+Mặc định `object.matrixAutoUpdate = true` (đặt bởi `Object3D.DEFAULT_MATRIX_AUTO_UPDATE`): mỗi lần `updateMatrixWorld()` chạy qua object đó, Three.js tự gọi `updateMatrix()` để nén lại `.position`/`.quaternion`/`.scale` mới nhất thành `.matrix`, luôn đồng bộ, không cần bạn làm gì. Với scene có hàng nghìn object **tĩnh** không bao giờ di chuyển sau khi đặt xong (địa hình, prop trang trí), phép tính lại này lặp lại vô ích mỗi frame — đặt `matrixAutoUpdate = false` tắt hẳn bước đó cho riêng object đó, một tối ưu thật sự đo được trên scene lớn.
+
+Đánh đổi: khi đã tắt `matrixAutoUpdate`, mọi lần bạn chỉnh `.position`/`.quaternion`/`.scale` bằng code sau đó, bạn phải tự gọi `object.updateMatrix()` (và nếu object có con, `object.updateMatrixWorld()`) — nếu quên, `.matrix` giữ nguyên giá trị cũ, object hiển thị sai vị trí một cách âm thầm, không có cảnh báo nào. Tách biệt với cờ này còn có `matrixWorldAutoUpdate` (mặc định cũng `true`) — kiểm soát việc object có được gộp vào lượt duyệt `updateMatrixWorld()` tự động từ scene xuống hay không; tắt riêng cờ này hữu ích khi bạn tự quản lý việc cập nhật matrixWorld cho một subtree cụ thể bằng tay, tách khỏi vòng lặp cập nhật toàn scene mỗi frame.
+
+## Group làm pivot: idiom hệ mặt trời
+
+`THREE.Group` là một `Object3D` không có hình học hay vật liệu riêng — nó tồn tại chỉ để làm điểm tựa (pivot) cho các object con. Idiom kinh điển: mô phỏng quỹ đạo hành tinh bằng cách **không** tính lại vị trí hành tinh mỗi frame bằng `cos`/`sin` thủ công, mà lồng nó vào một Group đặt tại tâm quỹ đạo, dịch hành tinh ra một khoảng offset cố định khỏi tâm Group đó, rồi chỉ xoay `group.rotation.y` mỗi frame. Vì world position của hành tinh bằng `groupMatrixWorld × offsetLocal`, xoay Group tự động quay cả offset theo đúng một vòng tròn quanh tâm — không cần công thức lượng giác nào trong code animate, chỉ cần tăng dần một góc.
+
+Lồng nhiều cấp Group là cách quỹ đạo-trong-quỹ-đạo hoạt động: một Group "hệ mặt trời" chứa Mặt Trời và một Group "quỹ đạo hành tinh"; Group đó chứa hành tinh và một Group "quỹ đạo mặt trăng" là con của chính hành tinh; Group mặt trăng chứa Mặt Trăng lệch tâm khỏi hành tinh. Xoay Group ngoài cùng quay cả hệ; xoay Group hành tinh chỉ quay mặt trăng quanh hành tinh mà không đụng vào chuyển động riêng của hành tinh quanh mặt trời — đúng bản chất kết hợp tuyến tính của phép nhân ma trận theo chuỗi cha-con.
+
+Group-làm-pivot hôm nay xoay quanh trục cố định bằng tay; bài đọc source Three.js kế tiếp lần theo đúng `updateMatrixWorld()` bạn vừa học khái niệm để thấy dòng code thật xử lý chuỗi nhân này, còn Track 4 (R3F) bọc toàn bộ cơ chế này lại thành `<group>` JSX khai báo thay vì gọi `add()`/`attach()` thủ công.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với scene graph và transform:
+
+1. **Đọc `object.position` để lấy world position của một object lồng sâu trong hierarchy.** `.position` luôn là toạ độ local so với cha trực tiếp — object càng nằm sâu, sai lệch với world position thật càng lớn. Dùng `getWorldPosition(target)` khi cần toạ độ world thật.
+2. **Dùng `add()` khi ý định thực sự là giữ nguyên world transform lúc đổi cha.** `add()` giữ số local, khiến object "nhảy" world position ngay khi gắn vào cha mới có `matrixWorld` khác; `attach()` mới là hàm giữ world transform không đổi.
+3. **Tắt `matrixAutoUpdate` rồi quên gọi `updateMatrix()` sau khi chỉnh transform bằng code.** Object đứng yên ở vị trí cũ dù `.position` đã đổi giá trị trong bộ nhớ — không có lỗi hay warning nào hiện ra, chỉ là hình ảnh sai lặng lẽ.
+
+</Callout>

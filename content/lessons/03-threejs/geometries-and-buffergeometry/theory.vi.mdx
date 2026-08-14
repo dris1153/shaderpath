@@ -1,0 +1,52 @@
+## BufferGeometry là gì: mọi geometry chỉ là dữ liệu attribute
+
+`THREE.BoxGeometry`, `SphereGeometry`, `PlaneGeometry`, `TorusGeometry`... trông như những "hình dạng có sẵn" khác hẳn nhau, nhưng cả bốn — và mọi geometry built-in khác — chỉ là một `BufferGeometry` đã được điền sẵn dữ liệu. Không có class riêng nào cho "hình cầu" ở tầng render: `SphereGeometry` là một hàm chạy một lần lúc khởi tạo, tính toạ độ các đỉnh trên mặt cầu rồi gọi đúng `geometry.setAttribute("position", ...)`, `setAttribute("normal", ...)`, `setAttribute("uv", ...)` — ba dòng lệnh bạn hoàn toàn có thể tự viết tay, như phần sau bài này sẽ làm.
+
+Mỗi attribute là một `BufferAttribute` bọc quanh đúng một `Float32Array` — chính loại dữ liệu Track 1 (bài VBO/VAO) đã giải thích: mảng số thực 32-bit, bố cục byte liên tục, cố định trước, để `gl.bufferData` copy thẳng vào VRAM. `geometry.attributes.position` không phải khái niệm mới của Three.js — nó là tên gọi khác của chính buffer bạn từng `gl.bufferData` tay, còn `geometry.setAttribute("position", ...)` bên dưới sinh ra đúng chuỗi `createBuffer`/`bindBuffer`/`bufferData`/`vertexAttribPointer` mà bài VBO/VAO đã đạo hàm.
+
+## Geometry built-in và tham số segment
+
+Tham số "segment" (`widthSegments`, `heightSegments`...) quyết định lưới tam giác được chia mịn tới đâu — và tác động trực tiếp, đo được, lên số tam giác thật sự gửi xuống GPU mỗi frame. `BoxGeometry` cho công thức sạch nhất để thấy rõ quy luật: mặc định (`segments = 1` trên cả ba trục) sinh đúng $12$ tam giác — $2$ tam giác cho mỗi $6$ mặt. Đặt cùng một số segment $s$ trên cả ba trục, mỗi mặt trở thành lưới $s \times s$ ô ($2s^2$ tam giác/mặt), tổng đúng $12s^2$ tam giác toàn khối — đo trực tiếp trên phiên bản Three.js dùng trong track này: $s=2$ cho $48$, $s=4$ cho $192$, $s=8$ cho $768$. Tăng gấp đôi segment không "mượt hơn một chút" — nó nhân đúng $4$ lần số tam giác, vì cả hai chiều của lưới trên mỗi mặt cùng tăng theo cùng tỉ lệ.
+
+`SphereGeometry(radius, widthSegments, heightSegments)` không cho công thức sạch bằng: hai hàng cực (Bắc/Nam) của lưới chỉ sinh một tam giác cho mỗi cột thay vì một tứ giác (hai tam giác) như các hàng giữa, vì mọi đỉnh trong một hàng cực trùng nhau về mặt hình học — Three.js bỏ qua tam giác suy biến đó. Đo trực tiếp: `SphereGeometry(1, 8, 8)` cho $112$ tam giác — nhận ra là hình cầu nhưng cạnh lởm chởm rõ; `(1, 16, 16)` cho $480$ tam giác, hơn $4$ lần; `(1, 32, 32)` cho $1984$ tam giác — gần nhưng chưa đúng $4$ lần nữa ($\approx 4{,}13\times$), vì phần "tiết kiệm" ở hai hàng cực chiếm tỉ lệ ngày càng nhỏ khi lưới càng mịn. Không có một công thức duy nhất đúng cho mọi geometry built-in — quy tắc chung cần nhớ là: segment tăng kéo theo số tam giác tăng ít nhất tuyến tính, và gần bậc hai khi cả hai chiều lưới cùng tăng theo cùng tỉ lệ. Bài Performance ở Track 12 sẽ quay lại đúng phép tăng này khi đếm draw call ngân sách cho cả scene.
+
+## Dựng BufferGeometry tay: một hình chóp từ position, normal và index
+
+Cách chắc chắn nhất để hiểu `BufferGeometry` không phải đọc lý thuyết thêm, mà tự dựng một cái từ ba mảng thô. Lấy một hình chóp đáy vuông làm ví dụ: $5$ đỉnh hình học duy nhất — $1$ đỉnh chóp $A$ và $4$ góc đáy $B_0..B_3$ — nhưng vì shading **phẳng** (mỗi mặt một pháp tuyến riêng, dựng bằng đúng `cross()` đã học ở Track 0: $\vec n = \widehat{(B_1 - B_0) \times (A - B_0)}$), $4$ mặt bên tam giác không thể chia sẻ đỉnh với nhau — mỗi mặt cần bản sao `position` riêng đi kèm `normal` riêng của chính nó, dù toạ độ trùng nhau. Kết quả: $4$ mặt bên $\times 3 = 12$ entry buffer không chia sẻ được, cộng $4$ đỉnh đáy — đáy phẳng nên cả $4$ đỉnh dùng chung đúng một pháp tuyến $(0,-1,0)$, chia sẻ được — ra tổng **$16$ entry vertex** trong buffer, dù hình chỉ có $5$ điểm hình học khác nhau.
+
+```js
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(new Float32Array(positions), 3),
+);
+geometry.setAttribute(
+  "normal",
+  new THREE.BufferAttribute(new Float32Array(normals), 3),
+);
+geometry.setIndex(indices); // 6 tam giác × 3 = 18 chỉ số, tham chiếu vào 16 entry
+```
+
+Demo dưới đây build chính xác hình chóp này lúc runtime, gọi `faceNormal()` — cùng công thức `triangleNormal()` ở bài dot/cross Track 0 — cho từng mặt, để bạn thấy `position`/`normal`/`uv` không phải field ẩn Three quản lý hộ, mà là mảng số bạn hoàn toàn kiểm soát.
+
+## Index vs non-indexed: chia sẻ đỉnh khi nào, không khi nào
+
+`setIndex()` chỉ tiết kiệm bộ nhớ khi nhiều tam giác thật sự dùng chung một entry vertex **giống hệt nhau** — cùng position, cùng normal, cùng uv. Một cube mặc định minh hoạ rõ: $8$ góc hình học, nhưng shading phẳng cần $4$ entry/mặt $\times 6$ mặt $= 24$ entry vertex — mỗi góc hình học xuất hiện lặp ở $3$ mặt kề nhau với $3$ normal khác nhau, không thể gộp. Chỗ index thật sự có tác dụng là **trong cùng một mặt**: $2$ tam giác của một mặt vuông chia sẻ đúng $2$ trong $4$ đỉnh của mặt đó (cùng normal, vì cùng mặt phẳng) — index buffer của cube dùng $12$ tam giác $\times 3 = 36$ chỉ số nhưng chỉ trỏ vào $24$ entry, tiết kiệm $12$ lần tra cứu trùng lặp. Hình chóp ở trên cho thấy đúng giới hạn ngược lại: $4$ mặt bên là tam giác đơn, không có "tam giác thứ hai cùng mặt" để chia sẻ — chỉ đáy (một mặt tứ giác gồm $2$ tam giác) mới hưởng lợi từ index, đúng $2$ đỉnh dùng chung trong tổng $18$ chỉ số.
+
+Non-indexed (`setIndex(null)`, hoặc chỉ set `position`/`normal` mà không gọi `setIndex`) buộc mỗi tam giác giữ trọn $3$ entry riêng — đơn giản hơn để build, nhưng lãng phí bộ nhớ đúng bằng phần chia sẻ index vừa bỏ lỡ. Hai lệnh vẽ bên dưới coi như tương đương nhau (`gl.drawArrays` cho non-indexed, `gl.drawElements` cho indexed) — khác biệt chỉ nằm ở việc GPU đọc `position`/`normal` trực tiếp theo thứ tự buffer, hay tra qua một buffer chỉ số trung gian trước.
+
+## `geometry.dispose()` và vì sao phải gọi
+
+`BufferGeometry` không tự giải phóng gì khi bị garbage-collect ở phía JavaScript — các buffer WebGL thật sự (`WebGLBuffer` cho mỗi attribute và cho index) sống trong VRAM, ngoài tầm với của garbage collector JS. Gọi `geometry.dispose()` bảo `WebGLRenderer` chạy đúng chuỗi `gl.deleteBuffer` cho từng buffer đó — chính lệnh Track 1 (bài VBO/VAO) đã nhắc tới nhưng chưa cần dùng vì demo ở đó không bao giờ tạo buffer mới giữa chừng.
+
+Con số cụ thể để thấy mức độ nghiêm trọng: một `SphereGeometry(1, 64, 64)` có $65 \times 65 = 4225$ vertex, mỗi vertex mang `position` + `normal` + `uv` ($3+3+2=8$ số thực, $32$ byte) — khoảng $132\text{KB}$ VRAM cho một geometry. Demo dưới đây đổi geometry mỗi khi bạn kéo slider `segments`, và luôn `dispose()` geometry cũ trước khi gán geometry mới — đúng thứ tự bắt buộc. Bỏ qua bước `dispose()` đó (lỗi rất dễ mắc khi tự viết) rò rỉ khoảng $132\text{KB}$ mỗi lần đổi; kéo slider liên tục ở $60$ lần/giây, tốc độ rò rỉ xấp xỉ $7.7\text{MB}$ mỗi giây — đủ crash tab trong vài phút.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với geometry và BufferGeometry:
+
+1. **Gán geometry mới cho mesh mà không `dispose()` geometry cũ.** `mesh.geometry = newGeometry` chỉ đổi tham chiếu JavaScript — buffer WebGL của geometry cũ vẫn nằm nguyên trong VRAM cho tới khi bạn tự gọi `dispose()` trên nó.
+2. **Tưởng segment càng cao càng "an toàn".** Khi cả `widthSegments` lẫn `heightSegments` cùng tăng, số tam giác tăng gần bậc hai, không phải một khoản chi phí nhỏ tuyến tính — `SphereGeometry(1, 24, 10)` cho $432$ tam giác, `SphereGeometry(1, 50, 50)` cho $4900$ — hơn $11$ lần cho một cải thiện thị giác thường không đáng.
+3. **Kỳ vọng `setIndex()` luôn tiết kiệm bộ nhớ.** Index chỉ có tác dụng khi các tam giác thật sự chia sẻ entry vertex giống hệt nhau (thường xảy ra trong cùng một mặt phẳng); với hình học toàn mặt tam giác rời như hình chóp ở trên, phần lớn entry vẫn không chia sẻ được dù có `setIndex()`.
+
+</Callout>

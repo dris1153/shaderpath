@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài checkpoint đóng module "Ánh sáng, Texture & Asset": không có lý thuyết mới, chỉ có một sản phẩm chạy được — một mini GLTF viewer chứng minh bạn ghép được `GLTFLoader`, bounding-box framing, `OrbitControls`, shadow map và dispose thủ công thành một component hoàn chỉnh, không rò rỉ khi đổi model hay unmount.
+
+## Yêu cầu
+
+Parse glTF hình khối nhúng sẵn (dùng lại đúng data file và hàm `disposeHierarchy` từ bài `loading-gltf-draco-meshopt`) bằng `GLTFLoader.parse()`. Tính bounding box bằng `Box3.setFromObject`, dùng tâm và bán kính bao đó để tự động đặt camera sao cho model luôn vừa khung hình dù to hay nhỏ — không hardcode khoảng cách. Gắn `OrbitControls` xoay quanh đúng tâm model. Thêm một `DirectionalLight` bật `castShadow` cùng một `AmbientLight`, đổ bóng model xuống một mặt phẳng ground nhận bóng. Có toggle wireframe. Dispose toàn bộ hierarchy, controls và renderer khi unmount. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Tách rõ ba bước: bounding box chỉ tính được sau khi glTF parse xong, nên toàn bộ setup camera phải chạy trong callback `onLoad`, không phải lúc mount; khoảng cách camera theo fov suy ra từ công thức tam giác vuông giữa bán kính bounding sphere và nửa góc fov; `OrbitControls` cần `controls.target` đặt đúng tâm model trước khi gọi `controls.update()` lần đầu, và `update()` phải chạy lại mỗi frame vì damping đang bật.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — model luôn nằm gọn trong khung hình bất kể to nhỏ, orbit mượt quanh đúng tâm, bóng đổ rõ ràng không bị acne/peter-panning nặng, và không còn object nào sống sót trong scene sau khi unmount.

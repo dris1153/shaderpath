@@ -1,0 +1,76 @@
+## Vì sao đọc source là thói quen senior
+
+Docs Three.js mô tả API bằng ngôn ngữ tự nhiên: "`attach()` giữ nguyên world transform", "`frustumCulled` bỏ qua object nằm ngoài camera". Câu hỏi của một kỹ sư senior không dừng ở đó — nó là "giữ world transform bằng đúng phép toán nào, theo thứ tự nào", "bounding sphere dùng để cull được tính TRƯỚC hay SAU khi vertex shader chạy". Không tài liệu nào, kể cả docs chính thức, trả lời được ở mức cơ chế; chỉ định nghĩa hàm mới trả lời chính xác, vì định nghĩa CHÍNH LÀ hành vi, không phải bản tóm tắt có thể lỗi thời hay đơn giản hoá quá tay. Three.js là mã nguồn mở MIT, khoảng vài trăm file JavaScript đọc thẳng được trên GitHub hoặc ngay trong `node_modules/three/src` sau khi `pnpm install` — không có lý do gì để đoán khi câu trả lời cách một `grep` hoặc một cú `Ctrl+click`.
+
+## Object3D: position, quaternion, scale và cặp updateMatrix/updateMatrixWorld
+
+Mở [`Object3D.js`](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js), constructor định nghĩa `position`, `rotation` (Euler), `quaternion`, `scale` bằng `Object.defineProperties` ([L160-226](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L160-L226)) — bốn thuộc tính này chỉ là dữ liệu thô, KHÔNG tự sinh ra `matrix`. Hai dòng tiếp theo tạo `this.matrix` và `this.matrixWorld` ([L233, L241](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L233)), cùng flag `matrixAutoUpdate` bạn đã gặp ở bài trước ([L253](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L253)). `updateMatrix()` ([L1133-1152](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1133-L1152)) chỉ làm một việc: `this.matrix.compose(this.position, this.quaternion, this.scale)`, rồi đặt `matrixWorldNeedsUpdate = true`. `updateMatrixWorld(force)` ([L1165-1203](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1165-L1203)) làm việc thứ hai: nếu có cha, nhân `matrixWorld` của cha với `matrix` cục bộ —
+
+```js
+this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
+```
+
+đúng công thức $M_{world} = M_{parent,\,world} \cdot M_{local}$ bạn đã học ở lý thuyết, giờ thấy tận mắt trong code thật, rồi đệ quy xuống từng `child.updateMatrixWorld(force)` — thứ tự cha trước con sau không phải quy ước tuỳ chọn, nó là cấu trúc vòng lặp `for` ngay trong hàm.
+
+## add, remove, attach: attach() thực sự đổi hệ quy chiếu
+
+`add(object)` ([L746-787](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L746-L787)) chỉ gỡ `object` khỏi cha cũ, gán `object.parent = this`, và `push` vào mảng `children` — không một dòng nào chạm tới `object.position`. Hệ quả: nếu `object.position` từng là toạ độ local trong hệ quy chiếu cũ, sau `add()` con số đó được TÁI DIỄN GIẢI nguyên xi trong hệ quy chiếu mới — object nhảy vị trí ngay lập tức nếu cha mới không ở gốc toạ độ. `attach(object)` ([L874-908](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L874-L908)) làm nhiều hơn hẳn: nó gọi `updateWorldMatrix`, dựng ma trận nghịch đảo của `this.matrixWorld`, nhân thêm `matrixWorld` của cha cũ (nếu có), rồi gọi `object.applyMatrix4(_m1)` — chính bước này viết lại `object.position/quaternion/scale` sao cho world transform giữ nguyên — TRƯỚC KHI mới thật sự đổi `object.parent`. Đọc đúng thứ tự bốn dòng này là câu trả lời chính xác cho câu hỏi "attach khác add ở đâu", không cần đoán.
+
+## traverse: duyệt toàn bộ scene graph
+
+`traverse(callback)` ([L1070-1082](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1070-L1082)) gọi `callback(this)` trước, rồi lặp `children` gọi đệ quy — DFS tiền thứ tự (pre-order), cha luôn thăm trước con. JSDoc ngay phía trên hàm còn ghi chú "Modifying the scene graph inside the callback is discouraged" — một cảnh báo về hành vi thật (sửa `children` đang bị lặp giữa chừng) mà không phải trang docs nào cũng nhắc tới rõ ràng như vậy.
+
+## WebGLRenderer.render(): projScreenMatrix và bước frustum culling
+
+Trong [`WebGLRenderer.js`](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js), `this.render = function(scene, camera)` ([bắt đầu L1609](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1609)) trước tiên cập nhật `matrixWorld` của scene và camera, rồi dựng:
+
+```js
+_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
+_frustum.setFromProjectionMatrix( _projScreenMatrix, WebGLCoordinateSystem, camera.reversedDepth );
+```
+([L1658-1659](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1658-L1659)) — sáu mặt phẳng frustum tính thẳng từ tích ma trận projection × view, đúng như Model→View→Projection bạn học ở Track 0. Hàm nội bộ `projectObject` đệ quy toàn bộ cây scene giống hệt `traverse`, và với mỗi Mesh chỉ đẩy vào render list nếu:
+
+```js
+if ( ! object.frustumCulled || _frustum.intersectsObject( object ) )
+```
+([L1885](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1885)) — object nằm hẳn ngoài sáu mặt phẳng đó bị loại TRƯỚC khi tới bất kỳ lệnh `gl.draw*` nào, không tốn một fragment shader invocation nào cho nó.
+
+## Sắp xếp render list: opaque trước-sau, transparent sau-trước — vì sao
+
+Ngay sau khi duyệt xong cây, `render()` gọi `currentRenderList.sort(_opaqueSort, _transparentSort, ...)` nếu `this.sortObjects === true` ([L1685-1689](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1685-L1689)). Hai hàm sort nằm trong [`WebGLRenderLists.js`](https://github.com/mrdoob/three.js/blob/r185/src/renderers/webgl/WebGLRenderLists.js#L1-L51): `painterSortStable` so `a.z - b.z` (tăng dần — gần trước, xa sau) cho danh sách **opaque**; `reversePainterSortStable` so `b.z - a.z` (giảm dần — xa trước, gần sau) cho danh sách **transparent**. Lý do khác nhau nối thẳng về Track 1: opaque vẽ gần-trước-xa-sau để depth test loại sớm fragment bị che khuất (early-Z) — vẽ ĐÚNG thứ tự nào cũng ra màu đúng nhờ depth buffer, chỉ khác hiệu năng. Transparent thì KHÔNG có depth buffer cứu — alpha blending là phép trộn tuần tự phụ thuộc thứ tự tuyệt đối, vẽ sai thứ tự cho ra màu sai hẳn (không chỉ chậm hơn), nên buộc phải vẽ xa trước để mỗi lớp mới luôn blend đúng lên trên lớp cũ.
+
+## WebGLState: nơi kiến thức Track 1 sống bên dưới
+
+Track 1 dạy `gl.enable(gl.DEPTH_TEST)`/`gl.disable(...)` gọi trực tiếp. `WebGLState.js` bọc lại đúng hai lệnh đó bằng một cache:
+
+```js
+function enable( id ) {
+  if ( enabledCapabilities[ id ] !== true ) {
+    gl.enable( id );
+    enabledCapabilities[ id ] = true;
+  }
+}
+```
+([L461-470](https://github.com/mrdoob/three.js/blob/r185/src/renderers/webgl/WebGLState.js#L461-L470)) — mỗi material/mesh yêu cầu bật `DEPTH_TEST` không tự động sinh ra một lệnh `gl.enable` thật; chỉ khi trạng thái THỰC SỰ đổi so với `enabledCapabilities[id]` đang cache, Three.js mới chạm tới driver. Đây là chỗ chính xác API WebGL thuần bạn viết tay ở Track 1 vẫn đang chạy — chỉ ẩn sau một lớp diff state để tránh gọi lặp lãng phí.
+
+## Cách tự đọc source: jsdelivr, GitHub, và test như tài liệu
+
+Ba mẹo thực dụng khi cần tra cứu:
+
+- Chốt đúng phiên bản: three@0.185.1 (bản cài trong repo này) khớp tag GitHub `r185` — đường dẫn dạng `github.com/mrdoob/three.js/blob/r185/src/...` là permalink cố định, không trôi theo `dev`/`master`.
+- Không muốn clone repo: `cdn.jsdelivr.net/npm/three@0.185.1/src/core/Object3D.js` phục vụ đúng file nguồn đó, dùng để dán link hoặc fetch trong console.
+- Tìm nhanh trong repo: GitHub có file finder (`t`) và tìm ký tự `/` để search theo path; câu hỏi kiểu "hàm này có ném lỗi khi tham số null không" thường trả lời nhanh nhất bằng cách đọc file test tương ứng dưới `test/unit/src/...` — test khẳng định input → output cụ thể, chặt hơn một dòng JSDoc.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tự tra cứu source Three.js:
+
+1. **Tưởng `add()` giữ world position như `attach()`.** `add()` không đụng tới `position` — object bị tái diễn giải toạ độ cục bộ trong hệ quy chiếu mới, nhảy vị trí ngay khi cha mới không ở gốc toạ độ; muốn giữ world transform bắt buộc phải dùng `attach()`.
+2. **Tin `frustumCulled` luôn đúng với geometry bị vertex shader di chuyển.** Test cull dùng `geometry.boundingSphere` tính từ vị trí đỉnh GỐC trên CPU, TRƯỚC khi vertex shader chạy — một shader làm cây đung đưa hay particle bay xa khỏi bounding sphere gốc có thể bị cull nhầm dù vẫn "nhìn thấy được"; phải tự phóng to `boundingSphere.radius` hoặc tắt `frustumCulled` cho geometry loại này.
+3. **Đọc code trên branch `dev`/`master` rồi áp cho bản `three` đã cài.** GitHub mặc định hiển thị branch mới nhất, luôn đi trước phiên bản npm đã pin trong `package.json`; hành vi có thể đã đổi giữa hai bản. Luôn mở đúng tag khớp version cài đặt, như `r185` ở bài này.
+
+</Callout>
+
+## Kết nối về sau
+
+Checkpoint ngay sau bài này dùng lại chính `attach()`, `traverse()` và raycasting để dựng một showroom hoàn chỉnh — không lý thuyết mới, chỉ ráp những gì vừa đọc thành sản phẩm chạy thật. Track 4 (R3F) không thay thế `WebGLRenderer` này — `useFrame` của R3F gọi thẳng đúng hàm `render()` bạn vừa đọc; và Track 6 (Custom Shader) sẽ patch trực tiếp vào layer state/material nằm ngay cạnh `WebGLState` qua `onBeforeCompile`.

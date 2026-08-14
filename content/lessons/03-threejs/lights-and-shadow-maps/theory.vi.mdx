@@ -1,0 +1,74 @@
+## Năm loại light, hai nhóm chi phí hoàn toàn khác nhau
+
+Three.js có năm loại light dựng sẵn hay dùng nhất, nhưng về bản chất chúng chia làm hai nhóm chi phí rất khác nhau. Nhóm thứ nhất — `AmbientLight` và `HemisphereLight` — không có hướng, không có vị trí ảnh hưởng đến shading, và quan trọng nhất: **không thể đổ bóng**. `AmbientLight(color, intensity)` cộng thẳng một màu đồng nhất vào mọi fragment bất kể hướng pháp tuyến — đúng nghĩa "fill" lấp vùng tối hoàn toàn đen mà ánh sáng trực tiếp không chạm tới. `HemisphereLight(skyColor, groundColor, intensity)` tinh tế hơn một chút: nội suy giữa hai màu theo thành phần $y$ của pháp tuyến bề mặt (mặt hướng lên trời nhận `skyColor`, mặt hướng xuống đất nhận `groundColor`) — vẫn chỉ là một phép nội suy dựa trên hướng, không có shadow map, không có light-space transform nào cả. Cả hai rẻ gần như miễn phí: chi phí thêm trên mỗi fragment chỉ là một phép cộng (hoặc một `mix`), không nhân thêm draw call nào.
+
+Nhóm thứ hai — `DirectionalLight`, `PointLight`, `SpotLight` — có hướng thật và **có thể** đổ bóng, nhưng ba loại này không đồng chi phí. `DirectionalLight` mô phỏng mặt trời: tia sáng song song, không suy giảm theo khoảng cách, hướng xác định bởi vector từ `light.position` đến `light.target.position`. `SpotLight` phát từ một điểm theo hình nón, có thêm `angle` (góc mở) và `penumbra` (độ mềm biên nón) — tốn hơn Directional một chút vì phải tính thêm suy giảm góc/khoảng cách mỗi fragment. `PointLight` phát toàn hướng từ một điểm — không có "phía sau" — nên khi bật shadow, nó phải render **sáu** lần vào sáu mặt của một cube map (một `PerspectiveCamera` 90° cho mỗi mặt) thay vì một lần như Directional/Spot. Đây là bậc thang chi phí thật: fill (Ambient/Hemisphere) < light có hướng không bóng < Directional/Spot có bóng (1 pass phụ) < Point có bóng (6 pass phụ).
+
+## Shadow không tự động: bốn cờ phải bật đúng cả bốn
+
+Có shadow trong scene không phải mặc định — quên một trong bốn bước sau, bóng không xuất hiện mà không có lỗi console nào cảnh báo bạn:
+
+```js
+renderer.shadowMap.enabled = true; // 1. renderer: bật cả pipeline shadow
+light.castShadow = true; // 2. light: light này CÓ render shadow map
+mesh.castShadow = true; // 3. mesh: mesh này ĐƯỢC vẽ vào shadow map
+ground.receiveShadow = true; // 4. mesh khác: mesh này ĐỌC shadow map khi shading
+```
+
+Bốn cờ độc lập vì chúng phục vụ hai giai đoạn khác nhau của pipeline. `castShadow` quyết định object có được vẽ trong **pass phụ** — một lần render toàn bộ scene từ góc nhìn của light vào một depth texture, gọi là shadow map. `receiveShadow` quyết định object có **đọc** shadow map đó khi tính màu ở pass chính hay không. Một quả cầu `castShadow = true` nhưng mặt sàn `receiveShadow = false` sẽ khiến quả cầu "đổ bóng" vào shadow map hoàn hảo, nhưng mặt sàn render ra hoàn toàn sạch bóng vì nó không bao giờ tra cứu shadow map lúc shading.
+
+## Shadow camera & frustum: vùng nhìn thấy của ánh sáng, không phải của bạn
+
+Shadow map bản chất là một ảnh depth chụp từ góc nhìn ánh sáng — nên nó cần một camera riêng, gọi là shadow camera, gắn ở `light.shadow.camera`. Với `DirectionalLight`, đó là một `OrthographicCamera` (vì tia sáng song song, không hội tụ) với `left/right/top/bottom/near/far` xác định một hộp — chỉ những gì nằm trong hộp đó mới được render vào shadow map. Object nằm ngoài frustum này hoàn toàn không tồn tại đối với shadow pass, dù nó hiện rõ ràng trong camera chính của bạn — hệ quả là bóng biến mất đột ngột đúng ở ranh giới hộp, một lỗi trông giống bug nhưng thực chất là frustum đặt quá hẹp so với kích thước scene.
+
+```js
+light.shadow.camera.left = -5;
+light.shadow.camera.right = 5;
+light.shadow.camera.top = 5;
+light.shadow.camera.bottom = -5;
+light.shadow.camera.near = 1;
+light.shadow.camera.far = 25;
+light.shadow.camera.updateProjectionMatrix();
+```
+
+Đặt hộp này khớp sát vùng có object cần đổ bóng — quá rộng lãng phí độ phân giải shadow map (mỗi texel phải phủ một vùng lớn hơn, bóng càng khối/lởm chởm ở cùng `mapSize`); quá hẹp thì vật thể ở rìa scene mất bóng hoàn toàn.
+
+## shadow.mapSize: độ phân giải và cái giá bộ nhớ thật
+
+`light.shadow.mapSize.set(w, h)` (mặc định $512 \times 512$) quyết định độ phân giải của texture depth dùng làm shadow map. Ước lượng, giả sử mỗi texel lưu một giá trị depth 16-bit (2 byte) — mức phổ biến cho render target dạng này:
+
+$$
+512 \times 512 = 262{,}144 \text{ texel} \times 2\text{ byte} \approx 512\text{ KB}
+$$
+
+Tăng gấp đôi một chiều không tăng gấp đôi bộ nhớ — nó tăng **gấp bốn**, vì số texel tăng theo cả hai chiều cùng lúc:
+
+$$
+1024 \times 1024 \approx 2\text{ MB} \quad (\times 4 \text{ so với } 512) \qquad 2048 \times 2048 \approx 8\text{ MB} \quad (\times 4 \text{ so với } 1024,\ \times 16 \text{ so với } 512)
+$$
+
+Và với `PointLight`, nhân thêm 6 vì shadow map là cube map sáu mặt — một Point light shadow $2048^2$ tốn xấp xỉ $8\text{MB} \times 6 \approx 48\text{MB}$ chỉ riêng cho một light, lý do thực dụng để không bao giờ đặt `mapSize` lớn cho Point light một cách tuỳ tiện.
+
+## Shadow acne và peter-panning: cùng một nguyên nhân gốc, hai triệu chứng ngược nhau
+
+Shadow map chỉ lưu **một** giá trị depth cho mỗi texel — texel đó đại diện cho cả một vùng bề mặt, không phải một điểm toán học. Khi render pass chính so sánh depth thật của một fragment với giá trị lưu trong texel tương ứng, sai số làm tròn/nội suy khiến fragment đang được chiếu sáng đúng lại bị so sánh "sâu hơn" giá trị đã lưu — kết luận sai rằng nó nằm trong bóng của chính nó. Kết quả là các sọc/nhiễu moiré lấm tấm trên bề mặt lẽ ra phải sáng đều, gọi là **shadow acne**, rõ nhất ở góc nghiêng gần song song với hướng sáng (grazing angle) vì depth biến thiên rất nhanh trong phạm vi một texel ở góc đó.
+
+`shadow.bias` sửa lỗi này bằng cách cộng thêm một hằng số rất nhỏ vào phép so sánh depth (giá trị âm điển hình, ví dụ $-0.005$), đẩy ngưỡng so sánh lùi lại đủ để loại bỏ các so sánh dương tính giả. Nhưng đẩy quá tay lại gây ra triệu chứng ngược: **peter-panning** — điểm tiếp xúc thật giữa vật thể và mặt sàn (nơi lẽ ra phải có bóng) giờ bị bias đẩy qua ngưỡng, tính nhầm thành "không bị che" — bóng tách rời khỏi chân vật thể, lơ lửng như thể vật thể không có bóng thật (tên gọi theo hình ảnh Peter Pan bị mất bóng). `shadow.normalBias` là một cách sửa khác: thay vì dịch giá trị depth, nó dịch **vị trí lấy mẫu** dọc theo pháp tuyến bề mặt trước khi chiếu vào light space — giảm acne ở bề mặt cong mà ít gây peter-panning hơn so với `bias` thô, thường dùng phối hợp cả hai (ví dụ `bias = -0.005`, `normalBias = 0.02` cho Directional light).
+
+## Làm mềm biên bóng: từ so sánh nhị phân đến PCF/PCFSoft
+
+Phép so sánh depth thô cho kết quả nhị phân — trong bóng hoặc không — khiến biên bóng răng cưa sắc lẹm đúng theo lưới texel của shadow map. `renderer.shadowMap.type = THREE.PCFShadowMap` (mặc định của Three.js) lấy mẫu một cụm texel lân cận quanh toạ độ shadow-map của fragment, lấy trung bình kết quả nhị phân đó thành một tỉ lệ liên tục — tạo gradient mềm ở biên thay vì cạnh cứng, đổi lại vài lần lấy mẫu texture thêm mỗi fragment. `THREE.PCFSoftShadowMap` dùng một kernel lấy mẫu rộng hơn cho biên mềm và tự nhiên hơn rõ rệt, chi phí thêm không đáng kể trên GPU hiện đại so với lợi ích hình ảnh.
+
+## Kết nối về sau
+
+Shadow map dựng sẵn ở đây là nền tảng — Track 11 (PBR) quay lại vấn đề ánh sáng gián tiếp bằng image-based lighting, nơi shadow cứng nhắc kiểu này không đủ để mô phỏng bóng đổ mềm của ánh sáng môi trường; Track 12 (Performance) đi sâu vào chi phí thật của nhiều shadow-casting light cùng lúc trên một scene và cách cắt giảm nó khi cần chạy trên di động. Nắm chắc bốn cờ, frustum và bias ngay bây giờ nghĩa là những track sau chỉ còn phải tối ưu, không phải học lại từ đầu.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với light và shadow map:
+
+1. **Bật `castShadow` trên light và mesh nhưng quên `renderer.shadowMap.enabled = true`.** Cả pipeline shadow tắt hoàn toàn ở cấp renderer, khiến castShadow/receiveShadow trên từng object trở thành vô nghĩa mà không có lỗi nào báo.
+2. **Quên `receiveShadow = true` trên mặt sàn.** Vật thể vẫn đổ bóng đúng vào shadow map, nhưng mặt sàn không bao giờ tra cứu shadow map khi shading nên bóng không hiện — dễ nhầm là lỗi ở light hoặc camera thay vì thiếu đúng một cờ trên mesh nhận bóng.
+3. **Tăng `bias` thật lớn để "chữa" shadow acne mà không kiểm tra lại điểm tiếp xúc.** Acne biến mất nhưng đổi sang peter-panning, bóng trôi khỏi chân vật thể; nên tăng từng bước nhỏ, hoặc ưu tiên `normalBias` trước khi đẩy `bias` thô lên cao.
+
+</Callout>

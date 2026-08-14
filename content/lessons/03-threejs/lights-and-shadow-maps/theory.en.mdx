@@ -1,0 +1,74 @@
+## Five Light Types, Two Very Different Cost Tiers
+
+Three.js ships five light types you'll reach for constantly, and they split into two cost tiers that matter a lot once shadows enter the picture. The first tier — `AmbientLight` and `HemisphereLight` — has no direction, no position that affects shading, and critically: **neither can cast a shadow**. `AmbientLight(color, intensity)` adds a flat, uniform color to every fragment regardless of its normal — a pure "fill" that keeps areas untouched by direct light from going fully black. `HemisphereLight(skyColor, groundColor, intensity)` is a touch more nuanced: it interpolates between two colors based on the surface normal's $y$ component (faces pointing skyward lean toward `skyColor`, faces pointing down toward `groundColor`) — still just a direction-based blend, no shadow map, no light-space transform involved. Both are close to free: the added per-fragment cost is one addition (or one `mix`), and neither adds a single extra draw call.
+
+The second tier — `DirectionalLight`, `PointLight`, `SpotLight` — has a real direction and **can** cast shadows, but the three aren't equally expensive. `DirectionalLight` simulates the sun: parallel rays, no distance falloff, direction defined by the vector from `light.position` to `light.target.position`. `SpotLight` emits from a point in a cone, with an extra `angle` (cone half-angle) and `penumbra` (edge softness) — slightly pricier than Directional since it computes an extra angular/distance falloff per fragment. `PointLight` radiates in every direction from a point — there's no "back side" — so once shadows are enabled it has to render **six** times into the six faces of a cube map (a 90° `PerspectiveCamera` per face) instead of once like Directional/Spot. That's the real cost ladder: fill lights (Ambient/Hemisphere) < a directional light with no shadow < Directional/Spot with shadows (one extra pass) < Point with shadows (six extra passes).
+
+## Shadows Aren't Automatic: Four Flags, All Four Must Be On
+
+Shadows showing up in a scene isn't the default — skip any one of these four steps and nothing appears, with zero console warning to tell you why:
+
+```js
+renderer.shadowMap.enabled = true; // 1. renderer: turn the whole shadow pipeline on
+light.castShadow = true; // 2. light: this light DOES render a shadow map
+mesh.castShadow = true; // 3. mesh: this mesh gets DRAWN into the shadow map
+ground.receiveShadow = true; // 4. another mesh: this mesh READS the shadow map when shading
+```
+
+The four flags are independent because they serve two different pipeline stages. `castShadow` decides whether an object gets rendered in a **secondary pass** — a full re-render of the scene from the light's point of view into a depth texture, the shadow map. `receiveShadow` decides whether an object **samples** that shadow map while computing its color in the main pass. A sphere with `castShadow = true` but a ground plane with `receiveShadow = false` will cast a perfectly correct shadow into the shadow map, yet the ground renders completely shadow-free because it never looks the shadow map up while shading.
+
+## Shadow Camera & Frustum: The Light's Field of View, Not Yours
+
+A shadow map is fundamentally a depth image captured from the light's point of view — so it needs its own camera, held at `light.shadow.camera`. For a `DirectionalLight`, that's an `OrthographicCamera` (parallel rays don't converge) with `left/right/top/bottom/near/far` defining a box — only what sits inside that box gets rendered into the shadow map. Anything outside this frustum simply doesn't exist for the shadow pass, no matter how visible it is in your main camera — the result is a shadow that vanishes abruptly right at the box's edge, a bug-looking artifact that's actually just a frustum sized too tight for the scene.
+
+```js
+light.shadow.camera.left = -5;
+light.shadow.camera.right = 5;
+light.shadow.camera.top = 5;
+light.shadow.camera.bottom = -5;
+light.shadow.camera.near = 1;
+light.shadow.camera.far = 25;
+light.shadow.camera.updateProjectionMatrix();
+```
+
+Size this box to hug the area that actually needs shadows — too large wastes resolution (each texel now covers more world space, making shadows blockier at the same `mapSize`); too small and objects near the scene's edges lose their shadow entirely.
+
+## shadow.mapSize: Resolution and Its Real Memory Cost
+
+`light.shadow.mapSize.set(w, h)` (defaults to $512 \times 512$) sets the resolution of the depth texture used as the shadow map. As an estimate, assuming each texel stores a 16-bit (2-byte) depth value — a common size for this kind of render target:
+
+$$
+512 \times 512 = 262{,}144 \text{ texels} \times 2\text{ bytes} \approx 512\text{ KB}
+$$
+
+Doubling one dimension doesn't double memory — it **quadruples** it, since texel count grows along both dimensions at once:
+
+$$
+1024 \times 1024 \approx 2\text{ MB} \quad (4\times \text{ vs. } 512) \qquad 2048 \times 2048 \approx 8\text{ MB} \quad (4\times \text{ vs. } 1024,\ 16\times \text{ vs. } 512)
+$$
+
+And for `PointLight`, multiply by another 6, since its shadow map is a six-face cube map — a $2048^2$ Point light shadow costs roughly $8\text{MB} \times 6 \approx 48\text{MB}$ for a single light, a very practical reason never to casually crank `mapSize` up on a Point light.
+
+## Shadow Acne and Peter-Panning: Same Root Cause, Opposite Symptoms
+
+A shadow map stores exactly **one** depth value per texel — that texel stands in for an entire patch of surface, not a mathematical point. When the main pass compares a fragment's real depth against the value stored in its corresponding texel, rounding/interpolation error can make a correctly-lit fragment compare as "deeper" than the stored value — wrongly concluding it's inside its own shadow. The result is speckled moiré stripes across a surface that should be evenly lit, called **shadow acne**, worst at grazing angles (nearly parallel to the light direction) because depth changes very fast across a single texel's footprint there.
+
+`shadow.bias` fixes this by adding a small constant to the depth comparison (a typical negative value like $-0.005$), pushing the comparison threshold back just enough to eliminate the false positives. Push it too far, though, and you get the opposite symptom: **peter-panning** — the real contact point between an object and the ground (where a shadow legitimately belongs) now gets pushed past the threshold too, wrongly computed as "unoccluded" — the shadow detaches from the object's base and appears to float, as if the object lost its shadow like Peter Pan. `shadow.normalBias` fixes acne a different way: instead of shifting the depth value, it shifts the **sample position** along the surface normal before projecting into light space — this reduces acne on curved surfaces with less peter-panning than a raw `bias`, and the two are often tuned together (e.g. `bias = -0.005`, `normalBias = 0.02` for a directional light).
+
+## Softening the Edge: From a Binary Compare to PCF/PCFSoft
+
+A raw depth comparison returns a binary result — in shadow or not — which makes shadow edges razor-sharp and jagged, following the shadow map's texel grid exactly. `renderer.shadowMap.type = THREE.PCFShadowMap` (Three.js's default) samples a small cluster of neighboring texels around the fragment's shadow-map coordinate and averages that binary result into a continuous fraction — producing a soft gradient at the edge instead of a hard line, at the cost of a few extra texture fetches per fragment. `THREE.PCFSoftShadowMap` uses a wider sampling kernel for a noticeably softer, more natural edge, at a cost that's negligible on modern GPUs relative to the visual payoff.
+
+## Where This Connects Later
+
+The shadow maps built here are the foundation — Track 11 (PBR) returns to indirect lighting via image-based lighting, where a shadow this rigid isn't enough to simulate the soft shadowing of ambient environment light; Track 12 (Performance) digs into the real cost of many shadow-casting lights in one scene at once, and how to cut it down for mobile. Get the four flags, the frustum, and bias solid now, and later tracks are pure optimization, not relearning from scratch.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common light/shadow-map mistakes:
+
+1. **Turning on `castShadow` for a light and mesh but forgetting `renderer.shadowMap.enabled = true`.** The entire shadow pipeline stays off at the renderer level, so every per-object castShadow/receiveShadow flag becomes meaningless with no error to tell you why.
+2. **Forgetting `receiveShadow = true` on the ground.** The object still casts a perfectly correct shadow into the shadow map, but the ground never samples that map while shading, so no shadow appears — easy to misdiagnose as a light or camera bug instead of one missing flag on the receiving mesh.
+3. **Cranking `bias` way up to "fix" shadow acne without re-checking the contact point.** The acne disappears but flips into peter-panning, the shadow drifting off the object's base; increase it in small steps instead, or reach for `normalBias` before pushing raw `bias` too far.
+
+</Callout>

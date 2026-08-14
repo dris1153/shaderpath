@@ -1,0 +1,15 @@
+## Goal
+
+This checkpoint closes the "Lights, Textures & Assets" module: no new theory, just a working artifact that proves you can combine `GLTFLoader`, bounding-box framing, `OrbitControls`, shadow maps and manual disposal into one complete component that doesn't leak when the model changes or the component unmounts.
+
+## Requirements
+
+Parse the embedded cube glTF (reuse the exact same data file and `disposeHierarchy` function from the `loading-gltf-draco-meshopt` lesson) with `GLTFLoader.parse()`. Compute a bounding box with `Box3.setFromObject`, and use its center and bounding radius to automatically place the camera so the model is always framed, whether it's tiny or huge — no hardcoded distance. Attach `OrbitControls` orbiting around the model's actual center. Add a `DirectionalLight` with `castShadow` on, plus an `AmbientLight`, casting the model's shadow onto a ground plane that receives it. Include a wireframe toggle. Dispose the entire hierarchy, the controls and the renderer on unmount. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Split the work into three clear steps: the bounding box can only be computed after the glTF finishes parsing, so all camera setup has to run inside the `onLoad` callback, not at mount time; the camera distance from fov follows a right-triangle formula between the bounding sphere's radius and half the fov angle; `OrbitControls` needs `controls.target` set to the model's center before the first `controls.update()` call, and `update()` has to run again every frame since damping is enabled.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the model always sits fully framed regardless of size, orbiting stays smooth around the correct center, shadows are clearly visible without heavy acne or peter-panning, and no object survives in the scene after unmount.

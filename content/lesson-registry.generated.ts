@@ -172,6 +172,62 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/theory.vi.mdx"),
     en: () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/theory.en.mdx"),
   },
+  "animation-mixer-and-clips": {
+    vi: () => import("./lessons/03-threejs/animation-mixer-and-clips/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/animation-mixer-and-clips/theory.en.mdx"),
+  },
+  "cameras-and-controls": {
+    vi: () => import("./lessons/03-threejs/cameras-and-controls/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/cameras-and-controls/theory.en.mdx"),
+  },
+  "checkpoint-gltf-viewer": {
+    vi: () => import("./lessons/03-threejs/checkpoint-gltf-viewer/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/checkpoint-gltf-viewer/theory.en.mdx"),
+  },
+  "checkpoint-interactive-showroom": {
+    vi: () => import("./lessons/03-threejs/checkpoint-interactive-showroom/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/checkpoint-interactive-showroom/theory.en.mdx"),
+  },
+  "checkpoint-primitive-still-life": {
+    vi: () => import("./lessons/03-threejs/checkpoint-primitive-still-life/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/checkpoint-primitive-still-life/theory.en.mdx"),
+  },
+  "geometries-and-buffergeometry": {
+    vi: () => import("./lessons/03-threejs/geometries-and-buffergeometry/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/geometries-and-buffergeometry/theory.en.mdx"),
+  },
+  "lights-and-shadow-maps": {
+    vi: () => import("./lessons/03-threejs/lights-and-shadow-maps/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/lights-and-shadow-maps/theory.en.mdx"),
+  },
+  "loading-gltf-draco-meshopt": {
+    vi: () => import("./lessons/03-threejs/loading-gltf-draco-meshopt/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/loading-gltf-draco-meshopt/theory.en.mdx"),
+  },
+  "materials-from-basic-to-physical": {
+    vi: () => import("./lessons/03-threejs/materials-from-basic-to-physical/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/materials-from-basic-to-physical/theory.en.mdx"),
+  },
+  "raycasting-and-picking": {
+    vi: () => import("./lessons/03-threejs/raycasting-and-picking/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/raycasting-and-picking/theory.en.mdx"),
+  },
+  "reading-threejs-source": {
+    vi: () => import("./lessons/03-threejs/reading-threejs-source/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/reading-threejs-source/theory.en.mdx"),
+  },
+  "scene-camera-renderer": {
+    vi: () => import("./lessons/03-threejs/scene-camera-renderer/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/scene-camera-renderer/theory.en.mdx"),
+  },
+  "scene-graph-and-transforms": {
+    vi: () => import("./lessons/03-threejs/scene-graph-and-transforms/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/scene-graph-and-transforms/theory.en.mdx"),
+  },
+  "textures-and-compression-ktx2": {
+    vi: () => import("./lessons/03-threejs/textures-and-compression-ktx2/theory.vi.mdx"),
+    en: () => import("./lessons/03-threejs/textures-and-compression-ktx2/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -208,6 +264,17 @@ export const REFERENCES_REGISTRY: Partial<
   "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/references"),
   "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/references"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/references"),
+  "animation-mixer-and-clips": () => import("./lessons/03-threejs/animation-mixer-and-clips/references"),
+  "cameras-and-controls": () => import("./lessons/03-threejs/cameras-and-controls/references"),
+  "geometries-and-buffergeometry": () => import("./lessons/03-threejs/geometries-and-buffergeometry/references"),
+  "lights-and-shadow-maps": () => import("./lessons/03-threejs/lights-and-shadow-maps/references"),
+  "loading-gltf-draco-meshopt": () => import("./lessons/03-threejs/loading-gltf-draco-meshopt/references"),
+  "materials-from-basic-to-physical": () => import("./lessons/03-threejs/materials-from-basic-to-physical/references"),
+  "raycasting-and-picking": () => import("./lessons/03-threejs/raycasting-and-picking/references"),
+  "reading-threejs-source": () => import("./lessons/03-threejs/reading-threejs-source/references"),
+  "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/references"),
+  "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/references"),
+  "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -369,6 +436,62 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"shaping-function-nghệ-thuật-uốn-nắn-dải-01","text":"Shaping function: nghệ thuật uốn nắn dải 0..1","depth":2},{"id":"signed-distance-2d-âm-bên-trong-0-tại-biên-dương-bên-ngoài","text":"Signed distance 2D: âm bên trong, 0 tại biên, dương bên ngoài","depth":2},{"id":"dựng-sdf-hình-tròn-lengthp---r","text":"Dựng SDF hình tròn: length(p) - r","depth":2},{"id":"smoothstep-cây-cọ-chống-răng-cưa-trên-distance-field","text":"smoothstep: cây cọ chống răng cưa trên distance field","depth":2},{"id":"kết-hợp-viền-qua-absd-glow-qua-suy-giảm-mũ","text":"Kết hợp: viền qua abs(d), glow qua suy giảm mũ","depth":2},{"id":"vì-sao-khoảng-cách-trước-màu-sau-thắng-tính-màu-trực-tiếp","text":"Vì sao \"khoảng cách trước, màu sau\" thắng tính màu trực tiếp","depth":2}],
     en: [{"id":"shaping-functions-the-art-of-bending-the-01-range","text":"Shaping Functions: The Art of Bending the 0..1 Range","depth":2},{"id":"signed-distance-in-2d-negative-inside-zero-at-the-boundary-positive-outside","text":"Signed Distance in 2D: Negative Inside, Zero at the Boundary, Positive Outside","depth":2},{"id":"building-a-circle-sdf-lengthp---r","text":"Building a Circle SDF: length(p) - r","depth":2},{"id":"smoothstep-the-anti-aliased-brush-over-a-distance-field","text":"smoothstep: The Anti-Aliased Brush Over a Distance Field","depth":2},{"id":"combining-outlines-via-absd-glow-via-exponential-falloff","text":"Combining: Outlines via abs(d), Glow via Exponential Falloff","depth":2},{"id":"why-distance-first-color-later-beats-direct-color-math","text":"Why \"Distance First, Color Later\" Beats Direct Color Math","depth":2}],
   },
+  "animation-mixer-and-clips": {
+    vi: [{"id":"ba-lớp-của-animation-system-clip-mixer-action","text":"Ba lớp của animation system: Clip, Mixer, Action","depth":2},{"id":"animationclip-dữ-liệu-keyframe-thuần","text":"AnimationClip: dữ liệu keyframe thuần","depth":2},{"id":"dựng-clip-bằng-keyframetrack-khi-chưa-có-asset-animate-sẵn","text":"Dựng clip bằng KeyframeTrack khi chưa có asset animate sẵn","depth":2},{"id":"animationmixer-và-mixerupdatedelta-trong-render-loop","text":"AnimationMixer và mixer.update(delta) trong render loop","depth":2},{"id":"animationaction-play-loop-mode-timescale-weight","text":"AnimationAction: play, loop mode, timeScale, weight","depth":2},{"id":"crossfade-giữa-hai-action-bằng-weight","text":"Crossfade giữa hai action bằng weight","depth":2},{"id":"skinning-và-animation-từ-gltf-clip-slot-vào-y-hệt","text":"Skinning và animation từ GLTF: clip slot vào y hệt","depth":2},{"id":"từ-đây-tới-r3f-và-capstone","text":"Từ đây tới R3F và capstone","depth":2}],
+    en: [{"id":"the-three-layers-of-the-animation-system-clip-mixer-action","text":"The Three Layers of the Animation System: Clip, Mixer, Action","depth":2},{"id":"animationclip-pure-keyframe-data","text":"AnimationClip: Pure Keyframe Data","depth":2},{"id":"building-a-clip-from-keyframetracks-with-no-animated-asset-yet","text":"Building a Clip from KeyframeTracks with No Animated Asset Yet","depth":2},{"id":"animationmixer-and-mixerupdatedelta-in-the-render-loop","text":"AnimationMixer and mixer.update(delta) in the Render Loop","depth":2},{"id":"animationaction-play-loop-mode-timescale-weight","text":"AnimationAction: Play, Loop Mode, timeScale, Weight","depth":2},{"id":"crossfading-between-two-actions-using-weight","text":"Crossfading Between Two Actions Using Weight","depth":2},{"id":"skinning-and-gltf-animations-the-clip-slots-in-identically","text":"Skinning and GLTF Animations: The Clip Slots In Identically","depth":2},{"id":"from-here-to-r3f-and-the-capstone","text":"From Here to R3F and the Capstone","depth":2}],
+  },
+  "cameras-and-controls": {
+    vi: [{"id":"perspectivecamera-vs-orthographiccamera-hai-phép-chiếu-hai-use-case","text":"PerspectiveCamera vs OrthographicCamera: hai phép chiếu, hai use case","depth":2},{"id":"orbitcontrols-target-damping-và-vòng-lặp-update","text":"OrbitControls: target, damping và vòng lặp update()","depth":2},{"id":"giới-hạn-khoảng-cách-và-góc-nhìn-distance-clamp-polar-angle-clamp-pan","text":"Giới hạn khoảng cách và góc nhìn: distance clamp, polar angle clamp, pan","depth":2},{"id":"controls-khác-map-trackball-fly-pointerlock","text":"Controls khác: Map, Trackball, Fly, PointerLock","depth":2},{"id":"ai-làm-chủ-camera-animate-bằng-code-vs-để-controls-tự-quản","text":"Ai làm chủ camera: animate bằng code vs để controls tự quản","depth":2},{"id":"resize-cập-nhật-aspect-và-updateprojectionmatrix","text":"Resize: cập nhật aspect và updateProjectionMatrix","depth":2}],
+    en: [{"id":"perspectivecamera-vs-orthographiccamera-two-projections-two-use-cases","text":"PerspectiveCamera vs OrthographicCamera: Two Projections, Two Use Cases","depth":2},{"id":"orbitcontrols-target-damping-and-the-update-loop","text":"OrbitControls: Target, Damping and the update() Loop","depth":2},{"id":"distance-and-angle-clamps-distance-clamp-polar-angle-clamp-pan","text":"Distance and Angle Clamps: Distance Clamp, Polar Angle Clamp, Pan","depth":2},{"id":"other-controls-map-trackball-fly-pointerlock","text":"Other Controls: Map, Trackball, Fly, PointerLock","depth":2},{"id":"who-owns-the-camera-code-driven-animation-vs-letting-controls-manage-it","text":"Who Owns the Camera: Code-Driven Animation vs Letting Controls Manage It","depth":2},{"id":"resize-updating-aspect-and-updateprojectionmatrix","text":"Resize: Updating Aspect and updateProjectionMatrix","depth":2}],
+  },
+  "checkpoint-gltf-viewer": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-interactive-showroom": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-primitive-still-life": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "geometries-and-buffergeometry": {
+    vi: [{"id":"buffergeometry-là-gì-mọi-geometry-chỉ-là-dữ-liệu-attribute","text":"BufferGeometry là gì: mọi geometry chỉ là dữ liệu attribute","depth":2},{"id":"geometry-built-in-và-tham-số-segment","text":"Geometry built-in và tham số segment","depth":2},{"id":"dựng-buffergeometry-tay-một-hình-chóp-từ-position-normal-và-index","text":"Dựng BufferGeometry tay: một hình chóp từ position, normal và index","depth":2},{"id":"index-vs-non-indexed-chia-sẻ-đỉnh-khi-nào-không-khi-nào","text":"Index vs non-indexed: chia sẻ đỉnh khi nào, không khi nào","depth":2},{"id":"geometrydispose-và-vì-sao-phải-gọi","text":"geometry.dispose() và vì sao phải gọi","depth":2}],
+    en: [{"id":"what-a-buffergeometry-is-every-geometry-is-just-attribute-data","text":"What a BufferGeometry Is: Every Geometry Is Just Attribute Data","depth":2},{"id":"built-in-geometries-and-what-segment-parameters-do","text":"Built-in Geometries and What Segment Parameters Do","depth":2},{"id":"building-a-buffergeometry-by-hand-a-pyramid-from-position-normal-and-index","text":"Building a BufferGeometry by Hand: a Pyramid from Position, Normal and Index","depth":2},{"id":"index-vs-non-indexed-when-vertices-can-be-shared-and-when-they-cant","text":"Index vs Non-Indexed: When Vertices Can Be Shared, and When They Can't","depth":2},{"id":"geometrydispose-and-why-you-need-it","text":"geometry.dispose() and Why You Need It","depth":2}],
+  },
+  "lights-and-shadow-maps": {
+    vi: [{"id":"năm-loại-light-hai-nhóm-chi-phí-hoàn-toàn-khác-nhau","text":"Năm loại light, hai nhóm chi phí hoàn toàn khác nhau","depth":2},{"id":"shadow-không-tự-động-bốn-cờ-phải-bật-đúng-cả-bốn","text":"Shadow không tự động: bốn cờ phải bật đúng cả bốn","depth":2},{"id":"shadow-camera--frustum-vùng-nhìn-thấy-của-ánh-sáng-không-phải-của-bạn","text":"Shadow camera & frustum: vùng nhìn thấy của ánh sáng, không phải của bạn","depth":2},{"id":"shadowmapsize-độ-phân-giải-và-cái-giá-bộ-nhớ-thật","text":"shadow.mapSize: độ phân giải và cái giá bộ nhớ thật","depth":2},{"id":"shadow-acne-và-peter-panning-cùng-một-nguyên-nhân-gốc-hai-triệu-chứng-ngược-nhau","text":"Shadow acne và peter-panning: cùng một nguyên nhân gốc, hai triệu chứng ngược nhau","depth":2},{"id":"làm-mềm-biên-bóng-từ-so-sánh-nhị-phân-đến-pcfpcfsoft","text":"Làm mềm biên bóng: từ so sánh nhị phân đến PCF/PCFSoft","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"five-light-types-two-very-different-cost-tiers","text":"Five Light Types, Two Very Different Cost Tiers","depth":2},{"id":"shadows-arent-automatic-four-flags-all-four-must-be-on","text":"Shadows Aren't Automatic: Four Flags, All Four Must Be On","depth":2},{"id":"shadow-camera--frustum-the-lights-field-of-view-not-yours","text":"Shadow Camera & Frustum: The Light's Field of View, Not Yours","depth":2},{"id":"shadowmapsize-resolution-and-its-real-memory-cost","text":"shadow.mapSize: Resolution and Its Real Memory Cost","depth":2},{"id":"shadow-acne-and-peter-panning-same-root-cause-opposite-symptoms","text":"Shadow Acne and Peter-Panning: Same Root Cause, Opposite Symptoms","depth":2},{"id":"softening-the-edge-from-a-binary-compare-to-pcfpcfsoft","text":"Softening the Edge: From a Binary Compare to PCF/PCFSoft","depth":2},{"id":"where-this-connects-later","text":"Where This Connects Later","depth":2}],
+  },
+  "loading-gltf-draco-meshopt": {
+    vi: [{"id":"gltf-là-gì-và-vì-sao-nó-gần-như-thắng-tuyệt-đối-trên-web","text":"glTF là gì, và vì sao nó gần như thắng tuyệt đối trên web","depth":2},{"id":"gltfloader-nạp-bất-đồng-bộ-rồi-duyệt-scene-graph","text":"GLTFLoader: nạp bất đồng bộ, rồi duyệt scene graph","depth":2},{"id":"nén-hình-học-draco-và-meshopt","text":"Nén hình học: Draco và meshopt","depth":2},{"id":"draco-nén-mạnh-đổi-lấy-chi-phí-giải-mã-wasm","text":"Draco: nén mạnh, đổi lấy chi phí giải mã wasm","depth":3},{"id":"meshopt-giải-mã-nhanh-hơn-pipeline-gltfpack","text":"meshopt: giải mã nhanh hơn, pipeline gltfpack","depth":3},{"id":"theo-dõi-tiến-trình-và-xử-lý-lỗi-khi-tải","text":"Theo dõi tiến trình và xử lý lỗi khi tải","depth":2},{"id":"dọn-dẹp-một-hierarchy-đã-nạp-traverse--dispose","text":"Dọn dẹp một hierarchy đã nạp: traverse + dispose","depth":2}],
+    en: [{"id":"what-gltf-is-and-why-it-basically-won-the-web","text":"What glTF Is, and Why It Basically Won the Web","depth":2},{"id":"gltfloader-loading-asynchronously-then-walking-the-scene-graph","text":"GLTFLoader: Loading Asynchronously, Then Walking the Scene Graph","depth":2},{"id":"compressing-geometry-draco-and-meshopt","text":"Compressing Geometry: Draco and meshopt","depth":2},{"id":"draco-strong-compression-at-the-cost-of-a-wasm-decode","text":"Draco: Strong Compression, at the Cost of a WASM Decode","depth":3},{"id":"meshopt-faster-to-decode-the-gltfpack-pipeline","text":"meshopt: Faster to Decode, the gltfpack Pipeline","depth":3},{"id":"tracking-progress-and-handling-load-errors","text":"Tracking Progress and Handling Load Errors","depth":2},{"id":"cleaning-up-a-loaded-hierarchy-traverse--dispose","text":"Cleaning Up a Loaded Hierarchy: Traverse + Dispose","depth":2}],
+  },
+  "materials-from-basic-to-physical": {
+    vi: [{"id":"năm-bậc-thang-material-từ-basic-đến-physical","text":"Năm bậc thang material: từ Basic đến Physical","depth":2},{"id":"meshbasicmaterial-vì-sao-mù-hoàn-toàn-với-ánh-sáng","text":"MeshBasicMaterial: vì sao \"mù\" hoàn toàn với ánh sáng","depth":2},{"id":"lambert-và-phong-per-vertex-hay-per-fragment","text":"Lambert và Phong: per-vertex hay per-fragment","depth":3},{"id":"standard-và-physical-bước-sang-pbr","text":"Standard và Physical: bước sang PBR","depth":2},{"id":"ngữ-nghĩa-của-metalness-và-roughness","text":"Ngữ nghĩa của metalness và roughness","depth":3},{"id":"chi-phí-vs-độ-chân-thực-chọn-material-nào-cho-việc-gì","text":"Chi phí vs độ chân thực: chọn material nào cho việc gì","depth":2},{"id":"màu-sắc-colorspace-và-dispose-material-đúng-cách","text":"Màu sắc, colorSpace và dispose material đúng cách","depth":2},{"id":"từ-đây-đi-đâu-ánh-sáng-thật-và-pbr-sâu-hơn","text":"Từ đây đi đâu: ánh sáng thật và PBR sâu hơn","depth":2}],
+    en: [{"id":"the-five-rungs-of-the-material-ladder-basic-to-physical","text":"The Five Rungs of the Material Ladder: Basic to Physical","depth":2},{"id":"meshbasicmaterial-why-its-completely-blind-to-light","text":"MeshBasicMaterial: Why It's Completely Blind to Light","depth":2},{"id":"lambert-and-phong-per-vertex-or-per-fragment","text":"Lambert and Phong: Per-Vertex or Per-Fragment","depth":3},{"id":"standard-and-physical-stepping-into-pbr","text":"Standard and Physical: Stepping Into PBR","depth":2},{"id":"what-metalness-and-roughness-actually-mean","text":"What Metalness and Roughness Actually Mean","depth":3},{"id":"cost-vs-fidelity-picking-the-right-material-for-the-job","text":"Cost vs Fidelity: Picking the Right Material for the Job","depth":2},{"id":"color-colorspace-and-disposing-materials-properly","text":"Color, colorSpace, and Disposing Materials Properly","depth":2},{"id":"where-this-goes-next-real-lighting-and-deeper-pbr","text":"Where This Goes Next: Real Lighting and Deeper PBR","depth":2}],
+  },
+  "raycasting-and-picking": {
+    vi: [{"id":"raycasting-là-gì-bắn-tia-từ-camera-qua-chuột","text":"Raycasting là gì: bắn tia từ camera qua chuột","depth":2},{"id":"chuyển-chuột-sang-ndc-công-thức-và-bẫy-lật-trục-y","text":"Chuyển chuột sang NDC: công thức và bẫy lật trục Y","depth":2},{"id":"raycastersetfromcamera-và-intersectobjects-dựng-tia-đọc-kết-quả","text":"Raycaster.setFromCamera và intersectObjects: dựng tia, đọc kết quả","depth":2},{"id":"recursive-flag-và-target-list-kiểm-tra-đúng-object-cần-test","text":"Recursive flag và target list: kiểm tra đúng object cần test","depth":2},{"id":"hover-vs-click-hai-pattern-dùng-chung-một-raycaster","text":"Hover vs click: hai pattern dùng chung một raycaster","depth":2},{"id":"hiệu-năng-layers-và-tần-suất-raycast","text":"Hiệu năng: layers và tần suất raycast","depth":2},{"id":"bounding-volume-và-ngưỡng-threshold-cho-pointslines","text":"Bounding volume và ngưỡng threshold cho Points/Lines","depth":2},{"id":"từ-đây-tới-r3f-và-capstone","text":"Từ đây tới R3F và capstone","depth":2}],
+    en: [{"id":"what-raycasting-is-firing-a-ray-from-the-camera-through-the-mouse","text":"What Raycasting Is: Firing a Ray from the Camera Through the Mouse","depth":2},{"id":"converting-the-mouse-to-ndc-the-formula-and-the-y-flip-trap","text":"Converting the Mouse to NDC: the Formula and the Y-Flip Trap","depth":2},{"id":"raycastersetfromcamera-and-intersectobjects-building-the-ray-reading-the-results","text":"Raycaster.setFromCamera and intersectObjects: Building the Ray, Reading the Results","depth":2},{"id":"the-recursive-flag-and-target-lists-testing-the-right-objects","text":"The Recursive Flag and Target Lists: Testing the Right Objects","depth":2},{"id":"hover-vs-click-two-patterns-sharing-one-raycaster","text":"Hover vs Click: Two Patterns Sharing One Raycaster","depth":2},{"id":"performance-layers-and-raycast-frequency","text":"Performance: Layers and Raycast Frequency","depth":2},{"id":"bounding-volumes-and-the-pointslines-threshold","text":"Bounding Volumes and the Points/Lines Threshold","depth":2},{"id":"from-here-to-r3f-and-the-capstone","text":"From Here to R3F and the Capstone","depth":2}],
+  },
+  "reading-threejs-source": {
+    vi: [{"id":"vì-sao-đọc-source-là-thói-quen-senior","text":"Vì sao đọc source là thói quen senior","depth":2},{"id":"object3d-position-quaternion-scale-và-cặp-updatematrixupdatematrixworld","text":"Object3D: position, quaternion, scale và cặp updateMatrix/updateMatrixWorld","depth":2},{"id":"add-remove-attach-attach-thực-sự-đổi-hệ-quy-chiếu","text":"add, remove, attach: attach() thực sự đổi hệ quy chiếu","depth":2},{"id":"traverse-duyệt-toàn-bộ-scene-graph","text":"traverse: duyệt toàn bộ scene graph","depth":2},{"id":"webglrendererrender-projscreenmatrix-và-bước-frustum-culling","text":"WebGLRenderer.render(): projScreenMatrix và bước frustum culling","depth":2},{"id":"sắp-xếp-render-list-opaque-trước-sau-transparent-sau-trước--vì-sao","text":"Sắp xếp render list: opaque trước-sau, transparent sau-trước — vì sao","depth":2},{"id":"webglstate-nơi-kiến-thức-track-1-sống-bên-dưới","text":"WebGLState: nơi kiến thức Track 1 sống bên dưới","depth":2},{"id":"cách-tự-đọc-source-jsdelivr-github-và-test-như-tài-liệu","text":"Cách tự đọc source: jsdelivr, GitHub, và test như tài liệu","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"why-reading-source-is-a-senior-habit","text":"Why Reading Source Is a Senior Habit","depth":2},{"id":"object3d-position-quaternion-scale-and-the-updatematrixupdatematrixworld-pair","text":"Object3D: position, quaternion, scale and the updateMatrix/updateMatrixWorld pair","depth":2},{"id":"add-remove-attach-attach-actually-converts-coordinate-frames","text":"add, remove, attach: attach() actually converts coordinate frames","depth":2},{"id":"traverse-walking-the-entire-scene-graph","text":"traverse: walking the entire scene graph","depth":2},{"id":"webglrendererrender-projscreenmatrix-and-the-frustum-culling-step","text":"WebGLRenderer.render(): projScreenMatrix and the frustum culling step","depth":2},{"id":"sorting-the-render-list-opaque-front-to-back-transparent-back-to-front--why","text":"Sorting the Render List: Opaque Front-to-Back, Transparent Back-to-Front — Why","depth":2},{"id":"webglstate-where-your-track-1-knowledge-lives-underneath","text":"WebGLState: Where Your Track 1 Knowledge Lives Underneath","depth":2},{"id":"how-to-navigate-jsdelivr-github-and-reading-tests-as-docs","text":"How to Navigate: jsdelivr, GitHub, and Reading Tests as Docs","depth":2},{"id":"looking-ahead","text":"Looking Ahead","depth":2}],
+  },
+  "scene-camera-renderer": {
+    vi: [{"id":"ba-mảnh-không-thể-thiếu-scene-camera-renderer","text":"Ba mảnh không thể thiếu: Scene, Camera, Renderer","depth":2},{"id":"perspectivecamera-fov-aspect-near-far-quyết-định-gì","text":"PerspectiveCamera: fov, aspect, near, far quyết định gì","depth":2},{"id":"webglrenderer-sở-hữu-context-quyết-định-độ-phân-giải","text":"WebGLRenderer: sở hữu context, quyết định độ phân giải","depth":2},{"id":"setsize-và-updatestyle","text":"setSize và updateStyle","depth":3},{"id":"setpixelratio-clamp-trước-khi-set","text":"setPixelRatio: clamp trước khi set","depth":3},{"id":"render-là-một-khung-hình--vòng-lặp-là-việc-của-bạn","text":"render() là một khung hình — vòng lặp là việc của bạn","depth":2},{"id":"resize-đúng-cách","text":"Resize đúng cách","depth":2},{"id":"ba-lớp-này-che-giấu-gì-của-track-1","text":"Ba lớp này che giấu gì của Track 1","depth":2}],
+    en: [{"id":"three-mandatory-pieces-scene-camera-renderer","text":"Three Mandatory Pieces: Scene, Camera, Renderer","depth":2},{"id":"what-fov-aspect-near-and-far-actually-control","text":"What fov, aspect, near, and far Actually Control","depth":2},{"id":"webglrenderer-owning-the-context-driving-resolution","text":"WebGLRenderer: Owning the Context, Driving Resolution","depth":2},{"id":"setsize-and-updatestyle","text":"setSize and updateStyle","depth":3},{"id":"setpixelratio-clamp-before-you-set-it","text":"setPixelRatio: Clamp Before You Set It","depth":3},{"id":"render-is-one-frame--the-loop-is-yours","text":"render() Is One Frame — the Loop Is Yours","depth":2},{"id":"resizing-correctly","text":"Resizing Correctly","depth":2},{"id":"what-these-three-hide-from-track-1","text":"What These Three Hide From Track 1","depth":2}],
+  },
+  "scene-graph-and-transforms": {
+    vi: [{"id":"object3d-node-phổ-quát-của-scene-graph","text":"Object3D: node phổ quát của scene graph","depth":2},{"id":"local-space-vs-world-space-cha-di-chuyển-con-được-theo-miễn-phí","text":"Local space vs world space: cha di chuyển, con \"được\" theo miễn phí","depth":2},{"id":"add-vs-attach-giữ-nguyên-world-transform-khi-đổi-cha","text":"add() vs attach(): giữ nguyên world transform khi đổi cha","depth":2},{"id":"duyệt-scene-graph-traverse-và-getobjectbyname","text":"Duyệt scene graph: traverse() và getObjectByName()","depth":2},{"id":"matrixautoupdate-khi-nào-threejs-tự-tính-lại-khi-nào-phải-tự-gọi","text":"matrixAutoUpdate: khi nào Three.js tự tính lại, khi nào phải tự gọi","depth":2},{"id":"group-làm-pivot-idiom-hệ-mặt-trời","text":"Group làm pivot: idiom hệ mặt trời","depth":2}],
+    en: [{"id":"object3d-the-universal-scene-graph-node","text":"Object3D: The Universal Scene Graph Node","depth":2},{"id":"local-vs-world-space-move-the-parent-children-follow-for-free","text":"Local vs World Space: Move the Parent, Children Follow for Free","depth":2},{"id":"add-vs-attach-preserving-world-transform-across-a-reparent","text":"add() vs attach(): Preserving World Transform Across a Reparent","depth":2},{"id":"walking-the-scene-graph-traverse-and-getobjectbyname","text":"Walking the Scene Graph: traverse() and getObjectByName()","depth":2},{"id":"matrixautoupdate-when-threejs-recomputes-automatically-when-you-must-call-it-yourself","text":"matrixAutoUpdate: When Three.js Recomputes Automatically, When You Must Call It Yourself","depth":2},{"id":"groups-as-pivots-the-solar-system-idiom","text":"Groups as Pivots: The Solar-System Idiom","depth":2}],
+  },
+  "textures-and-compression-ktx2": {
+    vi: [{"id":"textureloader-và-colorspace-trả-đúng-nợ-từ-track-0","text":"TextureLoader và colorSpace: trả đúng nợ từ Track 0","depth":2},{"id":"texture-không-cần-file-canvastexture-và-datatexture","text":"Texture không cần file: CanvasTexture và DataTexture","depth":2},{"id":"filtering-mipmap-wrap-đổi-tên-gọi-từ-track-1-sang-api-threejs","text":"Filtering, mipmap, wrap: đổi tên gọi từ Track 1 sang API Three.js","depth":2},{"id":"vì-sao-pngjpg-vẫn-nặng-trên-gpu-giải-mã-thô-cộng-mip-chain-133","text":"Vì sao PNG/JPG vẫn nặng trên GPU: giải mã thô cộng mip chain ×1.33","depth":2},{"id":"nén-thật-trên-gpu-ktx2-và-basis-universal","text":"Nén thật trên GPU: KTX2 và Basis Universal","depth":2},{"id":"anisotropy-khi-mipmap-thôi-chưa-đủ","text":"Anisotropy: khi mipmap thôi chưa đủ","depth":2},{"id":"texturedispose-vram-không-tự-trả-khi-js-quên-tham-chiếu","text":"texture.dispose(): VRAM không tự trả khi JS quên tham chiếu","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"textureloader-and-colorspace-paying-back-a-track-0-debt","text":"TextureLoader and colorSpace: Paying Back a Track 0 Debt","depth":2},{"id":"textures-without-a-file-canvastexture-and-datatexture","text":"Textures Without a File: CanvasTexture and DataTexture","depth":2},{"id":"filtering-mipmap-wrap-track-1s-names-renamed-to-threejss-api","text":"Filtering, Mipmap, Wrap: Track 1's Names Renamed to Three.js's API","depth":2},{"id":"why-pngjpg-still-sit-heavy-on-the-gpu-raw-decode-plus-a-133-mip-chain","text":"Why PNG/JPG Still Sit Heavy on the GPU: Raw Decode Plus a ×1.33 Mip Chain","depth":2},{"id":"real-gpu-side-compression-ktx2-and-basis-universal","text":"Real GPU-Side Compression: KTX2 and Basis Universal","depth":2},{"id":"anisotropy-when-mipmaps-alone-arent-enough","text":"Anisotropy: When Mipmaps Alone Aren't Enough","depth":2},{"id":"texturedispose-vram-doesnt-free-itself-when-js-forgets-a-reference","text":"texture.dispose(): VRAM Doesn't Free Itself When JS Forgets a Reference","depth":2},{"id":"where-this-connects-later","text":"Where This Connects Later","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -403,6 +526,17 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/demo"),
   "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
+  "animation-mixer-and-clips": () => import("./lessons/03-threejs/animation-mixer-and-clips/demo"),
+  "cameras-and-controls": () => import("./lessons/03-threejs/cameras-and-controls/demo"),
+  "geometries-and-buffergeometry": () => import("./lessons/03-threejs/geometries-and-buffergeometry/demo"),
+  "lights-and-shadow-maps": () => import("./lessons/03-threejs/lights-and-shadow-maps/demo"),
+  "loading-gltf-draco-meshopt": () => import("./lessons/03-threejs/loading-gltf-draco-meshopt/demo"),
+  "materials-from-basic-to-physical": () => import("./lessons/03-threejs/materials-from-basic-to-physical/demo"),
+  "raycasting-and-picking": () => import("./lessons/03-threejs/raycasting-and-picking/demo"),
+  "reading-threejs-source": () => import("./lessons/03-threejs/reading-threejs-source/demo"),
+  "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/demo"),
+  "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/demo"),
+  "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -449,4 +583,18 @@ export const EXERCISES_REGISTRY: Partial<
   "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/exercises"),
   "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/exercises"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/exercises"),
+  "animation-mixer-and-clips": () => import("./lessons/03-threejs/animation-mixer-and-clips/exercises"),
+  "cameras-and-controls": () => import("./lessons/03-threejs/cameras-and-controls/exercises"),
+  "checkpoint-gltf-viewer": () => import("./lessons/03-threejs/checkpoint-gltf-viewer/exercises"),
+  "checkpoint-interactive-showroom": () => import("./lessons/03-threejs/checkpoint-interactive-showroom/exercises"),
+  "checkpoint-primitive-still-life": () => import("./lessons/03-threejs/checkpoint-primitive-still-life/exercises"),
+  "geometries-and-buffergeometry": () => import("./lessons/03-threejs/geometries-and-buffergeometry/exercises"),
+  "lights-and-shadow-maps": () => import("./lessons/03-threejs/lights-and-shadow-maps/exercises"),
+  "loading-gltf-draco-meshopt": () => import("./lessons/03-threejs/loading-gltf-draco-meshopt/exercises"),
+  "materials-from-basic-to-physical": () => import("./lessons/03-threejs/materials-from-basic-to-physical/exercises"),
+  "raycasting-and-picking": () => import("./lessons/03-threejs/raycasting-and-picking/exercises"),
+  "reading-threejs-source": () => import("./lessons/03-threejs/reading-threejs-source/exercises"),
+  "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/exercises"),
+  "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/exercises"),
+  "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/exercises"),
 };

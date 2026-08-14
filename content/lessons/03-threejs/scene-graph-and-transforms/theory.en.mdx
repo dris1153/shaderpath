@@ -1,0 +1,47 @@
+## Object3D: The Universal Scene Graph Node
+
+Mesh, Group, Light, Camera — everything you add to a scene inherits from `Object3D`, the single universal node in Three.js's scene graph. Every `Object3D` holds three independent transform properties: `.position` (a Vector3), `.quaternion` (a Quaternion, kept in sync both ways with the Euler-angle `.rotation`), and `.scale` (a Vector3). None of these are matrices themselves — they're just human-readable/writable data; whenever Three.js needs to render, it calls `updateMatrix()` to pack all three into a single `Matrix4` stored in `.matrix`, following the exact $T \cdot R \cdot S$ order from Track 0's Model-View-Projection lesson: scale first, then rotate, then translate.
+
+`.matrix` is purely a **local** transform, describing that object relative to itself — it knows nothing about its parent. Once an object sits inside a hierarchy (via `parent.add(child)`), Three.js also computes `.matrixWorld`, the matrix actually used for rendering, by chaining: `matrixWorld = parent.matrixWorld × this.matrix`. That's the "parent-child matrix chain" Track 0 mentioned without a concrete object to demonstrate it — Three.js walks down from the scene root, computing each object's `matrixWorld` in exactly that order inside `updateMatrixWorld()`, recursing into every child.
+
+## Local vs World Space: Move the Parent, Children Follow for Free
+
+An object's `.position`/`.quaternion`/`.scale` are always interpreted **relative to its direct parent** — never absolute world coordinates, unless that object is a direct child of `scene` itself (whose transform is identity). The key consequence: moving or rotating a parent object automatically carries every descendant along in world space — without touching a single line of the children's own transform properties — because each child's `matrixWorld` gets recomputed every frame from the chain through its parent's fresh `matrixWorld`. That's why "group things, then rotate the group" is always cheaper and more correct than manually recomputing every object's world position by hand.
+
+To read an object's actual world position (not local), use `object.getWorldPosition(target)` — it extracts the translation component out of `matrixWorld` into a `Vector3` you supply yourself (the API is deliberately allocation-free, meant to run thousands of times a frame without generating garbage). Reading `object.position` directly here is a common mistake — it only ever returns the local coordinate, which is flat-out wrong once an object sits a few levels deep in a hierarchy.
+
+## add() vs attach(): Preserving World Transform Across a Reparent
+
+`parent.add(child)` simply links `child` into `parent.children`, leaving `child`'s **local** transform untouched — meaning that if `child` previously belonged to a different parent (or sat directly under `scene`) at some world position, reparenting it with `add()` makes it visually "jump" to a new world position, because the exact same local `.position` is now interpreted through a different parent `matrixWorld`.
+
+`parent.attach(child)` solves precisely that problem: before reparenting, it captures `child`'s current `matrixWorld`, then after attaching to the new parent it multiplies through the new parent's inverse `matrixWorld` to back out new **local** `.position`/`.quaternion`/`.scale` values such that the final `matrixWorld` — the actual visible world position/rotation/scale — doesn't change at all. In short: `add()` preserves the local numbers and changes the world result; `attach()` preserves the world result and changes the local numbers. One caveat straight from the Three.js source: `attach()` doesn't behave correctly when a parent (old or new) has non-uniform scale — a rare case, but worth knowing if your hierarchy has objects scaled unevenly per axis.
+
+## Walking the Scene Graph: traverse() and getObjectByName()
+
+`object.traverse(callback)` runs `callback` on `object` itself, then recurses depth-first through every descendant — the standard way to do something to *every* node in a subtree, like disposing all geometries/materials after loading a GLTF model, or turning on `castShadow = true` in bulk. `traverseVisible()` skips branches where `visible = false`; `traverseAncestors()` walks upward toward parents instead of down toward children.
+
+`object.getObjectByName(name)` searches a subtree for an object whose `.name` matches, returning the first hit — handy for pulling out a specific mesh by the name it was given in Blender after loading a GLTF. It's a linear search over the tree with no index behind it — calling it every frame inside a render loop on a large scene wastes cycles; cache the result in a variable right after loading instead of calling it repeatedly.
+
+## matrixAutoUpdate: When Three.js Recomputes Automatically, When You Must Call It Yourself
+
+By default `object.matrixAutoUpdate = true` (set from `Object3D.DEFAULT_MATRIX_AUTO_UPDATE`): every time `updateMatrixWorld()` walks through that object, Three.js automatically calls `updateMatrix()` to pack the latest `.position`/`.quaternion`/`.scale` into `.matrix`, always staying in sync without any extra work from you. On a scene with thousands of **static** objects that never move once placed (terrain, decorative props), that repeated recompute is wasted work every single frame — setting `matrixAutoUpdate = false` turns it off for that one object, a genuinely measurable optimization on large scenes.
+
+The tradeoff: once `matrixAutoUpdate` is off, any later code change to `.position`/`.quaternion`/`.scale` requires you to manually call `object.updateMatrix()` (and `object.updateMatrixWorld()` too, if the object has children) — forget it, and `.matrix` keeps its old value, silently rendering the object at the wrong spot with no warning at all. Separate from this flag there's also `matrixWorldAutoUpdate` (also `true` by default), which controls whether the object gets folded into the automatic top-down `updateMatrixWorld()` walk from the scene at all — turning it off is useful when you want to manage matrixWorld updates for a specific subtree by hand, decoupled from the whole-scene update pass every frame.
+
+## Groups as Pivots: The Solar-System Idiom
+
+A `THREE.Group` is an `Object3D` with no geometry or material of its own — it exists purely to act as a pivot for its children. The classic idiom: simulate a planet's orbit not by recomputing its position every frame with manual `cos`/`sin` calls, but by nesting it inside a Group placed at the orbit's center, offsetting the planet by a fixed distance from that Group's origin, and rotating only `group.rotation.y` each frame. Since the planet's world position equals `groupMatrixWorld × offsetLocal`, rotating the Group automatically sweeps that offset through a full circle around the center — no trigonometry needed in the animation code at all, just an ever-increasing angle.
+
+Nesting Groups multiple levels deep is how orbit-within-orbit works: a "solar system" Group holds the Sun and a "planet orbit" Group; that Group holds the planet and its own child "moon orbit" Group; the moon orbit Group holds the Moon offset from the planet. Rotating the outermost Group spins the entire system; rotating the planet's orbit Group only spins the moon around the planet without touching the planet's own motion around the sun — exactly the linear-combination nature of chained parent-child matrix multiplication.
+
+Today's group-as-pivot rotates around a fixed axis by hand; the next lesson, reading Three.js's own source, traces the actual `updateMatrixWorld()` code behind the concept you just learned, and Track 4 (R3F) wraps this entire mechanism into a declarative `<group>` JSX element instead of manual `add()`/`attach()` calls.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common scene-graph and transform mistakes:
+
+1. **Reading `object.position` to get the world position of an object nested deep in a hierarchy.** `.position` is always local relative to the direct parent — the deeper the object sits, the further it drifts from its actual world position. Use `getWorldPosition(target)` when you need the real world coordinate.
+2. **Using `add()` when the actual intent is preserving world transform across a reparent.** `add()` keeps the local numbers, so the object visually jumps to a new world position the instant it's attached to a parent with a different `matrixWorld`; `attach()` is the call that keeps world transform unchanged.
+3. **Turning off `matrixAutoUpdate` and then forgetting to call `updateMatrix()` after changing the transform in code.** The object stays frozen at its old position even though `.position` changed in memory — no error, no warning, just a silently wrong render.
+
+</Callout>

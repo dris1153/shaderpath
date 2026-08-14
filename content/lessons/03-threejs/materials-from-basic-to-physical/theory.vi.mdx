@@ -1,0 +1,65 @@
+## Năm bậc thang material: từ Basic đến Physical
+
+Three.js không có một class `Material` vạn năng — nó có năm class riêng biệt (`MeshBasicMaterial`, `MeshLambertMaterial`, `MeshPhongMaterial`, `MeshStandardMaterial`, `MeshPhysicalMaterial`) xếp thành một bậc thang, mỗi bậc cộng thêm một lớp vật lý ánh sáng và một khoản chi phí GPU. Đằng sau hậu trường, mỗi class biên dịch ra một chương trình GLSL khác nhau — chọn material không phải chọn "theme màu", mà là chọn đúng đoạn code sẽ chạy hàng trăm nghìn lần mỗi frame trên GPU của người dùng. Hiểu rõ bậc thang này trước khi chỉnh sáng quan trọng hơn bất kỳ light nào bạn thêm vào sau đó — sai material, dù ánh sáng đúng đến đâu, vẫn ra kết quả sai.
+
+## MeshBasicMaterial: vì sao "mù" hoàn toàn với ánh sáng
+
+`MeshBasicMaterial` không đọc bất kỳ uniform ánh sáng nào — chương trình fragment shader Three.js biên dịch cho nó hoàn toàn không có đoạn code lighting: màu ra = `map` (nếu có texture) nhân với `color`, hết. Thêm bao nhiêu `DirectionalLight` hay `PointLight` vào scene, mặt đối diện ánh sáng và mặt khuất bóng vẫn sáng như nhau. Đây không phải một giới hạn cần "sửa" — đó chính xác là lý do Basic tồn tại: UI overlay, wireframe debug, sprite phẳng, hay bất kỳ trường hợp nào bạn muốn màu cố định không phụ thuộc góc nhìn hay vị trí đèn. Vì bỏ hẳn đoạn lighting, chương trình GLSL của Basic ngắn hơn đáng kể so với bốn material còn lại — đây là lựa chọn rẻ nhất trong danh sách, hợp cho hàng chục nghìn object cùng lúc (ví dụ particle swarm) nơi chi phí lighting nhân lên theo số lượng sẽ giết frame rate trước khi bạn kịp nhận ra.
+
+### Lambert và Phong: per-vertex hay per-fragment
+
+`MeshLambertMaterial` tính khuếch tán (diffuse) bằng công thức Lambertian cổ điển:
+
+$$
+I_d = k_d \, \max(\mathbf{N} \cdot \mathbf{L},\ 0)
+$$
+
+với $\mathbf N$ là pháp tuyến bề mặt, $\mathbf L$ là hướng tới nguồn sáng. Điểm mấu chốt: Lambert tính $I_d$ **một lần cho mỗi vertex** trong vertex shader, rồi để GPU nội suy tuyến tính (interpolate) giá trị đó qua từng fragment của tam giác. Một sphere 48×48 segment có khoảng 2.401 vertex — nếu sphere đó phủ 300×300 pixel trên màn hình (khoảng 90.000 fragment, ước lượng), Lambert chỉ chạy phép dot-product hơn 2.400 lần, còn phần còn lại là nội suy gần như miễn phí. Đánh đổi: trên mesh ít vertex (low-poly), highlight bị "vỡ" thành từng mảng phẳng vì nội suy tuyến tính giữa các giá trị vertex không tạo ra được điểm sáng tròn mượt.
+
+`MeshPhongMaterial` chuyển chính phép tính đó xuống **per-fragment**: mỗi trong 90.000 fragment tự nội suy pháp tuyến rồi tự tính $\mathbf N \cdot \mathbf L$ của riêng nó — đắt hơn Lambert cỡ 35–40 lần theo đúng tỉ lệ fragment/vertex ở ví dụ trên, nhưng đổi lại là specular highlight mượt và đúng vị trí, dùng xấp xỉ Blinn-Phong:
+
+$$
+I_s = k_s \, (\mathbf{N} \cdot \mathbf{H})^{\text{shininess}}, \qquad \mathbf{H} = \operatorname{normalize}(\mathbf{L} + \mathbf{V})
+$$
+
+`shininess` càng lớn, đốm sáng specular càng nhỏ và gắt — kim loại đánh bóng cần shininess cao, nhựa mờ cần shininess thấp.
+
+## Standard và Physical: bước sang PBR
+
+`MeshStandardMaterial` bỏ hẳn tham số `shininess` mơ hồ của Phong, thay bằng hai tham số vật lý thật: `metalness` và `roughness` — mô hình PBR (Physically Based Rendering) mà gần như mọi engine hiện đại (Unreal, Unity, Blender, Substance Painter) đều dùng chung, nghĩa là texture PBR export từ các công cụ đó cắm thẳng vào Standard mà không cần convert. Đây là lý do Standard là lựa chọn mặc định cho bất kỳ vật thể nào cần trông "thật" trong Three.js hiện đại.
+
+`MeshPhysicalMaterial` kế thừa toàn bộ Standard rồi thêm các lớp vật lý phụ: `clearcoat` (lớp phủ bóng mỏng phía trên, như sơn xe hay gỗ đánh vẹc-ni — có Fresnel riêng, độc lập với lớp bên dưới), `transmission` (ánh sáng xuyên qua vật thể thay vì phản xạ — thuỷ tinh, nước), `sheen`, `iridescence`. Mỗi thuộc tính bật thêm là một khối tính toán riêng trong fragment shader — Physical chỉ nên dùng khi bạn thực sự cần một trong các hiệu ứng đó, không phải mặc định thay Standard.
+
+### Ngữ nghĩa của metalness và roughness
+
+`metalness ∈ [0,1]` quyết định vật liệu có phải kim loại hay không: ở $0$ (dielectric — phi kim loại, gỗ/nhựa/da/vải), phản xạ specular chỉ chiếm khoảng 4% năng lượng ánh sáng và không màu (Fresnel $F_0 \approx 0.04$), phần còn lại tán xạ dưới bề mặt tạo ra màu diffuse. Ở $1$ (kim loại), toàn bộ ánh sáng phản xạ ngay trên bề mặt và **mang màu** của `color` — không còn thành phần diffuse nào cả:
+
+$$
+\text{diffuseColor} = \text{baseColor} \times (1 - \text{metalness}), \qquad F_0 = \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+$$
+
+`roughness ∈ [0,1]` quyết định đốm specular đó gọn hay loang: $0$ là gương phản chiếu sắc nét, $1$ là bề mặt tán xạ ánh sáng ra mọi hướng, gần như không còn highlight riêng biệt. Hai cặp giá trị cụ thể đáng nhớ: **phấn viết bảng** là `metalness = 0, roughness = 0.9` — dielectric thô, gần như thuần diffuse, không đốm sáng; **kim loại đánh bóng** là `metalness = 1, roughness = 0.2` — gần như toàn bộ là specular gọn, gắt, không còn màu "chìm" bên dưới bề mặt.
+
+## Chi phí vs độ chân thực: chọn material nào cho việc gì
+
+Không có material "tốt nhất" — chỉ có material đúng cho từng việc. Basic cho UI 3D, debug wireframe, hoặc particle số lượng lớn nơi lighting không đáng chi phí. Lambert từng là lựa chọn phổ biến thời game mobile yếu GPU — giờ hiếm dùng trừ khi bạn cố tình muốn look faceted, low-poly kiểu retro. Phong hợp khi cần highlight rõ nhưng không cần độ chính xác vật lý — game stylized, toon shading nền. Standard là mặc định thực dụng cho hầu hết mọi thứ muốn trông thật: nhân vật, sản phẩm, kiến trúc. Physical chỉ bật khi bạn cần cụ thể clearcoat hoặc transmission — sơn xe, thuỷ tinh, chất lỏng.
+
+## Màu sắc, colorSpace và dispose material đúng cách
+
+Gán `new THREE.Color(0xff6b35)` cho `material.color` không lưu thẳng ba số $(1, 0.42, 0.21)$ vào bộ nhớ — Three.js bật `ColorManagement` mặc định (từ r150), tự động hiểu hex đó là sRGB (đúng như bài sRGB vs Linear ở Track 0) và convert ngay sang không gian linear trước khi lưu vào `.r/.g/.b`. Bạn không cần tự gamma-correct màu material bằng tay — engine đã làm hộ — nhưng nếu đọc trực tiếp `.r/.g/.b` để tính toán thủ công (ví dụ làm tối màu bằng `multiplyScalar`), kết quả nằm trong không gian linear chứ không phải hex gốc bạn gõ.
+
+Material cũng là tài nguyên GPU — nó giữ một chương trình shader đã biên dịch và các buffer uniform liên quan, y hệt geometry hay texture. Gán `mesh.material = newMaterial` **không** tự động giải phóng material cũ; bạn phải gọi `oldMaterial.dispose()` sau khi gán, nếu không chương trình shader cũ vẫn nằm lại trong bộ nhớ GPU dù chẳng còn mesh nào tham chiếu tới nó.
+
+## Từ đây đi đâu: ánh sáng thật và PBR sâu hơn
+
+Bài này cố tình chỉ dùng một light để cô lập phản ứng của từng material — bài `lights-and-shadow-maps` kế tiếp thêm shadow map, nhiều loại light, và giải thích vì sao thiếu ambient khiến mặt khuất tối đen. `checkpoint-primitive-still-life` ngay sau đó bắt bạn phối ít nhất ba material trong một cảnh có bố cục thật. Xa hơn, Track 11 (PBR & Lighting Theory) quay lại chính công thức `diffuseColor`/$F_0$ ở trên và mở rộng thành BRDF đầy đủ với microfacet model.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi làm việc với material:
+
+1. **Sửa property trên một material đang bị nhiều mesh dùng chung.** `const shared = new THREE.MeshStandardMaterial(...)` rồi gán cho 50 mesh để tiết kiệm bộ nhớ là hợp lý — nhưng gọi `shared.roughness = 0.1` sau đó đổi ngoại hình của **cả 50 mesh cùng lúc**, vì chúng tham chiếu đúng một object JS. Cần độc lập hoá appearance thì `clone()` material trước, hoặc dùng attribute per-instance.
+2. **Gán `mesh.material = newMat` mà quên `.dispose()` material cũ.** Three.js không tự dọn — làm việc này trong một vòng lặp (ví dụ mỗi lần kéo slider) mà không dispose sẽ rò rỉ một chương trình shader biên dịch sẵn mỗi lần, đủ để tụt hàng trăm MB VRAM sau vài phút thao tác.
+3. **Kỳ vọng `MeshBasicMaterial` phản ứng với ánh sáng hoặc đổ bóng.** Thêm `castShadow`/`receiveShadow` lên một mesh dùng Basic không có tác dụng — chương trình shader của Basic không hề đọc shadow map, dù renderer có bật `shadowMap.enabled` toàn cục.
+
+</Callout>

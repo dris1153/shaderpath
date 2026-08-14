@@ -1,0 +1,104 @@
+## TextureLoader and colorSpace: Paying Back a Track 0 Debt
+
+`THREE.TextureLoader().load(url)` loads an image asynchronously and returns a `Texture` immediately — empty until the image finishes loading, at which point Three.js updates the GPU copy for you (use `loadAsync` if you need to `await` it). Assigning that texture to `material.map` finishes the loading part — but there's an easy-to-skip step left: `texture.colorSpace = THREE.SRGBColorSpace`.
+
+This is exactly the debt from Track 0's sRGB & Gamma lesson: `renderer.outputColorSpace` (defaults to `SRGBColorSpace`) handles the final **encode** step when writing to the canvas, but the GPU still needs to know which textures to **decode** before feeding them into linear-space lighting math. Color textures (albedo, diffuse maps) are images stored in sRGB — mark them `colorSpace = SRGBColorSpace` so the GPU decodes correctly at sample time, no manual `pow()` required. Data textures (`normalMap`, `roughnessMap`, `metalnessMap`, `aoMap`) don't store light energy — leave them at the `THREE.NoColorSpace` default, never mark them sRGB:
+
+```js
+const loader = new THREE.TextureLoader();
+const albedo = loader.load("/textures/brick-albedo.jpg");
+albedo.colorSpace = THREE.SRGBColorSpace; // color map: needs decoding before lighting math
+
+const roughness = loader.load("/textures/brick-roughness.jpg");
+// roughness stays THREE.NoColorSpace (default) — it's data, not color
+
+const material = new THREE.MeshStandardMaterial({ map: albedo, roughnessMap: roughness });
+```
+
+## Textures Without a File: CanvasTexture and DataTexture
+
+Not every texture needs to load from a file. `CanvasTexture(canvasElement)` wraps an existing `<canvas>` (or `OffscreenCanvas`) directly as a GPU texture — useful for algorithmically drawn patterns (gradients, generative noise, text labels) using the familiar `CanvasRenderingContext2D` API. After redrawing the canvas, you must set `texture.needsUpdate = true` yourself — Three.js doesn't poll the canvas for changes every frame.
+
+`DataTexture(data, width, height, format, type)` builds straight from a raw byte array — the same idea as Track 1's `texImage2D` from raw pixel data, just wrapped in an object with the familiar filtering/wrap API:
+
+```js
+const size = 8;
+const data = new Uint8Array(size * size * 4);
+for (let y = 0; y < size; y++) {
+  for (let x = 0; x < size; x++) {
+    const i = (y * size + x) * 4;
+    const on = (x + y) % 2 === 0;
+    data[i] = data[i + 1] = data[i + 2] = on ? 235 : 20;
+    data[i + 3] = 255;
+  }
+}
+const checker = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+checker.needsUpdate = true; // required once after writing raw pixel data
+```
+
+## Filtering, Mipmap, Wrap: Track 1's Names Renamed to Three.js's API
+
+Every concept from Track 1's texture lesson still applies, just under new property names: `TEXTURE_MAG_FILTER`/`MIN_FILTER` become `texture.magFilter`/`texture.minFilter`; `gl.NEAREST`/`gl.LINEAR` become `THREE.NearestFilter`/`THREE.LinearFilter`; `gl.LINEAR_MIPMAP_LINEAR` (trilinear) becomes `THREE.LinearMipmapLinearFilter` — also Three's default `minFilter`. Calling `gl.generateMipmap()` by hand turns into the `texture.generateMipmaps = true` flag (on by default) — Three generates the mip chain itself on upload, nothing else to call. Wrap modes keep their meaning: `TEXTURE_WRAP_S`/`_T` become `texture.wrapS`/`texture.wrapT`, and `gl.REPEAT`/`CLAMP_TO_EDGE`/`MIRRORED_REPEAT` become `THREE.RepeatWrapping`/`THREE.ClampToEdgeWrapping`/`THREE.MirroredRepeatWrapping`; `texture.repeat.set(u, v)` (a `Vector2`) sets the tile count, meaningful only with Repeat/MirroredRepeat wrapping.
+
+One difference worth noting: Three defaults `texture.flipY = true` — the opposite of raw WebGL's `false` default — so the `UNPACK_FLIP_Y_WEBGL` headache Track 1 warned about mostly disappears once you're working inside Three, because the library already flips on upload.
+
+## Why PNG/JPG Still Sit Heavy on the GPU: Raw Decode Plus a ×1.33 Mip Chain
+
+PNG/JPG compress well **on disk** — a small download — but the GPU can't sample that compressed data directly. Before a texture goes up, the image has already been fully decoded into a raw RGBA pixel array, and it's that raw array sitting in VRAM, not the original compressed file. A $2048 \times 2048$ RGBA8 texture:
+
+$$
+2048 \times 2048 \times 4\text{ bytes} = 16{,}777{,}216\text{ bytes} \approx 16\text{ MB}
+$$
+
+— regardless of whether the source was a 400KB or a 4MB JPEG, the byte count on the GPU is identical. Add the mip chain: the full pyramid's sum ($1 + \tfrac14 + \tfrac{1}{16} + \dots$) converges to $\tfrac{4}{3}$ of the base level, so a mipmapped texture actually costs:
+
+$$
+16\text{MB} \times \frac{4}{3} \approx 21.3\text{MB} \quad \text{(estimate)}
+$$
+
+A "lightweight" 400KB JPEG on disk ends up occupying over 21MB of VRAM once uploaded and mipmapped — the "small file means light" intuition from everyday web dev is actively misleading here.
+
+## Real GPU-Side Compression: KTX2 and Basis Universal
+
+Unlike PNG/JPG, KTX2 (a container format wrapping Basis Universal supercompressed data) holds data the GPU **can sample directly while still compressed** — VRAM stays compressed for the texture's entire lifetime, not just on disk. `KTX2Loader` transcodes the Basis-encoded data into whatever GPU-native compressed format the running device actually supports (BC7/BC1 on desktop, ASTC on most mobile GPUs, ETC2 on some Android hardware, PVRTC on older iOS) — one `.ktx2` file, multiple possible transcode targets picked at runtime:
+
+```js
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+
+const ktx2Loader = new KTX2Loader()
+  .setTranscoderPath("/basis/") // where the WASM transcoder files are served from
+  .detectSupport(renderer); // MUST run before loading — picks the target format
+
+const compressed = await ktx2Loader.loadAsync("/textures/brick-albedo.ktx2");
+compressed.colorSpace = THREE.SRGBColorSpace; // the colorSpace rule still applies
+```
+
+As a practical estimate: common GPU-compressed formats land around 4–8 bits per pixel, versus 32 bits per pixel for raw RGBA8 — roughly 4–8× lighter than a decoded original at close to equivalent visual quality (the real ratio depends on format and content).
+
+## Anisotropy: When Mipmaps Alone Aren't Enough
+
+Mipmapping picks one isotropic (uniform) shrink level per fragment — but a texture viewed at a steep angle (the classic case: a road stretching toward the horizon) is compressed much more in one screen-space direction than the other. An isotropic mip level has to pick something small enough to avoid aliasing along the more-compressed direction, which over-blurs the less-compressed direction. Anisotropic filtering samples multiple points along that elongated footprint instead of just one — keeping detail sharp along the "long" axis while still avoiding noise along the "short" one:
+
+```js
+texture.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+```
+
+The value is capped by hardware (`getMaxAnisotropy()`, commonly 16); the cost is a few extra texture fetches per fragment — cheap on modern GPUs — and it adds **no** extra VRAM, since anisotropy only changes how the existing mip levels get sampled, not how many exist.
+
+## texture.dispose(): VRAM Doesn't Free Itself When JS Forgets a Reference
+
+JavaScript's garbage collector reclaims a `Texture` object once nothing references it anymore — but the actual GPU memory that texture allocated through the WebGL context is a completely separate resource the GC knows nothing about, and it's never freed automatically. You must call `texture.dispose()` explicitly (same for `geometry.dispose()`/`material.dispose()`), or VRAM leaks one texture at a time until the tab crashes or the driver starts evicting other resources — exactly why the `useDisposable` pattern shows up in every demo in this project.
+
+## Where This Connects Later
+
+Track 3's next lesson (Loading GLTF with Draco & meshopt) does the exact same thing for **geometry** instead of textures — the same build-time-compress, runtime-transcode philosophy. Track 12 (Performance) revisits this at production scale with `texture-memory-budget` (a whole-scene memory budget) and `asset-pipeline-draco-ktx2` (an automated build pipeline for asset compression) — get the memory math and the KTX2Loader wiring solid now, and those two lessons become pure scaling exercises instead of relearning the concepts.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common texture and compression mistakes:
+
+1. **Assuming "the JPG is small on disk, so the texture is light."** The GPU always stores a fully decoded image (raw RGBA plus its mip chain) — the VRAM number has nothing to do with the compressed file's size on disk.
+2. **Marking `SRGBColorSpace` on a data texture (normalMap/roughnessMap) instead of only on color maps.** The GPU gamma-decodes non-color values incorrectly, skewing every normal/roughness value — a shading bug that's hard to spot because it's not directly about visible color.
+3. **Calling `KTX2Loader.load()` without calling `detectSupport(renderer)` first.** The loader has no idea which transcode target the device supports, so loading fails or throws at runtime even though the `.ktx2` file itself is perfectly valid.
+
+</Callout>

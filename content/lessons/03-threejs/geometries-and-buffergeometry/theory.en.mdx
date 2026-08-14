@@ -1,0 +1,52 @@
+## What a BufferGeometry Is: Every Geometry Is Just Attribute Data
+
+`THREE.BoxGeometry`, `SphereGeometry`, `PlaneGeometry`, `TorusGeometry`... look like wildly different "built-in shapes," but all four — and every other built-in geometry — are just a `BufferGeometry` pre-filled with data. There's no separate class for "a sphere" at the render layer: `SphereGeometry` is a function that runs once at construction, computes vertex coordinates over the sphere's surface, then calls exactly `geometry.setAttribute("position", ...)`, `setAttribute("normal", ...)`, `setAttribute("uv", ...)` — three calls you can absolutely write by hand yourself, as the rest of this lesson does.
+
+Each attribute is a `BufferAttribute` wrapping exactly one `Float32Array` — the same data type Track 1's VBO/VAO lesson explained: a 32-bit float array with a fixed, contiguous byte layout, ready for `gl.bufferData` to copy straight into VRAM. `geometry.attributes.position` isn't a new Three.js concept — it's just another name for the very buffer you once `gl.bufferData`'d by hand, and `geometry.setAttribute("position", ...)` under the hood produces exactly the `createBuffer`/`bindBuffer`/`bufferData`/`vertexAttribPointer` chain the VBO/VAO lesson derived.
+
+## Built-in Geometries and What Segment Parameters Do
+
+The "segment" parameters (`widthSegments`, `heightSegments`...) decide how finely the triangle mesh is subdivided — and directly, measurably affect how many triangles actually get sent to the GPU each frame. `BoxGeometry` gives the cleanest formula for seeing the pattern: the default (`segments = 1` on all three axes) produces exactly $12$ triangles — $2$ per each of the $6$ faces. Put the same segment count $s$ on all three axes and each face becomes an $s \times s$ grid ($2s^2$ triangles per face), for exactly $12s^2$ triangles total — measured directly on the Three.js version this track uses: $s=2$ gives $48$, $s=4$ gives $192$, $s=8$ gives $768$. Doubling segments isn't "a bit smoother" — it multiplies the triangle count by exactly $4$, since both dimensions of the grid on each face scale up together.
+
+`SphereGeometry(radius, widthSegments, heightSegments)` doesn't give as clean a formula: the two pole rows (north/south) of the grid each produce only one triangle per column instead of a quad (two triangles) like the middle rows, because every vertex in a pole row is geometrically coincident — Three.js skips that degenerate triangle. Measured directly: `SphereGeometry(1, 8, 8)` gives $112$ triangles — recognizable as a sphere, but visibly faceted; `(1, 16, 16)` gives $480$ triangles, over $4\times$ more; `(1, 32, 32)` gives $1984$ triangles — close to, but not quite, another $4\times$ ($\approx 4.13\times$), since the pole "savings" shrink as a fraction of the total the finer the grid gets. There's no single formula that holds for every built-in geometry — the rule worth remembering is that segments increase triangle count at least linearly, and close to quadratically when both grid dimensions scale up together. The Performance lesson in Track 12 revisits this exact scaling when budgeting draw calls for a whole scene.
+
+## Building a BufferGeometry by Hand: a Pyramid from Position, Normal and Index
+
+The surest way to actually understand `BufferGeometry` isn't more theory — it's building one from three raw arrays. Take a square pyramid: $5$ unique geometric vertices — apex $A$ and $4$ base corners $B_0..B_3$ — but because of **flat** shading (each face gets its own normal, built with exactly the `cross()` from Track 0: $\vec n = \widehat{(B_1 - B_0) \times (A - B_0)}$), the $4$ triangular side faces can't share vertices with each other — every face needs its own `position` copy paired with its own `normal`, even where the coordinates coincide. The result: $4$ side faces $\times 3 = 12$ non-shareable buffer entries, plus $4$ base corners — the base is flat, so all $4$ corners share exactly one normal $(0,-1,0)$ and CAN be shared — for a total of **$16$ vertex entries** in the buffer, even though the shape has only $5$ distinct geometric points.
+
+```js
+const geometry = new THREE.BufferGeometry();
+geometry.setAttribute(
+  "position",
+  new THREE.BufferAttribute(new Float32Array(positions), 3),
+);
+geometry.setAttribute(
+  "normal",
+  new THREE.BufferAttribute(new Float32Array(normals), 3),
+);
+geometry.setIndex(indices); // 6 triangles × 3 = 18 indices, referencing 16 entries
+```
+
+The demo below builds this exact pyramid at runtime, calling `faceNormal()` — the same formula as `triangleNormal()` from Track 0's dot/cross lesson — per face, so you can see that `position`/`normal`/`uv` aren't hidden fields Three manages for you, but plain number arrays entirely under your control.
+
+## Index vs Non-Indexed: When Vertices Can Be Shared, and When They Can't
+
+`setIndex()` only saves memory when several triangles genuinely reuse an **identical** vertex entry — same position, same normal, same uv. A default cube illustrates this cleanly: $8$ geometric corners, but flat shading needs $4$ entries per face $\times 6$ faces $= 24$ vertex entries — each geometric corner shows up repeated across its $3$ adjacent faces with $3$ different normals, so it can't be merged. Indexing actually pays off **within a single face**: a square face's $2$ triangles share exactly $2$ of its $4$ corners (same normal, since they're coplanar) — a cube's index buffer uses $12$ triangles $\times 3 = 36$ indices but only points into $24$ entries, saving $12$ duplicate lookups. The pyramid above shows the opposite limit: the $4$ side faces are lone triangles with no "second triangle on the same face" to share with — only the base (one quad made of $2$ triangles) benefits from indexing, exactly $2$ shared corners out of $18$ total indices.
+
+Non-indexed (`setIndex(null)`, or just setting `position`/`normal` without ever calling `setIndex`) forces every triangle to keep its own full $3$ entries — simpler to build, but wastes exactly the memory that indexed sharing would have avoided. The two draw calls underneath are otherwise identical (`gl.drawArrays` for non-indexed, `gl.drawElements` for indexed) — the only difference is whether the GPU reads `position`/`normal` straight off the buffer in order, or looks them up through an intermediate index buffer first.
+
+## `geometry.dispose()` and Why You Need It
+
+A `BufferGeometry` releases nothing on its own when garbage-collected on the JavaScript side — the actual WebGL buffers (a `WebGLBuffer` per attribute, plus the index) live in VRAM, out of the JS garbage collector's reach. Calling `geometry.dispose()` tells `WebGLRenderer` to run the exact `gl.deleteBuffer` chain for each of those buffers — the very call Track 1's VBO/VAO lesson mentioned but never needed, since that lesson's demo never created a new buffer mid-run.
+
+A concrete number shows how serious this gets: a `SphereGeometry(1, 64, 64)` has $65 \times 65 = 4225$ vertices, each carrying `position` + `normal` + `uv` ($3+3+2=8$ floats, $32$ bytes) — roughly $132\text{KB}$ of VRAM per geometry. The demo below swaps geometry every time you drag the `segments` slider, and always `dispose()`s the old geometry before assigning the new one — the required order. Skipping that `dispose()` call (an easy mistake to make in your own code) leaks about $132\text{KB}$ per swap; drag continuously at $60$ swaps a second and the leak rate is roughly $7.7\text{MB}$ a second — enough to crash the tab within minutes.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common geometry and BufferGeometry mistakes:
+
+1. **Assigning a new geometry to a mesh without `dispose()`-ing the old one.** `mesh.geometry = newGeometry` only swaps a JavaScript reference — the old geometry's WebGL buffers stay allocated in VRAM until you explicitly call `dispose()` on it.
+2. **Assuming higher segments is always "safer."** When both `widthSegments` and `heightSegments` go up together, triangle count scales close to quadratically, not as a small linear cost — `SphereGeometry(1, 24, 10)` gives $432$ triangles, `SphereGeometry(1, 50, 50)` gives $4900$ — over $11\times$ more for a visual improvement that's often not worth it.
+3. **Expecting `setIndex()` to always save memory.** Indexing only helps when triangles genuinely share identical vertex entries (usually within the same flat face); for geometry made entirely of separate triangular faces, like the pyramid above, most entries still can't be shared even with `setIndex()`.
+
+</Callout>

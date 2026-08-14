@@ -1,0 +1,65 @@
+## What Raycasting Is: Firing a Ray from the Camera Through the Mouse
+
+Raycasting answers the question "what 3D object is the mouse pointing at?" by constructing a ray that starts at the camera, passes through the exact screen point where the cursor sits, and finds which object in the scene that ray hits first. This isn't a 2D test against screen-space bounding boxes — the ray genuinely travels through 3D space, so a far object occluded by a closer one won't get picked even if their 2D screen coordinates overlap; this is exactly the mechanism behind every click/hover object selection in a 3D game or editor.
+
+Three.js packages all of this into a single class: `THREE.Raycaster`. But before a ray can be built, the mouse position needs to be in the space Raycaster actually understands — NDC.
+
+## Converting the Mouse to NDC: the Formula and the Y-Flip Trap
+
+`event.clientX/clientY` are screen pixels, origin top-left, $y$ pointing down — exactly the pixel-to-NDC formula from Track 0, just fed a canvas instead of an image:
+
+```js
+function mouseToNDC(event, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -((event.clientY - rect.top) / rect.height) * 2 + 1; // flip y
+  return new THREE.Vector2(x, y);
+}
+```
+
+Three easy ways to get this wrong: using `canvas.width/height` instead of `getBoundingClientRect()`'s `rect.width/height` — wrong whenever the canvas is CSS-scaled, the exact same DPR issue from Track 1; forgetting to subtract `rect.left/rect.top` — wrong whenever the canvas isn't pinned to the viewport's corner; and **forgetting to flip the y axis**. WebGL's NDC has $y$ pointing up, while browser mouse coordinates have $y$ pointing down — missing that negation doesn't break raycasting outright, it doesn't throw or crash the console — it just fires the ray off-target: hovering lands on the correct $x$ but the $y$ position gets mirrored across the screen's center, so the hit test lands on the symmetric object instead of the one under the cursor. This is the hardest bug in this lesson to spot precisely because it looks "roughly right" — the cursor still hits something in the top half of the screen, just the wrong thing.
+
+## Raycaster.setFromCamera and intersectObjects: Building the Ray, Reading the Results
+
+With NDC in hand, `raycaster.setFromCamera(ndc, camera)` builds a ray starting at the camera (perspective) or at the near plane along the view direction (orthographic), passing through that exact NDC point. Calling `raycaster.intersectObjects(objects, recursive)` returns the list of intersections, **already sorted by increasing distance** — the first element is always the object closest to the camera that the ray hits, exactly what the user "sees" when they click. Each result element is a plain object containing:
+
+```js
+{
+  object,   // the Object3D/Mesh that got hit
+  distance, // distance from the camera to the hit point, in world units
+  point,    // Vector3 — the world-space coordinate where the ray hit the surface
+  face,     // the specific triangle that got hit (normal, index) — null if not a Mesh
+}
+```
+
+Because the results are already sorted, `intersects[0]` is almost always the right answer for "which object got clicked" — no manual distance comparison needed; only when deliberately picking through an obstacle (say, selecting whatever sits behind a piece of transparent glass) does walking further into `intersects[1]`, `intersects[2]`... become necessary.
+
+## The Recursive Flag and Target Lists: Testing the Right Objects
+
+`intersectObjects`'s second parameter — `recursive` — decides whether to also test the children of every object in the passed-in array; `true` is the common choice when the real object is a group of nested meshes, such as a loaded GLTF, which is already a hierarchy. But the parameter that actually decides performance is the first one: the `objects` array itself. `raycaster.intersectObjects(scene.children, true)` tests **everything** in the scene, including lights, helpers, objects that were never meant to be clickable — in a large scene, this is the single most common source of lag when interaction gets bolted onto a demo that used to run smoothly. The correct approach is to keep a dedicated "pickable" array — only the objects that genuinely need raycasting — and always call `intersectObjects(pickable, false)` instead of testing the whole scene.
+
+## Hover vs Click: Two Patterns Sharing One Raycaster
+
+The two most common interactions share the same raycast logic and differ only in when it runs. **Click** raycasts exactly once, at the moment a `pointerdown`/`click` event fires — cheap, single-shot. **Hover** needs to raycast every time the mouse moves to know which object currently sits under the cursor, which costs far more since it runs continuously at mouse-move frequency. The standard pattern for hover: keep track of whichever object was hovered on the previous raycast, compare it against the newly raycast object — only change visual state (say, setting `material.emissive`) when the two differ, avoiding rewriting a material property every single frame while the mouse sits still over the same object.
+
+## Performance: Layers and Raycast Frequency
+
+Beyond restricting the tested object array, `THREE.Layers` lets you exclude an entire group of objects from raycasting without manually filtering an array every time: assign `object.layers.set(1)` to objects that should never be clickable (background decoration, particles), then configure `raycaster.layers` to not enable that layer — Three skips them during traversal automatically, which performs better than array-filtering since it allocates no new array every frame. For hover raycasting running continuously off `pointermove`, one optimization that's easy to overlook: raycasting doesn't have to run at the exact frequency of mouse events — high-DPI mice can fire hundreds of events per second. The more common approach: let `pointermove` only record the latest NDC coordinate, while the actual raycast runs inside the render loop, at most once per frame.
+
+## Bounding Volumes and the Points/Lines Threshold
+
+Three.js doesn't test the ray against raw triangles from the start — `Mesh.raycast()` first tests the ray against `geometry.boundingSphere` (a sphere enclosing the whole mesh); failing that cheap test rules out the entire mesh without ever touching its triangle list, and only once the ray genuinely intersects the bounding sphere does Three go on to check `boundingBox` and then real triangles. This is why raycasting thousands of meshes stays feasible in real time — the real cost only falls on however many objects the ray actually comes close to. `Points` and `Line` have no surface to intersect in the geometric sense, so Three substitutes a distance threshold instead: `raycaster.params.Points.threshold`/`raycaster.params.Line.threshold` (in world units) defines a "hit" as the ray passing within that distance of a point or segment — a default threshold that's too small relative to the scene is a common reason clicking or hovering a point cloud or thin line "hits nothing" even though the cursor clearly sits right on top of it.
+
+## From Here to R3F and the Capstone
+
+Track 4 (React Three Fiber) wraps this exact mechanism into `onClick`/`onPointerOver` declared right on a JSX mesh — no new API, just `raycaster.intersectObjects` running under the hood every frame courtesy of the reconciler. Track 13's capstone uses this same raycasting to select objects in an interactive showroom — mastering the recursive/target-list/layers pieces here decides whether that capstone stays smooth with a few hundred objects or slows down as the count grows.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common raycasting and picking mistakes:
+
+1. **Forgetting to flip the Y axis when mapping the mouse to NDC.** No error, no crash — it just makes the hit test land on the object mirrored vertically across the screen's center, which looks "roughly right" and is easy to miss at first glance.
+2. **`intersectObjects(scene.children, true)` against the whole scene instead of a pickable array.** Works fine while the scene is small, then gets progressively laggier as objects are added, since every raycast has to test lights, helpers, and objects that were never meant to be interactive.
+3. **Raycasting Points/Lines with a default threshold that's too small.** A point cloud or thin line has no geometric surface to "hit" in the usual sense — forgetting to set `raycaster.params.Points.threshold`/`Line.threshold` to match the scene's scale makes clicking or hovering look like it simply doesn't work.
+
+</Callout>

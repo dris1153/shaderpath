@@ -1,0 +1,65 @@
+## The Five Rungs of the Material Ladder: Basic to Physical
+
+Three.js has no single do-everything `Material` class — it has five distinct ones (`MeshBasicMaterial`, `MeshLambertMaterial`, `MeshPhongMaterial`, `MeshStandardMaterial`, `MeshPhysicalMaterial`) arranged as a ladder, each rung adding another layer of light physics and another slice of GPU cost. Behind the scenes each class compiles into a different GLSL program — picking a material isn't picking a "color theme," it's picking the exact code that runs hundreds of thousands of times per frame on the user's GPU. Getting this ladder right before touching a single light matters more than any light you add afterward — the wrong material still looks wrong no matter how correct the lighting is.
+
+## MeshBasicMaterial: Why It's Completely Blind to Light
+
+`MeshBasicMaterial` never reads a single lighting uniform — the fragment shader program Three.js compiles for it has no lighting code path at all: output color = `map` (if a texture is set) multiplied by `color`, done. Add as many `DirectionalLight`s or `PointLight`s to the scene as you want, the lit face and the shadowed face come out identically bright. This isn't a limitation to "fix" — it's exactly why Basic exists: 3D UI overlays, wireframe debugging, flat sprites, or any case where you want a fixed color independent of view angle or light position. Because it drops the lighting path entirely, Basic's compiled GLSL program is noticeably shorter than the other four — it's the cheapest option on the list, suited to tens of thousands of objects at once (particle swarms, say) where lighting cost multiplied by object count would tank the frame rate before you noticed.
+
+### Lambert and Phong: Per-Vertex or Per-Fragment
+
+`MeshLambertMaterial` computes diffuse lighting with the classic Lambertian formula:
+
+$$
+I_d = k_d \, \max(\mathbf{N} \cdot \mathbf{L},\ 0)
+$$
+
+where $\mathbf N$ is the surface normal and $\mathbf L$ is the direction toward the light. The key detail: Lambert computes $I_d$ **once per vertex** in the vertex shader, then lets the GPU linearly interpolate that value across each triangle's fragments. A 48×48-segment sphere has about 2,401 vertices — if that sphere covers 300×300 pixels on screen (roughly 90,000 fragments, an estimate), Lambert only runs the dot-product math a bit over 2,400 times; everything else is near-free interpolation. The trade-off: on low-vertex meshes, highlights break into flat facets, because linearly interpolating between per-vertex values can't reconstruct a smooth round highlight.
+
+`MeshPhongMaterial` pushes that same computation down to **per-fragment**: each of those 90,000 fragments interpolates its own normal and computes its own $\mathbf N \cdot \mathbf L$ — roughly 35–40× more expensive than Lambert at the fragment/vertex ratio in the example above, but in exchange you get a smooth, correctly-positioned specular highlight via the Blinn-Phong approximation:
+
+$$
+I_s = k_s \, (\mathbf{N} \cdot \mathbf{H})^{\text{shininess}}, \qquad \mathbf{H} = \operatorname{normalize}(\mathbf{L} + \mathbf{V})
+$$
+
+The higher `shininess`, the smaller and sharper the specular spot — polished metal wants high shininess, dull plastic wants low.
+
+## Standard and Physical: Stepping Into PBR
+
+`MeshStandardMaterial` drops Phong's vague `shininess` knob entirely and replaces it with two physically grounded parameters: `metalness` and `roughness` — the PBR (Physically Based Rendering) model nearly every modern engine shares (Unreal, Unity, Blender, Substance Painter), which means PBR textures exported from those tools plug straight into Standard with no conversion needed. That's why Standard is the practical default for anything in modern Three.js meant to look real.
+
+`MeshPhysicalMaterial` inherits all of Standard and layers on extra physical terms: `clearcoat` (a thin glossy top coat, like car paint or varnished wood — with its own independent Fresnel response on top of the base layer), `transmission` (light passing through the object instead of bouncing off — glass, water), `sheen`, `iridescence`. Every extra property you enable is its own block of math in the fragment shader — reach for Physical only when you actually need one of those effects, not as a default swap-in for Standard.
+
+### What Metalness and Roughness Actually Mean
+
+`metalness ∈ [0,1]` decides whether a material behaves like a metal at all: at $0$ (dielectric — non-metal: wood, plastic, leather, fabric), specular reflectance accounts for only about 4% of the light and stays colorless (Fresnel $F_0 \approx 0.04$), while the rest scatters under the surface as diffuse color. At $1$ (metal), essentially all light reflects right at the surface and **takes on the color** of `color` — there's no diffuse term left at all:
+
+$$
+\text{diffuseColor} = \text{baseColor} \times (1 - \text{metalness}), \qquad F_0 = \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+$$
+
+`roughness ∈ [0,1]` decides whether that specular spot stays tight or spreads out: $0$ is a sharp mirror reflection, $1$ scatters light in every direction, leaving almost no distinct highlight at all. Two concrete pairs worth memorizing: **blackboard chalk** is `metalness = 0, roughness = 0.9` — a rough dielectric, nearly pure diffuse, no visible highlight; **polished metal** is `metalness = 1, roughness = 0.2` — almost entirely a tight, sharp specular response, with no color "sinking" under the surface.
+
+## Cost vs Fidelity: Picking the Right Material for the Job
+
+There's no "best" material — only the right one for the job at hand. Basic for 3D UI, wireframe debugging, or huge particle counts where lighting isn't worth the cost. Lambert used to be the go-to on weak mobile GPUs — it's rare now unless you deliberately want a faceted, retro low-poly look. Phong fits when you need a clear highlight but not physical accuracy — stylized games, toon-adjacent shading. Standard is the practical default for almost anything meant to look real: characters, products, architecture. Physical only turns on when you specifically need clearcoat or transmission — car paint, glass, liquids.
+
+## Color, colorSpace, and Disposing Materials Properly
+
+Assigning `new THREE.Color(0xff6b35)` to `material.color` doesn't store the raw triple $(1, 0.42, 0.21)$ in memory — Three.js enables `ColorManagement` by default (since r150), automatically treats that hex as sRGB (exactly like Track 0's sRGB vs Linear lesson) and converts it into the linear working space before it lands in `.r/.g/.b`. You don't have to gamma-correct material colors by hand — the engine already did it — but if you read `.r/.g/.b` directly to do your own math (darkening a color with `multiplyScalar`, say), the result lives in linear space, not the hex value you originally typed.
+
+A material is also a GPU resource — it holds a compiled shader program and its associated uniform buffers, exactly like a geometry or a texture. Assigning `mesh.material = newMaterial` does **not** automatically free the old one; you have to call `oldMaterial.dispose()` yourself after the swap, or the old compiled shader program stays resident in GPU memory even though no mesh references it anymore.
+
+## Where This Goes Next: Real Lighting and Deeper PBR
+
+This lesson deliberately uses a single light to isolate how each material responds — the next lesson, `lights-and-shadow-maps`, adds shadow maps, multiple light types, and explains why the lack of ambient light leaves shadowed faces pitch black here. `checkpoint-primitive-still-life` right after that has you deliberately compose at least three materials into one real scene. Further out, Track 11 (PBR & Lighting Theory) returns to the exact `diffuseColor`/$F_0$ formulas above and expands them into a full BRDF with a microfacet model.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common material mistakes:
+
+1. **Mutating a property on a material shared by many meshes.** `const shared = new THREE.MeshStandardMaterial(...)` assigned to 50 meshes to save memory is a reasonable move — but calling `shared.roughness = 0.1` afterward changes the appearance of **all 50 meshes at once**, since they reference the exact same JS object. To vary appearance independently, `clone()` the material first, or drive the difference through a per-instance attribute.
+2. **Assigning `mesh.material = newMat` and forgetting `.dispose()` on the old one.** Three.js doesn't clean this up automatically — doing this inside a loop (every slider drag, say) without disposing leaks a freshly compiled shader program each time, enough to drop hundreds of MB of VRAM after a few minutes of interaction.
+3. **Expecting `MeshBasicMaterial` to respond to lighting or cast/receive shadows.** Adding `castShadow`/`receiveShadow` to a Basic-material mesh does nothing — Basic's shader program never reads a shadow map, regardless of whether the renderer has `shadowMap.enabled` turned on globally.
+
+</Callout>

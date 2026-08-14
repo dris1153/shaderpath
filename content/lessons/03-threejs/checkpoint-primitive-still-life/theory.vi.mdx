@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build này không có lý thuyết mới — nó kiểm tra liệu bạn đã nắm được bậc thang material ở bài `materials-from-basic-to-physical` tới mức dựng được một cảnh tĩnh vật thật, có bố cục và ánh sáng, chứ không chỉ đổi select trên demo.
+
+## Yêu cầu
+
+Dựng một cảnh tĩnh vật Three.js thuần (không React) từ ít nhất 4 geometry built-in khác nhau, phối ít nhất 3 loại material — trong đó ít nhất một `MeshStandardMaterial` có `metalness`/`roughness` được canh chỉnh có chủ đích, không để mặc định. Bố cục vị trí/scale/rotation của từng object phải rõ ràng có chủ ý, không xếp chồng gốc toạ độ. Scene có đúng một `AmbientLight` và một `DirectionalLight`. Camera trôi nhẹ liên tục quanh cảnh bằng `requestAnimationFrame`. Toàn bộ geometry/material/renderer phải được `dispose()` khi teardown. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Giữ hai mảng `geometries[]` và `materials[]`, push vào ngay lúc tạo mesh — `dispose()` khi đó chỉ là một vòng lặp qua hai mảng đó cộng `renderer.dispose()`. Đặt geometry trước, chọn material sau khi đã hình dung geometry đó nên "trông như gì" (kim loại, sứ, nhựa...).
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi xem solution — đủ 4 geometry, đủ 3 material, ít nhất một cặp metalness/roughness có chủ đích, đúng 2 light, camera trôi mượt, và `dispose()` thực sự dọn sạch khi gọi.

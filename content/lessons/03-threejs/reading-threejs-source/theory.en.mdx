@@ -1,0 +1,76 @@
+## Why Reading Source Is a Senior Habit
+
+The Three.js docs describe behavior in prose: "`attach()` preserves world transform," "`frustumCulled` skips objects outside the camera." A senior engineer's real question goes further — "preserves world transform with which exact operations, in which order," "is the culling bounding sphere computed BEFORE or AFTER the vertex shader runs." No documentation, official or not, answers at the mechanism level; only the function's definition does, because the definition IS the behavior, not a summary that can drift stale or oversimplify. Three.js is MIT-licensed, a few hundred readable JavaScript files sitting right on GitHub or inside `node_modules/three/src` after `pnpm install` — there's no reason to guess when the answer is one `grep` or one `Ctrl+click` away.
+
+## Object3D: position, quaternion, scale and the updateMatrix/updateMatrixWorld pair
+
+Open [`Object3D.js`](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js): the constructor defines `position`, `rotation` (an Euler), `quaternion`, and `scale` via `Object.defineProperties` ([L160-226](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L160-L226)) — four plain data fields that do NOT automatically produce a `matrix`. The next two lines create `this.matrix` and `this.matrixWorld` ([L233, L241](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L233)), alongside the `matrixAutoUpdate` flag from last lesson ([L253](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L253)). `updateMatrix()` ([L1133-1152](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1133-L1152)) does exactly one thing: `this.matrix.compose(this.position, this.quaternion, this.scale)`, then flips `matrixWorldNeedsUpdate = true`. `updateMatrixWorld(force)` ([L1165-1203](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1165-L1203)) does the second job: with a parent present, it multiplies the parent's `matrixWorld` by the local `matrix` —
+
+```js
+this.matrixWorld.multiplyMatrices( this.parent.matrixWorld, this.matrix );
+```
+
+exactly the $M_{world} = M_{parent,\,world} \cdot M_{local}$ formula from theory, now visible in real code, then recurses into every `child.updateMatrixWorld(force)` — parent-before-child isn't a convention you have to remember, it's the literal `for` loop inside the function.
+
+## add, remove, attach: attach() actually converts coordinate frames
+
+`add(object)` ([L746-787](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L746-L787)) only detaches `object` from its old parent, sets `object.parent = this`, and pushes it into the `children` array — not a single line touches `object.position`. The consequence: if `object.position` used to be a local coordinate in the old frame, after `add()` that same number gets RE-INTERPRETED verbatim in the new frame — the object jumps instantly if the new parent isn't at the origin. `attach(object)` ([L874-908](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L874-L908)) does considerably more: it calls `updateWorldMatrix`, builds the inverse of `this.matrixWorld`, multiplies in the old parent's `matrixWorld` too (if any), then calls `object.applyMatrix4(_m1)` — this exact step rewrites `object.position/quaternion/scale` so the world transform is preserved — BEFORE `object.parent` actually changes. Reading these four lines in order is the precise answer to "how does attach differ from add," no guesswork required.
+
+## traverse: walking the entire scene graph
+
+`traverse(callback)` ([L1070-1082](https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L1070-L1082)) calls `callback(this)` first, then loops over `children` recursing into each — pre-order DFS, parent always visited before children. The JSDoc right above the method even notes "Modifying the scene graph inside the callback is discouraged" — a real-behavior warning (mutating `children` while it's mid-iteration) that not every docs page states this plainly.
+
+## WebGLRenderer.render(): projScreenMatrix and the frustum culling step
+
+In [`WebGLRenderer.js`](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js), `this.render = function(scene, camera)` ([starts at L1609](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1609)) first updates the scene's and camera's `matrixWorld`, then builds:
+
+```js
+_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse );
+_frustum.setFromProjectionMatrix( _projScreenMatrix, WebGLCoordinateSystem, camera.reversedDepth );
+```
+([L1658-1659](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1658-L1659)) — six frustum planes computed straight from the projection × view matrix product, exactly the Model→View→Projection chain from Track 0. The internal `projectObject` function recurses the scene tree just like `traverse`, and for each Mesh only pushes it into the render list when:
+
+```js
+if ( ! object.frustumCulled || _frustum.intersectsObject( object ) )
+```
+([L1885](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1885)) — an object entirely outside those six planes is dropped BEFORE any `gl.draw*` call, costing zero fragment shader invocations.
+
+## Sorting the Render List: Opaque Front-to-Back, Transparent Back-to-Front — Why
+
+Right after the tree walk, `render()` calls `currentRenderList.sort(_opaqueSort, _transparentSort, ...)` when `this.sortObjects === true` ([L1685-1689](https://github.com/mrdoob/three.js/blob/r185/src/renderers/WebGLRenderer.js#L1685-L1689)). The two sort functions live in [`WebGLRenderLists.js`](https://github.com/mrdoob/three.js/blob/r185/src/renderers/webgl/WebGLRenderLists.js#L1-L51): `painterSortStable` compares `a.z - b.z` (ascending — near first, far last) for the **opaque** list; `reversePainterSortStable` compares `b.z - a.z` (descending — far first, near last) for the **transparent** list. The reason they differ ties straight back to Track 1: opaque draws near-to-far so the depth test can early-reject occluded fragments (early-Z) — ANY draw order still produces a correct image thanks to the depth buffer, the sort only affects performance. Transparent objects get no such safety net — alpha blending is an order-dependent sequential blend with no depth-buffer fallback, drawing it out of order produces plainly wrong colors, not just slower ones — so it must draw far-to-near so every new layer blends correctly on top of what's already there.
+
+## WebGLState: Where Your Track 1 Knowledge Lives Underneath
+
+Track 1 taught `gl.enable(gl.DEPTH_TEST)`/`gl.disable(...)` called directly. `WebGLState.js` wraps those exact two calls behind a cache:
+
+```js
+function enable( id ) {
+  if ( enabledCapabilities[ id ] !== true ) {
+    gl.enable( id );
+    enabledCapabilities[ id ] = true;
+  }
+}
+```
+([L461-470](https://github.com/mrdoob/three.js/blob/r185/src/renderers/webgl/WebGLState.js#L461-L470)) — every mesh/material asking for `DEPTH_TEST` doesn't automatically fire a real `gl.enable` call; only when the requested state ACTUALLY differs from the cached `enabledCapabilities[id]` does Three.js touch the driver at all. This is precisely where the raw WebGL API you hand-wrote in Track 1 is still running — just hidden behind a state-diffing layer that avoids redundant calls.
+
+## How to Navigate: jsdelivr, GitHub, and Reading Tests as Docs
+
+Three practical habits for looking things up:
+
+- Pin the exact version: three@0.185.1 (the version installed in this repo) matches GitHub tag `r185` — a link like `github.com/mrdoob/three.js/blob/r185/src/...` is a stable permalink that won't drift with `dev`/`master`.
+- Skip cloning the repo: `cdn.jsdelivr.net/npm/three@0.185.1/src/core/Object3D.js` serves that exact source file, handy for sharing links or fetching from a console.
+- Search fast inside the repo: GitHub's file finder (`t`) and the `/` search-by-path shortcut cover most lookups; a question like "does this function throw on a null argument" is usually answered fastest by reading the matching test under `test/unit/src/...` — a test asserts a concrete input → output, tighter than a JSDoc line.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when looking up Three.js source yourself:
+
+1. **Assuming `add()` preserves world position like `attach()` does.** `add()` never touches `position` — the object's local coordinate gets re-interpreted in the new frame, jumping instantly whenever the new parent isn't at the origin; preserving world transform requires `attach()`.
+2. **Trusting `frustumCulled` for geometry a vertex shader displaces.** The cull test uses `geometry.boundingSphere`, computed from the ORIGINAL vertex positions on the CPU, BEFORE the vertex shader ever runs — a shader that sways foliage or blows particles beyond that original sphere can get culled while still visibly needed; you have to manually inflate `boundingSphere.radius` or disable `frustumCulled` for that geometry.
+3. **Reading code on the `dev`/`master` branch and applying it to the installed `three` version.** GitHub defaults to showing the latest branch, which is always ahead of whatever's pinned in `package.json`; behavior can have changed between the two. Always open the tag matching the installed version, like `r185` in this lesson.
+
+</Callout>
+
+## Looking Ahead
+
+The checkpoint right after this lesson reuses `attach()`, `traverse()`, and raycasting to build a complete showroom — no new theory, just assembling what you just read into something that runs. Track 4 (R3F) doesn't replace this `WebGLRenderer` — R3F's `useFrame` calls straight into the exact `render()` you just read; and Track 6 (Custom Shader) patches directly into the state/material layer sitting right next to `WebGLState` via `onBeforeCompile`.

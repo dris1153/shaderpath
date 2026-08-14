@@ -1,0 +1,41 @@
+## PerspectiveCamera vs OrthographicCamera: hai phép chiếu, hai use case
+
+Ở Track 0, phép chiếu (projection) là bước thứ ba của pipeline Model → View → Projection, biến toạ độ camera-space thành clip space. Three.js hiện thực hai loại camera tương ứng với hai ma trận chiếu khác nhau. `PerspectiveCamera(fov, aspect, near, far)` dùng chiếu phối cảnh: vật càng xa càng nhỏ, các đường thẳng song song hội tụ về một điểm — đúng như mắt người nhìn thế giới, nên là lựa chọn mặc định cho game 3D, walkthrough kiến trúc, bất cứ cảnh nào cần cảm giác chiều sâu thật. `OrthographicCamera(left, right, top, bottom, near, far)` dùng chiếu song song: kích thước vật trên màn hình không đổi theo khoảng cách tới camera, đường thẳng song song trong thế giới thực vẫn song song trên màn hình.
+
+Ortho thắng thế trong ba trường hợp cụ thể: UI 3D overlay (một icon 3D phải giữ nguyên kích thước dù camera chính lùi ra xa), isometric/chiến thuật (game chiến thuật dùng góc nhìn ortho hoặc gần-ortho để người chơi so sánh kích thước đơn vị chính xác bất kể vị trí trên bản đồ), và blueprint/CAD 2.5D (không méo hình khi đo đạc trên màn hình). fov/aspect/near/far của Perspective bạn đã gặp ở Track 0; left/right/top/bottom của Orthographic đóng vai trò tương tự — chúng định nghĩa trực tiếp một hộp (box) frustum thay vì một hình chóp cụt, và kích thước hộp đó — chứ không phải khoảng cách camera — quyết định vật to hay nhỏ trên màn hình.
+
+## OrbitControls: target, damping và vòng lặp update()
+
+`OrbitControls` (trong `three/addons/controls/OrbitControls.js`) là cách phổ biến nhất để cho người dùng xoay quanh một điểm. Nó không thay thế camera — nó lắng nghe sự kiện con trỏ/wheel trên `domElement` bạn truyền vào, rồi ghi thẳng lên `camera.position` và `camera.quaternion` mỗi khi bạn gọi `controls.update()`. Nội bộ, controls lưu vị trí camera dưới dạng toạ độ cầu (bán kính, góc phương vị, góc cực) quanh `controls.target` — một `Vector3` mặc định `(0,0,0)`, điểm camera luôn nhìn vào.
+
+`enableDamping = true` bật quán tính: thay vì camera dừng khớp ngay khi thả chuột, nó tiếp tục "trôi" chậm dần theo `dampingFactor` (mặc định `0.05`). Đây là lý do khiến `controls.update()` **bắt buộc** phải nằm trong render loop, không chỉ gọi khi có input: mỗi frame khi đang trôi, không có sự kiện chuột nào xảy ra cả — nếu chỉ gọi `update()` trong handler sự kiện, damping sẽ đứng khựng ngay khi ngón tay rời chuột. Ngay cả khi tắt damping, tài liệu chính thức vẫn khuyến nghị gọi `update()` mỗi frame như một thói quen mặc định, vì `autoRotate` (phần sau) dựa vào đúng cơ chế này.
+
+## Giới hạn khoảng cách và góc nhìn: distance clamp, polar angle clamp, pan
+
+Bốn cặp thuộc tính giới hạn phổ biến nhất: `minDistance`/`maxDistance` (mặc định `0`/`Infinity`) chặn bán kính cầu — với Perspective camera đây là khoảng cách dolly zoom; với Orthographic, zoom không đổi bán kính mà đổi `camera.zoom`, nên cặp `minZoom`/`maxZoom` mới thật sự áp dụng. `minPolarAngle`/`maxPolarAngle` (mặc định `0` và `Math.PI`, tính bằng radian) chặn góc cực — `0` là nhìn thẳng từ đỉnh xuống, `Math.PI` là nhìn thẳng từ đáy lên; đặt `maxPolarAngle` gần $\pi/2$ là cách kinh điển để camera không bao giờ chui xuống dưới mặt đất. Không nên đặt đúng `0` hay `Math.PI` làm biên: tại hai cực này vector "lên" của camera không còn xác định duy nhất, controls dễ giật khi chạm biên — chừa một khoảng đệm nhỏ (ví dụ `0.05`) là thực hành phổ biến. `minAzimuthAngle`/`maxAzimuthAngle` làm việc tương tự theo chiều ngang, mặc định không giới hạn.
+
+Pan (`enablePan`, mặc định bật) dịch chuyển cả `camera.position` lẫn `controls.target` cùng lúc — khác dolly/rotate chỉ đổi vị trí camera quanh target cố định. `screenSpacePanning` (mặc định `true`) quyết định pan trượt trên mặt phẳng vuông góc với hướng nhìn camera (tự nhiên hơn khi nhìn nghiêng) hay trượt trên mặt phẳng ngang chứa `camera.up` (tự nhiên hơn cho góc nhìn bản đồ từ trên xuống) — `MapControls`, biến thể ngay dưới đây, đặt cờ này thành `false`.
+
+## Controls khác: Map, Trackball, Fly, PointerLock
+
+`MapControls` kế thừa thẳng từ `OrbitControls`, chỉ đổi mặc định: chuột trái pan (không rotate), chuột phải rotate, `screenSpacePanning = false` — phù hợp app kiểu bản đồ/CAD nơi thao tác chính là kéo nhìn ngang chứ không xoay. `TrackballControls` bỏ hẳn khái niệm "trục lên cố định": camera có thể lật hoàn toàn qua cực mà không bị chặn bởi `minPolarAngle`/`maxPolarAngle` như OrbitControls — hợp với việc xoay tự do một vật thể trong không gian (mô hình phân tử, vệ tinh) nơi không có khái niệm "trên/dưới" tuyệt đối. `FlyControls` mô phỏng buồng lái: WASD di chuyển theo hệ toạ độ cục bộ của camera, chuột xoay hướng nhìn tự do — hợp mô phỏng bay/tàu vũ trụ. `PointerLockControls` khoá con trỏ chuột vào canvas qua Pointer Lock API, chỉ xử lý phần nhìn (look); di chuyển WASD do code của bạn tự viết — nền tảng cho control kiểu FPS. Chọn control nào phụ thuộc câu hỏi: có "mặt đất" và "lên" cố định không (Orbit/Map) hay không (Trackball); người dùng xoay quanh một điểm (Orbit) hay tự do di chuyển trong không gian (Fly/PointerLock)?
+
+## Ai làm chủ camera: animate bằng code vs để controls tự quản
+
+Animate camera bằng code thường chỉ cần hai dòng: `camera.position.lerp(targetPos, alpha)` để trượt êm tới vị trí mới, và `camera.lookAt(lookTarget)` để luôn hướng đúng chỗ. Vấn đề nảy sinh khi `OrbitControls` cũng đang bật: `controls.update()` mỗi frame ghi đè `camera.position`/`camera.quaternion` từ trạng thái spherical nội bộ của nó — nếu code set `camera.position` xong rồi `controls.update()` chạy ngay sau, controls sẽ kéo camera về đúng vị trí spherical cũ, animate coi như vô nghĩa (hoặc giật liên tục nếu hai bên tranh chấp mỗi frame). Chỉ một bên được ghi vào camera transform mỗi frame — hai cách giải quyết: tắt hẳn `controls.enabled = false` khi code đang animate rồi bật lại khi xong, hoặc animate `controls.target` thay vì `camera.position`/`lookAt` trực tiếp để controls luôn là chủ sở hữu duy nhất và tự tính lại spherical state cho bạn.
+
+## Resize: cập nhật aspect và updateProjectionMatrix
+
+Ma trận chiếu không tự tính lại khi container đổi kích thước — nó được cache trong `camera.projectionMatrix`, chỉ cập nhật khi bạn gọi `updateProjectionMatrix()` tường minh. Với Perspective, quy trình chuẩn là `camera.aspect = width / height; camera.updateProjectionMatrix();`. Orthographic không có thuộc tính `aspect` — bạn phải tự tính lại `left`/`right` (hoặc `top`/`bottom`) theo tỉ lệ khung hình mới trước khi gọi `updateProjectionMatrix()`, nếu không hình sẽ méo đúng theo tỉ lệ sai lệch giữa canvas cũ và mới. Quên bước `updateProjectionMatrix()` là lỗi im lặng: không có warning nào cả, camera chỉ đơn giản tiếp tục render với aspect ratio cũ cho tới khi chỗ khác vô tình gọi lại nó.
+
+Camera và controls hôm nay vẫn di chuyển trong một scene graph phẳng — bài tiếp theo mở khoá phần còn thiếu: parent-child hierarchy, world vs local space, và vì sao một `Group` rỗng lại là công cụ dựng pivot mạnh nhất trong Three.js.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi làm việc với camera và controls:
+
+1. **Bật `enableDamping` mà chỉ gọi `controls.update()` trong sự kiện chuột.** Camera trôi được vài frame ngay sau khi thả chuột rồi đứng khựng đột ngột — vì damping cần `update()` chạy liên tục mỗi frame kể cả khi không có input mới, không phải chỉ khi có sự kiện.
+2. **Vừa animate `camera.position` bằng code, vừa để `OrbitControls` bật.** Hai bên tranh chấp quyền ghi lên transform camera mỗi frame — kết quả camera giật hoặc bật ngược lại vị trí cũ do `controls.update()` ghi đè animate ngay sau đó.
+3. **Đổi kích thước canvas mà quên gọi `updateProjectionMatrix()`.** `camera.aspect` (hay `left`/`right`/`top`/`bottom` với Orthographic) đổi giá trị nhưng ma trận chiếu vẫn giữ nguyên vì nó chỉ được tính lại khi hàm này được gọi tường minh — hình ảnh bị méo đúng bằng tỉ lệ sai lệch giữa aspect cũ và mới.
+
+</Callout>

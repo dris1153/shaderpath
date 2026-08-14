@@ -1,0 +1,54 @@
+## Three Mandatory Pieces: Scene, Camera, Renderer
+
+Every Three.js app, no matter how simple or elaborate, starts from exactly three objects: `THREE.Scene` — the container for everything to be drawn; `THREE.PerspectiveCamera` — defining view and projection; `THREE.WebGLRenderer` — holding the real WebGL context and telling it to draw onto a canvas. These three don't interact directly at construction time — they only actually meet at the line `renderer.render(scene, camera)`, the call this lesson circles back to later.
+
+`Scene` is just a special `Object3D` acting as the root of the scene graph: calling `scene.add(mesh)` appends an object to its children list, and `renderer.render()` then traverses that whole tree to know what needs drawing. In Track 1, "knowing what needs drawing" meant calling `gl.drawArrays`/`gl.drawElements` yourself for every mesh, in the exact order you wrote them by hand; `Scene` replaces that manual draw-call list with a tree you add/remove objects from, while walking the tree and issuing draw calls becomes the renderer's job.
+
+## What fov, aspect, near, and far Actually Control
+
+`new THREE.PerspectiveCamera(fov, aspect, near, far)` takes exactly four parameters that determine the entire visible view frustum. `fov` (field of view, in degrees, measured vertically) decides how "wide or narrow the lens" is: the Model → View → Projection lesson in Track 0 derived $f = 1/\tan(\text{fov}/2)$ — the number that directly fills two diagonal entries of the $P$ matrix. Three.js's default fov is $50°$, giving $f = 1/\tan(25°) \approx 2.14$; pushing fov up to $90°$ (a wide-angle lens) gives $f = 1/\tan(45°) = 1$ — the frame "loosens," objects at the same distance look smaller and farther away; pulling fov down to $30°$ gives $f \approx 3.73$ — a telephoto effect, objects look noticeably bigger and flatter. `aspect` is the frame ratio (canvas width/height in pixels) — getting this wrong (say, hard-coding `16/9` while the canvas is actually near-square) doesn't crash anything, it just stretches the image along one axis, an easy bug to miss since nothing warns you.
+
+`near` and `far` bound how far the camera can see — anything closer than `near` or farther than `far` gets clipped out of the frustum, the exact clip-space mechanism from Track 0. Three.js defaults to `near = 0.1`, `far = 2000` — a `far/near` ratio of `20000` sounds harmless, but because depth-buffer precision distributes non-linearly with $1/z$ (the Depth Buffer & Z-Fighting lesson in Track 1 derived this), a larger far/near ratio means worse depth precision farther from near — z-fighting can show up even without deliberately stacking two coplanar surfaces. The practical rule: set `near`/`far` as tight as possible around the scene's actual range, don't blindly copy `0.1`–`2000` into every project.
+
+## WebGLRenderer: Owning the Context, Driving Resolution
+
+`new THREE.WebGLRenderer({ canvas })` calls `canvas.getContext("webgl2")` (or falls back to `webgl`) for you — the exact call Track 1 made you type by hand in the first-triangle lesson. From here the renderer keeps that context as private state; you never call `gl.clear`, `gl.viewport`, or `gl.drawElements` yourself again — every public `render()` call is a wrapper around precisely the gl calls you wrote by hand in Track 1.
+
+### `setSize` and `updateStyle`
+
+`renderer.setSize(width, height, updateStyle)` takes `width`/`height` in **CSS pixels**, not real buffer pixels — the renderer multiplies by the pixel ratio internally. The third argument, `updateStyle` (default `true`), decides whether the renderer writes `canvas.style.width`/`height` itself. When the canvas is already sized by CSS/Tailwind from a parent component (like the demo below, where `className="size-full"` fills the `AspectRatio` container), pass `false` so the renderer doesn't overwrite that inline style — the canvas keeps flexing with the layout instead of getting locked to whatever pixel size was computed at the last call.
+
+### `setPixelRatio`: Clamp Before You Set It
+
+`renderer.setPixelRatio(window.devicePixelRatio)` sounds reasonable but is dangerous on high-DPR devices: a DPR-3 phone with a $390\times844$ CSS screen produces a $1170\times2532 \approx 2.96$ million pixel buffer; clamping to DPR 2 (the standard recommendation, `Math.min(window.devicePixelRatio, 2)`) gives a $780\times1688 \approx 1.32$ million pixel buffer — roughly $2.25\times$ fewer fragment invocations per frame, for a sharpness difference the eye essentially can't tell apart (Track 1's canvas & DPR lesson measured exactly this threshold).
+
+## `render()` Is One Frame — the Loop Is Yours
+
+`renderer.render(scene, camera)` draws exactly **one** frame at the moment it's called, then returns immediately — no timer, no hidden loop inside it. Calling it once inside a `useEffect` and then wondering why the mesh isn't spinning is the single most common misunderstanding when starting Three.js: animation is always code you write yourself, driven by `requestAnimationFrame`, the very same loop you already wrote by hand in Track 1:
+
+```js
+function loop(t) {
+  mesh.rotation.y = t * 0.001;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+```
+
+## Resizing Correctly
+
+A resized container (window resize, a sidebar opening or closing) doesn't update anything on its own — you must detect it and handle exactly three things, in order: call `renderer.setSize(w, h, false)` again, set `camera.aspect = w / h`, then call `camera.updateProjectionMatrix()`. Skipping the last step is the quietest bug of all: `camera.aspect` is just a plain JavaScript field, Three.js has no setter that automatically recomputes the $P$ matrix when you assign a new value — the projection matrix keeps its old value until you explicitly call `updateProjectionMatrix()`.
+
+## What These Three Hide From Track 1
+
+Scene, Camera, and Renderer aren't new magic — they're an organized wrapper around exactly the API you wrote by hand in Track 1: `getContext`, managing a buffer/VAO for every `BufferGeometry` (next lesson), compiling a shader program per material, and finally calling `gl.drawElements`/`gl.drawArrays` for every object in the scene graph each time `render()` runs. Track 4 (React Three Fiber) wraps yet another layer on top of these exact three objects — `<Canvas>` creates the `WebGLRenderer`, JSX `<mesh>` builds the `Scene` graph — but underneath it all, every frame still boils down to the one `renderer.render(scene, camera)` call you just learned here.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first setting up Scene/Camera/Renderer:
+
+1. **Changing `camera.fov`/`aspect`/`near`/`far` and forgetting `camera.updateProjectionMatrix()`.** These fields are plain JavaScript properties; the $P$ matrix actually used to draw is only recomputed when you explicitly call this method — skip it, and the frame still renders with the old matrix even though the field's value has changed.
+2. **Calling `renderer.render()` once and expecting animation to run on its own.** There's no hidden `requestAnimationFrame` inside `render()` — every frame is an explicit call, exactly like the loop you wrote by hand in Track 1 with `gl.drawArrays` every frame.
+3. **Calling `setPixelRatio(window.devicePixelRatio)` without clamping.** On high-DPR devices, fragment invocations per frame scale with the square of DPR — a DPR-3 phone ends up rendering more than twice as many pixels as a DPR-2 clamp, for sharpness nobody can actually tell apart by eye.
+
+</Callout>

@@ -1,0 +1,101 @@
+## glTF là gì, và vì sao nó gần như thắng tuyệt đối trên web
+
+glTF (viết tắt của GL Transmission Format, do Khronos Group — cùng nhóm giữ chuẩn WebGL và Vulkan — thiết kế) không phải định dạng để *chỉnh sửa* model như `.blend` hay `.max`, mà là định dạng để *truyền tải và render trực tiếp*, nên hay được gọi vui là "JPEG của 3D". Khác biệt nằm ở việc file glTF lưu sẵn đúng thứ renderer cần: scene graph (cây node cha-con kèm transform), material theo chuẩn PBR metalness/roughness, animation clip có keyframe, và quan trọng nhất — vertex buffer ở dạng binary gần giống hệt layout mà GPU đọc. Vì vậy loader gần như copy thẳng mảng byte vào `BufferAttribute` chứ không phải parse lại một cấu trúc phức tạp.
+
+So với các định dạng cũ: `.obj` chỉ có geometry và material rất cơ bản (không animation, không PBR chuẩn), toàn bộ ở dạng text nên phải parse từng dòng; `.fbx` có animation và material tốt hơn nhưng là định dạng nhị phân đóng của Autodesk, thư viện đọc phải reverse-engineer cấu trúc. glTF thì công khai, có JSON schema chính thức, và tồn tại ở hai hình thức: `.gltf` (JSON + `.bin` chứa buffer + texture rời, tiện debug vì đọc được bằng mắt) hoặc gộp thành một file `.glb` nhị phân duy nhất — web gần như luôn dùng `.glb` vì chỉ cần đúng một HTTP request.
+
+## GLTFLoader: nạp bất đồng bộ, rồi duyệt scene graph
+
+```js
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+const loader = new GLTFLoader();
+loader.load(
+  "/models/character.glb",
+  (gltf) => {
+    scene.add(gltf.scene);
+    gltf.scene.traverse((obj) => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+    const head = gltf.scene.getObjectByName("Head");
+  },
+  (xhr) => console.log(`${((xhr.loaded / xhr.total) * 100).toFixed(0)}%`),
+  (err) => console.error("Nạp GLTF thất bại", err),
+);
+```
+
+`load()` nhận bốn tham số: URL, `onLoad`, `onProgress`, `onError` — không trả `Promise` mặc định, dù three.js cũng có `loader.loadAsync(url)` cho ai thích `await`. Object `gltf` trả về không chỉ có `scene` — còn có `scenes`, `cameras`, `animations` (mảng `AnimationClip`, dùng ở bài AnimationMixer sau này), và `parser` để truy cập JSON gốc. `gltf.scene.traverse()` (kế thừa từ `Object3D`, học kỹ ở bài Scene Graph) duyệt depth-first mọi node con cháu — đây chính là chỗ bạn bật `castShadow`/`receiveShadow` hàng loạt, vì bản thân file glTF không mang theo cờ đó. `getObjectByName()` tìm theo `name` đặt trong Blender/Maya lúc export; tên không đảm bảo unique, hàm chỉ trả về node khớp đầu tiên.
+
+## Nén hình học: Draco và meshopt
+
+Cả hai kỹ thuật giải quyết cùng một vấn đề — geometry thô, không nén, thường chiếm phần lớn dung lượng file glTF — nhưng đánh đổi khác nhau. Định nghĩa chung của tỉ lệ nén:
+
+$$
+\text{ratio} = 1 - \dfrac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}}
+$$
+
+### Draco: nén mạnh, đổi lấy chi phí giải mã wasm
+
+Draco (thư viện mã nguồn mở của Google) lượng tử hoá position/normal/uv rồi entropy-encode luôn đồ thị connectivity của mesh, thường giảm kích thước hình học hơn 90% với mesh dày polygon (nguồn: README của dự án Draco). Cái giá phải trả nằm ở runtime: trình duyệt phải tải thêm một decoder WASM (`draco_decoder.wasm`, vài trăm KB) và tốn thời gian CPU giải nén trước khi mesh sẵn sàng dùng — với mesh vài trăm nghìn vertex, decode có thể mất hàng chục mili-giây, đáng để hiện loading state thay vì coi là tức thời.
+
+```js
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("/draco/"); // thư mục chứa draco_decoder.wasm/js
+loader.setDRACOLoader(dracoLoader);
+```
+
+`setDecoderPath` phải trỏ tới một thư mục thật sự host các file decoder (copy từ `three/examples/jsm/libs/draco/`) — sai đường dẫn không báo lỗi ngay lập tức, chỉ khiến request tới file `.wasm` trả 404 và load thất bại âm thầm trong console.
+
+### meshopt: giải mã nhanh hơn, pipeline gltfpack
+
+meshopt (thư viện `meshoptimizer` của Arseny Kapoulkine) đi hướng khác: sắp lại thứ tự vertex để tận dụng cache trên GPU, lượng tử hoá dữ liệu theo cách thân thiện với bộ nén tổng quát (gzip/brotli mà server web gần như luôn bật sẵn) thay vì tự viết entropy coder riêng như Draco. Kích thước file nén qua HTTP thường gần tương đương Draco, nhưng vì không cần entropy-decode phức tạp, tốc độ giải nén ở client nhanh hơn Draco rõ rệt — theo benchmark của chính dự án meshoptimizer (ước lượng, xem nguồn), chênh lệch có thể tới cả chục lần với mesh lớn. Công cụ build đi kèm là `gltfpack`, chạy ở bước build: `gltfpack -i model.glb -o model.opt.glb -cc`.
+
+```js
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
+
+loader.setMeshoptDecoder(MeshoptDecoder);
+```
+
+Chọn kỹ thuật nào phụ thuộc bottleneck thật của dự án: ưu tiên Draco khi kích thước tải về là vấn đề chính và bạn chỉ decode một hoặc vài lần (model kiến trúc nặng, tải đúng một lần khi vào trang); ưu tiên meshopt khi ứng dụng nạp liên tục nhiều model nhỏ-vừa (catalog sản phẩm cuộn qua cuộn lại) và tốc độ decode dồn dập quan trọng hơn vài phần trăm dung lượng tiết kiệm thêm được.
+
+## Theo dõi tiến trình và xử lý lỗi khi tải
+
+`onProgress` nhận một `ProgressEvent`; nhiều server không trả `Content-Length` nên `event.lengthComputable` có thể là `false` và `event.total` bằng `0` — luôn guard chia cho 0 trước khi tính phần trăm hiển thị. `onError` bắt cả lỗi mạng (404, CORS) lẫn lỗi cấu trúc — trường hợp hay gặp nhất là file dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà bạn quên đăng ký đúng decoder: GLTFLoader ném lỗi rõ ràng dạng "Unhandled glTF extension" thay vì âm thầm trả về mesh rỗng. Luôn hiện UI loading (skeleton) trong lúc chờ `onLoad`, và UI báo lỗi khi `onError` bắn — không được để canvas trắng không phản hồi gì khi có sự cố.
+
+## Dọn dẹp một hierarchy đã nạp: traverse + dispose
+
+`gltf.scene` có thể chứa hàng chục mesh, mỗi mesh giữ geometry và material riêng — material lại có thể giữ nhiều texture (`map`, `normalMap`, `roughnessMap`, `aoMap`...) trên GPU. Gỡ `gltf.scene` khỏi `scene`, hay unmount component React, không tự giải phóng gì cả — garbage collector của JavaScript không biết gì về bộ nhớ phía GPU, bạn phải tự traverse và gọi `dispose()` từng thứ:
+
+```js
+function disposeHierarchy(root) {
+  root.traverse((obj) => {
+    if (!obj.isMesh) return;
+    obj.geometry.dispose();
+    const materials = Array.isArray(obj.material) ? obj.material : [obj.material];
+    for (const material of materials) {
+      for (const key of Object.keys(material)) {
+        const value = material[key];
+        if (value && value.isTexture) value.dispose();
+      }
+      material.dispose();
+    }
+  });
+}
+```
+
+Quét mọi property của material bằng `Object.keys` thay vì liệt kê tên cố định (`map`, `normalMap`, ...) an toàn hơn — material PBR có thể mang bất kỳ tổ hợp map nào, liệt kê thủ công rất dễ bỏ sót một loại. Bài checkpoint ngay sau đây dùng lại chính hàm này mỗi khi người dùng đổi model trong viewer; từ Track 4 (R3F) trở đi, `useLoader` kết hợp `Suspense` sẽ tự động hoá phần load/cache, nhưng dispose thủ công vẫn là việc bạn phải tự làm — nắm chắc nó ở đây, trước khi có abstraction che khuất, là nền tảng bắt buộc.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi nạp GLTF nén:
+
+1. **Quên gọi `setDRACOLoader`/`setMeshoptDecoder` trước lần `load()` đầu tiên.** File dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà chưa đăng ký decoder tương ứng khiến GLTFLoader ném thẳng lỗi "Unhandled glTF extension" — đăng ký sau khi đã gọi `load()` không có tác dụng, decoder phải gắn vào loader trước.
+2. **Gọi lại `loader.load()` mỗi lần effect chạy lại mà không hủy request cũ.** Dưới React Strict Mode, effect chạy hai lần khi mount — nếu không có cờ `cancelled` trong cleanup, `onLoad` của lần gọi đầu vẫn chạy sau khi component đã unmount/remount, add trùng mesh vào scene hoặc ghi vào state đã chết.
+3. **Quên dispose hierarchy khi đổi model hoặc unmount.** `gltf.scene` cũ vẫn giữ geometry/material/texture trên VRAM dù đã bị gỡ khỏi `scene` — thấy rõ nhất khi người dùng đổi qua lại nhiều model trong một viewer, VRAM tăng dần mà không bao giờ giảm.
+
+</Callout>

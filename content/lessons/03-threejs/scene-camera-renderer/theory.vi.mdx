@@ -1,0 +1,54 @@
+## Ba mảnh không thể thiếu: Scene, Camera, Renderer
+
+Mọi ứng dụng Three.js, dù đơn giản hay phức tạp đến đâu, đều bắt đầu từ đúng ba object: `THREE.Scene` — nơi chứa mọi thứ sẽ được vẽ; `THREE.PerspectiveCamera` — định nghĩa view và projection; `THREE.WebGLRenderer` — cầm context WebGL thật và gọi nó vẽ ra canvas. Ba object này không tương tác trực tiếp lúc khởi tạo — chúng chỉ thật sự gặp nhau tại dòng `renderer.render(scene, camera)`, câu lệnh sẽ quay lại ở phần sau bài này.
+
+`Scene` chỉ là một `Object3D` đặc biệt đóng vai trò gốc của scene graph: gọi `scene.add(mesh)` thêm object vào danh sách con, `renderer.render()` sau đó duyệt (traverse) toàn bộ cây này để biết cái gì cần vẽ. Ở Track 1, "biết cái gì cần vẽ" nghĩa là bạn tự gọi `gl.drawArrays`/`gl.drawElements` cho từng mesh theo đúng thứ tự viết tay trong code; `Scene` thay thế danh sách draw call thủ công đó bằng một cấu trúc cây bạn add/remove object vào, còn việc lặp qua cây và phát draw call là việc renderer làm hộ.
+
+## PerspectiveCamera: fov, aspect, near, far quyết định gì
+
+`new THREE.PerspectiveCamera(fov, aspect, near, far)` nhận đúng bốn tham số quyết định toàn bộ hình chóp nhìn thấy được (view frustum). `fov` (field of view, tính bằng độ, đo theo chiều dọc) quyết định "ống kính rộng hay hẹp": bài Model → View → Projection ở Track 0 đã đạo hàm $f = 1/\tan(\text{fov}/2)$ — con số quyết định trực tiếp hai phần tử đường chéo của ma trận $P$. fov mặc định của Three.js là $50°$, cho $f = 1/\tan(25°) \approx 2.14$; kéo fov lên $90°$ (ống kính góc rộng) cho $f = 1/\tan(45°) = 1$ — khung hình "nới" ra, vật ở cùng khoảng cách trông nhỏ và xa hơn; thu fov xuống $30°$ cho $f \approx 3.73$ — hiệu ứng tele, vật trông to và phẳng hơn hẳn. `aspect` là tỉ lệ khung hình (width/height của canvas tính bằng pixel) — đặt sai giá trị này (ví dụ hard-code `16/9` trong khi canvas thực tế gần vuông) không crash gì cả, chỉ kéo méo hình theo một trục, lỗi rất dễ bỏ sót vì không hề có warning.
+
+`near` và `far` giới hạn khoảng cách camera nhìn thấy — bất cứ thứ gì gần hơn `near` hoặc xa hơn `far` bị cắt (clip) khỏi frustum, đúng cơ chế clip space đã học ở Track 0. Mặc định Three.js dùng `near = 0.1`, `far = 2000` — tỉ lệ `far/near = 20000` nghe vô hại, nhưng vì độ chính xác của depth buffer phân bố phi tuyến theo $1/z$ (bài Depth buffer & z-fighting ở Track 1 đã đạo hàm điều này), tỉ lệ far/near càng lớn thì độ chính xác depth ở vùng xa near càng tệ — z-fighting xuất hiện ngay cả khi không cố tình đặt hai mặt chồng lên nhau. Quy tắc thực dụng: đặt `near`/`far` sát nhất có thể với phạm vi cảnh thật sự cần vẽ, không copy mù `0.1`–`2000` cho mọi scene.
+
+## WebGLRenderer: sở hữu context, quyết định độ phân giải
+
+`new THREE.WebGLRenderer({ canvas })` gọi `canvas.getContext("webgl2")` (hoặc fallback `webgl`) cho bạn — đúng lệnh Track 1 bắt bạn gõ tay ở bài tam giác đầu tiên. Từ đây renderer giữ context đó làm state riêng; bạn không tự gọi `gl.clear`, `gl.viewport`, hay `gl.drawElements` nữa — mọi API `render()` công khai đều là lớp bọc quanh chính xác những lệnh gl bạn từng viết tay ở Track 1.
+
+### `setSize` và `updateStyle`
+
+`renderer.setSize(width, height, updateStyle)` nhận `width`/`height` tính bằng **CSS pixel**, không phải pixel buffer thật — renderer tự nhân với pixel ratio bên trong. Tham số thứ ba, `updateStyle` (mặc định `true`), quyết định renderer có tự ghi `canvas.style.width`/`height` hay không. Khi canvas đã được định kích thước bằng CSS/Tailwind từ component cha (như trong demo dưới đây, `className="size-full"` lấp đầy container `AspectRatio`), truyền `false` để tránh renderer ghi đè inline style — canvas tiếp tục co giãn theo layout thay vì bị khoá cứng ở kích thước pixel tính tại lần gọi gần nhất.
+
+### `setPixelRatio`: clamp trước khi set
+
+`renderer.setPixelRatio(window.devicePixelRatio)` nghe hợp lý nhưng nguy hiểm trên thiết bị DPR cao: một điện thoại DPR 3 với màn hình CSS $390\times844$ cho buffer $1170\times2532 \approx 2{,}96$ triệu pixel; clamp về DPR 2 (khuyến nghị chuẩn, `Math.min(window.devicePixelRatio, 2)`) cho buffer $780\times1688 \approx 1{,}32$ triệu pixel — ít hơn khoảng $2{,}25$ lần số fragment invocation mỗi frame, gần như không đổi gì về độ nét mắt phân biệt được (Track 1, bài canvas & DPR, đã đo chính xác ngưỡng này).
+
+## `render()` là một khung hình — vòng lặp là việc của bạn
+
+`renderer.render(scene, camera)` vẽ đúng **một** khung hình tại thời điểm gọi rồi trả về ngay — không có timer, không có loop ẩn bên trong. Gọi nó một lần trong `useEffect` rồi thắc mắc sao mesh không quay là lỗi hiểu nhầm phổ biến nhất khi mới học Three.js: animation luôn là code bạn tự viết, driven bằng `requestAnimationFrame`, y hệt vòng lặp bạn đã tự tay viết ở Track 1:
+
+```js
+function loop(t) {
+  mesh.rotation.y = t * 0.001;
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+```
+
+## Resize đúng cách
+
+Container đổi kích thước (thay đổi cửa sổ, sidebar mở/đóng) không tự động cập nhật gì — bạn phải tự phát hiện rồi xử lý đúng ba việc theo đúng thứ tự: gọi lại `renderer.setSize(w, h, false)`, gán `camera.aspect = w / h`, rồi gọi `camera.updateProjectionMatrix()`. Bỏ bước cuối là lỗi âm thầm nhất: `camera.aspect` chỉ là một field JavaScript thường, Three.js không có setter nào tự động tính lại ma trận $P$ khi bạn gán giá trị mới — ma trận projection giữ nguyên giá trị cũ cho tới khi bạn chủ động gọi `updateProjectionMatrix()`.
+
+## Ba lớp này che giấu gì của Track 1
+
+Scene, Camera, Renderer không phải phép màu mới — chúng là lớp bọc có tổ chức quanh chính xác API bạn đã viết tay ở Track 1: `getContext`, quản lý buffer/VAO cho mỗi `BufferGeometry` (bài tiếp theo), compile chương trình shader cho mỗi material, và cuối cùng gọi `gl.drawElements`/`gl.drawArrays` cho từng object trong scene graph mỗi khi `render()` chạy. Track 4 (React Three Fiber) sẽ bọc thêm một lớp nữa lên trên chính ba object này — `<Canvas>` tạo `WebGLRenderer`, JSX `<mesh>` build `Scene` graph — nhưng phía dưới cùng, mỗi frame vẫn đúng một lệnh `renderer.render(scene, camera)` bạn vừa học ở đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dựng Scene/Camera/Renderer:
+
+1. **Đổi `camera.fov`/`aspect`/`near`/`far` mà quên gọi `camera.updateProjectionMatrix()`.** Các field này chỉ là property JavaScript thường; ma trận $P$ thật sự dùng để vẽ chỉ được tính lại khi bạn chủ động gọi hàm này — quên gọi, hình vẫn vẽ bằng ma trận cũ dù giá trị field đã đổi.
+2. **Gọi `renderer.render()` một lần rồi mong animation tự chạy.** Không có `requestAnimationFrame` nào ẩn bên trong `render()` — mỗi khung hình là một lệnh gọi tường minh, y hệt vòng lặp Track 1 bạn tự viết bằng `gl.drawArrays` mỗi frame.
+3. **Gọi `setPixelRatio(window.devicePixelRatio)` không clamp.** Trên thiết bị DPR cao, số fragment invocation mỗi frame tăng theo bậc hai của DPR — một chiếc điện thoại DPR 3 phải render nhiều hơn gấp hai lần so với clamp ở DPR 2, đổi lại độ nét gần như không ai phân biệt được bằng mắt thường.
+
+</Callout>

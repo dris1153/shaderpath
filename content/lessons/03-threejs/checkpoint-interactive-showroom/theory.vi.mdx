@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài tổng kết Track 3: không lý thuyết mới, chỉ một sản phẩm chạy thật ghép lại toàn bộ những gì bạn đã học — scene/camera/renderer, geometry và material, ánh sáng và shadow map, `OrbitControls`, raycasting, và chính `attach()`/`traverse()` vừa đọc trong source ở bài trước. Kết quả là một showroom 3D bạn có thể click chọn từng sản phẩm — chính sản phẩm này sẽ được dựng lại bằng R3F ở Track 4, nên cấu trúc code càng rõ ràng, việc so sánh "Three thuần vs R3F" sau này càng dễ.
+
+## Yêu cầu
+
+Dựng một showroom với **ít nhất 3 sản phẩm** (geometry built-in bất kỳ, `MeshStandardMaterial`) đặt trên pedestal riêng, dưới một rig ánh sáng `DirectionalLight` + `AmbientLight` có bật shadow map (cả vật lẫn sàn phải đổ và nhận bóng đúng). Camera điều khiển bằng `OrbitControls` với giới hạn hợp lý (không xoay xuống dưới sàn, không zoom quá gần/xa). Dùng `Raycaster` để: hover sáng nhẹ sản phẩm dưới con trỏ, click để chọn — sản phẩm đang chọn tự xoay nhẹ mỗi frame (dùng `AnimationClip` dựng bằng code hoặc animate tay bằng `requestAnimationFrame`, cả hai đều hợp lệ). Giải phóng toàn bộ geometry/material/controls/renderer khi không cần nữa. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Viết một hàm `createProduct(geometry, color, x)` dựng cặp pedestal + sản phẩm tại vị trí `x`, trả về cả hai mesh để raycast và dispose sau này. Giữ một mảng `items` chỉ chứa các mesh sản phẩm (không gồm pedestal) để `raycaster.intersectObjects(items)` không bao giờ nhầm trúng pedestal.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — đủ 3 sản phẩm phân biệt rõ hình khối, bóng đổ đúng lên sàn, controls không cho xoay lộn xuống dưới sàn, hover và click hoạt động độc lập với nhau (hover không "dính" khi đã chọn), sản phẩm được chọn xoay mượt, và không còn geometry/material nào bị rò rỉ sau khi dispose.

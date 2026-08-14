@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build has no new theory — it checks whether you actually command the material ladder from `materials-from-basic-to-physical` well enough to build a real still-life scene with deliberate composition and lighting, not just flip a select on a demo.
+
+## Requirements
+
+Build a vanilla Three.js scene (no React) from at least 4 different built-in geometries, combining at least 3 material types — with at least one `MeshStandardMaterial` whose `metalness`/`roughness` are deliberately tuned, not left at their defaults. Each object's position/scale/rotation must show clear intent — nothing stacked at the origin. The scene has exactly one `AmbientLight` and one `DirectionalLight`. The camera drifts gently and continuously via `requestAnimationFrame`. Every geometry/material/renderer must be `dispose()`d on teardown. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Keep two arrays, `geometries[]` and `materials[]`, pushing into them right when each mesh is created — `dispose()` then becomes a loop over those two arrays plus `renderer.dispose()`. Pick the geometry first, then choose the material after you've decided what that shape should "look like" (metal, ceramic, plastic...).
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — 4+ geometries, 3+ materials, at least one deliberate metalness/roughness pair, exactly 2 lights, a smoothly drifting camera, and a `dispose()` that actually cleans everything up when called.

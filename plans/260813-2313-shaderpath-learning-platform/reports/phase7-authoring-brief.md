@@ -37,6 +37,12 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - Theory MDX may embed a live editor where hands-on tweaking teaches best: `<Playground source={"void main() {\n  ...\n}"} />` (one per lesson max; the string is a fragment body using the default uniforms).
 - demo.tsx stays mandatory when `hasDemo: true` — for pure-shader lessons an R3F fullscreen plane with sibling `.vert`/`.frag` files (pattern: `content/lessons/02-glsl/shaping-functions-and-2d-sdf/demo.tsx`) is the norm.
 
+## Vanilla-Three lessons (Track 3)
+
+- Track 3 teaches Three.js WITHOUT React — demos must too: imperative `import * as THREE from "three"` on a plain `<canvas>` inside `useEffect` (`new THREE.WebGLRenderer({ canvas })`, manual scene setup), rendered via `useVisibleRaf`, cleaned up via `useDisposable` (dispose every geometry/material/texture you create + `renderer.dispose()`, NO `forceContextLoss`). The React shell is only the mount point — the lesson's code IS the vanilla API.
+- `three/addons/*` imports are available (OrbitControls, GLTFLoader, …).
+- No binary assets in the repo: textures are procedural (`THREE.DataTexture`/`CanvasTexture`); glTF demos embed a minimal glTF 2.0 JSON (a colored cube/triangle, ~60 lines in a sibling `.ts` data file) loaded through `GLTFLoader.parse()` — the loader pipeline is identical to loading real files. KTX2/Draco/meshopt are taught in theory + wiring code; demos state that real compressed assets arrive with real projects.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.
