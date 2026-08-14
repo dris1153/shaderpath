@@ -1,0 +1,49 @@
+## Vì sao mọi fragment shader phải khai báo `precision`
+
+Vertex shader trong GLSL ES có sẵn precision mặc định cho `float` (là `highp`), nhưng fragment shader thì KHÔNG — đặc tả cố tình không đặt mặc định ở fragment stage, vì một số driver/GPU nhúng chỉ đảm bảo hỗ trợ `mediump` ở đó, không phải `highp`. Hệ quả: dòng đầu tiên của mọi fragment shader trong khoá học này gần như luôn là `precision highp float;` (hoặc `mediump`/`lowp` khi cố ý) — thiếu dòng này là lỗi biên dịch cứng trên nhiều driver mobile/WebGL nghiêm ngặt, dù trên desktop Chrome/ANGLE trình biên dịch thường tự chọn giùm một precision mặc định và im lặng cho qua, che giấu lỗi cho tới khi chạy trên thiết bị khác. Kiểu `int` có mặc định riêng (`mediump` ở cả hai stage) nên ít khi cần khai báo tường minh, nhưng `float` ở fragment shader thì luôn cần.
+
+## highp, mediump, lowp: đặc tả nói gì, không phải đoán mò
+
+Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơn nhưng kém chính xác hơn" — đặc tả GLSL ES 3.00 (Bảng 4.7) quy định rõ hai con số SÀN tối thiểu mỗi driver bắt buộc phải đạt được: độ chính xác tương đối (tương đương số bit mantissa) và dải giá trị biểu diễn được (tương đương số bit exponent). Phần cứng thật thường tốt hơn sàn này, không bao giờ tệ hơn.
+
+### highp: gần với float 32-bit chuẩn, mantissa tối thiểu 16 bit
+
+`highp` đảm bảo dải tối thiểu $[-2^{62}, 2^{62}]$ và độ chính xác tương đối tối thiểu $2^{-16}$ (tương đương mantissa $\geq 16$ bit) — thấp hơn con số sàn của IEEE 754 single-precision thật (mantissa 23 bit), nhưng trong thực tế gần như mọi GPU đang bán ra (kể cả mobile) triển khai `highp` bằng đúng float 32-bit đầy đủ.
+
+### mediump: sàn tối thiểu 10-bit mantissa — không phải "nửa highp"
+
+`mediump` đảm bảo dải tối thiểu $[-2^{14}, 2^{14}]$ và độ chính xác tương đối tối thiểu $2^{-10}$ (mantissa $\geq 10$ bit) — con số này không tuỳ tiện: nó trùng khớp với mantissa 10-bit của định dạng half-float (FP16) chuẩn IEEE, và không phải trùng hợp ngẫu nhiên — nhiều GPU mobile triển khai `mediump` bằng đúng phần cứng FP16.
+
+### lowp: dải chỉ $[-2, 2]$, gần như chỉ hợp cho màu
+
+`lowp` chỉ đảm bảo dải $[-2, 2]$ với độ chính xác tương đối $2^{-8}$ — hẹp đến mức không đủ an toàn cho hầu hết phép toán tích luỹ, nhưng vừa đủ cho một kênh màu đã chuẩn hoá $0..1$ hoặc một mặt nạ hiển thị đơn giản.
+
+## Chi phí phần cứng: vì sao precision thấp hơn có thể nhanh hơn thật
+
+Nhiều GPU tile-based trên mobile (Arm Mali, Imagination PowerVR, Qualcomm Adreno) thực thi phép toán `mediump` trên làn ALU hẹp hơn `highp`, chạy được nhiều phép `mediump` hơn trong cùng một chu kỳ xung nhịp — con số **~2 lần thông lượng cho phép nội suy varying và ALU đơn giản trên nhiều dòng chip hiện tại là ƯỚC LƯỢNG được trích dẫn rộng rãi, không phải hằng số phổ quát: chênh lệch thật phụ thuộc driver, thế hệ chip và loại phép toán cụ thể**. Trên GPU rời của desktop, ranh giới phần cứng này thường KHÔNG tồn tại — hầu hết driver desktop âm thầm nâng `mediump`/`lowp` lên full float 32-bit bất kể bạn khai báo gì, nên chỉ test trên trình duyệt desktop có thể che giấu hoàn toàn những bug precision chỉ lộ ra trên thiết bị mobile thật.
+
+## Ba artifact kinh điển khi precision không đủ
+
+- **Banding**: một gradient liên tục về mặt toán học nhưng bị biểu diễn bằng quá ít bước rời rạc do mantissa ít bit, hiện ra thành các dải màu có cạnh sắc thay vì chuyển tiếp mượt — rõ nhất ở gradient bầu trời hay ánh sáng tinh tế.
+- **Jitter**: độ chính xác `mediump` là TƯƠNG ĐỐI theo độ lớn giá trị — một đại lượng tăng dần không giới hạn (thời gian `uTime` nhân với tần số lớn, hay toạ độ world-space xa gốc toạ độ) càng lớn thì bước nhảy giữa hai giá trị `mediump` biểu diễn được gần đó càng thô, biểu hiện thành animation mượt lúc đầu rồi giật/rung dần theo thời gian chạy.
+- **Texcoord snapping**: toạ độ UV tính bằng `mediump` trên texture atlas lớn có thể làm tròn sai sang texel bên cạnh vì khoảng cách giữa hai giá trị `mediump` biểu diễn được gần đó đã vượt quá kích thước một texel — hiện ra thành đường nối "bơi"/nhảy giật khi camera hoặc UV di chuyển chậm.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float v = uv.y;\n  float levels = 8.0; // thu nho: 2.0, 4.0 - phong to: 32.0, 64.0\n  float quantized = floor(v * levels) / levels;\n  fragColor = vec4(vec3(quantized), 1.0);\n}\n"} />
+
+## Chiến lược chọn precision cho khoá học này
+
+Vì khoá học này mặc định học trên GPU tầm desktop, quy ước là dùng `precision highp float;` ở mọi nơi TRỪ KHI bài học cố tình dạy về đánh đổi `mediump` (như demo của chính bài này) — giữ việc debug ban đầu đơn giản, không để precision gây nhiễu cho một bài học đang tập trung vào chủ đề khác. Chỉ hạ xuống `mediump` có chủ đích trên những đường tính toán nóng, đã hiểu rõ, sau khi đo đạc thật sự chứng minh cần thiết (Track 12 — Performance bàn kỹ hơn). Một quy tắc cứng bất kể nền tảng: KHÔNG BAO GIỜ dùng `mediump` (càng không phải `lowp`) cho toạ độ VỊ TRÍ (`gl_Position`, world-space) — sai số vị trí cộng dồn xuyên suốt pipeline và hiện ra thành jitter/rách hình ở đỉnh, một lớp bug đắt để chẩn đoán sau khi đã xảy ra.
+
+## Nền tảng này dẫn tới đâu: hàm dựng sẵn và chi phí branching
+
+Precision nằm âm thầm dưới mọi khai báo `uniform`/`varying` ở bài hàm dựng sẵn ngay sau đây, và trở nên đo được trực tiếp khi bài chi phí branching giới thiệu công cụ profiling — cùng một kiểu tư duy "bao nhiêu bit, bao nhiêu chu kỳ xung nhịp" quay lại ở đó, chỉ đổi đối tượng từ lưu trữ dữ liệu sang luồng điều khiển.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với precision qualifier:
+
+1. **Quên khai báo `precision ... float;` trong fragment shader.** Biên dịch được trên desktop Chrome vì driver tự chọn giùm một precision mặc định, nhưng lỗi cứng trên nhiều driver mobile/WebGL nghiêm ngặt — bug kiểu "chạy máy mình, vỡ máy khách" chỉ lộ ra khi test trên thiết bị thật.
+2. **Dùng `mediump` cho world-space position hoặc pha thời gian tích luỹ dài.** `uTime` nhân với một tần số lớn rồi lưu bằng `mediump` gây jitter tăng dần theo thời gian chạy ứng dụng, không phải lỗi xuất hiện ngay lập tức nên dễ lọt qua một lượt test nhanh vài giây.
+3. **Coi `lowp` là lựa chọn "an toàn, tiết kiệm" cho mọi giá trị 0..1.** Quên rằng một phép tính trung gian (ví dụ cộng dồn nhiều lớp bloom trước khi tone-map) có thể vượt dải $[-2, 2]$ dù giá trị hiển thị cuối cùng vẫn nằm trong $0..1$ — `lowp` clip sai ngay giữa chừng phép tính, trước khi kịp ra tới bước chuẩn hoá cuối.
+
+</Callout>

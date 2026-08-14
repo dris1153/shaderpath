@@ -1,0 +1,84 @@
+## Shaping Functions: The Art of Bending the 0..1 Range
+
+The Book of Shaders calls functions like `pow`, `step`, and `smoothstep` "shaping functions" — each takes a number (often in $[0,1]$, though not required) and returns another number, essentially **reshaping the curve of how input maps to output**. The `glsl-builtin-functions` lesson introduced each of these in isolation; this lesson stitches them into a single design mindset: instead of deciding a pixel's color straight from its coordinate, first compute **one scalar quantity** that describes the "shape" of whatever you're drawing, then run that scalar through a shaping function to decide how it affects the final image.
+
+The most powerful scalar for this job — and this lesson's entire subject — is distance. The demo attached to this lesson (`sdf-circle.frag`) is the purest, most compact example of the whole mindset: one line computes a distance, one line of `smoothstep` bends that distance into a smooth circular mask. The rest of this lesson dissects exactly those two lines.
+
+## Signed Distance in 2D: Negative Inside, Zero at the Boundary, Positive Outside
+
+A 2D signed distance field (SDF) is a function $d(p)$ that takes a point $p$ in the plane and returns the **signed** distance from $p$ to the nearest boundary of some shape:
+
+- $d(p) < 0$: $p$ sits **inside** the shape, and $|d(p)|$ tells you how far it still is from the boundary.
+- $d(p) = 0$: $p$ sits exactly on the **boundary** — this is the shape's actual outline.
+- $d(p) > 0$: $p$ sits **outside** the shape, and $d(p)$ is the positive distance to the nearest boundary point.
+
+Compared to a binary inside-test (returning just `true`/`false`), an SDF keeps far more information: not just in-or-out, but **how far**. That "how far" is exactly the raw material every technique in the rest of this lesson runs on — antialiasing, outlines, glow — none of which are possible from a single boolean bit.
+
+## Building a Circle SDF: length(p) - r
+
+A circle is the simplest SDF to derive straight from its geometric definition: every point on a circle centered at $c$ with radius $r$ sits exactly $r$ units from the center. The signed distance from any point $p$ to that circle's boundary is, therefore, just the distance from $p$ to the center, minus the radius:
+
+$$
+d(p) = \|p - c\| - r
+$$
+
+When $p$ coincides with the center, $\|p - c\| = 0$, so $d(p) = -r$ — more negative for a larger circle, matching the intuition that "being near the center of a big circle" means being deep inside it. When $\|p - c\| = r$ (exactly on the boundary), $d(p) = 0$. Past that radius, $d(p)$ grows linearly — moving 1 more world-space unit away increases $d$ by exactly 1, a property real SDFs have (not every remap does) that the outline and glow tricks below both lean on.
+
+The `sdf-circle.frag` demo writes exactly this formula with $c = 0$ (the center is relocated to the origin by `p = vUv - 0.5`, shifting UV's $[0,1]$ range down to $[-0.5, 0.5]$):
+
+```glsl
+vec2 p = vUv - 0.5;
+float d = length(p) - r; // r is driven by the "Radius" slider
+```
+
+`length(p)` is exactly $\|p - c\|$ when $c = 0$ — nothing more mysterious than the geometric definition above, just rewritten in GLSL.
+
+## smoothstep: The Anti-Aliased Brush Over a Distance Field
+
+With $d(p)$ in hand, the naive way to color a pixel is a binary test: `color = d < 0.0 ? inside : outside;`. The problem: each pixel commits fully to one color or the other — there's no notion of "a pixel half-covered by the shape" — so the circle's edge shows up jagged, most visibly along diagonal-ish angles.
+
+`smoothstep(edge0, edge1, d)` fixes exactly that by building a **transition band** around $d = 0$ instead of a hard threshold. The formula:
+
+$$
+t = \mathrm{clamp}\!\left(\frac{d - e_0}{e_1 - e_0},\ 0,\ 1\right), \qquad \mathrm{smoothstep}(e_0, e_1, d) = t^2(3 - 2t)
+$$
+
+For $d < e_0$ the result is $0$, for $d > e_1$ it's $1$, and in between it's a smooth S-curve (zero derivative at both ends) instead of an abrupt jump. In the demo, `uEdge0 = -0.02` and `uEdge1 = 0.02` build a roughly $0.04$-unit-wide band in UV space around the circle's boundary — drag those two sliders far apart to watch the edge turn visibly blurry, or squeeze them back toward 0 to watch jaggedness return as the band collapses toward a near-binary jump.
+
+A fixed constant like `±0.02` is only correct at one specific zoom level — zoom the camera in, or change the canvas resolution, and that same band either blurs too much or thins back into aliasing. The production-grade approach is `fwidth(d)`, a built-in that computes the screen-space derivative (roughly, how much $d$ changes between neighboring pixels), and using that value itself as the band width: `smoothstep(-fwidth(d), fwidth(d), d)`. That keeps the edge at roughly 1 pixel wide regardless of zoom or resolution, because `fwidth` always reflects the current pixel-to-unit ratio at draw time. `fwidth` (along with `dFdx`/`dFdy`) is a core built-in in GLSL ES 3.00 (WebGL2) — this lesson uses a fixed constant to keep things simple for learning, but it's worth knowing exactly where that shortcut's limits are.
+
+## Combining: Outlines via abs(d), Glow via Exponential Falloff
+
+Once $d$ exists, two common effects are just two different transforms of that same number — no need to recompute anything from scratch.
+
+**Outline:** `abs(d)` "folds" the number line around 0 — both a slightly-inside point and a slightly-outside point map to the same small positive value. Threshold that folded value with a second `smoothstep`, using the desired outline half-width `w`:
+
+```glsl
+float ring = smoothstep(w, 0.0, abs(d));
+```
+
+`ring` sits near 1 right at the boundary (on both sides) and fades toward 0 moving away from it in either direction — a uniform-width outline of thickness `2w`, "free" without ever building a separate offset shape.
+
+**Glow:** instead of a binary threshold, feed $d$ (clamped to the outside-only part, `max(d, 0.0)`) through an exponential decay:
+
+```glsl
+color += glowColor * exp(-k * max(d, 0.0));
+```
+
+The further a point sits from the boundary, the more negative the exponent, the smaller `exp` gets — producing a naturally fading halo with no texture and no separate blur pass, just one line of math on a $d$ you already have. The demo shows a related variant of the same trick: the band `abs(fract(d * 20.0) - 0.5)` draws faint iso-contour lines repeating every $0.05$ units of $d$ — effectively a "topographic map" of the distance field itself, readable straight off the screen.
+
+## Why "Distance First, Color Later" Beats Direct Color Math
+
+If you color pixels straight from UV coordinates (nested if/else branching on position), every effect — fill, outline, glow — needs its own logic written from scratch, and changing the shape (say, a circle into a rounded rectangle) forces rewriting all of that logic at once. The "distance first, color later" workflow splits the two concerns cleanly: compute $d$ once to describe *shape*, and every effect downstream (mask, outline, glow, iso-lines, or combining two SDFs with `min`/`max` as this lesson's objectives mention) is a pure function of that single $d$ — changing the shape only means changing how $d$ is computed, and the entire color layer on top keeps working untouched.
+
+The next lesson (Gradients, Patterns & Tiling) reuses this exact `length(p)` formula to build a radial gradient, and places a fresh SDF inside every repeated cell of a tiled grid. Further out, Track 8 (Raymarching) generalizes this whole idea to 3D: a ray gets "marched" step by step until a 3D SDF hits zero — the sign and magnitude of distance you just learned here carry over unchanged, just moved from a plane into a full space.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with SDFs and smoothstep:
+
+1. **Using a binary threshold (`d < 0.0 ? a : b`) instead of smoothstep.** A hard threshold has no transition band — each pixel commits fully to one color, with no concept of partial coverage — so the boundary shows up visibly jagged, most obviously along near-45°-diagonal edges.
+2. **Hardcoding `edge0`/`edge1` as fixed constants (like the demo's `±0.02`) and carrying them into a different scene.** That constant is only correct at the exact zoom/resolution it was tuned for — zooming or resizing the canvas either blurs the edge too much or thins it back into aliasing; production code needs `fwidth(d)` so the band width scales with actual on-screen pixels.
+3. **Computing an outline with `abs(d)` but forgetting to threshold it with a second smoothstep.** Folding the number line (`abs(d)`) alone doesn't draw an outline by itself — it's still a continuous range of values; skipping the second threshold step (`smoothstep(w, 0.0, abs(d))`) usually floods the whole shape with the outline color, or produces no visible outline at all from a flipped comparison.
+
+</Callout>

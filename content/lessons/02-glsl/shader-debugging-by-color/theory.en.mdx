@@ -1,0 +1,84 @@
+## No console.log on the GPU: the Screen IS the Debugger
+
+A fragment shader runs millions of times in parallel every frame on the GPU — there's no call stack to set a breakpoint on, no terminal to `console.log` into. The only channel a shader has to talk back to you is the pixel color it outputs. The core debugging technique exploits exactly that: assign the value you're suspicious of to `gl_FragColor` (or `fragColor` in GLSL ES 3.00) instead of the real color, then *read* the result with your eyes across the whole screen at once — a `console.log` running in parallel across 8 million pixels simultaneously, something no CPU tool can offer.
+
+```glsl
+// Instead of rendering the real color, output the value under suspicion
+fragColor = vec4(vec3(suspectValue), 1.0);
+```
+
+This isn't a side trick — for shaders, this **is** the primary debugging method, not a last resort when nothing else works.
+
+## Four Techniques for Outputting Values as Color
+
+**Remap signed values.** A color channel only displays correctly in $[0, 1]$ — outputting a signed value directly (like a normal component, which runs in $[-1, 1]$) wipes out the entire negative half, clamped to solid black by the GPU right where useful information should be. Fix it with a linear remap:
+
+$$
+x_{\text{remap}} = 0.5x + 0.5
+$$
+
+```glsl
+fragColor = vec4(vec3(x * 0.5 + 0.5), 1.0); // -1..1 → 0..1
+```
+
+**Isolate channels.** Pack several values into the RGB channels at once (`vec3(a, b, c)`) to compare them side by side in a single render, instead of swapping one value at a time — the eye distinguishes red/green/blue far faster than comparing two separate grayscale renders.
+
+**`step()` as a binary probe.** When the question is only "does this value cross threshold T", don't squint at a faint gray gradient — force it into a decisive black/white:
+
+```glsl
+fragColor = vec4(vec3(step(threshold, suspectValue)), 1.0); // white if >= threshold, black otherwise
+```
+
+**Catch NaN/Inf with an alarm color.** `NaN` propagates silently through every operation downstream of it (0/0, `sqrt` of a negative, `acos` outside $[-1,1]$) and usually shows up as black or randomly flickering pixels — easy to mistake for a different bug. Intercept it with a top-priority condition, painting a color that can't be confused with anything else in the scene:
+
+```glsl
+if (isnan(suspectValue)) { fragColor = vec4(1.0, 0.0, 1.0, 1.0); return; } // magenta = NaN
+if (isinf(suspectValue)) { fragColor = vec4(1.0, 1.0, 0.0, 1.0); return; } // yellow = Inf
+```
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float wave = sin(uv.x * 12.0 + uTime); // range -1..1\n\n  // drag mouse up/down: raw value (negatives clip to black) vs remapped\n  float raw = wave;\n  float remapped = wave * 0.5 + 0.5;\n  float v = uMouse.y > 0.5 ? remapped : raw;\n\n  fragColor = vec4(vec3(v), 1.0);\n}\n"} />
+
+## Region Probes and Trimming the Pipeline
+
+`gl_FragCoord` gives the absolute pixel coordinate on screen — use it to restrict a probe to one small region instead of covering the whole screen, useful when the value under suspicion only makes sense locally (say, one specific grid cell in a tiling pattern):
+
+```glsl
+if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) {
+  fragColor = vec4(vec3(suspectValue), 1.0);
+  return; // early return so the probe region doesn't blend with the rest of the scene
+}
+```
+
+For a multi-stage pipeline (normal computation → lighting → tone mapping → post effect), temporarily commenting out the later stages and outputting the suspected stage's raw result directly is the fastest way to confirm where the bug lives before digging further inside it.
+
+## Debugging Discipline: Change One Thing, Keep a Baseline, Bisect the Pipeline
+
+The three techniques above only pay off paired with discipline, not random edits followed by guessing:
+
+- **Change exactly one thing at a time.** Fix two spots at once and see the image come out right, and you genuinely don't know which change actually fixed it — next time a similar bug shows up, you're back to square one.
+- **Keep a known-good baseline to compare against.** Before changing anything, capture (or remember precisely) the correct shape of a part of the shader you're already sure works, so every later change has something concrete to check against instead of guessing "this looks more correct now."
+- **Bisect the pipeline (binary search).** For a long multi-step shader, don't probe from the first line — probe the midpoint of the pipeline first; if the value there is already wrong, the bug is in the first half, if it's right, it's in the second half. Each probe eliminates half the remaining suspects, dropping the number of probing steps from $O(n)$ to $O(\log n)$ compared to checking line by line.
+
+## A Real Case: "The Ring Renders Black"
+
+A rim-light effect on a ring: approximate a normal direction with `vec2 N = p` (where `p = uv - center`), then compare `dot(N, L)` against a high threshold to produce a glinting highlight along the ring's edge. The actual result: the whole ring renders solid black, no highlight ever appears no matter how `L`'s angle is rotated.
+
+Three color probes progressively narrow down the suspect list:
+
+1. **Probe A — output raw `N`, unremapped:** `vec3(N, 0.0)`. Half the screen is solid black (negative values clamped) — the first clue: this value is signed and might not fall inside the expected range.
+2. **Probe B — remap `N` with `N * 0.5 + 0.5`:** a proper unit vector should remap to colors spanning close to $0$ through close to $1$, with clear contrast. In practice the output is flat and murky, clustered around mid-gray $0.5$ — direct evidence that $\|N\|$ is far smaller than $1$, meaning `N` is **not normalized**.
+3. **Probe C — isolate the threshold condition itself:** `vec3(step(0.9, dot(N, L)))`. The whole screen is black — confirming `dot(N, L)` never crosses $0.9$, which is exactly why the highlight never lights up.
+
+A one-line fix — `vec2 N = normalize(p);` — and the highlight appears exactly as designed. The three probes weren't guesswork: they narrowed the suspect list from "the whole effect is wrong" down to one missing `normalize()` call, exactly the divide-and-conquer spirit from the previous section.
+
+Debug-by-color doesn't stop at this track: Track 7 (Procedural & Noise) needs raw hash/noise values probed before trusting them inside an FBM, and Track 9 (GPGPU) applies this same principle to inspect position/velocity data encoded in a texture — the only difference is probing a texture instead of an inline expression.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when debugging shaders by color:
+
+1. **Outputting a signed value straight to color without remapping.** The negative half clamps to black on the GPU, leading to the wrong conclusion "this value is always zero" when really only half its information got cut off — always `* 0.5 + 0.5` before suspecting the value itself is wrong.
+2. **Missing an unnormalized vector when the color looks flat and low-contrast.** A unit vector remaps into clearly spread-out colors; output clustered around mid-gray is almost always a sign the magnitude is much smaller than 1 — as in the "black ring" case above, not weak lighting.
+3. **Changing several spots at once and celebrating too early when the image "looks more correct."** Skipping a baseline and changing multiple things at once means you don't actually know which change fixed it — a similar bug resurfacing elsewhere sends you back to square one.
+
+</Callout>

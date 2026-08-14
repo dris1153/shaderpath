@@ -1,0 +1,84 @@
+## Shaping function: nghệ thuật uốn nắn dải 0..1
+
+The Book of Shaders gọi nhóm hàm như `pow`, `step`, `smoothstep` là "shaping functions" — hàm nhận một số (thường trong khoảng $[0,1]$, nhưng không bắt buộc) và trả về một số khác, về bản chất là **uốn nắn lại hình dạng của đường cong ánh xạ input → output**. Bài `glsl-builtin-functions` đã giới thiệu từng hàm riêng lẻ; bài này ghép chúng thành một tư duy thiết kế: thay vì quyết định màu trực tiếp từ toạ độ, trước hết tính ra **một đại lượng vô hướng** mô tả "hình dạng" của thứ muốn vẽ, rồi dùng shaping function để quyết định nó ảnh hưởng đến hình ảnh cuối thế nào.
+
+Đại lượng vô hướng phổ biến và mạnh nhất cho việc này chính là khoảng cách — chủ đề chính của bài. Demo đi kèm bài học (`sdf-circle.frag`) là ví dụ cô đọng nhất của tư duy này: một dòng tính khoảng cách, một dòng `smoothstep` uốn khoảng cách đó thành mặt nạ hình tròn mượt mà. Toàn bộ phần còn lại của bài mổ xẻ chính xác hai dòng đó.
+
+## Signed distance 2D: âm bên trong, 0 tại biên, dương bên ngoài
+
+Một signed distance field (SDF) 2D là một hàm $d(p)$ nhận toạ độ điểm $p$ trong mặt phẳng, trả về khoảng cách **có dấu** từ $p$ đến biên gần nhất của một hình:
+
+- $d(p) < 0$: $p$ nằm **trong** hình, độ lớn $|d(p)|$ cho biết còn cách biên bao xa.
+- $d(p) = 0$: $p$ nằm đúng trên **biên** — đây là đường viền thật của hình.
+- $d(p) > 0$: $p$ nằm **ngoài** hình, $d(p)$ là khoảng cách dương đến điểm biên gần nhất.
+
+So với một phép kiểm tra nhị phân kiểu "điểm này có nằm trong hình không?" (trả về `true`/`false`), SDF giữ lại nhiều thông tin hơn hẳn: không chỉ biết trong hay ngoài, mà biết **còn cách biên bao xa**. Chính phần thông tin "còn cách bao xa" đó là nguyên liệu cho mọi kỹ thuật ở phần sau bài — antialiasing, viền, glow — none trong số đó khả thi nếu chỉ có một bit `true`/`false`.
+
+## Dựng SDF hình tròn: length(p) - r
+
+Hình tròn là SDF đơn giản nhất để suy ra từ định nghĩa hình học thuần tuý: mọi điểm trên đường tròn tâm $c$ bán kính $r$ cách tâm đúng $r$ đơn vị. Khoảng cách có dấu từ một điểm $p$ bất kỳ đến biên hình tròn đó, do vậy, chỉ là khoảng cách từ $p$ đến tâm, trừ đi bán kính:
+
+$$
+d(p) = \|p - c\| - r
+$$
+
+Khi $p$ trùng tâm, $\|p - c\| = 0$ nên $d(p) = -r$ — càng âm khi bán kính càng lớn, đúng trực giác "càng ở gần tâm một hình tròn lớn thì càng ở sâu trong". Khi $\|p - c\| = r$ (đúng trên biên), $d(p) = 0$. Khi $p$ ra xa hơn $r$, $d(p)$ tăng tuyến tính — di chuyển thêm 1 đơn vị khoảng cách thế giới làm $d$ tăng thêm đúng 1, một tính chất SDF chuẩn (không phải mọi phép remap đều có) mà phần viền/glow bên dưới dựa vào.
+
+Demo `sdf-circle.frag` viết đúng công thức này với $c = 0$ (tâm ảnh hoá tại gốc bằng phép `p = vUv - 0.5`, dịch UV $[0,1]$ về $[-0.5, 0.5]$):
+
+```glsl
+vec2 p = vUv - 0.5;
+float d = length(p) - r; // r điều khiển bởi slider "Bán kính"
+```
+
+`length(p)` chính là $\|p - c\|$ khi $c = 0$ — không có gì bí ẩn hơn định nghĩa hình học ở trên, chỉ viết lại bằng GLSL.
+
+## smoothstep: cây cọ chống răng cưa trên distance field
+
+Có $d(p)$ rồi, cách ngây thơ nhất để tô màu là kiểm tra nhị phân: `color = d < 0.0 ? inside : outside;`. Vấn đề: mỗi pixel chỉ nhận đúng một trong hai màu — không có khái niệm "một nửa pixel nằm trong hình" — nên biên hình tròn hiện ra răng cưa (jagged), đặc biệt rõ ở góc nghiêng.
+
+`smoothstep(edge0, edge1, d)` giải quyết đúng vấn đề đó bằng cách tạo một **dải chuyển tiếp** quanh $d = 0$ thay vì một ngưỡng cứng. Công thức:
+
+$$
+t = \mathrm{clamp}\!\left(\frac{d - e_0}{e_1 - e_0},\ 0,\ 1\right), \qquad \mathrm{smoothstep}(e_0, e_1, d) = t^2(3 - 2t)
+$$
+
+Với $d < e_0$ kết quả là $0$, với $d > e_1$ kết quả là $1$, và ở giữa là một đường cong S mượt (đạo hàm bằng 0 ở hai đầu) thay vì bước nhảy đột ngột. Trong demo, `uEdge0 = -0.02` và `uEdge1 = 0.02` tạo một dải rộng khoảng $0.04$ đơn vị UV quanh biên hình tròn — kéo hai slider này ra xa nhau để thấy viền nhoè hẳn, kéo sát lại gần 0 để thấy răng cưa quay trở lại gần như bước nhảy nhị phân.
+
+Hằng số cố định như `±0.02` chỉ đúng ở một độ phóng cụ thể — phóng to camera hoặc đổi độ phân giải canvas, dải đó hoặc nhoè quá mức hoặc mỏng đến mức lại răng cưa. Cách chuẩn production là dùng `fwidth(d)`, hàm dựng sẵn tính đạo hàm màn hình (screen-space derivative — độ đổi giá trị của $d$ giữa các pixel lân cận), rồi lấy chính nó làm bề rộng dải: `smoothstep(-fwidth(d), fwidth(d), d)`. Cách này tự động giữ viền rộng đúng khoảng 1 pixel bất kể zoom hay resolution, vì `fwidth` luôn phản ánh đúng tỉ lệ pixel/đơn vị tại thời điểm vẽ. `fwidth` (cùng `dFdx`/`dFdy`) là built-in lõi trong GLSL ES 3.00 (WebGL2) — bài dùng hằng số cố định để đơn giản hoá cho mục đích học, nhưng đáng biết ranh giới đó tồn tại.
+
+## Kết hợp: viền qua abs(d), glow qua suy giảm mũ
+
+Một khi đã có $d$, hai hiệu ứng phổ biến chỉ là hai phép biến đổi khác nhau trên cùng một con số, không cần tính lại gì từ đầu.
+
+**Viền (outline):** `abs(d)` "gấp" trục số quanh 0 — cả điểm hơi trong lẫn hơi ngoài biên đều cho ra một giá trị nhỏ dương. Ngưỡng giá trị đã gấp đó bằng một `smoothstep` thứ hai, với nửa-độ-rộng đường viền mong muốn `w`:
+
+```glsl
+float ring = smoothstep(w, 0.0, abs(d));
+```
+
+`ring` gần 1 ở sát biên (cả hai phía) và tắt dần về 0 khi ra xa biên theo cả hai hướng — một đường viền độ rộng đều `2w`, "miễn phí" mà không cần dựng thêm hình offset nào.
+
+**Glow:** thay vì ngưỡng nhị phân, cho $d$ (chỉ phần ngoài hình, `max(d, 0.0)`) chạy qua một hàm suy giảm mũ:
+
+```glsl
+color += glowColor * exp(-k * max(d, 0.0));
+```
+
+Điểm càng ở xa biên, số mũ càng âm sâu, `exp` càng nhỏ — cho quầng sáng mờ dần tự nhiên mà không cần texture hay blur pass riêng, chỉ một dòng toán trên $d$ đã có sẵn. Demo minh hoạ một biến thể khác của cùng nguyên tắc: dải `abs(fract(d * 20.0) - 0.5)` vẽ các đường đồng mức (iso-contour) mờ lặp lại mỗi $0.05$ đơn vị $d$ — về bản chất là "bản đồ địa hình" của chính distance field, đọc trực tiếp bằng mắt.
+
+## Vì sao "khoảng cách trước, màu sau" thắng tính màu trực tiếp
+
+Nếu tính màu trực tiếp từ UV (kiểu if/else lồng nhau theo toạ độ), mỗi hiệu ứng — fill, viền, glow — cần logic riêng viết lại từ đầu, và đổi hình dạng (tròn sang chữ nhật bo góc chẳng hạn) buộc sửa lại toàn bộ các logic đó cùng lúc. Quy trình "khoảng cách trước, màu sau" tách hẳn hai việc: tính $d$ một lần duy nhất mô tả *hình dạng*, rồi mọi hiệu ứng phía sau (mask, viền, glow, iso-line, hay hợp hai SDF bằng `min`/`max` như mục tiêu bài này đề cập) chỉ là hàm thuần tuý của $d$ — đổi hình chỉ cần đổi công thức tính $d$, toàn bộ tầng màu phía sau giữ nguyên không sửa gì.
+
+Bài kế tiếp (Gradient, pattern & tiling) tái dùng chính công thức `length(p)` này để dựng radial gradient, và đặt lại một SDF mới bên trong từng ô lặp của một lưới tiling. Xa hơn, Track 8 (Raymarching) tổng quát hoá toàn bộ ý tưởng này lên 3D: một tia được "march" từng bước cho đến khi một SDF 3D chạm 0 — dấu và độ lớn của khoảng cách học ở đây giữ nguyên ý nghĩa, chỉ đổi từ mặt phẳng sang không gian.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới làm việc với SDF và smoothstep:
+
+1. **Dùng ngưỡng nhị phân (`d < 0.0 ? a : b`) thay vì smoothstep.** Ngưỡng cứng không có dải chuyển tiếp — mỗi pixel commit hẳn về một màu, không có khái niệm "phủ một phần" — nên biên hiện răng cưa rõ rệt, nhất là ở các góc nghiêng gần chéo 45°.
+2. **Hardcode `edge0`/`edge1` bằng hằng số cố định (như `±0.02` trong demo) rồi mang sang cảnh khác.** Hằng số đó chỉ đúng ở đúng một độ phóng/độ phân giải nó được tinh chỉnh — zoom hoặc đổi kích thước canvas làm viền hoặc nhoè quá mức hoặc mỏng tới mức răng cưa quay lại; sản phẩm thật cần `fwidth(d)` để bề rộng dải tự scale theo pixel thực tế.
+3. **Tính viền bằng `abs(d)` nhưng quên ngưỡng nó lại bằng smoothstep thứ hai.** Chỉ gấp trục số (`abs(d)`) không tự vẽ ra đường viền nào — nó vẫn là một dải giá trị liên tục; quên bước threshold thứ hai (`smoothstep(w, 0.0, abs(d))`) thường khiến toàn bộ hình bị tô đầy màu viền, hoặc ngược lại không có viền nào hiện ra vì so sánh sai chiều.
+
+</Callout>

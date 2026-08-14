@@ -1,0 +1,21 @@
+## Mục tiêu
+
+Đây là mini-build đầu tiên của Track 2: không có lý thuyết mới, chỉ có một shader chạy được để chứng minh bạn dùng thành thạo bộ hàm dựng sẵn (`cos`, `mix`, `step`) và hiểu chi phí branching đủ để tránh `if` khi không cần. Sản phẩm là một bảng màu (palette) chuyển động mượt theo thời gian, dựng hoàn toàn bằng công thức, không texture lookup nào cả.
+
+## Yêu cầu
+
+Triển khai công thức cosine palette của Inigo Quilez trong GLSL Playground:
+
+$$
+\text{pal}(t) = \vec a + \vec b \cos\big(2\pi (\vec c \, t + \vec d)\big)
+$$
+
+với `t` chạy theo `uTime` (và theo `uv.x` để tạo dải màu ngang thay vì một màu đồng nhất). Dựng **ít nhất hai bộ tham số** $(\vec a, \vec b, \vec c, \vec d)$ khác nhau — hai preset cho hai dải màu khác hẳn nhau — rồi chuyển đổi giữa chúng theo **nửa màn hình** bằng `step` trên `uv.x` (trái dùng preset 1, phải dùng preset 2), không dùng `if`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Viết đúng một hàm `palette(t, a, b, c, d)` áp thẳng công thức trên rồi gọi nó hai lần với hai bộ tham số khác nhau. Việc còn lại chỉ là chọn đúng `t` (để có chuyển động) và trộn hai kết quả bằng `mix(..., step(0.5, uv.x))`.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — màu chuyển động mượt theo thời gian, ranh giới hai preset rõ ràng ở giữa màn hình, và không một dòng `if` nào trong toàn bộ shader.

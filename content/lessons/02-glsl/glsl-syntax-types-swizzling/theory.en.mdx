@@ -1,0 +1,70 @@
+## GLSL Is Statically-Typed C, Not JavaScript With Curly Braces
+
+GLSL (OpenGL Shading Language) borrows C's surface syntax — semicolons, curly braces, functions with explicitly typed parameters and return values — but the difference that matters most coming from JavaScript isn't syntax, it's that GLSL actually compiles before it runs. The browser compiles vertex and fragment shaders at runtime, when your WebGL app initializes, but that's still a real compilation pass: the compiler checks every variable and every expression against its declared type, and rejects the _entire_ shader if a single line is mistyped — there's no "run until it breaks" behavior like a JavaScript function throwing mid-execution. A variable declared `float` stays `float` forever; there's no reassigning it to a different kind of value the way `let x = 5; x = "five";` works in JS. Loose-typing habits carried over from JavaScript are the single most common source of first bugs in GLSL, and nearly everything else in this lesson is about pinpointing exactly where that habit breaks.
+
+## Scalar Types and the No-Implicit-Cast Trap
+
+GLSL has four basic scalar types: `float`, `int`, `uint` (unsigned integer), and `bool`. Unlike C/C++, which automatically promotes `int` to `float` inside mixed arithmetic, GLSL ES has essentially no implicit conversion in assignments or arithmetic expressions — converting between types always requires an explicit constructor call like `float(n)` or `int(x)` (vector constructors like `vec3(1)` fall under this same explicit-conversion mechanism, not some implicit-cast exception).
+
+### `1 / 2` Isn't `0.5` — It's `0`
+
+The direct consequence: if both operands of `/` are `int`, GLSL performs integer division and discards the remainder — $1 \div 2 = 0$, not $0.5$. That's the classic C rule, and it catches anyone coming from JavaScript or Python 3, where `/` always returns a real number. To get real division, both operands must be `float` from the start:
+
+```glsl
+int a = 1, b = 2;
+float wrong = float(a / b);        // a/b = 0 (integer division) THEN cast -> 0.0
+float right = float(a) / float(b); // cast to float FIRST, then divide -> 0.5
+```
+
+### A Type Mismatch Is a Compile Error, Not a Silent Warning
+
+`float x = 1;` fails to compile — `1` is an `int` literal, and it can't be assigned straight to a `float` variable no matter how "compatible" the value looks. The fix is the decimal point: `float x = 1.0;`. The rule cuts both ways: `int n = 2.0;` also fails, since `2.0` is a `float` literal. Where JavaScript treats a type mismatch as routine (silently coercing it), the GLSL compiler flatly refuses and blocks the entire draw call — there's no "warn and keep going."
+
+## vec2/vec3/vec4 and mat2/mat3/mat4: First-Class Citizens, Not Fake Arrays
+
+Where a "vector" in JavaScript is usually just a `[x, y, z]` array or a plain object, GLSL bakes `vec2`/`vec3`/`vec4` (plus their `ivec`/`uvec`/`bvec` variants) directly into the language's type system. The `+ - * /` operators work component-wise automatically: `vec3(1.0, 2.0, 3.0) + vec3(0.1, 0.1, 0.1)` adds each `x/y/z` pair with no hand-written `add()` helper like the ones from Track 0's JS exercises. `mat2/mat3/mat4` matrices follow the same pattern, with one exception worth memorizing: `*` between two matrices performs true matrix multiplication (not per-element multiply), while `*` between a matrix and a vector performs a linear transform — the same symbol, two different behaviors depending on the operand types.
+
+### Constructors: Splat, Composition, and Truncation
+
+A vector constructor accepts several parameter combinations, as long as the total component count exactly matches the target size:
+
+```glsl
+vec3 splat = vec3(1.0);              // 1 number -> repeated into all 3 slots: (1.0, 1.0, 1.0)
+vec3 v3 = vec3(0.2, 0.4, 0.6);
+vec4 composed = vec4(v3, 1.0);       // 3 + 1 = 4 -> a vec3 plus a scalar composed into a vec4
+vec2 truncated = composed.xy;        // read back only 2 of the 4 components (swizzling, next section)
+```
+
+That `vec4(v3, 1.0)` pattern is one you'll type dozens of times in later lessons, every time a 3D `position` (not a direction "at infinity") needs to become a homogeneous coordinate before a matrix multiply.
+
+## Swizzling: Read, Write, and Permute With a Single Expression
+
+Swizzling means addressing vector components by NAME instead of index, and GLSL ships three fully equivalent naming sets for the exact same memory slots: `.xyzw` (positional), `.rgba` (color), `.stpq` (texture coordinates). The three sets are purely cosmetic aliases for the same 4 slots — you can NEVER mix names from two different sets in one swizzle expression (`.xg` is invalid, since `x` belongs to the xyzw set and `g` to the rgba set).
+
+### Reading and Permuting: `.xy`, `.bgr`, and Three Equivalent Name Sets
+
+On the read side, you can pick any subset, in any order, and REPEAT names freely: `.xy` pulls 2 of several components (yields a `vec2`), `.bgr` reverses the 3 color channels (still a `vec3`, just permuted), `.xyx` repeats the first component into the third slot too (still a `vec3` — reads have no uniqueness constraint). The result's size is always exactly the number of letters you wrote, regardless of whether the source vector is bigger or smaller — as long as the source actually HAS that component.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec3 base = vec3(uv, 0.5);\n  vec3 color = base.xyx; // try base.yxy, base.bgr, base.zyx ...\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+### Writing: Swizzle as an L-Value, and Its Limit
+
+Swizzles also work on the LEFT side of an assignment: `color.rg = uv;` writes `uv`'s two values into `color`'s `r` and `g` slots, leaving `b`/`a` untouched. But the write side has a constraint the read side doesn't: no repeated component names — `color.xx = vec2(1.0, 2.0)` is a compile error, because the compiler can't tell which value (`1.0` or `2.0`) should land in slot `x` when it appears twice on the left. That asymmetry trips people up: many internalize "swizzle just reorders things" from the read side, then get surprised applying the same assumption to a write.
+
+## Type Errors: The First Wall When Leaving JavaScript Habits
+
+For most people coming from JavaScript/TypeScript, type errors — not brace mismatches or logic bugs — are the first and most time-consuming wall when starting GLSL. The fastest way through is to swap the question you ask yourself while writing a line: instead of "what value is this," ask "what type is this, and does this operation preserve or change it." One cheap habit eliminates most of these errors before they happen: always write the decimal point on any literal that needs to be a `float`, even zero — `0.0`, never bare `0`.
+
+## Where This Foundation Leads: Built-ins and Precision
+
+The type and swizzle vocabulary from this lesson shows up in nearly every line of shader code from here on. The built-in functions lesson right after this one leans entirely on `mix`/`clamp`/`smoothstep` having component-wise overloads thanks to the exact type system you just learned; the precision-qualifiers lesson right after that adds a second axis — not just "what type" but "how many bits sit behind that type" — onto the very same `float`/`vec3` declarations you're now comfortable with.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common type/swizzle mistakes when starting out:
+
+1. **Forgetting the decimal point on a literal that needs to be `float`.** `float x = 1;` fails to compile because `1` is an `int` and GLSL never auto-casts on assignment — fix it with `1.0`. The reverse also fails: `int n = 2.0;` errors because `2.0` is a `float`.
+2. **Mixing two different swizzle name sets in one expression.** `color.rg` is valid, `color.xy` is valid, but `color.rx` isn't — `r` belongs to the `rgba` set, `x` to the `xyzw` set, and they can't mix even though they point at the same memory slots.
+3. **Repeating a component name on the write side of a swizzle.** `color.xy = base.xy` is fine, but `color.xx = vec2(1.0, 2.0)` is a compile error — reads tolerate repeats freely, writes don't, since a repeated name on the left creates a slot with two conflicting source values.
+
+</Callout>

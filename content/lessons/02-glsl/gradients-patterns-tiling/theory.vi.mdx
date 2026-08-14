@@ -1,0 +1,87 @@
+## Gradient là hàm của vị trí: linear và radial
+
+Gradient trong shader không phải texture lookup — nó là một **hàm liên tục của vị trí**, y hệt cách SDF ở bài trước là một hàm liên tục trả về khoảng cách. Khác biệt duy nhất: thay vì dùng khoảng cách để quyết định trong/ngoài một hình, gradient dùng một đại lượng vô hướng biến thiên mượt để nội suy giữa hai màu bằng `mix`.
+
+**Linear gradient** lấy một hướng `dir` (đã normalize), rồi chiếu `uv` lên hướng đó bằng `dot(uv, dir)` — phép chiếu đã học ở bài `dot-and-cross-products`. Kết quả tăng dần dọc theo `dir`, không đổi theo hướng vuông góc với nó:
+
+```glsl
+float t = dot(uv - 0.5, dir) + 0.5; // căn giữa quanh 0 trước khi chiếu
+vec3 color = mix(colorA, colorB, clamp(t, 0.0, 1.0));
+```
+
+**Radial gradient** tái dùng đúng công thức khoảng cách Euclid của bài trước — thay vì `length(p) - r` để phân trong/ngoài, chỉ cần chính `length(p)` làm tham số nội suy:
+
+```glsl
+float t = length(uv - 0.5);
+vec3 color = mix(colorA, colorB, clamp(t, 0.0, 1.0));
+```
+
+Cả hai chỉ khác nhau ở cách đo `t`: linear đo theo một trục, radial đo theo mọi hướng từ một tâm. Tư duy "tính đại lượng vô hướng trước, tô màu sau" của bài trước áp dụng nguyên vẹn ở đây.
+
+## fract(uv * N): toán tử tiling
+
+`fract(x)` trả về phần thập phân của `x`, bỏ phần nguyên — một hàm răng cưa lặp lại mỗi chu kỳ đúng 1 đơn vị. Nhân `uv` với `N` trước khi `fract` nén đúng `N` chu kỳ răng cưa đó vào lại khoảng `[0, 1)` ban đầu — đây chính là toán tử dựng nên mọi pattern tiling trong bài.
+
+Phép nhân-rồi-fract này chia không gian thành hai "không gian" tách biệt:
+
+- **Global space**: chính `uv`, trải dài liên tục trên toàn canvas, `[0, 1)`.
+- **Cell space** (hay local space): `fract(uv * N)`, luôn nằm trong `[0, 1)` bất kể đang ở ô nào — toạ độ "reset" mỗi khi bước sang ô mới.
+
+Phần nguyên bị `fract` bỏ đi không hề mất — `floor(uv * N)` giữ lại đúng phần đó, cho ra **cell id**: một cặp số nguyên xác định đang đứng ở ô nào. Ghép cả hai, mọi vị trí toàn cục tách gọn thành "ô nào" + "ở đâu trong ô đó":
+
+```glsl
+vec2 grid = uv * N;
+vec2 id = floor(grid);    // ô nào
+vec2 local = fract(grid); // ở đâu trong ô, luôn 0..1
+```
+
+## Biến hoá theo id: caro và lệch hàng
+
+Có `id` rồi, việc tiếp theo là dùng nó để mỗi ô trông khác nhau thay vì lặp y hệt nhau. Caro (checkerboard) là ví dụ kinh điển: `mod(id.x + id.y, 2.0)` cho ra $0$ hoặc $1$ xen kẽ theo đúng quy luật bàn cờ, vì tổng hai số nguyên đổi tính chẵn/lẻ mỗi khi một trong hai toạ độ tăng thêm 1.
+
+Demo của bài (chọn hoạ tiết "Caro") dùng đúng biểu thức đó để chọn giữa hai màu nền cho từng ô. Lệch hàng kiểu gạch xây (brick offset) là một biến hoá khác — không đổi màu, mà đổi **vị trí biên ô**: dịch `uv.x` thêm nửa độ rộng một ô ở các hàng lẻ, thực hiện *trước* khi nhân với `N`:
+
+```glsl
+float rowId = floor(uv.y * N);
+if (rowOffsetOn) {
+  uv.x += mod(rowId, 2.0) * (0.5 / N);
+}
+vec2 grid = uv * N; // tiếp tục như bình thường
+```
+
+Bật toggle "Lệch hàng" trong demo và so hai chế độ: caro thường thẳng hàng dọc tuyệt đối, caro lệch hàng có các ô so le như gạch xây — cùng công thức checker, chỉ khác việc biên ô có được dịch trước khi tính hay không.
+
+## Xoay bên trong từng ô: ma trận xoay quay lại từ Track 0
+
+Ma trận xoay 2D đã dựng ở bài `matrix-basics`, $R(\theta) = \begin{pmatrix}\cos\theta & -\sin\theta\\ \sin\theta & \cos\theta\end{pmatrix}$, áp dụng thẳng vào toạ độ cục bộ của từng ô — với một điều kiện bắt buộc: phải **căn giữa** toạ độ đó về $[-0.5, 0.5]$ trước khi xoay, để phép xoay quay quanh đúng tâm ô, không phải góc dưới-trái của nó (xoay quanh một góc sẽ văng cả motif ra ngoài ô, chồng lấn sang ô kế bên).
+
+```glsl
+mat2 rotate2d(float angle) {
+  return mat2(cos(angle), sin(angle), -sin(angle), cos(angle));
+}
+vec2 cell = rotate2d(uRotation) * (fract(grid) - 0.5);
+```
+
+Đây chính xác là hàm `rotate2d` từ chương "2D Matrices" của The Book of Shaders. Một điểm tinh tế: ta đang xoay toạ độ **lấy mẫu** (điểm dùng để tính motif), không xoay trực tiếp hình vẽ ra — nên chiều xoay nhìn thấy trên màn hình ngược với dấu góc truyền vào. Bài kế tiếp (Ma trận biến đổi trong shader) mổ xẻ đúng hiện tượng "khung quy chiếu đảo ngược" này và cách compose nhiều phép biến đổi theo đúng thứ tự.
+
+Thử ngay trong demo: hoạ tiết "Caro" ở góc xoay $0°$ lấp kín tuyệt đối từng ô (box SDF của nó vừa khít biên ô); tăng dần góc xoay, bốn góc ô bắt đầu hở ra thành tam giác nền tối — vì biên ô thật (định bởi `fract`) đứng yên, chỉ có "cây cọ" lấy mẫu bên trong xoay theo.
+
+## Seam và vì sao căn giữa (p - 0.5) triệt tiêu chúng
+
+`fract()` có một điểm gián đoạn cứng tại mọi biên số nguyên — giá trị nhảy thẳng từ gần-1 về 0 ngay lập tức khi bước sang ô kế tiếp. Nếu một motif không đối xứng quanh tâm ô của chính nó (ví dụ một hình tròn được tính SDF trực tiếp trên `fract(grid)` chưa trừ $0.5$, tức lệch hẳn về phía góc dưới-trái ô), khoảng cách từ nó đến bốn cạnh ô sẽ không đều nhau — cạnh gần bị motif tràn sang ô hàng xóm, cạnh xa để hở khoảng trống lớn. Đó chính là **seam**: một đường ráp nối lởm chởm, khoảng cách giữa các motif không đều ở hai phía một biên ô.
+
+`fract(grid) - 0.5` không loại bỏ điểm gián đoạn của `fract` — điểm đó vẫn tồn tại ở tầng dưới. Điều nó làm là đặt lại **gốc toạ độ $0$ đúng vào tâm hình học của mỗi ô**, khiến mọi motif dựng bằng `length()` hay `abs()` (vốn đối xứng quanh gốc) tự động cách đều cả bốn cạnh ô — không còn lệch về phía nào. Không có seam nào biến mất về mặt toán học; chỉ là motif giờ đối xứng hoàn hảo nên mắt người không còn thấy khoảng cách bất đối xứng đó nữa.
+
+## Từ một ô đơn lẻ đến poster hoàn chỉnh
+
+Bốn nguyên liệu vừa học — gradient như hàm liên tục của vị trí, `fract`/`floor` chia không gian thành cell space và id, biến hoá theo id, và xoay căn giữa trong từng ô — ghép lại là công thức đứng sau gần như mọi pattern procedural. Bài "Ma trận biến đổi trong shader" kế tiếp sẽ formalize việc compose nhiều phép biến đổi (scale, rotate, translate) đúng thứ tự nhân ma trận; checkpoint cuối module ("Poster pattern lát gạch động") ghép chính kỹ thuật tiling này với cosine palette đã học để dựng một poster hoàn chỉnh. Xa hơn nữa, "domain repetition" ở Track 8 (Raymarching) tổng quát hoá đúng phép tách `fract`/`floor` này từ một lưới 2D phẳng lên không gian 3D vô hạn — cho phép raymarch cả một trường vật thể lặp lại bất tận chỉ với bộ nhớ $O(1)$, dùng nguyên xi phép chia không gian vừa học ở đây, chỉ thêm một chiều.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dựng pattern bằng fract/floor:
+
+1. **Tính caro trên toạ độ liên tục thay vì trên id đã floor.** Viết `mod(uv.x * N + uv.y * N, 2.0)` thay vì `mod(floor(uv.x*N) + floor(uv.y*N), 2.0)` cho ra dải màu chuyển tiếp mượt dọc theo hai trục thay vì các ô caro sắc cạnh — vì `mod` trên số thực liên tục không hề tạo bước nhảy đúng tại biên ô, chỉ `floor` mới rời rạc hoá được vị trí thành chỉ số ô nguyên.
+2. **Xoay trước khi căn giữa.** Viết `rotate2d(angle) * fract(grid)` (thiếu `- 0.5`) khiến phép xoay quay quanh góc $(0,0)$ của ô thay vì tâm — motif văng lệch hẳn sang một phía, thậm chí chồm sang ô bên cạnh khi góc xoay đủ lớn.
+3. **Áp dụng offset lệch hàng sau khi đã nhân N.** Cộng độ lệch vào biến `grid` (đã nhân N) thay vì vào `uv` gốc (trước khi nhân) làm độ dịch sai hẳn đơn vị — dịch nguyên cả vài ô thay vì đúng nửa ô, và độ lệch không còn nhất quán mỗi khi đổi slider số ô N, vì quên chia lại `0.5` cho `N` ở đúng không gian toạ độ.
+
+</Callout>

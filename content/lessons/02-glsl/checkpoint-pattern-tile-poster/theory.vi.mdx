@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Mini-build khép lại Track GLSL: dựng một poster fullscreen lát gạch động, chạy được, tổng hợp mọi kỹ thuật đã học trong module này — SDF, tiling, ma trận biến đổi và tự debug bằng màu — thay vì học riêng lẻ từng mảnh.
+
+## Yêu cầu
+
+Fragment shader vẽ một lưới ô đều (tiling bằng `fract`/`floor`), mỗi ô hiện một trong **ít nhất 2 motif SDF khác nhau** (ví dụ hình tròn và hình vuông bo góc) chọn theo cell-id; mỗi ô **tự xoay theo `uTime`** bằng ma trận `mat2` dựng đúng constructor cột; toàn cảnh phủ một **gradient tint toàn cục**; biên mỗi motif **anti-alias bằng `smoothstep`**, không răng cưa. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Bốn bước, đúng thứ tự: (1) chia UV thành lưới, lấy `cellId = floor(uv * N)` và toạ độ cục bộ `cellUv = fract(uv * N) - 0.5`; (2) dùng `cellId` để chọn motif (parity chẵn/lẻ hoặc hash); (3) xoay `cellUv` bằng `rotate2d(uTime + offset)` — offset lấy từ hash của `cellId` để các ô không đồng bộ; (4) tính SDF, chuyển thành mask bằng `smoothstep`, trộn với gradient tint rồi mới composite lên nền.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — tự debug bằng kỹ thuật xuất giá trị ra màu (bài trước) nếu một ô trông sai, thay vì đoán mò.

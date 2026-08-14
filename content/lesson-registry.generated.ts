@@ -132,6 +132,46 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/01-webgl/what-webgl-is-and-isnt/theory.vi.mdx"),
     en: () => import("./lessons/01-webgl/what-webgl-is-and-isnt/theory.en.mdx"),
   },
+  "branching-cost-on-gpu": {
+    vi: () => import("./lessons/02-glsl/branching-cost-on-gpu/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/branching-cost-on-gpu/theory.en.mdx"),
+  },
+  "checkpoint-gradient-palette": {
+    vi: () => import("./lessons/02-glsl/checkpoint-gradient-palette/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/checkpoint-gradient-palette/theory.en.mdx"),
+  },
+  "checkpoint-pattern-tile-poster": {
+    vi: () => import("./lessons/02-glsl/checkpoint-pattern-tile-poster/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/checkpoint-pattern-tile-poster/theory.en.mdx"),
+  },
+  "glsl-builtin-functions": {
+    vi: () => import("./lessons/02-glsl/glsl-builtin-functions/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/glsl-builtin-functions/theory.en.mdx"),
+  },
+  "glsl-syntax-types-swizzling": {
+    vi: () => import("./lessons/02-glsl/glsl-syntax-types-swizzling/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/glsl-syntax-types-swizzling/theory.en.mdx"),
+  },
+  "gradients-patterns-tiling": {
+    vi: () => import("./lessons/02-glsl/gradients-patterns-tiling/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/gradients-patterns-tiling/theory.en.mdx"),
+  },
+  "matrix-transforms-in-shaders": {
+    vi: () => import("./lessons/02-glsl/matrix-transforms-in-shaders/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/matrix-transforms-in-shaders/theory.en.mdx"),
+  },
+  "precision-qualifiers": {
+    vi: () => import("./lessons/02-glsl/precision-qualifiers/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/precision-qualifiers/theory.en.mdx"),
+  },
+  "shader-debugging-by-color": {
+    vi: () => import("./lessons/02-glsl/shader-debugging-by-color/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/shader-debugging-by-color/theory.en.mdx"),
+  },
+  "shaping-functions-and-2d-sdf": {
+    vi: () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/theory.vi.mdx"),
+    en: () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -160,6 +200,14 @@ export const REFERENCES_REGISTRY: Partial<
   "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/references"),
   "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/references"),
   "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/references"),
+  "branching-cost-on-gpu": () => import("./lessons/02-glsl/branching-cost-on-gpu/references"),
+  "glsl-builtin-functions": () => import("./lessons/02-glsl/glsl-builtin-functions/references"),
+  "glsl-syntax-types-swizzling": () => import("./lessons/02-glsl/glsl-syntax-types-swizzling/references"),
+  "gradients-patterns-tiling": () => import("./lessons/02-glsl/gradients-patterns-tiling/references"),
+  "matrix-transforms-in-shaders": () => import("./lessons/02-glsl/matrix-transforms-in-shaders/references"),
+  "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/references"),
+  "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/references"),
+  "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -281,6 +329,46 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"webgl-là-gì-một-api-rasterization-cấp-thấp","text":"WebGL là gì: một API rasterization cấp thấp","depth":2},{"id":"chồng-ngăn-xếp-browser--webgl--driver--gpu","text":"Chồng ngăn xếp: browser → WebGL → driver → GPU","depth":2},{"id":"angle-trên-windows-dịch-gl-sang-d3dvulkan","text":"ANGLE trên Windows: dịch GL sang D3D/Vulkan","depth":3},{"id":"những-gì-webgl-không-cung-cấp-sẵn","text":"Những gì WebGL KHÔNG cung cấp sẵn","depth":2},{"id":"từ-vựng-thật-của-webgl-buffer-shader-texture-draw-call-state-machine","text":"Từ vựng thật của WebGL: buffer, shader, texture, draw call, state machine","depth":2},{"id":"khi-nào-viết-webgl-thuần-khi-nào-dùng-threejs","text":"Khi nào viết WebGL thuần, khi nào dùng Three.js","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
     en: [{"id":"what-webgl-is-a-low-level-rasterization-api","text":"What WebGL Is: a Low-Level Rasterization API","depth":2},{"id":"the-stack-browser--webgl--driver--gpu","text":"The Stack: Browser → WebGL → Driver → GPU","depth":2},{"id":"angle-on-windows-translating-gl-to-d3dvulkan","text":"ANGLE on Windows: Translating GL to D3D/Vulkan","depth":3},{"id":"what-webgl-does-not-provide","text":"What WebGL Does NOT Provide","depth":2},{"id":"webgls-real-vocabulary-buffers-shaders-textures-draw-calls-state-machine","text":"WebGL's Real Vocabulary: Buffers, Shaders, Textures, Draw Calls, State Machine","depth":2},{"id":"when-to-reach-for-raw-webgl-vs-threejs","text":"When to Reach for Raw WebGL vs Three.js","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
   },
+  "branching-cost-on-gpu": {
+    vi: [{"id":"gpu-không-chạy-mỗi-pixel-một-luồng-độc-lập-như-bạn-tưởng","text":"GPU không chạy \"mỗi pixel một luồng độc lập\" như bạn tưởng","depth":2},{"id":"warpwavefront-nhóm-32-hoặc-64-lane-chạy-lockstep","text":"Warp/wavefront: nhóm 32 hoặc 64 lane chạy lockstep","depth":2},{"id":"divergence-khi-các-lane-bất-đồng-cả-hai-nhánh-đều-chạy","text":"Divergence: khi các lane bất đồng, CẢ HAI nhánh đều chạy","depth":2},{"id":"khi-nào-if-gần-như-miễn-phí-rẽ-nhánh-trên-điều-kiện-đồng-nhất","text":"Khi nào if gần như miễn phí: rẽ nhánh trên điều kiện đồng nhất","depth":2},{"id":"khi-nào-if-đắt-rẽ-nhánh-phân-kỳ-trong-vòng-lặp-nóng","text":"Khi nào if đắt: rẽ nhánh phân kỳ trong vòng lặp nóng","depth":2},{"id":"viết-lại-branchless-bằng-stepmix--và-cái-giá-phải-trả","text":"Viết lại branchless bằng step/mix — và cái giá phải trả","depth":2},{"id":"texture-fetch-trong-nhánh-phân-kỳ-một-cạm-bẫy-khác","text":"Texture fetch trong nhánh phân kỳ: một cạm bẫy khác","depth":2},{"id":"đo-đừng-đoán","text":"Đo, đừng đoán","depth":2}],
+    en: [{"id":"gpus-dont-run-one-independent-thread-per-pixel-the-way-youd-assume","text":"GPUs Don't Run \"One Independent Thread Per Pixel\" the Way You'd Assume","depth":2},{"id":"warpswavefronts-groups-of-32-or-64-lanes-running-in-lockstep","text":"Warps/Wavefronts: Groups of 32 or 64 Lanes Running in Lockstep","depth":2},{"id":"divergence-when-lanes-disagree-both-branches-run","text":"Divergence: When Lanes Disagree, BOTH Branches Run","depth":2},{"id":"when-if-is-nearly-free-branching-on-a-uniform-condition","text":"When if Is Nearly Free: Branching on a Uniform Condition","depth":2},{"id":"when-if-is-expensive-divergent-branching-in-hot-loops","text":"When if Is Expensive: Divergent Branching in Hot Loops","depth":2},{"id":"branchless-rewrites-with-stepmix--and-their-cost","text":"Branchless Rewrites with step/mix — and Their Cost","depth":2},{"id":"texture-fetches-inside-divergent-branches-another-trap","text":"Texture Fetches Inside Divergent Branches: Another Trap","depth":2},{"id":"measure-dont-assume","text":"Measure, Don't Assume","depth":2}],
+  },
+  "checkpoint-gradient-palette": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-pattern-tile-poster": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "glsl-builtin-functions": {
+    vi: [{"id":"bộ-công-cụ-nhỏ-dựng-được-gần-như-mọi-hiệu-ứng-procedural","text":"Bộ công cụ nhỏ dựng được gần như mọi hiệu ứng procedural","depth":2},{"id":"mix-và-clamp-pha-trộn-và-giữ-trong-khoảng","text":"mix và clamp: pha trộn và giữ trong khoảng","depth":2},{"id":"step-và-smoothstep-ngưỡng-cứng-ngưỡng-mượt","text":"step và smoothstep: ngưỡng cứng, ngưỡng mượt","depth":2},{"id":"fract-và-mod-lặp-lại-không-cần-vòng-lặp","text":"fract và mod: lặp lại không cần vòng lặp","depth":2},{"id":"length-distance-dot-normalize-hình-học-quay-lại","text":"length, distance, dot, normalize: hình học quay lại","depth":2},{"id":"abs-sign-min-max-pow-uốn-và-so-sánh-giá-trị","text":"abs, sign, min, max, pow: uốn và so sánh giá trị","depth":2},{"id":"vì-sao-mọi-hàm-trên-chạy-component-wise-trên-vector","text":"Vì sao mọi hàm trên chạy \"component-wise\" trên vector","depth":2},{"id":"ghép-lại-pulse-stripes-rings","text":"Ghép lại: pulse, stripes, rings","depth":2},{"id":"style-ifelse-hay-stepmix","text":"Style: if/else hay step/mix?","depth":2}],
+    en: [{"id":"a-small-toolkit-that-builds-almost-every-procedural-effect","text":"A Small Toolkit That Builds Almost Every Procedural Effect","depth":2},{"id":"mix-and-clamp-blending-and-staying-in-range","text":"mix and clamp: Blending and Staying in Range","depth":2},{"id":"step-and-smoothstep-hard-thresholds-soft-thresholds","text":"step and smoothstep: Hard Thresholds, Soft Thresholds","depth":2},{"id":"fract-and-mod-repetition-without-a-loop","text":"fract and mod: Repetition Without a Loop","depth":2},{"id":"length-distance-dot-normalize-geometry-comes-back","text":"length, distance, dot, normalize: Geometry Comes Back","depth":2},{"id":"abs-sign-min-max-pow-bending-and-comparing-values","text":"abs, sign, min, max, pow: Bending and Comparing Values","depth":2},{"id":"why-all-of-the-above-run-component-wise-on-vectors","text":"Why All of the Above Run \"Component-Wise\" on Vectors","depth":2},{"id":"composing-pulses-stripes-rings","text":"Composing: Pulses, Stripes, Rings","depth":2},{"id":"style-ifelse-or-stepmix","text":"Style: if/else or step/mix?","depth":2}],
+  },
+  "glsl-syntax-types-swizzling": {
+    vi: [{"id":"glsl-là-c-có-kiểu-tĩnh-không-phải-javascript-có-dấu-ngoặc-nhọn","text":"GLSL là C có kiểu tĩnh, không phải JavaScript có dấu ngoặc nhọn","depth":2},{"id":"kiểu-vô-hướng-và-cái-bẫy-không-có-ép-kiểu-ngầm","text":"Kiểu vô hướng và cái bẫy không có ép kiểu ngầm","depth":2},{"id":"1--2-không-phải-05--nó-là-0","text":"1 / 2 không phải 0.5 — nó là 0","depth":3},{"id":"sai-kiểu-là-lỗi-biên-dịch-không-phải-cảnh-báo-im-lặng","text":"Sai kiểu là lỗi biên dịch, không phải cảnh báo im lặng","depth":3},{"id":"vec2vec3vec4-và-mat2mat3mat4-công-dân-hạng-nhất-không-phải-mảng-giả-lập","text":"vec2/vec3/vec4 và mat2/mat3/mat4: công dân hạng nhất, không phải mảng giả lập","depth":2},{"id":"constructor-splat-composition-và-cắt-bớt","text":"Constructor: splat, composition, và cắt bớt","depth":3},{"id":"swizzling-đọc-ghi-và-hoán-vị-chỉ-bằng-một-biểu-thức","text":"Swizzling: đọc, ghi và hoán vị chỉ bằng một biểu thức","depth":2},{"id":"đọc-và-hoán-vị-xy-bgr-và-ba-bộ-tên-tương-đương","text":"Đọc và hoán vị: .xy, .bgr, và ba bộ tên tương đương","depth":3},{"id":"ghi-swizzle-làm-l-value-và-giới-hạn-của-nó","text":"Ghi: swizzle làm l-value và giới hạn của nó","depth":3},{"id":"lỗi-kiểu-bức-tường-đầu-tiên-khi-rời-thói-quen-javascript","text":"Lỗi kiểu: bức tường đầu tiên khi rời thói quen JavaScript","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-hàm-dựng-sẵn-và-precision","text":"Nền tảng này dẫn tới đâu: hàm dựng sẵn và precision","depth":2}],
+    en: [{"id":"glsl-is-statically-typed-c-not-javascript-with-curly-braces","text":"GLSL Is Statically-Typed C, Not JavaScript With Curly Braces","depth":2},{"id":"scalar-types-and-the-no-implicit-cast-trap","text":"Scalar Types and the No-Implicit-Cast Trap","depth":2},{"id":"1--2-isnt-05--its-0","text":"1 / 2 Isn't 0.5 — It's 0","depth":3},{"id":"a-type-mismatch-is-a-compile-error-not-a-silent-warning","text":"A Type Mismatch Is a Compile Error, Not a Silent Warning","depth":3},{"id":"vec2vec3vec4-and-mat2mat3mat4-first-class-citizens-not-fake-arrays","text":"vec2/vec3/vec4 and mat2/mat3/mat4: First-Class Citizens, Not Fake Arrays","depth":2},{"id":"constructors-splat-composition-and-truncation","text":"Constructors: Splat, Composition, and Truncation","depth":3},{"id":"swizzling-read-write-and-permute-with-a-single-expression","text":"Swizzling: Read, Write, and Permute With a Single Expression","depth":2},{"id":"reading-and-permuting-xy-bgr-and-three-equivalent-name-sets","text":"Reading and Permuting: .xy, .bgr, and Three Equivalent Name Sets","depth":3},{"id":"writing-swizzle-as-an-l-value-and-its-limit","text":"Writing: Swizzle as an L-Value, and Its Limit","depth":3},{"id":"type-errors-the-first-wall-when-leaving-javascript-habits","text":"Type Errors: The First Wall When Leaving JavaScript Habits","depth":2},{"id":"where-this-foundation-leads-built-ins-and-precision","text":"Where This Foundation Leads: Built-ins and Precision","depth":2}],
+  },
+  "gradients-patterns-tiling": {
+    vi: [{"id":"gradient-là-hàm-của-vị-trí-linear-và-radial","text":"Gradient là hàm của vị trí: linear và radial","depth":2},{"id":"fractuv--n-toán-tử-tiling","text":"fract(uv  N): toán tử tiling","depth":2},{"id":"biến-hoá-theo-id-caro-và-lệch-hàng","text":"Biến hoá theo id: caro và lệch hàng","depth":2},{"id":"xoay-bên-trong-từng-ô-ma-trận-xoay-quay-lại-từ-track-0","text":"Xoay bên trong từng ô: ma trận xoay quay lại từ Track 0","depth":2},{"id":"seam-và-vì-sao-căn-giữa-p---05-triệt-tiêu-chúng","text":"Seam và vì sao căn giữa (p - 0.5) triệt tiêu chúng","depth":2},{"id":"từ-một-ô-đơn-lẻ-đến-poster-hoàn-chỉnh","text":"Từ một ô đơn lẻ đến poster hoàn chỉnh","depth":2}],
+    en: [{"id":"gradients-as-a-function-of-position-linear-and-radial","text":"Gradients as a Function of Position: Linear and Radial","depth":2},{"id":"fractuv--n-the-tiling-operator","text":"fract(uv  N): The Tiling Operator","depth":2},{"id":"variation-by-id-checker-and-row-offset","text":"Variation by id: Checker and Row Offset","depth":2},{"id":"rotation-inside-a-cell-the-rotation-matrix-returns-from-track-0","text":"Rotation Inside a Cell: the Rotation Matrix Returns from Track 0","depth":2},{"id":"seams-and-why-centering-p---05-removes-them","text":"Seams, and Why Centering (p - 0.5) Removes Them","depth":2},{"id":"from-a-single-cell-to-a-full-poster","text":"From a Single Cell to a Full Poster","depth":2}],
+  },
+  "matrix-transforms-in-shaders": {
+    vi: [{"id":"mat2mat3-trong-glsl-constructor-đọc-theo-cột","text":"mat2/mat3 trong GLSL: constructor đọc theo cột","depth":2},{"id":"xoay-uv-space-biến-đổi-toạ-độ-không-phải-ảnh","text":"Xoay UV space: biến đổi TOẠ ĐỘ, không phải \"ảnh\"","depth":2},{"id":"pivot-xoay-quanh-một-điểm-bất-kỳ-không-chỉ-quanh-gốc","text":"Pivot: xoay quanh một điểm bất kỳ, không chỉ quanh gốc","depth":2},{"id":"xoay-theo-thời-gian-ma-trận-sống-nhờ-utime","text":"Xoay theo thời gian: ma trận sống nhờ uTime","depth":2},{"id":"mat3-và-toạ-độ-đồng-nhất-gộp-rotate--translate-làm-một","text":"mat3 và toạ độ đồng nhất: gộp rotate + translate làm một","depth":2}],
+    en: [{"id":"mat2mat3-in-glsl-constructors-read-by-column","text":"mat2/mat3 in GLSL: Constructors Read by Column","depth":2},{"id":"rotating-uv-space-transform-the-coordinate-not-the-image","text":"Rotating UV Space: Transform the COORDINATE, Not the \"Image\"","depth":2},{"id":"pivot-rotating-around-any-point-not-just-the-origin","text":"Pivot: Rotating Around Any Point, Not Just the Origin","depth":2},{"id":"time-driven-rotation-matrices-that-live-on-utime","text":"Time-Driven Rotation: Matrices That Live on uTime","depth":2},{"id":"mat3-and-homogeneous-coordinates-folding-rotate--translate-into-one","text":"mat3 and Homogeneous Coordinates: Folding Rotate + Translate Into One","depth":2}],
+  },
+  "precision-qualifiers": {
+    vi: [{"id":"vì-sao-mọi-fragment-shader-phải-khai-báo-precision","text":"Vì sao mọi fragment shader phải khai báo precision","depth":2},{"id":"highp-mediump-lowp-đặc-tả-nói-gì-không-phải-đoán-mò","text":"highp, mediump, lowp: đặc tả nói gì, không phải đoán mò","depth":2},{"id":"highp-gần-với-float-32-bit-chuẩn-mantissa-tối-thiểu-16-bit","text":"highp: gần với float 32-bit chuẩn, mantissa tối thiểu 16 bit","depth":3},{"id":"mediump-sàn-tối-thiểu-10-bit-mantissa--không-phải-nửa-highp","text":"mediump: sàn tối thiểu 10-bit mantissa — không phải \"nửa highp\"","depth":3},{"id":"lowp-dải-chỉ--2-2-gần-như-chỉ-hợp-cho-màu","text":"lowp: dải chỉ $[-2, 2]$, gần như chỉ hợp cho màu","depth":3},{"id":"chi-phí-phần-cứng-vì-sao-precision-thấp-hơn-có-thể-nhanh-hơn-thật","text":"Chi phí phần cứng: vì sao precision thấp hơn có thể nhanh hơn thật","depth":2},{"id":"ba-artifact-kinh-điển-khi-precision-không-đủ","text":"Ba artifact kinh điển khi precision không đủ","depth":2},{"id":"chiến-lược-chọn-precision-cho-khoá-học-này","text":"Chiến lược chọn precision cho khoá học này","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-hàm-dựng-sẵn-và-chi-phí-branching","text":"Nền tảng này dẫn tới đâu: hàm dựng sẵn và chi phí branching","depth":2}],
+    en: [{"id":"why-every-fragment-shader-must-declare-precision","text":"Why Every Fragment Shader Must Declare precision","depth":2},{"id":"highp-mediump-lowp-what-the-spec-actually-guarantees","text":"highp, mediump, lowp: What the Spec Actually Guarantees","depth":2},{"id":"highp-close-to-a-real-32-bit-float-at-least-16-mantissa-bits","text":"highp: Close to a Real 32-Bit Float, at Least 16 Mantissa Bits","depth":3},{"id":"mediump-a-10-bit-mantissa-floor--not-half-of-highp","text":"mediump: A 10-Bit Mantissa Floor — Not \"Half of highp\"","depth":3},{"id":"lowp-a-range-of-just--2-2-fit-for-little-beyond-color","text":"lowp: A Range of Just $[-2, 2]$, Fit for Little Beyond Color","depth":3},{"id":"the-hardware-cost-why-lower-precision-can-genuinely-run-faster","text":"The Hardware Cost: Why Lower Precision Can Genuinely Run Faster","depth":2},{"id":"three-classic-artifacts-when-precision-falls-short","text":"Three Classic Artifacts When Precision Falls Short","depth":2},{"id":"this-courses-precision-strategy","text":"This Course's Precision Strategy","depth":2},{"id":"where-this-foundation-leads-built-ins-and-branching-cost","text":"Where This Foundation Leads: Built-ins and Branching Cost","depth":2}],
+  },
+  "shader-debugging-by-color": {
+    vi: [{"id":"không-có-consolelog-trên-gpu-màn-hình-chính-là-debugger","text":"Không có console.log trên GPU: màn hình chính là debugger","depth":2},{"id":"bốn-kỹ-thuật-xuất-giá-trị-ra-màu","text":"Bốn kỹ thuật xuất giá trị ra màu","depth":2},{"id":"probe-theo-vùng-và-cắt-bớt-pipeline","text":"Probe theo vùng và cắt bớt pipeline","depth":2},{"id":"kỷ-luật-debug-đổi-một-thứ-giữ-baseline-chia-đôi-pipeline","text":"Kỷ luật debug: đổi một thứ, giữ baseline, chia đôi pipeline","depth":2},{"id":"ca-thực-tế-vòng-tròn-render-ra-màu-đen","text":"Ca thực tế: \"vòng tròn render ra màu đen\"","depth":2}],
+    en: [{"id":"no-consolelog-on-the-gpu-the-screen-is-the-debugger","text":"No console.log on the GPU: the Screen IS the Debugger","depth":2},{"id":"four-techniques-for-outputting-values-as-color","text":"Four Techniques for Outputting Values as Color","depth":2},{"id":"region-probes-and-trimming-the-pipeline","text":"Region Probes and Trimming the Pipeline","depth":2},{"id":"debugging-discipline-change-one-thing-keep-a-baseline-bisect-the-pipeline","text":"Debugging Discipline: Change One Thing, Keep a Baseline, Bisect the Pipeline","depth":2},{"id":"a-real-case-the-ring-renders-black","text":"A Real Case: \"The Ring Renders Black\"","depth":2}],
+  },
+  "shaping-functions-and-2d-sdf": {
+    vi: [{"id":"shaping-function-nghệ-thuật-uốn-nắn-dải-01","text":"Shaping function: nghệ thuật uốn nắn dải 0..1","depth":2},{"id":"signed-distance-2d-âm-bên-trong-0-tại-biên-dương-bên-ngoài","text":"Signed distance 2D: âm bên trong, 0 tại biên, dương bên ngoài","depth":2},{"id":"dựng-sdf-hình-tròn-lengthp---r","text":"Dựng SDF hình tròn: length(p) - r","depth":2},{"id":"smoothstep-cây-cọ-chống-răng-cưa-trên-distance-field","text":"smoothstep: cây cọ chống răng cưa trên distance field","depth":2},{"id":"kết-hợp-viền-qua-absd-glow-qua-suy-giảm-mũ","text":"Kết hợp: viền qua abs(d), glow qua suy giảm mũ","depth":2},{"id":"vì-sao-khoảng-cách-trước-màu-sau-thắng-tính-màu-trực-tiếp","text":"Vì sao \"khoảng cách trước, màu sau\" thắng tính màu trực tiếp","depth":2}],
+    en: [{"id":"shaping-functions-the-art-of-bending-the-01-range","text":"Shaping Functions: The Art of Bending the 0..1 Range","depth":2},{"id":"signed-distance-in-2d-negative-inside-zero-at-the-boundary-positive-outside","text":"Signed Distance in 2D: Negative Inside, Zero at the Boundary, Positive Outside","depth":2},{"id":"building-a-circle-sdf-lengthp---r","text":"Building a Circle SDF: length(p) - r","depth":2},{"id":"smoothstep-the-anti-aliased-brush-over-a-distance-field","text":"smoothstep: The Anti-Aliased Brush Over a Distance Field","depth":2},{"id":"combining-outlines-via-absd-glow-via-exponential-falloff","text":"Combining: Outlines via abs(d), Glow via Exponential Falloff","depth":2},{"id":"why-distance-first-color-later-beats-direct-color-math","text":"Why \"Distance First, Color Later\" Beats Direct Color Math","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -307,6 +395,13 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/demo"),
   "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/demo"),
   "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/demo"),
+  "branching-cost-on-gpu": () => import("./lessons/02-glsl/branching-cost-on-gpu/demo"),
+  "glsl-builtin-functions": () => import("./lessons/02-glsl/glsl-builtin-functions/demo"),
+  "glsl-syntax-types-swizzling": () => import("./lessons/02-glsl/glsl-syntax-types-swizzling/demo"),
+  "gradients-patterns-tiling": () => import("./lessons/02-glsl/gradients-patterns-tiling/demo"),
+  "matrix-transforms-in-shaders": () => import("./lessons/02-glsl/matrix-transforms-in-shaders/demo"),
+  "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/demo"),
+  "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/demo"),
   "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/demo"),
 };
 
@@ -344,4 +439,14 @@ export const EXERCISES_REGISTRY: Partial<
   "vertex-fragment-rasterization": () => import("./lessons/01-webgl/vertex-fragment-rasterization/exercises"),
   "webgl-vs-webgpu-landscape": () => import("./lessons/01-webgl/webgl-vs-webgpu-landscape/exercises"),
   "what-webgl-is-and-isnt": () => import("./lessons/01-webgl/what-webgl-is-and-isnt/exercises"),
+  "branching-cost-on-gpu": () => import("./lessons/02-glsl/branching-cost-on-gpu/exercises"),
+  "checkpoint-gradient-palette": () => import("./lessons/02-glsl/checkpoint-gradient-palette/exercises"),
+  "checkpoint-pattern-tile-poster": () => import("./lessons/02-glsl/checkpoint-pattern-tile-poster/exercises"),
+  "glsl-builtin-functions": () => import("./lessons/02-glsl/glsl-builtin-functions/exercises"),
+  "glsl-syntax-types-swizzling": () => import("./lessons/02-glsl/glsl-syntax-types-swizzling/exercises"),
+  "gradients-patterns-tiling": () => import("./lessons/02-glsl/gradients-patterns-tiling/exercises"),
+  "matrix-transforms-in-shaders": () => import("./lessons/02-glsl/matrix-transforms-in-shaders/exercises"),
+  "precision-qualifiers": () => import("./lessons/02-glsl/precision-qualifiers/exercises"),
+  "shader-debugging-by-color": () => import("./lessons/02-glsl/shader-debugging-by-color/exercises"),
+  "shaping-functions-and-2d-sdf": () => import("./lessons/02-glsl/shaping-functions-and-2d-sdf/exercises"),
 };

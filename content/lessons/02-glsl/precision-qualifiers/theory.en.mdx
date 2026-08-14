@@ -1,0 +1,49 @@
+## Why Every Fragment Shader Must Declare `precision`
+
+GLSL ES vertex shaders come with a built-in default precision for `float` (`highp`), but fragment shaders do NOT — the spec deliberately leaves the fragment stage without a default, because some embedded drivers/GPUs only guarantee `mediump` support there, not `highp`. The practical result: the first line of nearly every fragment shader in this course is `precision highp float;` (or `mediump`/`lowp` when that's the deliberate point) — omitting it is a hard compile error on many strict mobile/WebGL drivers, even though desktop Chrome/ANGLE often silently picks a default precision for you and compiles anyway, hiding the bug until it ships to a different device. `int` has its own default (`mediump` in both stages), so it rarely needs an explicit declaration, but `float` in a fragment shader always does.
+
+## highp, mediump, lowp: What the Spec Actually Guarantees
+
+The three precision qualifiers aren't a vague "faster but less accurate" dial — the GLSL ES 3.00 spec (Table 4.7) pins down two hard FLOOR numbers every driver must meet: relative precision (equivalent to a mantissa bit count) and representable range (equivalent to an exponent bit count). Real hardware is usually better than this floor, never worse.
+
+### highp: Close to a Real 32-Bit Float, at Least 16 Mantissa Bits
+
+`highp` guarantees a range of at least $[-2^{62}, 2^{62}]$ and a relative precision of at least $2^{-16}$ (mantissa $\geq 16$ bits) — lower than genuine IEEE 754 single precision's floor (a 23-bit mantissa), but in practice almost every GPU shipping today, mobile included, implements `highp` as a full 32-bit float.
+
+### mediump: A 10-Bit Mantissa Floor — Not "Half of highp"
+
+`mediump` guarantees a range of at least $[-2^{14}, 2^{14}]$ and a relative precision of at least $2^{-10}$ (mantissa $\geq 10$ bits) — that number isn't arbitrary: it matches the 10-bit mantissa of the IEEE half-float (FP16) format exactly, and that's not a coincidence — many mobile GPUs implement `mediump` as literal FP16 hardware.
+
+### lowp: A Range of Just $[-2, 2]$, Fit for Little Beyond Color
+
+`lowp` guarantees only $[-2, 2]$ with a relative precision of $2^{-8}$ — narrow enough that it's unsafe for most accumulating math, but just enough for a normalized $0..1$ color channel or a simple visibility mask.
+
+## The Hardware Cost: Why Lower Precision Can Genuinely Run Faster
+
+Many tile-based mobile GPUs (Arm Mali, Imagination PowerVR, Qualcomm Adreno) execute `mediump` arithmetic on narrower ALU lanes than `highp`, fitting more `mediump` operations into the same clock cycle — a widely cited **~2x throughput figure for varying interpolation and simple ALU work on many current chips, which is an ESTIMATE, not a universal constant: the real gap depends on the driver, the chip generation, and the specific operation**. On desktop discrete GPUs, this hardware distinction usually doesn't exist at all — most desktop drivers silently promote `mediump`/`lowp` to a full 32-bit float regardless of what you declare, so testing only in a desktop browser can completely hide precision bugs that only surface on real mobile hardware.
+
+## Three Classic Artifacts When Precision Falls Short
+
+- **Banding**: a gradient that's mathematically continuous gets represented with too few discrete steps because of a low mantissa bit count, showing up as sharp color bands instead of a smooth transition — most visible in subtle sky or lighting gradients.
+- **Jitter**: `mediump` precision is RELATIVE to a value's magnitude — a quantity that keeps growing unbounded (`uTime` multiplied by a large frequency, or a world-space coordinate far from the origin) has an ever-coarser gap between representable `mediump` values as it grows, showing up as an animation that's smooth near the start and gradually starts stepping or vibrating the longer it runs.
+- **Texcoord snapping**: UV coordinates computed in `mediump` on a large texture atlas can round to the wrong neighboring texel once the gap between nearby representable `mediump` values exceeds the size of a single texel — visible as swimming or snapping seams as the camera or UV moves slowly.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float v = uv.y;\n  float levels = 8.0; // shrink: 2.0, 4.0 - grow: 32.0, 64.0\n  float quantized = floor(v * levels) / levels;\n  fragColor = vec4(vec3(quantized), 1.0);\n}\n"} />
+
+## This Course's Precision Strategy
+
+Since this course targets desktop-class GPUs by default, the convention is `precision highp float;` everywhere UNLESS a lesson is deliberately teaching the `mediump` tradeoff (like this lesson's own demo) — that keeps early debugging simple, without precision noise muddying a lesson focused on something else. Only drop to `mediump` deliberately on hot, well-understood paths once real profiling justifies it (Track 12 — Performance covers this properly). One hard rule regardless of platform: NEVER use `mediump` — let alone `lowp` — for POSITION math (`gl_Position`, world-space coordinates) — position error compounds across the whole pipeline and shows up as visible vertex jitter or tearing, an expensive bug class to diagnose after the fact.
+
+## Where This Foundation Leads: Built-ins and Branching Cost
+
+Precision sits silently underneath every `uniform`/`varying` declared in the built-in functions lesson right after this one, and becomes directly measurable once the branching-cost lesson introduces real GPU profiling — the same "how many bits, how many clock cycles" thinking returns there, just aimed at control flow instead of storage.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common precision-qualifier mistakes:
+
+1. **Forgetting to declare `precision ... float;` in a fragment shader.** Compiles fine on desktop Chrome because the driver silently picks a default, but fails hard on many mobile/strict WebGL drivers — a "works on my machine" bug that only shows up on a real device.
+2. **Using `mediump` for world-space position or a long-accumulating time phase.** `uTime` multiplied by a large frequency and stored in `mediump` causes jitter that grows the longer the app has been running, not an immediate failure, so it easily slips past a quick few-second test.
+3. **Treating `lowp` as a "safe, cheap" default for anything in 0..1.** An intermediate calculation (like summing several bloom layers before tone-mapping) can exceed the $[-2, 2]$ range even though the final displayed value stays within $0..1$ — `lowp` clips incorrectly mid-calculation, before the value ever reaches the final normalization step.
+
+</Callout>

@@ -1,0 +1,21 @@
+## Goal
+
+This is Track 2's first mini-build: no new theory, just a working shader that proves you can wield the built-in toolkit (`cos`, `mix`, `step`) fluently and understand branching cost well enough to skip `if` when it isn't needed. The artifact is a color palette animating smoothly over time, built entirely from a formula — no texture lookups.
+
+## Requirements
+
+Implement Inigo Quilez's cosine palette formula in the GLSL Playground:
+
+$$
+\text{pal}(t) = \vec a + \vec b \cos\big(2\pi (\vec c \, t + \vec d)\big)
+$$
+
+with `t` driven by `uTime` (and by `uv.x`, so you get a horizontal color band instead of one flat color). Build **at least two** different $(\vec a, \vec b, \vec c, \vec d)$ presets — two visibly different color ranges — and switch between them by **screen half** using `step` on `uv.x` (left uses preset 1, right uses preset 2), with no `if`. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Write exactly one `palette(t, a, b, c, d)` function implementing the formula above, and call it twice with two different parameter sets. What's left is picking the right `t` (for motion) and blending the two results with `mix(..., step(0.5, uv.x))`.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — color animates smoothly over time, the boundary between the two presets is clearly visible at the screen's midpoint, and there isn't a single `if` anywhere in the shader.

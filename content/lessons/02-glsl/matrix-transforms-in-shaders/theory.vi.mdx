@@ -1,0 +1,95 @@
+## mat2/mat3 trong GLSL: constructor đọc theo cột
+
+GLSL có `mat2`, `mat3`, `mat4` là kiểu dựng sẵn, và cách khởi tạo chúng bằng constructor là điểm dễ gây lỗi nhất khi mới viết shader biến đổi. `mat2(a, b, c, d)` **không** điền theo hàng như khi bạn viết ma trận ra giấy — nó điền theo **cột**: hai tham số đầu tạo cột 0, hai tham số sau tạo cột 1. Đây đúng là quy ước cột (column-major) mà bài Ma trận 2x2 & 3x3 ở Track 0 đã nhấn mạnh: đọc một ma trận bằng cách nhìn từng cột, vì mỗi cột chính là ảnh của một basis vector sau phép biến đổi — cột 0 là nơi $(1,0)$ đi tới, cột 1 là nơi $(0,1)$ đi tới.
+
+Ma trận xoay chuẩn (ngược kim đồng hồ, trục X sang phải, Y hướng lên) trông thế này khi viết ra giấy:
+
+$$
+R(\theta) = \begin{pmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{pmatrix}
+$$
+
+Cột 0 của $R(\theta)$ là $(\cos\theta, \sin\theta)$, cột 1 là $(-\sin\theta, \cos\theta)$. Constructor GLSL đúng phải là:
+
+```glsl
+mat2 rotate2d(float angle) {
+  float c = cos(angle);
+  float s = sin(angle);
+  // column-major: cột 0 = (c, s), cột 1 = (-s, c)
+  return mat2(c, s, -s, c);
+}
+```
+
+Đây chính là lỗi ma trận phổ biến nhất khi viết shader: nhiều người đọc ma trận trên giấy theo thứ tự hàng (trái sang phải, trên xuống dưới) rồi gõ y hệt bốn số đó vào `mat2(...)`. Với $R(\theta)$, thứ tự hàng là $\cos\theta, -\sin\theta, \sin\theta, \cos\theta$ — gõ thẳng chuỗi này vào constructor cho ra `mat2(c, -s, s, c)`, và vì GLSL đọc theo cột, kết quả thực sự là cột 0 $= (c, -s)$, cột 1 $= (s, c)$ — đúng bằng $R(-\theta)$, ma trận **nghịch đảo** của cái bạn định dựng. Hình xoay đúng độ lớn góc nhưng ngược hướng, và lỗi này gần như không thể nhìn ra bằng mắt nếu không biết chính xác mình đang tìm gì.
+
+## Xoay UV space: biến đổi TOẠ ĐỘ, không phải "ảnh"
+
+Fragment shader không có khái niệm "bức ảnh" để xoay — nó chỉ có một toạ độ UV cho mỗi pixel và một công thức quyết định màu tại toạ độ đó. Muốn pattern *trông như* đang xoay, bạn không xoay pattern — bạn xoay toạ độ UV trước khi đưa nó vào công thức vẽ pattern, và pattern tự động "đứng yên" trong hệ toạ độ mới đó.
+
+Hệ quả trực tiếp: xoay toạ độ theo chiều nào, pattern *nhìn thấy* lại xoay theo chiều **ngược lại**. Tưởng tượng bạn đứng yên và xoay máy quay theo chiều kim đồng hồ — thế giới trong khung hình lại quay ngược kim đồng hồ quanh bạn. Áp dụng vào code: nếu bạn nhân UV với $R(\theta)$ (xoay hệ trục $\theta$ độ ngược kim đồng hồ), điểm lấy mẫu dịch chuyển ngược kim đồng hồ trong không gian gốc của pattern — nên pattern hiển thị trên màn hình lại có vẻ xoay **theo** kim đồng hồ. Đây là trực giác "biến đổi nghịch đảo" (inverse-transform intuition): bạn không đang di chuyển pattern, bạn đang di chuyển ngược điểm lấy mẫu so với pattern đứng yên.
+
+```glsl
+vec2 p = rotate2d(angle) * uv; // xoay TOẠ ĐỘ +angle
+// → pattern hiển thị lại xoay -angle trên màn hình
+```
+
+<Playground source={"mat2 rotate2d(float a) {\n  float c = cos(a);\n  float s = sin(a);\n  return mat2(c, s, -s, c); // column-major: col0=(c,s), col1=(-s,c)\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float angle = (uMouse.x - 0.5) * 6.2831853; // keo chuot ngang de xoay\n  vec2 p = rotate2d(angle) * (uv - 0.5) + 0.5;\n  vec2 cell = floor(p * 8.0);\n  float parity = mod(cell.x + cell.y, 2.0);\n  vec3 color = mix(vec3(0.95, 0.5, 0.2), vec3(0.08, 0.1, 0.18), parity);\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Pivot: xoay quanh một điểm bất kỳ, không chỉ quanh gốc
+
+`rotate2d(angle) * uv` xoay quanh gốc toạ độ $(0,0)$ — với UV chạy trong $[0,1]$, gốc đó là góc dưới-trái, không phải tâm pattern. Kết quả: cả pattern văng quay quanh một góc màn hình thay vì tự xoay tại chỗ. Sửa bằng đúng ba bước — dịch điểm cần xoay về gốc, áp ma trận, dịch trả lại vị trí cũ:
+
+$$
+p' = M\,(p - c) + c
+$$
+
+với $c$ là điểm pivot (thường là $(0.5, 0.5)$, tâm hình học của UV space):
+
+```glsl
+vec2 p = uv - pivot;   // translate → gốc
+p = rotate2d(angle) * p; // transform
+p += pivot;              // translate back
+```
+
+Bỏ qua bước dịch chuyển này là lý do phổ biến khiến một hiệu ứng "xoay tại chỗ" trông như đang "quay quỹ đạo" quanh góc màn hình — hai hiện tượng dễ nhầm với nhau nhưng nguyên nhân chỉ là thiếu đúng hai dòng translate.
+
+## Xoay theo thời gian: ma trận sống nhờ uTime
+
+Biến `angle` không nhất thiết là hằng số hay giá trị điều khiển từ slider — gán nó bằng `uTime * speed` biến ma trận xoay thành một ma trận *sống*, tính lại mỗi khung hình. Vì `rotate2d()` chỉ tốn đúng một `cos()` và một `sin()`, chi phí này rẻ hơn nhiều so với một lần sample texture, kể cả khi chạy hàng triệu lần mỗi frame (ước lượng: màn hình 1920×1080 ở DPR 2 tương đương khoảng 8 triệu fragment invocation, mỗi cái gọi `rotate2d()` một lần nếu đặt trong `main()`). Điểm cần cẩn trọng không phải chi phí, mà là *đặt matrix ở đâu*: nếu `rotate2d()` nằm bên trong một vòng lặp lớn (raymarching, domain repetition — chủ đề Track 8), chi phí cộng dồn theo số lần lặp, không còn "rẻ" nữa.
+
+## mat3 và toạ độ đồng nhất: gộp rotate + translate làm một
+
+`mat2` chỉ biểu diễn được các phép biến đổi tuyến tính (xoay, scale, shear) — translation không phải phép tuyến tính nên không thể nhét vào một `mat2`, đó là lý do kỹ thuật translate→transform→translate-back ở trên cần tới ba dòng code riêng biệt. Bài Toạ độ đồng nhất & ma trận 4x4 ở Track 0 đã giới thiệu mẹo thêm thành phần $w$ để gộp translation vào phép nhân ma trận; ở 2D, mẹo tương tự dùng `mat3` với $w = 1$ cho điểm:
+
+$$
+\begin{pmatrix} x' \\ y' \\ 1 \end{pmatrix} = \begin{pmatrix} \cos\theta & -\sin\theta & t_x \\ \sin\theta & \cos\theta & t_y \\ 0 & 0 & 1 \end{pmatrix} \begin{pmatrix} x \\ y \\ 1 \end{pmatrix}
+$$
+
+```glsl
+mat3 build2DTransform(float angle, vec2 translate) {
+  float c = cos(angle);
+  float s = sin(angle);
+  return mat3(
+    c, s, 0.0,               // cột 0
+    -s, c, 0.0,               // cột 1
+    translate.x, translate.y, 1.0 // cột 2
+  );
+}
+
+vec2 applyTransform(mat3 m, vec2 p) {
+  return (m * vec3(p, 1.0)).xy; // thêm w=1, nhân, bỏ w
+}
+```
+
+Một phép nhân `mat3` thay cho ba dòng translate-transform-translate-back rời rạc — hữu ích khi cần compose nhiều transform liên tiếp (rotate rồi translate rồi rotate tiếp) mà không muốn cộng dồn sai số hoặc viết lặp code dịch chuyển ở mỗi bước.
+
+Kỹ thuật ở bài này không dừng lại trong GLSL: Track 4 (React Three Fiber) áp đúng nguyên lý translate→transform→translate-back khi bạn set `mesh.position`/`rotation`/`scale` — `Object3D.updateMatrix()` của Three.js dựng ma trận model theo đúng thứ tự đó phía sau hậu trường. Track 8 (Raymarching) dùng lại chính phép translate-transform-translate-back để lặp một hình vô hạn lần trong domain repetition với bộ nhớ O(1), còn Track 6 (Custom Shader) sẽ cho bạn tự tay inject những ma trận `mat3`/`mat4` này vào pipeline dựng sẵn của Three qua `onBeforeCompile`.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi biến đổi UV bằng ma trận:
+
+1. **Gõ ma trận theo thứ tự hàng vào constructor cột.** `mat2(a,b,c,d)` điền cột 0 $=(a,b)$, cột 1 $=(c,d)$ — gõ nhầm bốn số của $R(\theta)$ theo thứ tự đọc trên giấy cho ra $R(-\theta)$, xoay đúng độ lớn nhưng sai chiều, rất khó phát hiện chỉ bằng cách nhìn kết quả.
+2. **Quên dịch chuyển pivot trước khi xoay.** `M * uv` xoay quanh gốc $(0,0)$ (góc dưới-trái của UV), không phải tâm pattern — thiếu bước `uv - pivot` trước và `+ pivot` sau khiến hình văng quay quanh một góc màn hình thay vì tự xoay tại chỗ.
+3. **Nhầm chiều xoay của toạ độ với chiều xoay của pattern nhìn thấy.** Xoay UV $+\theta$ độ khiến pattern hiển thị lại xoay $-\theta$ độ — quên trực giác nghịch đảo này khiến animation xoay "sai chiều" so với thiết kế, dù công thức toán không hề sai.
+
+</Callout>

@@ -1,0 +1,70 @@
+## GLSL là C có kiểu tĩnh, không phải JavaScript có dấu ngoặc nhọn
+
+GLSL (OpenGL Shading Language) mượn cú pháp bề ngoài của C — dấu chấm phẩy, dấu ngoặc nhọn, hàm có kiểu tham số và kiểu trả về khai báo rõ ràng — nhưng khác biệt quan trọng nhất với JavaScript không nằm ở cú pháp, mà ở chỗ GLSL biên dịch thật trước khi chạy. Vertex shader và fragment shader được trình duyệt biên dịch ngay tại runtime (lúc ứng dụng WebGL khởi tạo), nhưng đó vẫn là một bước biên dịch đúng nghĩa: compiler kiểm tra kiểu của từng biến, từng biểu thức, và từ chối chạy _toàn bộ_ shader nếu bất kỳ dòng nào sai kiểu — không có khái niệm "chạy tới đâu hay tới đó rồi mới báo lỗi" như một hàm JavaScript ném exception giữa chừng. Một biến khai báo `float` thì mãi mãi là `float`; không có chuyện gán lại bằng một giá trị kiểu khác như `let x = 5; x = "năm"` trong JS. Thói quen định kiểu lỏng lẻo mang từ JavaScript sang là nguồn lỗi phổ biến nhất khi mới học GLSL, và gần như toàn bộ phần còn lại của bài này xoay quanh việc chỉ ra chính xác những chỗ thói quen đó gây lỗi.
+
+## Kiểu vô hướng và cái bẫy không có ép kiểu ngầm
+
+GLSL có bốn kiểu vô hướng cơ bản: `float`, `int`, `uint` (số nguyên không dấu), và `bool`. Khác với C/C++ vốn tự động thăng cấp `int` thành `float` khi cần trong biểu thức số học, GLSL ES gần như không có ép kiểu ngầm ở phép gán hay biểu thức số học nào — muốn đổi kiểu, phải gọi tường minh qua constructor như `float(n)` hay `int(x)` (constructor vector như `vec3(1)` cũng thuộc nhóm chuyển đổi tường minh này, không phải một ngoại lệ ép kiểu ngầm).
+
+### `1 / 2` không phải `0.5` — nó là `0`
+
+Hệ quả trực tiếp: nếu cả hai toán hạng của phép chia `/` đều là `int`, GLSL thực hiện phép chia nguyên, bỏ phần dư — $1 \div 2 = 0$, không phải $0.5$. Đây đúng là quy tắc C truyền thống, nhưng gây sốc cho người quen JavaScript hoặc Python 3, nơi `/` luôn trả về số thực. Muốn chia thực, cả hai toán hạng phải là `float` ngay từ đầu:
+
+```glsl
+int a = 1, b = 2;
+float wrong = float(a / b);        // a/b = 0 (chia nguyên) rồi mới đổi sang float -> 0.0
+float right = float(a) / float(b); // đổi sang float TRƯỚC khi chia -> 0.5
+```
+
+### Sai kiểu là lỗi biên dịch, không phải cảnh báo im lặng
+
+`float x = 1;` không biên dịch được — `1` là literal kiểu `int`, không thể gán thẳng cho biến `float` dù giá trị "nhìn có vẻ tương thích". Sửa đúng là thêm dấu chấm: `float x = 1.0;`. Quy tắc này áp dụng ở mọi hướng: `int n = 2.0;` cũng lỗi, vì `2.0` là literal `float`. Khác với JavaScript coi việc gán nhầm kiểu là chuyện bình thường (tự động ép), trình biên dịch GLSL từ chối thẳng và chặn toàn bộ draw call — không có "cảnh báo rồi vẫn chạy".
+
+## vec2/vec3/vec4 và mat2/mat3/mat4: công dân hạng nhất, không phải mảng giả lập
+
+Nếu ở JavaScript một "vector" thường chỉ là mảng `[x, y, z]` hoặc một object thường, GLSL đưa `vec2`/`vec3`/`vec4` (và các biến thể `ivec`, `uvec`, `bvec`) thẳng vào hệ thống kiểu của ngôn ngữ. Toán tử `+ - * /` hoạt động theo từng thành phần một cách tự nhiên: `vec3(1.0, 2.0, 3.0) + vec3(0.1, 0.1, 0.1)` cộng đúng từng cặp `x/y/z` mà không cần viết hàm `add()` thủ công như ở Track 0. Ma trận `mat2/mat3/mat4` cũng vậy, nhưng có một ngoại lệ đáng nhớ: toán tử `*` giữa hai ma trận thực hiện đúng phép nhân ma trận (không phải nhân từng phần tử), còn `*` giữa ma trận và vector thực hiện phép biến đổi tuyến tính — cùng một ký hiệu `*`, hai hành vi khác nhau tuỳ kiểu toán hạng.
+
+### Constructor: splat, composition, và cắt bớt
+
+Constructor của vector chấp nhận vài kiểu tổ hợp tham số, miễn tổng số thành phần khớp đúng kích thước đích:
+
+```glsl
+vec3 splat = vec3(1.0);              // 1 số -> lặp vào cả 3 thành phần: (1.0, 1.0, 1.0)
+vec3 v3 = vec3(0.2, 0.4, 0.6);
+vec4 composed = vec4(v3, 1.0);       // 3 + 1 = 4 -> ghép vec3 và 1 số thành vec4
+vec2 truncated = composed.xy;        // đọc bớt 2 trong 4 thành phần (swizzle, mục sau)
+```
+
+Đây chính là mẫu `vec4(v3, 1.0)` bạn sẽ gõ hàng chục lần ở các bài sau, mỗi khi cần chuyển một điểm 3D `position` (không mang ý nghĩa "hướng ở vô cực") thành toạ độ đồng nhất (homogeneous) trước khi nhân ma trận.
+
+## Swizzling: đọc, ghi và hoán vị chỉ bằng một biểu thức
+
+Swizzling là cách gọi thành phần vector bằng TÊN thay vì chỉ số — và GLSL cung cấp ba bộ tên hoàn toàn tương đương nhau về mặt vị trí bộ nhớ: `.xyzw` (toạ độ), `.rgba` (màu), `.stpq` (toạ độ texture). Ba bộ tên chỉ là "vỏ" khác nhau cho cùng 4 slot — KHÔNG được trộn tên từ hai bộ khác nhau trong cùng một biểu thức swizzle (`.xg` sai, vì `x` thuộc bộ `xyzw` còn `g` thuộc bộ `rgba`).
+
+### Đọc và hoán vị: `.xy`, `.bgr`, và ba bộ tên tương đương
+
+Ở chiều đọc, bạn có thể chọn bất kỳ tập con nào, theo bất kỳ thứ tự nào, và LẶP LẠI tên tuỳ ý: `.xy` lấy 2 trong nhiều thành phần (kết quả `vec2`), `.bgr` đảo ngược thứ tự 3 kênh màu (vẫn `vec3`, chỉ hoán vị), `.xyx` lặp thành phần đầu vào cả vị trí thứ ba (vẫn `vec3` — đọc không có ràng buộc phải duy nhất). Kích thước kết quả luôn bằng đúng số ký tự bạn viết, bất kể vector nguồn to hay nhỏ hơn — miễn nguồn thật sự CÓ thành phần đó.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec3 base = vec3(uv, 0.5);\n  vec3 color = base.xyx; // thu base.yxy, base.bgr, base.zyx ...\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+### Ghi: swizzle làm l-value và giới hạn của nó
+
+Swizzle cũng dùng được ở vế TRÁI phép gán: `color.rg = uv;` ghi hai giá trị của `uv` vào đúng hai slot `r` và `g` của `color`, để nguyên `b`/`a`. Nhưng chiều ghi có một ràng buộc mà chiều đọc không có: KHÔNG được lặp tên thành phần — `color.xx = vec2(1.0, 2.0)` là lỗi biên dịch, vì trình biên dịch không biết ghi giá trị nào (`1.0` hay `2.0`) vào slot `x` khi nó xuất hiện hai lần ở vế trái. Đây là bất đối xứng dễ bị bỏ qua: nhiều người thuộc lòng "swizzle chỉ là sắp xếp lại" từ chiều đọc, rồi bất ngờ khi áp cùng tư duy đó sang chiều ghi.
+
+## Lỗi kiểu: bức tường đầu tiên khi rời thói quen JavaScript
+
+Với hầu hết người học đến từ JavaScript/TypeScript, lỗi kiểu — không phải cú pháp dấu ngoặc hay logic sai — là bức tường đầu tiên và tốn thời gian nhất khi bắt đầu GLSL. Cách vượt qua nhanh nhất là đổi hẳn câu hỏi bạn tự đặt ra khi viết một dòng: thay vì "giá trị này là gì", hãy hỏi "kiểu của giá trị này là gì, và phép toán này có giữ nguyên hay đổi kiểu". Một thói quen rẻ tiền nhưng loại bỏ phần lớn lỗi trước khi chúng xảy ra: LUÔN viết dấu chấm thập phân cho mọi literal cần là `float`, kể cả số không — `0.0` chứ không phải `0`.
+
+## Nền tảng này dẫn tới đâu: hàm dựng sẵn và precision
+
+Từ vựng kiểu và swizzle học ở đây xuất hiện ở gần như mọi dòng shader từ giờ trở đi. Bài hàm dựng sẵn ngay sau đây dựa hoàn toàn vào việc `mix`/`clamp`/`smoothstep` đều có overload hoạt động theo từng thành phần vector nhờ đúng hệ thống kiểu vừa học; bài precision qualifier ngay sau đó lại thêm một trục thứ hai — không chỉ "kiểu gì" mà còn "bao nhiêu bit đứng sau kiểu đó" — vào chính những khai báo `float`/`vec3` bạn vừa quen tay.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới học kiểu và swizzle trong GLSL:
+
+1. **Quên dấu chấm thập phân trên literal cần là `float`.** `float x = 1;` không biên dịch được vì `1` là `int`, GLSL không tự ép kiểu ở phép gán — sửa bằng `1.0`. Ngược lại `int n = 2.0;` cũng lỗi vì `2.0` là `float`.
+2. **Trộn hai bộ tên swizzle khác nhau trong cùng một biểu thức.** `color.rg` hợp lệ, `color.xy` hợp lệ, nhưng `color.rx` thì không — `r` thuộc bộ `rgba`, `x` thuộc bộ `xyzw`, không được trộn dù chúng trỏ tới cùng slot bộ nhớ.
+3. **Lặp tên thành phần ở vế ghi (l-value) của swizzle.** `color.xy = base.xy` không sao, nhưng `color.xx = vec2(1.0, 2.0)` là lỗi biên dịch — chiều đọc cho lặp thoải mái, chiều ghi thì không, vì lặp ở vế trái tạo ra một slot có hai giá trị nguồn mâu thuẫn nhau.
+
+</Callout>

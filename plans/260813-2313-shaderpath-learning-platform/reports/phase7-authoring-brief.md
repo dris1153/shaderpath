@@ -31,6 +31,12 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 
 `theory.vi.mdx` + `theory.en.mdx` (BRIEF: 150–300 words, headings like `## Mục tiêu`/`## Goal`, `## Yêu cầu`/`## Requirements`, NO Callout) + `exercises.ts` (≥1 `build` exercise, 3 hints, ≥5 checklist items, starterCode skeleton + solutionCode) — no references.ts, no demo.tsx needed.
 
+## Shader-heavy lessons (Track 2 onward)
+
+- Lessons with `hasPlayground: true` in the track metadata SHOULD lean on the embedded playground: prefer exercise kind `"shader"` (its `starterCode` opens in the GLSL playground editor with `uTime`/`uResolution`/`uMouse` available and `fragColor` as output — write starter/solution as fragment-shader BODIES exactly like `lib/glsl/assemble.ts` DEFAULT_FRAGMENT).
+- Theory MDX may embed a live editor where hands-on tweaking teaches best: `<Playground source={"void main() {\n  ...\n}"} />` (one per lesson max; the string is a fragment body using the default uniforms).
+- demo.tsx stays mandatory when `hasDemo: true` — for pure-shader lessons an R3F fullscreen plane with sibling `.vert`/`.frag` files (pattern: `content/lessons/02-glsl/shaping-functions-and-2d-sdf/demo.tsx`) is the norm.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

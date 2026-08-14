@@ -1,0 +1,84 @@
+## Không có console.log trên GPU: màn hình chính là debugger
+
+Fragment shader chạy hàng triệu lần song song mỗi frame trên GPU — không có call stack để đặt breakpoint, không có terminal để `console.log`. Kênh duy nhất shader nói chuyện với bạn là màu pixel nó xuất ra. Kỹ thuật debug cốt lõi khai thác đúng sự thật đó: gán giá trị nghi ngờ vào `gl_FragColor` (hoặc `fragColor` trong GLSL ES 3.00) thay vì giá trị màu thật, rồi *đọc* kết quả bằng mắt trên toàn bộ màn hình cùng lúc — một dạng `console.log` chạy song song cho 8 triệu pixel một lúc mà không công cụ CPU nào làm được.
+
+```glsl
+// Thay vì render màu thật, xuất thẳng giá trị cần kiểm tra
+fragColor = vec4(vec3(suspectValue), 1.0);
+```
+
+Đây không phải mẹo phụ — với shader, đây **là** phương pháp debug chính, không phải phương án cuối cùng khi hết cách.
+
+## Bốn kỹ thuật xuất giá trị ra màu
+
+**Remap giá trị có dấu.** Kênh màu chỉ hiển thị đúng trong $[0, 1]$ — giá trị âm bị GPU clamp về $0$ khi hiển thị, nên xuất thẳng một giá trị có dấu (như thành phần normal, chạy trong $[-1, 1]$) làm mất sạch nửa âm, chỉ còn toàn màu đen ở nơi đáng lẽ có thông tin. Sửa bằng phép remap tuyến tính:
+
+$$
+x_{\text{remap}} = 0.5x + 0.5
+$$
+
+```glsl
+fragColor = vec4(vec3(x * 0.5 + 0.5), 1.0); // -1..1 → 0..1
+```
+
+**Cô lập từng kênh.** Đưa nhiều giá trị vào cùng lúc ba kênh RGB (`vec3(a, b, c)`) để so sánh chúng cạnh nhau trong một lần render, thay vì đổi qua đổi lại từng giá trị một — mắt phân biệt màu đỏ/xanh lá/xanh dương nhanh hơn nhiều so với so sánh hai lần render xám riêng biệt.
+
+**`step()` như một đầu dò nhị phân.** Khi câu hỏi chỉ là "giá trị này có vượt ngưỡng T không", đừng nhìn một dải xám mờ nhạt — ép nó thành đen/trắng dứt khoát:
+
+```glsl
+fragColor = vec4(vec3(step(threshold, suspectValue)), 1.0); // trắng nếu >= threshold, đen nếu không
+```
+
+**Bắt NaN/Inf bằng màu báo động.** `NaN` lan truyền âm thầm qua mọi phép toán sau nó (chia 0/0, `sqrt` của số âm, `acos` ngoài $[-1,1]$) và thường hiển thị thành các pixel đen hoặc nhấp nháy ngẫu nhiên — rất dễ bị nhầm là lỗi khác. Chặn đứng nó bằng một điều kiện ưu tiên cao nhất, tô hẳn một màu không thể lẫn với bất cứ thứ gì khác trong cảnh:
+
+```glsl
+if (isnan(suspectValue)) { fragColor = vec4(1.0, 0.0, 1.0, 1.0); return; } // magenta = NaN
+if (isinf(suspectValue)) { fragColor = vec4(1.0, 1.0, 0.0, 1.0); return; } // vàng = Inf
+```
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float wave = sin(uv.x * 12.0 + uTime); // range -1..1\n\n  // keo chuot len/xuong: gia tri tho (am bi clip den) doi gia tri da remap\n  float raw = wave;\n  float remapped = wave * 0.5 + 0.5;\n  float v = uMouse.y > 0.5 ? remapped : raw;\n\n  fragColor = vec4(vec3(v), 1.0);\n}\n"} />
+
+## Probe theo vùng và cắt bớt pipeline
+
+`gl_FragCoord` cho toạ độ pixel tuyệt đối trên màn hình — dùng nó để giới hạn probe vào đúng một vùng nhỏ thay vì phủ toàn màn hình, hữu ích khi giá trị cần soi chỉ có ý nghĩa cục bộ (ví dụ một ô lưới cụ thể trong pattern tiling):
+
+```glsl
+if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) {
+  fragColor = vec4(vec3(suspectValue), 1.0);
+  return; // return sớm để vùng probe không lẫn với phần còn lại của cảnh
+}
+```
+
+Với pipeline nhiều giai đoạn (tính normal → lighting → tone mapping → post effect), comment tạm những giai đoạn phía sau và output thẳng kết quả của giai đoạn nghi ngờ là cách nhanh nhất để xác nhận lỗi nằm ở đâu trước khi soi kỹ bên trong nó.
+
+## Kỷ luật debug: đổi một thứ, giữ baseline, chia đôi pipeline
+
+Ba kỹ thuật trên chỉ phát huy tác dụng khi đi kèm kỷ luật, không phải đổi ngẫu nhiên rồi đoán:
+
+- **Đổi đúng một thứ mỗi lần.** Sửa hai chỗ cùng lúc rồi thấy hình đúng nghĩa là bạn không biết chỗ nào thực sự sửa được lỗi — lần sau gặp bug tương tự lại phải dò lại từ đầu.
+- **Giữ một bản "known-good" để so sánh.** Trước khi sửa, chụp lại (hoặc nhớ chính xác) hình dạng đúng của một phần shader đã chắc chắn hoạt động, để mọi thay đổi sau đó có gì để đối chiếu thay vì đoán mò "trông có vẻ đúng hơn".
+- **Chia đôi pipeline (binary search).** Với shader dài nhiều bước, đừng dò từ dòng đầu tiên — probe điểm giữa pipeline trước; nếu giá trị ở đó đã sai, lỗi nằm ở nửa đầu, nếu đúng thì nằm ở nửa sau. Mỗi lần probe loại bỏ được một nửa nghi phạm, số bước dò giảm từ $O(n)$ xuống $O(\log n)$ so với dò tuần tự từng dòng.
+
+## Ca thực tế: "vòng tròn render ra màu đen"
+
+Một hiệu ứng rim-light trên một vòng tròn: tính hướng pháp tuyến gần đúng bằng `vec2 N = p` (với `p = uv - center`), rồi so `dot(N, L)` với một ngưỡng cao để tạo điểm sáng lấp lánh trên viền vòng. Kết quả thực tế: cả vòng tròn render ra màu đen tuyền, không một điểm sáng nào xuất hiện dù xoay góc nhìn `L` thế nào.
+
+Ba probe màu lần lượt thu hẹp nghi phạm:
+
+1. **Probe A — xuất thẳng `N` chưa remap:** `vec3(N, 0.0)`. Một nửa màn hình đen thui (giá trị âm bị clamp) — dấu hiệu đầu tiên: giá trị này có dấu và có thể không nằm trong khoảng kỳ vọng.
+2. **Probe B — remap `N` bằng `N * 0.5 + 0.5`:** đúng ra một vector đơn vị phải cho màu trải rộng gần $0$ đến gần $1$, tương phản rõ. Thực tế màu ra rất "bệt", quẩn quanh xám giữa $0.5$ — bằng chứng trực tiếp: $\|N\|$ nhỏ hơn $1$ rất nhiều, tức `N` **chưa được normalize**.
+3. **Probe C — cô lập chính điều kiện ngưỡng:** `vec3(step(0.9, dot(N, L)))`. Toàn màn hình đen — xác nhận `dot(N, L)` không bao giờ vượt $0.9$, đúng là nguyên nhân trực tiếp khiến điểm sáng chẳng bao giờ bật lên.
+
+Sửa chỉ một dòng — `vec2 N = normalize(p);` — và điểm sáng xuất hiện đúng như thiết kế. Ba probe không đoán mò: chúng thu hẹp nghi phạm từ "cả hiệu ứng sai" xuống đúng một dòng thiếu `normalize()`, đúng tinh thần chia-để-trị đã nói ở phần trước.
+
+Kỹ thuật debug-by-color không dừng lại ở Track này: Track 7 (Procedural & Noise) sẽ cần probe giá trị hash/noise thô trước khi tin chúng cho vào FBM, và Track 9 (GPGPU) dùng đúng nguyên lý này để soi dữ liệu position/velocity được mã hoá trong texture — chỉ khác là bạn probe một texture thay vì một biểu thức inline.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi debug shader bằng màu:
+
+1. **Xuất giá trị có dấu thẳng ra màu mà không remap.** Nửa âm bị GPU clamp về đen, khiến bạn kết luận nhầm "giá trị này luôn bằng 0" trong khi thực ra nó chỉ đang bị cắt mất một nửa thông tin — luôn `* 0.5 + 0.5` trước khi nghi ngờ giá trị sai.
+2. **Bỏ qua khả năng vector chưa normalize khi thấy màu 'bệt', ít tương phản.** Một vector đơn vị remap ra màu trải rộng rõ rệt; màu quẩn quanh xám giữa gần như luôn là dấu hiệu độ lớn nhỏ hơn 1 rất nhiều — như trong ca "vòng tròn đen" ở trên, chứ không phải do ánh sáng yếu.
+3. **Đổi nhiều chỗ cùng lúc rồi mừng vội khi hình "trông đúng hơn".** Không giữ baseline và không đổi từng thứ một khiến bạn không biết thay đổi nào thực sự sửa lỗi — bug tương tự quay lại ở chỗ khác vẫn phải dò từ đầu.
+
+</Callout>

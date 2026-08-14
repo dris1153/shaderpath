@@ -1,0 +1,87 @@
+## Gradients as a Function of Position: Linear and Radial
+
+A gradient in a shader isn't a texture lookup — it's a **continuous function of position**, exactly the way last lesson's SDF was a continuous function returning distance. The only difference: instead of using that distance to decide inside-versus-outside a shape, a gradient uses a smoothly varying scalar to interpolate between two colors with `mix`.
+
+A **linear gradient** picks a direction `dir` (normalized), then projects `uv` onto it with `dot(uv, dir)` — the same projection from the `dot-and-cross-products` lesson. The result increases along `dir` and stays constant along the direction perpendicular to it:
+
+```glsl
+float t = dot(uv - 0.5, dir) + 0.5; // recenter around 0 before projecting
+vec3 color = mix(colorA, colorB, clamp(t, 0.0, 1.0));
+```
+
+A **radial gradient** reuses the exact Euclidean distance formula from last lesson — instead of `length(p) - r` to split inside/outside, just `length(p)` itself becomes the interpolation parameter:
+
+```glsl
+float t = length(uv - 0.5);
+vec3 color = mix(colorA, colorB, clamp(t, 0.0, 1.0));
+```
+
+The two only differ in how `t` is measured: linear measures along one axis, radial measures in every direction from a center. Last lesson's "compute the scalar first, color later" mindset carries over unchanged.
+
+## fract(uv * N): The Tiling Operator
+
+`fract(x)` returns the fractional part of `x`, discarding the integer part — a sawtooth function that repeats every 1 unit. Multiplying `uv` by `N` before calling `fract` compresses exactly `N` cycles of that sawtooth back into the original `[0, 1)` range — this is the single operator behind every tiling pattern in this lesson.
+
+That multiply-then-fract splits space into two distinct spaces:
+
+- **Global space**: `uv` itself, running continuously across the whole canvas, `[0, 1)`.
+- **Cell space** (or local space): `fract(uv * N)`, always inside `[0, 1)` no matter which cell you're in — it "resets" every time you cross into a new cell.
+
+The integer part `fract` discards isn't lost — `floor(uv * N)` recovers exactly that part, giving the **cell id**: a pair of integers identifying which cell you're currently standing in. Together, any global position splits cleanly into "which cell" plus "where inside that cell":
+
+```glsl
+vec2 grid = uv * N;
+vec2 id = floor(grid);    // which cell
+vec2 local = fract(grid); // where inside it, always 0..1
+```
+
+## Variation by id: Checker and Row Offset
+
+With `id` available, the next step is using it so each cell looks different instead of identically repeating. The checkerboard is the classic example: `mod(id.x + id.y, 2.0)` alternates between $0$ and $1$ in exactly the checkerboard pattern, because the sum of two integers flips parity every time either coordinate increments by 1.
+
+This lesson's demo (with the "Checker" motif selected) uses exactly that expression to pick between two background colors per cell. Row offset — a brick-wall-style layout — is a different kind of variation: it doesn't change color, it changes **where a cell's boundary sits**. Odd rows get shifted by half a cell width in `x`, *before* multiplying by `N`:
+
+```glsl
+float rowId = floor(uv.y * N);
+if (rowOffsetOn) {
+  uv.x += mod(rowId, 2.0) * (0.5 / N);
+}
+vec2 grid = uv * N; // continues as normal
+```
+
+Toggle "Row offset" in the demo and compare the two modes: plain checker keeps every cell perfectly aligned in vertical columns, offset checker staggers alternating rows like brickwork — the exact same checker expression, differing only in whether the cell boundary gets shifted before it's computed.
+
+## Rotation Inside a Cell: the Rotation Matrix Returns from Track 0
+
+The 2D rotation matrix built in the `matrix-basics` lesson, $R(\theta) = \begin{pmatrix}\cos\theta & -\sin\theta\\ \sin\theta & \cos\theta\end{pmatrix}$, applies directly to a cell's local coordinate — with one mandatory step: that coordinate must be **centered** into $[-0.5, 0.5]$ before rotating, so the rotation pivots around the cell's own center rather than its bottom-left corner (pivoting around a corner throws the whole motif out of its cell, overlapping the neighbor).
+
+```glsl
+mat2 rotate2d(float angle) {
+  return mat2(cos(angle), sin(angle), -sin(angle), cos(angle));
+}
+vec2 cell = rotate2d(uRotation) * (fract(grid) - 0.5);
+```
+
+This is exactly the `rotate2d` function from The Book of Shaders' "2D Matrices" chapter. One subtlety worth flagging: this rotates the **sampling** coordinate (the point used to evaluate the motif), not the rendered shape directly — so the rotation direction visible on screen ends up opposite the sign of the angle you pass in. The next lesson (Matrix Transforms in Shaders) digs into exactly this "inverted frame of reference" and how to compose multiple transforms in the correct order.
+
+Try it directly in the demo: the "Checker" motif at $0°$ rotation fills each cell edge-to-edge (its box SDF exactly matches the cell boundary); as rotation increases, the four corners of every cell start showing small dark triangular gaps — because the true cell boundary (set by `fract`) never moves, only the sampling "brush" evaluated inside it rotates.
+
+## Seams, and Why Centering (p - 0.5) Removes Them
+
+`fract()` has a hard discontinuity at every integer boundary — the value jumps straight from just-under-1 back to 0 the instant you cross into the next cell. If a motif isn't symmetric around its own cell's center (say, a circle SDF evaluated directly on `fract(grid)` without subtracting $0.5$, sitting shifted toward the cell's bottom-left corner instead), its distance to the cell's four edges won't be equal — the near edge gets crowded, spilling into the neighboring cell, while the far edge leaves an oversized gap. That's a **seam**: a ragged join where the spacing between motifs is uneven on either side of a cell boundary.
+
+`fract(grid) - 0.5` doesn't remove `fract`'s underlying discontinuity — it's still there beneath the surface. What it does is relocate coordinate $0$ to sit exactly at **each cell's own geometric center**, so any motif built from `length()` or `abs()` (both symmetric around their origin) automatically sits equidistant from all four cell edges — never favoring one side. No seam vanishes mathematically; the motif is simply now perfectly symmetric, so the eye no longer registers that uneven spacing at all.
+
+## From a Single Cell to a Full Poster
+
+The four ingredients covered here — gradients as continuous functions of position, `fract`/`floor` splitting space into cell space plus id, variation driven by that id, and centered per-cell rotation — combine into the recipe behind nearly every procedural pattern. The next lesson, Matrix Transforms in Shaders, formalizes composing multiple transforms (scale, rotate, translate) in the correct matrix-multiplication order; the module's closing checkpoint (Animated Tiled Pattern Poster) combines this exact tiling technique with the earlier cosine-palette checkpoint into one finished shader. Further out, "domain repetition" in Track 8 (Raymarching) generalizes this exact `fract`/`floor` split from a flat 2D grid into infinite 3D space — letting a raymarcher render an endlessly repeating field of objects using only $O(1)$ memory, the very same space-splitting trick learned here, just with one extra dimension.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with fract/floor patterns:
+
+1. **Computing checker on a continuous coordinate instead of a floored id.** Writing `mod(uv.x * N + uv.y * N, 2.0)` instead of `mod(floor(uv.x*N) + floor(uv.y*N), 2.0)` produces a smooth color ramp along both axes instead of crisp checker cells — `mod` on a continuous real number never creates a jump exactly at the cell boundary; only `floor` discretizes a position into an integer cell index.
+2. **Rotating before centering.** Writing `rotate2d(angle) * fract(grid)` (missing the `- 0.5`) makes the rotation pivot around the cell's $(0,0)$ corner instead of its center — the motif swings noticeably off to one side, even spilling into the neighboring cell once the angle is large enough.
+3. **Applying the row offset after multiplying by N.** Adding the shift to the `grid` variable (already multiplied by N) instead of to the raw `uv` (before multiplying) gets the units wrong — it shifts by several whole cells instead of exactly half a cell, and the offset stops being consistent whenever the tile-count slider changes N, because the `0.5` never gets divided by `N` in the right coordinate space.
+
+</Callout>

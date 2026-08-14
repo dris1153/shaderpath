@@ -1,0 +1,41 @@
+## GPUs Don't Run "One Independent Thread Per Pixel" the Way You'd Assume
+
+The most misleading mental model when you first write a fragment shader: imagining the GPU hands each pixel its own CPU-like thread, running fully independently, with `if` branching freely at no extra cost. In reality GPUs use a model called **SIMT** (Single Instruction, Multiple Threads): a fixed hardware group of lanes all execute **the exact same machine instruction** at the exact same time, differing only in the data each lane operates on. There's no "thread per pixel" in the CPU sense — there are groups of pixels hard-locked to run in lockstep with each other. Understanding that grouping unit correctly is the key to understanding why `if` on a GPU is nothing like `if` on a CPU.
+
+## Warps/Wavefronts: Groups of 32 or 64 Lanes Running in Lockstep
+
+That grouping unit has a vendor-specific name: NVIDIA calls it a **warp**, fixed at 32 lanes; AMD calls it a **wavefront** — 64 lanes on the older GCN architecture, while the newer RDNA architecture supports both wave32 and wave64 modes (source: each vendor's official architecture documentation, see References). All 32 or 64 lanes in a warp/wavefront fetch exactly one instruction from the decoder, execute it simultaneously, and each lane applies that instruction to its own private registers (a different pixel, a different UV coordinate, a different intermediate value). This is exactly why GPUs achieve massive throughput on "do the same operation across huge amounts of data" work — the very nature of a fragment shader — but it's also precisely the constraint that makes branching complicated.
+
+## Divergence: When Lanes Disagree, BOTH Branches Run
+
+What happens when an `if` inside a warp evaluates differently across lanes — say 20 lanes take the `true` branch, the remaining 12 take `false`? The hardware cannot execute two different instructions at once for the same warp (that's the definition of lockstep), so it does the only thing it can: run **both branches sequentially** for the entire warp, using an **execution mask** to suppress writes on lanes not in the currently-running branch. Pass 1: all 32 lanes "run" the `true` branch's code, but only 20 lanes actually commit results — the other 12 are silently masked off. Pass 2: flip it for the `false` branch. The total cost is roughly the **sum** of both branches' cost, for the entire warp — not an average, and definitely not "you only pay for the path you took." This is called **divergence**, and it's the single reason `if` on a GPU behaves nothing like `if` on a CPU.
+
+## When if Is Nearly Free: Branching on a Uniform Condition
+
+If an `if`'s condition is identical across every lane in the warp — say, branching on a `uniform` variable (the same value for every pixel in the whole draw call) — there's nothing to diverge on: the entire warp takes one branch, the hardware runs only that branch, at no extra cost compared to having no `if` at all. Branching on a uniform is free in the literal sense. The problem only shows up when a condition depends on data that **varies per pixel** — a UV coordinate, the result of a `distance` call, a noise value — because then neighboring lanes in the same warp will almost certainly disagree at some boundary of that condition.
+
+## When if Is Expensive: Divergent Branching in Hot Loops
+
+Divergence cost only becomes something to actually worry about when two conditions hold at once: the condition diverges per pixel, AND the content of both branches is heavy enough (several `sin`/`cos`/`pow` calls, a texture fetch, or an inner loop). A divergent `if` wrapping a single simple assignment is barely worth thinking about — a few machine instructions' difference. But that same `if` sitting inside a loop that runs hundreds of times per pixel, with a heavy branch containing a dozen transcendental calls, multiplies the divergence penalty by the iteration count — exactly the scenario this lesson's demo deliberately sets up so you can measure it on your own hardware.
+
+## Branchless Rewrites with step/mix — and Their Cost
+
+The previous lesson covered writing `color = mix(b, a, step(0.5, x))` instead of `if (x > 0.5) color = a; else color = b;`. With a divergent condition inside a hot loop, this branchless version often wins: every lane always computes a fixed amount of work (both branches, always), so there's no "surprise" cost of suddenly computing both paths — that cost is paid upfront, uniformly, and the shader compiler usually optimizes a straight-line sequence with no jump better than it would a branch (there's no `branch` instruction to mispredict). But branchless isn't free either: it always pays the heaviest branch's cost for EVERY lane, including lanes that would have taken the cheap path if the code hadn't been rewritten as always-both — and readability drops in exchange, since a few layers of nested `mix`/`step` read far worse than an `if/else` block with clearly named branches. Branchless doesn't always win; the closing section returns to exactly that point.
+
+## Texture Fetches Inside Divergent Branches: Another Trap
+
+One special case worth naming even without going deep here: calling `texture()` inside a divergent `if` can break the GPU's ability to compute screen-space derivatives (`dFdx`/`dFdy`), which automatic mip-level selection relies on — some drivers handle this case poorly or incorrectly, producing aliased or wrong-mip texture output. The full derivative-and-mipmap story comes back properly in later tracks' texture and filtering lessons; for now, just remember: a divergent `if` wrapping a texture sample deserves more caution than a divergent `if` wrapping pure arithmetic.
+
+## Measure, Don't Assume
+
+Every "warp = 32," "wavefront = 64" figure above is architectural fact, but the actual real-world cost of a specific divergence — how many milliseconds, whether a branchless rewrite is even worth it — depends on the driver, the GPU generation, how heavy the branches are, and whether the shader compiler already "flattens" a simple `if` into branchless code on your behalf (many compilers do this for short `if` blocks, making a manual branchless rewrite redundant at times). No formula replaces measuring on the actual target hardware. Track 12 (Performance & Production) returns to this exact topic with real measurement tools — Spector.js, Chrome DevTools, RenderDoc — turning this lesson's "estimates" into real numbers on your specific GPU.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when reasoning about branching cost:
+
+1. **Mechanically treating every divergent `if` as "double the cost."** The cost only becomes significant when both conditions hold: the data actually diverges across lanes in a warp, AND the branch content is heavy enough. A divergent `if` wrapping a single constant assignment is basically unmeasurable — over-worrying about this case only hurts readability for nothing.
+2. **Confusing "divergence" with "how often each branch is taken."** An `if` where 90% of pixels take branch A and 10% take branch B diverges just as badly as a 50/50 split — as long as those two groups are interleaved within the SAME warp. Conversely, a condition that cleanly splits the screen into a left half and a right half costs almost nothing extra for most warps, since most warps sit entirely within one half (only warps straddling the boundary actually diverge).
+3. **Writing a branchless version of an `if` that was already uniform.** Branching on a `uniform` variable costs nothing extra — wrapping it in `mix`/`step` buys zero performance and only makes the code harder to read. Branchless is a tool for per-pixel data-dependent divergence, not a rule to apply blindly to every `if`.
+
+</Callout>
