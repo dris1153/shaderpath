@@ -21,9 +21,15 @@ test("selection note persists and appears on the notes page", async ({
 }) => {
   await page.goto("/vi/lesson/cartesian-and-uv-space");
   await expect(page.locator("#lesson-body")).toBeVisible();
+  // Earlier suite tests saved reading progress → the tracker restores a deep
+  // scroll position; pin back to the top so the selected paragraph is on screen
+  await page.waitForTimeout(500);
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   // Select the first theory paragraph programmatically, then fire mouseup.
   // The selection listener attaches after hydration — retry until the popover shows.
+  // Click inside the retry loop: a re-render between visibility and click
+  // would otherwise strand the click on a stale node.
   const noteButton = page.getByRole("button", { name: "Ghi chú", exact: true });
   await expect(async () => {
     await page.evaluate(() => {
@@ -37,8 +43,8 @@ test("selection note persists and appears on the notes page", async ({
       document.dispatchEvent(new MouseEvent("mouseup"));
     });
     await expect(noteButton).toBeVisible({ timeout: 1_000 });
-  }).toPass({ timeout: 15_000 });
-  await noteButton.click();
+    await noteButton.click({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
   await page
     .getByPlaceholder("Viết ghi chú của bạn…")
     .fill("e2e ghi chú kiểm thử");

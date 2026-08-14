@@ -20,6 +20,9 @@ const E2E_DB = `data/e2e-${Date.now()}.db`;
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Serial: parallel workers on one dev server made timing-sensitive tests
+  // (frame counters, debounced saves) flaky as the app grew.
+  workers: 1,
   use: {
     baseURL: "http://localhost:3100",
   },

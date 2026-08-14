@@ -40,8 +40,13 @@ export function LessonNotesLayer({
         <div
           className="fixed z-50"
           style={{
-            top: Math.min(selection.rect.bottom + 8, window.innerHeight - 220),
-            left: Math.min(selection.rect.left, window.innerWidth - 340),
+            // Clamp inside the viewport (below the sticky header) even when
+            // the selection sits partially off-screen
+            top: Math.min(
+              Math.max(selection.rect.bottom + 8, 64),
+              window.innerHeight - 240,
+            ),
+            left: Math.max(8, Math.min(selection.rect.left, window.innerWidth - 340)),
           }}
         >
           <Card className="w-80 shadow-lg">
