@@ -1,0 +1,82 @@
+## The Idea: Scatter Seed Points, Shade by Nearest Distance
+
+Voronoi noise — usually called Worley noise, after Steven Worley, who published the technique in 1996 — starts from an old geometric idea with a very modern GPU implementation: scatter a set of "feature points" across the plane, then for every pixel ask "which point is closest to me, and how far away is it?" The answer to that question — a single distance number per pixel — is the entire noise.
+
+The trick is scattering points without storing a single one in GPU memory: split the plane into a square grid, let each cell own exactly one point, and place that point at the hash of the cell's integer coordinate — the same hash-per-cell technique from the `hash-functions-on-gpu` lesson. No point texture, no buffer, just one deterministic `hash2(cell)` call running independently per pixel.
+
+```glsl
+vec2 h = hash2(cell); // the seed point's position inside cell "cell", in [0,1)
+```
+
+## The 3x3 Neighbor Scan: Why Your Own Cell Isn't Enough
+
+The naive mistake: measure distance only to the feature point owned by the pixel's own cell. That's correct near the cell center but wrong near the edge — a pixel sitting right next to its cell's border can easily be closer to a **neighboring** cell's feature point than to its own. Concretely: a pixel at local coordinate $f = (0.9, 0.5)$ (hugging the right edge) has its own cell's feature point at $(0.15, 0.6)$ — distance $\approx 0.757$ — but the neighboring cell's point, expressed in the current cell's frame, sits at $(1.2, 0.55)$ — distance $\approx 0.304$, far closer. Ignoring that neighbor produces a jagged seam right at every cell border — exactly the bug this lesson's exercise walks through.
+
+The fix: scan the full $3 \times 3$ block of neighboring cells (including your own), measure distance to all 9 feature points, and keep the minimum:
+
+```glsl
+float f1 = 8.0;
+for (int j = -1; j <= 1; j++)
+for (int i = -1; i <= 1; i++) {
+  vec2 b = vec2(float(i), float(j));
+  vec2 h = hash2(cell + b);
+  float d = length(b + h - f);
+  f1 = min(f1, d);
+}
+```
+
+$3 \times 3$ is enough because jitter (covered below) is clamped to $[0, 1]$ — a feature point never drifts outside its owning cell, so no point further than one cell away could ever beat a point already found within the 3x3 neighborhood.
+
+## F1, F2, and F2 − F1: Organic Cell Borders for Free
+
+$F_1$ is the distance to the **nearest** feature point; $F_2$ is the distance to the **second-nearest**. Both fall out of the exact same 3x3 scan — just keep the two smallest values instead of one. The geometric boundary between two Voronoi cells is precisely the set of points equidistant from both feature points — exactly where $F_2 - F_1 \to 0$. Thresholding that difference with `smoothstep` draws a thick, organic border that follows the true cell boundary without ever building a single polygon:
+
+```glsl
+float border = 1.0 - smoothstep(0.0, 0.08, f2 - f1);
+```
+
+## Cell-ID: Flat-Coloring Each Region with a Hash
+
+Instead of shading by distance, hash the **integer coordinate of the winning cell** (not the pixel's own coordinate!) into a color — every pixel belonging to the same Voronoi region automatically gets the same color, because they all share the same `f1Cell`. The result is a flat-shaded mosaic, useful whenever Voronoi is used as a random "material index" (region ID) rather than a continuous field.
+
+## Three Distance Metrics: Change the Ruler, Change the Cell Shape
+
+`length(r)` isn't the only way to define "close": swapping the distance function reshapes the Voronoi cells entirely, without touching a single line of the 3x3 scan.
+
+$$
+\|r\|_2 = \sqrt{r_x^2 + r_y^2}, \qquad \|r\|_1 = |r_x| + |r_y|, \qquad \|r\|_\infty = \max(|r_x|, |r_y|)
+$$
+
+Euclidean ($\|\cdot\|_2$) gives round, organic cells — the shape most people picture when they hear "Voronoi." Manhattan ($\|\cdot\|_1$) gives diamond-shaped cells with 45° edges. Chebyshev ($\|\cdot\|_\infty$) gives straight-edged square cells — the last two read as artificial and architectural rather than organic, which is exactly right for stylized tiling or circuit-board patterns.
+
+## Jitter: From a Perfect Grid to Full Chaos
+
+`uJitter` multiplies directly into the hash offset before it's added to the cell position: `r = b + h * jitter - f`. At `jitter = 0`, every feature point sits dead-center in its cell (since `h * 0 = 0` leaves only the `b` offset) — the Voronoi pattern degenerates into a perfectly even, entirely predictable grid. At `jitter = 1`, points move freely across the full cell footprint according to their hash value — the underlying lattice is still there (this stays a Voronoi diagram over a square grid, not true Poisson-disk sampling), but the eye stops recognizing it. Values in between form a continuous dial between "visible artificial order" and "organic chaos" — sweep it in the demo and watch the exact point where the square grid dissolves into shapeless cells.
+
+## Smooth Voronoi: Erasing the Derivative Kink with Log-Sum-Exp
+
+The `min()` in a standard F1 has a derivative problem: right at the boundary between two cells, `min()` snaps abruptly from "tracking point A" to "tracking point B" — the field's derivative (used for normal maps or bump mapping) is discontinuous there, even though $F_1$ itself is continuous. The result: a material using raw $F_1$ as a height field gets hard creases right along every cell border, invisible when looking at $F_1$ directly but glaring once you compute a normal from it.
+
+Inigo Quilez's technique replaces `min()` with a softer weighted sum — log-sum-exp:
+
+$$
+d_{\text{smooth}} = -\frac{1}{k}\ln\sum_{i} e^{-k\,d_i}
+$$
+
+When $k$ is large enough, the term for the smallest $d_i$ dominates the sum completely, so $d_{\text{smooth}} \approx \min_i d_i$ — an excellent approximation of min, but one built purely from continuous exponentials, infinitely differentiable ($C^\infty$), with no kink anywhere. Switch from F1 to "smooth voronoi" in the demo and zoom near a cell border to see the difference: F1 has a sharp crease; the smooth version bends through it seamlessly.
+
+## Applications and Cost: Stone, Cracked Mud, Cells
+
+A properly thresholded $F_2 - F_1$ gives cracked marble or dried mud; flat cell-ID coloring gives reptile scales, organic tiling, or a random territory map; raw F1 as a height field gives biological cell surfaces or — combined with the previous lesson's domain warping — shimmering caustics-like patterns underwater. The cost: every pixel needs exactly 9 hash calls (the 3x3 block), far cheaper than searching a real list of points for the nearest one; in 3D, the neighborhood becomes $3^3 = 27$ cells — Worley's original paper works through how to prune that search once $F_1$ is already small enough to guarantee no other cell can win.
+
+The next lesson (Curl Noise & Flow Fields) leaves static fields behind for moving vector fields — but the hash-per-cell and neighbor-scan techniques from this lesson return unchanged in Track 9 (GPGPU), where Voronoi becomes a partition scheme for GPU particle simulations.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common Voronoi/Worley implementation mistakes:
+
+1. **Scanning only the pixel's own cell, skipping the 8 neighbors.** Correct near cell centers, wrong near edges — a pixel near a cell border often has a neighboring cell's feature point closer than its own, producing a jagged seam at every cell boundary that's easy to misdiagnose as a hash bug instead of a scan-range bug.
+2. **Treating $F_2 - F_1$ as a real signed distance to the border.** It isn't — the "border" width it produces stretches and shrinks with the distance between the two feature points on either side (borders between nearby points are thinner than borders between far-apart ones), unlike a true SDF's uniform width.
+3. **Letting jitter exceed the $[0, 1]$ range without widening the scan.** The entire "3x3 is enough" argument depends on feature points never leaving their owning cell; jitter above 1 (or extra offset added outside the hash) can push a point two cells away, outside the scanned neighborhood — Voronoi silently starts missing the true nearest point with no error to flag it.
+
+</Callout>

@@ -1,0 +1,67 @@
+## A Vector Field for Motion: Why a Raw Gradient "Compresses" Particles
+
+The naive way to turn a noise field into motion: take a scalar potential field $\psi(p)$ (a familiar FBM from earlier lessons), compute its gradient $\nabla\psi$, and use that vector directly as velocity for particles or smoke. It sounds reasonable — the gradient always points toward the direction $\psi$ increases fastest — but it has a serious physical flaw: the gradient of any scalar function always points *toward* its local maxima and *away from* its local minima. Particles drifting along that field don't spread naturally — they get pulled into a handful of "wells," piling up denser and denser over time while other regions empty out entirely. This is **compression**: the field fails to conserve area/volume as particles move through it.
+
+## Divergence Intuition: ∇·F Measures Local Expansion
+
+The quantity that precisely measures "how much this field is compressing or expanding right here" is called **divergence**, written $\nabla \cdot F$. For a 2D field $F = (F_x, F_y)$:
+
+$$
+\nabla \cdot F = \frac{\partial F_x}{\partial x} + \frac{\partial F_y}{\partial y}
+$$
+
+Intuition: drop a small square of particles at point $p$ and let it drift along $F$ for a short time — $\nabla \cdot F(p) > 0$ means the square **expands** (particle density drops, the neighborhood "swells"); $\nabla \cdot F(p) < 0$ means it **shrinks** (density rises, particles clump); $\nabla \cdot F(p) = 0$ means the area stays the same — particles may swirl, stretch, or deform, but the total area they occupy never changes. A field with divergence zero everywhere is called **incompressible** — exactly the property missing from the raw gradient field above.
+
+## Curl in 2D: Rotate the Gradient 90°, Divergence Vanishes by a One-Line Proof
+
+Curl noise fixes exactly that problem with one remarkably simple transform: instead of using $\nabla\psi$ directly, **rotate it 90°**:
+
+$$
+F = \left(\frac{\partial \psi}{\partial y},\ -\frac{\partial \psi}{\partial x}\right)
+$$
+
+This field $F$ is always perpendicular to $\nabla\psi$ at every point — meaning it's always tangent to the level curve of $\psi$ passing through that point, never pointing toward an extremum. $F$'s divergence vanishes **algebraically**, not by numerical coincidence:
+
+$$
+\nabla \cdot F = \frac{\partial}{\partial x}\!\left(\frac{\partial \psi}{\partial y}\right) + \frac{\partial}{\partial y}\!\left(-\frac{\partial \psi}{\partial x}\right) = \frac{\partial^2 \psi}{\partial x\, \partial y} - \frac{\partial^2 \psi}{\partial y\, \partial x} = 0
+$$
+
+The two mixed partial derivatives $\partial^2\psi/\partial x\partial y$ and $\partial^2\psi/\partial y\partial x$ are equal for any sufficiently smooth function (Schwarz's/Clairaut's theorem) — so their difference is always zero, regardless of which specific FBM $\psi$ happens to be. Since a smooth function's level curves never cross themselves, a direct consequence follows: a curl field's streamlines never cross each other either — exactly the swirling, tangle-free "visual signature" you've seen in every curl-noise demo.
+
+## Numerical Derivatives: Central Differences and the Epsilon Tradeoff
+
+GLSL has no symbolic derivative for an arbitrary noise function — the formula above has to be approximated with a **central difference**:
+
+$$
+\frac{\partial \psi}{\partial x} \approx \frac{\psi(p + \varepsilon\,\hat x) - \psi(p - \varepsilon\,\hat x)}{2\varepsilon}
+$$
+
+$\varepsilon$ is a hand-picked hyperparameter, and erring in either direction hurts: too large samples $\psi$ at two widely separated points, losing high-frequency detail (the FBM's finer octaves get flattened out, the gradient reads as "blunt"); too small pushes the subtraction of two nearly-equal numbers right up against the GPU's floating-point precision limit — the result is numeric jitter, especially visible on mobile devices running `mediump`. A practical value usually lands around 1-2% of the noise's characteristic wavelength — small enough not to blur detail, large enough that the subtraction still means something.
+
+## Into 3D: Three Independent Noise Fields, the Full Curl Formula
+
+2D only needs a single scalar $\psi$ because "rotate 90°" only has one way to happen. 3D needs a **vector potential field** $\Psi = (\psi_x, \psi_y, \psi_z)$ — three independent FBM fields, usually built from the same noise function with different coordinate offsets to avoid correlation. The full curl:
+
+$$
+F = \nabla \times \Psi = \left(\frac{\partial \psi_z}{\partial y} - \frac{\partial \psi_y}{\partial z},\ \ \frac{\partial \psi_x}{\partial z} - \frac{\partial \psi_z}{\partial x},\ \ \frac{\partial \psi_y}{\partial x} - \frac{\partial \psi_x}{\partial y}\right)
+$$
+
+Each component needs 2 partial derivatives, each derivative 2 noise calls — 12 FBM calls total for a full 3D curl vector, far pricier than the 2D version's 4 calls, but the same principle holds: the curl of any vector potential field always has zero divergence, regardless of dimension, for exactly the same reason — the mixed partials cancel out in pairs.
+
+## Obstacle Avoidance: Modulating the Potential Near Boundaries
+
+A subtle consequence of streamlines running along level curves: if you force $\psi$ to stay **constant** along an obstacle's boundary (multiplying $\psi$ by a falloff toward a fixed value as it nears the obstacle's SDF), the level curve passing through that region is forced to bend along the exact shape of the boundary — and since $F$ is always tangent to level curves, the flow automatically "slides" along the obstacle instead of passing through it, with no hard collision check needed. This is the core idea behind obstacle-avoidance techniques in curl-noise-driven smoke and fire simulations — the full implementation is beyond this lesson's scope, but the principle fits in one sentence: modulate the amplitude of $\psi$, not of $F$.
+
+## From Vector Field to Actual Moving Particles
+
+Curl noise's classic application is advecting particles: each frame, update a particle's position with a simple Euler step $p \mathrel{+}= F(p)\,\Delta t$, using the freshly computed $F$ as instantaneous velocity. This lesson's demo simulates that same idea inside a fragment shader (there's no real particle memory — it "redraws" the advection effect every frame by stepping pixel coordinates backward along $F$ a few times). Track 9 (GPGPU) generalizes that exact update into a real compute pass: thousands of particle positions encoded in a texture, a fragment shader reading that texture each frame, adding $F(p)\,\Delta t$, and writing it back — the same formula, just a different place to store the state.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common curl-noise implementation mistakes:
+
+1. **Using $\nabla\psi$ directly as velocity, forgetting the 90° rotation.** It still "looks like motion" for the first few seconds, but over time particles keep drifting toward $\psi$'s extrema — exactly the compression artifact this lesson opens with, easy to misdiagnose as a parameter tuning issue rather than a missing component swap and sign flip.
+2. **Picking a fixed epsilon that doesn't scale with noise frequency.** Increasing `uScale` (compressing noise into a smaller space) while keeping an absolute epsilon unchanged makes the two central-difference sample points fall almost inside the same noise cell — the estimated derivative comes out nearly zero, or jumps erratically between neighboring cells depending on exactly where epsilon happens to land.
+3. **Confirming divergence-free only by eye (particles don't visibly clump) without understanding it's an algebraic property, not numerical luck.** This leads to "optimizing" the curl formula by approximating the mixed partial two different ways for $\partial\psi/\partial y$ and $-\partial\psi/\partial x$ (say, a different epsilon per direction) — breaking exactly the condition that makes the two mixed partials equal, so divergence stops vanishing precisely even though the formula still "looks like" curl.
+
+</Callout>

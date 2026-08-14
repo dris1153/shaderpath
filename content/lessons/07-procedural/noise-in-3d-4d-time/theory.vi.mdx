@@ -1,0 +1,61 @@
+## Hai lối animate noise: trượt hay tiến hoá
+
+Cách "hiển nhiên" nhất để animate một trường noise 2D là cộng thời gian vào toạ độ trước khi sample: `noise2(p + t * dir)` — mỗi frame dịch cả trường theo một hướng cố định. Cách thứ hai đổi đúng một tham số nhưng đổi hẳn bản chất chuyển động: `noise3(p.x, p.y, t)` — dùng chiều thứ ba của một khối noise 3D làm trục thời gian.
+
+Khác biệt nằm ở việc `t` có phải một TOẠ ĐỘ THẬT của hàm noise hay không. Ở cách một, `noise2` không hề biết thời gian tồn tại — nó chỉ đang được gọi ở vị trí khác mỗi frame. Ở cách hai, `t` ngang hàng với `p.x`, `p.y` trong định nghĩa `noise3` — mỗi giá trị `t` khác nhau là một hàm noise 2D HOÀN TOÀN KHÁC, không phải cùng một hàm bị dịch đi.
+
+## Scroll: `noise2(p + t·dir)` — trượt cứng, không tiến hoá
+
+Vì mọi pixel trong scroll cộng cùng một vector `t * dir`, hình dạng tương đối giữa các đốm noise được bảo toàn tuyệt đối qua thời gian — cả trường di chuyển như một khối cứng, giống một tấm ảnh bị kéo qua khung nhìn. Đóng băng một đốm cụ thể là phép thử rõ nhất: dưới scroll, nó giữ nguyên hình dạng, chỉ đổi vị trí.
+
+Điều đó không có nghĩa scroll "sai" — nó đúng khi hiệu ứng thật sự CẦN chuyển động cứng theo một hướng: nước chảy dọc kênh, băng chuyền, mây bị gió thổi gần như không đổi hướng trong vài giây quan sát. Demo đi kèm hiện thực scroll với hướng cố định `SCROLL_DIR = vec2(0.866, 0.5)` (vector đơn vị, $0.866^2 + 0.5^2 = 1$):
+
+```glsl
+return noise2(p * SCALE + SCROLL_DIR * t);
+```
+
+Chi phí cũng thấp nhất trong ba chế độ — chỉ một `noise2`. Vấn đề chỉ nảy sinh khi dùng scroll cho thứ đáng lẽ phải tiến hoá hình dạng: mây thật không chỉ trôi, nó còn phồng lên, tan ra; scroll cho mây bay lộ ngay cảm giác "hình dán di chuyển" giả tạo.
+
+## Slice: `noise3(p, t)` — mỗi khung là một lát cắt khác
+
+Slice coi khối noise 3D như một chồng vô hạn lát cắt 2D xếp dọc trục thứ ba; mỗi frame đổi độ sâu `t` để lấy ra một lát khác. Không có phép "dịch chuyển cứng" nào liên kết hai lát liền kề — chúng chỉ đơn thuần LÀ hai hàm noise 2D khác nhau, mượt qua nhau nhờ nội suy liên tục của noise theo `t` — nên các đốm tự do mọc lên, teo lại, hoặc tách đôi khi `t` trôi qua giá trị khiến chúng chạm rồi tách. Đây là chuyển động hữu cơ mà mây, lửa hay bề mặt nước cần.
+
+Hệ quả thú vị: slice thuần hầu như không bao giờ lộ vòng lặp rõ ràng. Quỹ đạo sample tại một pixel cố định là đường thẳng chạy dọc trục `t`, xuyên qua khối noise — với hash dựa trên `sin`/`fract` (bài Hash function trên GPU), quỹ đạo đó không có chu kỳ ngắn nào quay lại đúng điểm cũ trong phạm vi độ chính xác 32-bit; nó cứ tiến mãi qua những lát chưa từng ghé. Đủ dùng cho video/live-wallpaper phát vài giờ không ai để ý lặp — nhưng "gần như không lặp" khác hẳn "khép vòng chính xác tại một thời điểm chọn trước", điều GIF hay hoạt ảnh nền cần.
+
+## Vòng lặp hoàn hảo: lấy mẫu 4D trên một đường tròn
+
+Muốn có chu kỳ khép kín CHÍNH XÁC — không phải "khó nhận ra" mà bằng nhau tuyệt đối — kỹ thuật chuẩn là chuyển sang noise 4D, cho hai chiều dư chạy quanh một đường tròn thay vì trôi thẳng theo `t`:
+
+$$
+n(p, t) = \text{noise}_4\big(p_x,\ p_y,\ R\cos(\omega t),\ R\sin(\omega t)\big), \qquad \omega = \frac{2\pi}{T}
+$$
+
+với $T$ là chu kỳ loop mong muốn (giây), $R$ là bán kính đường tròn trong không gian noise. Vì $\cos$, $\sin$ tuần hoàn đúng $2\pi$, tại $t=0$ và $t=T$ hai chiều dư nhận đúng cùng cặp giá trị $(R, 0)$ — bốn tham số vào `noise4` giống hệt nhau nên kết quả cũng giống hệt: khung cuối và khung đầu là MỘT, không bước nhảy nào để che giấu. Đây là kỹ thuật chuẩn cho GIF hay live-wallpaper cần lặp mượt vô hạn (xem Tài liệu tham khảo). Bán kính $R$ không tuỳ ý: quá nhỏ, cả vòng chỉ dịch trong một góc hẹp của không gian noise nên hoạ tiết gần như đứng yên; quá lớn, mỗi bước nhảy sang vùng noise không còn tương quan, cho cảm giác nhiễu hạt thay vì mượt.
+
+## Cái giá tăng theo chiều: 4, 8, 16 góc lưới
+
+Value/gradient noise nội suy giữa các góc của một ô lưới — số góc tăng theo luỹ thừa 2 với số chiều: $2^2=4$ góc cho `noise2`, $2^3=8$ cho `noise3`, $2^4=16$ cho `noise4`. Mỗi góc cần đúng một lần hash — `noise4` do đó tốn gấp đôi số hash so với `noise3`, gấp bốn lần `noise2`, cho MỖI lần gọi. Bài Perlin & Simplex noise đã chỉ ra vì sao Simplex chọn lưới tam giác/tứ diện thay vì lưới vuông/khối chính là để né chi phí luỹ thừa này: chỉ cần $n+1$ đỉnh (3/4/5 ở 2D/3D/4D) thay vì $2^n$ góc — ở 4D là 5 so với 16, chênh hơn ba lần. Cost ladder thực dụng cho bài này: chỉ cần scroll thì `noise2` gần như miễn phí; slice đắt gấp đôi scroll nhưng đổi lại chuyển động thật hữu cơ; loop 4D đắt nhất nhưng là cách DUY NHẤT trong ba cách khép vòng chính xác — chọn dựa trên nhu cầu lặp của sản phẩm cuối, không phải cứ chiều cao hơn là tốt hơn.
+
+## Kết hợp scroll với slice, và giữ độ chính xác khi t lớn
+
+Hai chế độ không loại trừ nhau: khói bị gió thổi theo một hướng NHƯNG vẫn cuộn xoáy tại chỗ cần cả hai cùng lúc — cộng một hướng trôi vào hai chiều đầu của `noise3`, để chiều thứ ba vẫn làm trục tiến hoá riêng:
+
+```glsl
+float n = noise3(vec3(p + windDir * t * scrollSpeed, t * evolveSpeed));
+```
+
+`scrollSpeed` và `evolveSpeed` tách rời hoàn toàn — chỉnh cái này không ảnh hưởng cái kia, vì chúng điều khiển hai trục độc lập của cùng một khối 3D.
+
+Vấn đề thực dụng cuối: `t` thường lấy trực tiếp từ đồng hồ chạy liên tục, tăng dần vô hạn. Float 32-bit có khoảng 7 chữ số thập phân đáng tin ($2^{-23} \approx 1.19\times10^{-7}$); tại $t \approx 100000$ giây (~27-28 giờ chạy liên tục — ước lượng), bước nhảy nhỏ nhất float còn phân biệt được đã lớn cỡ $0.012$ giây — gần bằng một khung hình ở 60fps ($\approx 0.017$s), nên `sin`/`cos`/noise bắt đầu giật nhẹ. Với chế độ loop, sửa gần như miễn phí: `mod(t, T)` trước khi đưa vào `cos`/`sin`, vì chuyển động vốn đã tuần hoàn theo `T`. Với slice thuần không có chu kỳ tự nhiên, cách thực dụng là định kỳ trừ bớt một khoảng lớn khỏi bộ đếm thời gian phía CPU — hoạ tiết vẫn liên tục vì noise chỉ quan tâm phần dư, không quan tâm giá trị tuyệt đối.
+
+Track 9 (GPGPU) dùng lại chính ý tưởng "chiều dư làm trục điều khiển" để advect hạt theo một trường 3D noise theo thời gian thực; checkpoint tiếp theo của module này ghép domain warping, Voronoi và đúng kỹ thuật slice vừa học vào một vật liệu địa hình chuyển động hoàn chỉnh.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi animate noise theo thời gian:
+
+1. **Dùng scroll cho thứ cần tiến hoá hữu cơ (mây, lửa, nước).** Scroll dịch cả trường như một khối cứng nên mọi đốm giữ nguyên hình dạng mãi mãi — phép thử: đóng băng một đốm qua vài giây; nếu nó không đổi hình mà chỉ đổi vị trí, đó là dấu hiệu chắc chắn scroll đang bị dùng sai chỗ.
+2. **Chọn bán kính $R$ cho loop 4D mà không thử nghiệm.** $R$ quá nhỏ khiến cả vòng gần như đứng yên; $R$ quá lớn khiến các bước liên tiếp nhảy sang vùng noise không tương quan, cho cảm giác nhiễu hạt/rung giật thay vì mượt — không có công thức đóng cho $R$ "đúng", phải chỉnh bằng mắt theo tốc độ mong muốn.
+3. **Để `t` tăng vô hạn mà không recenter, rồi bất ngờ khi hoạt ảnh giật sau vài giờ chạy.** Lỗi dễ bị bỏ qua vì không xuất hiện lúc dev-test (vài phút) mà chỉ lộ khi triển khai thật (live-wallpaper, màn hình trưng bày chạy 24/7) — `mod(t, T)` cho loop, hoặc trừ bớt định kỳ cho slice thuần, ngăn được vấn đề trước khi nó xảy ra.
+
+</Callout>

@@ -1,0 +1,73 @@
+## Một octave chỉ có một kích thước chi tiết — vật liệu thật có chi tiết ở mọi kích thước
+
+Một lần gọi Perlin hoặc Simplex (bài trước) cho một trường noise với đúng MỘT "kích thước đặc trưng" — quyết định trực tiếp bởi tần số lấy mẫu đưa vào hàm noise. Phóng to một vân đá, một đám mây, hay một dải núi thật, chi tiết không dừng ở một kích thước — hình dạng lớn (khối núi), gờ vừa (vách đá), sạn nhỏ (bề mặt lởm chởm) — tất cả chồng lên nhau cùng lúc. Một hàm noise đơn tần không tạo ra được cấu trúc nhiều tầng đó dù chọn tần số nào; FBM (fractal Brownian motion — tên mượn từ toán xác suất, trong đồ hoạ chỉ đơn giản là "chồng noise nhiều tần số") giải đúng bài toán này bằng cách cộng nhiều lớp noise cùng dạng, mỗi lớp một tần số và biên độ khác nhau.
+
+## Vòng lặp FBM: gain thu nhỏ biên độ, lacunarity phóng to tần số
+
+Ý tưởng viết thành code chỉ là một vòng lặp cộng dồn:
+
+```glsl
+float fbm(vec2 p, int octaves, float lacunarity, float gain) {
+  float sum = 0.0;
+  float amplitude = 1.0;
+  float frequency = 1.0;
+  for (int i = 0; i < octaves; i++) {
+    sum += amplitude * noise(p * frequency);
+    amplitude *= gain;        // moi octave dong gop IT hon octave truoc
+    frequency *= lacunarity;  // ... nhung o tan so CAO hon octave truoc
+  }
+  return sum;
+}
+```
+
+Viết bằng công thức tổng:
+
+$$
+\mathrm{fbm}(p) = \sum_{i=0}^{N-1} g^{\,i} \cdot \mathrm{noise}\!\left(l^{\,i}\, p\right)
+$$
+
+với $N$ là số octave, $g$ là gain (tỉ lệ thu nhỏ biên độ mỗi bước), $l$ là lacunarity (tỉ lệ phóng to tần số mỗi bước). Giá trị "chuẩn" kinh điển là $g = 0.5$ và $l = 2.0$ — mỗi octave tiếp theo chi tiết gấp đôi (tần số x2) nhưng đóng góp giảm đúng một nửa. Đây không phải hằng số bắt buộc, chỉ là điểm khởi đầu hợp lý: hạ $g$ xuống dưới 0.5 làm các octave chi tiết mờ nhạt hẳn (kết quả nhìn mượt, gần giống một octave duy nhất); nâng $g$ lên gần 1.0 khiến octave chi tiết đóng góp gần bằng octave lớn, kết quả nhiễu hạt, mất cấu trúc phân tầng rõ ràng. Tương tự, $l$ nhỏ hơn 2 (ví dụ 1.5) làm các tầng chi tiết gần nhau về tần số hơn — chuyển tiếp mượt nhưng ít "khoảng cách" thị giác giữa các tầng; $l$ lớn hơn 2 (ví dụ 3–4) nới rộng khoảng cách, dễ lộ artefact riêng của từng octave nếu chọn quá lớn.
+
+## Số octave: chi phí tuyến tính, và điểm dừng dưới kích thước pixel
+
+Mỗi octave thêm đúng một lần gọi hàm noise cùng vài phép nhân/cộng — chi phí tăng TUYẾN TÍNH theo số octave $N$, khác hẳn "lời nguyền lưới vuông" $2^n$ của bài trước (chi phí theo SỐ CHIỀU của một lần gọi noise, không phải số lần gọi). Nhân đôi octave từ 4 lên 8 tốn gấp đôi, không tệ hơn. Nhưng octave không miễn phí mãi: octave thứ $i$ có chu kỳ không gian xấp xỉ $\text{kích thước gốc} / l^i$ — khi chu kỳ đó nhỏ hơn khoảng cách giữa hai pixel liền kề (vượt giới hạn Nyquist của độ phân giải render), octave đó không còn thêm chi tiết NHÌN THẤY ĐƯỢC — chỉ thêm nhiễu cao tần không giải được (aliasing, nhấp nháy khi có chuyển động nhẹ). Ước lượng thực dụng: FBM phủ mặt phẳng rộng 4 đơn vị UV trên canvas 512px, octave có chu kỳ dưới $4/512 \approx 0.008$ đơn vị đã vượt ngưỡng hữu ích — thường rơi vào octave 6–8 với $l=2$, một lý do 6–8 là số octave phổ biến trong game/demo thay vì 20–30.
+
+## Chuẩn hoá: chia cho tổng biên độ tối đa
+
+Vì mỗi lớp noise nằm trong khoảng $[-1,1]$ (xấp xỉ, xem bài trước), tổng $N$ lớp có biên độ TỐI ĐA lý thuyết bằng tổng cấp số nhân của các biên độ, không phải $N$:
+
+$$
+\text{biên độ tối đa} = \sum_{i=0}^{N-1} g^{\,i} = \frac{1 - g^{N}}{1 - g} \quad (g \neq 1)
+$$
+
+Chia kết quả thô cho đúng tổng này giữ FBM luôn ổn định bất kể chọn bao nhiêu octave hay gain — thiếu bước này, đổi số octave khi chỉnh demo sẽ vô tình làm ảnh sáng/tối hẳn lên chỉ vì tổng biên độ đổi, không phải vì hình dạng noise đổi. Demo `fbm.frag` tính đúng tổng này (`maxAmplitude`) trong cùng vòng lặp rồi chia ở bước cuối.
+
+## Uốn kết quả: ridged, turbulence, billow
+
+FBM tiêu chuẩn cộng thẳng giá trị noise có dấu — kết quả đối xứng, đều đặn kiểu gò đồi mềm. Đổi cách xử lý MỖI lớp trước khi cộng cho ra ba biến thể hình dạng khác hẳn, cùng một vòng lặp:
+
+- **Turbulence** (Perlin, nhiễu loạn): lấy `abs(noise)` trước khi cộng — luôn dương, tạo nếp gấp sắc nhọn đúng tại những điểm noise gốc đổi dấu (giống ngọn lửa hoặc khói cuộn).
+- **Ridged FBM**: `1.0 - abs(noise)` — đảo ngược turbulence, biến đúng những điểm đổi dấu đó thành GỜ SÁNG NHẤT thay vì đáy — mô phỏng sống núi (ridge) sắc nét, dùng phổ biến cho địa hình núi đá.
+- **Billow** (gợn sóng): `2.0 * abs(noise) - 1.0` — vẫn lấy trị tuyệt đối như turbulence nhưng co giãn lại về khoảng $[-1,1]$ cân đối quanh 0, cho hình dạng tròn trịa như mây cuộn thay vì nếp gấp sắc như turbulence thô.
+
+Cả ba chỉ đổi một dòng bên trong vòng lặp — phần cộng dồn, chuẩn hoá, octave/gain/lacunarity giữ nguyên y hệt. Demo bài học chỉ chọn được standard/ridged/turbulence để giữ control panel gọn; billow để lại cho bài tập.
+
+## FBM làm input cho color ramp, không phải màu cuối cùng
+
+Giá trị FBM chuẩn hoá về $[0,1]$ hiếm khi là màu cuối — nó thường chỉ là MỘT SỐ VÔ HƯỚNG đưa tiếp vào `mix()` giữa vài màu mốc (color ramp: nước sâu → nước nông → cát → cỏ → đá → tuyết cho một bản đồ độ cao, hoặc nền trời → mây cho bài checkpoint mây kế tiếp module). Tách "tính hình dạng" (FBM) khỏi "tô màu" (color ramp) là đúng tư duy "khoảng cách trước, màu sau" đã gặp ở SDF (Track 2) — chỉ đổi khoảng cách có dấu thành một trường vô hướng noise nhiều tầng.
+
+## Octave không phải mức chi tiết bạn thiết kế — đó là một phổ bạn tinh chỉnh
+
+Sai lầm phổ biến khi mới học FBM là nghĩ "octave 1 = chi tiết lớn tôi chọn, octave 2 = chi tiết vừa..." — như thể từng octave là một quyết định thiết kế độc lập. Thực ra octave chỉ là một ĐIỂM LẤY MẪU đều trên một PHỔ liên tục (tần số tăng theo $l^i$, biên độ giảm theo $g^i$) — chỉnh $g$ và $l$ thay đổi HÌNH DẠNG của cả phổ cùng lúc, không phải chỉnh riêng từng "tầng". Inigo Quilez, trong bài viết về fBm, nhấn mạnh đúng điểm này: fBm không phải danh sách chi tiết thiết kế thủ công, mà là lấy mẫu rời rạc một quá trình ngẫu nhiên có phổ tần số tuân theo luật luỹ thừa — tinh chỉnh $g$, $l$, $N$ tương đương tinh chỉnh HÌNH DẠNG phổ đó, không phải "thêm bớt từng lớp chi tiết" theo trực giác.
+
+Bài checkpoint kế tiếp trong module (Mini-build: Mây thủ tục) ghép FBM vừa học với hash và gradient noise của hai bài trước thành một cảnh mây động hoàn chỉnh. Xa hơn, module Trường nâng cao mở ra domain warping — dùng chính đầu ra FBM để làm méo TOẠ ĐỘ đưa vào một lần gọi FBM khác, biến kết cấu gò đồi đều đặn của bài này thành hình xoáy hữu cơ.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng FBM:
+
+1. **Đổi số octave mà quên chuẩn hoá lại theo tổng biên độ mới.** Không chia cho $\frac{1-g^N}{1-g}$, tăng octave từ 4 lên 8 làm ảnh sáng/tối hẳn lên dù hình dạng chi tiết không đổi nhiều — dễ nhầm tưởng octave cao hơn "làm hỏng" kết quả trong khi vấn đề chỉ là biên độ tổng chưa chuẩn hoá.
+2. **Chọn quá nhiều octave vượt xa độ phân giải hiển thị.** Octave có chu kỳ nhỏ hơn khoảng cách pixel không thêm chi tiết nhìn thấy được — chỉ tốn thêm phép tính mỗi frame và thêm nhiễu cao tần gây nhấp nháy khi có chuyển động nhẹ (camera rung, animate theo thời gian), một chi phí trả mà không đổi được gì về mặt thị giác.
+3. **Nhầm turbulence và ridged FBM đảo ngược nhau.** `abs(noise)` (turbulence) cho ĐÁY sắc nhọn tại điểm đổi dấu; `1.0 - abs(noise)` (ridged) cho ĐỈNH sắc nhọn tại đúng điểm đó — copy nhầm công thức khiến địa hình "núi" nhìn giống hố sụt lộn ngược, hoặc ngược lại.
+
+</Callout>

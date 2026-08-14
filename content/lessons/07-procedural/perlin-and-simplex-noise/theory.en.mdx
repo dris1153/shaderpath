@@ -1,0 +1,80 @@
+## Perlin Noise: Gradient Noise Made Canonical on a Square Grid
+
+The previous lesson (Value & Gradient Noise) built gradient noise: every grid corner holds a random gradient vector, and the value at a point inside the cell interpolates between dot products of that gradient with the offset vector from corner to point. Perlin noise isn't a different idea — it IS that gradient noise, packaged into a canonical algorithm with three specific pieces: how gradients are picked at each corner, the curve used for interpolation (the fade curve), and the n-linear interpolation formula across all of a cell's corners. Ken Perlin published the original version in 1985 in "An Image Synthesizer" (it earned him an Academy Award for Technical Achievement in 1997), then revised his own algorithm in 2002 in the short paper "Improving Noise" — both versions still work today, and they differ in exactly one place: the fade curve, which the next section dissects.
+
+## Picking Gradients at Grid Corners: The Classic Permutation Table vs GPU Hashing
+
+Perlin's original 1985 version picks gradients through a fixed permutation table: 256 pre-shuffled integers, looked up twice in a nested fashion from a corner's integer coordinates ($p[X + p[Y]]$) to produce an index, which then selects one of 8 or 12 predefined gradient vectors. This was fast on 1980s CPUs, but on a modern GPU, a texture/array lookup typically costs more than a pure-function hash computed directly, with no auxiliary memory at all. So most GLSL implementations today (this lesson's demo included) replace the permutation table with a stateless 2D→1D hash function (the kind covered in the Hash Functions on the GPU lesson), turning that hash value into an angle in $[0, 2\pi)$ to build a unit gradient $(\cos\theta, \sin\theta)$ — drifting from Perlin's exact original table, in exchange for zero auxiliary memory and no 256-entry repeating period, with negligible visual quality difference for nearly every purpose.
+
+## The Fade Curve: 2002's Quintic Replaces 1985's Cubic
+
+Both versions use $\mathrm{fade}(t)$ to bend the local coordinate $t \in [0,1]$ before it drives linear interpolation, avoiding a raw linear ramp (whose constant derivative creates a visible kink at cell boundaries). The 1985 version uses the familiar cubic Hermite curve:
+
+$$
+\mathrm{fade}_{1985}(t) = 3t^2 - 2t^3
+$$
+
+The 2002 version replaces it with a quintic:
+
+$$
+\mathrm{fade}_{2002}(t) = 6t^5 - 15t^4 + 10t^3
+$$
+
+Both satisfy $\mathrm{fade}(0)=0$, $\mathrm{fade}(1)=1$, and a first derivative of 0 at both ends ($C^1$ continuous). The difference lives in the second derivative: for the cubic, $\mathrm{fade}_{1985}''(t) = 6 - 12t$, giving $\mathrm{fade}''(0) = 6$ and $\mathrm{fade}''(1) = -6$ — nonzero, curvature changes abruptly right at the cell boundary, hard to spot in a static image but very visible once you take a derivative of the noise (a normal map straight from the noise value). The quintic fixes exactly that: $\mathrm{fade}_{2002}''(t) = 120t^3 - 180t^2 + 60t$, vanishing at both ends — $C^2$ continuous. Try $t=0.25$: $\mathrm{fade}_{1985}(0.25) = 0.15625$ while $\mathrm{fade}_{2002}(0.25) \approx 0.1035$ — the quintic ramps up noticeably slower near both ends of the cell.
+
+## Implementing Perlin 2D: Dot Products and Bilinear Interpolation
+
+For $p$ inside a cell with bottom-left corner $i = \lfloor p \rfloor$ and local coordinate $f = \mathrm{fract}(p)$, the noise value is a bilinear interpolation of four dot products — one per corner, between that corner's gradient and the offset vector from the corner to $p$:
+
+```glsl
+float perlin2D(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = dot(perlinGradient(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0));
+  float b = dot(perlinGradient(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  float c = dot(perlinGradient(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  float d = dot(perlinGradient(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+  vec2 u = perlinFade(f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+```
+
+Exactly four `dot` lines for the square cell's four corners, then a two-level nested `mix` (bilinear — the general "n-linear": bilinear in 2D, trilinear in 3D) weighted by `u = fade(f)` instead of raw `f`. This lesson's demo (`perlin-simplex.frag`) implements exactly this function, selectable through the "Algorithm" control.
+
+## Range and Normalizing to [0,1]
+
+Since each term is a dot product between a unit vector (gradient) and an offset vector shorter than 1, raw 2D Perlin values don't neatly fill $[-1,1]$ — a commonly cited empirical bound (not a tightly proven one) puts the magnitude around $[-0.7,\ 0.7]$. Since UI and color ramps usually expect $[0,1]$, the standard normalization step is just `value * 0.5 + 0.5`, accepting that the extreme ends almost never reach absolute 0 or 1 — good enough for nearly every visual purpose. This lesson's demo applies exactly this remap before feeding the value into a color `mix`.
+
+## The Square-Grid Curse: 2ⁿ Corners per Dimension
+
+Perlin samples EVERY corner of the $n$-cube surrounding a point — 4 corners in 2D, 8 in 3D, 16 in 4D, growing as $2^n$. Each corner needs one hash/gradient call and one dot product, so cost grows exponentially with dimension, not linearly. That's exactly why 4D Perlin (used to animate 3D noise over time without an obvious loop, see the Noise in 3D/4D over Time lesson) costs four times more than 2D Perlin purely from corner count. Simplex exists specifically to fix this exponential blow-up.
+
+## Simplex: A Triangular Lattice, the Skew Factor, and a Radial Kernel
+
+Simplex's core idea (Ken Perlin, 2001): replace the square grid with a simplex lattice — an equilateral triangle in 2D, a tetrahedron in 3D, generally a shape with exactly $n+1$ vertices in $n$ dimensions (3 in 2D, 4 in 3D, 5 in 4D) instead of $2^n$. To tile the plane with equilateral triangles without a complicated irregular grid, the algorithm "skews" the input coordinates into a space where the triangular lattice looks like an ordinary square grid, computes the lattice cell in that skewed space, then "unskews" back. The 2D skew factors:
+
+$$
+F_2 = \frac{\sqrt{3}-1}{2} \approx 0.36603, \qquad G_2 = \frac{3-\sqrt{3}}{6} \approx 0.21132
+$$
+
+($F_2$ skews coordinates in, $G_2$ unskews back out — generalizing to $F_n = \frac{\sqrt{n+1}-1}{n}$ and $G_n = \frac{1 - 1/\sqrt{n+1}}{n}$ for any dimension). The second big difference from Perlin: Simplex doesn't interpolate by a cell's geometric weight (`u = fade(f)`) — each simplex vertex contributes through a **radial falloff kernel**, decaying with the squared distance from the sample point to that very vertex, cut hard to zero past a fixed radius. There's no longer a "bilinear blend between neighboring corners" — just a weighted sum of whichever vertices are close enough, symmetric in every direction instead of biased along the two axes the way a square grid is.
+
+## An Expired Patent, and OpenSimplex
+
+Perlin held a US patent (6,867,776) covering the use of Simplex noise for 3D-and-higher texture synthesis — that patent expired on January 8, 2022, so 3D/4D Simplex has been free of legal restriction ever since (2D Simplex was never covered by it). During the years the patent was active (2001–2022), the community produced OpenSimplex (Kurt Spencer, 2014) as a patent-free alternative — built on a geometrically different stretched hypercubic honeycomb lattice, trading a larger kernel (smoother, but slower) for freedom from the axis-aligned directional streaking that's classic Perlin's most easily spotted visual artifact at high zoom.
+
+## Which to Pick, and Using webgl-noise in Practice
+
+In 2D, both give roughly comparable visual quality — pick Perlin for simpler, more readable code (exactly 4 dot products), pick Simplex if you need it to line up directly with the 3D/4D version used in a later lesson. At 3D and up, especially when animating through a 3rd/4th time dimension, Simplex almost always wins thanks to its $n+1$ cost instead of $2^n$. When you need analytic derivatives of the noise (a procedural normal map without numerically sampling `fwidth`), both families have "compute the gradient alongside the value" variants — saving repeated sampling just to approximate a derivative by finite differences. In production, most projects don't reimplement Simplex from scratch — the `webgl-noise` source from Ashima Arts and Stefan Gustavson (this lesson's demo `simplex2D` lifts the formula straight from it) is the standard pragmatic choice, battle-tested across thousands of GLSL projects.
+
+The next lesson (FBM — Fractal Brownian Motion) stacks multiple layers of exactly the two noise functions learned here — rising frequency, falling amplitude — to get multi-scale detail like clouds or rock texture, instead of the single "characteristic size" a lone Perlin/Simplex call produces.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when implementing Perlin/Simplex for the first time:
+
+1. **Forgetting to normalize gradients to unit vectors.** `perlinGradient` must always return $(\cos\theta,\sin\theta)$ — length exactly 1; letting the length accidentally vary with the hash (say, multiplying in another random factor) inflates the noise's range unpredictably and breaks the "stable amplitude across cells" property the entire $[-0.7,0.7]\to[0,1]$ normalization step depends on.
+2. **Interpolating with raw `f` instead of `fade(f)`.** Skipping the fade step and `mix`-ing directly with the local coordinate is equivalent to using the lowest-degree curve possible (linear) — cell boundaries show up as visible checkerboard-like seams, exactly the problem both fade curves above were designed to eliminate.
+3. **Copying the Simplex formula but "simplifying" `mod(x, 289.0)` into a different number.** The 289 constant isn't arbitrary — it's paired with the permute coefficient `((x*34.0)+1.0)*x` to keep the whole computation safely inside `highp float` precision on most mobile GPUs; changing that constant usually breaks the visible randomness (obvious repeating streaks) with no compile error to warn you.
+
+</Callout>

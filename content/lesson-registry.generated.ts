@@ -372,6 +372,46 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/theory.vi.mdx"),
     en: () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/theory.en.mdx"),
   },
+  "checkpoint-animated-terrain-material": {
+    vi: () => import("./lessons/07-procedural/checkpoint-animated-terrain-material/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/checkpoint-animated-terrain-material/theory.en.mdx"),
+  },
+  "checkpoint-procedural-clouds": {
+    vi: () => import("./lessons/07-procedural/checkpoint-procedural-clouds/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/checkpoint-procedural-clouds/theory.en.mdx"),
+  },
+  "curl-noise-flow-fields": {
+    vi: () => import("./lessons/07-procedural/curl-noise-flow-fields/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/curl-noise-flow-fields/theory.en.mdx"),
+  },
+  "domain-warping": {
+    vi: () => import("./lessons/07-procedural/domain-warping/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/domain-warping/theory.en.mdx"),
+  },
+  "fbm-fractal-brownian-motion": {
+    vi: () => import("./lessons/07-procedural/fbm-fractal-brownian-motion/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/fbm-fractal-brownian-motion/theory.en.mdx"),
+  },
+  "hash-functions-on-gpu": {
+    vi: () => import("./lessons/07-procedural/hash-functions-on-gpu/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/hash-functions-on-gpu/theory.en.mdx"),
+  },
+  "noise-in-3d-4d-time": {
+    vi: () => import("./lessons/07-procedural/noise-in-3d-4d-time/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/noise-in-3d-4d-time/theory.en.mdx"),
+  },
+  "perlin-and-simplex-noise": {
+    vi: () => import("./lessons/07-procedural/perlin-and-simplex-noise/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/perlin-and-simplex-noise/theory.en.mdx"),
+  },
+  "value-and-gradient-noise": {
+    vi: () => import("./lessons/07-procedural/value-and-gradient-noise/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/value-and-gradient-noise/theory.en.mdx"),
+  },
+  "voronoi-and-worley": {
+    vi: () => import("./lessons/07-procedural/voronoi-and-worley/theory.vi.mdx"),
+    en: () => import("./lessons/07-procedural/voronoi-and-worley/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -447,6 +487,14 @@ export const REFERENCES_REGISTRY: Partial<
   "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/references"),
   "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/references"),
   "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/references"),
+  "curl-noise-flow-fields": () => import("./lessons/07-procedural/curl-noise-flow-fields/references"),
+  "domain-warping": () => import("./lessons/07-procedural/domain-warping/references"),
+  "fbm-fractal-brownian-motion": () => import("./lessons/07-procedural/fbm-fractal-brownian-motion/references"),
+  "hash-functions-on-gpu": () => import("./lessons/07-procedural/hash-functions-on-gpu/references"),
+  "noise-in-3d-4d-time": () => import("./lessons/07-procedural/noise-in-3d-4d-time/references"),
+  "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/references"),
+  "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/references"),
+  "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -808,6 +856,46 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"vì-sao-webgpu-đổi-cách-viết-shader","text":"Vì sao WebGPU đổi cách viết shader","depth":2},{"id":"hình-dạng-code-tsl-import-node-nodematerial","text":"Hình dạng code TSL: import, node, NodeMaterial","depth":2},{"id":"một-hiệu-ứng-hai-ngôn-ngữ-glsl-và-tsl-cạnh-nhau","text":"Một hiệu ứng, hai ngôn ngữ: GLSL và TSL cạnh nhau","depth":2},{"id":"tsl-mang-lại-gì-và-cái-giá-phải-trả-hôm-nay","text":"TSL mang lại gì, và cái giá phải trả hôm nay","depth":2},{"id":"khi-nào-nên-bắt-đầu-dùng-tsl","text":"Khi nào nên bắt đầu dùng TSL","depth":2},{"id":"webgpurenderer-trạng-thái-và-cách-fallback","text":"WebGPURenderer: trạng thái và cách fallback","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
     en: [{"id":"why-webgpu-changes-how-you-write-shaders","text":"Why WebGPU Changes How You Write Shaders","depth":2},{"id":"the-shape-of-tsl-code-imports-nodes-nodematerial","text":"The Shape of TSL Code: Imports, Nodes, NodeMaterial","depth":2},{"id":"one-effect-two-languages-glsl-and-tsl-side-by-side","text":"One Effect, Two Languages: GLSL and TSL Side by Side","depth":2},{"id":"what-tsl-buys-you-and-todays-cost","text":"What TSL Buys You, and Today's Cost","depth":2},{"id":"when-to-reach-for-tsl","text":"When to Reach for TSL","depth":2},{"id":"webgpurenderer-status-and-how-it-falls-back","text":"WebGPURenderer: Status and How It Falls Back","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
   },
+  "checkpoint-animated-terrain-material": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-procedural-clouds": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "curl-noise-flow-fields": {
+    vi: [{"id":"trường-vector-cho-chuyển-động-vì-sao-gradient-thô-làm-hạt-nén","text":"Trường vector cho chuyển động: vì sao gradient thô làm hạt \"nén\"","depth":2},{"id":"trực-giác-phân-kỳ-f-đo-độ-giãn-nở-cục-bộ","text":"Trực giác phân kỳ: ∇·F đo độ giãn nở cục bộ","depth":2},{"id":"curl-2d-xoay-gradient-90-phân-kỳ-triệt-tiêu-bằng-chứng-minh-một-dòng","text":"Curl 2D: xoay gradient 90°, phân kỳ triệt tiêu bằng chứng minh một dòng","depth":2},{"id":"đạo-hàm-số-sai-phân-trung-tâm-và-đánh-đổi-epsilon","text":"Đạo hàm số: sai phân trung tâm và đánh đổi epsilon","depth":2},{"id":"lên-3d-ba-trường-noise-độc-lập-công-thức-curl-đầy-đủ","text":"Lên 3D: ba trường noise độc lập, công thức curl đầy đủ","depth":2},{"id":"né-vật-cản-điều-chế-trường-tiềm-năng-gần-biên","text":"Né vật cản: điều chế trường tiềm năng gần biên","depth":2},{"id":"từ-trường-vector-đến-hạt-chuyển-động-thật","text":"Từ trường vector đến hạt chuyển động thật","depth":2}],
+    en: [{"id":"a-vector-field-for-motion-why-a-raw-gradient-compresses-particles","text":"A Vector Field for Motion: Why a Raw Gradient \"Compresses\" Particles","depth":2},{"id":"divergence-intuition-f-measures-local-expansion","text":"Divergence Intuition: ∇·F Measures Local Expansion","depth":2},{"id":"curl-in-2d-rotate-the-gradient-90-divergence-vanishes-by-a-one-line-proof","text":"Curl in 2D: Rotate the Gradient 90°, Divergence Vanishes by a One-Line Proof","depth":2},{"id":"numerical-derivatives-central-differences-and-the-epsilon-tradeoff","text":"Numerical Derivatives: Central Differences and the Epsilon Tradeoff","depth":2},{"id":"into-3d-three-independent-noise-fields-the-full-curl-formula","text":"Into 3D: Three Independent Noise Fields, the Full Curl Formula","depth":2},{"id":"obstacle-avoidance-modulating-the-potential-near-boundaries","text":"Obstacle Avoidance: Modulating the Potential Near Boundaries","depth":2},{"id":"from-vector-field-to-actual-moving-particles","text":"From Vector Field to Actual Moving Particles","depth":2}],
+  },
+  "domain-warping": {
+    vi: [{"id":"ý-tưởng-của-quilez-làm-méo-chính-toạ-độ-trước-khi-lấy-mẫu","text":"Ý tưởng của Quilez: làm méo chính toạ độ trước khi lấy mẫu","depth":2},{"id":"một-lớp-warp-q-rồi-fbmp--strengthq","text":"Một lớp warp: q rồi fbm(p + strength·q)","depth":2},{"id":"đọc-cường-độ-warp-méo-nhẹ-vs-chảy-như-dòng-nước","text":"Đọc cường độ warp: méo nhẹ vs chảy như dòng nước","depth":2},{"id":"lồng-lớp-thứ-hai-r-xây-từ-q-cho-vân-marble-và-khói","text":"Lồng lớp thứ hai: r xây từ q, cho vân marble và khói","depth":2},{"id":"tô-màu-bằng-q-và-r-không-chỉ-bằng-f--mẹo-của-quilez","text":"Tô màu bằng q và r, không chỉ bằng f — mẹo của Quilez","depth":2},{"id":"vì-sao-offset-phải-khác-nhau-giữa-các-kênh","text":"Vì sao offset phải khác nhau giữa các kênh","depth":2},{"id":"chi-phí-mỗi-lớp-nhân-thêm-số-lần-gọi-fbm","text":"Chi phí: mỗi lớp nhân thêm số lần gọi fbm","depth":2},{"id":"liên-hệ-tới-hiện-tượng-thật-trực-giác-advection","text":"Liên hệ tới hiện tượng thật: trực giác advection","depth":2},{"id":"từ-warp-một-lớp-tới-toàn-bộ-trường-procedural","text":"Từ warp một lớp tới toàn bộ trường procedural","depth":2}],
+    en: [{"id":"quilezs-idea-distort-the-coordinate-itself-before-sampling","text":"Quilez's Idea: Distort the Coordinate Itself Before Sampling","depth":2},{"id":"one-warp-layer-q-then-fbmp--strengthq","text":"One Warp Layer: q, Then fbm(p + strength·q)","depth":2},{"id":"reading-warp-strength-gentle-distortion-vs-flowing-water","text":"Reading Warp Strength: Gentle Distortion vs. Flowing Water","depth":2},{"id":"nesting-a-second-layer-r-built-from-q-for-marble-and-smoke","text":"Nesting a Second Layer: r Built From q, for Marble and Smoke","depth":2},{"id":"coloring-by-q-and-r-not-just-f--quilezs-trick","text":"Coloring by q and r, Not Just f — Quilez's Trick","depth":2},{"id":"why-the-offsets-must-differ-between-channels","text":"Why the Offsets Must Differ Between Channels","depth":2},{"id":"cost-every-layer-multiplies-the-fbm-call-count","text":"Cost: Every Layer Multiplies the fbm Call Count","depth":2},{"id":"connection-to-a-real-phenomenon-advection-intuition","text":"Connection to a Real Phenomenon: Advection Intuition","depth":2},{"id":"from-a-single-warp-layer-to-a-full-procedural-field","text":"From a Single Warp Layer to a Full Procedural Field","depth":2}],
+  },
+  "fbm-fractal-brownian-motion": {
+    vi: [{"id":"một-octave-chỉ-có-một-kích-thước-chi-tiết--vật-liệu-thật-có-chi-tiết-ở-mọi-kích-thước","text":"Một octave chỉ có một kích thước chi tiết — vật liệu thật có chi tiết ở mọi kích thước","depth":2},{"id":"vòng-lặp-fbm-gain-thu-nhỏ-biên-độ-lacunarity-phóng-to-tần-số","text":"Vòng lặp FBM: gain thu nhỏ biên độ, lacunarity phóng to tần số","depth":2},{"id":"số-octave-chi-phí-tuyến-tính-và-điểm-dừng-dưới-kích-thước-pixel","text":"Số octave: chi phí tuyến tính, và điểm dừng dưới kích thước pixel","depth":2},{"id":"chuẩn-hoá-chia-cho-tổng-biên-độ-tối-đa","text":"Chuẩn hoá: chia cho tổng biên độ tối đa","depth":2},{"id":"uốn-kết-quả-ridged-turbulence-billow","text":"Uốn kết quả: ridged, turbulence, billow","depth":2},{"id":"fbm-làm-input-cho-color-ramp-không-phải-màu-cuối-cùng","text":"FBM làm input cho color ramp, không phải màu cuối cùng","depth":2},{"id":"octave-không-phải-mức-chi-tiết-bạn-thiết-kế--đó-là-một-phổ-bạn-tinh-chỉnh","text":"Octave không phải mức chi tiết bạn thiết kế — đó là một phổ bạn tinh chỉnh","depth":2}],
+    en: [{"id":"one-octave-has-one-feature-scale--real-materials-have-detail-at-every-scale","text":"One Octave Has One Feature Scale — Real Materials Have Detail at Every Scale","depth":2},{"id":"the-fbm-loop-gain-shrinks-amplitude-lacunarity-grows-frequency","text":"The FBM Loop: Gain Shrinks Amplitude, Lacunarity Grows Frequency","depth":2},{"id":"octave-count-linear-cost-and-a-cutoff-below-pixel-size","text":"Octave Count: Linear Cost, and a Cutoff Below Pixel Size","depth":2},{"id":"normalization-dividing-by-the-maximum-possible-amplitude","text":"Normalization: Dividing by the Maximum Possible Amplitude","depth":2},{"id":"shaping-the-result-ridged-turbulence-billow","text":"Shaping the Result: Ridged, Turbulence, Billow","depth":2},{"id":"fbm-as-input-to-a-color-ramp-not-the-final-color","text":"FBM as Input to a Color Ramp, Not the Final Color","depth":2},{"id":"octaves-arent-a-detail-level-you-design--theyre-a-spectrum-you-tune","text":"Octaves Aren't a Detail Level You Design — They're a Spectrum You Tune","depth":2}],
+  },
+  "hash-functions-on-gpu": {
+    vi: [{"id":"vì-sao-gpu-không-có-random-thật","text":"Vì sao GPU không có random() thật","depth":2},{"id":"hash-sinfract-kinh-điển-và-cách-nó-hoạt-động","text":"Hash sin/fract kinh điển và cách nó hoạt động","depth":2},{"id":"artefact-thật-của-hash-sin-đừng-giấu-nó","text":"Artefact thật của hash sin: đừng giấu nó","depth":2},{"id":"hash-tốt-hơn-đa-thức-không-dùng-sin","text":"Hash tốt hơn: đa thức không dùng sin","depth":2},{"id":"hash-2d2d-cho-hướng-gradient-và-seeding","text":"Hash 2D→2D cho hướng gradient, và seeding","depth":2},{"id":"trắng-xoá-là-gì-và-giới-hạn-của-nó","text":"Trắng xoá là gì, và giới hạn của nó","depth":2}],
+    en: [{"id":"why-the-gpu-has-no-real-random","text":"Why the GPU Has No Real random()","depth":2},{"id":"the-classic-sinfract-hash-and-how-it-works","text":"The Classic sin/fract Hash, and How It Works","depth":2},{"id":"the-sin-hashs-real-artifacts-no-hiding-them","text":"The Sin Hash's Real Artifacts: No Hiding Them","depth":2},{"id":"a-better-hash-sine-free-polynomials","text":"A Better Hash: Sine-Free Polynomials","depth":2},{"id":"2d2d-hashes-for-gradient-directions-and-seeding","text":"2D→2D Hashes for Gradient Directions, and Seeding","depth":2},{"id":"what-white-noise-is-and-where-it-runs-out","text":"What White Noise Is, and Where It Runs Out","depth":2}],
+  },
+  "noise-in-3d-4d-time": {
+    vi: [{"id":"hai-lối-animate-noise-trượt-hay-tiến-hoá","text":"Hai lối animate noise: trượt hay tiến hoá","depth":2},{"id":"scroll-noise2p--tdir--trượt-cứng-không-tiến-hoá","text":"Scroll: noise2(p + t·dir) — trượt cứng, không tiến hoá","depth":2},{"id":"slice-noise3p-t--mỗi-khung-là-một-lát-cắt-khác","text":"Slice: noise3(p, t) — mỗi khung là một lát cắt khác","depth":2},{"id":"vòng-lặp-hoàn-hảo-lấy-mẫu-4d-trên-một-đường-tròn","text":"Vòng lặp hoàn hảo: lấy mẫu 4D trên một đường tròn","depth":2},{"id":"cái-giá-tăng-theo-chiều-4-8-16-góc-lưới","text":"Cái giá tăng theo chiều: 4, 8, 16 góc lưới","depth":2},{"id":"kết-hợp-scroll-với-slice-và-giữ-độ-chính-xác-khi-t-lớn","text":"Kết hợp scroll với slice, và giữ độ chính xác khi t lớn","depth":2}],
+    en: [{"id":"two-ways-to-animate-noise-sliding-vs-evolving","text":"Two Ways to Animate Noise: Sliding vs Evolving","depth":2},{"id":"scroll-noise2p--tdir--rigid-sliding-no-evolution","text":"Scroll: noise2(p + t·dir) — Rigid Sliding, No Evolution","depth":2},{"id":"slice-noise3p-t--every-frame-is-a-different-slab","text":"Slice: noise3(p, t) — Every Frame Is a Different Slab","depth":2},{"id":"a-perfect-loop-sampling-4d-noise-on-a-circle","text":"A Perfect Loop: Sampling 4D Noise on a Circle","depth":2},{"id":"the-cost-ladder-4-8-16-grid-corners","text":"The Cost Ladder: 4, 8, 16 Grid Corners","depth":2},{"id":"combining-scroll-and-slice-and-staying-precise-when-t-is-large","text":"Combining Scroll and Slice, and Staying Precise When t Is Large","depth":2}],
+  },
+  "perlin-and-simplex-noise": {
+    vi: [{"id":"perlin-noise-chuẩn-hoá-gradient-noise-trên-lưới-vuông","text":"Perlin noise: chuẩn hoá gradient noise trên lưới vuông","depth":2},{"id":"chọn-gradient-tại-góc-lưới-bảng-permutation-cổ-điển-và-hash-trên-gpu","text":"Chọn gradient tại góc lưới: bảng permutation cổ điển và hash trên GPU","depth":2},{"id":"fade-curve-quintic-2002-thay-cho-cubic-1985","text":"Fade curve: quintic 2002 thay cho cubic 1985","depth":2},{"id":"cài-đặt-perlin-2d-dot-product-và-nội-suy-song-tuyến","text":"Cài đặt Perlin 2D: dot product và nội suy song tuyến","depth":2},{"id":"khoảng-giá-trị-và-chuẩn-hoá-về-01","text":"Khoảng giá trị và chuẩn hoá về [0,1]","depth":2},{"id":"lời-nguyền-lưới-vuông-2ⁿ-góc-theo-số-chiều","text":"Lời nguyền lưới vuông: 2ⁿ góc theo số chiều","depth":2},{"id":"simplex-lưới-tam-giác-hệ-số-skew-và-kernel-bán-kính","text":"Simplex: lưới tam giác, hệ số skew, và kernel bán kính","depth":2},{"id":"bằng-sáng-chế-hết-hạn-và-opensimplex","text":"Bằng sáng chế hết hạn và OpenSimplex","depth":2},{"id":"chọn-thuật-toán-nào-và-dùng-webgl-noise-trong-thực-tế","text":"Chọn thuật toán nào, và dùng webgl-noise trong thực tế","depth":2}],
+    en: [{"id":"perlin-noise-gradient-noise-made-canonical-on-a-square-grid","text":"Perlin Noise: Gradient Noise Made Canonical on a Square Grid","depth":2},{"id":"picking-gradients-at-grid-corners-the-classic-permutation-table-vs-gpu-hashing","text":"Picking Gradients at Grid Corners: The Classic Permutation Table vs GPU Hashing","depth":2},{"id":"the-fade-curve-2002s-quintic-replaces-1985s-cubic","text":"The Fade Curve: 2002's Quintic Replaces 1985's Cubic","depth":2},{"id":"implementing-perlin-2d-dot-products-and-bilinear-interpolation","text":"Implementing Perlin 2D: Dot Products and Bilinear Interpolation","depth":2},{"id":"range-and-normalizing-to-01","text":"Range and Normalizing to [0,1]","depth":2},{"id":"the-square-grid-curse-2ⁿ-corners-per-dimension","text":"The Square-Grid Curse: 2ⁿ Corners per Dimension","depth":2},{"id":"simplex-a-triangular-lattice-the-skew-factor-and-a-radial-kernel","text":"Simplex: A Triangular Lattice, the Skew Factor, and a Radial Kernel","depth":2},{"id":"an-expired-patent-and-opensimplex","text":"An Expired Patent, and OpenSimplex","depth":2},{"id":"which-to-pick-and-using-webgl-noise-in-practice","text":"Which to Pick, and Using webgl-noise in Practice","depth":2}],
+  },
+  "value-and-gradient-noise": {
+    vi: [{"id":"từ-trắng-xoá-tới-noise-có-cấu-trúc-hash-chỉ-tại-điểm-lưới","text":"Từ trắng xoá tới noise có cấu trúc: hash chỉ tại điểm lưới","depth":2},{"id":"value-noise-trộn-song-tuyến-bốn-góc-ô-lưới","text":"Value noise: trộn song tuyến bốn góc ô lưới","depth":2},{"id":"vì-sao-nội-suy-tuyến-tính-lộ-hình-thoi-gián-đoạn-đạo-hàm","text":"Vì sao nội suy tuyến tính lộ hình thoi: gián đoạn đạo hàm","depth":2},{"id":"hàm-fade-smoothstep-và-quintic","text":"Hàm fade: smoothstep và quintic","depth":2},{"id":"gradient-noise-góc-lưới-giữ-hướng-không-giữ-giá-trị","text":"Gradient noise: góc lưới giữ hướng, không giữ giá trị","depth":2},{"id":"so-sánh-và-vì-sao-engine-chọn-gradient-noise","text":"So sánh và vì sao engine chọn gradient noise","depth":2}],
+    en: [{"id":"from-white-noise-to-structured-noise-hashing-only-at-grid-points","text":"From White Noise to Structured Noise: Hashing Only at Grid Points","depth":2},{"id":"value-noise-bilinear-blending-of-four-corners","text":"Value Noise: Bilinear Blending of Four Corners","depth":2},{"id":"why-linear-interpolation-shows-diamonds-a-derivative-discontinuity","text":"Why Linear Interpolation Shows Diamonds: A Derivative Discontinuity","depth":2},{"id":"the-fade-function-smoothstep-and-quintic","text":"The Fade Function: Smoothstep and Quintic","depth":2},{"id":"gradient-noise-corners-store-direction-not-value","text":"Gradient Noise: Corners Store Direction, Not Value","depth":2},{"id":"comparing-the-two-and-why-engines-reach-for-gradient-noise","text":"Comparing the Two, and Why Engines Reach for Gradient Noise","depth":2}],
+  },
+  "voronoi-and-worley": {
+    vi: [{"id":"ý-tưởng-rắc-điểm-hạt-giống-tô-theo-khoảng-cách-gần-nhất","text":"Ý tưởng: rắc điểm hạt giống, tô theo khoảng cách gần nhất","depth":2},{"id":"quét-33-ô-lân-cận-vì-sao-chỉ-nhìn-ô-của-mình-là-chưa-đủ","text":"Quét 3×3 ô lân cận: vì sao chỉ nhìn ô của mình là chưa đủ","depth":2},{"id":"f1-f2-và-hiệu-f2--f1-viền-ô-hữu-cơ","text":"F1, F2 và hiệu F2 − F1: viền ô hữu cơ","depth":2},{"id":"cell-id-tô-phẳng-từng-vùng-bằng-một-hash","text":"Cell-ID: tô phẳng từng vùng bằng một hash","depth":2},{"id":"ba-độ-đo-khoảng-cách-đổi-luật-đo-đổi-hẳn-hình-dạng-ô","text":"Ba độ đo khoảng cách: đổi luật đo, đổi hẳn hình dạng ô","depth":2},{"id":"jitter-từ-lưới-đều-tăm-tắp-đến-hỗn-loạn-hoàn-toàn","text":"Jitter: từ lưới đều tăm tắp đến hỗn loạn hoàn toàn","depth":2},{"id":"voronoi-mượt-xoá-điểm-gãy-đạo-hàm-bằng-log-sum-exp","text":"Voronoi mượt: xoá điểm gãy đạo hàm bằng log-sum-exp","depth":2},{"id":"ứng-dụng-và-chi-phí-đá-bùn-nứt-tế-bào","text":"Ứng dụng và chi phí: đá, bùn nứt, tế bào","depth":2}],
+    en: [{"id":"the-idea-scatter-seed-points-shade-by-nearest-distance","text":"The Idea: Scatter Seed Points, Shade by Nearest Distance","depth":2},{"id":"the-3x3-neighbor-scan-why-your-own-cell-isnt-enough","text":"The 3x3 Neighbor Scan: Why Your Own Cell Isn't Enough","depth":2},{"id":"f1-f2-and-f2--f1-organic-cell-borders-for-free","text":"F1, F2, and F2 − F1: Organic Cell Borders for Free","depth":2},{"id":"cell-id-flat-coloring-each-region-with-a-hash","text":"Cell-ID: Flat-Coloring Each Region with a Hash","depth":2},{"id":"three-distance-metrics-change-the-ruler-change-the-cell-shape","text":"Three Distance Metrics: Change the Ruler, Change the Cell Shape","depth":2},{"id":"jitter-from-a-perfect-grid-to-full-chaos","text":"Jitter: From a Perfect Grid to Full Chaos","depth":2},{"id":"smooth-voronoi-erasing-the-derivative-kink-with-log-sum-exp","text":"Smooth Voronoi: Erasing the Derivative Kink with Log-Sum-Exp","depth":2},{"id":"applications-and-cost-stone-cracked-mud-cells","text":"Applications and Cost: Stone, Cracked Mud, Cells","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -881,6 +969,14 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/demo"),
   "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/demo"),
   "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/demo"),
+  "curl-noise-flow-fields": () => import("./lessons/07-procedural/curl-noise-flow-fields/demo"),
+  "domain-warping": () => import("./lessons/07-procedural/domain-warping/demo"),
+  "fbm-fractal-brownian-motion": () => import("./lessons/07-procedural/fbm-fractal-brownian-motion/demo"),
+  "hash-functions-on-gpu": () => import("./lessons/07-procedural/hash-functions-on-gpu/demo"),
+  "noise-in-3d-4d-time": () => import("./lessons/07-procedural/noise-in-3d-4d-time/demo"),
+  "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/demo"),
+  "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/demo"),
+  "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -977,4 +1073,14 @@ export const EXERCISES_REGISTRY: Partial<
   "three-injected-uniforms": () => import("./lessons/06-custom-shaders/three-injected-uniforms/exercises"),
   "three-shader-chunk-system": () => import("./lessons/06-custom-shaders/three-shader-chunk-system/exercises"),
   "tsl-and-webgpu-outlook": () => import("./lessons/06-custom-shaders/tsl-and-webgpu-outlook/exercises"),
+  "checkpoint-animated-terrain-material": () => import("./lessons/07-procedural/checkpoint-animated-terrain-material/exercises"),
+  "checkpoint-procedural-clouds": () => import("./lessons/07-procedural/checkpoint-procedural-clouds/exercises"),
+  "curl-noise-flow-fields": () => import("./lessons/07-procedural/curl-noise-flow-fields/exercises"),
+  "domain-warping": () => import("./lessons/07-procedural/domain-warping/exercises"),
+  "fbm-fractal-brownian-motion": () => import("./lessons/07-procedural/fbm-fractal-brownian-motion/exercises"),
+  "hash-functions-on-gpu": () => import("./lessons/07-procedural/hash-functions-on-gpu/exercises"),
+  "noise-in-3d-4d-time": () => import("./lessons/07-procedural/noise-in-3d-4d-time/exercises"),
+  "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/exercises"),
+  "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/exercises"),
+  "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/exercises"),
 };

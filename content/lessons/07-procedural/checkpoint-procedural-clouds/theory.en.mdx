@@ -1,0 +1,15 @@
+## Goal
+
+This is the mini-build closing the "Noise Foundations" module: no new theory, just a working fragment shader that proves you can wire hashing, noise and FBM together into an actual cloud scene — not just building each technique in isolation, but combining them into a texture that reads as "clouds," animating like weather rather than jittery grain.
+
+## Requirements
+
+Build a cloud scene in the GLSL Playground: a vertical sky gradient (horizon brighter than zenith), a cloud layer built from FBM with coverage and softness baked in as constants, time-driven drift using two FBM layers at different speeds for a parallax feel instead of one scrolling texture, warmer edge tinting near a sun position, and a subtle FBM warp on the sampling coordinate before computing density so the clouds aren't uniform round blobs. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Hashing, value noise and `fbm()` are already provided in the starter code — your job is wiring them correctly: `smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)` shapes the soft cloud edge; two `fbm()` calls offset by `uTime` at different speeds, blended together, give the parallax; and a distance check from `uv` to the sun position adds warm color exactly into the cloud's edge band (where density sits between 0 and 1), without bleeding into the solid core.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — clouds read as soft volume rather than grainy noise, motion looks like wind rather than a scrolling texture, edges visibly brighten near the sun, there's no hard banding between cloud and sky, and it runs indefinitely with no visible loop or reset point.

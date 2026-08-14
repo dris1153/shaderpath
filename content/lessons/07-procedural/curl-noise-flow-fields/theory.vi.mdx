@@ -1,0 +1,67 @@
+## Trường vector cho chuyển động: vì sao gradient thô làm hạt "nén"
+
+Cách ngây thơ nhất để biến một trường noise thành chuyển động: lấy một trường tiềm năng vô hướng $\psi(p)$ (một FBM quen thuộc từ các bài trước), tính gradient $\nabla\psi$ của nó, rồi dùng thẳng vector đó làm vận tốc cho hạt hay khói. Nhìn hợp lý — gradient luôn chỉ theo hướng $\psi$ tăng nhanh nhất — nhưng nó có một lỗi vật lý nghiêm trọng: gradient của một hàm vô hướng bất kỳ luôn chỉ *về phía* các đỉnh cực đại và *ra khỏi* các đáy cực tiểu của $\psi$. Hạt trôi theo trường đó không lan toả tự nhiên — chúng bị hút dồn vào các điểm cực trị, càng lâu càng dồn cục dày đặc tại một vài "hố", để trống hoàn toàn những vùng khác. Đây chính là hiện tượng **nén** (compression): trường không bảo toàn thể tích/diện tích khi hạt di chuyển theo nó.
+
+## Trực giác phân kỳ: ∇·F đo độ giãn nở cục bộ
+
+Đại lượng đo chính xác "trường này nén hay giãn tại đây bao nhiêu" gọi là **phân kỳ** (divergence), ký hiệu $\nabla \cdot F$. Với trường 2D $F = (F_x, F_y)$:
+
+$$
+\nabla \cdot F = \frac{\partial F_x}{\partial x} + \frac{\partial F_y}{\partial y}
+$$
+
+Trực giác: thả một hình vuông nhỏ các hạt tại điểm $p$, để nó trôi theo $F$ trong một khoảng thời gian ngắn — $\nabla \cdot F(p) > 0$ nghĩa là hình vuông đó **giãn ra** (mật độ hạt giảm, vùng lân cận "nở"); $\nabla \cdot F(p) < 0$ nghĩa là nó **co lại** (mật độ tăng, hạt dồn cục); $\nabla \cdot F(p) = 0$ nghĩa là diện tích giữ nguyên — hạt có thể xoáy, kéo dài, biến dạng, nhưng tổng diện tích nó chiếm không đổi. Trường có phân kỳ triệt tiêu khắp mọi nơi gọi là **không nén được** (incompressible) — chính xác tính chất còn thiếu ở trường gradient thô phần trên.
+
+## Curl 2D: xoay gradient 90°, phân kỳ triệt tiêu bằng chứng minh một dòng
+
+Curl noise sửa đúng vấn đề đó bằng một phép biến đổi cực đơn giản: thay vì dùng $\nabla\psi$ trực tiếp, **xoay nó 90°**:
+
+$$
+F = \left(\frac{\partial \psi}{\partial y},\ -\frac{\partial \psi}{\partial x}\right)
+$$
+
+Trường $F$ này luôn vuông góc với $\nabla\psi$ tại mọi điểm — tức nó luôn tiếp tuyến với đường đồng mức (level curve) của $\psi$ đi qua điểm đó, không bao giờ hướng về phía cực trị. Phân kỳ của $F$ triệt tiêu **về mặt đại số**, không phải trùng hợp số học:
+
+$$
+\nabla \cdot F = \frac{\partial}{\partial x}\!\left(\frac{\partial \psi}{\partial y}\right) + \frac{\partial}{\partial y}\!\left(-\frac{\partial \psi}{\partial x}\right) = \frac{\partial^2 \psi}{\partial x\, \partial y} - \frac{\partial^2 \psi}{\partial y\, \partial x} = 0
+$$
+
+Hai đạo hàm riêng phần hỗn hợp $\partial^2\psi/\partial x\partial y$ và $\partial^2\psi/\partial y\partial x$ bằng nhau với mọi hàm đủ mượt (định lý Schwarz/Clairaut) — nên hiệu của chúng luôn bằng 0, bất kể $\psi$ cụ thể là FBM gì. Vì đường đồng mức của một hàm mượt không bao giờ tự cắt chính nó, hệ quả trực tiếp là: streamline của một curl field không bao giờ giao nhau — chính là "chữ ký thị giác" xoáy nước, không rối, đặc trưng của curl noise trong mọi demo bạn từng thấy.
+
+## Đạo hàm số: sai phân trung tâm và đánh đổi epsilon
+
+GLSL không có phép lấy đạo hàm ký hiệu cho một hàm noise tuỳ ý — công thức trên phải xấp xỉ bằng **sai phân trung tâm** (central difference):
+
+$$
+\frac{\partial \psi}{\partial x} \approx \frac{\psi(p + \varepsilon\,\hat x) - \psi(p - \varepsilon\,\hat x)}{2\varepsilon}
+$$
+
+$\varepsilon$ là một siêu tham số phải chọn tay, và cả hai hướng chọn sai đều gây hại: $\varepsilon$ quá lớn lấy mẫu $\psi$ ở hai điểm cách xa nhau, làm mất chi tiết tần số cao (các octave nhỏ của FBM bị san phẳng, gradient trở nên "cùn"); $\varepsilon$ quá nhỏ đẩy phép trừ hai số gần bằng nhau về sát giới hạn độ chính xác dấu phẩy động của GPU — kết quả nhiễu hạt (jitter numeric), đặc biệt rõ trên các thiết bị di động chạy `mediump`. Giá trị thực dụng thường nằm quanh 1-2% bước sóng đặc trưng của noise — đủ nhỏ để không làm mờ chi tiết, đủ lớn để phép trừ còn ý nghĩa.
+
+## Lên 3D: ba trường noise độc lập, công thức curl đầy đủ
+
+2D chỉ cần một $\psi$ vô hướng vì "xoay 90°" chỉ có một cách. 3D cần một **trường tiềm năng vector** $\Psi = (\psi_x, \psi_y, \psi_z)$ — ba trường FBM độc lập, thường dựng từ cùng một hàm noise nhưng offset toạ độ khác nhau để tránh tương quan. Curl đầy đủ:
+
+$$
+F = \nabla \times \Psi = \left(\frac{\partial \psi_z}{\partial y} - \frac{\partial \psi_y}{\partial z},\ \ \frac{\partial \psi_x}{\partial z} - \frac{\partial \psi_z}{\partial x},\ \ \frac{\partial \psi_y}{\partial x} - \frac{\partial \psi_x}{\partial y}\right)
+$$
+
+Mỗi thành phần đòi 2 đạo hàm riêng, mỗi đạo hàm 2 lần gọi noise — tổng cộng 12 lần gọi FBM cho một vector curl 3D đầy đủ, đắt hơn hẳn bản 2D (4 lần gọi) nhưng cùng một nguyên lý: phân kỳ của một curl luôn bằng 0 với mọi trường vector tiềm năng, bất kể số chiều, vì lý do y hệt — các đạo hàm riêng hỗn hợp triệt tiêu nhau theo cặp.
+
+## Né vật cản: điều chế trường tiềm năng gần biên
+
+Một hệ quả tinh tế của việc streamline chạy dọc đường đồng mức: nếu ép $\psi$ giữ **hằng số** dọc theo biên của một vật cản (nhân $\psi$ với một hệ số giảm dần về một giá trị cố định khi tới gần SDF của vật cản), đường đồng mức đi qua vùng đó buộc phải uốn theo đúng hình dạng biên — và vì $F$ luôn tiếp tuyến với đường đồng mức, dòng chảy tự động "trượt" dọc theo vật cản thay vì xuyên qua nó, không cần thêm một điều kiện va chạm cứng nào. Đây là ý tưởng nền của kỹ thuật obstacle-avoidance trong khói/lửa mô phỏng bằng curl noise — chi tiết cài đặt đầy đủ vượt khỏi phạm vi bài này, nhưng nguyên lý chỉ gói gọn trong một câu: điều chế biên độ của $\psi$, không phải của $F$.
+
+## Từ trường vector đến hạt chuyển động thật
+
+Ứng dụng kinh điển nhất của curl noise là advect hạt: mỗi khung hình, cập nhật vị trí hạt bằng một bước Euler đơn giản $p \mathrel{+}= F(p)\,\Delta t$, dùng chính $F$ vừa dựng làm vận tốc tức thời. Demo của bài này mô phỏng đúng ý tưởng đó trong một fragment shader (không có bộ nhớ hạt thật — chỉ "vẽ lại" hiệu ứng advect mỗi frame bằng cách lùi ngược toạ độ pixel dọc theo $F$ vài bước). Track 9 (GPGPU) tổng quát hoá chính xác phép cập nhật này thành một compute pass thật: vị trí hàng nghìn hạt mã hoá trong một texture, mỗi frame một fragment shader đọc texture đó, cộng $F(p)\,\Delta t$, rồi ghi lại — cùng công thức, chỉ khác nơi lưu trạng thái.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài curl noise:
+
+1. **Dùng thẳng $\nabla\psi$ làm vận tốc, quên bước xoay 90°.** Trông vẫn "có vẻ chuyển động" trong vài giây đầu, nhưng theo thời gian hạt luôn dồn cục về phía các cực trị của $\psi$ — đúng hiện tượng nén mở đầu bài, dễ nhầm là lỗi tham số hoá thay vì thiếu đúng một bước hoán vị hai thành phần và đổi dấu.
+2. **Chọn epsilon cố định mà không theo tần số noise.** Tăng `uScale` (nén noise vào không gian nhỏ hơn) mà giữ nguyên epsilon tuyệt đối khiến hai điểm lấy mẫu sai phân trung tâm rơi gần như trùng một ô lưới noise — đạo hàm ước lượng gần như 0 sai, hoặc ngược lại nhảy giá trị bất thường giữa hai ô kề nhau, tuỳ vị trí epsilon rơi vào.
+3. **Chỉ chứng minh phân kỳ triệt tiêu bằng mắt (nhìn hạt không dồn cục) mà không hiểu đó là tính chất đại số, không phải hên xui số học.** Dẫn tới việc "tối ưu" công thức curl bằng cách xấp xỉ thô đạo hàm hỗn hợp theo hai cách khác nhau cho $\partial\psi/\partial y$ và $-\partial\psi/\partial x$ (ví dụ epsilon khác nhau mỗi hướng) — phá vỡ đúng điều kiện làm hai đạo hàm hỗn hợp bằng nhau, phân kỳ không còn triệt tiêu chính xác nữa dù công thức trông vẫn "giống" curl.
+
+</Callout>

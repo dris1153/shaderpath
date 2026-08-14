@@ -1,0 +1,90 @@
+## From White Noise to Structured Noise: Hashing Only at Grid Points
+
+The last lesson stopped at white noise: `hash21(floor(uv * N))` gives every grid cell a value fully independent of its neighbor — statistically clean, visually useless, since the eye can't read any shape out of uniform grain. The key to getting structure is restricting where the hash gets called: instead of hashing every pixel, hash only at integer grid points — coordinates $(i_x, i_y)$ with $i_x, i_y \in \mathbb{Z}$ — then interpolate between those anchor values for every pixel that falls inside a cell. Every pixel within the same $2\times 2$ grid-point cell now "knows" about its neighbors, since they all interpolate from the same 4 shared anchors; that's exactly the spatial correlation the previous lesson deliberately erased, brought back under control.
+
+Splitting a coordinate $p$ into an integer and fractional part is always the same, whether it's value or gradient noise: $i = \lfloor p \rfloor$ is the bottom-left corner of the grid cell containing $p$, $f = \mathrm{fract}(p) = p - i$ is $p$'s relative position inside that cell, always in $[0, 1)^2$. The four grid corners are $i$, $i + (1,0)$, $i + (0,1)$, $i + (1,1)$ — exactly 4 hash calls per pixel, no more, however many pixels sit inside that one cell.
+
+## Value Noise: Bilinear Blending of Four Corners
+
+Value noise is the simplest way to use those 4 hashed values: hash each corner directly into a number, then bilinearly blend the four numbers by the pixel's position $f$ inside the cell:
+
+$$
+n(p) = a(1-f_x)(1-f_y) + b\,f_x(1-f_y) + c(1-f_x)f_y + d\,f_x f_y
+$$
+
+with $a, b, c, d$ the hashed values at the 4 corners in that order. In GLSL, bilinear blending is much more compact with nested `mix` calls — interpolating along $x$ twice (the cell's top and bottom edges), then interpolating that result along $y$:
+
+```glsl
+float a = hash21(i);
+float b = hash21(i + vec2(1.0, 0.0));
+float c = hash21(i + vec2(0.0, 1.0));
+float d = hash21(i + vec2(1.0, 1.0));
+
+float n = mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+```
+
+The result is continuous ($C^0$) across cell boundaries — two adjacent cells share exactly 2 corners, so the value at their shared edge matches exactly, no jump. But continuous in value doesn't mean continuous in derivative, and that's exactly what the next section digs into.
+
+## Why Linear Interpolation Shows Diamonds: A Derivative Discontinuity
+
+The formula above uses $f$ directly as the interpolation weight — a linear fade, $u = f$. Inside a cell, $n(p)$'s slope along each axis is constant, fully determined by that cell's own 4 corner values: $\partial n/\partial x$ inside a cell depends only on $(a, b, c, d)$, nothing about the neighboring cell. The trouble sits at the boundary: the adjacent cell has 4 different corners (sharing exactly 2 with this one), so its constant slope is generally a different number. $n(p)$'s derivative therefore jumps abruptly right at the grid boundary — the value $n$ matches, but the slope doesn't, a first-order derivative discontinuity ($C^0$ but not $C^1$).
+
+The human eye is very sensitive to derivative discontinuities even when it's not sensitive to value discontinuities — that's why creases along the grid (often described as "diamonds" or "facet lines") become obvious the moment value noise gets used as a bump map or lit from a grazing angle, even though the raw grayscale image looked smooth when viewed straight on. Perlin ran into exactly this problem developing his original noise in the 1980s, and the fix isn't changing how the 4 corners get blended — it's changing the function that decides the interpolation weight, the next section's topic.
+
+## The Fade Function: Smoothstep and Quintic
+
+A fade is a function $f(t): [0,1] \to [0,1]$ applied to $f_x, f_y$ before feeding them into `mix`, replacing the linear $u = f$. Smoothstep, already seen in Track 2, is the first candidate:
+
+$$
+f(t) = 3t^2 - 2t^3, \qquad f'(t) = 6t(1-t)
+$$
+
+$f'(0) = f'(1) = 0$ — the derivative is zero at exactly the two endpoints $t=0, t=1$, precisely where two adjacent cells meet. Because the fade's own derivative vanishes at the boundary, $n(p)$'s derivative there no longer depends on the fade's "rate of change," only on the corner values the two cells share — adjacent cells now match up to first order ($C^1$), and the diamond artifact disappears.
+
+Smoothstep isn't quite perfect: its second derivative, $f''(t) = 6 - 12t$, is nonzero at both endpoints ($f''(0)=6$, $f''(1)=-6$) — curvature still has a discontinuity, showing up under specular lighting even once it's gone from diffuse. Perlin fixed exactly this in "Improving Noise" (2002) with a quintic function:
+
+$$
+f(t) = 6t^5 - 15t^4 + 10t^3
+$$
+
+$$
+f'(t) = 30t^2(t-1)^2, \qquad f''(t) = 60t(2t-1)(t-1)
+$$
+
+Both $f'$ and $f''$ are zero at $t=0$ and $t=1$ — continuous through the second derivative ($C^2$), erasing the curvature discontinuity smoothstep still leaves behind. The cost is a couple more higher-degree polynomial multiplies per axis than smoothstep — cheap relative to the payoff, which is why most modern Perlin noise implementations default to quintic.
+
+## Gradient Noise: Corners Store Direction, Not Value
+
+Gradient noise changes exactly one thing: each grid corner doesn't store a number, it stores a direction — a random unit vector, drawn from last lesson's 2D→2D hash (or from a random angle $\theta = \mathrm{hash21}(i) \cdot 2\pi$ turned into $(\cos\theta, \sin\theta)$). Each corner's contribution is no longer the hash itself, but the **dot product** between that corner's gradient and the offset vector from that corner to $p$:
+
+```glsl
+vec2 g00 = gradientAt(i);
+vec2 g10 = gradientAt(i + vec2(1.0, 0.0));
+vec2 g01 = gradientAt(i + vec2(0.0, 1.0));
+vec2 g11 = gradientAt(i + vec2(1.0, 1.0));
+
+float v00 = dot(g00, f - vec2(0.0, 0.0));
+float v10 = dot(g10, f - vec2(1.0, 0.0));
+float v01 = dot(g01, f - vec2(0.0, 1.0));
+float v11 = dot(g11, f - vec2(1.0, 1.0));
+
+float n = mix(mix(v00, v10, u.x), mix(v01, v11, u.x), u.y);
+```
+
+These four `dot` lines keep value noise's exact bilinear structure, just swapping the "corner value" ($a, b, c, d$) for "the gradient's projection onto the direction toward $p$." The direct consequence: right at a grid point, the offset vector to itself is $(0, 0)$, so $\mathrm{dot}(g, \vec 0) = 0$ for any gradient — gradient noise is **always exactly zero at every grid point**, no matter what direction the hash produces. Value noise has no such property: at a grid point, its value is literally the raw hash, some arbitrary number in $[0,1)$, which reads as a fixed "bright spot" at every lattice node if you look closely.
+
+## Comparing the Two, and Why Engines Reach for Gradient Noise
+
+Visually, value noise (with a good fade) reads as a "blocky/cloudy" texture — clumping around each node's hash value, with a fairly even amplitude but shapes biased toward round blobs centered on grid points, since the only information each corner carries is "high or low." Gradient noise is noticeably smoother, and its feature size is more even across the whole field, since each corner also carries directional information — the resulting field varies not just in amplitude but in slope direction continuously in every direction, less biased toward the horizontal/vertical axes than value noise.
+
+Graphics engines almost always reach for gradient noise (Perlin/Simplex, next lesson) over value noise for two reasons tied directly to what was just covered: the "zero at grid points" property keeps a field's amplitude stable when many octaves get stacked on top of each other (the FBM topic coming up) — value noise lacks that property, so stacking octaves tends to reveal grid structure at multiple frequencies at once; and gradient noise's derivative has a compact analytic formula, computable alongside the value itself without finite differences — directly useful when building terrain normals or bump maps in Track 8 and Track 11. The next lesson (Perlin & Simplex Noise) formalizes exactly the gradient formula built here, then Simplex swaps the square grid for a triangular one to cut the number of corners that need hashing as dimensions grow.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when building value/gradient noise from scratch:
+
+1. **Interpolating directly with `f` (linear fade) and then wondering why diamond creases show up.** Skipping `smoothstep`/quintic on `f` before feeding it into `mix` leaves the derivative discontinuous at every cell boundary — the crease is most visible when the noise is used as a bump map or lit from a grazing angle.
+2. **In gradient noise, reusing the same `f` for all 4 corners instead of subtracting each corner's own offset.** It must be `f`, `f - vec2(1,0)`, `f - vec2(0,1)`, `f - vec2(1,1)` for the four corners respectively — using the wrong offset breaks the "zero at grid points" property, so the noise no longer cancels where it should and looks noticeably off from standard gradient noise.
+3. **Forgetting to split `i = floor(p)` and `f = fract(p)` before hashing the 4 corners.** Hashing `p` directly, unsplit, samples the wrong corner positions and breaks continuity between cells — the noise shows an obvious stair-stepped grid instead of a smooth field.
+
+</Callout>

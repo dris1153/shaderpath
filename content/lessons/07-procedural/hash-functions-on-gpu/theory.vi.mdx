@@ -1,0 +1,57 @@
+## Vì sao GPU không có random() thật
+
+Trên CPU, `Math.random()` hoạt động vì runtime giữ một state ẩn — một biến trạng thái nội bộ mà mỗi lần gọi đọc rồi cập nhật tuần tự. Fragment shader không có chỗ giữ state kiểu đó: một khung hình 1920×1080 sinh ra khoảng 2 triệu invocation chạy gần như đồng thời trên hàng nghìn lõi, không invocation nào biết nó chạy trước hay sau invocation khác, và không có ô nhớ dùng chung nào ghi được xuyên suốt chúng. Pixel ở toạ độ $(120, 340)$ tại frame này, frame sau, hay được driver vẽ lại theo thứ tự tile khác — nếu giá trị của nó phụ thuộc "mình là invocation thứ mấy" thay vì chỉ phụ thuộc toạ độ, hình ảnh sẽ nhấp nháy hoặc đổi pattern giữa các frame dù camera đứng yên.
+
+Giải pháp duy nhất khả thi là hash function: một hàm toán thuần nhận toạ độ và trả về một số trông "ngẫu nhiên" nhưng xác định tuyệt đối — cùng input luôn cho đúng cùng output, bất kể GPU nào, thứ tự nào, frame nào. Đánh đổi: không có state nghĩa là không "rút thăm không lặp lại" kiểu CPU được, nhưng đổi lại có tính lặp lại hoàn hảo — thứ `Math.random()` không có. Với đồ hoạ thời gian thực, nơi một cảnh vẽ lại 60 lần mỗi giây và phải trông giống hệt nhau ở cùng góc nhìn, tính lặp lại quan trọng hơn hẳn tính "ngẫu nhiên thật".
+
+## Hash sin/fract kinh điển và cách nó hoạt động
+
+Hash 2D→1D phổ biến nhất, do The Book of Shaders phổ biến rộng rãi:
+
+```glsl
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+```
+
+Đọc từ trong ra ngoài. `dot(p, vec2(127.1, 311.7))` gộp $x, y$ của $p$ thành một số thực duy nhất, dùng hai hằng số cố ý không tròn để tránh cộng hưởng với lưới toạ độ nguyên — hai điểm gần nhau cho hai giá trị dot gần nhau nhưng đủ khác biệt để không trùng. `sin(...)` là bộ xáo trộn: dao động nhanh, phi tuyến, một thay đổi nhỏ ở input (đã khuếch đại qua `dot`) tạo output gần như không đoán trước được — "hỗn loạn" theo nghĩa toán học, không phải ngẫu nhiên thật, chỉ nhạy input tới mức trông giống ngẫu nhiên. Nhân với $43758.5453123$ rồi lấy `fract`: hằng số lớn kéo giãn phần thập phân của $\sin$ (chỉ nằm trong $[-1, 1]$) ra một dải rất rộng, `fract` cắt lấy phần lẻ, xoá hết thông tin phần nguyên để kết quả trông đều khắp $[0, 1)$.
+
+## Artefact thật của hash sin: đừng giấu nó
+
+Công thức trên phổ biến vì đơn giản, nhưng có ba artefact đo được, không phải lý thuyết suông. Thứ nhất, độ chính xác: nhiều GPU di động mặc định `mediump` — float 16-bit, khoảng 3 chữ số thập phân đáng tin — trong khi range reduction bên trong `sin()` (đưa góc lớn về $[-\pi, \pi]$ trước khi tính) cần độ chính xác cao hơn nhiều; nhiều toạ độ khác nhau bị làm tròn về cùng vài giá trị sin, hash suy biến còn vài dải màu lặp (banding) thay vì noise mượt. Thứ hai, ngay ở `highp` (float 32-bit) trên desktop, hash vẫn lộ cấu trúc — sọc chéo hoặc caro mờ — khi toạ độ đủ lớn, ví dụ terrain trải hàng chục nghìn đơn vị thế giới: sai số làm tròn của `dot()` và range reduction cộng dồn theo độ lớn input, tới ngưỡng nào đó các toạ độ liền kề hash ra giá trị tương quan thay vì độc lập — Jarzynski và Olano đo trực tiếp vấn đề này khi so sánh chất lượng các hash GPU phổ biến, xếp hash dựa trên `sin` vào nhóm vừa chậm vừa kém tin cậy. Thứ ba là chi phí: `sin` là hàm siêu việt, nhiều kiến trúc GPU tính qua một special-function unit riêng, thông lượng thấp hơn hẳn ALU thường — chạy hàng triệu lần mỗi frame, chênh lệch đó cộng dồn thành mili-giây đo được.
+
+## Hash tốt hơn: đa thức không dùng sin
+
+Cách sửa cả ba vấn đề cùng lúc: bỏ hẳn `sin`, chỉ dùng nhân, cộng và `fract` lặp lại để đạt độ xáo trộn tương đương. Dave Hoskins công bố một họ hash như vậy, gọi thẳng là "hash without sine":
+
+```glsl
+float hash21(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+```
+
+Ý tưởng: nhân toạ độ với các hằng số lẻ nhỏ rồi `fract` để có ba giá trị rác ban đầu (`p3`), sau đó tự trộn ba giá trị đó với nhau qua một `dot`. Dòng `p3 += dot(p3, p3.yzx + 33.33)` là bước quan trọng nhất — nó khiến $x$ ảnh hưởng tới $y$, $y$ ảnh hưởng tới $z$ trước khi kết hợp lại; thiếu bước này kết quả vẫn gần như tuyến tính theo input, dễ đoán. Không hàm siêu việt nào được gọi nên không có vấn đề range reduction, và toàn bộ phép toán chỉ là nhân-cộng nên rẻ ở mọi mức precision. "Hash without sine" đã thành tên gọi chung cho cả nhóm hash đa thức tương tự, khác nhau ở hằng số và số bước trộn, cùng chung nguyên lý: xáo trộn bằng đại số thuần, không dùng lượng giác.
+
+## Hash 2D→2D cho hướng gradient, và seeding
+
+`hash21` trả về một số — đủ cho noise vô hướng như độ sáng hay độ cao, nhưng bài sau cần hướng: một vector 2D ngẫu nhiên tại mỗi điểm lưới để làm gradient noise. Cách đơn giản nhất để có hash 2D→2D là chạy phép hash hai lần với hai bộ hằng số khác nhau rồi ghép hai kết quả vô hướng thành một `vec2`, hoặc trộn cả ba kênh của `p3` ở trên rồi tách ra nhiều giá trị cùng lúc — chính cách Dave Hoskins dùng cho `hash22`/`hash33`. Bài sau (Value & Gradient noise) dùng đúng kỹ thuật này để mỗi góc ô lưới có một hướng riêng.
+
+Một hash chỉ nhận đúng một input — muốn nhiều trường ngẫu nhiên độc lập từ cùng một toạ độ, seed là công cụ duy nhất, theo hai cách: dịch input trước khi hash (`hash21(p + seed * 17.13)`, hằng số $17.13$ cố ý lẻ để không trùng bội số kích thước lưới), hoặc tách kênh output bằng bộ hằng số magic khác nhau. Cả hai cách tận dụng đúng một tính chất: hash chỉ cần input khác đủ nhiều là output đã độc lập.
+
+## Trắng xoá là gì, và giới hạn của nó
+
+Render trực tiếp `hash21(floor(uv * N))` cho ra đúng thứ mắt gọi là "trắng xoá" hay static: mỗi ô lưới một giá trị xám hoàn toàn độc lập với ô bên cạnh — biết giá trị ô $(3, 5)$ không cho biết gì về ô $(3, 6)$ hay $(4, 5)$. Đó chính là "không có tương quan không gian": tương quan giữa hai ô đo mức độ biết ô này giúp đoán ô kia, và một hash tốt cố tình đưa tương quan đó về gần 0.
+
+Đó cũng là giới hạn: mắt người không đọc được "hình dạng" từ trắng xoá thuần — không mây, không vân đá, không địa hình, chỉ nhiễu hạt đều khắp. Bài kế tiếp trong Track 7 xây tiếp từ đây bằng cách phá vỡ chính sự không-tương-quan đó có kiểm soát: chỉ hash tại các điểm lưới nguyên rồi nội suy giữa chúng, biến trắng xoá rời rạc thành trường liên tục có cấu trúc. Xa hơn, Track 9 (GPGPU) dùng lại `hash21`/`hash22` để sinh vị trí và vận tốc khởi tạo cho hàng triệu hạt mà không cần buffer ngẫu nhiên upload từ CPU, còn Track 8 (Raymarching) dùng hash để dithering — phá băng màu trong soft shadow bằng một lượng nhiễu nhỏ, xác định, không đổi giữa các frame.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng hash trên GPU:
+
+1. **Seed bằng số tròn nhỏ (`+1.0`, `+2.0`) thay vì hằng số lẻ lớn.** Cộng đúng 1 đơn vị đôi khi trùng với đúng bước nhảy của lưới đang hash (`floor(uv * N)` bước 1 đơn vị mỗi ô) — "kênh ngẫu nhiên" thứ hai vô tình trở thành kênh ô bên cạnh, không hề độc lập với kênh đầu.
+2. **Nhét `uTime` hoặc toạ độ thế giới thẳng vào một hash dùng cho vân tĩnh.** Hash vẫn xác định đúng nghĩa toán học, nhưng nếu input đổi theo thời gian hoặc theo khoảng cách camera, kết quả trông như noise "nhấp nháy" hay "trôi" — dễ nhầm là bug ngẫu nhiên trong khi thực ra chỉ là input đã đổi.
+3. **Test hash sin trên demo nhỏ (toạ độ 0..1 hoặc vài chục đơn vị) rồi mang thẳng sang terrain toạ độ thế giới hàng nghìn đơn vị.** Artefact banding của hash sin chỉ lộ rõ ở toạ độ lớn — bỏ qua bước test đúng scale thật dễ khiến lỗi chỉ xuất hiện sau khi build xong địa hình.
+
+</Callout>

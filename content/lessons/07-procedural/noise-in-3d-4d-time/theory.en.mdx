@@ -1,0 +1,61 @@
+## Two Ways to Animate Noise: Sliding vs Evolving
+
+The "obvious" way to animate a 2D noise field is to add time into the sample coordinate: `noise2(p + t * dir)` — every frame slides the whole field along a fixed direction. The second way changes exactly one parameter, yet changes the character of the motion entirely: `noise3(p.x, p.y, t)` — using a 3D noise volume's third axis as the time axis.
+
+The difference comes down to whether `t` is a real COORDINATE of the noise function or not. In the first approach, `noise2` has no idea time exists — it's simply called at a different position each frame. In the second, `t` sits on equal footing with `p.x` and `p.y` inside `noise3`'s definition — each different value of `t` is an ENTIRELY DIFFERENT 2D noise function, not the same one shifted around.
+
+## Scroll: `noise2(p + t·dir)` — Rigid Sliding, No Evolution
+
+Because every pixel under scroll adds the exact same vector `t * dir`, the relative shape between noise blobs is preserved perfectly over time — the whole field moves like a rigid body, more like a photo dragged across the viewport. Freezing one specific blob is the clearest test: under scroll, it keeps its exact shape, only its position changes.
+
+That doesn't make scroll "wrong" — it's correct when an effect genuinely needs rigid motion along one direction: water flowing down a channel, a conveyor belt, clouds pushed by wind blowing in a nearly constant direction over a few observed seconds. The accompanying demo implements scroll with a fixed direction, `SCROLL_DIR = vec2(0.866, 0.5)` (a unit vector, $0.866^2 + 0.5^2 = 1$):
+
+```glsl
+return noise2(p * SCALE + SCROLL_DIR * t);
+```
+
+It's also the cheapest of the three modes — a single `noise2` call. The problem only shows up when scroll gets used for something that ought to evolve: real clouds don't just drift, they billow and dissolve; scroll for drifting clouds instantly reads as a "moving sticker."
+
+## Slice: `noise3(p, t)` — Every Frame Is a Different Slab
+
+Slice treats the 3D noise volume as an infinite stack of 2D slabs along the third axis; each frame changes the depth `t` to pull a different slab. No rigid translation links two neighboring slabs — they're simply two DIFFERENT 2D noise functions, blended smoothly only thanks to the noise function's continuous interpolation over `t` — so blobs are free to grow, shrink, or split as `t` drifts past a value where they touch and separate. That's the organic motion clouds, fire, or water need.
+
+An interesting consequence: pure slice almost never shows an obvious loop. The sample trajectory at a fixed pixel is a straight line along the `t` axis, piercing through the volume — with a `sin`/`fract`-based hash (the Hash Functions on the GPU lesson), that trajectory has no short period that returns it to the same point within 32-bit float precision; it just keeps moving through slabs never visited before. Good enough for a video or live-wallpaper running hours without anyone noticing a repeat — but "practically never repeats" is very different from "closes exactly at a chosen time," which a GIF or looping background needs.
+
+## A Perfect Loop: Sampling 4D Noise on a Circle
+
+For a loop that closes EXACTLY — not just "hard to notice," but bit-for-bit equal — the standard technique moves to 4D noise and drives the two extra dimensions around a circle instead of drifting linearly with `t`:
+
+$$
+n(p, t) = \text{noise}_4\big(p_x,\ p_y,\ R\cos(\omega t),\ R\sin(\omega t)\big), \qquad \omega = \frac{2\pi}{T}
+$$
+
+where $T$ is the desired loop period (seconds), $R$ the circle's radius in noise space. Because $\cos$ and $\sin$ repeat exactly every $2\pi$, at $t=0$ and $t=T$ the extra dimensions land on the identical pair $(R, 0)$ — all four `noise4` arguments are identical, so the result is identical: the last frame and the first are literally THE SAME, with no seam to hide. This is the standard technique for GIFs and live-wallpapers that loop seamlessly forever (see References). Radius $R$ isn't arbitrary: too small, the whole loop only travels a tiny corner of noise space, so the pattern barely moves; too large, each timestep jumps into uncorrelated noise territory, producing a grainy look instead of smooth motion.
+
+## The Cost Ladder: 4, 8, 16 Grid Corners
+
+Value/gradient noise interpolates between a grid cell's corners — the corner count grows as a power of 2 with dimension: $2^2=4$ for `noise2`, $2^3=8$ for `noise3`, $2^4=16$ for `noise4`. Every corner needs exactly one hash call — `noise4` therefore costs twice as many hash calls as `noise3`, four times as many as `noise2`, on EVERY invocation. The Perlin & Simplex Noise lesson already showed why Simplex swaps the square/cube grid for a triangular/tetrahedral one specifically to dodge this exponential growth: only $n+1$ vertices (3/4/5 in 2D/3D/4D) instead of $2^n$ corners — at 4D that's 5 versus 16, better than a 3x gap. The practical cost ladder here: if scroll is all that's needed, `noise2` is nearly free; slice costs twice as much but buys genuinely organic motion; the 4D loop is the priciest but the ONLY one of the three that closes a loop exactly — pick based on whether the final product needs to loop, not on the assumption a higher dimension is automatically better.
+
+## Combining Scroll and Slice, and Staying Precise When t Is Large
+
+The two modes aren't mutually exclusive: smoke pushed by wind WHILE still curling in place needs both at once — add a drift direction into `noise3`'s first two dimensions, letting the third keep doing its own job as the evolution axis:
+
+```glsl
+float n = noise3(vec3(p + windDir * t * scrollSpeed, t * evolveSpeed));
+```
+
+`scrollSpeed` and `evolveSpeed` are fully independent — tuning one never touches the other, since they drive two separate axes of the same volume.
+
+One last practical issue: `t` is usually taken from a continuously running clock, growing without bound. A 32-bit float carries roughly 7 reliable decimal digits ($2^{-23} \approx 1.19\times10^{-7}$); at $t \approx 100{,}000$ seconds (~27-28 hours of runtime — an estimate), the smallest step a float can distinguish has grown to about $0.012$ seconds — nearly one whole frame at 60fps ($\approx 0.017$s), so `sin`/`cos`/noise start to visibly stutter. For loop mode, the fix is nearly free: `mod(t, T)` before feeding `cos`/`sin`, since the motion is already periodic over `T`. For pure slice with no natural period, periodically subtracting a large chunk from the CPU-side time counter works — the pattern stays continuous since noise only cares about the remainder, never the absolute value.
+
+Track 9 (GPGPU) reuses this "extra dimension as a control axis" idea to advect particles through a real-time 3D noise field; this module's next checkpoint combines domain warping, Voronoi, and the exact slice technique just learned into one complete, moving terrain material.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when animating noise over time:
+
+1. **Using scroll for something that needs organic evolution (clouds, fire, water).** Scroll translates the whole field like a rigid body, so every blob keeps its shape forever — the test: freeze one blob across a few seconds; if it never changes shape, only position, that's a sure sign scroll is misused.
+2. **Picking a radius $R$ for the 4D loop without testing it.** Too small and the loop barely moves; too large and consecutive steps jump into uncorrelated noise, producing a grainy/jittery look instead of smooth motion — there's no closed-form "correct" $R$; it has to be tuned by eye against the desired speed.
+3. **Letting `t` grow forever without recentering, then being surprised the animation stutters after hours.** Easy to miss because it never shows up in dev-testing (a few minutes) and only surfaces in real deployment (a live-wallpaper or kiosk running 24/7) — `mod(t, T)` for loop mode, or periodically subtracting a large chunk for pure slice, prevents the problem instead of patching it after the fact.
+
+</Callout>

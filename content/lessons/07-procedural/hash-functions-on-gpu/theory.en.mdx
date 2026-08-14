@@ -1,0 +1,57 @@
+## Why the GPU Has No Real random()
+
+On the CPU, `Math.random()` works because the runtime keeps hidden state — a pseudo-random generator with an internal variable that every call reads and then advances, so the next call always differs from the last. A fragment shader has nowhere to keep state like that: a single 1920×1080 frame fires around 2 million invocations running near-simultaneously across thousands of cores, no invocation knows whether it ran before or after another, and there's no shared writable memory cell threading through invocations within a draw call. The pixel at $(120, 340)$ this frame, next frame, or redrawn by the driver in a completely different tile order — if its value depended on "which invocation am I" rather than purely on its coordinate, the image would flicker or shift pattern between frames even with a perfectly static camera.
+
+The only workable answer is a hash function: a pure math function that takes a coordinate (or any input) and returns a number that looks "random" but is absolutely deterministic — the same input always produces the exact same output, no matter which GPU, which order, which frame runs it. The trade-off is explicit: no state means no CPU-style "draw without repeats," but in exchange you get perfect reproducibility, which `Math.random()` never had. In real-time graphics, where a scene redraws 60 times a second and must look identical from the same viewpoint every time, reproducibility matters more than being "truly random."
+
+## The Classic sin/fract Hash, and How It Works
+
+The most common 2D→1D hash, popularized widely by The Book of Shaders:
+
+```glsl
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+```
+
+Read inside out. `dot(p, vec2(127.1, 311.7))` folds $x$ and $y$ into a single scalar, using two deliberately non-round constants to avoid resonating with the integer coordinate grid — two nearby points give two nearby dot values, but different enough to not collide. `sin(...)` is the scrambler: sine oscillates fast and non-linearly, so a small change in input (already amplified by the dot) turns into an output that's practically unpredictable — chaos in the mathematical sense, not true randomness, just input-sensitivity extreme enough to look random. Finally, multiplying by $43758.5453123$ before `fract`: the large constant stretches sine's decimal part (confined to $[-1, 1]$) across a huge range, `fract` grabs exactly the fractional remainder, wiping out the integer part so the result reads uniformly across $[0, 1)$.
+
+## The Sin Hash's Real Artifacts: No Hiding Them
+
+The formula above is popular for its simplicity, but it carries three measurable artifacts, not theoretical hand-waving. First, precision: many mobile GPUs default fragment shaders to `mediump` — roughly a 16-bit float with about 3 trustworthy decimal digits — while the range reduction inside `sin()` (folding a large angle back into $[-\pi, \pi]$ before evaluating) needs far more precision than that to stay accurate; many distinct input coordinates round down to the same handful of sine values, degenerating the hash into repeating color bands instead of smooth noise. Second, even at `highp` (32-bit float) on desktop, the hash still leaks structure — faint diagonal stripes or checkering — once the input coordinate grows large enough, for instance a terrain spanning tens of thousands of world units: rounding error from `dot()` and sine's range reduction compound with input magnitude, and past some threshold neighboring coordinates start hashing to correlated rather than independent values. Jarzynski and Olano measured exactly this when comparing the quality of popular GPU hashes, and rank sine-based hashes among the slowest and least reliable on real hardware. Third is cost: `sin` is a transcendental function, and many GPU architectures compute it through a dedicated special-function unit with lower throughput than a plain ALU multiply or add — run millions of times per frame, that gap compounds into measurable milliseconds.
+
+## A Better Hash: Sine-Free Polynomials
+
+The fix for all three problems at once is dropping `sin` entirely, relying only on multiplication, addition, and repeated `fract` to reach comparable scrambling. Dave Hoskins published exactly such a family, plainly named "hash without sine":
+
+```glsl
+float hash21(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+```
+
+The idea: multiply the coordinate by small odd constants and `fract` to get three initial "junk" values (`p3`), then mix those three values into each other through a `dot`. The line `p3 += dot(p3, p3.yzx + 33.33)` is the crucial step — it makes the $x$ component influence $y$, and $y$ influence $z$, before they're recombined; skip it and the result stays nearly linear in the input and easy to predict. No transcendental function gets called, so there's no range-reduction problem, and the whole thing is pure multiply-add, cheap at any precision level. This isn't the only hash in this family — "hash without sine" has become a generic name for a whole class of similar polynomial hashes, differing in constants and mixing steps but sharing the same principle: scramble with pure algebra, no trigonometry.
+
+## 2D→2D Hashes for Gradient Directions, and Seeding
+
+`hash21` returns a single number — enough for scalar noise like brightness or height, but the next lesson needs direction: a random 2D vector at every grid point to build gradient noise. The simplest way to get a 2D→2D hash is running the scalar hash twice with two different constant sets and packing the two results into a `vec2`, or mixing all three channels of `p3` above and splitting out several values at once — exactly how Dave Hoskins builds `hash22`/`hash33`. The next lesson (Value & Gradient Noise) uses precisely this technique so every grid corner gets its own direction.
+
+A hash only accepts one input — getting several independent random fields from the same coordinate needs a seed, in one of two ways: shifting the input before hashing (`hash21(p + seed * 17.13)`, with $17.13$ deliberately odd so it never lines up with a multiple of the grid spacing), or splitting output channels by calling the hash with different magic-constant sets. Both rely on the same property: the hash only needs a sufficiently different input for the output to already be independent — nothing more elaborate is required.
+
+## What White Noise Is, and Where It Runs Out
+
+Rendering `hash21(floor(uv * N))` directly produces exactly what the eye calls "white noise" or static: every grid cell gets a gray value fully independent of its neighbor — knowing cell $(3, 5)$'s value tells you nothing about $(3, 6)$ or $(4, 5)$. That's precisely "no spatial correlation": correlation between two cells measures how much knowing one helps predict the other, and a good hash deliberately drives that toward zero.
+
+That's also its limit: the human eye can't read any "shape" out of pure white noise — no clouds, no stone veins, no terrain, just uniform grain. The next lesson in Track 7 builds on this by breaking that very lack-of-correlation in a controlled way: hashing only at integer grid points, then interpolating between them, turning discrete white noise into a continuous structured field. Further out, Track 9 (GPGPU) reuses this exact `hash21`/`hash22` to seed initial position and velocity for millions of particles without uploading a random buffer from the CPU, while Track 8 (Raymarching) uses hashing for dithering — breaking up color banding in soft shadows with a tiny, deterministic amount of noise that stays fixed across frames.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with GPU hashing:
+
+1. **Seeding with a small round number (`+1.0`, `+2.0`) instead of a large odd constant.** Adding exactly 1 unit can line up with the very step of the grid being hashed (`floor(uv * N)` steps 1 unit per cell) — the "second random channel" accidentally becomes the neighboring cell's channel, not independent of the first at all.
+2. **Feeding `uTime` or unnormalized world coordinates straight into a hash meant for static texture.** The hash stays deterministic in the strict mathematical sense, but if the input changes over time or with camera distance, the result reads as noise that "flickers" or "drifts" — easy to mistake for a random bug when it's really just a changing input.
+3. **Testing the sine hash on a small demo (coordinates 0..1 or a few dozen units) then carrying it straight into world-scale terrain spanning thousands of units.** The sine hash's banding artifact only shows up at large coordinates — skipping a test at the real scale often means the bug only surfaces after the terrain is fully built.
+
+</Callout>

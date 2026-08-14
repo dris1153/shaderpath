@@ -1,0 +1,86 @@
+## Quilez's Idea: Distort the Coordinate Itself Before Sampling
+
+Domain warping is the technique Inigo Quilez describes in his "Domain Warping" article (iquilezles.org): instead of treating a noise value $f(p)$ as the final stop, use $f$ itself (or a different noise function) to compute a displacement, then add that displacement to $p$ **before** calling $f$ again:
+
+$$
+f_{warp}(p) = f\big(p + g(p)\big)
+$$
+
+where $g(p)$ returns a displacement vector — usually a pair of FBM values sampled at $p$. Unlike simply layering an extra noise pass on top of a final color: warping doesn't change $f$'s output at a fixed point, it changes the very point $f$ gets sampled at — the entire spatial structure of the noise gets bent, twisted, and stretched, like viewing a flat plane through rippled glass instead of a flat pane.
+
+## One Warp Layer: q, Then fbm(p + strength·q)
+
+Implementing a single warp layer takes exactly two steps. Step one: compute a displacement vector $q$ by calling FBM twice at $p$, each time with a different offset:
+
+```glsl
+vec2 q = vec2(
+  fbm(p + vec2(0.0, 0.0)),
+  fbm(p + vec2(5.2, 1.3))
+);
+```
+
+Step two: add $q$ (scaled by a `strength` coefficient) to $p$, then call FBM again for the final result:
+
+```glsl
+float f = fbm(p + strength * q);
+```
+
+There's nothing more mysterious than that — the "magic" is that $q$ is itself a continuous, smooth field, so the displacement it produces is smooth too: nearby points in $p$ get pushed in similar directions, preserving continuity in the final result even though the sampling coordinate has been substantially bent.
+
+## Reading Warp Strength: Gentle Distortion vs. Flowing Water
+
+`strength` is the single parameter deciding what the warp visually feels like. At small values (roughly 0.1–0.5), $q$ only shifts $p$ by a fraction of one noise cycle — the original FBM streaks are still recognizable, just slightly wavy, like faint wood grain. At larger values (roughly 2–6 and up), the displacement exceeds the size of a noise "cell" itself — the original structure nearly disappears, replaced by continuously flowing swirling bands, reading as smoke or water motion even though the image is entirely static. There's no single correct threshold: stone veins want a gentle warp, smoke or fire wants a strong one. Drag the mouse horizontally in the embedded editor below to control `strength` directly and watch that transition happen:
+
+<Playground source={"float hash21(vec2 p) {\n  p = fract(p * vec2(123.34, 456.21));\n  p += dot(p, p + 45.32);\n  return fract(p.x * p.y);\n}\n\nfloat noise(vec2 p) {\n  vec2 i = floor(p);\n  vec2 f = fract(p);\n  float a = hash21(i);\n  float b = hash21(i + vec2(1.0, 0.0));\n  float c = hash21(i + vec2(0.0, 1.0));\n  float d = hash21(i + vec2(1.0, 1.0));\n  vec2 u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);\n}\n\nfloat fbm(vec2 p) {\n  float sum = 0.0;\n  float amp = 0.5;\n  for (int i = 0; i < 5; i++) {\n    sum += amp * noise(p);\n    p *= 2.0;\n    amp *= 0.5;\n  }\n  return sum;\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = uv * 3.0 + vec2(uTime * 0.05, 0.0);\n  float strength = uMouse.x * 4.0; // drag mouse horizontally to set warp strength\n\n  vec2 q = vec2(fbm(p), fbm(p + vec2(5.2, 1.3)));\n  float f = fbm(p + strength * q);\n\n  vec3 colorA = vec3(0.05, 0.08, 0.2);\n  vec3 colorB = vec3(0.95, 0.55, 0.2);\n  vec3 color = mix(colorA, colorB, f);\n  color = mix(color, vec3(0.2, 0.6, 0.9), clamp(q.x, 0.0, 1.0) * 0.4);\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Nesting a Second Layer: r Built From q, for Marble and Smoke
+
+Domain warping doesn't stop at one layer. Use the $q$ just computed to warp a different FBM, producing a vector $r$, then use $r$ for one final warp:
+
+```glsl
+vec2 r = vec2(
+  fbm(p + strength * q + vec2(1.7, 9.2)),
+  fbm(p + strength * q + vec2(8.3, 2.8))
+);
+float f = fbm(p + strength * r);
+```
+
+Each nested layer is another distortion tier stacked on the previous one — the first layer produces basic waviness, the second bends that same waviness through yet another field. Two layers or more is the formula behind most of Quilez's famous marble, agate and smoke shots on Shadertoy — natural stone-vein structure is rarely a single simple swirl, it's several distortion layers stacked at different scales.
+
+## Coloring by q and r, Not Just f — Quilez's Trick
+
+One easy-to-miss detail: $q$ and $r$ aren't just intermediate variables to use and discard — they're useful scalar fields for coloring in their own right. Instead of just `mix(colorA, colorB, f)`, Quilez uses $q_x$, $r_x$, $r_y$ as blend factors for additional color layers:
+
+```glsl
+vec3 color = mix(colorA, colorB, f);
+color = mix(color, colorC, clamp(q.x, 0.0, 1.0));
+color = mix(color, colorD, clamp(r.y, 0.0, 1.0));
+```
+
+Why this matters: $f$ in the end is just one scalar number — coloring by it alone produces a fairly monotonous gradient along one axis. $q$ and $r$ carry information about the warp's structure itself — where it got pulled hard, in which direction — so coloring by them makes heavily-distorted regions stand out as distinct bands, giving a sense of depth a single `mix` on $f$ can never reach. This lesson's demo has a "color by intermediate values" toggle — flip it on and compare directly against coloring by $f$ alone.
+
+## Why the Offsets Must Differ Between Channels
+
+The two `fbm()` calls building $q_x$ and $q_y$ use different offsets — $(0,0)$ and $(5.2, 1.3)$ — deliberately, not as two meaningless random numbers. Using the same offset (or none at all) would make $q_x$ and $q_y$ the exact same FBM field at every point, meaning $q$ would always sit along the diagonal $q_x = q_y$ — the warp would only pull in one fixed direction instead of swirling freely. An offset large enough — a few units, well beyond a noise cycle — guarantees the two channels sample unrelated regions of the same field, producing near-independent values. This is the cheapest way to fake two independent noise fields out of a single `fbm()`, with no need for a second hash function.
+
+## Cost: Every Layer Multiplies the fbm Call Count
+
+Domain warping isn't free. A 5-octave FBM already costs 5 `noise()` calls; one warp layer needs 2 `fbm()` calls to build $q$ plus 1 more for the final result — $3 \times 5 = 15$ `noise()` calls per pixel total. Two layers, adding $r$, multiply that further: 2 for $q$, 2 for $r$, 1 for the final result — $5 \times 5 = 25$ calls, nearly double a single layer. On a 1920×1080 screen at DPR 2 (an estimated ~8.3 million fragments per frame), the gap between 15 and 25 `noise()` calls per pixel adds up to tens of millions of extra operations per frame. Treat warp-layer count as an octave budget to balance: more layers always look better, but cost grows roughly linearly with layer count, and on mobile GPUs that shows up fast as ballooning frame time.
+
+## Connection to a Real Phenomenon: Advection Intuition
+
+Domain warping isn't an arbitrary visual trick — it approximates fluid-dynamics advection reasonably well: a quantity like smoke, color or heat gets transported along a velocity field, so its original shape gets stretched and swirled to match it. $q$ (or $r$) plays a role much like a velocity field; adding it to the sampling coordinate is equivalent to pushing the sample point backward along the flow. This isn't a real fluid simulation — no mass conservation, no Navier-Stokes equations — but it's close enough visually to fool the eye, at a cost hundreds of times cheaper than an actual simulation.
+
+## From a Single Warp Layer to a Full Procedural Field
+
+This lesson's technique is the hinge between a static FBM function and most organic-looking procedural materials in this track: the next Voronoi/Worley lesson introduces a completely different kind of field to warp; the checkpoint closing the "Advanced Fields" module combines this exact domain warping with Voronoi and time-animated noise into one complete animated material.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with domain warping:
+
+1. **Using the same offset (or offset = 0) for both channels of q.** That makes $q_x = q_y$ at every point — the warp only pulls in one fixed diagonal direction instead of swirling naturally in every direction, even though the image still "looks" warped.
+2. **Setting strength too high right away.** With `strength` beyond a few times the noise cell size, the result stops being "controlled distortion" and breaks into near-random chaotic noise — losing exactly the smooth structure warping is supposed to preserve. Start from 0 and increase gradually while watching, rather than guessing a large number upfront.
+3. **Forgetting that each nested layer multiplies cost, not adds to it.** Adding an $r$ layer to a shader that already has $q$ isn't "a bit more work" — it nearly doubles the per-pixel `fbm()` call count; enabling both layers across a screen-filling scene without measuring frame time first can easily drop a mid-range GPU below 30fps.
+
+</Callout>

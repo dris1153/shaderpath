@@ -1,0 +1,15 @@
+## Goal
+
+The closing mini-build for the Advanced Fields module: build a **moving material study** that synthesizes everything just learned — domain warping, Voronoi/FBM, and time-animated noise — into something that actually runs, not just three techniques understood in isolation.
+
+## Requirements
+
+Pick one of three subjects: terrain seen from above, marble, or wood grain — but this lesson ships a **complete solution for the terrain subject**: a height field from domain-warped FBM (naturally curving coastlines, no artificial bumps), colored with an elevation ramp (deep water → shallow water → sand → grass → rock → snow, blended smoothly with `smoothstep`, no hard boundaries), rocky detail from Voronoi blended into high elevations, and real motion: shimmering water plus slowly drifting cloud shadows over the terrain (using 3D noise with a time axis — exactly last lesson's slice technique) while the land itself stays perfectly stable. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Four layers, built in order: (1) height field = domain-warped FBM decides the terrain's shape; (2) elevation ramp = a chain of successive `smoothstep`s over height, one color band each; (3) rocky detail = Voronoi, masked to only appear at high elevations (using height itself as the mask); (4) motion = a second FBM/noise layer sampled over time (the third axis), driving water shimmer and a global darkening factor for cloud shadows — this layer must NOT feed back into the height field, or the land will "breathe" on the wrong rhythm.
+
+## What "Done" Looks Like
+
+Check against the checklist in the Exercises section before opening the solution — if marble or wood grain was chosen instead of terrain, apply the same four principles (base shape → smooth color bands → detail → motion decoupled from shape) to that subject.

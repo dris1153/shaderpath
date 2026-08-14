@@ -1,0 +1,82 @@
+## Ý tưởng: rắc điểm hạt giống, tô theo khoảng cách gần nhất
+
+Voronoi noise (thường gọi là Worley noise, theo tên Steven Worley — người công bố kỹ thuật này năm 1996) rắc một tập điểm "hạt giống" (feature points) lên mặt phẳng, rồi với mỗi pixel hỏi "điểm gần tôi nhất là điểm nào, cách bao xa?". Câu trả lời — một con số khoảng cách duy nhất mỗi pixel — chính là toàn bộ noise.
+
+Cái khéo léo: rắc điểm mà không lưu một mảng nào trong bộ nhớ GPU. Chia mặt phẳng thành lưới ô vuông, mỗi ô sở hữu đúng một điểm, vị trí điểm là hash của toạ độ nguyên của ô — đúng kỹ thuật hash-theo-ô đã học ở bài `hash-functions-on-gpu`. Không texture, không buffer, chỉ một hàm `hash2(cell)` xác định chạy độc lập trên từng pixel.
+
+```glsl
+vec2 h = hash2(cell); // vị trí điểm hạt giống bên trong ô "cell", trong [0,1)
+```
+
+## Quét 3×3 ô lân cận: vì sao chỉ nhìn ô của mình là chưa đủ
+
+Sai lầm ngây thơ nhất: chỉ tính khoảng cách đến điểm hạt giống của ô chứa pixel. Đúng ở tâm ô, sai gần biên — một pixel sát mép ô mình hoàn toàn có thể gần một điểm hạt giống ở **ô hàng xóm** hơn. Ví dụ: pixel ở toạ độ cục bộ $f = (0.9, 0.5)$ (sát mép phải), điểm hạt giống ô của nó ở $(0.15, 0.6)$ — cách $\approx 0.757$; điểm hạt giống ô bên phải, quy về hệ toạ độ ô hiện tại, ở $(1.2, 0.55)$ — cách chỉ $\approx 0.304$, gần hơn hẳn. Bỏ qua ô lân cận cho ra đường ráp nối lởm chởm đúng tại mọi biên ô — chủ đề bài tập của bài này.
+
+Cách sửa: quét toàn bộ khối $3 \times 3$ ô lân cận (kể cả ô của chính mình), tính khoảng cách đến cả 9 điểm hạt giống, giữ lại giá trị nhỏ nhất:
+
+```glsl
+float f1 = 8.0;
+for (int j = -1; j <= 1; j++)
+for (int i = -1; i <= 1; i++) {
+  vec2 b = vec2(float(i), float(j));
+  vec2 h = hash2(cell + b);
+  float d = length(b + h - f);
+  f1 = min(f1, d);
+}
+```
+
+$3 \times 3$ đủ dùng vì jitter (phần sau) bị giới hạn trong $[0,1]$ — một điểm hạt giống không bao giờ trôi ra khỏi ô chủ của nó, nên không thể có điểm nào cách xa hơn 1 ô mà vẫn gần hơn điểm trong 3×3 lân cận.
+
+## F1, F2 và hiệu F2 − F1: viền ô hữu cơ
+
+$F_1$ là khoảng cách đến điểm hạt giống **gần nhất**; $F_2$ đến điểm **gần thứ nhì**. Cả hai rơi ra tự nhiên từ đúng một vòng quét 3×3 — chỉ cần giữ hai giá trị nhỏ nhất thay vì một. Ranh giới giữa hai ô Voronoi là tập điểm cách đều hai điểm hạt giống — đúng nơi $F_2 - F_1 \to 0$. Ngưỡng hiệu số đó bằng `smoothstep` cho một đường viền dày, hữu cơ, chạy đúng theo biên tế bào thật mà không cần dựng polygon nào:
+
+```glsl
+float border = 1.0 - smoothstep(0.0, 0.08, f2 - f1);
+```
+
+## Cell-ID: tô phẳng từng vùng bằng một hash
+
+Thay vì tô theo khoảng cách, hash **toạ độ nguyên của ô sở hữu điểm thắng** (không phải toạ độ pixel!) ra một màu — mọi pixel cùng một vùng Voronoi tự động nhận cùng một màu, vì chia sẻ chung `f1Cell`. Kết quả là mosaic phẳng từng mảng, hữu ích khi Voronoi dùng như "chỉ số vật liệu" ngẫu nhiên (region ID) thay vì trường liên tục.
+
+## Ba độ đo khoảng cách: đổi luật đo, đổi hẳn hình dạng ô
+
+`length(r)` không phải cách duy nhất định nghĩa "gần": đổi hàm đo khoảng cách đổi hẳn hình dạng ô Voronoi, dù thuật toán quét 3×3 không đổi một dòng.
+
+$$
+\|r\|_2 = \sqrt{r_x^2 + r_y^2}, \qquad \|r\|_1 = |r_x| + |r_y|, \qquad \|r\|_\infty = \max(|r_x|, |r_y|)
+$$
+
+Euclid ($\|\cdot\|_2$) cho ô tròn, hữu cơ — hình dung mặc định khi nghe "Voronoi". Manhattan ($\|\cdot\|_1$) cho ô hình thoi, cạnh xiên 45°. Chebyshev ($\|\cdot\|_\infty$) cho ô hình vuông thẳng cạnh — hai độ đo sau tạo cảm giác nhân tạo, kiến trúc, đúng thứ cần cho gạch lát hay mạch điện tử cách điệu.
+
+## Jitter: từ lưới đều tăm tắp đến hỗn loạn hoàn toàn
+
+`uJitter` nhân trực tiếp vào độ lệch hash trước khi cộng vào vị trí ô: `r = b + h * jitter - f`. Tại `jitter = 0`, mọi điểm đứng yên giữa ô của nó (`h * 0 = 0`, chỉ còn offset `b`) — Voronoi suy biến thành lưới đều tăm tắp, dự đoán được hoàn toàn. Tại `jitter = 1`, điểm dịch tự do trong toàn ô theo đúng giá trị hash — lưới nền vẫn còn (đây luôn là Voronoi trên lưới vuông, không phải Poisson-disk thật) nhưng mắt không còn nhận ra. Giá trị trung gian là núm xoay liên tục giữa "trật tự nhân tạo" và "hỗn loạn hữu cơ" — chỉnh nó trong demo để thấy đúng thời điểm lưới vuông "tan" thành các tế bào bất định hình.
+
+## Voronoi mượt: xoá điểm gãy đạo hàm bằng log-sum-exp
+
+Hàm `min()` trong F1 chuẩn có vấn đề với đạo hàm: đúng tại biên giữa hai ô, `min()` nhảy đột ngột từ "theo dõi điểm A" sang "điểm B" — đạo hàm trường (dùng để tính normal/bump map) gián đoạn tại đó, dù $F_1$ vẫn liên tục. Kết quả: vật liệu dùng $F_1$ thô làm height field có nếp gấp cứng đúng tại biên ô, dù nhìn trực tiếp $F_1$ không thấy vấn đề gì.
+
+Kỹ thuật của Inigo Quilez thay `min()` bằng tổng trọng số mềm hơn — log-sum-exp:
+
+$$
+d_{\text{smooth}} = -\frac{1}{k}\ln\sum_{i} e^{-k\,d_i}
+$$
+
+Khi $k$ đủ lớn, số hạng ứng với $d_i$ nhỏ nhất áp đảo tổng, nên $d_{\text{smooth}} \approx \min_i d_i$ — xấp xỉ tốt hàm min, nhưng bản thân là tổng các hàm mũ liên tục vô hạn lần khả vi ($C^\infty$), không còn điểm gãy. Đổi từ F1 sang "Voronoi mượt" trong demo và phóng to gần một biên ô: F1 có nếp gấp sắc; bản mượt uốn cong liền mạch qua đúng chỗ đó.
+
+## Ứng dụng và chi phí: đá, bùn nứt, tế bào
+
+$F_2 - F1$ ngưỡng đúng cách cho vân đá cẩm thạch nứt hoặc bùn nứt khô; cell-ID phẳng cho vảy da, gạch lát hữu cơ, bản đồ vùng lãnh thổ ngẫu nhiên; F1 thô làm height field cho bề mặt tế bào sinh học hoặc — kết hợp domain warping từ bài trước — vệt sáng gợn dạng caustics dưới nước. Chi phí: mỗi pixel cần đúng 9 lần gọi hash (khối 3×3), rẻ hơn nhiều so với duyệt một danh sách điểm thật; lên 3D, khối lân cận thành $3^3 = 27$ ô — bài báo gốc của Worley bàn kỹ cách cắt bớt số ô cần quét khi $F_1$ đã đủ nhỏ để chắc chắn không ô nào khác thắng nổi.
+
+Bài kế tiếp (Curl noise & flow field) rời trường tĩnh để bước sang trường vector chuyển động — nhưng chính kỹ thuật hash-theo-ô và quét lân cận học ở đây quay lại nguyên vẹn ở Track 9 (GPGPU), khi Voronoi làm sơ đồ phân vùng cho mô phỏng hạt trên GPU.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài Voronoi/Worley:
+
+1. **Chỉ quét ô chứa pixel, bỏ qua 8 ô lân cận.** Kết quả đúng ở tâm ô nhưng sai hẳn gần biên — pixel gần mép ô thường có điểm hạt giống ở ô hàng xóm gần hơn điểm của chính ô nó, tạo ra đường ráp nối lởm chởm đúng tại mọi biên ô, dễ nhầm là lỗi hash thay vì lỗi phạm vi quét.
+2. **Coi $F_2 - F_1$ như một khoảng cách có dấu thật đến biên.** Nó không phải — độ rộng "viền" mà nó tạo ra co giãn theo khoảng cách giữa hai điểm hạt giống hai bên biên (biên giữa hai điểm gần nhau mỏng hơn biên giữa hai điểm xa nhau), không đồng đều như một SDF thật.
+3. **Đặt jitter vượt quá phạm vi $[0, 1]$ mà không mở rộng vùng quét.** Toàn bộ lập luận "3×3 là đủ" dựa trên giả định điểm hạt giống không bao giờ rời khỏi ô chủ của nó; jitter lớn hơn 1 (hoặc cộng thêm độ lệch ngoài hash) có thể đẩy điểm sang ô cách 2 bước, nằm ngoài vùng quét — Voronoi bắt đầu bỏ sót điểm gần nhất thật sự mà không có cảnh báo lỗi nào.
+
+</Callout>

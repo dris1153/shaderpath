@@ -1,0 +1,80 @@
+## Perlin noise: chuẩn hoá gradient noise trên lưới vuông
+
+Bài trước (Value & Gradient noise) đã dựng gradient noise: mỗi góc ô lưới giữ một vector gradient ngẫu nhiên, giá trị tại một điểm bên trong ô là nội suy giữa các dot product của gradient đó với vector lệch từ góc đến điểm. Perlin noise CHÍNH LÀ gradient noise đó, đóng gói thành thuật toán chuẩn với ba mảnh: cách chọn gradient tại mỗi góc, đường cong nội suy (fade curve), và công thức nội suy n-tuyến trên toàn bộ góc ô. Ken Perlin công bố bản gốc năm 1985 trong "An Image Synthesizer", rồi tự sửa lại năm 2002 trong bài ngắn "Improving Noise" — cả hai còn dùng được, khác nhau đúng ở fade curve, mục tiếp theo mổ xẻ khác biệt đó.
+
+## Chọn gradient tại góc lưới: bảng permutation cổ điển và hash trên GPU
+
+Bản 1985 gốc chọn gradient bằng một bảng permutation cố định: 256 số nguyên xáo trộn sẵn, tra hai lần lồng nhau theo toạ độ nguyên của góc ($p[X + p[Y]]$) ra một chỉ số, dùng chỉ số đó chọn 1 trong 8–12 vector gradient dựng sẵn. Cách này rẻ trên CPU thập niên 1980, nhưng trên GPU hiện đại, tra một texture/array còn tốn hơn hẳn một hàm hash tính trực tiếp không cần bộ nhớ phụ. Vì vậy hầu hết cài đặt GLSL nay (kể cả demo này) thay bảng permutation bằng một hash 2D→1D thuần hàm số (dạng đã học ở bài Hash Functions on GPU), biến giá trị hash thành một góc trong $[0, 2\pi)$ để dựng gradient đơn vị $(\cos\theta, \sin\theta)$ — mất tính "chuẩn" đúng bảng gốc, đổi lấy không bộ nhớ phụ và không chu kỳ lặp 256 phần tử, chất lượng thị giác gần như không khác biệt.
+
+## Fade curve: quintic 2002 thay cho cubic 1985
+
+Cả hai phiên bản dùng $\mathrm{fade}(t)$ để uốn toạ độ cục bộ $t \in [0,1]$ trước khi đưa vào nội suy tuyến tính, tránh việc nội suy thẳng tuột (đường thẳng có đạo hàm không đổi, tạo góc gãy nhìn thấy được tại biên ô). Bản 1985 dùng cubic Hermite quen thuộc:
+
+$$
+\mathrm{fade}_{1985}(t) = 3t^2 - 2t^3
+$$
+
+Bản 2002 thay bằng quintic:
+
+$$
+\mathrm{fade}_{2002}(t) = 6t^5 - 15t^4 + 10t^3
+$$
+
+Cả hai thoả $\mathrm{fade}(0)=0$, $\mathrm{fade}(1)=1$, đạo hàm bậc nhất bằng 0 tại hai đầu ($C^1$ liên tục). Khác biệt ở đạo hàm bậc hai: cubic có $\mathrm{fade}_{1985}''(t) = 6 - 12t$, cho $\mathrm{fade}''(0) = 6$, $\mathrm{fade}''(1) = -6$ — khác 0, độ cong đổi đột ngột tại biên ô, khó thấy trên ảnh tĩnh nhưng lộ rõ khi lấy đạo hàm noise (normal map từ chính giá trị noise). Quintic sửa đúng chỗ đó: $\mathrm{fade}_{2002}''(t) = 120t^3 - 180t^2 + 60t$, triệt tiêu về 0 tại cả hai đầu — $C^2$ liên tục. Thử $t=0.25$: $\mathrm{fade}_{1985}(0.25) = 0.15625$ trong khi $\mathrm{fade}_{2002}(0.25) \approx 0.1035$ — quintic "khởi động" chậm hơn gần hai đầu ô.
+
+## Cài đặt Perlin 2D: dot product và nội suy song tuyến
+
+Với $p$ trong ô có góc dưới-trái $i = \lfloor p \rfloor$ và toạ độ cục bộ $f = \mathrm{fract}(p)$, giá trị noise là nội suy song tuyến giữa bốn dot product — một dot product cho mỗi góc, giữa gradient tại góc đó và vector lệch từ góc đến $p$:
+
+```glsl
+float perlin2D(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float a = dot(perlinGradient(i + vec2(0.0, 0.0)), f - vec2(0.0, 0.0));
+  float b = dot(perlinGradient(i + vec2(1.0, 0.0)), f - vec2(1.0, 0.0));
+  float c = dot(perlinGradient(i + vec2(0.0, 1.0)), f - vec2(0.0, 1.0));
+  float d = dot(perlinGradient(i + vec2(1.0, 1.0)), f - vec2(1.0, 1.0));
+  vec2 u = perlinFade(f);
+  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+```
+
+Đúng bốn dòng `dot` cho bốn góc ô vuông, rồi `mix` lồng hai tầng (bilinear — "n-tuyến" tổng quát, trilinear ở 3D) dùng `u = fade(f)` thay vì `f` thô làm trọng số. Demo đi kèm bài học (`perlin-simplex.frag`) triển khai đúng hàm này, chọn được qua control "Thuật toán".
+
+## Khoảng giá trị và chuẩn hoá về [0,1]
+
+Vì mỗi thành phần là dot product giữa một vector đơn vị (gradient) và một vector lệch dài dưới 1, giá trị Perlin 2D thô không nằm gọn trong $[-1,1]$ — ước lượng thực nghiệm phổ biến (không phải chặn chứng minh chặt) cho biên độ khoảng $[-0.7,\ 0.7]$. Vì UI và color ramp thường cần $[0,1]$, bước chuẩn hoá phổ biến chỉ là `value * 0.5 + 0.5`, chấp nhận hai đầu dải gần như không chạm 0 hay 1 tuyệt đối — đủ tốt cho hầu hết mục đích thị giác. Demo bài học áp đúng phép này trước khi đưa giá trị vào `mix` màu.
+
+## Lời nguyền lưới vuông: 2ⁿ góc theo số chiều
+
+Perlin lấy mẫu tại MỌI góc của ô siêu lập phương ($n$-cube) bao quanh điểm — 4 góc ở 2D, 8 ở 3D, 16 ở 4D, tăng theo $2^n$. Mỗi góc cần một lần gọi hash/gradient và một dot product, nên chi phí tăng theo cấp số nhân với số chiều, không tuyến tính. Đây là lý do Perlin 4D (dùng để animate noise 3D theo thời gian mà không lặp, xem bài Noise 3D/4D theo thời gian) đắt gấp bốn lần Perlin 2D chỉ vì số góc. Simplex ra đời để giải đúng bài toán tăng trưởng cấp số nhân này.
+
+## Simplex: lưới tam giác, hệ số skew, và kernel bán kính
+
+Ý tưởng cốt lõi của Simplex (Ken Perlin, 2001): thay lưới ô vuông bằng lưới simplex — tam giác đều ở 2D, tứ diện ở 3D, tổng quát là hình có đúng $n+1$ đỉnh ở $n$ chiều (3 ở 2D, 4 ở 3D, 5 ở 4D) thay vì $2^n$. Để phủ kín mặt phẳng bằng tam giác đều, thuật toán "skew" (làm xiên) toạ độ đầu vào về một không gian mà lưới tam giác trông giống lưới vuông, tính lưới ở đó, rồi "unskew" ngược lại. Hệ số skew ở 2D:
+
+$$
+F_2 = \frac{\sqrt{3}-1}{2} \approx 0.36603, \qquad G_2 = \frac{3-\sqrt{3}}{6} \approx 0.21132
+$$
+
+($F_2$ xiên toạ độ vào, $G_2$ unskew ngược lại — tổng quát hoá thành $F_n = \frac{\sqrt{n+1}-1}{n}$ và $G_n = \frac{1 - 1/\sqrt{n+1}}{n}$). Khác biệt lớn thứ hai: Simplex không nội suy theo trọng số hình học của ô (`u = fade(f)`) — mỗi đỉnh đóng góp qua một **kernel suy giảm dạng bán kính** (radial falloff), giảm theo bình phương khoảng cách đến chính đỉnh đó, cắt về 0 hẳn ngoài một bán kính cố định. Không còn "nội suy song tuyến giữa các góc lân cận" — chỉ còn tổng có trọng số của các đỉnh đủ gần, đối xứng mọi hướng thay vì thiên theo hai trục như lưới vuông.
+
+## Bằng sáng chế hết hạn và OpenSimplex
+
+Perlin từng cấp bằng sáng chế Mỹ (US 6.867.776) cho việc dùng Simplex noise trong tổng hợp texture 3D trở lên — hết hạn ngày 8/1/2022, nên từ đó Simplex 3D/4D dùng tự do không còn rào cản pháp lý (Simplex 2D chưa từng bị patent). Trong giai đoạn còn patent (2001–2022), cộng đồng tạo ra OpenSimplex (Kurt Spencer, 2014) — thuật toán thay thế không dính patent, dùng lưới tổ ong kéo giãn khác về mặt hình học, đổi lại kernel lớn hơn (mượt hơn nhưng chậm hơn) và tránh được vệt sọc theo trục, artefact thị giác dễ nhận ra nhất của Perlin cổ điển ở độ phóng cao.
+
+## Chọn thuật toán nào, và dùng webgl-noise trong thực tế
+
+Ở 2D, cả hai cho chất lượng gần tương đương — chọn Perlin nếu ưu tiên code đơn giản (đúng 4 dot product), chọn Simplex nếu cần khớp trực tiếp với phiên bản 3D/4D ở bài sau. Ở 3D trở lên, đặc biệt khi animate qua chiều thời gian thứ 3/4, Simplex gần như luôn thắng nhờ chi phí $n+1$ thay vì $2^n$. Khi cần đạo hàm giải tích của noise (normal map không cần lấy mẫu `fwidth`), cả hai họ đều có biến thể "tính kèm đạo hàm" — tiết kiệm việc lấy mẫu nhiều lần chỉ để ước lượng đạo hàm bằng sai phân hữu hạn. Thực tế, phần lớn dự án không viết lại Simplex từ đầu — mã nguồn `webgl-noise` của Ashima Arts và Stefan Gustavson (hàm `simplex2D` trong demo này lấy nguyên công thức từ đó) là lựa chọn thực dụng chuẩn, kiểm chứng qua hàng nghìn dự án GLSL.
+
+Bài kế tiếp (FBM — Fractal Brownian Motion) chồng nhiều lớp chính hai hàm noise vừa học ở đây — với tần số tăng dần, biên độ giảm dần — để có chi tiết nhiều tầng như mây hay vân đá, thay vì chỉ một "kích thước đặc trưng" duy nhất mà một lần gọi Perlin/Simplex tạo ra.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài Perlin/Simplex lần đầu:
+
+1. **Quên chuẩn hoá gradient về vector đơn vị.** `perlinGradient` phải luôn trả về $(\cos\theta,\sin\theta)$ — độ dài đúng 1; nếu vô tình để độ dài đổi theo hash (ví dụ nhân thêm một hệ số ngẫu nhiên khác), khoảng giá trị noise phình to bất thường và mất luôn tính chất "biên độ ổn định giữa các ô" mà toàn bộ phép chuẩn hoá $[-0.7,0.7]\to[0,1]$ dựa vào.
+2. **Nội suy bằng `f` thô thay vì `fade(f)`.** Bỏ qua bước fade và `mix` thẳng bằng toạ độ cục bộ tương đương dùng đường cong bậc thấp nhất có thể (tuyến tính) — biên ô lộ rõ dưới dạng vệt kẻ ca-rô nhìn thấy được, đúng vấn đề mà cả hai đường cong fade ở trên được thiết kế để triệt tiêu.
+3. **Copy công thức Simplex nhưng đổi `mod(x, 289.0)` thành một số khác "cho gọn".** Hằng số 289 không tuỳ ý — nó được chọn cùng hệ số permute `((x*34.0)+1.0)*x` để giữ toàn bộ phép tính trong độ chính xác `highp float` an toàn trên phần lớn GPU di động; đổi hằng số này thường phá vỡ tính ngẫu nhiên nhìn thấy được (xuất hiện vệt lặp lại rõ rệt) mà không báo lỗi biên dịch nào.
+
+</Callout>

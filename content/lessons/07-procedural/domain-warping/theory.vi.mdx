@@ -1,0 +1,86 @@
+## Ý tưởng của Quilez: làm méo chính toạ độ trước khi lấy mẫu
+
+Domain warping là kỹ thuật Inigo Quilez mô tả trong bài viết "Domain Warping" (iquilezles.org): thay vì coi giá trị noise $f(p)$ là điểm dừng cuối cùng, dùng chính $f$ (hoặc một hàm noise khác) để tính ra một độ dịch chuyển, rồi cộng độ dịch đó vào $p$ **trước** khi gọi $f$ một lần nữa:
+
+$$
+f_{warp}(p) = f\big(p + g(p)\big)
+$$
+
+với $g(p)$ trả về một vector dịch chuyển — thường là một cặp giá trị FBM lấy mẫu tại $p$. Khác với chồng thêm một lớp noise lên màu cuối cùng: warping không đổi giá trị đầu ra của $f$ tại một điểm cố định, nó đổi chính điểm mà $f$ được lấy mẫu — toàn bộ cấu trúc không gian của noise bị bẻ cong, xoắn, kéo giãn, như nhìn một mặt phẳng qua lớp kính gợn sóng thay vì kính phẳng.
+
+## Một lớp warp: q rồi fbm(p + strength·q)
+
+Triển khai một lớp warp cần đúng hai bước. Bước một, tính một vector dịch chuyển $q$ bằng cách gọi FBM hai lần tại $p$, mỗi lần với một offset khác nhau:
+
+```glsl
+vec2 q = vec2(
+  fbm(p + vec2(0.0, 0.0)),
+  fbm(p + vec2(5.2, 1.3))
+);
+```
+
+Bước hai, cộng $q$ (đã nhân với một hệ số cường độ `strength`) vào $p$ rồi gọi FBM lần nữa để ra kết quả cuối:
+
+```glsl
+float f = fbm(p + strength * q);
+```
+
+Không có gì bí ẩn hơn thế — "phép thuật" nằm ở việc $q$ tự nó cũng là một trường liên tục, mượt, không giật cục, nên độ dịch nó tạo ra cũng mượt: các điểm gần nhau trong $p$ bị dịch theo hướng gần giống nhau, giữ được tính liên tục của kết quả cuối dù toạ độ lấy mẫu đã bị bẻ cong đáng kể.
+
+## Đọc cường độ warp: méo nhẹ vs chảy như dòng nước
+
+`strength` là tham số duy nhất quyết định cảm giác thị giác của warp. Ở giá trị nhỏ (khoảng 0.1–0.5), $q$ chỉ dịch $p$ đi một phần nhỏ của một chu kỳ noise — vân FBM gốc vẫn nhận ra được, chỉ hơi lượn sóng, giống vân gỗ nhẹ. Ở giá trị lớn (khoảng 2–6 trở lên), độ dịch vượt hẳn kích thước một "ô" noise — cấu trúc gốc gần như biến mất, thay bằng các dải xoáy trôi chảy liên tục, gợi chuyển động khói hoặc nước dù ảnh hoàn toàn tĩnh. Không có ngưỡng đúng tuyệt đối: vân đá cần warp nhẹ, khói hay lửa cần warp mạnh. Kéo chuột ngang trong khung dưới đây để chỉnh `strength` trực tiếp và quan sát quá trình chuyển tiếp đó:
+
+<Playground source={"float hash21(vec2 p) {\n  p = fract(p * vec2(123.34, 456.21));\n  p += dot(p, p + 45.32);\n  return fract(p.x * p.y);\n}\n\nfloat noise(vec2 p) {\n  vec2 i = floor(p);\n  vec2 f = fract(p);\n  float a = hash21(i);\n  float b = hash21(i + vec2(1.0, 0.0));\n  float c = hash21(i + vec2(0.0, 1.0));\n  float d = hash21(i + vec2(1.0, 1.0));\n  vec2 u = f * f * (3.0 - 2.0 * f);\n  return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);\n}\n\nfloat fbm(vec2 p) {\n  float sum = 0.0;\n  float amp = 0.5;\n  for (int i = 0; i < 5; i++) {\n    sum += amp * noise(p);\n    p *= 2.0;\n    amp *= 0.5;\n  }\n  return sum;\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = uv * 3.0 + vec2(uTime * 0.05, 0.0);\n  float strength = uMouse.x * 4.0; // keo chuot ngang de chinh cuong do warp\n\n  vec2 q = vec2(fbm(p), fbm(p + vec2(5.2, 1.3)));\n  float f = fbm(p + strength * q);\n\n  vec3 colorA = vec3(0.05, 0.08, 0.2);\n  vec3 colorB = vec3(0.95, 0.55, 0.2);\n  vec3 color = mix(colorA, colorB, f);\n  color = mix(color, vec3(0.2, 0.6, 0.9), clamp(q.x, 0.0, 1.0) * 0.4);\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Lồng lớp thứ hai: r xây từ q, cho vân marble và khói
+
+Domain warping không dừng ở một lớp. Dùng chính $q$ vừa tính để warp một FBM khác, ra vector $r$, rồi dùng $r$ để warp lần cuối:
+
+```glsl
+vec2 r = vec2(
+  fbm(p + strength * q + vec2(1.7, 9.2)),
+  fbm(p + strength * q + vec2(8.3, 2.8))
+);
+float f = fbm(p + strength * r);
+```
+
+Mỗi lớp lồng thêm là một tầng méo chồng lên tầng trước — lớp một tạo độ lượn sóng cơ bản, lớp hai làm chính độ lượn sóng đó tiếp tục bị bẻ cong theo một trường khác. Hai lớp trở lên là công thức đứng sau hầu hết ảnh marble, agate và khói nổi tiếng của Quilez trên Shadertoy — vân đá tự nhiên hiếm khi là một lớp xoáy đơn giản, mà là nhiều lớp biến dạng chồng lên nhau ở các tỉ lệ khác nhau.
+
+## Tô màu bằng q và r, không chỉ bằng f — mẹo của Quilez
+
+Một chi tiết dễ bỏ sót: $q$ và $r$ không chỉ là biến trung gian dùng rồi bỏ — bản thân chúng là những trường vô hướng hữu ích để tô màu. Thay vì chỉ `mix(colorA, colorB, f)`, Quilez dùng thêm $q_x$, $r_x$, $r_y$ làm hệ số trộn cho các lớp màu khác nhau:
+
+```glsl
+vec3 color = mix(colorA, colorB, f);
+color = mix(color, colorC, clamp(q.x, 0.0, 1.0));
+color = mix(color, colorD, clamp(r.y, 0.0, 1.0));
+```
+
+Lý do kỹ thuật này quan trọng: $f$ cuối cùng chỉ là một con số vô hướng — tô màu chỉ dựa vào nó cho ra dải màu khá đơn điệu theo một trục. $q$ và $r$ mang thông tin về cấu trúc của phép warp — chỗ nào bị kéo mạnh, theo hướng nào — nên tô màu theo chúng làm vùng biến dạng mạnh nổi bật thành dải màu riêng, cho cảm giác chiều sâu mà một `mix` dựa trên $f$ đơn thuần không bao giờ đạt được. Demo của bài có toggle "tô màu theo giá trị trung gian" — bật lên và so sánh trực tiếp với chỉ tô theo $f$.
+
+## Vì sao offset phải khác nhau giữa các kênh
+
+Hai lời gọi `fbm()` dựng $q_x$ và $q_y$ dùng offset khác nhau — $(0,0)$ và $(5.2, 1.3)$ — một cách cố ý, không phải hai số ngẫu nhiên vô nghĩa. Dùng cùng một offset (hoặc không offset gì) khiến $q_x$ và $q_y$ là cùng một trường FBM y hệt nhau tại mọi điểm, nghĩa là $q$ luôn nằm dọc đường chéo $q_x = q_y$ — warp chỉ kéo theo đúng một hướng cố định thay vì xoáy tự do theo mọi hướng. Offset đủ lớn — vài đơn vị, lớn hơn hẳn chu kỳ noise — đảm bảo hai kênh lấy mẫu ở hai vùng không liên quan của cùng một trường FBM, cho ra hai giá trị gần như độc lập. Đây là cách rẻ nhất để giả lập hai trường noise độc lập từ một hàm `fbm()` duy nhất, không cần viết thêm hàm hash thứ hai.
+
+## Chi phí: mỗi lớp nhân thêm số lần gọi fbm
+
+Domain warping không miễn phí. Một FBM 5 octave đã tốn 5 lần gọi `noise()`; một lớp warp cần 2 lần gọi `fbm()` để dựng $q$ cộng 1 lần cho kết quả cuối — tổng $3 \times 5 = 15$ lần `noise()` mỗi pixel. Hai lớp, dùng cả $r$, nhân thêm: 2 lần cho $q$, 2 lần cho $r$, 1 lần cho kết quả cuối — tổng $5 \times 5 = 25$ lần, gần gấp đôi một lớp. Trên màn hình 1920×1080 ở DPR 2 (ước lượng ~8.3 triệu fragment mỗi khung hình), chênh lệch 15 so với 25 lần `noise()` mỗi pixel cộng dồn thành hàng chục triệu phép tính thêm mỗi khung. Nên nghĩ về số lớp warp như một ngân sách octave cần cân đối: nhiều lớp hơn luôn đẹp hơn, nhưng chi phí tăng gần tuyến tính theo số lớp, và trên mobile GPU nó lộ ra rất nhanh dưới dạng frame time tăng vọt.
+
+## Liên hệ tới hiện tượng thật: trực giác advection
+
+Domain warping không phải một mẹo hình ảnh tuỳ tiện — nó xấp xỉ khá tốt hiện tượng advection trong vật lý chất lỏng: một đại lượng như khói, màu hay nhiệt độ bị vận chuyển theo một trường vận tốc, khiến hình dạng gốc bị kéo giãn và xoáy theo đúng trường đó. $q$ hoặc $r$ đóng vai trò gần giống trường vận tốc; cộng nó vào toạ độ trước khi lấy mẫu tương đương đẩy điểm lấy mẫu ngược theo dòng chảy. Đây không phải mô phỏng chất lỏng thật — không bảo toàn khối lượng, không giải Navier-Stokes — nhưng đủ giống về thị giác để lừa mắt người, với chi phí rẻ hơn hàng trăm lần so với simulation thật.
+
+## Từ warp một lớp tới toàn bộ trường procedural
+
+Kỹ thuật của bài này là bản lề giữa một hàm FBM tĩnh và phần lớn material thủ tục nhìn hữu cơ trong track này: bài Voronoi/Worley kế tiếp giới thiệu một loại trường hoàn toàn khác để warp lên; checkpoint đóng module "Trường nâng cao" sẽ ghép chính domain warping này với Voronoi và noise theo thời gian thành một material động hoàn chỉnh.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng domain warping:
+
+1. **Dùng cùng một offset (hoặc offset = 0) cho cả hai kênh của q.** Khiến $q_x = q_y$ tại mọi điểm — warp chỉ kéo theo đúng một hướng chéo cố định thay vì xoáy tự nhiên theo mọi hướng, dù ảnh vẫn "trông có vẻ" đã warp.
+2. **Đặt strength quá lớn ngay từ đầu.** Với `strength` vượt quá vài lần kích thước một ô noise, kết quả không còn là "méo có kiểm soát" mà vỡ thành nhiễu hỗn loạn gần như ngẫu nhiên — mất hẳn cấu trúc mượt mà warping vốn phải giữ lại. Tăng dần từ 0 và quan sát, đừng đoán ngay một con số lớn.
+3. **Quên rằng mỗi lớp lồng nhân chi phí, không cộng.** Thêm lớp $r$ vào một shader đã có $q$ không phải "cộng thêm một chút việc" — nó gần như nhân đôi số lần gọi `fbm()` mỗi pixel; bật cả hai lớp trên một cảnh phủ kín màn hình mà không đo frame time trước dễ khiến GPU tầm trung tụt hẳn xuống dưới 30fps.
+
+</Callout>

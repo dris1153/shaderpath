@@ -1,0 +1,73 @@
+## One Octave Has One Feature Scale — Real Materials Have Detail at Every Scale
+
+A single Perlin or Simplex call (previous lesson) produces a noise field with exactly ONE "characteristic size" — the average distance between successive peaks and valleys, set directly by the sampling frequency fed into the noise function. Zoom into a real rock vein, a real cloud, a real mountain range, and detail never stops at one size — there's large-scale shape (the massif), medium-scale ridges (cliff faces), and fine-scale grain (rough surface texture) — all layered on top of each other simultaneously. A single-frequency noise call can't produce that multi-scale structure no matter which frequency you pick; FBM (fractal Brownian motion — a name borrowed from probability theory, but in graphics it simply means "stack noise at multiple frequencies") solves exactly this by summing several layers of the same noise, each at a different frequency and amplitude.
+
+## The FBM Loop: Gain Shrinks Amplitude, Lacunarity Grows Frequency
+
+The idea written as code is just an accumulating loop:
+
+```glsl
+float fbm(vec2 p, int octaves, float lacunarity, float gain) {
+  float sum = 0.0;
+  float amplitude = 1.0;
+  float frequency = 1.0;
+  for (int i = 0; i < octaves; i++) {
+    sum += amplitude * noise(p * frequency);
+    amplitude *= gain;        // each next octave contributes LESS than the one before
+    frequency *= lacunarity;  // ... but at a HIGHER frequency than the one before
+  }
+  return sum;
+}
+```
+
+Written as a summation formula:
+
+$$
+\mathrm{fbm}(p) = \sum_{i=0}^{N-1} g^{\,i} \cdot \mathrm{noise}\!\left(l^{\,i}\, p\right)
+$$
+
+where $N$ is the octave count, $g$ is gain (the amplitude shrink ratio per step), $l$ is lacunarity (the frequency growth ratio per step). The classic "canonical" values are $g = 0.5$ and $l = 2.0$ — each following octave is twice as detailed (frequency $\times2$) but contributes exactly half as much. These aren't mandatory constants, just a sensible starting point: dropping $g$ below 0.5 makes the fine-detail octaves fade out almost entirely (the result reads smooth, close to a single octave); pushing $g$ toward 1.0 makes fine octaves contribute nearly as much as coarse ones, producing a grainy result with no clear layered structure. Similarly, $l$ below 2 (say 1.5) packs the detail layers closer together in frequency — smoother transitions, but less visual "separation" between layers; $l$ above 2 (say 3–4) widens that gap, more easily exposing each individual octave's own artifacts if pushed too far.
+
+## Octave Count: Linear Cost, and a Cutoff Below Pixel Size
+
+Each octave adds exactly one noise function call plus a few multiply/adds — cost grows LINEARLY with octave count $N$, unlike the previous lesson's $2^n$ "square-grid curse" (that was cost per DIMENSION of a single noise call, not per number of calls). Doubling octaves from 4 to 8 doubles the cost, nothing worse. But octaves aren't free forever: octave $i$ has a spatial period of roughly $\text{base size} / l^i$ — once that period drops below the distance between adjacent screen pixels (i.e., the frequency exceeds the render resolution's Nyquist limit), that octave stops adding VISIBLE detail — it only adds unresolvable high-frequency noise (aliasing, flicker on the slightest camera or object motion). A practical estimate: for FBM covering a plane roughly 4 UV units wide on a 512px canvas, any octave with a period under about $4/512 \approx 0.008$ units has already crossed the useful threshold — that typically lands around octave 6–8 at $l=2$, one reason 6–8 octaves is the common range in real games and demos instead of 20–30.
+
+## Normalization: Dividing by the Maximum Possible Amplitude
+
+Since each noise layer sits within roughly $[-1,1]$ (see the previous lesson), $N$ summed layers have a theoretical MAXIMUM amplitude equal to the geometric sum of the amplitudes, not $N$:
+
+$$
+\text{max amplitude} = \sum_{i=0}^{N-1} g^{\,i} = \frac{1 - g^{N}}{1 - g} \quad (g \neq 1)
+$$
+
+Dividing the raw result by exactly this sum keeps FBM in a stable range regardless of how many octaves or what gain you pick — skip this step, and changing octave count while tuning a demo will accidentally brighten or darken the whole image just because the total amplitude changed, not because the noise shape did, which is misleading when visually comparing octave counts. This lesson's `fbm.frag` demo computes exactly this running total (`maxAmplitude`) inside the same loop, then divides at the end.
+
+## Shaping the Result: Ridged, Turbulence, Billow
+
+Standard FBM sums signed noise values directly — the result is symmetric, an even rolling-hills look. Changing how EACH layer is processed before summing produces three visibly different shape variants, all from the same loop:
+
+- **Turbulence** (Perlin): take `abs(noise)` before summing — always positive, producing sharp creases exactly where the raw noise crosses zero (reads like flame or roiling smoke).
+- **Ridged FBM**: `1.0 - abs(noise)` — flips turbulence, turning those same zero-crossings into the BRIGHTEST RIDGES instead of valleys — a sharp mountain-ridge look, commonly used for rocky terrain.
+- **Billow**: `2.0 * abs(noise) - 1.0` — still takes the absolute value like turbulence, but rescales it back to a balanced $[-1,1]$ range centered on zero, producing rounded, puffy cloud-like shapes instead of turbulence's sharp creases.
+
+All three change exactly one line inside the loop — the accumulation, normalization, and octave/gain/lacunarity handling all stay identical. This lesson's demo only offers standard/ridged/turbulence to keep the control panel compact; billow is left for the exercises.
+
+## FBM as Input to a Color Ramp, Not the Final Color
+
+A normalized FBM value in $[0,1]$ is rarely the final color — it's usually just a SCALAR fed into a `mix()` between a handful of anchor colors (a color ramp: deep water → shallow water → sand → grass → rock → snow for a heightmap, or sky → cloud for the module's upcoming cloud checkpoint). Splitting "computing shape" (FBM) from "coloring it" (a color ramp) is the same "distance first, color later" mindset from SDFs (Track 2) — just swapping a signed distance for a multi-scale noise scalar field.
+
+## Octaves Aren't a Detail Level You Design — They're a Spectrum You Tune
+
+A common mistake when first learning FBM is thinking "octave 1 = the coarse detail I chose, octave 2 = the medium detail I chose..." — as if each octave were an independent design decision. In reality, an octave is just an evenly-spaced SAMPLE POINT on a continuous SPECTRUM (frequency growing geometrically as $l^i$, amplitude shrinking geometrically as $g^i$) — tuning $g$ and $l$ reshapes the entire spectrum at once, not one "layer" at a time. Inigo Quilez, in his article on fBm, makes exactly this point: fBm isn't a hand-designed list of details, but a discrete sampling of a random process whose frequency spectrum follows a power law — tuning $g$, $l$, $N$ is equivalent to tuning the SHAPE of that spectrum (its slope, its bandwidth), not manually "adding or removing detail layers" by feel.
+
+The module's next checkpoint (Mini-build: Procedural Clouds) combines the FBM just learned here with the hashing and gradient noise from the previous two lessons into one complete, animated cloud scene. Further out, the Advanced Fields module introduces domain warping — using FBM's own output to distort the COORDINATES fed into another FBM call, turning this lesson's even rolling-hills texture into organic, swirling shapes.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with FBM:
+
+1. **Changing octave count without re-normalizing by the new max amplitude.** Skip dividing by $\frac{1-g^N}{1-g}$, and raising octaves from 4 to 8 brightens or darkens the whole image even though the detail shape barely changed — easy to mistake for "more octaves broke the result" when the real issue is an un-normalized total amplitude.
+2. **Picking far more octaves than the display resolution can show.** An octave with a period smaller than the pixel spacing adds no visible detail — it only costs extra computation every frame and adds high-frequency noise that flickers on the slightest motion (camera shake, time-based animation), a cost paid for zero visual gain.
+3. **Mixing up turbulence and ridged FBM as opposites.** `abs(noise)` (turbulence) produces sharp VALLEYS at zero-crossings; `1.0 - abs(noise)` (ridged) produces sharp PEAKS at those exact same points — copying the wrong formula makes "mountain" terrain look like an inverted sinkhole, or vice versa.
+
+</Callout>

@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Mini-build đóng module "Nền tảng noise": không lý thuyết mới, chỉ một fragment shader chứng minh bạn ghép nối hash, noise và FBM thành một cảnh mây thật — phối chúng thành kết cấu đọc được là "mây", chuyển động sống chứ không phải nhiễu hạt.
+
+## Yêu cầu
+
+Dựng một cảnh mây trong GLSL Playground: sky gradient theo trục dọc (chân trời sáng hơn đỉnh trời); một lớp mây dựng từ FBM với coverage và softness cố định bằng hằng số; trôi theo thời gian bằng hai lớp FBM tốc độ khác nhau để có cảm giác song song thị sai (parallax) thay vì một texture cuộn đều; viền mây ánh sáng ấm hơn gần vị trí mặt trời; và một phép warp FBM nhẹ lên toạ độ trước khi lấy mật độ để mây không phải khối tròn đều tăm tắp. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Hash, value noise và `fbm()` đã có sẵn trong starter code — việc của bạn là dùng đúng cách: `smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)` định hình biên mây mềm; hai lần gọi `fbm()` với offset `uTime` ở hai tốc độ khác nhau rồi trộn lại cho parallax; và một phép trừ khoảng cách `uv` tới mặt trời để tô thêm màu ấm đúng vào dải biên mây, không tràn vào phần lõi.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — mây đọc được là khối mềm chứ không phải nhiễu hạt, chuyển động như gió thổi chứ không phải một texture đang cuộn, viền sáng lên rõ khi gần mặt trời, không có banding cứng giữa vùng mây và trời, và chạy dài không thấy điểm lặp hay reset.

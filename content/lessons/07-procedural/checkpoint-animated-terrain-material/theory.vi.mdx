@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Mini-build khép lại module Trường nâng cao: dựng một **material study chuyển động** tổng hợp mọi kỹ thuật vừa học — domain warping, Voronoi/FBM và noise theo thời gian — thành một thứ chạy thật, không chỉ đọc hiểu từng kỹ thuật tách rời.
+
+## Yêu cầu
+
+Chọn một trong ba đề tài: nhìn địa hình từ trên cao, vân marble, hoặc vân gỗ — nhưng bài này cung cấp **solution đầy đủ cho đề tài địa hình**: một height field từ FBM bị domain-warp (đường bờ biển cong tự nhiên, không lồi lõm giả tạo), tô màu bằng dải elevation (nước sâu → nước cạn → cát → cỏ → đá → tuyết, chuyển màu mượt bằng `smoothstep`, không có ranh giới cứng), chi tiết đá lởm chởm từ Voronoi trộn vào vùng cao, và chuyển động thật: nước lấp lánh + bóng mây trôi chậm qua địa hình (dùng noise 3D với trục thời gian — đúng kỹ thuật slice của bài trước) trong khi mặt đất giữ nguyên hình dạng. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Bốn lớp, xây theo thứ tự: (1) height field = FBM đã warp domain quyết định hình dạng địa hình; (2) elevation ramp = chuỗi `smoothstep` liên tiếp theo height, mỗi dải một màu; (3) chi tiết đá = Voronoi, chỉ hiện ở vùng cao (mask bằng chính height); (4) chuyển động = một lớp FBM/noise thứ hai lấy mẫu theo thời gian (trục thứ ba), điều khiển độ lấp lánh của nước và một hệ số làm tối áp lên toàn cảnh cho bóng mây — lớp này KHÔNG được phép ảnh hưởng ngược lại height field, nếu không đất sẽ "thở" theo nhịp sai.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — nếu chọn marble hoặc vân gỗ thay vì địa hình, áp dụng đúng bốn nguyên tắc trên (hình dạng cơ bản → dải màu mượt → chi tiết → chuyển động tách biệt khỏi hình dạng) cho đề tài đã chọn.
