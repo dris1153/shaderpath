@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Dựng một gallery 3 khối trưng bày (exhibit), mỗi khối tự lazy-load "vật phẩm" riêng qua một Suspense boundary RIÊNG, trong khi bệ đỡ (pedestal) của cả ba dùng chung đúng MỘT geometry và MỘT material tạo ở module scope — tổng hợp hai bài trước (`memoizing-geometry-and-materials` và `suspense-and-asset-loading`) thành một sản phẩm thật, không chỉ đọc hiểu công thức.
+
+## Yêu cầu
+
+3 slot vị trí cố định, cạnh nhau. Mỗi slot có `<Suspense fallback={<PlaceholderMesh />}>` bọc RIÊNG quanh component gọi `useLoader` với một delayed loader mô phỏng độ trễ khác nhau cho mỗi slot (không asset thật, không network) — slot chậm không được kéo theo slot nhanh. Bệ đỡ mỗi slot dùng chung một geometry + material hoisted ở module scope, gán qua prop `geometry=`/`material=` (không phải JSX con). Có một toggle "tải tất cả" bật cả 3 exhibit cùng lúc để quan sát 3 fallback chạy độc lập. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Một component `Slot({ index, active })` gói: pedestal (geometry/material module-scope gán qua prop) + `<Suspense fallback={<PlaceholderMesh />}>{active && <Exhibit index={index} />}</Suspense>`. `AssetGallery` chỉ lặp 3 `Slot` với cùng một prop `active`.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — 3 fallback hiện/biến mất độc lập theo đúng thời gian delay riêng của từng slot, `renderer.info.memory.geometries` đúng bằng 4 sau khi cả 3 tải xong (1 pedestal dùng chung + 3 exhibit riêng), và không có `<div>` DOM trần nào lọt vào làm fallback bên trong Canvas.

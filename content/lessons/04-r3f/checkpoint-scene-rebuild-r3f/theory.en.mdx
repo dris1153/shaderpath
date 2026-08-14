@@ -1,0 +1,15 @@
+## Goal
+
+This is the capstone of the R3F track's first module: no new theory, just an exact rebuild of the interactive showroom built with vanilla Three.js in Track 3 (`checkpoint-interactive-showroom`), this time with R3F's JSX and hooks. Comparing the two implementations of the same product side by side is the best way to *feel* how much boilerplate R3F removes — not just read about it.
+
+## Requirements
+
+At least 3 products (any geometry, `meshStandardMaterial`) on separate pedestals, built directly as `<mesh>` JSX; an `ambientLight` + `directionalLight` rig with `castShadow`/`receiveShadow` set in the right places; a camera driven by drei's `<OrbitControls>` with sane limits; hover highlight and click-to-select using `onPointerOver`/`onPointerOut`/`onClick` straight on `<mesh>` — NO hand-built `THREE.Raycaster` like in Track 3, R3F already raycasts for you through pointer events; the selected product rotates every frame via `useFrame`, mutating a ref, never calling setState. Full details live in the Exercises section below.
+
+## Structure Hint
+
+A `Product` component takes props (a product definition, the `selected` flag) and manages its own local hover state with `useState`; the parent component holds the `selected` state (the currently chosen product's id, or `null`) and an array of data defining the 3 products.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — shadows are visibly cast, hover/click work entirely through JSX pointer events rather than a hand-rolled raycaster, the selected product spins smoothly independent of framerate, and no `setState` runs inside `useFrame`.

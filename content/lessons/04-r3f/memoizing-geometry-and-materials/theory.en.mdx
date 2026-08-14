@@ -1,0 +1,78 @@
+## Every Render Re-Evaluates JSX — But That Doesn't Mean Three Objects Get Rebuilt
+
+When a React component re-renders, its whole function body runs again, including JSX lines like `<boxGeometry args={[1, 1, 1]} />`. But "JSX gets re-evaluated" doesn't mean "Three.js constructs a new object." R3F isn't a wrapper calling functions on your behalf (see `why-r3f-reconciler`) — it's a reconciler: every JSX element only DESCRIBES the Three.js object that should exist at that spot in the tree, and whether a real object gets rebuilt is the reconciler's call.
+
+So the right question isn't "did the component re-render" — it always does — but "did R3F call `new THREE.BoxGeometry(...)` again, or reuse the existing object." The answer lives in exactly one mechanism: how R3F handles the `args` prop.
+
+## `args`: A New Array Isn't a New Instance
+
+Writing `<boxGeometry args={[1, 1, 1]} />`, the literal `[1, 1, 1]` is a BRAND NEW array on every render — every array literal creates a new object, plain JS semantics. If R3F compared `args` by array reference (`oldArgs === newArgs`), the geometry would be destroyed and rebuilt on EVERY re-render — a disaster for any scene that isn't perfectly static.
+
+R3F doesn't do that. Straight from the `@react-three/fiber` source: it only reconstructs when `newArgs.length !== oldArgs.length`, or some index `i` exists where `newArgs[i] !== oldArgs[i]` — comparing element-by-element with `!==`, never the whole array by reference. For `[1, 1, 1]` against the previous render, every pair is equal by value (`1 === 1`) — the geometry stays put.
+
+Two practical consequences follow. First, you don't need `useMemo` around `<boxGeometry args={[1,1,1]} />` just because the component re-renders constantly — static primitive args are already handled. Second, the real trap is non-primitive args: `args={[someShapeInstance]}` where `someShapeInstance` is a `new THREE.Shape(...)` rebuilt every render (even if logically identical) makes `newArgs[0] !== oldArgs[0]` true every time — two distinct objects are never `===`, no matter how identical their contents — so the geometry rebuilds on EVERY render, silently, no warning anywhere.
+
+## Where the Real Cost Actually Lives
+
+Suppose the geometry/material genuinely does get rebuilt — where does the cost come from, exactly?
+
+For geometry: `new THREE.BoxGeometry(...)` allocates `Float32Array`s for position/normal/uv and computes a bounding sphere — CPU-side, measurable with `performance.now()`. The moment it's first used, Three.js uploads those buffers to the GPU via `gl.bufferData` — a BRAND NEW GPU buffer per instance, even when contents are identical.
+
+For materials, the less-known fact: Three.js does NOT recompile a shader per material instance. `WebGLPrograms` caches compiled programs by a STRUCTURAL cache key — whether a map is present, vertex colors, flat shading, light count, tone mapping — entirely EXCLUDING uniform values like color or the material's UUID. 200 identically-configured `MeshStandardMaterial` instances still produce exactly ONE `WebGLProgram`, and `gl.useProgram` only fires when the program reference changes — every other mesh skips it entirely.
+
+So the real cost of "not sharing a material" lives elsewhere: (a) GC pressure from N separate JS objects plus their own internal bookkeeping (`WebGLProperties`); and (b) a sharper risk — if a material gets disposed by R3F (unmount, or reconstructed under the `args` rule above) while it's the LAST instance holding that cache key, Three.js calls `releaseProgram`; `usedTimes` hits zero and the program is genuinely `destroy()`-ed. Next time it's needed, the shader compiles from scratch — precisely the one-frame stutter Track 12 covers as "shader compilation stalls."
+
+## useMemo for Hand-Built Objects
+
+Args-diffing only applies to geometry/material written as JSX. Build an object MANUALLY inside a component's body — say, a `uniforms` object for `shaderMaterial`, or a `THREE.Shape` used as path input — and no diffing mechanism protects you, because that code runs UNCONDITIONALLY every render:
+
+```tsx
+// NOT memoized: a fresh object every render
+const uniforms = { uTime: { value: 0 } };
+
+// Memoized: same reference across renders, rebuilt only when a dependency changes
+const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+```
+
+The dependency array has to be honest about what the object actually uses: if `uniforms` depends on `color`, list `color`. Omitting a dependency isn't extra optimization — it locks in a falsely stable reference, silently freezing the uniform, a bug that's easy to misdiagnose elsewhere.
+
+## Hoisting to Module Scope: One Material, a Hundred Meshes
+
+When many meshes share a geometry/material that never depends on any component's state, don't build it inside the component — not even inside `useMemo`, still tied to one component instance's lifecycle. Build it at **module scope**, running once when the file is imported:
+
+```tsx
+// Module scope — runs ONCE on import, not once per mount
+const sharedGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+const sharedMaterial = new THREE.MeshStandardMaterial({ color: "#6ea8fe" });
+
+function Cell({ position }: { position: [number, number, number] }) {
+  // Assigned via an existing-object PROP, not a JSX child — R3F only
+  // auto-disposes instances it created itself (via args); a prop-assigned
+  // geometry/material has a lifecycle entirely outside R3F.
+  return (
+    <mesh position={position} geometry={sharedGeometry} material={sharedMaterial} />
+  );
+}
+```
+
+Easy to miss: writing `<mesh><boxGeometry args={[...]} /></mesh>` at EVERY mesh in a repeated list, even with identical `args`, still means 100 JSX elements at DIFFERENT positions in the tree — args-diff only compares an element against its own previous render, never across siblings. The result is 100 separate geometry instances, even though it looks like "the same thing written 100 times."
+
+## When NOT to Memoize
+
+Don't wrap `useMemo` around everything on reflex — that's complexity bought for nothing. Skip it when: `args` are all static numbers/strings/booleans (already handled); the geometry/material is cheap and used once in the whole scene (one lonely sphere isn't worth hoisting); or a value changes continuously via animation — in that case you shouldn't be creating new objects at all, but mutating an existing property directly inside `useFrame` (`mesh.current.rotation.y += delta`), the subject of the `disposal-and-memory-leaks` and `drei-essentials` lessons right before this one.
+
+## Measuring the Difference with renderer.info
+
+`useThree((s) => s.gl)` returns the live renderer. `gl.info.memory.geometries` counts EXACTLY how many GPU geometries are alive; `gl.info.programs.length` counts COMPILED shader programs — not material instances, as the "real cost" section explained. The demo below toggles between one shared module-scope material and 200 per-mesh JSX materials: `programs` stays roughly UNCHANGED between the two modes (same structural cache key), while `geometries` visibly jumps between 1 and 200 — and the cost of building the scene (measured with `performance.now()` around the allocation loop) shows a measurable gap.
+
+<Callout variant="mistake" title="Common mistakes">
+
+1. **An incomplete `useMemo` dependency array** — e.g. `useMemo(() => new THREE.MeshStandardMaterial({ color }), [])` forgetting `color`. The material freezes at its initial color forever even as the prop keeps changing, an easy bug to misdiagnose elsewhere.
+2. **Assuming identical `args` across sibling JSX elements auto-dedupes geometry.** 200 `<boxGeometry args={[0.6,0.6,0.6]} />` across 200 different `<mesh>` elements in a `.map()` still create 200 separate instances — args-diff only compares an element against its own previous render, never across siblings.
+3. **Expecting `renderer.info.programs` to drop with a shared material.** This confuses "sharing a JS instance" with "sharing a compiled GPU program" — Three.js already dedupes programs by structural cache key regardless; `geometries` is the metric that actually reflects hoisting.
+
+</Callout>
+
+## Where This Leads Next
+
+The next lesson, `suspense-and-asset-loading`, applies the same "what actually gets rebuilt, and when" question to a different axis: asynchronous assets, where Suspense decides WHEN a component is even allowed to render. The `checkpoint-asset-gallery` checkpoint combines both: the pedestal uses this lesson's module-scope hoisting, the exhibit uses next lesson's Suspense. Track 12 (Performance & Production) returns to this exact `renderer.info` toolkit to measure draw calls, batching and instancing at a larger scale.

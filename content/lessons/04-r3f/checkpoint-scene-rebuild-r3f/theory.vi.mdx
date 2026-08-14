@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài tổng kết Module 1 của Track R3F: không có lý thuyết mới, chỉ dựng lại chính xác showroom tương tác đã xây bằng Three.js thuần ở Track 3 (`checkpoint-interactive-showroom`), nhưng lần này bằng JSX và hook của R3F. So sánh trực tiếp hai cách viết cùng một sản phẩm là cách tốt nhất để *cảm nhận* được R3F tiết kiệm bao nhiêu boilerplate — không phải đọc lý thuyết suông.
+
+## Yêu cầu
+
+Ít nhất 3 sản phẩm (geometry bất kỳ, `meshStandardMaterial`) trên pedestal riêng, dựng thẳng bằng `<mesh>` JSX; rig ánh sáng `ambientLight` + `directionalLight` với `castShadow`/`receiveShadow` bật đúng chỗ; camera điều khiển bằng `<OrbitControls>` của drei với giới hạn hợp lý; hover sáng nhẹ + click chọn dùng thẳng `onPointerOver`/`onPointerOut`/`onClick` trên `<mesh>` — KHÔNG tự dựng `THREE.Raycaster` như ở Track 3, R3F đã raycast hộ qua pointer event; sản phẩm đang chọn tự xoay mỗi frame bằng `useFrame`, mutate ref, không setState. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Một component `Product` nhận props (định nghĩa sản phẩm, trạng thái `selected`) và tự quản lý state hover cục bộ bằng `useState`; component cha giữ state `selected` (id sản phẩm đang chọn, hoặc `null`) và một mảng dữ liệu định nghĩa 3 sản phẩm.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — bóng đổ nhìn thấy được, hover/click hoạt động hoàn toàn qua pointer event JSX chứ không phải raycaster tay, sản phẩm được chọn xoay mượt độc lập framerate, và không có `setState` nào chạy bên trong `useFrame`.

@@ -1,0 +1,97 @@
+## Vì sao debug UI không phải là đồ chơi
+
+Tinh chỉnh một vật liệu hay một scene bằng cách sửa số trong code, lưu file, đợi hot-reload, rồi nhìn lại kết quả là một vòng lặp chậm — chậm hơn nhiều so với cảm giác cần có khi bạn đang thử "roughness 0.4 hay 0.45 nhìn thật hơn". Debug UI như leva giải quyết đúng vấn đề đó: sinh ra một panel điều khiển thật, kéo-thả được, từ một object cấu hình khai báo — không component riêng nào phải tự viết, không CSS nào phải tự canh. Với việc tinh chỉnh vật liệu, ánh sáng hay uniform shader, quy trình đúng gần như luôn là "tweak trước, code sau": kéo slider tới khi mắt thấy đúng, rồi mới copy đúng con số đó vào source — chứ không đoán số rồi build lại nhiều lần. leva là công cụ mặc định cho quy trình này trong hệ sinh thái R3F, đúng như dat.GUI từng là chuẩn cho Three.js thuần trước đó.
+
+## `useControls`: từ object khai báo tới panel thật
+
+Hook trung tâm của leva là `useControls` — nhận vào một object mô tả từng control, trả về đúng giá trị hiện tại của chúng, panel UI tự sinh ra bên cạnh mà không cần đụng tới bất kỳ component JSX nào khác:
+
+```tsx
+import { useControls } from "leva";
+
+function TunedLight() {
+  const { color, intensity } = useControls({
+    color: "#f97316",
+    intensity: { value: 1.2, min: 0, max: 4, step: 0.1 },
+  });
+
+  return <pointLight color={color} intensity={intensity} />;
+}
+```
+
+Giá trị đơn giản (`"#f97316"`) tự được suy ra kiểu input đúng — leva nhận diện chuỗi mã hex thành color picker, số thành slider mặc định không giới hạn. Muốn kiểm soát range, dùng object mở rộng `{ value, min, max, step }` như `intensity` ở trên. Mỗi lần kéo slider, `useControls` re-render component với giá trị mới — cùng một luồng dữ liệu React bình thường, chỉ khác nguồn state không phải `useState` của bạn mà là store nội bộ của leva.
+
+Lưu ý quan trọng: leva KHÔNG được cài trong repo của nền tảng học này. Mọi đoạn code leva trong bài — kể cả đoạn trên — là code thật, chạy nguyên vẹn trong bất kỳ dự án R3F nào có cài package `leva`, nhưng demo tương tác bên dưới mô phỏng đúng workflow tweak-rồi-copy đó bằng chính hệ control có sẵn của nền tảng, không import leva thật.
+
+### Range, màu, button, folder
+
+Ngoài số và màu, leva còn có input cho button (kích hoạt một hành động, ví dụ reset) và `folder` để nhóm control liên quan lại với nhau — mấu chốt khi một scene có hàng chục tham số cần tinh chỉnh cùng lúc, panel phẳng sẽ nhanh chóng trở nên không đọc nổi:
+
+```tsx
+import { useControls, folder, button } from "leva";
+
+function useMaterialTuning() {
+  return useControls({
+    Material: folder({
+      color: "#f97316",
+      roughness: { value: 0.4, min: 0, max: 1, step: 0.01 },
+      metalness: { value: 0.2, min: 0, max: 1, step: 0.01 },
+    }),
+    Light: folder({
+      intensity: { value: 1.2, min: 0, max: 4 },
+      reset: button((get) => console.log("current:", get("Material.color"))),
+    }),
+  });
+}
+```
+
+`folder(schema)` bọc một nhóm key thành một section có thể thu gọn trong panel — đúng cấu trúc "Material" / "Light" mà demo dưới đây mô phỏng lại bằng chính control panel của nền tảng. `useControls("tên folder", schema)` (dạng hai tham số) là cách viết tắt tương đương của một `folder` duy nhất ở cấp cao nhất, dùng khi cả hook chỉ cần đúng một nhóm.
+
+### Monitor: hiện giá trị real-time không cần state
+
+`monitor` là một input đặc biệt CHỈ ĐỌC — không sinh ra control tương tác, chỉ hiện một giá trị đang thay đổi liên tục, ví dụ FPS hay một số đo trong `useFrame`, mà không buộc component cha phải `setState` mỗi frame (việc đó sẽ re-render toàn bộ cây React 60 lần một giây, chi phí không hề nhỏ):
+
+```tsx
+const fpsRef = useRef(0);
+useControls({
+  fps: monitor(fpsRef, { graph: true, interval: 100 }),
+});
+```
+
+leva tự đọc `fpsRef.current` theo chu kỳ `interval` (mili-giây) và vẽ lại đúng phần UI đó — không phải toàn bộ scene. Đây là bước đệm tự nhiên dẫn sang khái niệm quan trọng hơn: đọc giá trị thay đổi liên tục mà không trả giá bằng re-render.
+
+## Transient read: đọc get/set mà không re-render
+
+`useControls` bản thường trả về giá trị đã re-render — đủ cho phần lớn trường hợp, nhưng sai công cụ nếu bạn cần đọc giá trị đó BÊN TRONG một `useFrame` chạy 60 lần một giây: gọi lại `useControls()` mỗi frame là sai hoàn toàn (đó là một hook, không phải một hàm đọc nhanh). leva giải quyết bằng dạng function-schema, trả về thêm `set`/`get`:
+
+```tsx
+const [{ counter }, set, get] = useControls(() => ({ counter: 0 }));
+
+function tick() {
+  set({ counter: get("counter") + 1 });
+}
+```
+
+`get(key)` đọc đúng giá trị mới nhất tại đúng thời điểm gọi — không qua re-render, không có độ trễ một frame. `set(patch)` cập nhật giá trị NGAY LẬP TỨC vào store của leva; panel UI vẫn hiện đúng số mới (vì chính leva subscribe vào store đó), nhưng component gọi `set`/`get` không hề re-render chỉ vì thao tác đó — tách hẳn "cập nhật UI panel" khỏi "cập nhật logic scene mỗi frame", đúng tinh thần mutate-trực-tiếp-trong-useFrame mà cả track này đã dùng nhiều lần với uniform và ref Three.js.
+
+## leva so với control panel của chính nền tảng này
+
+Demo của hầu hết bài học trong nền tảng này đã có sẵn một control panel — `Slider`, `Switch`, `Select` của shadcn, được component `Demo` sinh ra từ mảng `ControlDef` khai báo. Nhìn thoáng qua, đó gần như là "leva của riêng nền tảng" — cùng ý tưởng: khai báo schema, panel tự sinh, giá trị chảy vào scene qua props. Nhưng hai công cụ phục vụ hai VAI TRÒ khác hẳn nhau, không chỉ khác giao diện. Control panel của `Demo` được LẬP TRÌNH VIÊN NỀN TẢNG thiết kế sẵn, cố định, cho một NGƯỜI HỌC cụ thể tương tác với đúng một demo cụ thể — nó là một phần UI CHÍNH THỨC của sản phẩm, ship cho mọi người dùng. leva ngược lại: bản thân lập trình viên tự thêm vào lúc code để CHÍNH HỌ tinh chỉnh nhanh, rồi hầu như luôn bị xoá hoặc tắt đi sau khi chốt được con số cuối cùng — nó là công cụ dev-time, không phải một phần sản phẩm.
+
+## Đừng ship devtool vào production
+
+leva cho một prop `hidden` trên component `<Leva />` để ẩn hẳn panel: `<Leva hidden={true} />` khiến UI biến mất hoàn toàn khỏi DOM. Điều dễ hiểu lầm: `hidden` chỉ ẩn GIAO DIỆN, nó KHÔNG tự động loại bỏ code JavaScript của leva ra khỏi bundle production — package vẫn được import, vẫn được bundle, vẫn tốn băng thông tải về dù người dùng cuối chẳng bao giờ thấy panel đó. Muốn thực sự loại leva khỏi bundle production, phải tách hẳn code path — ví dụ chỉ import và mount `<Leva />` khi `process.env.NODE_ENV !== "production"`, hoặc dùng `dynamic import()` để bundler tách nó thành một chunk riêng không bao giờ được tải ở production. Cách tiếp cận `hidden={true}` chỉ hợp lý khi bạn muốn TẠM ẩn panel lúc demo cho người khác xem nhưng vẫn cần bật lại ngay sau đó trong cùng phiên làm việc.
+
+## Những gì quay lại ở các track sau
+
+Vòng lặp tweak-rồi-copy-vào-code mà leva phục vụ sẽ còn xuất hiện suốt các track shader nặng hơn: Track 6 (Custom Shader) và Track 7 (Procedural & Noise) đều có rất nhiều tham số — tần số noise, hệ số domain warping, ngưỡng threshold — mà tìm bằng tay trong code sẽ chậm hơn hẳn so với kéo slider rồi copy số cuối cùng. Bài mini-build đóng track này, `checkpoint-mini-configurator`, quay lại đúng lựa chọn "leva hay control panel thật" khi quyết định UI cuối cùng của một sản phẩm gần với production.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng debug UI kiểu leva:
+
+1. **Tưởng `hidden={true}` loại bỏ leva khỏi bundle production.** Nó chỉ ẩn UI — code JavaScript của leva vẫn nằm trong bundle, vẫn được tải về, trừ khi import được tách theo `NODE_ENV` hoặc dynamic import.
+2. **Gọi `useControls()` lặp lại bên trong `useFrame` để "đọc giá trị mới nhất".** `useControls` là một React hook, không phải một hàm đọc nhanh — gọi nó 60 lần một giây vi phạm rules-of-hooks và ép re-render liên tục; đúng chỗ cần dùng là dạng function-schema với `get`/`set` (transient read).
+3. **Nhầm control panel của một sản phẩm thật (như panel `Demo` của nền tảng này) với một devtool kiểu leva.** Cả hai đều "khai báo schema → sinh UI", nhưng panel sản phẩm là một phần UI CHÍNH THỨC ship cho người dùng cuối, còn leva là công cụ dev-time — trộn lẫn hai vai trò dễ dẫn tới việc vô tình ship UI tinh chỉnh nội bộ ra bản production.
+
+</Callout>

@@ -452,8 +452,8 @@ export const lessons: LessonMeta[] = [
       en: "Mini-build: Mini Product Configurator",
     },
     summary: {
-      vi: "Một configurator sản phẩm nhỏ: đổi màu/vật liệu qua Leva hoặc UI thật, multi-view với chính-diện và góc xoay tự do — bài tổng kết đóng track R3F bằng một sản phẩm gần với thực tế production.",
-      en: "A small product configurator: swap colors/materials via Leva or real UI, a multi-view layout with a front shot and a free-orbit angle — the R3F track's capstone, close to a real production build.",
+      vi: "Một configurator sản phẩm nhỏ: state React điều khiển màu/vật liệu từng bộ phận, turntable, giá hiển thị theo lựa chọn — bài tổng kết đóng track R3F bằng một sản phẩm gần với thực tế production.",
+      en: "A small product configurator: React state drives per-part colors/materials, a turntable, and a live price readout — the R3F track's capstone, close to a real production build.",
     },
     difficulty: 3,
     estimatedMinutes: 60,
@@ -463,11 +463,13 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["r3f-vs-vanilla-three"],
     objectives: {
       vi: [
-        "Kết hợp portal/multi-view, memoization và asset loading vào một sản phẩm tương tác hoàn chỉnh",
+        "Dùng state React điều khiển scene: màu/finish từng bộ phận, turntable và giá theo lựa chọn",
+        "Áp dụng memoization (geometry dùng chung), OrbitControls có clamp, shadows và disposal sạch",
         "Đóng track R3F với một configurator có thể mở rộng thành dự án thực tế",
       ],
       en: [
-        "Combine portals/multi-view, memoization and asset loading into one complete interactive product",
+        "Drive the scene from React state: per-part colors/finish, a turntable and an options-based price",
+        "Apply memoization (shared geometry), clamped OrbitControls, shadows and clean disposal",
         "Close the R3F track with a configurator that could grow into a real project",
       ],
     },

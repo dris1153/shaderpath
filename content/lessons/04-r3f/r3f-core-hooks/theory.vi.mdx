@@ -1,0 +1,59 @@
+## useFrame: vòng lặp render riêng của mỗi component
+
+`useFrame` đăng ký một callback chạy đúng một lần cho mỗi frame R3F render bên trong `<Canvas>` — không phải bạn tự gọi `requestAnimationFrame`, mà R3F gom callback từ *mọi* component đang mount (bất kể độ sâu trong cây) vào một vòng lặp trung tâm duy nhất và chạy chúng tuần tự ngay trước khi vẽ frame ra canvas. Có thể gọi `useFrame` ở bất kỳ component nào nằm trong `<Canvas>`, không chỉ ở gốc — mười component khác nhau, mỗi cái tự đăng ký một `useFrame`, vẫn chỉ tốn đúng một vòng lặp render vật lý, không phải mười cái `requestAnimationFrame` chồng lên nhau.
+
+```ts
+useFrame((state, delta) => {
+  // chạy mỗi frame, ngay trước khi R3F vẽ scene
+});
+```
+
+### Delta: chuyển động không phụ thuộc framerate
+
+Tham số thứ hai, `delta`, là số giây trôi qua kể từ frame trước. Ở màn hình 60Hz, delta xấp xỉ $1/60 \approx 0.01667s$ (16.67ms); ở màn hình 144Hz, delta co lại còn $1/144 \approx 0.00694s$ (6.94ms) — ít hơn 2.4 lần. Nhân tốc độ với delta thay vì cộng một hằng số cố định mỗi frame là bắt buộc: `angle += SPEED * delta` cho ra đúng cùng một tốc độ góc thực (rad/giây) trên cả hai màn hình, vì delta nhỏ hơn bù lại đúng bằng số lần callback được gọi nhiều hơn mỗi giây. Bỏ delta (`angle += SPEED`) làm vật quay nhanh gấp 2.4 lần trên màn 144Hz so với 60Hz — đúng mẫu callback dt-correct đã gặp ở Track 0 (bài interpolation & easing), giờ chạy bên trong `useFrame` thay vì `requestAnimationFrame` viết tay.
+
+## Ref, không phải setState: quy tắc quan trọng nhất
+
+Đây là lỗi hiệu năng số một của người mới học R3F: gọi `setState` bên trong `useFrame` để lưu góc quay hay vị trí animate, rồi đưa state đó vào JSX. Mỗi lần `setState` chạy, React lên lịch một lượt render mới — với animation 60fps đó là 60 lượt reconciliation mỗi giây, mỗi lượt React phải diff lại cây component, chạy lại toàn bộ hook và re-render mọi component con, dù gần như không prop nào thật sự đổi ngoài một góc quay. Cách đúng: giữ giá trị animate trong `useRef` (đổi giá trị không kích hoạt render), và bên trong `useFrame` ghi thẳng vào property Three.js thật qua ref — `meshRef.current.rotation.y += delta`. Không setState nào chạy, không re-render nào xảy ra, chỉ có object Three.js bị mutate rồi frame kế tiếp vẽ nó ra màn hình đúng hiện trạng mới.
+
+```ts
+const meshRef = useRef<Mesh>(null);
+useFrame((state, delta) => {
+  if (meshRef.current) meshRef.current.rotation.y += delta;
+});
+```
+
+## Bề mặt tham số state: clock, camera, pointer, invalidate
+
+Tham số đầu tiên của callback, `state`, có cùng shape với object mà `useThree()` trả về. `state.clock` là `THREE.Clock` của canvas — `state.clock.elapsedTime` là tổng số giây đã trôi kể từ khi Clock khởi tạo, dùng để tính pha cho animation tuần hoàn thay vì tự cộng dồn delta theo tay. `state.camera` là camera đang active của scene. `state.pointer` là một `Vector2` giữ toạ độ con trỏ đã chuẩn hoá về $[-1, 1]$, được R3F tự cập nhật mỗi khi trình duyệt bắn sự kiện pointer — đọc thẳng `state.pointer` bên trong `useFrame` là cách rẻ nhất để một object "đuổi theo" chuột, không cần tự dựng `Raycaster`. `state.invalidate()` là hàm yêu cầu R3F vẽ thêm đúng một frame nữa — cần thiết khi canvas chạy `frameloop="demand"` (chỉ render lúc có gì đó thay đổi) thay vì vòng lặp liên tục mặc định.
+
+## useThree: đọc state canvas mà không kéo theo re-render thừa
+
+Gọi `useThree()` không tham số trả về *toàn bộ* object state ở trên, và subscribe component vào *mọi* thay đổi của nó — canvas resize, đổi DPR, hay bất kỳ field nào khác cũng khiến component re-render dù nó chỉ cần đúng một field. `useThree(selector)` nhận một hàm chọn lọc — ví dụ `useThree((s) => s.camera)` — chỉ subscribe vào đúng slice đó: component chỉ re-render khi chính field `camera` đổi tham chiếu (như đổi từ Perspective sang Orthographic), một sự kiện resize không còn chạm tới nó. Nguyên tắc: chọn càng hẹp, càng ít lý do cho React re-render — cùng logic với memoization đã quen, chỉ khác nguồn state ở đây do R3F quản lý qua store nội bộ.
+
+## useLoader: nạp asset tích hợp Suspense, cache theo URL
+
+`useLoader(Loader, url)` — ví dụ `useLoader(TextureLoader, "/wood.jpg")` — nạp asset và tích hợp thẳng với React Suspense: lần gọi đầu tiên với một URL, hook throw một Promise; `<Suspense fallback>` bao ngoài bắt lấy Promise đó và hiện fallback; khi Promise resolve, React render lại component với asset đã sẵn sàng — không cần biến `isLoading` viết tay. Kết quả được cache trong một Map nội bộ khoá theo cặp (loader, URL): gọi `useLoader(TextureLoader, "/wood.jpg")` ở hai component khác nhau chỉ tải file một lần duy nhất, lần thứ hai nhận thẳng từ cache. Muốn tải trước khi component mount để tránh giật hình lúc chuyển scene, gọi `useLoader.preload(TextureLoader, "/wood.jpg")` ở module scope hoặc trong một effect chạy sớm.
+
+```ts
+const texture = useLoader(TextureLoader, "/wood.jpg");
+useLoader.preload(TextureLoader, "/wood.jpg"); // tải trước, tránh giật khi mount
+```
+
+## Render priority: khi bạn tự kiểm soát vòng lặp render
+
+`useFrame` nhận tham số thứ hai tuỳ chọn — render priority, mặc định 0. Bình thường, sau khi mọi callback priority 0 chạy xong, R3F tự gọi `gl.render(scene, camera)` giúp bạn. Truyền một priority dương (`useFrame(callback, 1)`) tắt hành vi tự render mặc định đó: R3F hiểu là bạn muốn tự kiểm soát, và callback ở priority cao nhất chịu trách nhiệm tự gọi render (thường qua `EffectComposer` khi cần nhiều pass hoặc post-processing) — cơ chế này quay lại chi tiết hơn ở Track 10.
+
+## Kết nối về sau
+
+Kỷ luật "mutate ref, không setState" học ở đây không dừng ở animation đơn giản — nó là nền của mọi thứ chạy real-time trong R3F về sau: cập nhật uniform shader mỗi frame ở Track 6, hàng nghìn vị trí particle ở Track 9, hay đồng bộ timeline GSAP với render loop ở Track 5 đều viết thẳng vào ref/object Three.js, không bao giờ qua state React.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng hook của R3F:
+
+1. **Gọi `setState` bên trong `useFrame` để lưu vị trí/góc animate.** Đây chính là chủ đề chính của bài — mỗi `setState` là một lượt reconciliation React đầy đủ, 60 lần/giây với animation mượt, trong khi mutate ref qua object Three.js thật không tốn gì thêm ngoài một phép gán.
+2. **Gọi `useThree()` không selector trong một component nằm sâu, cập nhật thường xuyên.** Component subscribe vào toàn bộ state nên một sự kiện resize/DPR đổi kéo re-render cả những component chỉ cần đọc `camera`, dù chẳng liên quan gì đến kích thước canvas.
+3. **Không kiểm tra `ref.current` trước khi dùng trong `useFrame`.** Component có thể unmount giữa lúc animation đang chạy (chuyển route, đóng modal); truy cập `.rotation` trên `null` crash toàn bộ canvas — luôn `if (!meshRef.current) return;` đầu callback thay vì tin object luôn tồn tại.
+
+</Callout>

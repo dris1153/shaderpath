@@ -1,0 +1,90 @@
+## Why Many WebGL Canvases Is a Real Problem
+
+The most natural R3F pattern for several 3D "viewports" on one page is: one `<Canvas>` per viewport. Tracks 0 through 3 all do exactly that — every demo manages its own renderer, scene, and camera, fully independent of any other demo on the page. Simple, easy to reason about, and with one demo per page there's nothing to worry about — the problem shows up once the number of viewports grows.
+
+Every `<Canvas>` creates a real WebGL context — its own connection to the graphics driver, with its own memory, compiled shaders, and GPU state, shared with nothing else. Browsers don't let that number grow without bound: according to virtual-webgl, Gregg Tavares's project built to solve exactly this, "browsers usually limit WebGL to 8 to 16 contexts max" per page. Crossing that line doesn't throw a loud error — the browser silently loses the OLDEST live context to make room, and the canvas that lost it turns into a black frame unless the code listens for `webglcontextlost` and recovers manually. This curriculum has over 160 lessons — a "quick preview of many demos" page showing a few dozen canvases at once would run straight into that 8–16 ceiling.
+
+The cost isn't only that hard ceiling. Every context is an independent renderer: textures, compiled shaders, geometry buffers — none of it is shared across contexts, even when two canvases render the exact same model. Opening 10 canvases for 10 copies of the same 3D chair means loading and compiling the same shader 10 times and holding 10 texture copies in VRAM — wasteful well before you ever hit the context ceiling.
+
+## The Low-Level Technique: A Scissor Test on One Canvas
+
+The fix isn't avoiding multiple viewports — it's decoupling "viewport" from "WebGL context": still many viewports, but one canvas, one renderer, one context. The underlying technique is the scissor test — a built-in WebGL feature that restricts which pixels a draw call is allowed to touch, independent of the viewport transform. The Three.js Fundamentals manual describes exactly this pattern: clear the whole canvas once, then for each viewport, enable the scissor test, set the viewport and scissor to the same pixel rectangle, and call `render()` with that viewport's own scene and camera:
+
+```ts
+function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
+  renderer.setScissorTest(false);
+  renderer.clear(true, true, true); // clear ONCE, scissor not yet enabled
+
+  for (const { scene, camera, rect } of viewports) {
+    renderer.setScissorTest(true);
+    renderer.setViewport(rect.left, rect.bottom, rect.width, rect.height);
+    renderer.setScissor(rect.left, rect.bottom, rect.width, rect.height);
+    renderer.render(scene, camera);
+  }
+}
+```
+
+`rect` here is in real canvas pixels (different from CSS pixels whenever `devicePixelRatio` isn't 1), origin bottom-left — WebGL's convention, the opposite of the DOM's. The usual way to get `rect` is calling `element.getBoundingClientRect()` on a real HTML `<div>` placed exactly where you want the viewport to appear, then converting DOM coordinates (origin top-left) into scissor coordinates (origin bottom-left) yourself. That's exactly the mechanism drei's `View` automates for you.
+
+## drei's `View`: Turning a DOM Tag Into a Viewport
+
+### How View Works Underneath, and Why It Needs a Tunnel
+
+`<View track={ref}>` takes a React ref pointing at a DOM element — usually a plain layout `<div>`, placed anywhere around the Canvas. Every frame it calls `ref.current.getBoundingClientRect()`, converts it into scissor coordinates as above, then draws the JSX inside `<View>` into that exact region via `useFrame` at its own priority level. Content inside a `<View>` doesn't run in the Canvas's root scene — it's routed into a virtual scene created with R3F's own `createPortal`, fully isolated from every other `<View>`: cameras, lights, and objects declared inside one `<View>` don't automatically appear in another. To make two viewports "look like the same scene" from two angles, you have to deliberately declare the same JSX content in both, driven by one shared external state — `View` doesn't share a single Three.js object between two virtual scenes on its own.
+
+`View` also has a variant for writing `<View>` anywhere in the React tree, even outside `<Canvas>`, while a fixed `<Canvas>` (usually covering the whole page) renders on its behalf somewhere else. That "crossing" of the React tree uses the `tunnel-rat` library: content written in component A actually gets drawn wherever `<View.Port />` sits inside `<Canvas>` in component B, even though A and B aren't nested — differing from `createPortal` in that it crosses the React component tree, not just the scene. This lesson's demo uses the simpler variant: `<View>` written directly inside `<Canvas>`, managing its own tracking `<div>` refs — enough when the layout and the Canvas already live in the same component.
+
+### `track`, `index`, and the Orthographic Camera Trap
+
+`index` decides draw order: `<View>`s are sorted by ascending `index`, and a higher `index` draws later, so it paints on top — used to layer an overlay above the main viewport. The most common trap is with orthographic cameras: without `manual` set on the camera, `View` silently forces its `left/right/top/bottom` to match the tracked rect's pixel dimensions every single frame — any zoom or frustum you set yourself in code gets overwritten without a trace. To keep a chosen frustum (say, a top-down viewport framing an exact portion of the scene), you must explicitly set `manual` on the camera.
+
+## `createPortal`: Rendering a Branch Into a Different Target
+
+R3F's `createPortal` isn't `react-dom`'s `createPortal` — it doesn't move a DOM node, it changes which SCENE a JSX branch attaches to, the way `react-dom`'s version changes the DOM container. `createPortal(children, targetScene)` attaches `children` to `targetScene` instead of the Canvas's default scene — a fully independent camera, lights, and objects for `targetScene`, isolated from the main scene. Because `targetScene` isn't rendered automatically (only the Canvas's default scene gets auto-rendered by R3F each frame), you have to call `renderer.render(targetScene, camera)` yourself inside a `useFrame` — exactly the technique behind drei's built-in `<Hud>` component, and behind the render-to-texture technique from Track 1's framebuffer objects: both "render into a different target than the main scene/canvas," just with different final destinations — a secondary scene composited on top (a HUD) versus a texture meant to be reused (render-to-texture).
+
+```tsx
+function Hud() {
+  const [hudScene] = useState(() => new THREE.Scene());
+  const camRef = useRef<THREE.OrthographicCamera>(null);
+
+  useFrame(({ gl }) => {
+    if (!camRef.current) return;
+    gl.autoClear = false;
+    gl.clearDepth(); // wipe the depth buffer, KEEP the main scene's color output
+    gl.render(hudScene, camRef.current);
+  }, 1); // priority > 0 → takes over rendering manually, runs AFTER the main scene
+
+  return createPortal(
+    <>
+      <orthographicCamera ref={camRef} position={[0, 0, 10]} />
+      <mesh>
+        <ringGeometry args={[0.4, 0.5, 32]} />
+        <meshBasicMaterial color="yellow" />
+      </mesh>
+    </>,
+    hudScene,
+  );
+}
+```
+
+## When a Second `<Canvas>` Is Still the Right Call
+
+Consolidating into one canvas isn't always correct. If two viewports never appear at the same time — two different routes in a Next.js app, say, where the old Canvas fully unmounts before the new one mounts — there's no "multiple live contexts" to worry about, and splitting the work across two `<Canvas>`es keeps the code simpler. Likewise, if two scenes need very different renderer configuration — a full HDR tone-mapped scene versus a tiny 3D icon needing neither antialiasing nor tone mapping — merging them forces a common `gl` configuration for both, sometimes costing more than it saves. The practical rule: only consolidate when the number of SIMULTANEOUSLY LIVE viewports is large enough to threaten the context ceiling, or when sharing resources — loaded textures, geometry — brings a clear win.
+
+## Case Study: This Platform's Own Demo Architecture
+
+This entire learning platform, starting from Track 0, is built exactly on "one demo, one `<Canvas>`" — this very lesson too, at its outermost layer: the `Demo` component wraps a `DemoCanvas`. That's the right call for the current use case: every lesson page shows exactly one demo, and the old canvas always unmounts before a new one mounts on navigation — no scenario where multiple contexts stay alive at once. But if the roadmap later adds a "compare multiple demos" page showing dozens of demos on one screen, this same architecture would hit the context ceiling fast — and `View` would be the right tool to consolidate those N canvases into one, without rewriting every demo. The real trade-off: simplicity while writing (each demo fully self-contained) versus efficiency at scale (one shared canvas) — this platform deliberately picks the former, correctly, for its current use case.
+
+## What Comes Back in Later Tracks
+
+Rendering into a different target keeps coming back after this lesson. Track 9 (GPGPU) uses the exact render-to-texture principle behind `createPortal`/FBOs to store particle state in a texture via a ping-pong technique; Track 13's capstone revisits `View` when this track's closing mini-build needs a front-facing frame and a free-orbit angle on the same product at once. Getting comfortable with the boundary between "scene" (logical data) and "canvas/context" (a GPU resource) now saves every later lesson from re-deriving it from scratch.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with View and createPortal:
+
+1. **Forgetting `manual` on an orthographic camera inside a `View`.** Without it, `View` silently forces `left/right/top/bottom` to match the tracked rect's pixel dimensions every frame — any zoom or frustum set in code gets overwritten with nothing logged to the console.
+2. **Assuming multiple `<View>`s share one Three.js Scene.** Each `<View>` renders into its own virtual scene — moving an object in one viewport doesn't automatically move its "identical" counterpart in another, unless both are driven from the same external state.
+3. **Forgetting that scissor only restricts WHERE drawing happens, it doesn't clear the canvas for you.** `setScissor`/`setViewport` are no substitute for one full-canvas `clear()` at the frame's start — skip it, and old pixels in regions not repainted this frame (say, where an object just moved away from) stay put, leaving a ghost trail.
+
+</Callout>

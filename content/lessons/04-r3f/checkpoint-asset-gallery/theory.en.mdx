@@ -1,0 +1,15 @@
+## Goal
+
+Build a 3-exhibit gallery where each exhibit lazy-loads its own "item" through a SEPARATE Suspense boundary, while all three pedestals share exactly ONE geometry and ONE material created at module scope — synthesizing the previous two lessons (`memoizing-geometry-and-materials` and `suspense-and-asset-loading`) into a real artifact, not just recognizing the formulas.
+
+## Requirements
+
+3 fixed-position slots, side by side. Each slot wraps its own `<Suspense fallback={<PlaceholderMesh />}>` around a component calling `useLoader` with a delayed loader simulating a DIFFERENT latency per slot (no real assets, no network) — a slow slot must never drag a fast one down with it. Every slot's pedestal shares one geometry + material hoisted at module scope, assigned via the `geometry=`/`material=` prop (never a JSX child). Include a "load all" toggle that activates all 3 exhibits at once so the 3 fallbacks can be observed running independently. Full details live in the Exercises section below.
+
+## Structure Hint
+
+A `Slot({ index, active })` component wrapping: a pedestal (module-scope geometry/material assigned via prop) + `<Suspense fallback={<PlaceholderMesh />}>{active && <Exhibit index={index} />}</Suspense>`. `AssetGallery` just loops 3 `Slot`s sharing the same `active` prop.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the 3 fallbacks appear and disappear independently, matching each slot's own delay, `renderer.info.memory.geometries` equals exactly 4 once all three finish loading (1 shared pedestal + 3 separate exhibits), and no bare DOM `<div>` ever ends up as a fallback inside the Canvas.

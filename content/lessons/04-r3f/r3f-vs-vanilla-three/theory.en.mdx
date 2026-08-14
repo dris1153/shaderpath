@@ -1,0 +1,47 @@
+## Where R3F Wins: React, Composition, Pointer Events for Free
+
+"R3F or vanilla Three.js" has no single universally correct answer — it depends on the project's context, not on one tool being inherently "better." R3F wins most clearly when a 3D scene lives **inside an existing React app**: scene state needs to stay in sync with UI state (a cart, an active tab, filter results), routing moves users in and out of a page hosting a canvas, or a 3D component needs props from its parent like any other React component. `<mesh position={cartItem.slot}>` re-renders automatically the moment `cartItem` changes, no hand-built bridge needed — exactly like a `<div>`.
+
+The second advantage is composition. A detail-heavy scene written in JSX gets the full React toolbox for free: `{condition && <mesh>}` for conditional mount/unmount, custom hooks to share logic across scenes, Context to pass state deep down without manually threading it through every Three.js object. This track already leans on exactly those tools — `useDisposable`, `useVisibleRaf`/`useVisibleFrameloop` — as shared hooks, hard to replicate this cleanly in vanilla without hand-rolling an equivalent system.
+
+The third advantage is concrete and measurable: pointer events. `<mesh onPointerOver={...} onClick={...}>` just works — R3F's `<Canvas>` registers its own internal raycasting system on mount, testing intersections against the whole scene graph every time the pointer moves. In vanilla Three.js, the same behavior needs a hand-built `THREE.Raycaster`, manual mouse-to-NDC conversion, manual `intersectObject` calls inside the render loop, and manual matching of hits back to the right mesh — exactly what this lesson's demo puts side by side.
+
+## Where Vanilla Three.js Wins: Control, Bundle, Engine Architectures
+
+There are also situations where vanilla Three.js is clearly the right call. First: **outside a React context** — a static page, a Vue/Svelte app, or a microsite with no other use for React; pulling in both React and R3F's reconciler just to draw one canvas is pure unnecessary weight. Second: needing **absolute control over the render loop** — exact ordering between physics/audio/render steps, or integrating an external scheduler that doesn't fit React's commit cycle. R3F still exposes the loop via `useFrame`, but that loop runs inside R3F's own machinery (`frameloop="demand"`/`"always"`) — to change how frames get scheduled at the root, a hand-written `requestAnimationFrame` loop stays simpler.
+
+Third, and measurable: **bundle size**. Three.js itself, minified and gzipped, weighs around 155KB on one real build measured directly by a pmndrs maintainer — an estimate, shifting by version since three.js famously doesn't tree-shake cleanly (see the citation below). `@react-three/fiber` adds a reconciler layer on top — an estimated 10–20KB min+gzip depending on version, check current numbers on Bundlephobia before deciding — plus React itself if the project doesn't already ship it; for a microsite with exactly one WebGL canvas, that addition is pure overhead. Fourth: **engine-like architectures** — custom object pooling, a custom ECS, or physics on a Web Worker deciding for itself when a frame is "ready" — a model owning its own loop, which doesn't fit the reconciler's "components commit, then render" model. Finally: the hiring pool of developers who only know vanilla Three.js is still larger — vanilla code ports directly into any framework, or none at all.
+
+## The Blended Reality: R3F IS Three.js
+
+The "R3F vs vanilla" framing tempts newcomers into treating these as two separate technologies — they aren't. R3F's own docs state it plainly: it's "a React renderer for three.js," and `<mesh />` "dynamically turns into `new THREE.Mesh()`" — literally, not as a metaphor. There's no "virtual DOM for 3D" layer in between; the JSX you write CREATES the real Three.js object, identical to one you'd `new` yourself in vanilla.
+
+### Escape Hatches: Refs, useThree, and Imperative Chunks Inside JSX
+
+Because it's real Three.js underneath, R3F always leaves an escape hatch back to imperative code when JSX isn't expressive enough. A `ref` on any JSX element returns the actual Three.js instance — `meshRef.current` is a real `THREE.Mesh`, mutated directly inside `useFrame` (`meshRef.current.rotation.y += delta`) exactly like in vanilla. `useThree()` returns the current renderer/scene/camera (`gl`, `scene`, `camera`) — to set `gl.toneMapping` or read `scene.children` directly, call the plain Three.js API. And nothing stops an R3F component from building an object with `new THREE.BufferGeometry()` inside `useMemo` and attaching it via the `geometry` prop — valid, it just means JSX no longer auto-disposes it for you (the Disposal & Memory Leaks lesson covered this).
+
+## Migration Costs: Neither Direction Is Free
+
+Switching direction costs something either way, not just vanilla → R3F. Vanilla to R3F: relearn that props aren't always constructor arguments (there's a dedicated `args` prop, everything else assigns as a property), rewrite animation loops as `useFrame` instead of managing a raw RAF id, and temporarily lose the feel of direct scene-graph control. R3F to vanilla: rewrite everything R3F used to do for you — manual disposal, manual raycasting, Suspense-driven loading replaced by a hand-managed Promise/`isLoading` flag. Neither direction is "just a thin layer" — deciding early is cheaper, since migrating a large project midstream costs far more than choosing correctly upfront.
+
+## A Decision Checklist
+
+Before choosing, answer a few concrete questions: is the project already running React — if not, R3F is almost always wrong. Does the scene need to stay tightly synced with UI state (a cart, filters, a form) — if so, R3F saves a lot of hand-built bridging. Do you need absolute control over physics/audio/render ordering each frame — if so, lean vanilla. Is bundle size a hard constraint (say, a landing page under strict Lighthouse budgets) — if so, weigh R3F+React's added weight first. Does the team have stronger React experience than raw Three.js — if so, R3F usually wins on development speed.
+
+## Case Study: This Platform's Three Deliberate Picks
+
+The platform you're learning on is a real example of these exact criteria, not a random pick. Interactive demos across most lessons use R3F (`DemoCanvas`, `useVisibleFrameloop`) — every demo needs tight sync with a React control panel (shadcn's `Slider`, `Switch`, `Select`) plus ready-made Suspense/error boundary handling; hand-writing that bridge for dozens of demos would cost far more than JSX that just re-renders when state changes. Track 3 teaches Three.js entirely in vanilla — deliberately: wrapping that content in R3F's JSX would hide the exact mechanics being taught (manually setting up scene/camera/renderer, owning the render loop, disposing by hand), defeating the lesson's purpose. The GLSL playground in Tracks 1/2 uses raw WebGL, neither Three.js nor R3F — it only needs a single fullscreen quad and a fragment shader, with no scene graph worth any extra abstraction.
+
+Three different picks for three different goals, not "R3F is always better" or its opposite — exactly the spirit of the decision checklist above.
+
+Track 5 (GSAP) returns to this exact `useFrame`/render-loop boundary when syncing an animation timeline with an R3F scene; Track 6 (Custom Shaders) goes further into the `onBeforeCompile` and drei `shaderMaterial` escape hatches — the same "R3F never hides Three.js underneath" principle covered here.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three common mistakes when comparing and choosing between R3F and vanilla Three.js:
+
+1. **Treating "no overhead" as the whole performance story.** R3F's docs state components carry no cost because they "render outside of React" — true for per-frame commits, but it doesn't mean mounting/unmounting thousands of JSX nodes per second is as cheap as vanilla: the reconciler still walks the fiber tree every time the JSX structure changes, a different cost than render cost.
+2. **Running two competing animation loops at once.** Relying on `DemoCanvas`'s `frameloop="demand"` (auto-invalidating while visible) while also adding a manual `requestAnimationFrame` loop "just to be safe" in the same component — the result is two independent loops both updating state, causing stutter or doubled speed with no obvious cause.
+3. **Assuming vanilla-to-R3F is "just wrapping the old code in JSX."** Auto-dispose only applies to geometry/material created directly in JSX; geometry hoisted with `useMemo` or a manually loaded texture still needs its own `.dispose()` — the classic Disposal & Memory Leaks mistake, wearing a new disguise once someone assumes "R3F handles it all."
+
+</Callout>

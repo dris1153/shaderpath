@@ -1,0 +1,90 @@
+## Vì sao nhiều canvas WebGL là một vấn đề thật
+
+Cách viết R3F tự nhiên nhất cho nhiều "khung nhìn" 3D trên một trang là: mỗi khung nhìn một `<Canvas>`. Track 0 đến Track 3 đều làm vậy — mỗi demo tự quản lý renderer, scene, camera riêng, độc lập hoàn toàn với demo khác trên cùng trang. Đơn giản, dễ suy luận, và với một demo trên một trang thì không có gì phải bàn — vấn đề xuất hiện khi số lượng khung nhìn tăng lên.
+
+Mỗi `<Canvas>` tạo một context WebGL thật — kết nối riêng tới driver đồ hoạ, với bộ nhớ, shader đã biên dịch và trạng thái GPU của chính nó, không chia sẻ với context khác. Trình duyệt không cho phép số context này tăng vô hạn: theo virtual-webgl, dự án của Gregg Tavares chuyên giải quyết đúng vấn đề này, "trình duyệt thường giới hạn WebGL ở khoảng 8 đến 16 context tối đa" trên một trang. Vượt ngưỡng đó không sinh lỗi ồn ào — trình duyệt âm thầm làm mất context CŨ NHẤT đang sống để nhường chỗ, canvas mất context trở thành một khung hình đen, trừ khi code lắng nghe sự kiện `webglcontextlost` để tự phục hồi. Chương trình học này có hơn 160 bài — một trang "xem nhanh nhiều demo cùng lúc" hiển thị vài chục canvas một lúc sẽ chạm thẳng vào con số 8–16 đó.
+
+Cái giá không chỉ nằm ở con số cứng đó. Mỗi context là một renderer độc lập: texture, shader đã biên dịch, buffer hình học — không có gì được chia sẻ giữa hai context, kể cả khi hai canvas vẽ đúng cùng một model. Mở 10 canvas cho 10 bản sao của cùng một chiếc ghế 3D nghĩa là nạp và biên dịch shader 10 lần, giữ 10 bản copy texture trong VRAM — lãng phí thấy rõ ngay cả khi chưa chạm ngưỡng giới hạn context.
+
+## Kỹ thuật thấp tầng: scissor test trên một canvas duy nhất
+
+Giải pháp không phải là tránh nhiều khung nhìn, mà là tách "khung nhìn" (viewport) ra khỏi "context WebGL": vẫn nhiều khung nhìn, nhưng chỉ một canvas, một renderer, một context. Kỹ thuật nền của cách này là scissor test — một tính năng có sẵn của WebGL, giới hạn vùng pixel mà một lệnh vẽ được phép chạm vào, độc lập với viewport transform. Tài liệu Three.js Fundamentals mô tả đúng mẫu này: dọn sạch toàn bộ canvas một lần, sau đó với mỗi khung nhìn, bật scissor test, set viewport và scissor cùng một hình chữ nhật pixel, rồi gọi `render()` với scene/camera riêng của khung nhìn đó:
+
+```ts
+function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
+  renderer.setScissorTest(false);
+  renderer.clear(true, true, true); // dọn MỘT LẦN, chưa bật scissor
+
+  for (const { scene, camera, rect } of viewports) {
+    renderer.setScissorTest(true);
+    renderer.setViewport(rect.left, rect.bottom, rect.width, rect.height);
+    renderer.setScissor(rect.left, rect.bottom, rect.width, rect.height);
+    renderer.render(scene, camera);
+  }
+}
+```
+
+`rect` ở đây tính bằng pixel thật của canvas (khác CSS pixel nếu `devicePixelRatio` khác 1), gốc dưới-trái — quy ước của WebGL, ngược với DOM. Cách thông dụng nhất để lấy `rect` là gọi `element.getBoundingClientRect()` trên một `<div>` HTML thật đặt đúng nơi bạn muốn khung nhìn xuất hiện, rồi tự quy đổi toạ độ DOM (gốc trên-trái) sang toạ độ scissor (gốc dưới-trái). Đây chính xác là cơ chế mà `View` của drei tự động hoá cho bạn.
+
+## `View` của drei: biến một thẻ DOM thành một khung nhìn
+
+### Cách View hoạt động bên dưới, và vì sao cần tunnel
+
+`<View track={ref}>` nhận một React ref trỏ tới một phần tử DOM — thường là một `<div>` layout bình thường, đặt bất kỳ đâu quanh Canvas. Mỗi frame, nó gọi `ref.current.getBoundingClientRect()`, quy đổi sang toạ độ scissor như ở trên, rồi vẽ JSX bên trong `<View>` vào đúng vùng đó bằng `useFrame` với một mức priority riêng. Nội dung của `<View>` không chạy trong scene gốc của Canvas — nó được đưa vào một scene ảo tạo bằng `createPortal` của chính R3F, cô lập hoàn toàn với các `<View>` khác: camera, ánh sáng, object khai báo trong một `<View>` không tự động xuất hiện ở `<View>` kia. Muốn hai khung nhìn "trông như cùng một scene" từ hai góc khác nhau, bạn phải chủ động khai báo cùng nội dung JSX ở cả hai, điều khiển bởi cùng một nguồn state bên ngoài — `View` không tự chia sẻ một object Three.js giữa hai virtual scene.
+
+`View` còn có một biến thể dùng khi `<View>` được viết ở bất kỳ đâu trong cây React, kể cả ngoài `<Canvas>`, trong khi một `<Canvas>` cố định (thường phủ toàn trang) đứng render hộ ở chỗ khác. Cơ chế "xuyên" cây React này dùng thư viện `tunnel-rat`: nội dung viết ở component A thực sự được vẽ tại vị trí đặt `<View.Port />` bên trong `<Canvas>` ở component B, dù A và B không lồng nhau — khác `createPortal` ở chỗ nó xuyên qua cây React, không chỉ xuyên scene. Demo bài này dùng biến thể đơn giản hơn: `<View>` viết trực tiếp bên trong `<Canvas>`, tự quản ref của các `<div>` theo dõi — đủ dùng khi layout và Canvas đã nằm chung một component.
+
+### `track`, `index`, và cạm bẫy camera orthographic
+
+`index` quyết định thứ tự vẽ: các `<View>` được sắp theo `index` tăng dần, `index` cao hơn vẽ sau nên đè lên trên — dùng để layer overlay lên trên khung nhìn chính. Cạm bẫy thường gặp nhất nằm ở camera orthographic: nếu không set `manual` trên camera, `View` sẽ tự ép `left/right/top/bottom` của nó khớp chính xác kích thước pixel của rect đang track mỗi frame — mọi giá trị zoom hay frustum bạn tự đặt trong code đều bị ghi đè âm thầm. Muốn giữ frustum tự chọn (ví dụ một khung nhìn từ trên xuống bao trọn đúng phạm vi scene bạn muốn), phải khai báo tường minh `manual` trên camera.
+
+## `createPortal`: vẽ một nhánh scene vào một đích khác
+
+`createPortal` của R3F không phải `createPortal` của `react-dom` — nó không di chuyển DOM node, mà đổi SCENE mà một nhánh JSX được gắn vào, giống cách `react-dom`'s `createPortal` đổi CONTAINER DOM. `createPortal(children, targetScene)` gắn `children` vào `targetScene` thay vì scene mặc định của Canvas — camera, ánh sáng, object riêng cho `targetScene`, hoàn toàn cô lập với scene chính. Vì `targetScene` không tự động được vẽ (chỉ scene mặc định của Canvas được R3F tự render mỗi frame), bạn phải tự gọi `renderer.render(targetScene, camera)` bên trong một `useFrame` — chính là kỹ thuật đứng sau component `<Hud>` có sẵn của drei, và đứng sau kỹ thuật render-to-texture đã gặp ở Track 1 (framebuffer object): cả hai đều "vẽ vào một đích khác scene/canvas chính", chỉ khác đích cuối là một scene phụ chồng lên (HUD) hay một texture để dùng lại (render-to-texture).
+
+```tsx
+function Hud() {
+  const [hudScene] = useState(() => new THREE.Scene());
+  const camRef = useRef<THREE.OrthographicCamera>(null);
+
+  useFrame(({ gl }) => {
+    if (!camRef.current) return;
+    gl.autoClear = false;
+    gl.clearDepth(); // xoá depth buffer, GIỮ nguyên màu đã vẽ ở scene chính
+    gl.render(hudScene, camRef.current);
+  }, 1); // priority > 0 → tự quản lý render, chạy SAU scene chính
+
+  return createPortal(
+    <>
+      <orthographicCamera ref={camRef} position={[0, 0, 10]} />
+      <mesh>
+        <ringGeometry args={[0.4, 0.5, 32]} />
+        <meshBasicMaterial color="yellow" />
+      </mesh>
+    </>,
+    hudScene,
+  );
+}
+```
+
+## Khi nào một `<Canvas>` thứ hai vẫn là lựa chọn đúng
+
+Gộp về một canvas không phải lúc nào cũng đúng. Nếu hai khung nhìn không bao giờ hiển thị cùng lúc — ví dụ hai route khác nhau của một ứng dụng Next.js, nơi Canvas cũ unmount hoàn toàn trước khi Canvas mới mount — thì không có "nhiều context sống cùng lúc" để lo, và tách biệt bằng hai `<Canvas>` giữ code đơn giản hơn hẳn. Tương tự nếu hai scene cần cấu hình renderer khác hẳn nhau — một scene HDR tone-mapping đầy đủ, một icon 3D nhỏ không cần antialias — gộp chung buộc bạn tìm điểm chung cho mọi cấu hình `gl`, đôi khi phức tạp hơn giá trị tiết kiệm được. Quy tắc thực dụng: chỉ gộp khi số khung nhìn sống cùng lúc đủ lớn để chạm ngưỡng context, hoặc khi chia sẻ resource — texture, geometry đã nạp — mang lại lợi ích rõ ràng.
+
+## Case study: kiến trúc demo của chính nền tảng này
+
+Toàn bộ nền tảng học này, từ Track 0, dựng đúng theo "mỗi demo một `<Canvas>`" — bài này cũng vậy ở tầng ngoài cùng, component `Demo` bọc một `DemoCanvas`. Đây là lựa chọn đúng cho use case hiện tại: mỗi trang bài học chỉ hiển thị một demo, canvas cũ luôn unmount trước khi canvas mới mount khi chuyển trang — không có tình huống nhiều context sống cùng lúc để lo. Nhưng nếu roadmap sau này thêm một trang "so sánh nhiều demo" hiển thị hàng chục demo cùng lúc, kiến trúc hiện tại sẽ chạm giới hạn context rất nhanh — và `View` sẽ là công cụ đúng để gộp N canvas đó thành một, không phải viết lại từng demo. Đánh đổi thật: đơn giản khi viết (mỗi demo tự trị) so với hiệu quả khi hiển thị hàng loạt (một canvas dùng chung) — nền tảng này đang chọn vế đầu, có chủ đích, đúng cho use case hiện tại.
+
+## Những gì quay lại ở các track sau
+
+Kỹ thuật render vào một đích khác quay lại nhiều lần sau bài này. Track 9 (GPGPU) dùng đúng nguyên lý render-to-texture của `createPortal`/FBO để lưu trạng thái particle vào texture qua kỹ thuật ping-pong; Track 13 (capstone) mở lại `View` khi bài mini-build cuối track này cần một khung chính diện và một góc xoay tự do cùng một sản phẩm. Nắm chắc ranh giới giữa "scene" (dữ liệu logic) và "canvas/context" (tài nguyên GPU) ngay bây giờ sẽ giúp mọi bài sau đỡ phải suy nghĩ lại từ đầu.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dùng View và createPortal:
+
+1. **Quên `manual` trên camera orthographic bên trong `View`.** Thiếu nó, `View` tự ép `left/right/top/bottom` khớp pixel của rect đang track mỗi frame — zoom/frustum tự đặt trong code lặng lẽ bị ghi đè, không lỗi nào log ra console.
+2. **Tưởng nhiều `<View>` chia sẻ chung một Three.js Scene.** Mỗi `<View>` render vào một virtual scene riêng — di chuyển object ở khung nhìn này không tự động di chuyển bản "giống hệt" ở khung nhìn kia, trừ khi cả hai điều khiển từ cùng một state bên ngoài.
+3. **Quên rằng scissor chỉ giới hạn vùng vẽ, không tự dọn canvas.** `setScissor`/`setViewport` không thay cho một lần `clear()` toàn canvas đầu frame — thiếu bước này, pixel cũ ở vùng chưa vẽ lại (ví dụ chỗ object vừa rời khỏi) vẫn còn nguyên, tạo vệt bóng ma.
+
+</Callout>

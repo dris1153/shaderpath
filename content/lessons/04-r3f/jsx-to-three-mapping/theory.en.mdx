@@ -1,0 +1,72 @@
+## Lowercase JSX Names = Three.js Class Names
+
+`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>` aren't arbitrary HTML-like tags or some hidden set of React components — they're literally THREE class names with the first letter lowercased. R3F pre-registers (via an internal `extend(THREE)` call that runs the moment you import `@react-three/fiber`) every export of the `THREE` namespace into a catalog mapping lowercase strings to constructors: `mesh` → `THREE.Mesh`, `boxGeometry` → `THREE.BoxGeometry`, `meshStandardMaterial` → `THREE.MeshStandardMaterial`, `group` → `THREE.Group`, `perspectiveCamera` → `THREE.PerspectiveCamera`. The naming rule is exactly one step: drop the `THREE.` prefix, lowercase the first letter (`Mesh` → `mesh`). There's no separate list of "valid props" per JSX element — validity depends entirely on whether that specific THREE class actually has a property or constructor argument by that name; the real Three.js docs are the only reference you need, no R3F-specific prop tables exist.
+
+The direct consequence: any THREE class, including ones R3F has "never seen," is automatically usable in JSX the moment you spell its lowercase name correctly, no waiting on an R3F update or a separate type declaration. That's also why this lesson ends with `extend()`: the mechanism for registering a class that ISN'T part of the default `THREE` namespace (a class you wrote yourself, or a helper from another library) into that exact same catalog.
+
+## args: Constructor Arguments, and Why Changing Them Is Expensive
+
+Not every property of a THREE object can be assigned after construction — `BoxGeometry` builds its actual geometry data inside the constructor from `width/height/depth`; there's no setter to resize a geometry that's already been built. For cases like this, JSX uses the special `args` prop, which takes an ARRAY matching the real constructor's parameter order:
+
+```tsx
+<boxGeometry args={[1, 2, 3]} />
+// exactly equivalent to: new THREE.BoxGeometry(1, 2, 3)
+```
+
+Because `args` maps directly onto a `new` call, R3F has no way to "change the args" of an existing object other than DESTROYING it and CONSTRUCTING a brand-new one with the new args — there's no cheap "resize" at the WebGL level for a `BufferGeometry` that's already been uploaded to the GPU. Changing `args` on a rendered `<boxGeometry>` therefore triggers destroy + re-create + a fresh GPU buffer upload every time a slider wired to `args` moves, far more expensive than mutating an ordinary property — Track 6 quantifies this cost precisely with a custom `BufferGeometry`. The practical rule: anything that needs to animate smoothly over time belongs in a property prop (`scale`, `position`), never in `args`; anything set once at construction time belongs in `args`.
+
+## Property Props: Assigned After Construction, Plus the Scalar Shorthand
+
+Any prop that isn't `args` skips the constructor entirely — R3F constructs the object first with `new Class()` (or `new Class(...args)` if `args` is present), then assigns every remaining prop as a plain property assignment: `<mesh position={[1, 0, 0]}>` runs exactly like `mesh.position.set(1, 0, 0)` (R3F detects that `.position` is an existing `THREE.Vector3` with a `.set()` method and calls it, instead of overwriting the property with a brand-new Vector3 — keeping the same instance alive across the object's whole lifetime, which matters because other code may already hold a reference to that exact Vector3). That's why changing `position` is nowhere near as costly as changing `args`: no GPU buffer gets touched, just three numbers in CPU memory.
+
+For properties that take a `Vector3`/`Euler` (all three axes equal, say uniformly scaling a mesh), R3F lets you pass a single NUMBER instead of a three-element array — `<mesh scale={2} />` is equivalent to `<mesh scale={[2, 2, 2]} />`, both calling `mesh.scale.set(2, 2, 2)`. This shorthand only applies to the standard vector properties (`position`, `rotation`, `scale`), not as a general rule for every prop — there's no generic "auto-broadcast a number into an array" happening at the React layer; the logic lives inside R3F itself when it detects the target property's type is a vector.
+
+## Pierced Props: Assigning Deep into Nested Properties with Dashes
+
+Sometimes you only need to change ONE axis or one deeply nested field without resetting the whole parent object. The pierced-prop syntax uses dashes to walk straight down a property path, with no need to read back the current value of the other axes:
+
+```tsx
+<mesh position-x={5} rotation-y={Math.PI / 4} material-color="hotpink" />
+// equivalent to:
+// mesh.position.x = 5
+// mesh.rotation.y = Math.PI / 4
+// mesh.material.color = new THREE.Color("hotpink")  (assigned via .set(), see below)
+```
+
+The dashes in the prop name split into a chain of access steps: `material-color` reaches into `mesh.material` and then `.color`; you can go as deep as needed as long as you chain enough dashes (`material-uniforms-uTime-value`, for instance — you'll see this again in Track 6 when tweaking uniforms directly through JSX). Pierced props matter most when two axes of the same Vector3 come from two independent, unrelated pieces of state that shouldn't overwrite each other — instead of rebuilding a three-element array every time only one axis changes (`position={[x, fixedY, fixedZ]}`), `position-x={x}` touches exactly the axis that needs to change.
+
+## attach: How Geometry/Material Attach to the Right Slot on Their Parent
+
+A `<mesh>` has no built-in way to know where its `<boxGeometry>` child should be assigned — Three.js has no natural "child" concept for geometry/material the way it does for Object3D. R3F solves this with the `attach` prop, which decides which property of the parent the child object gets assigned to. For the common elements, `attach` already has a sensible IMPLICIT default: a `<boxGeometry>` inside a `<mesh>` automatically gets `attach="geometry"` (running `mesh.geometry = <object>`), and `<meshStandardMaterial>` automatically gets `attach="material"` — which is why most R3F code never needs to write `attach` explicitly.
+
+`attach` accepts the same dash syntax as pierced props to target a deeply nested field or an array slot, for the cases where the implicit default isn't enough — for example, attaching a `BufferAttribute` into exactly the `attributes.position` slot of a hand-built `bufferGeometry`: `<bufferAttribute attach="attributes-position" args={[positions, 3]} />`. `attach` also accepts a FUNCTION instead of a string for cases needing custom attach/detach logic (say, attaching into an array instead of a single property, which requires returning its own cleanup function) — outside this lesson's scope, but worth knowing so it isn't a surprise when it turns up in a drei helper's source.
+
+## "Non-Serializable" Values: Vectors Accept Arrays, Colors Accept Strings
+
+`Vector3`, `Euler`, `Color` aren't plain JSON-serializable data (not a number/string/boolean/flat array/object) — they're real THREE classes with methods. R3F handles this by accepting a "compact" prop shape (an array of numbers, or a string) and converting it through that exact class's own API rather than overwriting the property: the `color` prop accepts a CSS string (`"hotpink"`, `"#ff0088"`, `"rgb(255,0,136)"`) and R3F calls `material.color.set("hotpink")` — no new `Color` gets constructed, it just sets a new value on the Color instance the material already owns. Similarly, the `position` prop accepts a three-number array and R3F calls `.set(...array)` instead of overwriting the property outright.
+
+The general rule: for any target property that has a `.set()` method (nearly every THREE math class does), R3F prefers calling `.set()` with the prop's value over overwriting it with a new object — preserving the instance's identity, avoiding an unnecessary allocation on every re-render, and keeping any existing reference (if other code holds one) still valid.
+
+## extend(): Growing the JSX Catalog for Custom Classes
+
+The opening section of this lesson said the default catalog covers the entire `THREE` namespace — but a class that ISN'T part of it (something you wrote yourself, or imported from `three/examples/jsm`, or from an external library like `three-stdlib`) doesn't automatically get a JSX name. `extend()` registers additional classes into that exact same catalog:
+
+```tsx
+import { extend } from "@react-three/fiber";
+import { RoundedBoxGeometry } from "three-stdlib";
+
+extend({ RoundedBoxGeometry });
+// now usable as: <roundedBoxGeometry args={[1, 1, 1, 4, 0.1]} />
+```
+
+Every rule covered in this lesson (`args`, property props, pierced props, `attach`) applies identically to a class you just `extend()`-ed — because they're all just entries in the same catalog, with no special-casing for "official" THREE classes versus custom ones. Track 6 (Custom Shaders) reuses this exact mechanism to turn a hand-written `ShaderMaterial` (whose constructor takes an `{ uniforms, vertexShader, fragmentShader }` object) into a lowercase JSX element usable with `args`/property props exactly like `meshStandardMaterial` — nothing new to relearn.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when mapping JSX to Three.js:
+
+1. **Putting a smoothly-animated value into `args`.** `args` only runs once, at construction — changing it every frame (say, wiring `args={[radius, 32, 32]}` to an animated `radius`) destroys and rebuilds the entire geometry, re-uploading a GPU buffer continuously instead of simply mutating `scale`.
+2. **Forgetting `attach` when geometry/material isn't a direct child of `<mesh>`.** The `attach="geometry"`/`attach="material"` defaults only kick in when that object is a DIRECT child of `<mesh>`; wrapping it in a custom intermediate component without setting `attach` explicitly leaves the object "floating," attached to nothing, and the mesh renders wrong or empty.
+3. **Assuming `color="hotpink"` allocates a new Color on every re-render.** R3F calls `.set()` on the Color instance the material already owns — it allocates nothing new. The real allocation trap is constructing `new THREE.Color()` yourself in the component body (outside `useMemo`) and passing that instance through a different prop — that's what creates garbage every render, not the JSX string prop itself.
+
+</Callout>

@@ -1,0 +1,15 @@
+## Goal
+
+The track's final mini-build: no new theory, just a working artifact proving plain React state can genuinely drive a 3D scene — R3F's biggest payoff over vanilla, and the capstone for the whole track.
+
+## Requirements
+
+Build a small product configurator: a product assembled from several primitives (not a single block), each part with its own color `<select>`, another `<select>` for "material finish" (switching `roughness` across the whole product via matte/satin/glossy presets), a toggle that starts/stops a continuous turntable spin, and a price-style readout that recalculates the instant a choice changes — all driven by plain React state, no extra state-management library. The camera sits under `OrbitControls` with distance/angle clamps, shadows are enabled, and any geometry shared across identical meshes must be hoisted once with `useMemo` and disposed manually on unmount.
+
+## Structure Hint
+
+Keep the "3D component" (receives color/material/spinning as props, holds no state of its own) strictly separate from the "control UI" (holds all the state, just a handful of plain `<select>`s/checkboxes) — that boundary is exactly what makes "React state drives the scene" obvious instead of tangled.
+
+## What "Done" Looks Like
+
+Check against the exercise checklist: each part's color change only affects that part, the finish select changes `roughness` across the whole product, the turntable spins smoothly with no jump on toggle, the price readout updates instantly, and manually hoisted geometry gets disposed on unmount — no leaked nodes across repeated mount/unmount cycles.

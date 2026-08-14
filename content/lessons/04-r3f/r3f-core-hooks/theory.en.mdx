@@ -1,0 +1,59 @@
+## useFrame: Each Component's Own Render Loop
+
+`useFrame` registers a callback that runs exactly once per frame R3F renders inside `<Canvas>` — you never call `requestAnimationFrame` yourself; R3F collects callbacks from *every* mounted component (at any depth in the tree) into one central loop and runs them in sequence right before the frame is drawn to the canvas. `useFrame` can be called from any component nested inside `<Canvas>`, not just the root — ten different components each registering their own `useFrame` still costs exactly one physical render loop, not ten stacked `requestAnimationFrame` calls.
+
+```ts
+useFrame((state, delta) => {
+  // runs every frame, right before R3F draws the scene
+});
+```
+
+### Delta: Motion Independent of Framerate
+
+The second parameter, `delta`, is the number of seconds elapsed since the previous frame. On a 60Hz display, delta is roughly $1/60 \approx 0.01667s$ (16.67ms); on a 144Hz display it shrinks to $1/144 \approx 0.00694s$ (6.94ms) — over 2.4x smaller. Multiplying a speed by delta instead of adding a fixed constant every frame is mandatory: `angle += SPEED * delta` produces the exact same real angular speed (radians per second) on both displays, because the smaller delta exactly offsets the higher number of callback invocations per second. Drop delta (`angle += SPEED`) and the object spins 2.4x faster on a 144Hz screen than on a 60Hz one — the same dt-correct callback pattern from Track 0 (the interpolation & easing lesson), now running inside `useFrame` instead of a hand-written `requestAnimationFrame`.
+
+## Refs, Not setState: The Rule That Matters Most
+
+This is the number one performance mistake beginners make with R3F: calling `setState` inside `useFrame` to store a rotation angle or position, then feeding that state into JSX. Every `setState` call schedules a fresh render — for a smooth 60fps animation that's 60 reconciliation passes per second, each one forcing React to diff the component tree, re-run every hook, and re-render every child, even though almost nothing actually changed besides one angle. The correct approach: keep the animated value in a `useRef` (changing it never triggers a render), and inside `useFrame` write straight into the real Three.js property through that ref — `meshRef.current.rotation.y += delta`. No setState runs, no re-render happens, only the Three.js object gets mutated, and the next frame simply draws it in its new state.
+
+```ts
+const meshRef = useRef<Mesh>(null);
+useFrame((state, delta) => {
+  if (meshRef.current) meshRef.current.rotation.y += delta;
+});
+```
+
+## The state Argument Surface: clock, camera, pointer, invalidate
+
+The callback's first parameter, `state`, has the exact same shape as the object `useThree()` returns. `state.clock` is the canvas's `THREE.Clock` — `state.clock.elapsedTime` is the total number of seconds since the Clock was created, useful for driving a periodic animation's phase instead of manually accumulating delta. `state.camera` is the scene's currently active camera. `state.pointer` is a `Vector2` holding the cursor position normalized to $[-1, 1]$, kept up to date by R3F every time the browser fires a pointer event — reading `state.pointer` directly inside `useFrame` is the cheapest way to make an object "chase" the cursor, no hand-built `Raycaster` required. `state.invalidate()` is a function that asks R3F to draw exactly one more frame — necessary when the canvas runs `frameloop="demand"` (rendering only when something changed) instead of the default continuous loop.
+
+## useThree: Reading Canvas State Without Extra Re-Renders
+
+Calling `useThree()` with no argument returns the *entire* state object above and subscribes the component to *every* change in it — a canvas resize, a DPR change, or any other field flipping also re-renders the component even if it only cares about one field. `useThree(selector)` takes a selector function — for example `useThree((s) => s.camera)` — and subscribes to just that slice: the component only re-renders when the `camera` field itself changes reference (say, swapping from Perspective to Orthographic); a resize event no longer touches it at all. The principle: the narrower the selection, the fewer reasons React has to re-render — the same logic as memoization you already know, just with R3F's internal store as the state source instead of your own.
+
+## useLoader: Suspense-Integrated Asset Loading, Cached by URL
+
+`useLoader(Loader, url)` — for example `useLoader(TextureLoader, "/wood.jpg")` — loads an asset and plugs straight into React Suspense: the first call with a given URL throws a Promise; the surrounding `<Suspense fallback>` catches it and shows the fallback; once the Promise resolves, React re-renders the component with the asset ready — no hand-rolled `isLoading` variable needed. The result is cached in an internal Map keyed by the (loader, URL) pair: calling `useLoader(TextureLoader, "/wood.jpg")` from two different components only fetches the file once, and the second call gets served straight from the cache. To load ahead of a component mounting, avoiding a hitch when switching scenes, call `useLoader.preload(TextureLoader, "/wood.jpg")` at module scope or inside an early-running effect.
+
+```ts
+const texture = useLoader(TextureLoader, "/wood.jpg");
+useLoader.preload(TextureLoader, "/wood.jpg"); // load ahead of time, no mount-time hitch
+```
+
+## Render Priority: Taking Over the Render Loop
+
+`useFrame` accepts an optional second parameter — render priority, defaulting to 0. Normally, once every priority-0 callback has run, R3F calls `gl.render(scene, camera)` on your behalf. Passing a positive priority (`useFrame(callback, 1)`) turns off that default auto-render: R3F assumes you want manual control, and the callback with the highest priority becomes responsible for calling render itself (usually through an `EffectComposer` when multiple passes or post-processing are involved) — this mechanism comes back in much more detail in Track 10.
+
+## Where This Leads
+
+The "mutate a ref, never setState" discipline learned here doesn't stop at simple animation — it's the foundation of everything real-time in R3F from this point on: per-frame shader uniform updates in Track 6, thousands of particle positions in Track 9, and GSAP timelines synced to the render loop in Track 5 all write straight into a ref or Three.js object, never through React state.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first using R3F's hooks:
+
+1. **Calling `setState` inside `useFrame` to store an animated position or angle.** This is this lesson's central topic for a reason — every `setState` is a full React reconciliation pass, 60 times a second for a smooth animation, while mutating a ref through a real Three.js object costs nothing beyond a single assignment.
+2. **Calling `useThree()` without a selector inside a deep, frequently-updating component.** The component subscribes to the entire state, so a resize or DPR change re-renders components that only ever read `camera`, even though neither has anything to do with canvas size.
+3. **Not guarding `ref.current` before using it inside `useFrame`.** A component can unmount mid-animation (route change, closed modal); reading `.rotation` off `null` crashes the whole canvas — always start the callback with `if (!meshRef.current) return;` instead of assuming the object still exists.
+
+</Callout>

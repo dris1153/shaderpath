@@ -1,0 +1,70 @@
+## R3F không "bọc" Three.js — nó là một reconciler
+
+Cách dễ nhất để hiểu sai React Three Fiber (R3F) là tưởng tượng nó như một lớp tiện ích quanh Three.js: bạn đưa vào JSX, có một hàm nào đó "dịch" JSX ấy thành lệnh gọi Three.js — `new THREE.Mesh(...)`, `scene.add(...)` — giống một hàm `createMesh(config)` nhận object cấu hình rồi gọi constructor hộ bạn. Đó là mô hình **wrapper**: nhận input, chạy một lượt, sinh ra output, không giữ lại gì để so sánh cho lần sau.
+
+R3F không hoạt động như vậy. Nó dựng trên `react-reconciler` — chính gói low-level mà `react-dom` dùng để biến JSX thành DOM thật, và React Native dùng để biến JSX thành view iOS/Android thật. `react-dom` là một "host config" cắm vào reconciler, dạy nó cách tạo/cập nhật/xoá node DOM (`document.createElement`, `node.setAttribute`, `node.removeChild`). `@react-three/fiber` là một host config khác, dạy đúng bộ máy reconciler đó cách tạo/cập nhật/xoá object Three.js thật (`new THREE[Type]()`, gán property, `parent.remove(object)`) — thay DOM bằng scene graph Three.js làm "target". Cùng một cỗ máy diffing và cây fiber sống suốt vòng đời app, chỉ đổi nơi nó vẽ ra.
+
+Khác biệt này không phải chữ nghĩa. Một wrapper thật sự không có khái niệm "cây trước đó" để so sánh — mỗi lần bạn gọi nó, nó làm lại từ đầu hoặc bắt bạn tự diff bằng tay. Reconciler thì giữ một cây fiber nội bộ, so sánh cây JSX mới với cây cũ ở mỗi lần render, rồi chỉ áp dụng đúng phần thay đổi tối thiểu — đây là engine "diffing" bạn đã biết từ `react-dom`, chạy y hệt vậy nhưng nhắm vào object Three.js thay vì DOM node.
+
+## Scene khai báo = f(state): diffing tạo, mutate, huỷ object thật
+
+Hệ quả trực tiếp: scene 3D trong R3F là một hàm thuần của state React — đổi state, JSX render lại, reconciler diff cây mới với cây cũ, rồi quyết định đúng ba việc cho từng node:
+
+- Node mới hoàn toàn (không có ở cây cũ) → tạo object Three.js thật bằng `new`.
+- Node đã tồn tại nhưng prop đổi → mutate trực tiếp property trên object đã có, không tạo lại.
+- Node biến mất khỏi cây mới → dọn cleanup, object bị gỡ khỏi scene graph thật.
+
+```tsx
+function MeshList({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <mesh key={i} position={[i * 1.2, 0, 0]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="orange" />
+        </mesh>
+      ))}
+    </>
+  );
+}
+```
+
+Tăng `count` từ 5 lên 8 không đụng tới 5 mesh cũ — reconciler chỉ tạo thêm đúng 3 `THREE.Mesh` mới; giảm ngược từ 8 xuống 5 chỉ gỡ và dispose đúng 3 object thừa, 5 object còn lại vẫn là cùng một instance trong bộ nhớ suốt các lần render, không bị tạo lại. Đây là điều một wrapper không tự cho bạn — không có "cây cũ" để so sánh, wrapper phải render lại toàn bộ hoặc bắt bạn tự viết logic diff.
+
+## Composition, hook và context hoạt động y hệt bên trong scene
+
+Vì `<Canvas>` bên trong vẫn là một cây React bình thường — chỉ đổi host config — mọi cơ chế compose của React áp dụng thẳng vào scene 3D, không cần lớp thích nghi nào: `useState` cho state cục bộ của một object, custom hook đóng gói logic dùng lại giữa nhiều mesh, `useContext` để một vật liệu con đọc theme màu từ tổ tiên xa mà không cần truyền prop qua từng tầng trung gian, fragment và conditional rendering (`{visible && <mesh />}`) để bật/tắt object có điều kiện. Track 3 (Three.js thuần) phải tự dựng registry, tự truyền tham chiếu qua closure hoặc biến toàn cục để làm những việc tương đương — R3F có được miễn phí, đúng những gì React đã giải quyết cho DOM.
+
+## Bằng chứng: không add/remove thủ công, unmount tự dọn dẹp
+
+Ba dấu hiệu cụ thể để nhận ra đang dùng reconciler thật, không phải wrapper giả:
+
+Thứ nhất, không có lệnh `scene.add()`/`.remove()` nào trong code người dùng viết — component chỉ khai báo JSX, reconciler tự quyết định khi nào gọi các hàm đó bên dưới. Thấy mình gọi `.add()` thủ công trong một component R3F gần như luôn là dấu hiệu đang chống lại mô hình thay vì dùng nó.
+
+Thứ hai, unmount một component tự dọn: geometry/material do JSX tạo ra bị gọi `.dispose()`, object bị gỡ khỏi `scene.children` — không cần viết `useEffect` cleanup thủ công cho phần lớn trường hợp (bài Disposal & Memory Leak ở module sau chỉ rõ những ngoại lệ, ví dụ texture nạp thủ công ngoài JSX).
+
+Thứ ba — chủ đề trọn vẹn của bài kế tiếp — prop trên JSX ánh xạ trực tiếp vào property thật của object: `<mesh position={[1, 0, 0]}>` gán thẳng vào `mesh.position`, không có lớp "virtual prop" trung gian diễn giải lại ý nghĩa.
+
+## Vẫn là THREE bên dưới: hiệu năng và kiến thức Track 3 không đổi
+
+Điều R3F KHÔNG đổi quan trọng không kém điều nó đổi: cây scene cuối cùng vẫn là đúng `THREE.Scene` chứa đúng `THREE.Mesh`, `THREE.BufferGeometry`, `THREE.Material` mà Track 3 đã học — render bằng đúng `WebGLRenderer`, đúng draw call, đúng chi phí GPU cho mỗi vertex/fragment. Reconciler chỉ thêm một lớp sổ sách kế toán chạy trên CPU giữa các frame để quyết định "cái gì thay đổi" — nó không chèn thêm bước xử lý nào vào render pipeline thật trên GPU. Một scene render chậm vì lý do y hệt dù viết bằng R3F hay Three.js thuần: quá nhiều draw call, shader quá nặng, hay overdraw — không phải vì "có React ở giữa". Toàn bộ kỹ thuật profile bằng Spector.js hay đọc `stats.js` ở Track 12 áp dụng nguyên vẹn, không cần học lại.
+
+## Khi nào tư duy reconciler thực sự quan trọng: danh sách có key
+
+Nơi mental model reconciler ngừng là chi tiết triển khai và bắt đầu quyết định trực tiếp hành vi: danh sách mesh render bằng `.map()` với `key`. Giống hệt React DOM, `key` là định danh identity mà reconciler dùng để so khớp node cũ với node mới — đổi `key` của một phần tử (dù prop khác giữ nguyên) buộc reconciler coi đó là node HOÀN TOÀN khác: unmount bản cũ (huỷ object Three.js thật, mất mọi state cục bộ gắn qua ref vào nó), rồi mount bản mới (tạo object Three.js mới tinh). Ngược lại, giữ nguyên `key` nhưng đổi prop khác chỉ mutate object đã tồn tại — state gắn qua ref (ví dụ một góc xoay dở dang) sống sót qua lần render đó.
+
+Đây chính xác là bẫy phổ biến nhất khi một danh sách 3D được sắp lại (sort/filter) mà dùng index mảng làm `key`: index đổi theo thứ tự mới → reconciler nghĩ phần lớn node đã đổi identity → huỷ và tạo lại hầu hết mesh dù dữ liệu thực chất chỉ đổi chỗ, gây giật hình và mất animation state đang chạy dở. Quy tắc rút ra giống hệt React DOM: dùng một id ổn định của chính dữ liệu (không phải index mảng) làm `key` cho bất kỳ danh sách object 3D nào có thể thêm/bớt/sắp lại thứ tự.
+
+## Nền tảng này dẫn tới đâu: JSX ↔ Three.js mapping và giới hạn của mental model
+
+Bài tiếp theo mổ xẻ đúng cơ chế ánh xạ prop → property mà phần "Bằng chứng" ở trên mới chỉ nêu tên: khi nào một prop trở thành constructor argument (`args`), khi nào trở thành property gán sau, và cú pháp pierced prop (`position-x`) để gán sâu vào một object lồng nhau. Xa hơn nữa, Track 9 (GPGPU/Particles) sẽ đẩy mental model reconciler tới giới hạn thật của nó: hàng trăm nghìn particle không thể mỗi cái là một component JSX riêng — chi phí diff hàng trăm nghìn node mỗi frame là bất khả thi — buộc quay lại tư duy imperative của Track 3 cho riêng phần đó, dùng một `InstancedMesh` duy nhất thay vì một danh sách JSX.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới quen mental model reconciler:
+
+1. **Gọi `scene.add()`/`.remove()` thủ công bên trong component R3F.** Reconciler không biết gì về object bạn tự thêm bằng tay — nó không nằm trong cây fiber nên không được diff, không được dispose khi unmount, và dễ tạo ra object trùng lặp mỗi lần component re-render.
+2. **Dùng index mảng làm `key` cho danh sách mesh có thể sắp lại hoặc lọc.** Index đổi theo vị trí mới khiến reconciler coi gần như mọi phần tử đã đổi identity, huỷ và tạo lại object Three.js không cần thiết, làm mất animation state đang chạy dở gắn qua ref.
+3. **Tưởng unmount luôn tự dispose mọi thứ.** Tự động dispose chỉ áp dụng cho geometry/material được JSX tạo ra trực tiếp; texture nạp thủ công ngoài JSX, event listener gắn tay, hay object dựng bằng `new THREE.X()` ngoài cây component vẫn phải tự cleanup — chi tiết đầy đủ ở bài Disposal & Memory Leak.
+
+</Callout>

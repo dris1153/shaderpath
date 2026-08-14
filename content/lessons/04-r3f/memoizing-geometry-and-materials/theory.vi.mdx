@@ -1,0 +1,78 @@
+## Mỗi lần render, JSX được đánh giá lại — nhưng object Three thì chưa chắc
+
+Khi một component React re-render, toàn bộ thân hàm chạy lại, kể cả các dòng JSX như `<boxGeometry args={[1, 1, 1]} />`. Nhưng "JSX được đánh giá lại" không đồng nghĩa "Three.js tạo object mới". R3F không phải wrapper gọi hàm hộ bạn (bài `why-r3f-reconciler`) — nó là một reconciler: mỗi JSX element chỉ MÔ TẢ object Three.js mong muốn tồn tại ở đúng vị trí đó trong cây, còn có tạo lại object thật hay không là quyết định của reconciler.
+
+Câu hỏi đúng không phải "component có render lại không" — luôn có — mà là "R3F có gọi lại `new THREE.BoxGeometry(...)` hay tái sử dụng object cũ". Câu trả lời nằm gọn trong một cơ chế: cách R3F xử lý prop `args`.
+
+## `args`: mảng mới không có nghĩa là instance mới
+
+Viết `<boxGeometry args={[1, 1, 1]} />`, literal `[1, 1, 1]` là một mảng JS HOÀN TOÀN MỚI ở mỗi render — mọi literal mảng đều tạo object mới, đó là ngữ nghĩa JS thuần tuý. Nếu R3F so sánh args bằng tham chiếu mảng (`oldArgs === newArgs`), geometry sẽ bị huỷ và dựng lại ở MỌI lần re-render — thảm hoạ cho bất kỳ scene nào không hoàn toàn tĩnh.
+
+R3F không làm vậy. Đọc trực tiếp trong source `@react-three/fiber`: nó chỉ tái tạo instance khi `newArgs.length !== oldArgs.length`, hoặc tồn tại chỉ số `i` sao cho `newArgs[i] !== oldArgs[i]` — so sánh TỪNG PHẦN TỬ bằng `!==`, không so sánh cả mảng bằng tham chiếu. Với `[1, 1, 1]` so với lần render trước, từng cặp bằng nhau theo giá trị (`1 === 1`) — geometry giữ nguyên.
+
+Hệ quả thực dụng: một, bạn không cần bọc `<boxGeometry args={[1,1,1]} />` trong `useMemo` chỉ vì component re-render liên tục — args là primitive tĩnh thì R3F đã tự lo. Hai, bẫy thật nằm ở args KHÔNG phải primitive: `args={[someShapeInstance]}` với `someShapeInstance` là `new THREE.Shape(...)` dựng lại mỗi render (dù hình dạng logic giống hệt) khiến `newArgs[0] !== oldArgs[0]` luôn đúng — hai object khác nhau không bao giờ `===` nhau dù nội dung giống hệt — geometry bị dựng lại ở MỌI render, âm thầm, không cảnh báo nào.
+
+## Chi phí thật nằm ở đâu
+
+Giả sử geometry/material thực sự bị tạo lại — chi phí đến từ đâu, chính xác?
+
+Với geometry: `new THREE.BoxGeometry(...)` cấp phát `Float32Array` cho position/normal/uv và tính bounding sphere — chạy trên CPU, đo được bằng `performance.now()`. Ngay khi dùng lần đầu, Three.js upload các buffer đó lên GPU qua `gl.bufferData` — một buffer GPU MỚI cho MỖI instance, dù nội dung giống hệt nhau.
+
+Với material, điều ít người biết: Three.js KHÔNG biên dịch lại shader cho mỗi material instance. `WebGLPrograms` cache chương trình GPU theo một cache key CẤU TRÚC — có map hay không, vertex color, flat shading, số light, tone mapping — hoàn toàn KHÔNG gồm giá trị uniform như màu hay UUID material. 200 instance `MeshStandardMaterial` cấu hình giống hệt nhau vẫn chỉ tạo ra đúng MỘT `WebGLProgram`, và `gl.useProgram` chỉ gọi khi tham chiếu program đổi — các mesh còn lại bỏ qua hoàn toàn.
+
+Vậy chi phí thật của "không share material" nằm ở hai chỗ khác: (a) rác GC từ N object JS riêng cộng bookkeeping nội bộ (`WebGLProperties`) cho từng cái; và (b) rủi ro cụ thể hơn — nếu material bị R3F huỷ (unmount, hoặc "phải dựng lại" theo cơ chế args ở trên) trong khi là instance DUY NHẤT giữ cache key đó, Three.js gọi `releaseProgram`; `usedTimes` về 0 khiến chương trình bị `program.destroy()` thật sự. Lần sau cần lại, biên dịch shader từ đầu — đúng cái giật hình một frame mà "shader compilation stall" (Track 12) nói tới.
+
+## useMemo cho object dựng thủ công
+
+Cơ chế args-diff chỉ áp dụng cho geometry/material viết bằng JSX. Khi bạn dựng object THỦ CÔNG trong thân component — ví dụ `uniforms` cho `shaderMaterial`, hay một `THREE.Shape` dùng làm path — không có cơ chế diff nào bảo vệ bạn, vì code đó chạy lại VÔ ĐIỀU KIỆN mỗi render:
+
+```tsx
+// KHÔNG memo: uniforms là object mới mỗi render
+const uniforms = { uTime: { value: 0 } };
+
+// CÓ memo: giữ nguyên tham chiếu, chỉ tạo lại khi dependency đổi
+const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+```
+
+Dependency array phải trung thực với những gì object thực sự dùng: uniforms phụ thuộc prop `color` thì deps phải liệt kê `color`. Bỏ sót dependency không "tối ưu thêm" — nó giữ một tham chiếu ổn định giả, khiến uniform ngừng cập nhật, một bug im lặng dễ đổ oan cho chỗ khác.
+
+## Hoisting ra module scope: một material, trăm mesh
+
+Khi nhiều mesh dùng chung một geometry/material không đổi theo state của bất kỳ component nào, đừng tạo nó trong component — kể cả trong `useMemo`, vốn vẫn gắn với vòng đời một instance component. Tạo ở **module scope**, chạy đúng một lần khi module được import:
+
+```tsx
+// Module scope — chạy MỘT LẦN khi import, không phải mỗi mount
+const sharedGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.6);
+const sharedMaterial = new THREE.MeshStandardMaterial({ color: "#6ea8fe" });
+
+function Cell({ position }: { position: [number, number, number] }) {
+  // Gán qua PROP object có sẵn, không phải JSX con — R3F chỉ tự dispose
+  // instance mà CHÍNH NÓ tạo ra (qua args); object nhận qua prop
+  // geometry/material có vòng đời nằm ngoài R3F hoàn toàn.
+  return (
+    <mesh position={position} geometry={sharedGeometry} material={sharedMaterial} />
+  );
+}
+```
+
+Điểm hay bị bỏ sót: viết `<mesh><boxGeometry args={[...]} /></mesh>` ở MỖI mesh trong một danh sách lặp, dù `args` giống hệt nhau, vẫn là 100 JSX element ở VỊ TRÍ KHÁC NHAU trong cây — args-diff chỉ so một element với chính nó ở lần render trước, không so CHÉO giữa các anh em. Kết quả là 100 instance geometry riêng biệt, dù trông như "cùng một thứ lặp lại 100 lần".
+
+## Khi nào KHÔNG cần memo hoá
+
+Đừng bọc `useMemo` quanh mọi thứ theo phản xạ — thêm độ phức tạp không đổi lại lợi ích gì. Bỏ qua memo khi: args toàn số/chuỗi/boolean tĩnh (R3F đã tự lo); geometry/material rẻ và chỉ tồn tại một instance trong cả scene (một quả cầu duy nhất không đáng hoisting); hoặc giá trị đổi liên tục theo animation — trường hợp này không nên tạo object mới bao giờ, mà `useFrame` mutate trực tiếp property có sẵn (`mesh.current.rotation.y += delta`), chủ đề bài `disposal-and-memory-leaks` và `drei-essentials` ngay trước bài này.
+
+## Đo sự khác biệt bằng renderer.info
+
+`useThree((s) => s.gl)` trả về renderer đang chạy. `gl.info.memory.geometries` đếm CHÍNH XÁC số geometry GPU đang sống; `gl.info.programs.length` đếm số chương trình shader ĐÃ COMPILE — không phải số material instance, như phần "chi phí thật" đã giải thích. Demo dưới đây bật/tắt giữa material module-scope dùng chung và 200 material JSX riêng cho từng mesh: `programs` gần như KHÔNG đổi giữa hai chế độ (cùng cache key cấu trúc), trong khi `geometries` nhảy rõ giữa 1 và 200 — và chi phí dựng scene (đo bằng `performance.now()` quanh vòng lặp cấp phát) chênh lệch đo được.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+1. **Bọc `useMemo` với dependency array thiếu sót** — ví dụ `useMemo(() => new THREE.MeshStandardMaterial({ color }), [])` quên `color` trong deps. Material "đóng băng" ở giá trị color ban đầu dù prop đổi liên tục, dễ khiến debug sai chỗ.
+2. **Tưởng args giống hệt nhau giữa các JSX element anh em tự dedupe geometry.** 200 `<boxGeometry args={[0.6,0.6,0.6]} />` ở 200 `<mesh>` khác nhau trong một `.map()` vẫn tạo 200 instance riêng — args-diff chỉ so một element với chính nó ở lần render trước.
+3. **Kỳ vọng `renderer.info.programs` giảm khi chuyển sang material dùng chung.** Nhầm lẫn giữa "chia sẻ instance JS" và "chia sẻ chương trình GPU đã compile" — Three.js đã dedupe theo cache key cấu trúc bất kể bạn share instance hay không; `geometries` mới là thước đo đúng.
+
+</Callout>
+
+## Từ đây tới đâu
+
+Bài tiếp theo, `suspense-and-asset-loading`, áp cùng câu hỏi "cái gì thực sự được tạo lại, khi nào" lên một trục khác: asset bất đồng bộ, nơi Suspense quyết định KHI NÀO component được phép render. Checkpoint `checkpoint-asset-gallery` ghép cả hai: bệ đỡ dùng module-scope hoisting của bài này, exhibit dùng Suspense của bài sau. Track 12 (Performance & Production) quay lại đúng bộ công cụ `renderer.info` để đo draw call, batching và instancing ở quy mô lớn hơn.

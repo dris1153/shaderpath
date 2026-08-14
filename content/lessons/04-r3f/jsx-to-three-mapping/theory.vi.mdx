@@ -1,0 +1,72 @@
+## Tên JSX viết thường = tên class Three.js
+
+`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>` không phải tên thẻ HTML tuỳ ý hay component React ẩn danh — chúng là tên class THREE viết thường chữ cái đầu, đúng nghĩa đen. R3F đăng ký sẵn (qua một lệnh `extend(THREE)` chạy ngầm khi import `@react-three/fiber`) toàn bộ export của namespace `THREE` thành một "catalog" ánh xạ chuỗi thường → constructor: `mesh` → `THREE.Mesh`, `boxGeometry` → `THREE.BoxGeometry`, `meshStandardMaterial` → `THREE.MeshStandardMaterial`, `group` → `THREE.Group`. Quy tắc chỉ một bước: bỏ tiền tố `THREE.`, viết hoa chữ đầu thành thường. Không có danh sách "prop hợp lệ" riêng cho từng element JSX — hợp lệ hay không phụ thuộc hoàn toàn vào chính class THREE đó có property/constructor argument tên đó hay không, tra thẳng docs Three.js là đủ.
+
+Hệ quả: mọi class THREE, kể cả class R3F "chưa từng biết tới", tự động dùng được trong JSX ngay khi viết đúng tên viết thường — không cần chờ R3F cập nhật. Đây là lý do phần cuối bài giới thiệu `extend()`: cách đăng ký thêm một class KHÔNG nằm trong namespace `THREE` mặc định vào đúng catalog đó.
+
+## args: constructor argument, và vì sao đổi args tốn kém
+
+Không phải mọi property của một object THREE đều gán được sau khi tạo — `BoxGeometry` build sẵn hình học ngay trong constructor dựa trên `width/height/depth`, không có setter nào đổi kích thước một geometry đã dựng xong. Với những trường hợp này, JSX dùng prop đặc biệt `args`, nhận một MẢNG đúng thứ tự tham số constructor thật:
+
+```tsx
+<boxGeometry args={[1, 2, 3]} />
+// tương đương hệt: new THREE.BoxGeometry(1, 2, 3)
+```
+
+Vì `args` map thẳng vào lời gọi `new`, R3F không có cách nào khác để "đổi args" của một object đã tồn tại ngoài việc HUỶ object cũ và DỰNG LẠI object mới với args mới — không có "resize" rẻ tiền nào ở tầng WebGL cho một `BufferGeometry` đã upload lên GPU. Đổi `args` trên một `<boxGeometry>` đang render vì vậy kích hoạt destroy + re-create + re-upload buffer mỗi lần một slider gắn vào `args` di chuyển, đắt hơn hẳn mutate một property thường — Track 6 định lượng chính xác chi phí này với một `BufferGeometry` tuỳ biến. Nguyên tắc thực dụng: giá trị cần animate mượt nên nằm ở property prop (`scale`, `position`), không phải `args`; giá trị chỉ đặt một lần lúc khởi tạo mới hợp lý để nằm trong `args`.
+
+## Property prop: gán sau khi khởi tạo, và cú pháp rút gọn scalar
+
+Prop không phải `args` không đi qua constructor — R3F tạo object trước bằng `new Class()` (hoặc `new Class(...args)`), rồi gán TỪNG prop còn lại như một property assignment thuần: `<mesh position={[1, 0, 0]}>` chạy y hệt `mesh.position.set(1, 0, 0)` (R3F phát hiện `.position` là một `THREE.Vector3` có sẵn `.set()` và gọi nó, thay vì gán đè bằng Vector3 mới — giữ nguyên instance xuyên suốt vòng đời object, quan trọng vì code khác có thể đang giữ tham chiếu tới đúng Vector3 đó). Đây là lý do đổi `position` rẻ hơn hẳn đổi `args`: không buffer GPU nào bị đụng tới, chỉ ba con số CPU thay đổi.
+
+Với property nhận một `Vector3`/`Euler` (ba trục bằng nhau, ví dụ phóng to đều), R3F cho phép truyền thẳng một SỐ đơn thay vì mảng ba phần tử — `<mesh scale={2} />` tương đương `<mesh scale={[2, 2, 2]} />`. Rút gọn này chỉ áp dụng cho các property vector chuẩn (`position`, `rotation`, `scale`), không phải quy tắc chung cho mọi prop — logic nằm trong chính R3F khi nó phát hiện kiểu property đích là vector.
+
+## Pierced prop: gán sâu vào property lồng nhau bằng dấu gạch ngang
+
+Đôi khi bạn chỉ cần đổi ĐÚNG MỘT trục hoặc một field lồng sâu, không muốn set lại cả object cha. Cú pháp pierced prop dùng dấu gạch ngang để đi thẳng vào đường dẫn property:
+
+```tsx
+<mesh position-x={5} rotation-y={Math.PI / 4} material-color="hotpink" />
+// tương đương:
+// mesh.position.x = 5
+// mesh.rotation.y = Math.PI / 4
+// mesh.material.color = new THREE.Color("hotpink")  (gán qua .set(), xem phần sau)
+```
+
+Dấu gạch nối trong tên prop tách thành một chuỗi bước truy cập: `material-color` đi vào `mesh.material` rồi tới `.color`; sâu bao nhiêu cấp cũng viết được (`material-uniforms-uTime-value` chẳng hạn, gặp lại ở Track 6 khi chỉnh uniform qua JSX). Pierced prop hữu ích nhất khi hai trục của cùng một Vector3 đến từ hai state độc lập không muốn ghi đè nhau — thay vì tự dựng lại mảng ba phần tử mỗi lần chỉ một trục đổi, viết thẳng `position-x={x}` chỉ đụng đúng trục cần đổi.
+
+## attach: cách geometry/material tự gắn vào đúng chỗ trên parent
+
+Một `<mesh>` không tự biết `<boxGeometry>` con của nó phải gán vào đâu — Three.js không có khái niệm "con" tự nhiên cho geometry/material như cho Object3D. R3F giải quyết bằng prop `attach`, quyết định object con gán vào property nào của parent. Với các element phổ biến, `attach` có giá trị NGẦM ĐỊNH sẵn: `<boxGeometry>` trong `<mesh>` tự động `attach="geometry"`, `<meshStandardMaterial>` tự động `attach="material"` — đây là lý do phần lớn code R3F không cần viết `attach` tường minh.
+
+`attach` chấp nhận cùng cú pháp gạch ngang như pierced prop, dùng khi ngầm định không đủ — ví dụ gắn một `BufferAttribute` vào đúng slot `attributes.position` của một `bufferGeometry` tự tạo: `<bufferAttribute attach="attributes-position" args={[positions, 3]} />`. `attach` cũng nhận một HÀM thay vì chuỗi cho logic gắn/gỡ tuỳ biến — nằm ngoài phạm vi bài này nhưng đáng biết để không ngạc nhiên khi gặp trong source helper của drei.
+
+## Giá trị "không serialize được": vector nhận mảng, màu nhận chuỗi
+
+`Vector3`, `Euler`, `Color` không phải kiểu dữ liệu JSON-serializable thuần — chúng là class THREE thật, có method. R3F chấp nhận PROP dạng "gọn" (mảng số, hoặc chuỗi) rồi tự chuyển đổi bằng đúng API của class đó thay vì gán đè: prop `color` nhận chuỗi CSS (`"hotpink"`, `"#ff0088"`) và R3F gọi `material.color.set("hotpink")` — không tạo `Color` mới, chỉ set lại giá trị Color instance sẵn có. Tương tự, prop `position` nhận mảng ba số và R3F gọi `.set(...array)` thay vì gán đè property.
+
+Nguyên tắc chung: bất kỳ property đích nào có method `.set()` (hầu hết class toán học của THREE đều có), R3F ưu tiên gọi `.set()` thay vì gán đè bằng object mới — giữ nguyên identity của instance, tránh cấp phát thừa mỗi lần re-render, và giữ tham chiếu cũ (nếu code khác đang giữ) vẫn hợp lệ.
+
+## extend(): mở rộng bảng catalog JSX cho class tuỳ biến
+
+Phần đầu bài nói catalog mặc định phủ hết namespace `THREE` — nhưng class KHÔNG nằm trong đó (tự viết, hoặc import từ `three/examples/jsm`, hoặc thư viện ngoài như `three-stdlib`) không tự nhiên có tên JSX. `extend()` đăng ký thêm class vào đúng catalog đó:
+
+```tsx
+import { extend } from "@react-three/fiber";
+import { RoundedBoxGeometry } from "three-stdlib";
+
+extend({ RoundedBoxGeometry });
+// từ giờ dùng được: <roundedBoxGeometry args={[1, 1, 1, 4, 0.1]} />
+```
+
+Mọi quy tắc đã học trong bài này (`args`, property prop, pierced prop, `attach`) áp dụng y hệt cho class vừa `extend()` — vì chúng chỉ là entry trong cùng một catalog, không có xử lý đặc biệt nào cho class "chính chủ" THREE so với class tuỳ biến. Track 6 (Custom Shader) dùng lại đúng cơ chế này để biến một `ShaderMaterial` tự viết thành một JSX element viết thường, dùng được với `args`/property prop y hệt `meshStandardMaterial`.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi ánh xạ JSX sang Three.js:
+
+1. **Đưa giá trị animate mượt vào `args`.** `args` chỉ chạy một lần lúc constructor — đổi nó mỗi frame (ví dụ nối `args={[radius, 32, 32]}` với một `radius` animate) huỷ và dựng lại toàn bộ geometry, re-upload buffer GPU liên tục thay vì chỉ mutate `scale`.
+2. **Quên `attach` khi geometry/material không nằm trực tiếp trong `<mesh>`.** Ngầm định `attach="geometry"`/`attach="material"` chỉ hoạt động khi object đó là CON TRỰC TIẾP của `<mesh>`; bọc nó qua một component trung gian tự viết mà quên set `attach` tường minh khiến object "trôi nổi" không gắn vào đâu, mesh hiển thị sai hoặc trống.
+3. **Tưởng `color="hotpink"` tạo Color mới mỗi lần re-render.** R3F gọi `.set()` trên Color instance có sẵn, không cấp phát object mới — nhưng nếu bạn TỰ tạo `new THREE.Color()` trong thân component (ngoài `useMemo`) rồi truyền qua một prop khác, bạn mới thực sự tạo object rác mỗi lần render, không phải do JSX gây ra.
+
+</Callout>

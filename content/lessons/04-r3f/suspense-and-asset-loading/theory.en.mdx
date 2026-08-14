@@ -1,0 +1,82 @@
+## Suspense Isn't a Loading Mechanism — It's a Contract Built on Throwing
+
+React Suspense knows nothing about networks or 3D assets. Its contract is simple and completely general: if a component, WHILE RENDERING, throws a Promise instead of returning JSX, React reads that as "not ready yet" — it catches that Promise at the NEAREST enclosing `<Suspense>`, shows `fallback`, and remembers to retry rendering that exact subtree once the Promise resolves. There's no `isLoading` state you have to hand-write; the entire "render → not ready → retry → done" loop lives inside React's own render mechanism.
+
+`useLoader` and `useGLTF` (drei) are simply hooks that lean on this exact contract for asset loading.
+
+## How useLoader/useGLTF Suspend, Step by Step
+
+Straight from the `@react-three/fiber` source: `useLoader(LoaderClass, url)` looks up a cache keyed by `[loader, url]`. On a first-time cache miss, it constructs (and memoizes) one loader instance for that class, calls `loader.load(url, onLoad, onProgress, onError)`, wraps it in a `Promise`, and **throws that pending Promise**. React catches the throw, shows `fallback`, and waits.
+
+When `onLoad` fires (the asset finished loading), the Promise resolves, and the cache stores the RESOLVED VALUE (no longer a Promise) under that same `[loader, url]` key. React re-renders the suspended subtree — this time `useLoader` looks up the cache, finds the value already there, and returns it IMMEDIATELY, no throw at all — the component renders like any ordinary synchronous hook. drei's `useGLTF` is `useLoader` pre-wired for `GLTFLoader` (with Draco/meshopt configuration baked in) — same mechanism, just a specific loader.
+
+## `<Suspense fallback>` INSIDE Canvas: the Placeholder Has to Be a Mesh
+
+The only difference from "ordinary" React Suspense: a `<Suspense>` placed inside `<Canvas>` behaves identically — it's just React, indifferent to whether you're in the DOM tree or R3F's scene-graph tree. But `fallback` MUST be a valid object in that tree: a mesh, a `<group>`, or drei's `Html` component (which wraps real DOM in a portal, so it still counts as a valid R3F element). Writing `fallback={<div>Loading...</div>}` — a bare DOM `<div>` — errors out immediately at runtime, because R3F has no idea which Three.js class a `div` tag maps to.
+
+```tsx
+<Suspense fallback={<PlaceholderMesh />}>
+  <HeavyExhibit url="/model.glb" />
+</Suspense>
+```
+
+`PlaceholderMesh` here is a real mesh — say, a simple spinning wireframe block — or an `<Html center>` wrapping a real DOM spinner, anchored at the exact 3D position the asset will occupy. Both are valid; which one you pick depends on whether you want the placeholder to "feel 3D" or just need an unambiguous loading indicator.
+
+## Nested Suspense Boundaries: Progressive Reveal
+
+Suspense boundaries can nest arbitrarily. Putting a SINGLE boundary around an entire scene means the heaviest piece decides when EVERYTHING shows up — including lights, the ground, or peripheral UI that needed no loading at all. Wrapping a SEPARATE boundary around each heavy piece lets whatever's already ready show up immediately:
+
+```tsx
+<>
+  {/* Never suspends — shows immediately */}
+  <ambientLight />
+  <Ground />
+
+  {/* Only this waits; the rest of the scene isn't dragged along */}
+  <Suspense fallback={<ExhibitPlaceholder />}>
+    <HeavyExhibit url="/exhibit.glb" />
+  </Suspense>
+</>
+```
+
+This is precisely the pattern the `checkpoint-asset-gallery` checkpoint uses: every slot in the gallery gets its OWN Suspense boundary, so a fast-loading slot never waits on a slow one.
+
+## Preloading: Run It Before You Need It, Same Cache
+
+`useLoader.preload(LoaderClass, url)` (and drei's variants: `useGLTF.preload`, `useTexture.preload`) writes into the EXACT SAME cache that `useLoader`/`useGLTF` actually read from, keyed by that same `[loader, url]`. Calling it EARLY — on hover over a button, when a parent component mounts, or the moment you know a user is about to need that asset — means the Promise has already started loading, and may have already resolved, before the component that calls `useLoader` even renders. The result: the suspend moment disappears entirely, `fallback` never gets a chance to show.
+
+A common trap: the cache key is `[loader, url]`, and `loader` here is the exact FIRST VALUE you pass in — if one call site passes a CLASS (`GLTFLoader`) while another passes an already-constructed INSTANCE (`new GLTFLoader()`), the two calls look up two DIFFERENT cache keys despite an identical `url` — the preload is effectively wasted, and the real component waits from scratch anyway.
+
+## Suspense Doesn't Catch Errors — an Error Boundary Does
+
+Suspense only handles "not ready yet," never "failed." When the Promise gets REJECTED (a 404, malformed data), the next render doesn't throw the Promise again — React throws a real Error, and that Error propagates up to the NEAREST Error Boundary, completely bypassing the Suspense boundary wrapping it. Without an Error Boundary, one failed asset can take down the entire component branch, sometimes the whole page.
+
+This platform's shared `<Demo>` component already stacks these in the right order for every single demo: `<DemoErrorBoundary><Suspense fallback={...}>...</Suspense></DemoErrorBoundary>` — the Error Boundary sits OUTSIDE Suspense, exactly the order needed to catch both failure modes. The demo below inherits this for free, with nothing extra to write.
+
+## startTransition When Swapping an Already-Loaded Asset
+
+Switching from asset A (currently showing) to asset B (already cached via preload, or not) usually makes React suspend that subtree AGAIN, flashing to `fallback` even though A is still perfectly renderable. Wrapping the state change in `startTransition` tells React: "keep A on screen, don't rush to show fallback — only swap to B once B is TRULY ready":
+
+```tsx
+import { startTransition } from "react";
+
+function handleSwap(nextUrl: string) {
+  startTransition(() => setUrl(nextUrl));
+}
+```
+
+## Suspense at Scale: How This Platform Lazy-Mounts Entire Lessons
+
+Suspense's core idea — don't pay for rendering something not needed yet — repeats at a completely different scale right inside the lesson route you're reading now: `app/[locale]/lesson/[lessonSlug]/page.tsx` looks up `DEMO_REGISTRY[lesson.slug]`, a dynamic `import()`, and only `await`s it once that route is actually visited. The mechanism is entirely different (this is Server Component code-splitting via `await import()`, not client-side throw-Promise-catch-at-Suspense) — but the motivation is identical: don't load or run code for a demo the user hasn't reached yet.
+
+<Callout variant="mistake" title="Common mistakes">
+
+1. **Using a plain DOM `<div>` as a fallback inside Canvas.** A `Suspense` living inside the R3F tree requires its children to be valid Three.js objects (mesh, group) or drei's `<Html>` — a bare `<div>` fails at runtime immediately, not silently.
+2. **Forgetting the Error Boundary and letting Suspense handle both loading and failure.** Suspense only catches pending Promises; once a Promise rejects, React throws a REAL Error on the next render, propagating straight to the nearest Error Boundary — without one, a 404'd asset crashes the entire UI branch instead of showing a clean error message.
+3. **A preload that doesn't match the cache key.** Calling `preload` with the loader constructor in one place, then `useLoader` with a self-constructed instance somewhere else — two different `[loader, url]` cache keys despite an identical `url`, so the preload effectively never ran.
+
+</Callout>
+
+## Where This Leads Next
+
+The previous lesson, `memoizing-geometry-and-materials`, taught when R3F rebuilds objects on its own and when you have to take control; this lesson teaches Suspense controlling WHEN a component is even allowed to render — two independent axes that always show up together in a real asset pipeline. The `checkpoint-asset-gallery` checkpoint right after this combines both into a three-exhibit gallery. Track 12 (Performance & Production) revisits preloading from the angle of hiding real network latency, once assets are real files instead of the simulated loader used here.

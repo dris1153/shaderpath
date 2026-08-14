@@ -1,0 +1,43 @@
+## drei là gì: thư viện chuẩn của R3F, không phải một phần của framework
+
+`@react-three/fiber` chỉ làm đúng một việc — làm reconciler, biến JSX thành cây object Three.js. Mọi thứ "tiện" hơn thế — controls camera, load asset, nhúng DOM, chữ SDF, IBL một dòng — không nằm trong package đó. `@react-three/drei` lấp khoảng trống này: một "growing collection of useful helpers and ready-made abstractions" theo đúng lời mô tả của chính repo, giống vai trò lodash cho JS thuần hay Radix cho UI. Điểm cần nhớ ngay từ đầu: đây là grab-bag, không phải core framework với cam kết ổn định API chặt như R3F — một số helper rất trưởng thành (`OrbitControls`, `useTexture`), số khác còn ở nhánh thử nghiệm và có thể đổi API giữa các bản minor. Bài này dạy cách phân biệt hai loại đó, không chỉ cách import.
+
+## Tour nhanh: OrbitControls, Environment, useTexture/useGLTF
+
+`OrbitControls` của drei bọc đúng lớp `OrbitControls` trong `three/examples/jsm` (thứ Track 3 đã import tay), nhưng lo hai việc bản tay phải tự viết: gọi `controls.update()` mỗi frame bên trong `useFrame` nội bộ, và tự gọi `invalidate()` khi phát hiện `frameloop="demand"` — kéo chuột xong scene vẽ lại ngay, không cần biết demand-render là gì. Một dòng `<OrbitControls />` thay cho cả chục dòng setup + cleanup thủ công.
+
+`Environment` dựng image-based lighting trong đúng một dòng: `<Environment preset="city" />` tải một HDRI có sẵn, chạy qua `PMREMGenerator` của Three.js để tạo prefiltered environment map, rồi gán thẳng vào `scene.environment` — mọi vật liệu PBR trong scene lập tức có phản xạ môi trường thực thay vì màu phẳng. Đây là bản xem trước gọn cho lý thuyết IBL đầy đủ (irradiance map, prefiltered mip chain, BRDF LUT) ở Track 11.
+
+`useTexture`/`useGLTF` là lớp đường quanh `useLoader`: cùng cơ chế cache theo URL, nhưng thêm API tĩnh để preload trước khi component mount — `useGLTF.preload(url)` gọi ở module scope (ngay khi route được biết trước) khiến asset đã nằm sẵn trong cache lúc user thực sự điều hướng tới, xoá độ trễ loading ở đúng khoảnh khắc khó chịu nhất.
+
+## Html: nhúng DOM thật vào scene, và cơ chế occlusion
+
+`Html` không tạo mesh nào cả. Mỗi frame nó chiếu toạ độ world của điểm neo qua `camera` ra toạ độ pixel màn hình, rồi đặt một `<div>` HTML thật đúng vị trí đó bằng CSS transform — bạn nhét bất kỳ component React nào (form, tooltip, chart) vào giữa scene 3D mà không cần vẽ lại bằng geometry. Có hai chế độ định vị: mặc định là billboard nhẹ — label luôn quay mặt về camera, cỡ pixel cố định bất kể khoảng cách; bật `transform` thì cả ma trận 3D (xoay, scale theo phối cảnh) áp lên DOM qua `matrix3d()`, label "sống" đúng trong không gian 3D nhưng tốn hơn vì phải tính lại transform mỗi frame.
+
+`occlude` giải quyết vấn đề khác: vì `Html` render ra ngoài canvas (DOM thật, không qua WebGL depth buffer), mặc định nó luôn nổi trên mọi thứ kể cả đứng sau một mesh. Bật `occlude`, drei raycast từ camera tới đúng điểm neo mỗi frame — trúng mesh nào trước khi tới label thì ẩn label. Đây là raycast CPU, không phải depth-test GPU thật, nên chi phí tăng tuyến tính theo số label × độ phức tạp scene — vài label vô hại, vài chục label trong scene nặng đáng đo trước khi ship.
+
+## Text và shaderMaterial: SDF chữ không tốn geometry, và cầu nối tới Track 6
+
+`Text` bọc thư viện `troika-three-text`: parse font (ttf/otf/woff) và sinh atlas SDF (signed distance field) cho từng glyph trong một web worker riêng — không đứng hình main thread lúc load font. Điểm khác biệt cốt lõi so với `TextGeometry` kiểu cũ (extrude từng ký tự thành mesh 3D thật): toàn bộ chuỗi text được vẽ bằng đúng MỘT quad phẳng cộng một fragment shader đọc atlas SDF, không phải một mesh riêng cho mỗi ký tự. Kết quả: tăng `fontSize` gấp đôi không tốn thêm một vertex nào — chi phí hình học của `Text` gần như hằng số bất kể cỡ chữ hay độ dài chuỗi.
+
+`shaderMaterial` là một factory function nhỏ — đọc source chỉ vài chục dòng — nhận vào object uniform mặc định cùng vertex/fragment shader, trả về một class kế thừa `THREE.ShaderMaterial`. Bên trong, nó bọc mỗi uniform bằng `THREE.Uniform`, rồi định nghĩa getter/setter cho từng uniform ngay trên instance, để bạn đọc/ghi `material.uColor = ...` thay vì phải đào sâu `material.uniforms.uColor.value = ...`; cuối cùng đăng ký class đó qua `extend()` của R3F để nó xuất hiện như một JSX tag viết thường (`<myMaterial />`). Đây chính xác là công cụ nền cho toàn bộ Track 6 (Custom Shader trong Three.js) — hiểu source của nó bây giờ nghĩa là không phải học lại từ đầu khi tới đó.
+
+## Center, Bounds, và kỷ luật đọc source thay vì đoán
+
+`Center` đo bounding box thật của children bằng `Box3.setFromObject`, rồi dịch một group cha đúng bằng vector `-center` cộng offset căn lề — không đụng vào toạ độ gốc của bất kỳ child nào bên trong. Cách làm này an toàn với nội dung động (đổi model, đổi độ dài text) vì mỗi lần bounding box đổi, group cha tự tính lại, children không cần biết gì về việc mình đang bị dịch chuyển. `Bounds` đi xa hơn: cùng phép đo bounding box đó, nhưng còn tính khoảng lùi camera cần thiết để toàn bộ nội dung vừa khung hình, thường gọi imperatively qua ref (`bounds.refresh().fit()`) sau khi asset load xong.
+
+Cả hai ví dụ trên đều là lý do nên đọc source trước khi dùng một helper lạ trong sản phẩm thật: source của `Center`/`shaderMaterial` chỉ vài chục dòng dễ đọc, không phải hộp đen — biết chính xác nó làm gì giúp đánh giá đúng chi phí (một `useFrame` ẩn bên trong? một raycast mỗi frame?) mà chỉ đọc tên component không thể đoán ra.
+
+## Khi nào KHÔNG cần drei
+
+Nếu một helper chỉ tương đương 2-3 dòng JSX thuần R3F, import cả `drei` để dùng đúng một cái không đáng — thêm dependency, thêm một tầng trừu tượng để rà khi có bug. Ví dụ kinh điển: `<Box args={[1,1,1]} />` của drei chỉ là viết tắt của `<mesh><boxGeometry args={[1,1,1]}/><meshStandardMaterial/></mesh>` — biết cả hai để chọn có chủ đích, không phải học đúng một cách rồi quên mất cách kia tồn tại. Ranh giới thực dụng: dùng drei cho phần thật sự phức tạp bên dưới (raycast occlusion của `Html`, pipeline SDF của `Text`, `PMREMGenerator` của `Environment`) — bỏ qua nó cho phần ba dòng code tự viết đã xong, và nhất quán với đúng chủ đề của lesson trước: giữ số object bạn phải tự quản lý vòng đời (kể cả object drei tạo ra bên trong) ở mức tối thiểu cần thiết.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi bắt đầu dùng drei:
+
+1. **Tự gọi `controls.update()` thêm một lần trong `useFrame` của riêng mình khi đã dùng `<OrbitControls />`.** Component này tự update mỗi frame nội bộ — update kép không làm gì sai về logic nhưng lãng phí một lượt tính toán mỗi frame, và dễ gây lẫn lộn khi debug độ trễ input.
+2. **Đặt hàng chục `<Html occlude>` trong một scene nặng mà quên occlusion là raycast CPU mỗi frame, không phải depth-test GPU.** Vài label thì vô hình về chi phí; vài chục label trên scene nhiều mesh phức tạp có thể tụt fps rõ rệt — đo trước khi ship, không đoán.
+3. **Coi mọi helper trong drei "chắc chắn ổn định" như core của react-three-fiber.** Một số helper (đặc biệt các helper còn thử nghiệm) đổi API giữa các bản minor — khác hẳn cam kết semver của package lõi; luôn khoá version cụ thể và đọc changelog khi upgrade, không tự tin auto-update.
+
+</Callout>

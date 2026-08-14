@@ -1,0 +1,70 @@
+## R3F Doesn't "Wrap" Three.js — It's a Reconciler
+
+The easiest way to misunderstand React Three Fiber (R3F) is to picture it as a convenience layer over Three.js: you feed in JSX, some function "translates" it into Three.js calls — `new THREE.Mesh(...)`, `scene.add(...)` — the same way a `createMesh(config)` helper takes a config object and calls a constructor on your behalf. That's the **wrapper** model: take input, run once, produce output, keep nothing around to compare against next time.
+
+R3F doesn't work that way. It's built on `react-reconciler` — the exact low-level package `react-dom` uses to turn JSX into real DOM, and the one React Native uses to turn JSX into real iOS/Android views. `react-dom` is a "host config" plugged into the reconciler, teaching it how to create/update/destroy DOM nodes (`document.createElement`, `node.setAttribute`, `node.removeChild`). `@react-three/fiber` is a different host config teaching that same reconciler machinery how to create/update/destroy real Three.js objects (`new THREE[Type]()`, property assignment, `parent.remove(object)`) — swapping the DOM for the Three.js scene graph as the target. Same diffing engine, same fiber tree living for the app's whole lifetime, just a different place it paints onto.
+
+That distinction isn't semantics. A real wrapper has no notion of a "previous tree" to diff against — every call either starts from scratch or forces you to hand-roll your own diffing logic. A reconciler keeps an internal fiber tree, compares the new JSX tree against the old one on every render, and applies only the minimal change required — the same diffing engine you already know from `react-dom`, running unchanged except that it targets Three.js objects instead of DOM nodes.
+
+## Declarative Scene = f(state): Diffing Creates, Mutates, and Destroys Real Objects
+
+The direct consequence: a 3D scene in R3F is a pure function of React state — state changes, JSX re-renders, the reconciler diffs the new tree against the old one, and decides exactly three things per node:
+
+- A node that's entirely new (absent from the old tree) → a real object gets constructed with `new`.
+- A node that already exists but has a changed prop → the property gets mutated directly on the existing object, nothing gets recreated.
+- A node that's gone from the new tree → cleanup runs, the object gets removed from the real scene graph.
+
+```tsx
+function MeshList({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <mesh key={i} position={[i * 1.2, 0, 0]}>
+          <boxGeometry args={[1, 1, 1]} />
+          <meshStandardMaterial color="orange" />
+        </mesh>
+      ))}
+    </>
+  );
+}
+```
+
+Bumping `count` from 5 to 8 doesn't touch the 5 existing meshes — the reconciler constructs exactly 3 new `THREE.Mesh` instances; dropping back from 8 to 5 removes and disposes exactly the 3 extra objects, and the remaining 5 stay the same in-memory instance across renders, never recreated. That's precisely what a wrapper can't give you for free — with no "previous tree" to compare against, a wrapper either re-renders everything or forces you to write the diffing logic yourself.
+
+## Composition, Hooks, and Context Work Identically Inside the Scene
+
+Because `<Canvas>` still contains an ordinary React tree underneath — just with a different host config — every React composition mechanism applies directly to the 3D scene with zero adaptation layer: `useState` for a single object's local state, a custom hook packaging logic reused across several meshes, `useContext` so a nested material reads a color theme from a distant ancestor without prop-drilling through every level in between, fragments and conditional rendering (`{visible && <mesh />}`) to toggle objects on and off. Track 3 (vanilla Three.js) has to hand-build a registry, thread references through closures, or reach for global variables to do the equivalent — R3F gets it for free, exactly what React already solved for the DOM.
+
+## The Proof: No Manual add/remove, Automatic Cleanup on Unmount
+
+Three concrete signals that you're working with a real reconciler, not a disguised wrapper:
+
+First, there's no `scene.add()`/`.remove()` call anywhere in user code — a component only declares JSX, and the reconciler decides on its own when to call those underneath. Finding yourself calling `.add()` by hand inside an R3F component is almost always a sign you're fighting the model instead of using it.
+
+Second, unmounting a component cleans up automatically: geometries/materials created by JSX get `.dispose()` called on them, the object gets removed from `scene.children` — no manual `useEffect` cleanup needed for most cases (the Disposal & Memory Leak lesson later in this module covers the exceptions, like a texture loaded imperatively outside JSX).
+
+Third — the entire subject of the next lesson — a JSX prop maps directly onto a real object property: `<mesh position={[1, 0, 0]}>` assigns straight into `mesh.position`, with no intermediate "virtual prop" layer reinterpreting what position means.
+
+## Still THREE Underneath: Performance and Track 3 Knowledge Carry Over
+
+What R3F does NOT change matters just as much as what it does: the final scene tree is still a real `THREE.Scene` holding real `THREE.Mesh`, `THREE.BufferGeometry`, `THREE.Material` instances exactly as covered in Track 3 — rendered by the same `WebGLRenderer`, the same draw calls, the same GPU cost per vertex/fragment. The reconciler only adds a bookkeeping layer running in JS between frames to decide "what changed" — it doesn't insert any extra step into the actual GPU render pipeline. A scene renders slowly for the exact same reasons whether it's written in R3F or vanilla Three.js: too many draw calls, an overly expensive shader, or overdraw — never because "React is in the middle." Every profiling technique from Spector.js or reading `stats.js` output in Track 12 applies unchanged, nothing needs relearning.
+
+## When the Reconciler Mental Model Actually Matters: Keyed Lists
+
+Where the reconciler model stops being an implementation detail and starts directly deciding behavior: a list of meshes rendered with `.map()` and `key`. Exactly like React DOM, `key` is the identity the reconciler uses to match old nodes to new ones — changing an element's `key` (even with every other prop unchanged) forces the reconciler to treat it as an ENTIRELY different node: the old one unmounts (the real Three.js object gets destroyed, along with any local state attached via ref), the new one mounts (a brand-new Three.js object gets constructed). Keep the same `key` but change some other prop, and only the existing object gets mutated — state attached via ref (say, a rotation mid-animation) survives that render.
+
+This is exactly the most common trap when a 3D list gets reordered (sorted/filtered) using the array index as `key`: the index shifts with the new order → the reconciler thinks most nodes changed identity → it destroys and recreates most meshes even though the underlying data merely moved, causing visible pops and losing in-flight animation state. The rule is identical to React DOM: use a stable id from the data itself (never the array index) as `key` for any 3D list that can be added to, removed from, or reordered.
+
+## Where This Foundation Leads: JSX ↔ Three.js Mapping and the Model's Limits
+
+The next lesson dissects the exact prop → property mapping mechanism that the "Proof" section above only named: when a prop becomes a constructor argument (`args`), when it becomes a property assigned afterward, and the pierced-prop syntax (`position-x`) for assigning deep into a nested object. Further out, Track 9 (GPGPU/Particles) pushes the reconciler mental model to its real limit: hundreds of thousands of particles can't each be their own JSX component — diffing that many nodes every frame is simply infeasible — forcing a return to Track 3's imperative approach for that specific case, a single `InstancedMesh` instead of a JSX list.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first learning the reconciler mental model:
+
+1. **Calling `scene.add()`/`.remove()` manually inside an R3F component.** The reconciler knows nothing about an object you added by hand — it's not part of the fiber tree, so it never gets diffed, never gets disposed on unmount, and easily ends up duplicated on every re-render.
+2. **Using the array index as `key` for a mesh list that can be reordered or filtered.** The index shifts with the new position, making the reconciler treat nearly every element as a changed identity, needlessly destroying and recreating Three.js objects and losing in-flight animation state attached via ref.
+3. **Assuming unmount always disposes everything.** Automatic disposal only covers geometries/materials created directly by JSX; textures loaded imperatively outside JSX, manually attached event listeners, or objects built with `new THREE.X()` outside the component tree still need explicit cleanup — full details in the Disposal & Memory Leak lesson.
+
+</Callout>

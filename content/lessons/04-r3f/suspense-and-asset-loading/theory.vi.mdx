@@ -1,0 +1,82 @@
+## Suspense không phải cơ chế loading — nó là một hợp đồng với throw
+
+React Suspense không "biết" gì về network hay asset 3D. Hợp đồng của nó đơn giản và tổng quát: nếu một component, TRONG LÚC RENDER, throw một Promise thay vì trả JSX, React hiểu đó là tín hiệu "chưa sẵn sàng" — nó bắt Promise đó ở `<Suspense>` GẦN NHẤT bao quanh, hiện `fallback`, và ghi nhớ để thử render lại chính subtree đó khi Promise resolve. Không có `isLoading` state nào bạn phải tự viết; toàn bộ vòng lặp "render → chưa xong → thử lại → xong" nằm trong chính cơ chế render của React.
+
+`useLoader` và `useGLTF` (drei) chỉ là những hook tận dụng đúng hợp đồng này cho việc tải asset.
+
+## useLoader/useGLTF suspend thế nào, chính xác từng bước
+
+Đọc thẳng trong source của `@react-three/fiber`: `useLoader(LoaderClass, url)` tra một cache khoá bởi `[loader, url]`. Cache miss lần đầu — nó khởi tạo (và ghi nhớ) một instance loader cho class đó, gọi `loader.load(url, onLoad, onProgress, onError)`, bọc trong một `Promise`, rồi **throw chính Promise đang pending đó**. React bắt được throw, hiện `fallback`, và chờ.
+
+Khi `onLoad` được gọi (asset tải xong), Promise resolve, cache lưu lại GIÁ TRỊ đã resolve (không còn là Promise nữa) khoá bởi đúng `[loader, url]` đó. React render lại subtree bị suspend — lần này `useLoader` tra cache, thấy giá trị đã sẵn sàng, trả về NGAY, không throw gì cả — component render bình thường như một hook đồng bộ. `useGLTF` của drei là `useLoader` được cấu hình sẵn cho `GLTFLoader` (kèm thiết lập Draco/meshopt) — cùng cơ chế, chỉ khác loader cụ thể.
+
+## `<Suspense fallback>` bên TRONG Canvas: placeholder phải là mesh
+
+Điểm khác biệt duy nhất so với Suspense "thường" của React: `<Suspense>` đặt bên trong `<Canvas>` vẫn hoạt động y hệt — nó chỉ là React, không quan tâm bạn đang ở DOM hay ở cây scene-graph của R3F. Nhưng `fallback` PHẢI là một object hợp lệ trong cây đó: một mesh, một `<group>`, hoặc component `Html` của drei (nó tự bọc DOM thật vào một portal, nên vẫn "hợp lệ" như một element R3F). Viết `fallback={<div>Đang tải...</div>}` — một `<div>` DOM trần — sẽ lỗi runtime ngay lập tức, vì R3F không biết ánh xạ thẻ `div` sang class Three.js nào.
+
+```tsx
+<Suspense fallback={<PlaceholderMesh />}>
+  <HeavyExhibit url="/model.glb" />
+</Suspense>
+```
+
+`PlaceholderMesh` ở đây là một mesh thật — ví dụ một khối wireframe xoay đơn giản — hoặc một `<Html center>` chứa spinner DOM thật, gắn tại đúng vị trí 3D của asset sắp hiện. Cả hai đều hợp lệ; chọn cái nào tuỳ bạn muốn placeholder "cảm giác 3D" hay chỉ cần một chỉ báo loading rõ ràng.
+
+## Suspense boundary lồng nhau: progressive reveal
+
+Suspense boundary có thể lồng nhau tuỳ ý. Đặt MỘT boundary ngoài cùng quanh cả scene nghĩa là phần nặng nhất quyết định khi nào MỌI THỨ hiện ra — kể cả ánh sáng, mặt đất, hay UI phụ vốn không cần tải gì cả. Bọc boundary RIÊNG quanh từng phần nặng cho phép những gì đã sẵn sàng hiện ra ngay:
+
+```tsx
+<>
+  {/* Không suspend — hiện ngay lập tức */}
+  <ambientLight />
+  <Ground />
+
+  {/* Chỉ phần này chờ, phần còn lại của scene không bị kéo theo */}
+  <Suspense fallback={<ExhibitPlaceholder />}>
+    <HeavyExhibit url="/exhibit.glb" />
+  </Suspense>
+</>
+```
+
+Đây chính xác là pattern checkpoint `checkpoint-asset-gallery` dùng: mỗi slot trong gallery có Suspense RIÊNG, để slot tải nhanh không phải đợi slot tải chậm.
+
+## Preload: chạy trước khi cần, chung một cache
+
+`useLoader.preload(LoaderClass, url)` (và các biến thể của drei: `useGLTF.preload`, `useTexture.preload`) ghi vào ĐÚNG cache mà `useLoader`/`useGLTF` thật sự đọc, khoá bởi cùng `[loader, url]`. Gọi nó SỚM — khi hover vào một nút, khi một component cha mount, hay ngay khi biết trước người dùng sắp cần asset đó — khiến Promise đã bắt đầu tải và có thể đã resolve từ trước khi component thật sự gọi `useLoader`. Kết quả: lần suspend biến mất hoàn toàn, `fallback` không bao giờ kịp hiện.
+
+Bẫy thường gặp: cache key là `[loader, url]`, và `loader` ở đây chính là GIÁ TRỊ ĐẦU TIÊN bạn truyền — nếu một nơi truyền CLASS (`GLTFLoader`) còn nơi khác truyền một INSTANCE đã tạo sẵn (`new GLTFLoader()`), hai lời gọi tra hai cache key khác nhau dù cùng `url` — preload coi như vô nghĩa, component thật vẫn phải đợi từ đầu.
+
+## Suspense không bắt lỗi — Error Boundary mới bắt
+
+Suspense chỉ xử lý "chưa sẵn sàng", không xử lý "thất bại". Khi Promise bị REJECT (asset lỗi 404, JSON hỏng), lần render kế tiếp React không throw lại Promise nữa — nó throw một Error thật, và Error đó bay lên `Error Boundary` GẦN NHẤT, bỏ qua hoàn toàn Suspense boundary đang bọc nó. Thiếu Error Boundary, một asset lỗi làm sập cả nhánh component, có khi cả trang trắng xoá.
+
+Component `<Demo>` dùng chung của nền tảng này đã xếp đúng thứ tự sẵn cho mọi demo: `<DemoErrorBoundary><Suspense fallback={...}>...</Suspense></DemoErrorBoundary>` — Error Boundary NẰM NGOÀI Suspense, đúng thứ tự cần thiết để bắt cả hai loại thất bại. Demo dưới đây thừa hưởng điều này miễn phí, không cần viết thêm gì.
+
+## startTransition khi đổi asset đã tải sẵn
+
+Khi chuyển từ asset A (đang hiện) sang asset B (đã có trong cache nhờ preload, hoặc thậm chí chưa), việc đổi state điều khiển url thường khiến React suspend LẠI subtree đó, chớp tắt về `fallback` dù A vẫn còn hiện được. Bọc việc đổi state trong `startTransition` báo cho React biết: "giữ nguyên A trên màn hình, đừng vội hiện fallback — chỉ swap sang B khi B THỰC SỰ sẵn sàng":
+
+```tsx
+import { startTransition } from "react";
+
+function handleSwap(nextUrl: string) {
+  startTransition(() => setUrl(nextUrl));
+}
+```
+
+## Suspense ở quy mô lớn: cách nền tảng này lazy-mount cả bài học
+
+Ý tưởng cốt lõi của Suspense — đừng trả giá cho thứ chưa cần render — lặp lại ở một quy mô hoàn toàn khác ngay trong chính route bài học bạn đang đọc: `app/[locale]/lesson/[lessonSlug]/page.tsx` tra `DEMO_REGISTRY[lesson.slug]`, một `import()` động, và chỉ `await` nó khi route đó thực sự được truy cập. Cơ chế khác hẳn (đây là code-splitting phía Server Component bằng `await import()`, không phải throw-Promise-catch-ở-Suspense phía client) — nhưng động lực giống hệt nhau: không tải, không chạy code cho một demo người dùng chưa xem tới.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+1. **Đặt một `<div>` DOM thường làm fallback bên trong Canvas.** `Suspense` nằm trong cây R3F yêu cầu con của nó là object Three.js hợp lệ (mesh, group) hoặc `<Html>` của drei — một `<div>` trần gây lỗi runtime ngay lập tức, không phải lỗi "âm thầm".
+2. **Quên Error Boundary, để Suspense một mình xử lý cả lỗi lẫn loading.** Suspense chỉ bắt Promise pending; khi Promise reject, React throw một Error THẬT ở lần render kế, bay thẳng lên Error Boundary gần nhất — thiếu nó, một asset 404 làm sập cả nhánh UI thay vì chỉ hiện thông báo lỗi gọn gàng.
+3. **Preload không khớp cache key.** Gọi `preload` với constructor loader ở một chỗ, gọi `useLoader` với một instance loader tự tạo ở chỗ khác — hai cache key `[loader, url]` khác nhau dù `url` giống hệt, preload coi như chưa từng chạy.
+
+</Callout>
+
+## Từ đây tới đâu
+
+Bài trước, `memoizing-geometry-and-materials`, dạy khi nào R3F tự dựng lại object và khi nào bạn phải tự kiểm soát; bài này dạy Suspense kiểm soát KHI NÀO một component được phép render — hai trục độc lập nhưng luôn xuất hiện cùng nhau trong asset pipeline thật. Checkpoint `checkpoint-asset-gallery` ngay sau đây ghép cả hai vào một gallery 3 khối trưng bày. Track 12 (Performance & Production) quay lại preload dưới góc độ "ẩn latency thật" khi asset là file thật thay vì loader mô phỏng như ở đây.

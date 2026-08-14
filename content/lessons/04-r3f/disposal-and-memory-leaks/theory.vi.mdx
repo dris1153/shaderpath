@@ -1,0 +1,78 @@
+## Vì sao memory leak là kẻ thù số 1 của R3F
+
+Một component React leak thông thường tệ nhất giữ lại vài KB object JS — trình duyệt vẫn chạy, chỉ chậm dần. Component R3F leak khác hẳn về bản chất: mỗi `geometry`/`material`/`texture` bị bỏ quên giữ nguyên một buffer thật trên VRAM của GPU, thứ garbage collector của JavaScript **hoàn toàn không biết tới**. GC chỉ dọn được object JS khi hết tham chiếu — nhưng `WebGLBuffer`, `WebGLTexture` sống ở phía driver GPU, ngoài tầm với của GC, chỉ giải phóng khi có ai gọi đúng `.dispose()`. Một app điều hướng qua lại giữa nhiều bài học 3D — đúng mô hình của nền tảng này — là kịch bản tệ nhất cho kiểu leak này: mount/unmount hàng chục lần một phiên, VRAM cộng dồn tuyến tính tới khi driver từ chối cấp thêm context.
+
+## R3F tự dispose gì, và lặng lẽ bỏ qua gì
+
+R3F giải quyết phần lớn bài toán trên bằng một quy tắc: object nào **chính R3F tự khởi tạo** từ JSX tag — viết `<boxGeometry args={[1,1,1]} />`, reconciler tự gọi `new THREE.BoxGeometry(1,1,1)` — sẽ được gọi `.dispose()` khi component chứa nó unmount, miễn có phương thức `dispose`. Muốn tắt (geometry dùng chung giữa nhiều mesh, không muốn unmount cái đầu tiên phá luôn phần còn dùng), đặt `dispose={null}` lên tag đó hoặc lên `<group>` cha.
+
+Nhưng "tự khởi tạo từ JSX" hẹp hơn nhiều người nghĩ. Ba trường hợp R3F **không thể biết** để dispose:
+
+1. **Object dựng bằng `new THREE.X()` ngoài JSX** — trong `useMemo`, `useEffect`, hay một loader tự viết (không qua `useLoader`). R3F chỉ theo dõi cây instance chính nó tạo ra; một `THREE.BoxGeometry` bạn `new` tay rồi nhét vào `<primitive object={mesh} />` nằm ngoài sổ sách đó. Tài liệu R3F nói thẳng: *"Primitives will not dispose of the object they carry on unmount, you are responsible for disposing of it!"* — hợp lý, vì object truyền vào `primitive` thường đang được cache/dùng lại nơi khác (`scene` từ `useGLTF`), R3F không có cách biết unmount một consumer có an toàn để phá huỷ resource dùng chung hay không.
+2. **Render target** (`THREE.WebGLRenderTarget`) dựng tay cho pass hậu kỳ hay camera phụ — luôn cần `renderTarget.dispose()` thủ công.
+3. **Event listener và RAF handle** đăng ký tay (`addEventListener`, `requestAnimationFrame` gọi trực tiếp ngoài `useFrame`) — không phải object Three.js nên "dispose" không áp dụng, nhưng quên gỡ gây leak closure cùng bản chất.
+
+## Vòng lặp leak: mount/unmount tích tụ, và cách quan sát
+
+Leak dạng này gần như vô hình khi thử một lần — chỉ lộ qua **chu kỳ lặp**. Nếu một component leak $k$ geometry mỗi lần mount và không giảm khi unmount, sau $n$ chu kỳ, số geometry sống trên GPU tăng tuyến tính:
+
+$$
+G(n) = k \cdot n
+$$
+
+không hệ số giảm nào — đường thẳng đi lên mãi, đúng nghĩa "leak". Công cụ đo trực tiếp đáng tin nhất là `renderer.info.memory`: `geometries` và `textures` là **số resource GPU đang sống**, tăng khi tạo, giảm đúng lúc `.dispose()` chạy — chạy trên mọi trình duyệt hỗ trợ WebGL2, không cần cờ đặc biệt.
+
+`performance.memory` (chỉ Chromium, đo tổng JS heap) là công cụ phụ hữu ích để xác nhận nghi ngờ ban đầu: geometry/material leak vẫn là object JS bị scene graph giữ tham chiếu, heap phình lên cùng lúc. Nhưng nó đo gộp — mọi allocation JS khác trong app cũng cộng vào — nên không tách được "leak GPU resource" khỏi leak state React bình thường. `renderer.info.memory` chính xác hơn hẳn vì chỉ đếm đúng loại resource đang nghi ngờ.
+
+## Ba pattern dọn dẹp, và pattern nhà của nền tảng này
+
+Ba cách hợp lệ để dispose một object không do R3F tự tạo:
+
+**1. Tạo trong `useEffect`, dispose trong cleanup của chính effect đó** — tường minh nhất, hợp khi object chỉ dùng trong effect tạo ra nó:
+
+```tsx
+useEffect(() => {
+  const geometry = new THREE.SphereGeometry(1, 32, 32);
+  meshRef.current!.geometry = geometry;
+  return () => geometry.dispose();
+}, []);
+```
+
+**2. `useMemo` giữ object ổn định qua re-render, cộng effect riêng chỉ để dispose** — khi object cần dùng ở nhiều chỗ khác trong component, không chỉ trong effect tạo ra nó:
+
+```tsx
+const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+useEffect(() => () => geometry.dispose(), [geometry]);
+```
+
+**3. `useDisposable`** — hook dùng chung của nền tảng này (`lib/hooks/use-disposable.ts`), gộp cả hai pattern trên vào một registry, tránh quên `return () => ...dispose()` rải rác:
+
+```tsx
+const disposables = useDisposable();
+const geometry = useMemo(
+  () => disposables.register(new THREE.SphereGeometry(1, 32, 32)),
+  [disposables],
+);
+```
+
+`register(obj)` đẩy `obj` vào một mảng nội bộ rồi trả nguyên lại — không đổi kiểu hay hành vi runtime; `registerFn(fn)` nhận callback dọn dẹp bất kỳ (huỷ listener, cancel RAF) cho thứ không có `.dispose()`. Hook chỉ có một effect, chạy đúng lúc unmount, gọi `fns` trước (LIFO, dừng loop/listener), rồi `objects` sau (LIFO, huỷ resource GPU) — để không callback nào chạy trên resource đã dispose. Một cleanup lỗi không chặn các cleanup còn lại — mỗi lệnh gọi bọc `try/catch` riêng.
+
+## Strict Mode và bài học loseContext
+
+React Strict Mode (mặc định ở dev) cố tình mount → unmount → mount lại mỗi component ngay khi xuất hiện, để lộ cleanup không an toàn khi chạy hai lần. Với dispose GPU resource việc này vô hại — dispose object của mount 1, tạo object mới ở mount 2, không có gì để lo.
+
+Nhưng nền tảng này từng dính lỗi tinh vi hơn, đúng ở cơ chế double-mount này: một demo WebGL thuần từng gọi `gl.getExtension('WEBGL_lose_context').loseContext()` trong cleanup, nghĩ là "reset sạch context mỗi lần unmount". Vấn đề: Strict Mode remount **dùng lại đúng element `<canvas>`**, và context đã "lost" không tự phục hồi trên canvas đó nếu không tự bắt `webglcontextrestored` rồi khởi tạo lại cả pipeline. Kết quả: demo chạy được lần mount đầu, trắng vĩnh viễn ở lần hai — ngay trong dev, tái hiện 100%. Bài học không riêng cho `loseContext`: cleanup nào phá huỷ *container đang được tái sử dụng* (canvas, context, singleton) — thay vì chỉ dispose *resource bạn tự tạo bên trong nó* — không sống sót qua double-mount của Strict Mode.
+
+## Nền tảng này dẫn tới đâu
+
+Ba pattern dispose ở trên quay lại liên tục về sau: Track 9 (GPGPU) ping-pong giữa hai `WebGLRenderTarget`, cả hai tự dispose tay đúng như render target ở mục 2; Track 12 (Performance) đo ngân sách bộ nhớ texture cho cả scene lớn bằng chính `renderer.info` này. Nắm chắc ranh giới "R3F tự lo" vs "bạn phải tự lo" ngay bây giờ để khỏi debug leak trên một scene phức tạp hơn nhiều sau này.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với disposal trong R3F:
+
+1. **Tưởng `<primitive object={mesh} />` cũng auto-dispose như mesh JSX bình thường.** Tài liệu R3F nói rõ primitive KHÔNG bao giờ tự dispose — object bên trong luôn cần dispose tay, dù tự `new` hay lấy từ `useGLTF`.
+2. **Dispose một geometry/material đang được nhiều mesh dùng chung.** `.dispose()` là hành động một chiều: gọi xong buffer GPU biến mất ngay — mesh khác còn tham chiếu geometry đó sẽ vẽ ra rác hoặc quăng lỗi WebGL ở lần render kế tiếp. Dùng chung thì đặt `dispose={null}` và tự quản lý vòng đời ở nơi tạo ra, không phải từng consumer.
+3. **Gọi `loseContext()`/`forceContextLoss()` trong cleanup để "dọn sạch" canvas.** Strict Mode tái sử dụng đúng canvas element khi remount, context đã lost không tự phục hồi — cách đúng là dispose từng geometry/material/texture tự tạo, để trình duyệt tự thu hồi context khi canvas thật sự rời DOM.
+
+</Callout>

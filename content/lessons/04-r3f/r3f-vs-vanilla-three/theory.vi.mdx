@@ -1,0 +1,47 @@
+## R3F thắng ở đâu: React, composition, pointer event miễn phí
+
+"R3F hay Three.js thuần" không có câu trả lời đúng duy nhất — phụ thuộc bối cảnh dự án, không phải công cụ nào "tốt hơn" về bản chất. R3F thắng rõ nhất khi cảnh 3D sống **bên trong một ứng dụng React** sẵn có: state scene cần đồng bộ với state UI (giỏ hàng, tab đang chọn, kết quả filter), routing điều hướng vào/ra trang có canvas, hay component 3D nhận prop từ cha như mọi component React khác. `<mesh position={cartItem.slot}>` tự re-render đúng lúc `cartItem` đổi, không cần cầu nối thủ công nào — y như một `<div>`.
+
+Lợi thế thứ hai là composition. Scene giàu chi tiết viết bằng JSX tận dụng được toàn bộ công cụ React quen thuộc: `{condition && <mesh>}` để mount/unmount có điều kiện, custom hook tái sử dụng logic giữa nhiều scene, Context chia sẻ state sâu mà không "prop drilling" thủ công qua từng object Three.js. Track này đã dùng đúng những công cụ đó — `useDisposable`, `useVisibleRaf`/`useVisibleFrameloop` — như hook dùng chung, khó làm gọn tương tự trong vanilla nếu không tự chế một hệ thống tương đương.
+
+Lợi thế thứ ba, cụ thể và đo được: pointer event. `<mesh onPointerOver={...} onClick={...}>` hoạt động ngay — `<Canvas>` của R3F tự đăng ký một hệ thống raycasting nội bộ khi mount, kiểm tra giao điểm toàn scene graph mỗi khi con trỏ di chuyển. Ở Three.js thuần, cùng hành vi đó cần tự tạo `THREE.Raycaster`, tự chuyển toạ độ chuột sang NDC, tự gọi `intersectObject` trong render loop, và tự khớp kết quả với đúng mesh đang hover — đúng thứ demo bài này đặt cạnh nhau.
+
+## Three.js thuần thắng ở đâu: kiểm soát, bundle, kiến trúc engine
+
+Ngược lại, có tình huống Three.js thuần rõ ràng đúng hơn. Đầu tiên: **ngoài ngữ cảnh React** — trang tĩnh, ứng dụng Vue/Svelte, hay microsite không cần React cho phần nào khác; kéo theo cả React lẫn reconciler chỉ để vẽ một canvas là chi phí thừa. Thứ hai: cần **kiểm soát tuyệt đối vòng lặp render** — thứ tự chính xác physics/audio/render, hay tích hợp scheduler ngoài không hợp chu kỳ commit của React. R3F vẫn cho truy cập qua `useFrame`, nhưng vòng lặp đó chạy trong bộ máy nội bộ R3F (`frameloop="demand"`/`"always"`) — muốn đổi tận gốc cách frame được lên lịch, viết `requestAnimationFrame` tay vẫn đơn giản hơn.
+
+Thứ ba, đo được bằng số: **kích thước bundle**. Bản thân three.js, minify+gzip, nặng khoảng 155KB trên một build thực do chính maintainer pmndrs đo — ước lượng, dao động theo phiên bản vì three.js tree-shake không triệt để (citation bên dưới). `@react-three/fiber` cộng thêm lớp reconciler — ước lượng 10–20KB min+gzip tuỳ phiên bản, kiểm tra số mới nhất trên Bundlephobia trước khi quyết — cộng cả React nếu dự án chưa có sẵn; với một microsite chỉ một canvas WebGL, khoản cộng đó là overhead thuần tuý. Thứ tư: **kiến trúc kiểu engine** — object pooling riêng, ECS riêng, hay physics chạy Web Worker tự quyết khi nào một frame "sẵn sàng" — mô hình sở hữu vòng lặp không khớp "component commit rồi render" của reconciler. Cuối cùng: pool nhân sự chỉ biết Three.js thuần vẫn lớn hơn — code vanilla port thẳng sang framework nào cũng được, hoặc không framework nào.
+
+## Sự thật ở giữa: R3F chính là Three.js
+
+"R3F vs vanilla" dễ khiến người mới nghĩ đây là hai công nghệ tách biệt — thực ra không phải. Docs chính thức của R3F nói thẳng: nó là "a React renderer for three.js", và `<mesh />` "dynamically turns into `new THREE.Mesh()`" — nghĩa đen, không ẩn dụ. Không có lớp "virtual DOM cho 3D" nào đứng giữa; JSX bạn viết TẠO RA đúng object Three.js thật, y hệt object bạn tự `new` trong vanilla.
+
+### Escape hatch: ref, useThree, và code imperative ngay trong JSX
+
+Vì bên dưới vẫn là Three.js thật, R3F luôn để lại đường thoát về imperative code khi JSX không đủ biểu cảm. `ref` trên bất kỳ element JSX nào trả về đúng instance Three.js — `meshRef.current` là một `THREE.Mesh` thật, mutate trực tiếp trong `useFrame` (`meshRef.current.rotation.y += delta`) không khác gì vanilla. `useThree()` trả về renderer/scene/camera hiện tại (`gl`, `scene`, `camera`) — muốn set `gl.toneMapping` hay đọc `scene.children` trực tiếp, cứ gọi thẳng API Three.js. Và không gì ngăn một component R3F tự dựng object bằng `new THREE.BufferGeometry()` trong `useMemo` rồi gắn vào JSX bằng prop `geometry` — hợp lệ, chỉ là JSX không tự động dispose hộ nữa (bài Disposal & Memory Leaks đã nói kỹ điều này).
+
+## Chi phí di chuyển: không hướng nào miễn phí
+
+Đổi hướng nào cũng phải trả giá, không chỉ vanilla → R3F. Từ vanilla sang R3F: học lại rằng prop không phải lúc nào cũng là constructor argument (có `args` riêng cho constructor, phần còn lại gán bằng property), viết lại vòng lặp animation bằng `useFrame` thay vì tự quản lý RAF id, tạm "mất" cảm giác kiểm soát trực tiếp scene graph. Từ R3F sang vanilla: tự viết lại toàn bộ phần R3F từng làm hộ — dispose thủ công, raycasting thủ công, Suspense-driven loading phải thay bằng Promise/`isLoading` tự quản. Không hướng nào là "chỉ thêm một lớp mỏng" — quyết định càng sớm càng rẻ, vì migrate giữa chừng một dự án lớn tốn công hơn nhiều so với chọn đúng ngay từ đầu.
+
+## Bảng câu hỏi quyết định
+
+Trước khi chọn, tự trả lời vài câu hỏi cụ thể: dự án đã chạy React sẵn chưa — chưa thì R3F gần như luôn sai. Scene có cần đồng bộ chặt với state UI (giỏ hàng, filter, form) không — có thì R3F tiết kiệm nhiều cầu nối thủ công. Có cần kiểm soát tuyệt đối thứ tự physics/audio/render mỗi frame không — có thì nghiêng về vanilla. Bundle size có phải ràng buộc cứng (landing page đo Lighthouse nghiêm ngặt) không — có thì cân đo thêm phần R3F+React trước khi quyết. Team có kinh nghiệm React mạnh hơn Three.js thuần không — có thì R3F thường thắng về tốc độ phát triển.
+
+## Case study: ba lựa chọn có chủ đích của chính nền tảng này
+
+Nền tảng bạn đang học chính là một ví dụ thực tế của những tiêu chí trên, không phải chọn ngẫu nhiên. Demo tương tác ở hầu hết bài học dùng R3F (`DemoCanvas`, `useVisibleFrameloop`) — vì mỗi demo cần đồng bộ chặt với panel điều khiển React (`Slider`, `Switch`, `Select` của shadcn) và Suspense/error boundary có sẵn; viết tay cầu nối đó cho hàng chục demo tốn công hơn nhiều so với JSX tự re-render khi state đổi. Track 3 dạy Three.js hoàn toàn vanilla — có chủ đích: bọc phần dạy đó bằng JSX sẽ che khuất chính cơ chế đang được dạy (dựng scene/camera/renderer thủ công, tự quản vòng lặp, tự dispose), phản tác dụng mục tiêu bài học. Playground GLSL ở Track 1/2 dùng WebGL thô, không Three.js lẫn R3F — vì chỉ cần một quad phủ màn hình và một fragment shader, không scene graph nào đáng trả thêm lớp trừu tượng.
+
+Ba lựa chọn khác nhau cho ba mục tiêu khác nhau, không phải "R3F luôn tốt hơn" hay ngược lại — đúng tinh thần bảng câu hỏi quyết định ở trên.
+
+Track 5 (GSAP) sẽ quay lại đúng ranh giới `useFrame`/vòng lặp render này khi đồng bộ animation timeline với scene R3F; Track 6 (Custom Shader) sẽ khai thác tiếp escape hatch `onBeforeCompile` và `shaderMaterial` của drei — cùng một nguyên lý "R3F không giấu Three.js bên dưới" vừa học ở đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi so sánh và lựa chọn giữa R3F và Three.js thuần:
+
+1. **Coi "no overhead" là toàn bộ câu chuyện hiệu năng.** Docs R3F khẳng định component không tạo chi phí vì "render outside of React" — đúng cho việc commit từng frame, nhưng không nghĩa là mount/unmount hàng nghìn node JSX mỗi giây rẻ ngang vanilla: reconciler vẫn phải walk fiber tree mỗi khi cấu trúc JSX đổi, một chi phí khác hẳn chi phí render.
+2. **Chạy song song hai vòng lặp animation.** Vừa dựa vào `frameloop="demand"` của `DemoCanvas` (tự invalidate khi visible), vừa tự thêm một `requestAnimationFrame` thủ công "cho chắc" trong cùng component — kết quả hai loop độc lập cùng update state, animation giật hoặc chạy đúp tốc độ mà không rõ nguyên nhân.
+3. **Nghĩ chuyển vanilla sang R3F chỉ là "bọc JSX quanh code cũ".** Auto-dispose chỉ áp dụng cho geometry/material tạo trực tiếp trong JSX; geometry hoist bằng `useMemo` hay texture nạp thủ công vẫn phải tự `.dispose()` — đúng lỗi kinh điển ở bài Disposal & Memory Leaks, chỉ đội lốt mới khi ai đó nghĩ "R3F lo hết rồi".
+
+</Callout>

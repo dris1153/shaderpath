@@ -1,0 +1,43 @@
+## What drei Is: R3F's Standard Library, Not Part of the Framework
+
+`@react-three/fiber` does exactly one job — act as the reconciler that turns JSX into a tree of Three.js objects. Everything more "convenient" than that — camera controls, asset loading, embedding DOM, SDF text, one-line IBL — lives outside that package. `@react-three/drei` fills that gap: a "growing collection of useful helpers and ready-made abstractions," in the repo's own words, playing much the same role lodash plays for plain JS or Radix plays for UI components. Worth remembering from the start: this is a grab-bag, not a core framework with R3F's tight API-stability guarantees — some helpers are extremely mature (`OrbitControls`, `useTexture`), others still live on an experimental branch and can change API between minor versions. This lesson is about telling the two apart, not just how to import them.
+
+## The Quick Tour: OrbitControls, Environment, useTexture/useGLTF
+
+drei's `OrbitControls` wraps the exact same `OrbitControls` class from `three/examples/jsm` that Track 3 imported by hand, but handles two things the hand-rolled version leaves to you: calling `controls.update()` every frame inside its own internal `useFrame`, and calling `invalidate()` whenever it detects `frameloop="demand"` — drag the mouse and the scene redraws immediately, no need to know demand-rendering exists underneath. One line, `<OrbitControls />`, replaces a dozen lines of manual setup and cleanup.
+
+`Environment` builds image-based lighting in exactly one line: `<Environment preset="city" />` loads a ready-made HDRI, runs it through Three.js's `PMREMGenerator` to produce a prefiltered environment map, then assigns it straight to `scene.environment` — every PBR material in the scene instantly picks up real environment reflections instead of flat color. This is a compact preview of the full IBL theory (irradiance maps, prefiltered mip chains, the BRDF LUT) coming in Track 11.
+
+`useTexture`/`useGLTF` are sugar over `useLoader`: same URL-keyed cache, but with a static preload API added on top — calling `useGLTF.preload(url)` at module scope (as soon as a route is known ahead of time) puts the asset in cache before the component that needs it ever mounts, erasing the loading delay at exactly the moment it would otherwise be most annoying.
+
+## Html: Embedding Real DOM in the Scene, and How Occlusion Works
+
+`Html` creates no mesh at all. Every frame it projects the world-space coordinate of its anchor point through `camera` into screen pixels, then places a real `<div>` at that exact spot via a CSS transform — meaning you can drop any React component (a form, a tooltip, a chart) into the middle of a 3D scene without drawing it as geometry. It offers two positioning modes: the default is a lightweight billboard — the label always faces the camera, a fixed pixel size regardless of distance; enabling `transform` applies the full 3D matrix (rotation, perspective scale) to the DOM via `matrix3d()`, so the label genuinely "lives" in 3D space, at the cost of recomputing that CSS transform every frame.
+
+`occlude` solves a separate problem: because `Html` renders outside the canvas (real DOM, never touching the WebGL depth buffer), by default it floats above everything, even when it should be hidden behind a mesh. Turning `occlude` on makes drei raycast from the camera to the anchor point every frame — hit any mesh before reaching the label, and the label hides. That's a CPU raycast, not a real GPU depth test, so its cost scales linearly with label count × scene complexity — a handful of labels costs nothing measurable; dozens of them in a heavy scene is worth profiling before shipping.
+
+## Text and shaderMaterial: SDF Text with No Geometry Cost, and a Bridge to Track 6
+
+`Text` wraps the `troika-three-text` library: it parses a font (ttf/otf/woff) and generates a signed-distance-field atlas for each glyph inside a dedicated web worker, so loading a font never stalls the main thread. The core difference from old-school `TextGeometry` (which extrudes every character into a real 3D mesh): the entire string is drawn with exactly ONE flat quad plus a fragment shader sampling that SDF atlas, not one mesh per character. The result: doubling `fontSize` costs not a single extra vertex — `Text`'s geometric cost stays roughly constant regardless of font size or string length.
+
+`shaderMaterial` is a small factory function — its source reads in a few dozen lines — that takes a default-uniforms object plus vertex/fragment shader strings and returns a class extending `THREE.ShaderMaterial`. Internally, it wraps each uniform in a `THREE.Uniform`, then defines a getter/setter for every uniform right on the instance, so you read/write `material.uColor = ...` instead of digging into `material.uniforms.uColor.value = ...`; finally it registers that class through R3F's `extend()` so it shows up as a lowercase JSX tag (`<myMaterial />`). This is precisely the foundation Track 6 (Custom Shaders in Three.js) builds every custom material on — understanding its source now means not relearning it from scratch once you get there.
+
+## Center, Bounds, and the Discipline of Reading Source Instead of Guessing
+
+`Center` measures its children's real bounding box with `Box3.setFromObject`, then shifts a parent group by exactly `-center` plus an alignment offset — never touching any child's own local coordinates. That makes it safe with dynamic content (a swapped model, a text string that changes length): whenever the bounding box changes, the parent group recomputes automatically, and children never need to know they're being repositioned. `Bounds` goes further: same bounding-box measurement, but it also computes how far back the camera needs to sit for everything to fit in frame, typically invoked imperatively through a ref (`bounds.refresh().fit()`) once an asset finishes loading.
+
+Both examples are exactly why reading source before reaching for an unfamiliar helper in production matters: `Center`'s and `shaderMaterial`'s source is a few dozen readable lines, not a black box — knowing precisely what it does lets you judge its real cost (a hidden `useFrame`? a raycast every frame?) in a way the component's name alone never tells you.
+
+## When You Don't Need drei
+
+If a helper is equivalent to 2-3 lines of plain R3F JSX, pulling in all of `drei` just for that one thing isn't worth it — it's another dependency, another abstraction layer to check when something breaks. The classic example: drei's `<Box args={[1,1,1]} />` is simply shorthand for `<mesh><boxGeometry args={[1,1,1]}/><meshStandardMaterial/></mesh>` — know both so the choice is deliberate, not a habit that erases the other option from memory. The practical line: reach for drei when something genuinely complex sits underneath (the raycast occlusion in `Html`, the SDF pipeline in `Text`, the `PMREMGenerator` in `Environment`) — skip it for the three lines you'd write yourself anyway, and stay consistent with the previous lesson's theme: keep the count of objects whose lifecycle you own — including the ones drei creates internally — to the minimum actually needed.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with drei:
+
+1. **Calling `controls.update()` again inside your own `useFrame` when already using `<OrbitControls />`.** The component already updates every frame internally — the double update isn't logically wrong, but wastes a computation pass every frame and muddies input-lag debugging.
+2. **Dropping dozens of `<Html occlude>` labels into a heavy scene while forgetting occlusion is a CPU raycast every frame, not a GPU depth test.** A handful of labels costs nothing measurable; dozens on a scene full of complex meshes can visibly tank the frame rate — profile it, don't guess.
+3. **Treating every drei helper as "certainly stable" the way react-three-fiber's core is.** Some helpers (particularly the more experimental ones) change API between minor versions, unlike the core package's tight semver guarantees — pin an exact version and read the changelog on upgrade, don't auto-update blindly.
+
+</Callout>

@@ -228,6 +228,58 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/03-threejs/textures-and-compression-ktx2/theory.vi.mdx"),
     en: () => import("./lessons/03-threejs/textures-and-compression-ktx2/theory.en.mdx"),
   },
+  "checkpoint-asset-gallery": {
+    vi: () => import("./lessons/04-r3f/checkpoint-asset-gallery/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/checkpoint-asset-gallery/theory.en.mdx"),
+  },
+  "checkpoint-mini-configurator": {
+    vi: () => import("./lessons/04-r3f/checkpoint-mini-configurator/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/checkpoint-mini-configurator/theory.en.mdx"),
+  },
+  "checkpoint-scene-rebuild-r3f": {
+    vi: () => import("./lessons/04-r3f/checkpoint-scene-rebuild-r3f/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/checkpoint-scene-rebuild-r3f/theory.en.mdx"),
+  },
+  "disposal-and-memory-leaks": {
+    vi: () => import("./lessons/04-r3f/disposal-and-memory-leaks/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/disposal-and-memory-leaks/theory.en.mdx"),
+  },
+  "drei-essentials": {
+    vi: () => import("./lessons/04-r3f/drei-essentials/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/drei-essentials/theory.en.mdx"),
+  },
+  "jsx-to-three-mapping": {
+    vi: () => import("./lessons/04-r3f/jsx-to-three-mapping/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/jsx-to-three-mapping/theory.en.mdx"),
+  },
+  "leva-debug-ui": {
+    vi: () => import("./lessons/04-r3f/leva-debug-ui/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/leva-debug-ui/theory.en.mdx"),
+  },
+  "memoizing-geometry-and-materials": {
+    vi: () => import("./lessons/04-r3f/memoizing-geometry-and-materials/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/memoizing-geometry-and-materials/theory.en.mdx"),
+  },
+  "portals-views-multi-canvas": {
+    vi: () => import("./lessons/04-r3f/portals-views-multi-canvas/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/portals-views-multi-canvas/theory.en.mdx"),
+  },
+  "r3f-core-hooks": {
+    vi: () => import("./lessons/04-r3f/r3f-core-hooks/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/r3f-core-hooks/theory.en.mdx"),
+  },
+  "r3f-vs-vanilla-three": {
+    vi: () => import("./lessons/04-r3f/r3f-vs-vanilla-three/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/r3f-vs-vanilla-three/theory.en.mdx"),
+  },
+  "suspense-and-asset-loading": {
+    vi: () => import("./lessons/04-r3f/suspense-and-asset-loading/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/suspense-and-asset-loading/theory.en.mdx"),
+  },
+  "why-r3f-reconciler": {
+    vi: () => import("./lessons/04-r3f/why-r3f-reconciler/theory.vi.mdx"),
+    en: () => import("./lessons/04-r3f/why-r3f-reconciler/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -275,6 +327,16 @@ export const REFERENCES_REGISTRY: Partial<
   "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/references"),
   "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/references"),
   "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/references"),
+  "disposal-and-memory-leaks": () => import("./lessons/04-r3f/disposal-and-memory-leaks/references"),
+  "drei-essentials": () => import("./lessons/04-r3f/drei-essentials/references"),
+  "jsx-to-three-mapping": () => import("./lessons/04-r3f/jsx-to-three-mapping/references"),
+  "leva-debug-ui": () => import("./lessons/04-r3f/leva-debug-ui/references"),
+  "memoizing-geometry-and-materials": () => import("./lessons/04-r3f/memoizing-geometry-and-materials/references"),
+  "portals-views-multi-canvas": () => import("./lessons/04-r3f/portals-views-multi-canvas/references"),
+  "r3f-core-hooks": () => import("./lessons/04-r3f/r3f-core-hooks/references"),
+  "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/references"),
+  "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/references"),
+  "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -492,6 +554,58 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"textureloader-và-colorspace-trả-đúng-nợ-từ-track-0","text":"TextureLoader và colorSpace: trả đúng nợ từ Track 0","depth":2},{"id":"texture-không-cần-file-canvastexture-và-datatexture","text":"Texture không cần file: CanvasTexture và DataTexture","depth":2},{"id":"filtering-mipmap-wrap-đổi-tên-gọi-từ-track-1-sang-api-threejs","text":"Filtering, mipmap, wrap: đổi tên gọi từ Track 1 sang API Three.js","depth":2},{"id":"vì-sao-pngjpg-vẫn-nặng-trên-gpu-giải-mã-thô-cộng-mip-chain-133","text":"Vì sao PNG/JPG vẫn nặng trên GPU: giải mã thô cộng mip chain ×1.33","depth":2},{"id":"nén-thật-trên-gpu-ktx2-và-basis-universal","text":"Nén thật trên GPU: KTX2 và Basis Universal","depth":2},{"id":"anisotropy-khi-mipmap-thôi-chưa-đủ","text":"Anisotropy: khi mipmap thôi chưa đủ","depth":2},{"id":"texturedispose-vram-không-tự-trả-khi-js-quên-tham-chiếu","text":"texture.dispose(): VRAM không tự trả khi JS quên tham chiếu","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
     en: [{"id":"textureloader-and-colorspace-paying-back-a-track-0-debt","text":"TextureLoader and colorSpace: Paying Back a Track 0 Debt","depth":2},{"id":"textures-without-a-file-canvastexture-and-datatexture","text":"Textures Without a File: CanvasTexture and DataTexture","depth":2},{"id":"filtering-mipmap-wrap-track-1s-names-renamed-to-threejss-api","text":"Filtering, Mipmap, Wrap: Track 1's Names Renamed to Three.js's API","depth":2},{"id":"why-pngjpg-still-sit-heavy-on-the-gpu-raw-decode-plus-a-133-mip-chain","text":"Why PNG/JPG Still Sit Heavy on the GPU: Raw Decode Plus a ×1.33 Mip Chain","depth":2},{"id":"real-gpu-side-compression-ktx2-and-basis-universal","text":"Real GPU-Side Compression: KTX2 and Basis Universal","depth":2},{"id":"anisotropy-when-mipmaps-alone-arent-enough","text":"Anisotropy: When Mipmaps Alone Aren't Enough","depth":2},{"id":"texturedispose-vram-doesnt-free-itself-when-js-forgets-a-reference","text":"texture.dispose(): VRAM Doesn't Free Itself When JS Forgets a Reference","depth":2},{"id":"where-this-connects-later","text":"Where This Connects Later","depth":2}],
   },
+  "checkpoint-asset-gallery": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-mini-configurator": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-scene-rebuild-r3f": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "disposal-and-memory-leaks": {
+    vi: [{"id":"vì-sao-memory-leak-là-kẻ-thù-số-1-của-r3f","text":"Vì sao memory leak là kẻ thù số 1 của R3F","depth":2},{"id":"r3f-tự-dispose-gì-và-lặng-lẽ-bỏ-qua-gì","text":"R3F tự dispose gì, và lặng lẽ bỏ qua gì","depth":2},{"id":"vòng-lặp-leak-mountunmount-tích-tụ-và-cách-quan-sát","text":"Vòng lặp leak: mount/unmount tích tụ, và cách quan sát","depth":2},{"id":"ba-pattern-dọn-dẹp-và-pattern-nhà-của-nền-tảng-này","text":"Ba pattern dọn dẹp, và pattern nhà của nền tảng này","depth":2},{"id":"strict-mode-và-bài-học-losecontext","text":"Strict Mode và bài học loseContext","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"why-memory-leaks-are-r3fs-enemy-number-one","text":"Why Memory Leaks Are R3F's Enemy Number One","depth":2},{"id":"what-r3f-disposes-automatically-and-what-it-quietly-skips","text":"What R3F Disposes Automatically, and What It Quietly Skips","depth":2},{"id":"the-leak-lifecycle-mountunmount-accumulation-and-how-to-watch-it","text":"The Leak Lifecycle: Mount/Unmount Accumulation, and How to Watch It","depth":2},{"id":"three-cleanup-patterns-and-this-platforms-house-pattern","text":"Three Cleanup Patterns, and This Platform's House Pattern","depth":2},{"id":"strict-mode-and-the-losecontext-cautionary-tale","text":"Strict Mode and the loseContext Cautionary Tale","depth":2},{"id":"where-this-leads-later","text":"Where This Leads Later","depth":2}],
+  },
+  "drei-essentials": {
+    vi: [{"id":"drei-là-gì-thư-viện-chuẩn-của-r3f-không-phải-một-phần-của-framework","text":"drei là gì: thư viện chuẩn của R3F, không phải một phần của framework","depth":2},{"id":"tour-nhanh-orbitcontrols-environment-usetextureusegltf","text":"Tour nhanh: OrbitControls, Environment, useTexture/useGLTF","depth":2},{"id":"html-nhúng-dom-thật-vào-scene-và-cơ-chế-occlusion","text":"Html: nhúng DOM thật vào scene, và cơ chế occlusion","depth":2},{"id":"text-và-shadermaterial-sdf-chữ-không-tốn-geometry-và-cầu-nối-tới-track-6","text":"Text và shaderMaterial: SDF chữ không tốn geometry, và cầu nối tới Track 6","depth":2},{"id":"center-bounds-và-kỷ-luật-đọc-source-thay-vì-đoán","text":"Center, Bounds, và kỷ luật đọc source thay vì đoán","depth":2},{"id":"khi-nào-không-cần-drei","text":"Khi nào KHÔNG cần drei","depth":2}],
+    en: [{"id":"what-drei-is-r3fs-standard-library-not-part-of-the-framework","text":"What drei Is: R3F's Standard Library, Not Part of the Framework","depth":2},{"id":"the-quick-tour-orbitcontrols-environment-usetextureusegltf","text":"The Quick Tour: OrbitControls, Environment, useTexture/useGLTF","depth":2},{"id":"html-embedding-real-dom-in-the-scene-and-how-occlusion-works","text":"Html: Embedding Real DOM in the Scene, and How Occlusion Works","depth":2},{"id":"text-and-shadermaterial-sdf-text-with-no-geometry-cost-and-a-bridge-to-track-6","text":"Text and shaderMaterial: SDF Text with No Geometry Cost, and a Bridge to Track 6","depth":2},{"id":"center-bounds-and-the-discipline-of-reading-source-instead-of-guessing","text":"Center, Bounds, and the Discipline of Reading Source Instead of Guessing","depth":2},{"id":"when-you-dont-need-drei","text":"When You Don't Need drei","depth":2}],
+  },
+  "jsx-to-three-mapping": {
+    vi: [{"id":"tên-jsx-viết-thường--tên-class-threejs","text":"Tên JSX viết thường = tên class Three.js","depth":2},{"id":"args-constructor-argument-và-vì-sao-đổi-args-tốn-kém","text":"args: constructor argument, và vì sao đổi args tốn kém","depth":2},{"id":"property-prop-gán-sau-khi-khởi-tạo-và-cú-pháp-rút-gọn-scalar","text":"Property prop: gán sau khi khởi tạo, và cú pháp rút gọn scalar","depth":2},{"id":"pierced-prop-gán-sâu-vào-property-lồng-nhau-bằng-dấu-gạch-ngang","text":"Pierced prop: gán sâu vào property lồng nhau bằng dấu gạch ngang","depth":2},{"id":"attach-cách-geometrymaterial-tự-gắn-vào-đúng-chỗ-trên-parent","text":"attach: cách geometry/material tự gắn vào đúng chỗ trên parent","depth":2},{"id":"giá-trị-không-serialize-được-vector-nhận-mảng-màu-nhận-chuỗi","text":"Giá trị \"không serialize được\": vector nhận mảng, màu nhận chuỗi","depth":2},{"id":"extend-mở-rộng-bảng-catalog-jsx-cho-class-tuỳ-biến","text":"extend(): mở rộng bảng catalog JSX cho class tuỳ biến","depth":2}],
+    en: [{"id":"lowercase-jsx-names--threejs-class-names","text":"Lowercase JSX Names = Three.js Class Names","depth":2},{"id":"args-constructor-arguments-and-why-changing-them-is-expensive","text":"args: Constructor Arguments, and Why Changing Them Is Expensive","depth":2},{"id":"property-props-assigned-after-construction-plus-the-scalar-shorthand","text":"Property Props: Assigned After Construction, Plus the Scalar Shorthand","depth":2},{"id":"pierced-props-assigning-deep-into-nested-properties-with-dashes","text":"Pierced Props: Assigning Deep into Nested Properties with Dashes","depth":2},{"id":"attach-how-geometrymaterial-attach-to-the-right-slot-on-their-parent","text":"attach: How Geometry/Material Attach to the Right Slot on Their Parent","depth":2},{"id":"non-serializable-values-vectors-accept-arrays-colors-accept-strings","text":"\"Non-Serializable\" Values: Vectors Accept Arrays, Colors Accept Strings","depth":2},{"id":"extend-growing-the-jsx-catalog-for-custom-classes","text":"extend(): Growing the JSX Catalog for Custom Classes","depth":2}],
+  },
+  "leva-debug-ui": {
+    vi: [{"id":"vì-sao-debug-ui-không-phải-là-đồ-chơi","text":"Vì sao debug UI không phải là đồ chơi","depth":2},{"id":"usecontrols-từ-object-khai-báo-tới-panel-thật","text":"useControls: từ object khai báo tới panel thật","depth":2},{"id":"range-màu-button-folder","text":"Range, màu, button, folder","depth":3},{"id":"monitor-hiện-giá-trị-real-time-không-cần-state","text":"Monitor: hiện giá trị real-time không cần state","depth":3},{"id":"transient-read-đọc-getset-mà-không-re-render","text":"Transient read: đọc get/set mà không re-render","depth":2},{"id":"leva-so-với-control-panel-của-chính-nền-tảng-này","text":"leva so với control panel của chính nền tảng này","depth":2},{"id":"đừng-ship-devtool-vào-production","text":"Đừng ship devtool vào production","depth":2},{"id":"những-gì-quay-lại-ở-các-track-sau","text":"Những gì quay lại ở các track sau","depth":2}],
+    en: [{"id":"why-debug-ui-isnt-a-toy","text":"Why Debug UI Isn't a Toy","depth":2},{"id":"usecontrols-from-a-declarative-object-to-a-real-panel","text":"useControls: From a Declarative Object to a Real Panel","depth":2},{"id":"ranges-colors-buttons-folders","text":"Ranges, Colors, Buttons, Folders","depth":3},{"id":"monitor-live-values-without-state","text":"Monitor: Live Values Without State","depth":3},{"id":"transient-reads-getset-without-a-re-render","text":"Transient Reads: get/set Without a Re-render","depth":2},{"id":"leva-vs-this-platforms-own-control-panel","text":"leva vs. This Platform's Own Control Panel","depth":2},{"id":"dont-ship-a-devtool-to-production","text":"Don't Ship a Devtool to Production","depth":2},{"id":"what-comes-back-in-later-tracks","text":"What Comes Back in Later Tracks","depth":2}],
+  },
+  "memoizing-geometry-and-materials": {
+    vi: [{"id":"mỗi-lần-render-jsx-được-đánh-giá-lại--nhưng-object-three-thì-chưa-chắc","text":"Mỗi lần render, JSX được đánh giá lại — nhưng object Three thì chưa chắc","depth":2},{"id":"args-mảng-mới-không-có-nghĩa-là-instance-mới","text":"args: mảng mới không có nghĩa là instance mới","depth":2},{"id":"chi-phí-thật-nằm-ở-đâu","text":"Chi phí thật nằm ở đâu","depth":2},{"id":"usememo-cho-object-dựng-thủ-công","text":"useMemo cho object dựng thủ công","depth":2},{"id":"hoisting-ra-module-scope-một-material-trăm-mesh","text":"Hoisting ra module scope: một material, trăm mesh","depth":2},{"id":"khi-nào-không-cần-memo-hoá","text":"Khi nào KHÔNG cần memo hoá","depth":2},{"id":"đo-sự-khác-biệt-bằng-rendererinfo","text":"Đo sự khác biệt bằng renderer.info","depth":2},{"id":"từ-đây-tới-đâu","text":"Từ đây tới đâu","depth":2}],
+    en: [{"id":"every-render-re-evaluates-jsx--but-that-doesnt-mean-three-objects-get-rebuilt","text":"Every Render Re-Evaluates JSX — But That Doesn't Mean Three Objects Get Rebuilt","depth":2},{"id":"args-a-new-array-isnt-a-new-instance","text":"args: A New Array Isn't a New Instance","depth":2},{"id":"where-the-real-cost-actually-lives","text":"Where the Real Cost Actually Lives","depth":2},{"id":"usememo-for-hand-built-objects","text":"useMemo for Hand-Built Objects","depth":2},{"id":"hoisting-to-module-scope-one-material-a-hundred-meshes","text":"Hoisting to Module Scope: One Material, a Hundred Meshes","depth":2},{"id":"when-not-to-memoize","text":"When NOT to Memoize","depth":2},{"id":"measuring-the-difference-with-rendererinfo","text":"Measuring the Difference with renderer.info","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
+  "portals-views-multi-canvas": {
+    vi: [{"id":"vì-sao-nhiều-canvas-webgl-là-một-vấn-đề-thật","text":"Vì sao nhiều canvas WebGL là một vấn đề thật","depth":2},{"id":"kỹ-thuật-thấp-tầng-scissor-test-trên-một-canvas-duy-nhất","text":"Kỹ thuật thấp tầng: scissor test trên một canvas duy nhất","depth":2},{"id":"view-của-drei-biến-một-thẻ-dom-thành-một-khung-nhìn","text":"View của drei: biến một thẻ DOM thành một khung nhìn","depth":2},{"id":"cách-view-hoạt-động-bên-dưới-và-vì-sao-cần-tunnel","text":"Cách View hoạt động bên dưới, và vì sao cần tunnel","depth":3},{"id":"track-index-và-cạm-bẫy-camera-orthographic","text":"track, index, và cạm bẫy camera orthographic","depth":3},{"id":"createportal-vẽ-một-nhánh-scene-vào-một-đích-khác","text":"createPortal: vẽ một nhánh scene vào một đích khác","depth":2},{"id":"khi-nào-một-canvas-thứ-hai-vẫn-là-lựa-chọn-đúng","text":"Khi nào một <Canvas> thứ hai vẫn là lựa chọn đúng","depth":2},{"id":"case-study-kiến-trúc-demo-của-chính-nền-tảng-này","text":"Case study: kiến trúc demo của chính nền tảng này","depth":2},{"id":"những-gì-quay-lại-ở-các-track-sau","text":"Những gì quay lại ở các track sau","depth":2}],
+    en: [{"id":"why-many-webgl-canvases-is-a-real-problem","text":"Why Many WebGL Canvases Is a Real Problem","depth":2},{"id":"the-low-level-technique-a-scissor-test-on-one-canvas","text":"The Low-Level Technique: A Scissor Test on One Canvas","depth":2},{"id":"dreis-view-turning-a-dom-tag-into-a-viewport","text":"drei's View: Turning a DOM Tag Into a Viewport","depth":2},{"id":"how-view-works-underneath-and-why-it-needs-a-tunnel","text":"How View Works Underneath, and Why It Needs a Tunnel","depth":3},{"id":"track-index-and-the-orthographic-camera-trap","text":"track, index, and the Orthographic Camera Trap","depth":3},{"id":"createportal-rendering-a-branch-into-a-different-target","text":"createPortal: Rendering a Branch Into a Different Target","depth":2},{"id":"when-a-second-canvas-is-still-the-right-call","text":"When a Second <Canvas> Is Still the Right Call","depth":2},{"id":"case-study-this-platforms-own-demo-architecture","text":"Case Study: This Platform's Own Demo Architecture","depth":2},{"id":"what-comes-back-in-later-tracks","text":"What Comes Back in Later Tracks","depth":2}],
+  },
+  "r3f-core-hooks": {
+    vi: [{"id":"useframe-vòng-lặp-render-riêng-của-mỗi-component","text":"useFrame: vòng lặp render riêng của mỗi component","depth":2},{"id":"delta-chuyển-động-không-phụ-thuộc-framerate","text":"Delta: chuyển động không phụ thuộc framerate","depth":3},{"id":"ref-không-phải-setstate-quy-tắc-quan-trọng-nhất","text":"Ref, không phải setState: quy tắc quan trọng nhất","depth":2},{"id":"bề-mặt-tham-số-state-clock-camera-pointer-invalidate","text":"Bề mặt tham số state: clock, camera, pointer, invalidate","depth":2},{"id":"usethree-đọc-state-canvas-mà-không-kéo-theo-re-render-thừa","text":"useThree: đọc state canvas mà không kéo theo re-render thừa","depth":2},{"id":"useloader-nạp-asset-tích-hợp-suspense-cache-theo-url","text":"useLoader: nạp asset tích hợp Suspense, cache theo URL","depth":2},{"id":"render-priority-khi-bạn-tự-kiểm-soát-vòng-lặp-render","text":"Render priority: khi bạn tự kiểm soát vòng lặp render","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"useframe-each-components-own-render-loop","text":"useFrame: Each Component's Own Render Loop","depth":2},{"id":"delta-motion-independent-of-framerate","text":"Delta: Motion Independent of Framerate","depth":3},{"id":"refs-not-setstate-the-rule-that-matters-most","text":"Refs, Not setState: The Rule That Matters Most","depth":2},{"id":"the-state-argument-surface-clock-camera-pointer-invalidate","text":"The state Argument Surface: clock, camera, pointer, invalidate","depth":2},{"id":"usethree-reading-canvas-state-without-extra-re-renders","text":"useThree: Reading Canvas State Without Extra Re-Renders","depth":2},{"id":"useloader-suspense-integrated-asset-loading-cached-by-url","text":"useLoader: Suspense-Integrated Asset Loading, Cached by URL","depth":2},{"id":"render-priority-taking-over-the-render-loop","text":"Render Priority: Taking Over the Render Loop","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "r3f-vs-vanilla-three": {
+    vi: [{"id":"r3f-thắng-ở-đâu-react-composition-pointer-event-miễn-phí","text":"R3F thắng ở đâu: React, composition, pointer event miễn phí","depth":2},{"id":"threejs-thuần-thắng-ở-đâu-kiểm-soát-bundle-kiến-trúc-engine","text":"Three.js thuần thắng ở đâu: kiểm soát, bundle, kiến trúc engine","depth":2},{"id":"sự-thật-ở-giữa-r3f-chính-là-threejs","text":"Sự thật ở giữa: R3F chính là Three.js","depth":2},{"id":"escape-hatch-ref-usethree-và-code-imperative-ngay-trong-jsx","text":"Escape hatch: ref, useThree, và code imperative ngay trong JSX","depth":3},{"id":"chi-phí-di-chuyển-không-hướng-nào-miễn-phí","text":"Chi phí di chuyển: không hướng nào miễn phí","depth":2},{"id":"bảng-câu-hỏi-quyết-định","text":"Bảng câu hỏi quyết định","depth":2},{"id":"case-study-ba-lựa-chọn-có-chủ-đích-của-chính-nền-tảng-này","text":"Case study: ba lựa chọn có chủ đích của chính nền tảng này","depth":2}],
+    en: [{"id":"where-r3f-wins-react-composition-pointer-events-for-free","text":"Where R3F Wins: React, Composition, Pointer Events for Free","depth":2},{"id":"where-vanilla-threejs-wins-control-bundle-engine-architectures","text":"Where Vanilla Three.js Wins: Control, Bundle, Engine Architectures","depth":2},{"id":"the-blended-reality-r3f-is-threejs","text":"The Blended Reality: R3F IS Three.js","depth":2},{"id":"escape-hatches-refs-usethree-and-imperative-chunks-inside-jsx","text":"Escape Hatches: Refs, useThree, and Imperative Chunks Inside JSX","depth":3},{"id":"migration-costs-neither-direction-is-free","text":"Migration Costs: Neither Direction Is Free","depth":2},{"id":"a-decision-checklist","text":"A Decision Checklist","depth":2},{"id":"case-study-this-platforms-three-deliberate-picks","text":"Case Study: This Platform's Three Deliberate Picks","depth":2}],
+  },
+  "suspense-and-asset-loading": {
+    vi: [{"id":"suspense-không-phải-cơ-chế-loading--nó-là-một-hợp-đồng-với-throw","text":"Suspense không phải cơ chế loading — nó là một hợp đồng với throw","depth":2},{"id":"useloaderusegltf-suspend-thế-nào-chính-xác-từng-bước","text":"useLoader/useGLTF suspend thế nào, chính xác từng bước","depth":2},{"id":"suspense-fallback-bên-trong-canvas-placeholder-phải-là-mesh","text":"<Suspense fallback> bên TRONG Canvas: placeholder phải là mesh","depth":2},{"id":"suspense-boundary-lồng-nhau-progressive-reveal","text":"Suspense boundary lồng nhau: progressive reveal","depth":2},{"id":"preload-chạy-trước-khi-cần-chung-một-cache","text":"Preload: chạy trước khi cần, chung một cache","depth":2},{"id":"suspense-không-bắt-lỗi--error-boundary-mới-bắt","text":"Suspense không bắt lỗi — Error Boundary mới bắt","depth":2},{"id":"starttransition-khi-đổi-asset-đã-tải-sẵn","text":"startTransition khi đổi asset đã tải sẵn","depth":2},{"id":"suspense-ở-quy-mô-lớn-cách-nền-tảng-này-lazy-mount-cả-bài-học","text":"Suspense ở quy mô lớn: cách nền tảng này lazy-mount cả bài học","depth":2},{"id":"từ-đây-tới-đâu","text":"Từ đây tới đâu","depth":2}],
+    en: [{"id":"suspense-isnt-a-loading-mechanism--its-a-contract-built-on-throwing","text":"Suspense Isn't a Loading Mechanism — It's a Contract Built on Throwing","depth":2},{"id":"how-useloaderusegltf-suspend-step-by-step","text":"How useLoader/useGLTF Suspend, Step by Step","depth":2},{"id":"suspense-fallback-inside-canvas-the-placeholder-has-to-be-a-mesh","text":"<Suspense fallback> INSIDE Canvas: the Placeholder Has to Be a Mesh","depth":2},{"id":"nested-suspense-boundaries-progressive-reveal","text":"Nested Suspense Boundaries: Progressive Reveal","depth":2},{"id":"preloading-run-it-before-you-need-it-same-cache","text":"Preloading: Run It Before You Need It, Same Cache","depth":2},{"id":"suspense-doesnt-catch-errors--an-error-boundary-does","text":"Suspense Doesn't Catch Errors — an Error Boundary Does","depth":2},{"id":"starttransition-when-swapping-an-already-loaded-asset","text":"startTransition When Swapping an Already-Loaded Asset","depth":2},{"id":"suspense-at-scale-how-this-platform-lazy-mounts-entire-lessons","text":"Suspense at Scale: How This Platform Lazy-Mounts Entire Lessons","depth":2},{"id":"where-this-leads-next","text":"Where This Leads Next","depth":2}],
+  },
+  "why-r3f-reconciler": {
+    vi: [{"id":"r3f-không-bọc-threejs--nó-là-một-reconciler","text":"R3F không \"bọc\" Three.js — nó là một reconciler","depth":2},{"id":"scene-khai-báo--fstate-diffing-tạo-mutate-huỷ-object-thật","text":"Scene khai báo = f(state): diffing tạo, mutate, huỷ object thật","depth":2},{"id":"composition-hook-và-context-hoạt-động-y-hệt-bên-trong-scene","text":"Composition, hook và context hoạt động y hệt bên trong scene","depth":2},{"id":"bằng-chứng-không-addremove-thủ-công-unmount-tự-dọn-dẹp","text":"Bằng chứng: không add/remove thủ công, unmount tự dọn dẹp","depth":2},{"id":"vẫn-là-three-bên-dưới-hiệu-năng-và-kiến-thức-track-3-không-đổi","text":"Vẫn là THREE bên dưới: hiệu năng và kiến thức Track 3 không đổi","depth":2},{"id":"khi-nào-tư-duy-reconciler-thực-sự-quan-trọng-danh-sách-có-key","text":"Khi nào tư duy reconciler thực sự quan trọng: danh sách có key","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu-jsx--threejs-mapping-và-giới-hạn-của-mental-model","text":"Nền tảng này dẫn tới đâu: JSX ↔ Three.js mapping và giới hạn của mental model","depth":2}],
+    en: [{"id":"r3f-doesnt-wrap-threejs--its-a-reconciler","text":"R3F Doesn't \"Wrap\" Three.js — It's a Reconciler","depth":2},{"id":"declarative-scene--fstate-diffing-creates-mutates-and-destroys-real-objects","text":"Declarative Scene = f(state): Diffing Creates, Mutates, and Destroys Real Objects","depth":2},{"id":"composition-hooks-and-context-work-identically-inside-the-scene","text":"Composition, Hooks, and Context Work Identically Inside the Scene","depth":2},{"id":"the-proof-no-manual-addremove-automatic-cleanup-on-unmount","text":"The Proof: No Manual add/remove, Automatic Cleanup on Unmount","depth":2},{"id":"still-three-underneath-performance-and-track-3-knowledge-carry-over","text":"Still THREE Underneath: Performance and Track 3 Knowledge Carry Over","depth":2},{"id":"when-the-reconciler-mental-model-actually-matters-keyed-lists","text":"When the Reconciler Mental Model Actually Matters: Keyed Lists","depth":2},{"id":"where-this-foundation-leads-jsx--threejs-mapping-and-the-models-limits","text":"Where This Foundation Leads: JSX ↔ Three.js Mapping and the Model's Limits","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -537,6 +651,16 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/demo"),
   "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/demo"),
   "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/demo"),
+  "disposal-and-memory-leaks": () => import("./lessons/04-r3f/disposal-and-memory-leaks/demo"),
+  "drei-essentials": () => import("./lessons/04-r3f/drei-essentials/demo"),
+  "jsx-to-three-mapping": () => import("./lessons/04-r3f/jsx-to-three-mapping/demo"),
+  "leva-debug-ui": () => import("./lessons/04-r3f/leva-debug-ui/demo"),
+  "memoizing-geometry-and-materials": () => import("./lessons/04-r3f/memoizing-geometry-and-materials/demo"),
+  "portals-views-multi-canvas": () => import("./lessons/04-r3f/portals-views-multi-canvas/demo"),
+  "r3f-core-hooks": () => import("./lessons/04-r3f/r3f-core-hooks/demo"),
+  "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/demo"),
+  "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/demo"),
+  "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -597,4 +721,17 @@ export const EXERCISES_REGISTRY: Partial<
   "scene-camera-renderer": () => import("./lessons/03-threejs/scene-camera-renderer/exercises"),
   "scene-graph-and-transforms": () => import("./lessons/03-threejs/scene-graph-and-transforms/exercises"),
   "textures-and-compression-ktx2": () => import("./lessons/03-threejs/textures-and-compression-ktx2/exercises"),
+  "checkpoint-asset-gallery": () => import("./lessons/04-r3f/checkpoint-asset-gallery/exercises"),
+  "checkpoint-mini-configurator": () => import("./lessons/04-r3f/checkpoint-mini-configurator/exercises"),
+  "checkpoint-scene-rebuild-r3f": () => import("./lessons/04-r3f/checkpoint-scene-rebuild-r3f/exercises"),
+  "disposal-and-memory-leaks": () => import("./lessons/04-r3f/disposal-and-memory-leaks/exercises"),
+  "drei-essentials": () => import("./lessons/04-r3f/drei-essentials/exercises"),
+  "jsx-to-three-mapping": () => import("./lessons/04-r3f/jsx-to-three-mapping/exercises"),
+  "leva-debug-ui": () => import("./lessons/04-r3f/leva-debug-ui/exercises"),
+  "memoizing-geometry-and-materials": () => import("./lessons/04-r3f/memoizing-geometry-and-materials/exercises"),
+  "portals-views-multi-canvas": () => import("./lessons/04-r3f/portals-views-multi-canvas/exercises"),
+  "r3f-core-hooks": () => import("./lessons/04-r3f/r3f-core-hooks/exercises"),
+  "r3f-vs-vanilla-three": () => import("./lessons/04-r3f/r3f-vs-vanilla-three/exercises"),
+  "suspense-and-asset-loading": () => import("./lessons/04-r3f/suspense-and-asset-loading/exercises"),
+  "why-r3f-reconciler": () => import("./lessons/04-r3f/why-r3f-reconciler/exercises"),
 };

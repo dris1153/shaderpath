@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build cuối cùng của track: không có lý thuyết mới, chỉ có một sản phẩm chạy được để chứng minh state React thật sự điều khiển được một scene 3D — đúng "món lời" lớn nhất của R3F so với vanilla, tổng kết toàn bộ track.
+
+## Yêu cầu
+
+Dựng một configurator sản phẩm nhỏ: một sản phẩm ghép từ nhiều primitive (không phải một khối đơn), mỗi phần có `<select>` đổi màu riêng, một `<select>` khác đổi "material finish" (đổi `roughness` theo preset matte/satin/glossy áp cho toàn bộ sản phẩm), một toggle bật/tắt xoay turntable liên tục, và một dòng readout kiểu giá tiền tính lại ngay khi đổi lựa chọn — toàn bộ chỉ bằng plain React state, không thư viện quản lý state ngoài. Camera dùng `OrbitControls` có giới hạn khoảng cách/góc nhìn (clamp), bật shadow, và geometry dùng chung giữa các mesh giống nhau phải hoist một lần bằng `useMemo` rồi tự dispose khi unmount.
+
+## Gợi ý cấu trúc
+
+Tách hẳn phần "component 3D" (nhận state màu/material/spinning qua prop, không tự giữ state) khỏi phần "UI điều khiển" (giữ toàn bộ state, chỉ gồm mấy `<select>`/checkbox thường) — ranh giới đó chính là thứ khiến "state React điều khiển scene" trở nên rõ ràng thay vì rối.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập: đổi màu từng phần đúng phần đó, đổi finish đổi `roughness` toàn bộ sản phẩm, turntable xoay mượt không giật khi bật/tắt, giá tiền cập nhật tức thời, và geometry hoist thủ công được dispose đúng lúc unmount — không có node nào rò rỉ khi mount/unmount lặp lại.

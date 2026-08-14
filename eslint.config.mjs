@@ -20,6 +20,9 @@ const eslintConfig = defineConfig([
     files: ["content/lessons/**/demo.tsx", "components/viz/**"],
     rules: {
       "react-hooks/immutability": "off",
+      // Teaching demos count renders via refs on purpose (the technique IS
+      // the lesson content); the compiler-era rule can't know that.
+      "react-hooks/refs": "off",
     },
   },
 ]);

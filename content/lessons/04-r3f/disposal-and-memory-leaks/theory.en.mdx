@@ -1,0 +1,78 @@
+## Why Memory Leaks Are R3F's Enemy Number One
+
+A leaky ordinary React component is, worst case, a few stray KB of JS objects — the browser keeps running, just a little slower over time. A leaky R3F component is different in kind: every forgotten `geometry`/`material`/`texture` holds onto a real buffer on GPU VRAM, something JavaScript's garbage collector **has no idea exists**. GC only reclaims a JS object once nothing references it anymore — but `WebGLBuffer` and `WebGLTexture` live on the GPU driver side, entirely outside the GC's reach, and only get freed when something explicitly calls `.dispose()`. An app that navigates back and forth between many 3D lessons — exactly this platform's shape — is the worst-case scenario for this kind of leak: mount and unmount dozens of times in one session, and VRAM piles up linearly until the driver refuses to grant another context.
+
+## What R3F Disposes Automatically, and What It Quietly Skips
+
+R3F handles most of this with one rule: any object **R3F itself instantiated** from a JSX tag — you write `<boxGeometry args={[1,1,1]} />`, the reconciler calls `new THREE.BoxGeometry(1,1,1)` internally — gets `.dispose()` called on it when the component holding it unmounts, as long as it has a `dispose` method. To opt out (a geometry shared across several meshes, where you don't want the first one to unmount and destroy the copy everyone else is still using), set `dispose={null}` on that tag, or on a parent `<group>` to opt out an entire subtree.
+
+But "instantiated by R3F itself" is a narrower net than most people assume. Three cases R3F **has no way to know about**:
+
+1. **Objects built with `new THREE.X()` outside JSX** — inside `useMemo`, `useEffect`, or a hand-rolled loader (not going through `useLoader`). R3F only tracks the instance tree it created; a `THREE.BoxGeometry` you `new`'d by hand and dropped into `<primitive object={mesh} />` sits entirely off its books. The R3F docs say this plainly: *"Primitives will not dispose of the object they carry on unmount, you are responsible for disposing of it!"* — for good reason: whatever gets passed into `primitive`'s `object` prop is often cached or reused elsewhere (a `scene` from `useGLTF`, say), and R3F has no way of knowing whether one consumer unmounting makes it safe to destroy a resource other consumers still hold.
+2. **Render targets** (`THREE.WebGLRenderTarget`) built by hand for a post-processing pass or a secondary camera — these always need a manual `renderTarget.dispose()`.
+3. **Event listeners and RAF handles** registered by hand (`addEventListener`, `requestAnimationFrame` called directly outside `useFrame`) — not Three.js objects, so "dispose" doesn't apply, but forgetting to remove them leaks a closure in exactly the same spirit.
+
+## The Leak Lifecycle: Mount/Unmount Accumulation, and How to Watch It
+
+This kind of leak is nearly invisible on a single test — it only shows up across **repeated cycles**. If a component leaks $k$ geometries every mount and never releases them on unmount, after $n$ cycles the number of geometries alive on the GPU grows linearly:
+
+$$
+G(n) = k \cdot n
+$$
+
+no decreasing term anywhere — a straight line climbing forever, which is exactly what "leak" means. The most reliable tool for measuring this directly is `renderer.info.memory`: `geometries` and `textures` are **live counts of GPU-resident resources**, incrementing on creation and decrementing the instant `.dispose()` runs — working on any WebGL2-capable browser, no special flag required.
+
+`performance.memory` (Chromium-only, measures total JS heap) is a useful secondary signal for confirming an initial suspicion: leaked geometry/material objects are still JS objects the scene graph keeps referenced, so the heap grows in tandem. But it's an aggregate number — every other JS allocation in the app adds to it too — so it can't isolate "GPU resource leak" from ordinary React state growth. `renderer.info.memory` is far more precise since it only counts the exact resource type under suspicion.
+
+## Three Cleanup Patterns, and This Platform's House Pattern
+
+Three valid ways to dispose an object R3F didn't create for you:
+
+**1. Create it inside `useEffect`, dispose it in that same effect's cleanup** — the most explicit option, a good fit when the object is only used inside the effect that created it:
+
+```tsx
+useEffect(() => {
+  const geometry = new THREE.SphereGeometry(1, 32, 32);
+  meshRef.current!.geometry = geometry;
+  return () => geometry.dispose();
+}, []);
+```
+
+**2. `useMemo` to keep the object stable across re-renders, plus a separate effect purely for disposal** — needed when the object is read elsewhere in the component, not only inside the effect that built it:
+
+```tsx
+const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
+useEffect(() => () => geometry.dispose(), [geometry]);
+```
+
+**3. `useDisposable`** — this platform's shared hook (`lib/hooks/use-disposable.ts`), folding both patterns above into a single registry so you can't forget a scattered `return () => ...dispose()`:
+
+```tsx
+const disposables = useDisposable();
+const geometry = useMemo(
+  () => disposables.register(new THREE.SphereGeometry(1, 32, 32)),
+  [disposables],
+);
+```
+
+`register(obj)` just pushes `obj` into an internal array and hands it straight back — no type change, no runtime behavior change; `registerFn(fn)` accepts any arbitrary cleanup callback (removing a listener, cancelling a RAF) for things without a `.dispose()` method. The hook itself holds exactly one effect, firing precisely on unmount, running `fns` first (LIFO — stop loops and listeners), then `objects` (LIFO — free GPU resources), so no leftover callback ever runs against an already-disposed resource. One failing cleanup doesn't block the rest — every call is wrapped in its own `try/catch`.
+
+## Strict Mode and the loseContext Cautionary Tale
+
+React Strict Mode (on by default in dev) deliberately mounts, unmounts, then remounts every component the moment it appears, to surface cleanup that isn't safe to run twice. For disposing GPU resources this is harmless — disposing mount 1's object, then creating a fresh one for mount 2, is exactly correct behavior, nothing to worry about.
+
+But this platform once hit a much subtler bug tied to that exact double-mount mechanism: a raw-WebGL demo used to call `gl.getExtension('WEBGL_lose_context').loseContext()` in its cleanup, on the assumption it would "cleanly reset the context every unmount." The catch: a Strict Mode remount **reuses the same `<canvas>` element**, and a context once "lost" cannot be recovered on that canvas without manually catching `webglcontextrestored` and rebuilding the entire pipeline. The result: the demo worked on the first mount and stayed permanently blank on the second — in dev, reproducing 100% of the time, not some rare edge case. The lesson generalizes past `loseContext`: any cleanup that destroys the *container being reused* (the canvas, the context, a singleton) — rather than only disposing the *resources you created inside it* — cannot survive Strict Mode's double-mount.
+
+## Where This Leads Later
+
+These three cleanup patterns keep resurfacing: Track 9 (GPGPU) ping-pongs between two `WebGLRenderTarget`s, both requiring the same manual disposal as case 2 above; Track 12 (Performance) budgets texture memory for an entire large scene using this exact `renderer.info`. Get the line between "R3F handles it" and "you handle it" solid now, so you're not debugging a leak on a far more complex scene later.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common disposal mistakes in R3F:
+
+1. **Assuming `<primitive object={mesh} />` auto-disposes like an ordinary JSX mesh.** The R3F docs are explicit that primitives NEVER auto-dispose — the object inside always needs manual disposal, whether you `new`'d it yourself or got it from `useGLTF`.
+2. **Disposing a geometry/material still shared by multiple meshes.** `.dispose()` is a one-way action: call it, and the GPU buffer is gone immediately — any other mesh still referencing that geometry renders garbage or throws a WebGL error on its next draw call. For shared resources, set `dispose={null}` and manage the lifecycle at the place that created it, not at each consumer.
+3. **Calling `loseContext()`/`forceContextLoss()` in cleanup to "clean up" the canvas.** Strict Mode reuses the exact same canvas element on remount, and a lost context doesn't recover on its own — the correct cleanup is disposing every geometry/material/texture you created, and letting the browser reclaim the context once the canvas truly leaves the DOM.
+
+</Callout>

@@ -1,0 +1,97 @@
+## Why Debug UI Isn't a Toy
+
+Tuning a material or a scene by editing numbers in code, saving the file, waiting for hot-reload, then looking at the result is a slow loop — much slower than it should feel when you're just trying to see whether "roughness 0.4 or 0.45 looks more right." A debug UI like leva solves exactly this: it generates a real, draggable control panel from a declarative config object — no custom component to write, no CSS to hand-tune. For tuning a material, a light, or a shader uniform, the correct workflow is almost always "tweak first, code after": drag a slider until it looks right, then copy that exact number into source — not guess a number and rebuild repeatedly. leva is the de-facto tool for this workflow in the R3F ecosystem, the same role dat.GUI used to play for vanilla Three.js.
+
+## `useControls`: From a Declarative Object to a Real Panel
+
+leva's central hook is `useControls` — it takes an object describing each control and returns their current values, with a UI panel generated alongside it, no extra JSX component required:
+
+```tsx
+import { useControls } from "leva";
+
+function TunedLight() {
+  const { color, intensity } = useControls({
+    color: "#f97316",
+    intensity: { value: 1.2, min: 0, max: 4, step: 0.1 },
+  });
+
+  return <pointLight color={color} intensity={intensity} />;
+}
+```
+
+A plain value (`"#f97316"`) has its input type inferred automatically — leva recognizes a hex string as a color picker, a number as an unbounded slider by default. To control the range, use the expanded object form `{ value, min, max, step }`, as `intensity` does above. Every time a slider is dragged, `useControls` re-renders the component with the new value — the same ordinary React data flow, just sourced from leva's internal store instead of your own `useState`.
+
+An important note: leva is NOT installed in this platform's repository. Every leva snippet in this lesson — including the one above — is real code, runnable as-is in any R3F project with the `leva` package installed, but the interactive demo below mimics that same tweak-then-copy workflow using this platform's own control system, with no real leva import.
+
+### Ranges, Colors, Buttons, Folders
+
+Beyond numbers and colors, leva also has an input for buttons (triggering an action, like a reset) and `folder` for grouping related controls together — essential once a scene has a few dozen tunable parameters at once, since a flat panel quickly becomes unreadable:
+
+```tsx
+import { useControls, folder, button } from "leva";
+
+function useMaterialTuning() {
+  return useControls({
+    Material: folder({
+      color: "#f97316",
+      roughness: { value: 0.4, min: 0, max: 1, step: 0.01 },
+      metalness: { value: 0.2, min: 0, max: 1, step: 0.01 },
+    }),
+    Light: folder({
+      intensity: { value: 1.2, min: 0, max: 4 },
+      reset: button((get) => console.log("current:", get("Material.color"))),
+    }),
+  });
+}
+```
+
+`folder(schema)` wraps a group of keys into a collapsible section in the panel — exactly the "Material" / "Light" structure this lesson's demo mimics through this platform's own control panel. `useControls("folder name", schema)` (the two-argument form) is shorthand for a single top-level `folder`, used when the whole hook call only needs one group.
+
+### Monitor: Live Values Without State
+
+`monitor` is a special READ-ONLY input — it doesn't produce an interactive control, it just displays a continuously changing value, like FPS or a number tracked inside `useFrame`, without forcing the parent component to `setState` every frame (which would re-render the whole React tree 60 times a second — a real cost):
+
+```tsx
+const fpsRef = useRef(0);
+useControls({
+  fps: monitor(fpsRef, { graph: true, interval: 100 }),
+});
+```
+
+leva reads `fpsRef.current` on its own `interval` (milliseconds) and repaints only that piece of UI — not the whole scene. This is the natural bridge into a bigger idea: reading a continuously changing value without paying for a re-render.
+
+## Transient Reads: get/set Without a Re-render
+
+The standard `useControls` returns re-rendered values — fine for most cases, but the wrong tool if you need to read that value INSIDE a `useFrame` running 60 times a second: calling `useControls()` again every frame would be flatly wrong (it's a hook, not a fast getter). leva solves this with the function-schema form, which returns extra `set`/`get` functions:
+
+```tsx
+const [{ counter }, set, get] = useControls(() => ({ counter: 0 }));
+
+function tick() {
+  set({ counter: get("counter") + 1 });
+}
+```
+
+`get(key)` reads the exact latest value at the moment it's called — no re-render, no one-frame lag. `set(patch)` updates leva's store IMMEDIATELY; the UI panel still shows the new number correctly (because leva itself subscribes to that store), but the component calling `set`/`get` doesn't re-render just from that call — cleanly separating "update the UI panel" from "update scene logic every frame," the same mutate-directly-inside-`useFrame` spirit this track has already used repeatedly with uniforms and Three.js refs.
+
+## leva vs. This Platform's Own Control Panel
+
+Most lesson demos on this platform already ship a control panel — shadcn `Slider`, `Switch`, and `Select` widgets, generated by the `Demo` component from a declarative `ControlDef` array. At a glance, that looks like "this platform's own leva" — same idea: declare a schema, generate a panel, values flow into the scene through props. But the two tools serve two fundamentally different ROLES, not just different looks. `Demo`'s control panel is designed ahead of time by this PLATFORM'S OWN ENGINEERS, fixed, for a specific LEARNER to interact with one specific demo — it's official, shipped product UI, delivered to every user. leva is the opposite: engineers add it themselves while coding, for THEMSELVES to tune something quickly, and it's almost always removed or disabled once the final numbers are locked in — it's a dev-time tool, not part of the shipped product.
+
+## Don't Ship a Devtool to Production
+
+leva exposes a `hidden` prop on the `<Leva />` component to hide the panel entirely: `<Leva hidden={true} />` removes the UI completely from the DOM. The easy misunderstanding: `hidden` only hides the UI, it does NOT automatically strip leva's JavaScript out of the production bundle — the package is still imported, still bundled, still costs download weight even though the end user never sees the panel. To actually remove leva from a production bundle, the code path itself must be split — for example, only importing and mounting `<Leva />` when `process.env.NODE_ENV !== "production"`, or using a dynamic `import()` so the bundler splits it into a chunk that's never fetched in production. The `hidden={true}` approach only makes sense when you want to TEMPORARILY hide the panel while demoing to someone else but still need it back on later in the same session.
+
+## What Comes Back in Later Tracks
+
+The tweak-then-copy-into-code loop leva serves keeps showing up through the heavier shader tracks ahead: Track 6 (Custom Shaders) and Track 7 (Procedural & Noise) are both full of parameters — noise frequency, domain-warping coefficients, threshold cutoffs — that are far slower to find by hand-editing code than by dragging a slider and copying the final number. This track's closing mini-build, `checkpoint-mini-configurator`, revisits exactly this "leva or a real control panel" decision when settling on the final UI of a near-production product.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with leva-style debug UI:
+
+1. **Assuming `hidden={true}` removes leva from the production bundle.** It only hides the UI — leva's JavaScript still ships in the bundle and still gets downloaded, unless the import itself is split by `NODE_ENV` or a dynamic import.
+2. **Calling `useControls()` repeatedly inside `useFrame` to "read the latest value."** `useControls` is a React hook, not a fast getter — calling it 60 times a second breaks the rules of hooks and forces continuous re-renders; the right tool is the function-schema form with `get`/`set` (a transient read).
+3. **Confusing a real product's control panel (like this platform's own `Demo` panel) with a leva-style devtool.** Both are "declare a schema, generate UI," but a product panel is official, shipped UI delivered to end users, while leva is a dev-time tool — blurring the two roles is how internal tuning UI accidentally ships in a production build.
+
+</Callout>
