@@ -1,0 +1,62 @@
+## Transform feedback: đường đi khác tới "trạng thái sống trên GPU"
+
+Hai bài trước — ping-pong FBO thủ công và `GPUComputationRenderer` — đều đi cùng một con đường: mã hoá trạng thái particle vào PIXEL của một texture, cập nhật nó bằng một fragment shader chạy full-screen, rồi đọc lại texture đó ở frame sau. WebGL2 có một con đường hoàn toàn khác, không đụng tới texture hay fragment shader nào cả: **transform feedback**. Ý tưởng cốt lõi — một vertex shader vốn dĩ chỉ tính `gl_Position` để rasterizer dùng, giờ được phép ghi thêm bất kỳ giá trị `out` nào của nó thẳng ra một buffer trên GPU, không cần đi qua bước rasterize/fragment nào. Với một hệ particle, đó chính là chỗ cần: đọc position/velocity hiện tại làm `in` attribute, tính position/velocity mới, ghi ra `out`, GPU tự "chụp" (capture) từng lô output đó vào một `WebGLBuffer` — đúng định dạng attribute mà draw call TIẾP THEO dùng lại làm input, không phải encode gì thành màu pixel.
+
+## `transformFeedbackVaryings` phải gọi trước khi link chương trình
+
+GPU cần biết TRƯỚC khi biên dịch xong một program: những `out` varying nào của vertex shader sẽ được ghi ra buffer, theo thứ tự nào.
+
+```ts
+gl.transformFeedbackVaryings(program, ["vPosition", "vVelocity"], gl.SEPARATE_ATTRIBS);
+gl.linkProgram(program); // phải đứng SAU transformFeedbackVaryings()
+```
+
+`gl.transformFeedbackVaryings(...)` khai báo đúng điều đó — và phải gọi **trước** `gl.linkProgram(program)`, không phải sau. Lý do: linker cần biết trước để cấp phát đúng "chân cắm" output cho từng varying được liệt kê, y hệt cách nó cấp phát location cho attribute input; gọi sau khi link xong không còn tác dụng gì (chương trình đã "đóng băng" cấu trúc). `SEPARATE_ATTRIBS` nghĩa là mỗi varying trong danh sách ghi ra một buffer RIÊNG (buffer thứ $i$ ứng với binding point thứ $i$); chế độ còn lại, `INTERLEAVED_ATTRIBS`, gộp tất cả varying vào một buffer duy nhất theo layout xen kẽ (stride) — tiết kiệm số buffer nhưng đọc lại từng attribute ở draw call sau phức tạp hơn vì phải khai báo đúng stride/offset.
+
+## Ghi ra buffer: `bindBufferBase`, `beginTransformFeedback`/`endTransformFeedback`
+
+Trước khi vẽ, mỗi binding point transform feedback phải trỏ tới một buffer thật:
+
+```ts
+gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, bufferBPosition);
+gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, bufferBVelocity);
+gl.enable(gl.RASTERIZER_DISCARD);
+gl.beginTransformFeedback(gl.POINTS);
+gl.drawArrays(gl.POINTS, 0, count);
+gl.endTransformFeedback();
+gl.disable(gl.RASTERIZER_DISCARD);
+```
+
+`bindBufferBase` gán buffer nhận `vPosition` (varying đầu tiên trong mảng truyền cho `transformFeedbackVaryings`) vào chỉ số 0, tương tự chỉ số 1 cho `vVelocity`. `beginTransformFeedback(gl.POINTS)` mở "chế độ ghi", `drawArrays` chạy vertex shader cho từng particle và GPU tự ghi từng cặp `vPosition`/`vVelocity` vào đúng buffer đã bind, và `endTransformFeedback()` đóng lại. Chi tiết dễ quên: WebGL cấm một buffer vừa là NGUỒN đọc attribute (qua VAO) vừa là ĐÍCH ghi transform feedback trong cùng draw call — đây chính là lý do bắt buộc phải có hai bộ buffer (double-buffer): đọc từ bộ A, ghi vào bộ B, không được đọc-ghi cùng một buffer.
+
+## `RASTERIZER_DISCARD`: pass chỉ để tính, không để vẽ
+
+Một draw call bình thường luôn rasterize: biến điểm/tam giác thành pixel rồi chạy fragment shader. Pass update ở đây không cần bước đó — nó chỉ cần vertex shader chạy và ghi ra buffer, còn `gl_Position` tính ra chỉ để hợp lệ cú pháp, không mang ý nghĩa hình học nào (`vec4(0.0)` là đủ). `gl.enable(gl.RASTERIZER_DISCARD)` báo cho GPU bỏ hẳn giai đoạn rasterize + fragment cho các draw call tiếp theo, cho tới khi `gl.disable(gl.RASTERIZER_DISCARD)`. Vì vậy chương trình update vẫn phải có một fragment shader hợp lệ để link (GLSL bắt buộc), nhưng nội dung của nó không quan trọng — không có invocation fragment nào từng chạy.
+
+## Double-buffer bằng VAO thay vì texture
+
+Ping-pong FBO ping-pong ở cấp texture (hai `WebGLRenderTarget`); transform feedback ping-pong ở cấp buffer/VAO. Mỗi bộ (A, B) là một `WebGLVertexArrayObject` trỏ tới đúng hai buffer position/velocity của bộ đó. Một frame: bind VAO của bộ đang là "front" để vừa render (vẽ particle lên màn hình, dùng dữ liệu của frame trước) vừa dùng làm input cho draw call update; buffer đích của bộ còn lại nhận output qua `bindBufferBase`; xong thì đảo vai trò front/back cho frame sau. Vì input và output là hai object buffer vật lý khác nhau (không phải hai vùng của cùng một buffer), không cần đồng bộ hoá thủ công gì thêm — driver tự đảm bảo thứ tự.
+
+## Vì sao Three.js không lộ transform feedback ra API
+
+`THREE.Material`/`WebGLRenderer` được thiết kế quanh một pipeline: material → shader → rasterize → fragment → framebuffer; toàn bộ trừu tượng render target, `ShaderMaterial`, post-processing đều giả định có một bước fragment ở cuối tạo ra pixel. Transform feedback phá vỡ đúng giả định đó — nó là một draw call KHÔNG rasterize, ghi thẳng vào buffer thay vì framebuffer. Three.js không có khái niệm "buffer đích không phải texture" trong material system, nên `GPUComputationRenderer` (và mọi API GPGPU khác của Three) buộc phải đi đường fragment-texture dù chậm hơn một chút, thay vì lộ ra transform feedback thô. Đây không phải thiếu sót — là hệ quả trực tiếp của việc trừu tượng hoá quanh "material tạo ra pixel" — nên demo bài này buộc phải dùng WebGL2 thuần, không qua Three.
+
+## So với ping-pong texture: khi nào transform feedback thắng
+
+Transform feedback bỏ hẳn bước encode/decode qua màu pixel: dữ liệu ra vào là đúng kiểu mảng số thực bạn định nghĩa (không phải RGBA của một texture), và một buffer có thể chứa nhiều attribute xen kẽ (interleaved) tự nhiên như bất kỳ VBO thông thường nào — không cần "đóng gói" 4 số liền nhau vào một texel. Bù lại, nó mất khả năng mà texture có sẵn: sample lân cận. Một fragment shader có thể `texture2D(texturePosition, uv + offset)` để đọc trạng thái của particle KHÁC — chính kỹ thuật boids ở bài `boids-flocking-on-gpu` cần để mỗi particle "nhìn thấy" hàng xóm; vertex shader trong transform feedback chỉ thấy đúng MỘT particle nó đang xử lý qua `in` attribute, không có cách nào đọc chéo sang particle khác trong cùng draw call.
+
+Demo bài này minh hoạ đúng trường hợp transform feedback hợp nhất: lực hấp dẫn nghịch đảo bình phương $F = s/r^2$ hướng về gốc toạ độ, với $s$ là cường độ hút và $r$ khoảng cách tới tâm — mỗi particle chỉ cần vị trí CỦA CHÍNH NÓ để tính lực, không cần nhìn particle nào khác. Vận tốc quỹ đạo tròn ban đầu được gieo bằng công thức cân bằng lực hướng tâm $v = \sqrt{s/r}$ (suy từ $v^2/r = s/r^2$), tính một lần trên CPU lúc khởi tạo. Quy tắc chọn chung: trạng thái thuần theo từng particle, không cần đọc hàng xóm → transform feedback rẻ và trực tiếp hơn; cần lấy mẫu không gian (flow field, boids, va chạm lân cận) → texture/`GPUComputationRenderer` bắt buộc phải dùng vì đó là cách duy nhất "nhìn" sang ô nhớ khác.
+
+## WebGPU compute: hướng đi tiếp theo
+
+Cả ping-pong texture lẫn transform feedback đều là cách lách quanh việc WebGL không có compute shader thật — chúng mượn tạm vertex/fragment stage để làm việc của compute. WebGPU có compute shader đúng nghĩa: đọc/ghi buffer tuỳ ý, không ràng buộc vào rasterize hay vertex-per-particle, kèm `workgroup` chia luồng tường minh thay vì một draw call ẩn dụ. Track 6 đã nhắc TSL (Three Shading Language) như lớp trừu tượng cho WebGPU; phần compute của TSL dùng callback JS biên dịch thẳng sang compute shader WGSL, xoá bỏ luôn nhu cầu "giả lập" bằng vertex hay fragment như hai kỹ thuật của track này — nhưng đó là câu chuyện của một track sau, khi WebGPU đủ phổ biến để không còn là "tính năng thử nghiệm".
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với transform feedback:
+
+1. **Gọi `transformFeedbackVaryings` SAU `gl.linkProgram`.** Chương trình vẫn "link thành công" về cú pháp nhưng không capture đúng gì cả — linker đã cố định layout output trước khi lệnh này chạy, gọi muộn không còn tác dụng.
+2. **Dùng cùng một buffer vừa làm input VAO vừa làm đích `bindBufferBase`** trong một draw call (quên double-buffer) — WebGL báo lỗi hoặc hành vi không xác định vì đọc/ghi chồng nhau trong cùng lúc hàng nghìn invocation vertex shader chạy song song.
+3. **Quên `gl.disable(RASTERIZER_DISCARD)` sau update pass.** Mọi draw call render TIẾP THEO — kể cả không liên quan gì tới simulation — im lặng không vẽ gì lên màn hình, vì trạng thái discard vẫn còn bật toàn cục cho tới khi tắt tay.
+
+</Callout>

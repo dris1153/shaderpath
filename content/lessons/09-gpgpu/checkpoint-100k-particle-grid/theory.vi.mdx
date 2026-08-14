@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Bài mini-build đầu tiên của Track GPGPU, đóng module "Trạng thái trên GPU": dựng một hệ 100.000 particle mà cả vị trí lẫn vận tốc đều cập nhật hoàn toàn trên GPU qua `GPUComputationRenderer` — không một dòng `particle.position += ...` nào chạy trên CPU mỗi frame. Đây là bài kiểm chứng bạn thật sự nắm compute variable, dependency giữa hai texture trạng thái, và cách render một đám mây `Points` đọc vị trí từ texture thay vì từ buffer cố định.
+
+## Yêu cầu
+
+Dựng lưới 320×320 (~102.400) particle nằm phẳng trên mặt phẳng XY. Mỗi particle có một "vị trí nhà" cố định — suy thẳng từ toạ độ UV của chính texture trạng thái, không cần texture riêng lưu home. Compute shader vận tốc: lực lò xo kéo particle về home, cộng nhiễu ngẫu nhiên nhỏ để particle không di chuyển đồng loạt như một khối cứng, rồi damping để hệ tắt dần thay vì dao động mãi. Compute shader vị trí chỉ tích phân Euler đơn giản. Mỗi vài giây, một xung lực (burst) đẩy toàn bộ lưới văng ra một hướng ngẫu nhiên, rồi lò xo tự kéo chúng về lại đúng home ban đầu. Render bằng `Points`, mỗi vertex đọc vị trí qua một attribute "state-uv" trỏ vào đúng texel của nó trong texture trạng thái; tô màu theo tốc độ tức thời (độ lớn vector vận tốc ánh xạ qua một dải màu hue).
+
+## Gợi ý cấu trúc
+
+Toàn bộ bài dựng quanh hai compute shader ăn khớp nhau qua `setVariableDependencies`: shader vận tốc đọc texture vị trí VÀ texture vận tốc của frame trước để tính lực; shader vị trí chỉ đọc texture vận tốc frame trước để tích phân. Không có texture "home" thứ ba — mọi thứ suy ra từ đúng hai texture đó cộng toạ độ UV sẵn có trong `gl_FragCoord`.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — hệ giữ 60fps ổn định ở quy mô 100k, burst thật sự làm particle văng ra rồi tụ lại đúng vị trí ban đầu (không lệch dần theo thời gian), màu đổi rõ theo tốc độ, và remount component (đổi trang rồi quay lại) không làm rò rỉ GPU memory.

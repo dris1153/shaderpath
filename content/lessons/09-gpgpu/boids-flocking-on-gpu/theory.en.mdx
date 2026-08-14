@@ -1,0 +1,59 @@
+## Reynolds's Three Rules: Separation, Alignment, Cohesion
+
+Craig Reynolds introduced the "boids" model at SIGGRAPH 1987 to answer a question that sounds almost paradoxical: how do you simulate a flock flying in formation when no single bird knows the flock's overall "plan"? His answer was three deceptively simple rules, and the crucial part is that each one only looks at nearby neighbors — no boid ever knows where the bird at the opposite end of the flock is, and the flock still flies as one.
+
+### Separation — Avoiding Close-Range Collisions
+
+Each boid gets pushed away from neighbors that are too close, with a force that scales inversely with the square of distance — the closer another boid gets, the more sharply the push ramps up, mirroring how a real animal reacts to an imminent collision.
+
+### Alignment — Flying the Same Way as the Flock
+
+Each boid steers its velocity toward the average velocity of neighbors in a wider radius — not copying any single neighbor exactly, just drifting gradually toward the shared heading.
+
+### Cohesion — Not Getting Left Behind
+
+Each boid steers gently toward the center of mass of neighbors within the widest radius, keeping the flock from dissolving into scattered individuals.
+
+These three forces add up linearly into a new velocity every frame. No rule ever "knows" the flock's overall shape — flocking is the result of thousands of independent, parallel local vector additions, not a path-planning algorithm.
+
+## Translating to the GPU: Each Boid Samples Its Own Neighbors From the State Texture
+
+The `pingpong-fbo-state-textures` and `gpucomputationrenderer` lessons already taught that every particle's position and velocity lives in two state textures, ping-ponged every frame. Boids reuse exactly that infrastructure, changing only the velocity-update fragment shader: instead of reading just its own state at the current texel, every compute invocation (every boid) now has to loop over other texels in that same state texture to find out who's nearby — that's the core difference from `flow-field-particles`, where each particle only samples an independent vector field and never needs to know where any other particle is.
+
+### The O(N²) Problem and Stride Sampling
+
+Looping over all N texels for each of N boids costs $O(N^2)$ texture reads per frame. At $N = 4096$ (this lesson's $64\times64$ demo grid), that's $4096^2 \approx 16.8$ million reads — heavy, but the texture is only $64\times64$, small enough to stay cache-friendly, so it still runs smoothly in real time (estimate, hardware-dependent). three.js's official `webgl_gpgpu_birds` example uses this exact full-scan strategy at a similarly modest scale.
+
+But at $N = 65536$ (a $256\times256$ grid, the scale the very next lesson, `instancing-a-million-objects`, reaches for), a full scan is $65536^2 \approx 4.3$ billion reads per frame — no longer realistic in real time on most GPUs. The practical fix: sample a stride subset instead — read only texel $0, k, 2k, 3k, \dots$ instead of all of them, turning $O(N^2)$ into $O(N^2/k)$. With $k=8$, reads per frame drop to roughly $536$ million — exactly an 8x reduction. Since texel index has no relationship to actual spatial position (two boids adjacent in index order can sit at opposite ends of the flock), a fixed index stride still lands on a reasonably random cross-section of the flock — flocking only needs a statistical estimate of nearby heading and density, not an exact neighbor set.
+
+## Zones and Weight Balancing
+
+The three rules use three nested radii: separation the smallest (roughly $0.4\times$ the perception radius), alignment in the middle ($0.7\times$), cohesion using the full perception radius. This ordering isn't arbitrary — separation must win at close range, or cohesion (pulling toward the center) and alignment (pulling toward the shared heading) overpower it, and boids overlap instead of avoiding each other — looking more like a clumped mass than a flock. Weight balancing (not just zone radii) matters just as much: a separation weight set too low relative to alignment/cohesion produces exactly this collapse even when the radii are ordered correctly.
+
+## Speed Clamping and Edge Behavior
+
+Raw velocity after summing all three forces can drift toward infinity (alignment keeps chasing a rising average) or toward zero (a boid stuck between canceling forces) — either breaks the illusion of flight. Speed clamping forces the velocity's magnitude into a $[v_{min}, v_{max}]$ range after every force sum, keeping motion looking natural.
+
+When a boid drifts past the bounds, there are two options: **wrap** (teleport to the opposite side via `mod()`) or **soft-turn** (a gentle steering force pushing back toward center, no position jump). Wrap is cheap and simple but produces a visible "teleport" if the camera sits close to the edge; soft-turn looks smoother but needs its force strength tuned so boids don't oscillate back and forth at the boundary. This lesson's demo uses soft-turn to keep the whole flock inside frame.
+
+## Emergence: No Leader, No Global Plan
+
+This is the single most important idea in the whole lesson: no texel in the state texture is ever marked "leader," and no step ever precomputes the flock's overall formation. A V-shaped goose formation, a swirling school of fish — all of it is emergent behavior: thousands of independent, parallel, local decisions adding up to something that looks globally "organized" without any single entity in the system actually "knowing" about it. That's exactly why boids run well on the GPU: every compute invocation is fully independent, with no synchronization or central coordination required — ideal conditions for thousands of parallel threads.
+
+## Parameter Recipes: Tight Swarm vs. Loose Wander
+
+Two common flock "feels" are just a few numbers apart: a tight swarm (a dense, sardine-like ball moving as one) wants high cohesion, high alignment, a small perception radius, and just enough separation to avoid overlap. A loose wander (scattered but broadly headed the same way, like migrating birds) wants alignment to dominate, cohesion kept low, and a larger perception radius so boids sense the shared trend from farther away without being pulled tightly together. There's no single "correct" recipe — dragging the demo's sliders is the fastest way to build intuition for this parameter space.
+
+## Where This Leads: Instancing, Performance, and the Interactive Particle Capstone
+
+Today's boids stop at rendering with point sprites — the very next lesson, `instancing-a-million-objects`, replaces that with an InstancedMesh reading the state texture directly in its vertex shader, unlocking real geometry (not just dots) at tens of thousands to millions of objects. Track 12 (Performance) comes back to actually measure the texture-fetch cost that stride sampling here only estimates, and Capstone 3 in Track 13 combines all of it — flow fields, boids, instancing — into one complete interactive particle system.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when implementing boids on the GPU:
+
+1. **Setting the separation weight too low relative to alignment/cohesion.** Since cohesion pulls a boid toward the group's center and alignment pulls it toward the average velocity, both routinely "win" unless separation is weighted strongly enough at close range — the result is the whole flock collapsing into an overlapping clump instead of flying tightly together with real spacing. Always check: at very small distances, separation's magnitude ($1/d^2$ times its weight) needs to clearly outweigh alignment + cohesion combined.
+2. **Comparing UV coordinates with `==` to skip self, instead of comparing distance.** `gl_FragCoord.xy / resolution.xy` and `(vec2(x, y) + 0.5) / resolution` are two independently computed values — floating-point rounding can occasionally make `otherUv == uv` false even for the exact same texel, which makes a boid apply separation against itself, producing hard-to-trace jitter. Always use `dist < epsilon` to skip self instead.
+3. **Forgetting to list a variable as its own dependency in `setVariableDependencies`.** `textureVelocity` needs to read its own previous frame to accumulate forces onto the existing velocity — omitting that self-dependency leaves the corresponding sampler uniform never assigned (`null`), and sampling a null texture returns undefined values that turn into NaN, spreading through the render target and going black within a few frames.
+
+</Callout>

@@ -1,0 +1,108 @@
+## Why You Can't Read and Write the Same Texture in One Pass
+
+Say you have a state texture `state`, and you want a fragment shader that "reads `state`, adds an acceleration, writes back to `state`" — exactly like a CPU loop overwriting the same array it's reading from. On the GPU, this is **undefined behavior** per the OpenGL/WebGL specification: when the same texture is both an input (sampler) and an output (framebuffer attachment) of the same draw call, the driver gives no guarantee about read-before-write ordering across the parallel fragment invocations — the result can be correct for one texel, wrong for another, and differ across GPUs. This is called a **feedback loop**, and it's the entire reason the ping-pong technique exists.
+
+## Ping-Pong: Two Render Targets Trading Read/Write
+
+The fix: use **two** render targets, call them A and B. This frame reads from A, writes to B; next frame flips the roles — reads from B, writes to A. No texture is ever simultaneously read and written within a single draw call; A and B just take turns being each other's "scratch pad."
+
+### Building a WebGLRenderTarget by Hand in Three.js
+
+```js
+const options = {
+  minFilter: THREE.NearestFilter,
+  magFilter: THREE.NearestFilter,
+  type: THREE.HalfFloatType,
+  format: THREE.RGBAFormat,
+  depthBuffer: false,
+};
+const targetA = new THREE.WebGLRenderTarget(size, size, options);
+const targetB = new THREE.WebGLRenderTarget(size, size, options);
+```
+
+`NearestFilter` isn't a cosmetic choice — a texel here is **data**, not color. Linearly interpolating between particle #41's position and #42's (two neighboring texels, usually completely unrelated) carries no physical meaning; `LinearFilter` would silently blend the data into a meaningless value. `HalfFloatType` gives enough range and precision for most positions/velocities (details below) while costing half the memory of `FloatType`. WebGL2 needs the `EXT_color_buffer_float` extension to render **into** a float or half-float texture — Three.js automatically requests this extension when you create that kind of render target; if the device doesn't support it (rare, mostly a few older mobile GPUs), it just `console.warn`s once and the framebuffer counts as incomplete, so the texture reads back as all zeros.
+
+### The Compute Scene: A Screen-Filling Quad + an Orthographic Camera
+
+To "run" a fragment shader over an entire texture, you render a rectangle that fills NDC space ($[-1,1]^2$) through an orthographic camera — every pixel of the render target lines up with exactly one fragment shader invocation:
+
+```js
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+const scene = new THREE.Scene();
+scene.add(quad);
+
+renderer.setRenderTarget(targetB);
+renderer.render(scene, camera);
+renderer.setRenderTarget(null); // always hand the screen back when you're done
+```
+
+There's no real 3D mesh here — the quad is just a "frame" forcing the GPU to run the fragment shader exactly once per texel of the target.
+
+## Encoding State into RGBA: Position/Life and Velocity
+
+An RGBA texture holds exactly 4 numbers per texel. A common encoding: the "position" texture's `.xyz` channels hold coordinates, `.a` holds a spare value (life, seed, or whatever number each particle needs) — a "velocity" texture's `.xyz` holds the velocity vector. Need more variables (acceleration, age, particle type)? Add a third texture, or use multiple render targets (one draw call writing several textures at once) if you'd rather fold everything into one pass instead of several sequential ones.
+
+## The Compute Fragment Shader: Read Old State, Write New State
+
+```glsl
+// velocity-update.frag — reads buffer A, writes buffer B (for the velocity texture)
+uniform sampler2D uPosition; // position texture — the READ buffer
+uniform sampler2D uVelocity; // velocity texture — the READ buffer
+uniform float uDelta;
+
+void main() {
+  vec3 pos = texture2D(uPosition, vUv).xyz;
+  vec3 vel = texture2D(uVelocity, vUv).xyz;
+  vel.y -= 9.8 * uDelta; // gravity
+  // ... boundary bounce, write to another channel if needed ...
+  gl_FragColor = vec4(vel, 0.0);
+}
+```
+
+Every `gl_FragColor` here is one texel — one particle — computed entirely independently of every other texel in the same draw call. This is "fragment shader = parallel `map`" from the previous lesson, made real as actual code.
+
+## Rendering Particles: Points Reading a UV Into the State Texture
+
+`THREE.Points` needs one "vertex" per particle so the GPU knows how many points to draw — but the real position lives in a texture, not a buffer attribute. The standard trick: add a dedicated buffer attribute (`aReference`, a `vec2`) holding **the UV coordinate into the state texture** for that particle; the vertex shader samples the texture with this UV to get the real position:
+
+```glsl
+attribute vec2 aReference; // UV into the state texture, NOT a 3D coordinate
+uniform sampler2D uTexturePosition;
+
+void main() {
+  vec3 realPosition = texture2D(uTexturePosition, aReference).xyz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(realPosition, 1.0);
+}
+```
+
+The geometry still needs a standard `position` attribute (Three.js uses it to compute the bounding sphere and figure out the vertex count) — but its contents don't matter, only the array's length does, since the displayed position comes from `aReference` plus the texture, not from `position`.
+
+## Swapping References in JS — No Data Copying
+
+After each compute step, "swapping" A and B doesn't copy a single byte of data — it just flips two references:
+
+```js
+let read = targetA;
+let write = targetB;
+// ...render into write, sample from read...
+[read, write] = [write, read]; // only the references move, the textures never do
+```
+
+Next frame, `read` points at the texture just written last frame — correct causal order, at essentially zero cost.
+
+## Half Float's Precision
+
+`HalfFloatType` (16-bit) has a range of roughly $\pm 65{,}504$, with precision that thins out as values grow — around $1$, the gap between two representable numbers is about $2^{-10} \approx 0.001$; around $1000$, that gap jumps to about $1$. For particle positions in a typical 3D scene, usually a few units to a few hundred units, half float has precision to spare. The problem only shows up if you dump raw real-world coordinates spanning tens of thousands of units straight into a state texture — in that case, subtract a local origin before writing.
+
+## Where This Lesson Leads
+
+The next lesson's `GPUComputationRenderer` wraps up exactly the machinery you just built by hand here — two render targets, a compute scene, read/write ordering — into an `addVariable`/`compute()` API, so you stop managing each object yourself. Understanding the manual mechanics before reaching for the packaged API is exactly why this track orders the two lessons this way.
+
+<Callout variant="mistake" title="Common mistakes">
+
+1. **Binding the same render target as both the input sampler and the output framebuffer in one draw call** — say, forgetting to flip `read`/`write` after a swap, or wiring the wrong texture to a uniform. The result is subtly wrong, sometimes only showing up on specific GPUs, and brutally hard to debug because the driver reports no error at all.
+2. **Not clamping `uDelta` after a slow frame or a hidden-then-reopened tab** — delta can spike to hundreds of milliseconds. Particles tunnel straight through boundary bounds or their velocities explode, because Euler integration with a large delta is no longer numerically stable.
+3. **Forgetting `renderer.setRenderTarget(null)` after the compute pass.** Three.js keeps rendering everything after that — including the main scene — into the stale render target; the screen sits frozen or black, while the console reports nothing wrong, because technically every render call still "succeeded."
+
+</Callout>

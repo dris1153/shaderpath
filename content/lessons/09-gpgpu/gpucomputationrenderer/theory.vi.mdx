@@ -1,0 +1,70 @@
+## GPUComputationRenderer đóng gói lại điều gì
+
+Bài trước dựng ping-pong FBO bằng tay: hai `WebGLRenderTarget`, một chỉ số 0/1 để biết cái nào đang là "đọc" cái nào là "ghi", và tự viết logic hoán đổi sau mỗi frame — cho MỖI kênh trạng thái (position, velocity...) riêng biệt. `GPUComputationRenderer`, tiện ích chính thức nằm ở `three/addons/misc/GPUComputationRenderer.js`, đóng gói đúng kỹ thuật đó thành khái niệm "biến compute" (variable): mỗi biến tự quản lý cặp render target của chính nó, tự hoán đổi, và tự lo việc truyền texture của biến này làm input cho biến khác. Đọc thẳng file nguồn (three@0.185.1, [GitHub](https://github.com/mrdoob/three.js/blob/master/examples/jsm/misc/GPUComputationRenderer.js)) cho thấy nó không viết lại thuật toán ping-pong khác đi — `compute()` bên trong vẫn y hệt: đọc render target ở chỉ số hiện tại, ghi vào chỉ số còn lại, rồi đảo chỉ số. Cái được tự động hoá là *bộ nhớ sổ sách* (bookkeeping): bạn không còn tự tay quản lý cặp target theo từng biến, không tự nối uniform texture của biến này sang shader của biến kia.
+
+## Khởi tạo, texture trạng thái, và khai báo biến compute
+
+`new GPUComputationRenderer(sizeX, sizeY, renderer)` chỉ lưu kích thước lưới compute và tham chiếu tới `WebGLRenderer` đang dùng — chưa tạo texture hay render target nào. `gpuCompute.createTexture()` trả về một `THREE.DataTexture` rỗng kích thước `sizeX × sizeY`, kiểu `FloatType`, mà bạn tự tay điền dữ liệu ban đầu vào `texture.image.data` (một mảng phẳng, 4 số mỗi texel theo thứ tự RGBA) trước khi dùng nó làm giá trị khởi tạo:
+
+```ts
+const gpuCompute = new GPUComputationRenderer(SIZE, SIZE, renderer);
+const dtPosition = gpuCompute.createTexture();
+const dtVelocity = gpuCompute.createTexture();
+// ...điền dtPosition.image.data / dtVelocity.image.data (Float32Array RGBA)...
+
+const velocityVariable = gpuCompute.addVariable("textureVelocity", velocityShader, dtVelocity);
+const positionVariable = gpuCompute.addVariable("texturePosition", positionShader, dtPosition);
+```
+
+`addVariable(name, computeFragmentShader, initialValueTexture)` đăng ký một biến: tạo cho nó một `ShaderMaterial` riêng dùng shader bạn truyền vào làm fragment shader, còn vertex shader luôn cố định — một full-screen quad viết sẵn bên trong `GPUComputationRenderer`, bạn không được và không cần đổi. Đây là lý do "chỉ fragment": mọi phép tính của một biến compute chạy trong đúng MỘT fragment shader, chấm một texel ra một pixel.
+
+## `setVariableDependencies` và uniform được tiêm tự động
+
+Một biến compute cần đọc dữ liệu của chính nó (frame trước) và/hoặc của biến khác để tính frame sau — `setVariableDependencies(variable, [dep1, dep2, ...])` khai báo đúng danh sách đó. Với hệ xoáy hai biến kinh điển: velocity phụ thuộc `[velocity, position]` (cần vận tốc cũ để damping, cần vị trí để tính lực xoáy theo bán kính), position phụ thuộc `[velocity, position]` (cần vận tốc mới để tích phân, cần vị trí cũ để cộng dồn):
+
+```ts
+gpuCompute.setVariableDependencies(velocityVariable, [velocityVariable, positionVariable]);
+gpuCompute.setVariableDependencies(positionVariable, [velocityVariable, positionVariable]);
+const error = gpuCompute.init();
+if (error !== null) throw new Error(error);
+```
+
+Điều ít ai để ý khi chỉ đọc doc: `init()` biến MỖI dependency — kể cả tự phụ thuộc chính nó — thành một dòng `uniform sampler2D <tên biến>;` được **chèn thẳng vào đầu** chuỗi fragment shader của bạn, đồng thời tạo sẵn entry uniform tương ứng. Nghĩa là bạn không bao giờ tự viết `uniform sampler2D texturePosition;` trong shader của chính biến `texturePosition` — chỉ cần liệt kê nó trong mảng dependency, `GPUComputationRenderer` tự khai báo hộ. Mỗi frame, `compute()` gán `uniforms[depName].value = depVar.renderTargets[currentTextureIndex].texture` — nạp texture ở chỉ số **hiện tại** (frame vừa xong) làm input, trước khi ghi kết quả frame mới vào chỉ số còn lại.
+
+## `init()`, `compute()`, và chỉ số ping-pong dùng chung
+
+`init()` phải gọi sau khi khai báo xong mọi biến và dependency — nó tạo thật hai render target cho từng biến, render texture khởi tạo vào cả hai (để buffer nào cũng có dữ liệu hợp lệ ngay từ frame đầu), rồi chèn các dòng uniform như trên. Khác với phần lớn API của Three ném lỗi (`throw`), `init()` trả về `null` khi ổn, hoặc một **chuỗi mô tả lỗi** khi có vấn đề (ví dụ thiết bị không có vertex texture: `"No support for vertex shader textures."`) — bạn phải tự kiểm tra `if (error !== null)`, không có gì tự dừng chương trình giúp bạn.
+
+Một chi tiết dễ bị bỏ sót: `currentTextureIndex` là **một số duy nhất cho toàn bộ `GPUComputationRenderer`**, không phải mỗi biến giữ chỉ số ping-pong của riêng nó. `compute()` lặp qua tất cả biến, tính từng biến bằng CÙNG một cặp chỉ số đọc/ghi, rồi đảo chỉ số đúng một lần ở cuối — mọi biến trong cùng renderer luôn đồng bộ vòng ping-pong với nhau. Đọc kết quả bằng `gpuCompute.getCurrentRenderTarget(variable).texture`, gán thẳng vào uniform của material render particle:
+
+```ts
+gpuCompute.compute();
+particleMaterial.uniforms.texturePosition.value =
+  gpuCompute.getCurrentRenderTarget(positionVariable).texture;
+```
+
+## `resolution`: define được tiêm sẵn, không phải uniform
+
+Constructor gọi `addResolutionDefine` cho mọi biến, đặt `material.defines.resolution` thành chuỗi `"vec2(128.0, 128.0)"` — Three biên dịch `defines` thành dòng `#define resolution vec2(128.0, 128.0)` đặt trước cả shader. Vì là `#define` (thay thế văn bản thuần), không phải `uniform`, bạn dùng `resolution` trong shader mà không khai báo gì cả — nhưng cũng vì thế, tự khai báo thêm `uniform vec2 resolution;` sẽ vỡ: trình biên dịch thay `resolution` bằng `vec2(128.0, 128.0)` ở MỌI chỗ xuất hiện, kể cả trong chính dòng khai báo, biến nó thành `uniform vec2 vec2(128.0, 128.0);` — lỗi cú pháp. Công thức đọc texel của chính mình luôn là `gl_FragCoord.xy / resolution.xy`: khác bài UV space ở Track 0 phải tự cộng $+0.5$ vì chỉ số pixel không phải tâm pixel, `gl_FragCoord` đã được rasterizer tính sẵn ở TÂM pixel — không cần cộng gì thêm.
+
+## Giới hạn của GPUComputationRenderer
+
+Ba giới hạn đáng nhớ, cả ba đều bắt nguồn từ việc nó chỉ là một lớp bọc quanh full-screen fragment pass: (1) chỉ chạy được trên fragment shader — không có đường nào tới transform feedback (bài sau); (2) mỗi biến đúng MỘT texture RGBA, tức tối đa 4 số float trạng thái mỗi biến mỗi texel — cần hơn 4 giá trị (ví dụ position + life + size) phải tách thêm biến khác; (3) mọi biến trong CÙNG một `GPUComputationRenderer` bắt buộc cùng `sizeX × sizeY` vì kích thước được truyền một lần ở constructor — muốn một lưới độ phân giải khác phải dựng thêm một instance `GPUComputationRenderer` riêng.
+
+## Kiểu dữ liệu texture: FloatType mặc định, fallback phải tự làm
+
+`dataType` mặc định là `THREE.FloatType`, đổi được qua `gpuCompute.setDataType(type)`. Render vào một render target kiểu float đòi hỏi WebGL2 hỗ trợ extension [`EXT_color_buffer_float`](https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/) — không phải mọi GPU di động có nó. Đọc kỹ file nguồn `GPUComputationRenderer.js` không thấy bất kỳ đoạn code nào tự phát hiện thiết bị hay tự đổi sang `HalfFloatType` — khác với mô tả thường nghe truyền miệng, bản hiện tại **không** tự fallback: nếu thiết bị không hỗ trợ float render target, `compute()` vẫn chạy không báo lỗi gì (không đi qua nhánh kiểm tra nào cả), nhưng framebuffer sẽ không hoàn chỉnh và texture đọc lại toàn số rác hoặc đen ngòm. Muốn an toàn trên di động, tự gọi `gpuCompute.setDataType(THREE.HalfFloatType)` trước khi `addVariable` — độ chính xác thấp hơn nhưng đủ cho hầu hết mô phỏng particle, và được hỗ trợ rộng hơn nhiều.
+
+## Nối tiếp: cấu trúc hai biến này quay lại ở đâu
+
+Đúng cặp `textureVelocity`/`texturePosition` phụ thuộc lẫn nhau ở bài này là khung xương của gần hết phần còn lại của track: mini-build lưới 100k particle ghép thêm hình học render, `flow-field-particles` thay lực xoáy bằng lực đọc từ curl noise, `boids-flocking-on-gpu` thêm bước lấy mẫu hàng xóm ngay trong fragment shader của velocity. Bài tiếp theo đứng ở phía đối lập: transform feedback đạt được đúng mục tiêu "trạng thái sống trên GPU" nhưng đi con đường hoàn toàn khác — ghi thẳng ra buffer từ vertex shader, không texture, không fragment pass nào cả.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với `GPUComputationRenderer`:
+
+1. **Quên gọi `setVariableDependencies` trước `init()`.** Không có dependency, không có uniform `sampler2D` nào được chèn — shader tham chiếu `texturePosition`/`textureVelocity` sẽ không biên dịch được (identifier chưa khai báo), hoặc nếu bạn không tham chiếu gì thì trạng thái đơn giản là đứng yên mãi mãi vì chẳng đọc được frame trước.
+2. **Tự khai báo lại `uniform sampler2D texturePosition;`** cho một biến đã liệt kê chính nó trong dependency. `init()` đã tự chèn đúng dòng đó rồi — khai báo tay thêm một lần nữa là lỗi biên dịch "redefinition".
+3. **Coi `FloatType` mặc định là chạy được trên mọi thiết bị.** Không có fallback tự động trong bản three hiện tại (đã đọc source xác nhận) — thiết bị thiếu `EXT_color_buffer_float` không ném lỗi gì ở `init()` hay `compute()`, chỉ âm thầm cho texture toàn số rác hoặc đen ngòm.
+
+</Callout>

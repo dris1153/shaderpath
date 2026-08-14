@@ -1,0 +1,51 @@
+## Points chỉ là pixel: object thật cần InstancedMesh
+
+Track 9 tới giờ vẽ particle bằng `THREE.Points` — mỗi particle chỉ là một chấm vuông luôn quay mặt về camera (billboard), không có hình khối thật, không có mặt để chiếu sáng đúng nghĩa. Muốn mỗi particle là một khối tứ diện hay hộp thật — có geometry, có normal, nhận ánh sáng như một mesh bình thường — cần `InstancedMesh`: một draw call vẽ N bản sao của cùng một geometry, mỗi bản sao mang một `mat4` biến đổi riêng trong buffer `instanceMatrix`. Track 6 đã dạy cách cập nhật `instanceMatrix` bằng CPU (`setMatrixAt` trong vòng lặp JS); bài này thay vòng lặp CPU đó bằng chính texture trạng thái GPGPU đã học suốt track — không còn dòng JS nào chạy mỗi frame để định vị instance.
+
+## Hợp nhất: vertex shader của InstancedMesh đọc thẳng texture GPGPU
+
+Ý tưởng cốt lõi: vertex shader của `InstancedMesh` vốn đã chạy nhiều lần mỗi frame (một lần cho mỗi đỉnh của mỗi instance) — hoàn toàn có thể `texture2D()` vào texture trạng thái GPGPU ngay trong đó, y hệt cách fragment shader của bài `pingpong-fbo-state-textures` đọc trạng thái để cập nhật. Compute pass (chạy trên texture, không render ra màn hình) và render pass (vẽ N instance) trở thành hai bước nối tiếp trong cùng một frame, không có bước trung gian nào đưa dữ liệu qua CPU.
+
+### instanceMatrix giữ nguyên identity, vị trí đến từ texture
+
+Chi tiết dễ gây nhầm lẫn nhất: `instanceMatrix` không phải nơi chứa vị trí động ở đây. Mọi instance được gán ma trận identity một lần khi tạo mesh — vị trí thật đến từ việc cộng thêm toạ độ đọc từ texture vào `transformed` (biến cục bộ giữ vị trí đỉnh) ngay trong vertex shader, trước khi `instanceMatrix` (đang là identity, vô hại) nhân vào ở bước chiếu. Tại sao không đặt luôn vị trí vào `instanceMatrix` mỗi frame như Track 6 làm? Vì làm vậy nghĩa là phải ghi lại toàn bộ buffer `instanceMatrix` từ CPU mỗi frame — đúng chi phí bài này muốn loại bỏ.
+
+### Định vị texel của từng instance: gl_InstanceID hay instanced attribute
+
+Mỗi instance cần biết phải đọc texel nào trong texture trạng thái. WebGL2 cấp sẵn biến dựng sẵn `gl_InstanceID` trong vertex shader — chuyển thành toạ độ UV bằng phép chia lấy dư: hàng $= \lfloor id / W \rfloor$, cột $= id \bmod W$, rồi $u = (\text{cột} + 0.5)/W$, $v = (\text{hàng} + 0.5)/H$, đúng công thức pixel-to-UV đã học ở Track 0. Cách khác — cách demo bài này chọn — là gán sẵn một `InstancedBufferAttribute` chứa UV cho mỗi instance ngay lúc dựng mesh: tính một lần trên CPU (rẻ, chỉ chạy khi tạo/resize, không phải mỗi frame), rồi gửi thẳng vào GPU dưới dạng attribute. Cả hai cách đều đúng; attribute tránh phụ thuộc vào cách trình biên dịch shader của Three xử lý `gl_InstanceID`.
+
+## Nối dây trong Three: onBeforeCompile hay ShaderMaterial riêng
+
+Có hai đường để chèn đoạn đọc texture này vào: viết một `ShaderMaterial` hoàn toàn tự tay (kiểm soát toàn bộ, nhưng phải tự lo lighting nếu muốn), hoặc dùng `onBeforeCompile` để vá thêm vào một `MeshStandardMaterial` có sẵn — giữ nguyên toàn bộ hệ thống lighting/PBR của Three, chỉ chèn code đọc texture vào đúng chunk `#include <uv_vertex>` (lấy mẫu vị trí/vận tốc), `#include <beginnormal_vertex>` (xoay pháp tuyến) và `#include <begin_vertex>` (cộng vị trí) — chính kỹ thuật `onBeforeCompile` học ở Track 6, giờ áp lên dữ liệu đến từ GPGPU thay vì một hiệu ứng tĩnh.
+
+## Xoay instance theo hướng vận tốc: dựng basis từ vector
+
+Một tứ diện trôi theo dòng chảy trông sống động hơn hẳn nếu nó "hướng mặt" theo hướng đang bay, không chỉ trôi mà không xoay. Cách dựng: từ vector vận tốc đã chuẩn hoá, coi nó là trục `up` của một hệ toạ độ cục bộ mới, chọn một trục tham chiếu bất kỳ không song song (ví dụ trục X thế giới), cross hai vector đó ra trục `right`, rồi cross `up` và `right` ra trục thứ ba — ba trục vuông góc này ghép thành một `mat3` nhân trực tiếp vào cả `transformed` (vị trí đỉnh cục bộ) lẫn pháp tuyến, đúng kỹ thuật cross product dựng hệ trục đã học ở Track 0.
+
+## Luật "không đọc ngược": compute → render không rời GPU
+
+Nguyên tắc bất di bất dịch của toàn bộ pipeline này: không bao giờ đọc vị trí từ render target về CPU (không `readPixels`, không `getDataURL`) rồi dùng lại giá trị đó ở đâu khác trên CPU — làm vậy buộc CPU phải chờ GPU xong việc, phá vỡ toàn bộ lý do dùng GPGPU ngay từ đầu (bài `why-particles-live-on-gpu` đã giải thích cái giá của việc này). Mỗi frame ở đây, CPU chỉ làm đúng hai việc: gọi `compute()` một lần và gọi draw call của `InstancedMesh` một lần — không có bước nào ở giữa đụng vào dữ liệu vị trí thật.
+
+## Thực tế về quy mô: chi phí vertex texture fetch
+
+"Hàng triệu object" trong tên bài là mục tiêu thực tế, không phải con số của demo (demo giữ ở 16k–65k để không đốt máy người học — spec nền tảng giới hạn mọi demo nhúng ở mức này). Điều dễ bỏ sót: vertex shader chạy theo VERTEX, không theo INSTANCE — một tứ diện không lập chỉ mục có 12 đỉnh, nên mỗi instance tốn $12 \times 2 = 24$ lần đọc texture (position + velocity), không phải 2. Ở $N = 1{,}000{,}000$ instance, 60fps, tổng số lần đọc texture mỗi giây riêng cho việc định vị là
+
+$$
+1{,}000{,}000 \times 12 \times 2 \times 60 \approx 1.44 \text{ tỷ lần/giây}
+$$
+
+— một GPU tầm trung xử lý được ước lượng vài trăm triệu đến vài tỷ lần đọc texture mỗi giây (ước lượng, tuỳ kiến trúc), nên con số này đã chạm hoặc vượt ngưỡng thoải mái. Đây chính là lý do LOD ở quy mô instancing không chỉ tiết kiệm chi phí raster hoá (ít pixel hơn) mà còn cắt thẳng vào số lần đọc texture: dùng geometry ít đỉnh hơn cho instance ở xa (một tam giác 3 đỉnh thay vì tứ diện 12 đỉnh) giảm số lần đọc texture định vị theo đúng tỉ lệ số đỉnh, không chỉ giảm số pixel tô màu.
+
+## So với cập nhật instanceMatrix bằng CPU
+
+Bài `instancedmesh-per-instance-attributes` ở Track 6 từng đo trực tiếp: dựng lại `instanceMatrix` bằng vòng lặp JS rồi gọi `needsUpdate = true` mỗi frame tốn thời gian CPU tỉ lệ thuận với số instance — dù chỉ vài nghìn instance, vòng lặp `setMatrixAt` đã chiếm vài phần trăm ngân sách khung hình (16.7ms ở 60fps). Đường GPGPU ở bài này giữ chi phí CPU gần như hằng số bất kể số instance là 16.384 hay 65.536, vì CPU không còn chạm vào dữ liệu vị trí — toàn bộ chi phí chuyển sang GPU, nơi vốn đã song song hoá cực tốt cho đúng loại việc này. Demo bài này bật/tắt được cả hai đường để so trực tiếp con số ms/frame.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi ghép InstancedMesh với texture trạng thái GPGPU:
+
+1. **Quên rằng `instanceMatrix` mặc định là ma trận toàn số 0, không phải identity.** Dùng thẳng `new THREE.InstancedMesh(geo, mat, count)` mà không gán identity cho từng instance khiến `instanceMatrix * vec4(transformed, 1.0)` ở `project_vertex` nhân với ma trận 0 — mọi instance co về đúng gốc toạ độ, biến mất khỏi màn hình dù code đọc texture vị trí hoàn toàn đúng.
+2. **Xoay `transformed` (vị trí) theo basis vận tốc mà quên xoay pháp tuyến theo đúng basis đó.** Vị trí đỉnh đúng nhưng ánh sáng tính từ pháp tuyến cũ (chưa xoay) — hình vẫn ở đúng chỗ, hướng đúng chiều bay, nhưng phần sáng/tối trên mỗi mặt không khớp với hướng nó đang chỉ, nhìn "sai sai" dù không lỗi rõ ràng.
+3. **Không tắt `frustumCulled` trên InstancedMesh có vị trí đến từ texture.** Three tính frustum culling dựa trên bounding sphere của geometry gốc (thường ở gần origin) — vì vị trí thật của từng instance nằm ngoài đó, xoay camera một chút có thể khiến Three quyết định "cả object nằm ngoài khung hình" và bỏ qua draw call dù instance vẫn đang hiển thị đúng vị trí thực.
+
+</Callout>

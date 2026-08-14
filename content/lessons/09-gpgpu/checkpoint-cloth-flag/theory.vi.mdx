@@ -1,0 +1,11 @@
+## Mục tiêu
+
+Đây là mini-build khép lại Track 9: dựng một lá cờ vải mô phỏng chạy hoàn toàn trên GPU, không một dòng vật lý nào chạy trên CPU mỗi frame. Bài này gộp lại đúng ba thứ track đã dạy riêng lẻ — texture trạng thái ping-pong (module 1), `GPUComputationRenderer` làm lớp API cho ping-pong đó, và mô hình mass-spring + Verlet integration từ bài cloth-simulation-basics — thành một pipeline compute → render nhìn thấy được, có gió, có nếp gấp, có ánh sáng.
+
+## Yêu cầu
+
+Lưới vải 64×48 điểm, lưu vị trí trong hai texture trạng thái (`texturePosition` và `texturePreviousPosition`, cho Verlet integration cần cả frame hiện tại lẫn frame trước). Cột ghim vào cột cờ (`uv.x = 0`) đứng yên tuyệt đối; phần còn lại chịu trọng lực và một lực gió có hướng nhưng cường độ biến thiên theo thời gian (gusty, điều chế bằng noise) — gió phải chiếu lên pháp tuyến ước lượng của bề mặt để lá cờ **phần phật** thay vì trượt cứng sang một bên. Ràng buộc khoảng cách với 8 hàng xóm (4 cấu trúc + 4 chéo chống xô lệch) dùng lực lò xo Hooke, không phải constraint-solve nhiều pass. Vertex shader của mesh hiển thị lấy mẫu `texturePosition` để đặt từng đỉnh, tính lại pháp tuyến mỗi frame từ 4 hàng xóm lân cận (không dùng pháp tuyến gốc của geometry phẳng — nó không bao giờ đổi). Fragment shader tô hai tông theo mặt trước/sau (`gl_FrontFacing`) nhân với ánh sáng khuếch tán đơn giản, cộng thêm sọc kẻ theo UV. Timestep vật lý (`uDt`) phải là hằng số cố định, không lấy từ delta thời gian thực mỗi frame — chi tiết đầy đủ nằm trong phần Bài tập.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution: lá cờ phần phật thuyết phục theo từng đợt gió, cột cờ không bao giờ nhúc nhích, chạy liên tục 5 phút không nổ constraint (đỉnh văng ra xa vô hạn), ánh sáng thể hiện rõ nếp gấp bề mặt, sọc kẻ biến dạng theo đúng hình dạng vải, và khung hình giữ ổn định suốt quá trình.

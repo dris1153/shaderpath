@@ -1,0 +1,69 @@
+## Anatomy of the CPU Particle Loop
+
+The "natural" way to build a particle system: keep the position (and velocity) of $N$ particles in a `Float32Array`, run a `for` loop every frame to update each element, then tell the GPU the data changed.
+
+```js
+const positions = new Float32Array(particleCount * 3); // xyz per particle
+const velocities = new Float32Array(particleCount * 3);
+
+function update(dt) {
+  for (let i = 0; i < particleCount; i++) {
+    const o = i * 3;
+    velocities[o + 1] -= 9.8 * dt; // gravity
+    positions[o] += velocities[o] * dt;
+    positions[o + 1] += velocities[o + 1] * dt;
+    positions[o + 2] += velocities[o + 2] * dt;
+  }
+  geometry.attributes.position.needsUpdate = true; // tell Three to re-upload
+}
+```
+
+Three things happen every frame, in this exact order: (1) JS runs $N$ iterations of plain arithmetic on the main thread; (2) `needsUpdate = true` tells Three.js the `BufferAttribute` is dirty; (3) on the next render, Three calls `bufferSubData` to copy the **entire** `positions` array — not just the changed part, all of it — from RAM to VRAM. With a few hundred particles, all three steps are too cheap to measure. This lesson answers: once $N$ climbs into the hundreds of thousands, which of these three steps actually blows up frame time?
+
+## Bandwidth Isn't the Bottleneck — So What Is?
+
+The common intuition is to blame "transferring data across the bus" — it sounds reasonable, but the numbers don't back it up.
+
+### Estimating the Bus Transfer Cost
+
+$$
+100{,}000 \times 3 \times 4\ \text{bytes} = 1{,}200{,}000\ \text{bytes} \approx 1.2\ \text{MB / frame}
+$$
+
+$$
+1.2\ \text{MB} \times 60\ \text{fps} \approx 72\ \text{MB/s}
+$$
+
+72MB/s is the figure for 100,000 particles at 60fps, counting position only (a `vec3`, 4 bytes per component). A typical PCIe Gen3 x16 slot has a nominal one-way bandwidth around 16GB/s (an estimate, chipset-dependent) — 72MB/s is under 0.5% of that. On laptops with an integrated GPU (Intel, Apple Silicon), CPU and GPU even share the same physical RAM, so "crossing the bus" barely exists in the discrete-PCIe sense at all. In other words: raw physical bandwidth is almost never why a 100k particle system stutters.
+
+### Estimating the JavaScript Loop Cost
+
+So where's the real cost? A warmed-up JS engine can push tens to hundreds of millions of simple arithmetic operations per second (an estimate, varying widely by engine and CPU) — updating 100,000 particles at roughly 10 operations each (add velocity, apply gravity, write three components) is only about 1 million operations, in theory under 0.1ms. So why does it still stutter in practice?
+
+Three causes stack up, not one. **First**, `TypedArray` writes at scattered offsets don't get vectorized by the JIT the way a pure matrix operation would. **Second**, any hidden allocation inside the loop — say, a temporary `new THREE.Vector3()` instead of writing straight into the array — triggers the garbage collector, and a single GC pause can eat several unpredictable milliseconds right when the frame is already tight. **Third**, `bufferSubData` doesn't just cost time proportional to buffer size; it carries a fixed per-call overhead to synchronize the driver with the GPU — and that overhead repeats **every frame**, not once. All three costs run on the same main thread as React re-renders, input handling, everything else — so they stack directly into the 16.6ms budget a 60fps frame needs. This, not the bus, is the real bottleneck.
+
+## The GPGPU Inversion: Textures as State, Fragment Shaders as the Update Function
+
+GPGPU (General-Purpose computing on GPU) flips the whole architecture above: instead of the CPU holding state and pushing it to the GPU every frame, **state lives permanently on the GPU**, as a texture. A position texture sized $W \times H$ holds $W \times H$ particles — each texel is one particle, its RGBA channels are literally $(x, y, z, \dots)$. A fragment shader acts as the update function: it runs in parallel for every texel, reads that texel's own old state (and other texels' state if needed), computes the new state, and writes it to the destination texture. When it's time to draw a particle, the particle mesh's vertex shader samples that state texture directly for position — no step ever sends the particle back to the CPU, no `Float32Array`, no `bufferSubData`.
+
+The general principle behind this trick: **a texture is equivalent to a 2D array, and a fragment shader is equivalent to a parallel `map`** over that array. This idea predates compute shaders entirely — GPGPU emerged in the mid-2000s, when programmers "tricked" a graphics pipeline built only to draw triangles into a parallel computing machine, by rendering into a texture instead of onto the screen. WebGL2 has no real compute shader (that's WebGPU's privilege), so this texture-as-array trick remains the primary route to GPGPU in the browser — and it's the foundation every remaining lesson in this track builds on.
+
+## Real-World Thresholds: When Moving to the GPU Pays Off
+
+There's no hard line, but a few rough estimates help orient you. Below roughly 10,000 particles, a CPU loop usually isn't worth worrying about — JS plus upload cost sits deep inside the frame budget, and you keep full freedom to write arbitrary JS logic per particle. Above roughly 50,000, the combined weight of the JS loop, GC, and upload is usually large enough to justify building a GPU pipeline. The 10k–50k range is a gray zone, depending on how complex each particle's update is, the target device (a mid-range phone is nothing like a desktop), and whether particles need to interact with CPU-side gameplay logic at all.
+
+## What You Lose by Moving to the GPU
+
+GPGPU isn't free from an engineering standpoint. You lose the ability to write arbitrary JS logic per particle — every behavior has to be re-expressed in GLSL, where complex branching and arbitrary external data access (say, querying some other particle by index) is difficult or impossible to do cleanly. Reading state back to the CPU — for raycasting, or so gameplay logic knows where a particle is — is brutally slow: `gl.readPixels` forces the GPU to synchronize with the CPU, stalling the exact pipeline you were trying to avoid. Debugging gets noticeably harder too: there's no `console.log` inside a shader, so the practical fallback is rendering state to the screen as color just to "see" it — precisely the technique the next lesson uses.
+
+## Where This Lesson Leads
+
+The next lesson builds the ping-pong FBO technique by hand — two render targets swapping read/write roles every frame — which is exactly how "state lives in a texture" becomes real code. After that, `GPUComputationRenderer` wraps this same technique into a tighter API; transform feedback is WebGL2's own alternative path. The "State on the GPU" module closes with a 100,000-particle grid running entirely on the GPU — a number that, after this lesson, you now know exactly why the CPU couldn't handle.
+
+<Callout variant="mistake" title="Common mistakes">
+
+1. **Blaming "bandwidth" when a particle system stutters.** The real numbers (as computed above) almost always show the JS loop plus GC plus `bufferSubData` call overhead as the actual culprit, not the volume of data transferred — suspecting the wrong cause leads you to optimize the wrong thing (say, compressing data to half-float) while the real problem is allocation inside the loop.
+2. **Allocating temporary objects inside the update loop** — a `new THREE.Vector3()`, spreading an array, creating a fresh closure every iteration. It feels harmless because the object is small, but that's exactly the source of unpredictable GC pauses, showing up as a random stutter frame even though the average stays smooth — and it's brutally hard to reproduce while profiling.
+3. **Forgetting `needsUpdate = true` after writing directly into a `BufferAttribute`'s array.** The particles genuinely update in RAM, but the drawing on screen sits frozen, because Three.js has no way of knowing the data changed and so never calls `bufferSubData` — no console error ever signals this.
+
+</Callout>

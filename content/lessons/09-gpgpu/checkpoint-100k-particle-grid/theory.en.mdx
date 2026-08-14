@@ -1,0 +1,15 @@
+## Goal
+
+This is the GPGPU track's first mini-build, closing out the "State on the GPU" module: build a 100,000-particle system where BOTH position and velocity update entirely on the GPU through `GPUComputationRenderer` — not a single `particle.position += ...` line runs on the CPU per frame. It proves you actually understand compute variables, the dependency between two state textures, and how to render a `Points` cloud that reads position from a texture instead of a fixed buffer.
+
+## Requirements
+
+Build a flat 320×320 (~102,400) particle grid lying in the XY plane. Each particle has a fixed "home" position — derived directly from the state texture's own UV coordinate, no separate texture needed to store it. The velocity compute shader: a spring force pulling the particle back toward home, plus a small random perturbation so particles don't all move in perfect lockstep, plus damping so the system settles instead of oscillating forever. The position compute shader is a plain Euler integration. Every few seconds, a burst impulse scatters the whole grid outward in a random direction, and the spring pulls everything back to its original home. Render with `Points`, each vertex reading its position through a "state-uv" attribute pointing at its exact texel in the state texture; color by instantaneous speed (the velocity vector's magnitude mapped through a hue ramp).
+
+## Structure Hint
+
+Everything here is built around two compute shaders wired together via `setVariableDependencies`: the velocity shader reads both the previous frame's position texture AND velocity texture to compute forces; the position shader only reads the previous frame's velocity texture to integrate. There's no third "home" texture — everything derives from those exact two textures plus the UV coordinate already available in `gl_FragCoord`.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — the system holds a stable 60fps at 100k scale, the burst genuinely scatters particles and pulls them back to their exact original spot (no gradual drift over time), color clearly tracks speed, and remounting the component (navigate away and back) leaks no GPU memory.

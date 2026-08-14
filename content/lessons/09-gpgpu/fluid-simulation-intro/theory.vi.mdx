@@ -1,0 +1,72 @@
+## Ba hướng tiếp cận mô phỏng chất lỏng thời gian thực
+
+Cloth ở bài trước là một lưới hữu hạn các điểm nối với hàng xóm bằng ràng buộc khoảng cách — mô hình gọn, chạy tốt trên texture trạng thái. Chất lỏng khó hơn hẳn vì có một ràng buộc **toàn cục**, không cục bộ: thể tích phải bảo toàn ở mọi nơi cùng lúc, không riêng giữa một cặp hàng xóm. Giải bài toán đó có hai họ giải pháp hoàn toàn khác triết lý — **hạt** (particle-based: SPH, PBF) và **lưới** (grid-based: Stable Fluids của Jos Stam) — và bài này chỉ vẽ bản đồ ba hướng đó, không cài đặt đầy đủ hướng nào. Demo đi kèm dựng đúng một góc nhỏ, khả thi nhất trên trình duyệt: Stable Fluids trên lưới 2D.
+
+## SPH — hạt mang khối lượng, mật độ từ kernel làm mượt
+
+Smoothed Particle Hydrodynamics coi chất lỏng là một đám hạt rời rạc, mỗi hạt mang khối lượng $m$, vị trí, vận tốc. Không có lưới nào cả — mật độ tại vị trí hạt $i$ ước lượng bằng cách cộng đóng góp của các hạt lân cận, trọng số giảm dần theo khoảng cách qua một **hàm kernel làm mượt** $W$ (thường là spline bậc ba hoặc poly6, bán kính hỗ trợ $h$):
+
+$$
+\rho_i = \sum_j m_j\, W(\lVert \mathbf{r}_i - \mathbf{r}_j\rVert, h)
+$$
+
+Áp suất tại $i$ suy ra từ độ lệch mật độ so với mật độ nghỉ ($p_i \propto \rho_i - \rho_0$), rồi gradient áp suất (cũng tính qua đạo hàm của $W$) đẩy các hạt bị nén ra xa nhau. Chỗ tốn kém nhất không phải phép toán — mà là **tìm hàng xóm**: tổng công thức trên đòi quét mọi cặp hạt trong bán kính $h$, brute-force là $O(N^2)$. Với $N=5000$ hạt, đó là 25 triệu phép so khoảng cách mỗi khung hình; ở 100.000 hạt là 10 tỷ — không có bộ nhớ đệm không gian (spatial hashing, uniform grid binning) thì con số particle nghe "khiêm tốn" vẫn đủ giết framerate. SPH hợp nhất cho chất lỏng có **bề mặt và tia bắn tung toé** — nước đổ, sóng vỗ, giọt rơi — vì mỗi hạt tự nhiên là một mẫu bề mặt.
+
+## PBF — ràng buộc vị trí thay vì tính lực
+
+Position Based Fluids (Macklin & Müller, 2013) giữ nguyên công thức mật độ SPH nhưng đổi cách dùng nó: thay vì tích lực áp suất rồi tích phân vận tốc, PBF viết mật độ thành một **ràng buộc vị trí** mỗi hạt phải thoả:
+
+$$
+C_i(\mathbf{p}) = \frac{\rho_i}{\rho_0} - 1 = 0
+$$
+
+rồi giải ràng buộc đó trực tiếp trên vị trí — đúng kỹ thuật Position-Based Dynamics dùng cho ràng buộc khoảng cách của cloth ở bài trước, chỉ khác dạng ràng buộc. "Giải, không tích phân lực" là lý do PBF ổn định hơn hẳn SPH cổ điển ở timestep lớn: SPH ép $k$ (độ cứng áp suất) lên cao để chất lỏng đủ "đặc" dễ sinh dao động số bùng nổ, PBF không có $k$ nào để chỉnh sai. Đây là kỹ thuật đứng sau phần lớn hệ hạt fluid trong game engine hiện đại (NVIDIA Flex, PhysX fluid).
+
+## Stable Fluids của Stam — lưới, không phải hạt
+
+Hướng thứ ba bỏ hẳn khái niệm hạt. Không gian chia thành lưới cố định, mỗi ô lưới lưu vận tốc (và tuỳ ứng dụng: mật độ khói, nhiệt độ, màu mực) — y hệt kiểu texture trạng thái đã dùng xuyên suốt track này. Jos Stam (1999) rút Navier–Stokes không nén thành một vòng cập nhật bốn bước mỗi khung hình: cộng lực ngoài, **advect** (di chuyển đại lượng theo chính trường vận tốc), khuếch tán, **project** (ép trường vận tốc hết phân kỳ).
+
+Bước advect là mấu chốt của cái tên "stable": Stam dùng **semi-Lagrangian advection** — với mỗi ô, lần ngược theo vận tốc để tìm ô đó "đến từ đâu" ở khung trước, rồi lấy mẫu nội suy tại đó — thay vì tích phân tiến (forward Euler) vốn nổ số học nếu $\Delta t$ vượt điều kiện CFL. Lần ngược ổn định với **mọi** $\Delta t$, đổi lại bằng khuếch tán số học (chi tiết mịn mất dần theo thời gian, kể cả khi tắt hẳn dissipation) — ổn định không đồng nghĩa chính xác.
+
+Bước project chính là divergence từ bài curl noise (Track 7): phân rã Helmholtz nói bất kỳ trường $\mathbf{w}$ nào cũng tách được thành phần không phân kỳ $\mathbf{u}$ cộng một gradient áp suất, $\mathbf{w} = \mathbf{u} + \nabla p$. Giải $p$ qua phương trình Poisson $\nabla^2 p = \nabla\cdot\mathbf{w}$ rồi trừ đi:
+
+$$
+\mathbf{u} = \mathbf{w} - \nabla p
+$$
+
+Không có nghiệm đóng cho lưới rời rạc, nên $p$ giải bằng lặp **Jacobi** — mỗi lần lặp, mỗi ô cập nhật từ bốn ô hàng xóm và giá trị phân kỳ cố định của chính nó:
+
+```glsl
+// một bước lặp Jacobi trong vòng giải áp suất
+float p = (pLeft + pRight + pBottom + pTop - divergence) * 0.25;
+```
+
+Càng lặp nhiều, trường càng gần "hết phân kỳ" thật — đúng slider trong demo bên dưới.
+
+## Vì sao demo "fluid" nổi tiếng trên web đều là Stable Fluids 2D
+
+Bản demo WebGL phong cách Pavel Dobryakov (repo `PavelDoGreat/WebGL-Fluid-Simulation`) mà hầu như ai học GLSL cũng từng thấy — không phải SPH. Đó là Stable Fluids trên lưới 2D: một texture "dye" (màu mực) bị advect bởi một texture vận tốc, chuột kéo splat lực trực tiếp vào cả hai. Lý do nó thống trị demo web không phải thẩm mỹ — là chi phí: lưới cố định không cần tìm hàng xóm (vấn đề $O(N^2)$ của SPH biến mất, lấy mẫu texture láng giềng luôn là $O(1)$), và mọi bước (advect, splat, divergence, Jacobi, project) đều là một fullscreen-quad fragment shader đọc/ghi FBO — đúng nền GPGPU ping-pong đã học từ đầu track này. Không cần công cụ mới, chỉ cần nhiều pass hơn.
+
+## Chi phí, độ phức tạp và chọn đúng công cụ
+
+| | SPH | PBF | Stable Fluids |
+|---|---|---|---|
+| Biểu diễn | Hạt rời rạc | Hạt rời rạc | Lưới cố định (texture) |
+| Chi phí chính | Tìm hàng xóm $O(N^2)$ (không binning) | Tìm hàng xóm + vòng lặp giải ràng buộc | Số ô lưới × số bước × số lần lặp Jacobi |
+| Ổn định | Nhạy với $\Delta t$, độ cứng $k$ | Ổn định hơn SPH lực-dựa | Vô điều kiện ổn định (advect), nhưng khuếch tán số |
+| Quy mô web hợp lý | Vài nghìn hạt không binning | Tương tự SPH, cần binning để lên chục nghìn | Lưới 128²–256² mượt ở 60fps |
+| Phù hợp cho | Chất lỏng có bề mặt, tia bắn, giọt | Như SPH, cần ổn định hơn | Khói, mực, hiệu ứng 2D màn hình |
+
+## Phạm vi thực tế trên web
+
+Nói thẳng: một mô phỏng chất lỏng 3D chất lượng sản xuất — nước đổ trong game, splash VFX — nằm ngoài tầm một tab trình duyệt. Nó cần SPH/PBF với spatial hashing thật, hàng chục nghìn hạt giữ 60fps, ngân sách GPU đó hợp lý trên console/native, không hợp lý cạnh tranh với phần còn lại của trang web. Lưới 2D là điểm ngọt của web: đủ thuyết phục về thị giác (khói, mực, hiệu ứng tương tác theo chuột), đủ rẻ để chạy song song những thứ khác trên trang. Demo dưới đây dựng đúng điểm ngọt đó — không phải vì SPH/PBF "khó", mà vì đó là lựa chọn kỹ thuật đúng cho môi trường này. Capstone "GPU particle system tương tác" ở Track 13 sẽ quay lại câu hỏi quy mô hạt này, lần này cho particle thuần không cần incompressibility.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới đọc/thử cài mô phỏng chất lỏng:
+
+1. **Đổ lỗi cho "GPU chậm" khi thật ra thuật toán là $O(N^2)$.** Một SPH brute-force 5000 hạt tụt khung hình không phải vì GPU yếu — vì thiếu cấu trúc không gian (uniform grid/spatial hash) để giới hạn tìm hàng xôm về vùng lân cận thật sự, không phải toàn bộ tập hạt.
+2. **Giảm số lần lặp Jacobi để "tiết kiệm" mà không nhận ra phân kỳ chưa thực sự về 0.** Kết quả là dòng chảy trông vuông vức, xoáy yếu hoặc biến mất hẳn — không phải lỗi công thức, chỉ đơn giản là nghiệm áp suất chưa hội tụ đủ; đúng hiện tượng slider số vòng lặp trong demo minh hoạ.
+3. **Nhầm "ổn định vô điều kiện" của semi-Lagrangian advection với "chính xác."** Đặt dissipation về giá trị không làm mất màu mực gì cả nhưng trường vẫn mờ dần theo thời gian — đó là khuếch tán số học vốn có của phép nội suy mỗi bước advect, không phải bug ở dissipation.
+
+</Callout>

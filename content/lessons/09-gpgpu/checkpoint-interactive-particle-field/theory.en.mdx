@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build closes out the "Behaviors at Scale" module: no new theory, just three already-learned techniques — a GPU-driven flow field, mouse interaction, and instancing — combined into one particle field that reacts to the cursor in real time. It also doubles as the seed for capstone 3 (an interactive GPU particle system): the code you write here gets extended later, not rewritten from scratch.
+
+## Requirements
+
+A compute shader updates tens of thousands of particle positions every frame, combining curl noise as the ambient flow with a radial force driven by the pointer: push away on hover, pull in while the mouse is held, strength fading smoothly with distance instead of cutting off abruptly. Render with instancing (instanced quads or points), colored by each particle's speed. Particles must never sit fully still — turn off the mouse interaction and the ambient flow alone must keep the field moving. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Each particle's velocity is a **sum**, not a choice: `vel = flowField(pos) + mouseForce(pos, pointer)`. Only `mouseForce` depends on the pointer and needs a TODO; the wiring that gets the pointer's position in plane space (raycasting onto a plane) is already provided in the starter — no need to touch it.
+
+## What "Done" Looks Like
+
+Check against the checklist in the exercises section before opening the solution — the cursor must genuinely sculpt the particle field's shape, both push and pull must work, motion should read as organic rather than jittery, and the field must settle back into its ambient drift once the mouse leaves.

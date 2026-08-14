@@ -1,0 +1,62 @@
+## Transform Feedback: the Other Path to "State Living on the GPU"
+
+The previous two lessons — manual ping-pong FBOs and `GPUComputationRenderer` — both take the same road: encode particle state into a texture's PIXELS, update it with a full-screen fragment shader, then read that texture back next frame. WebGL2 has a completely different road that never touches a texture or a fragment shader at all: **transform feedback**. The core idea — a vertex shader, which normally only computes `gl_Position` for the rasterizer, is allowed to write any of its `out` values straight into a GPU buffer instead, with no rasterize/fragment step in between. For a particle system that's exactly what's needed: read current position/velocity as `in` attributes, compute new position/velocity, write them as `out`, and the GPU automatically captures each batch of output into a `WebGLBuffer` — already shaped like the attribute format the NEXT draw call can reuse as input, with nothing encoded into pixel color.
+
+## `transformFeedbackVaryings` Must Run Before Linking
+
+The GPU needs to know, BEFORE a program finishes compiling, which `out` varyings of the vertex shader get captured into a buffer, and in what order.
+
+```ts
+gl.transformFeedbackVaryings(program, ["vPosition", "vVelocity"], gl.SEPARATE_ATTRIBS);
+gl.linkProgram(program); // must come AFTER transformFeedbackVaryings()
+```
+
+`gl.transformFeedbackVaryings(...)` declares exactly that — and it must run **before** `gl.linkProgram(program)`, not after. Why: the linker needs that information up front to allocate the correct output "slot" for each listed varying, the same way it allocates a location for an input attribute; calling this after linking has no effect at all — the program's layout is already frozen. `SEPARATE_ATTRIBS` means each varying in the list writes to its OWN buffer (the $i$-th buffer maps to the $i$-th binding point); the other mode, `INTERLEAVED_ATTRIBS`, packs every varying into a single buffer with an interleaved layout (stride) — fewer buffers to manage, but reading each attribute back in a later draw call is more work since you have to get the stride/offset exactly right.
+
+## Writing to a Buffer: `bindBufferBase`, `beginTransformFeedback`/`endTransformFeedback`
+
+Before drawing, every transform feedback binding point needs to point at a real buffer:
+
+```ts
+gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, bufferBPosition);
+gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 1, bufferBVelocity);
+gl.enable(gl.RASTERIZER_DISCARD);
+gl.beginTransformFeedback(gl.POINTS);
+gl.drawArrays(gl.POINTS, 0, count);
+gl.endTransformFeedback();
+gl.disable(gl.RASTERIZER_DISCARD);
+```
+
+`bindBufferBase` assigns the buffer that receives `vPosition` (the first varying in the array passed to `transformFeedbackVaryings`) to index 0, and likewise index 1 for `vVelocity`. `beginTransformFeedback(gl.POINTS)` opens "capture mode," `drawArrays` runs the vertex shader for each particle while the GPU writes every `vPosition`/`vVelocity` pair into its bound buffer, and `endTransformFeedback()` closes it. An easy detail to miss: WebGL forbids a single buffer from being both the SOURCE of an attribute read (through a VAO) and the DESTINATION of a transform feedback write within the same draw call — that's exactly why double-buffering is mandatory: read from set A, write into set B, never read and write the same buffer.
+
+## `RASTERIZER_DISCARD`: a Pass That Only Computes, Never Draws
+
+A normal draw call always rasterizes: turning points/triangles into pixels and running a fragment shader. The update pass here needs none of that — it only needs the vertex shader to run and write its buffer output, while `gl_Position` gets computed purely to satisfy GLSL's syntax, carrying no geometric meaning at all (`vec4(0.0)` is enough). `gl.enable(gl.RASTERIZER_DISCARD)` tells the GPU to drop the rasterize + fragment stages entirely for every following draw call, until `gl.disable(gl.RASTERIZER_DISCARD)`. That's why the update program still needs a valid fragment shader to link (GLSL requires one), but its contents don't matter — no fragment invocation ever runs it.
+
+## Double-Buffering with VAOs Instead of Textures
+
+Ping-pong FBOs ping-pong at the texture level (two `WebGLRenderTarget`s); transform feedback ping-pongs at the buffer/VAO level. Each set (A, B) is one `WebGLVertexArrayObject` pointing at that set's own position and velocity buffers. Each frame: bind the "front" set's VAO to both render (draw particles on screen using last frame's data) and serve as the update draw call's input; the other set's buffers receive output through `bindBufferBase`; then flip the front/back roles for next frame. Since input and output are two physically distinct buffer objects (not two regions of the same buffer), no manual synchronization is needed at all — the driver guarantees ordering on its own.
+
+## Why Three.js Doesn't Expose Transform Feedback
+
+`THREE.Material`/`WebGLRenderer` are designed around one pipeline: material → shader → rasterize → fragment → framebuffer; every abstraction around render targets, `ShaderMaterial`, post-processing all assumes a fragment step at the end that produces a pixel. Transform feedback breaks exactly that assumption — it's a draw call that does NOT rasterize, writing straight into a buffer instead of a framebuffer. Three.js has no concept of a "target that isn't a texture" anywhere in its material system, so `GPUComputationRenderer` (and every other GPGPU-adjacent API Three ships) is forced down the fragment-texture road even though it's a bit slower, instead of exposing raw transform feedback. This isn't an oversight — it's a direct consequence of abstracting around "a material produces a pixel," which is exactly why this lesson's demo has to drop down to raw WebGL2 instead of going through Three.
+
+## Versus Ping-Pong Textures: When Transform Feedback Wins
+
+Transform feedback skips the pixel-color encode/decode step entirely: data in and out is exactly the numeric array shape you define (not a texture's RGBA), and one buffer can hold multiple interleaved attributes as naturally as any ordinary VBO — no need to "pack" four numbers into a texel. In exchange, it loses something textures get for free: neighbor sampling. A fragment shader can `texture2D(texturePosition, uv + offset)` to read a DIFFERENT particle's state — exactly what the `boids-flocking-on-gpu` lesson needs so each particle can "see" its neighbors; a transform feedback vertex shader only ever sees the ONE particle it's processing through its `in` attributes, with no way to read across to another particle within the same draw call.
+
+This lesson's demo illustrates exactly the case transform feedback fits best: an inverse-square pull toward the origin, $F = s/r^2$, where $s$ is the attractor strength and $r$ the distance to center — each particle only needs its OWN position to compute that force, never another particle's. The initial circular-orbit velocity is seeded from the centripetal balance $v = \sqrt{s/r}$ (derived from $v^2/r = s/r^2$), computed once on the CPU at setup. The general rule: pure per-particle state, no neighbor reads needed → transform feedback is cheaper and more direct; spatial sampling required (flow fields, boids, nearby collisions) → texture/`GPUComputationRenderer` is mandatory, because that's the only way to "look" into a different memory cell.
+
+## WebGPU Compute: What Comes Next
+
+Both ping-pong textures and transform feedback are ways of working around WebGL having no real compute shader — they borrow the vertex/fragment stages to do compute's job. WebGPU has an actual compute shader: arbitrary buffer reads/writes, with no tie to rasterization or one-vertex-per-particle, and explicit `workgroup` thread division instead of a repurposed draw call. Track 6 already introduced TSL (Three Shading Language) as the abstraction layer for WebGPU; TSL's compute path uses a JS callback compiled straight down to a WGSL compute shader, eliminating the need to "fake" compute with vertex or fragment stages the way this track's two techniques do — but that's a story for a later track, once WebGPU is common enough to stop being an "experimental feature."
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common transform feedback mistakes:
+
+1. **Calling `transformFeedbackVaryings` AFTER `gl.linkProgram`.** The program still "links successfully" syntactically but captures nothing meaningful — the linker already froze the output layout before this call ran, so calling it late has no effect.
+2. **Using the same buffer as both the VAO's input source and the `bindBufferBase` destination** in one draw call (forgetting to double-buffer) — WebGL errors out or produces undefined behavior, since thousands of vertex shader invocations run in parallel, reading and writing the same memory at once.
+3. **Forgetting `gl.disable(RASTERIZER_DISCARD)` after the update pass.** Every following render draw call — even ones unrelated to the simulation — silently draws nothing at all, because the discard state is still globally on until it's turned off by hand.
+
+</Callout>

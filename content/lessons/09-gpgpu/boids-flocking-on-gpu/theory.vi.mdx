@@ -1,0 +1,59 @@
+## Ba quy tắc của Reynolds: separation, alignment, cohesion
+
+Craig Reynolds giới thiệu mô hình "boids" tại SIGGRAPH 1987 để trả lời một câu hỏi tưởng ngược đời: mô phỏng một đàn chim bay theo đội hình mà không con nào biết "kế hoạch" của cả đàn. Lời giải của ông chỉ gồm ba quy tắc, và điều quan trọng nhất là: mỗi quy tắc chỉ nhìn vào hàng xóm ở gần — không boid nào biết vị trí của con ở đầu kia đàn, đàn vẫn bay có tổ chức.
+
+### Separation — tránh va chạm cự ly gần
+
+Mỗi boid bị đẩy ra xa những hàng xóm quá sát, lực tỉ lệ nghịch bình phương khoảng cách — càng gần lực càng tăng đột ngột, giống phản xạ né va chạm thật của một sinh vật sống.
+
+### Alignment — bay cùng hướng đàn
+
+Mỗi boid kéo vận tốc của mình về gần vận tốc trung bình của các hàng xóm trong một vùng rộng hơn — không copy chính xác vận tốc ai cả, chỉ steer dần theo hướng chung.
+
+### Cohesion — không tách đàn
+
+Mỗi boid steer nhẹ về phía tâm khối của các hàng xóm trong vùng rộng nhất, giữ đàn không rã thành các cá thể lẻ tẻ.
+
+Ba lực này cộng tuyến tính thành một vận tốc mới mỗi frame. Không quy tắc nào "biết" hình dạng đàn tổng thể — flocking là kết quả của hàng nghìn phép cộng vector cục bộ chạy song song, không phải một thuật toán lập kế hoạch đường bay.
+
+## Dịch sang GPU: mỗi boid tự lấy mẫu hàng xóm từ texture trạng thái
+
+Bài `pingpong-fbo-state-textures` và `gpucomputationrenderer` đã dạy: vị trí và vận tốc của mọi particle sống trong hai texture trạng thái, ping-pong mỗi frame. Boids tái dùng đúng hạ tầng đó, chỉ đổi fragment shader cập nhật vận tốc: thay vì chỉ đọc trạng thái của chính mình ở texel hiện tại, mỗi invocation compute (mỗi boid) phải lặp qua các texel khác trong cùng texture trạng thái để biết "ai đang ở gần mình" — đây là khác biệt cốt lõi so với `flow-field-particles`, nơi mỗi particle chỉ đọc một trường vector độc lập, không cần biết particle khác đang ở đâu.
+
+### Vấn đề O(N²) và giải pháp lấy mẫu stride
+
+Lặp qua toàn bộ N texel cho mỗi N boid tốn $O(N^2)$ phép đọc texture mỗi frame. Với $N = 4096$ (lưới $64\times64$ của demo bài này), đó là $4096^2 \approx 16.8$ triệu lần đọc — nặng nhưng texture chỉ $64\times64$, vẫn vừa cache của GPU nên chạy mượt thời gian thực (ước lượng, phụ thuộc phần cứng). three.js dùng đúng chiến lược full-scan này trong ví dụ chính thức `webgl_gpgpu_birds` ở quy mô nhỏ tương tự.
+
+Nhưng ở $N = 65536$ (lưới $256\times256$, quy mô bài `instancing-a-million-objects` ngay sau đây chạm tới), full scan là $65536^2 \approx 4.3$ tỷ lần đọc mỗi frame — không còn khả thi thời gian thực trên hầu hết GPU. Giải pháp thực dụng: lấy mẫu một tập con theo stride — chỉ đọc texel thứ $0, k, 2k, 3k, \dots$ thay vì tất cả, biến $O(N^2)$ thành $O(N^2/k)$. Với $k=8$, số lần đọc mỗi frame còn khoảng $536$ triệu — giảm đúng 8 lần. Vì chỉ số texel không tương ứng với vị trí không gian thực (hai boid liền chỉ số có thể ở hai đầu đàn), lấy mẫu theo stride vẫn cho một mẫu ngẫu nhiên hợp lý đại diện cho đàn — flocking chỉ cần một ước lượng thống kê về hướng/mật độ xung quanh, không cần tập hàng xóm chính xác tuyệt đối.
+
+## Vùng bán kính và cân bằng trọng số
+
+Ba quy tắc dùng ba bán kính lồng nhau: separation nhỏ nhất (khoảng $0.4$ lần bán kính cảm nhận), alignment trung bình ($0.7$ lần), cohesion dùng trọn bán kính cảm nhận. Thứ tự này không tuỳ ý: separation phải thắng ở cự ly gần, nếu không cohesion (kéo vào tâm) và alignment (kéo theo hướng chung) sẽ áp đảo, khiến các boid chồng lấn lên nhau thay vì né tránh — nhìn giống một khối hạt dính chặt hơn là một đàn chim. Cân bằng trọng số ba lực (không chỉ bán kính vùng) quan trọng không kém: trọng số separation quá thấp so với alignment/cohesion tạo đúng lỗi collapse này dù bán kính đã đúng thứ tự.
+
+## Speed clamping và edge behavior
+
+Vận tốc thô sau khi cộng ba lực có thể tăng dần vô hạn (alignment liên tục kéo về trung bình đang tăng) hoặc giảm về gần 0 (boid mắc kẹt giữa các lực triệt tiêu nhau) — cả hai đều phá vỡ cảm giác "đang bay". Speed clamping ép độ lớn vận tốc vào một khoảng $[v_{min}, v_{max}]$ sau mỗi lần cộng lực, giữ chuyển động tự nhiên.
+
+Khi boid bay ra khỏi vùng biên, có hai lựa chọn: **wrap** (dịch chuyển tức thời sang phía đối diện, dùng `mod()`) hoặc **soft-turn** (một lực steer nhẹ đẩy ngược về tâm khi vượt biên, không có bước nhảy vị trí). Wrap rẻ và đơn giản nhưng gây "dịch chuyển tức thời" nhìn thấy được nếu camera đủ gần biên; soft-turn mượt hơn về thị giác nhưng cần tinh chỉnh độ mạnh lực để không tạo dao động qua lại ở rìa. Demo bài này dùng soft-turn để giữ cả đàn luôn trong khung hình.
+
+## Emergence: không thủ lĩnh, không kế hoạch toàn cục
+
+Đây là ý quan trọng nhất của cả bài: không texel nào trong texture trạng thái được đánh dấu "leader", không có bước nào tính trước hình dạng đội hình. Hình chữ V của đàn ngỗng, xoáy cuộn của đàn cá — toàn bộ là hành vi nổi (emergent behavior): hàng nghìn quyết định cục bộ, chạy song song, độc lập, cộng lại thành một hình thái có vẻ "có tổ chức" ở quy mô toàn cục mà không thực thể nào trong hệ thống thực sự "biết" về nó. Đây chính xác là lý do boids chạy tốt trên GPU: mỗi compute invocation hoàn toàn độc lập, không cần đồng bộ hoá hay điều phối trung tâm — điều kiện lý tưởng cho hàng nghìn luồng song song.
+
+## Công thức tham số: đàn chặt hay đàn lỏng
+
+Hai "cảm giác" đàn phổ biến chỉ cách nhau vài con số: đàn chặt (khối di chuyển sát nhau, kiểu cá mòi) cần cohesion cao, alignment cao, perception radius nhỏ, separation vừa đủ để không chồng lấn. Đàn lỏng (bay tản mác nhưng vẫn cùng hướng, kiểu chim di cư) cần alignment chiếm ưu thế, cohesion thấp, perception radius lớn hơn để cảm nhận xu hướng chung từ xa mà không bị kéo sát lại. Không có công thức "đúng" duy nhất — thử các slider trong demo là cách nhanh nhất để cảm nhận không gian tham số này.
+
+## Nối tiếp: instancing, hiệu năng, và particle system tương tác
+
+Boids hôm nay dừng lại ở việc render bằng point sprite — bài `instancing-a-million-objects` ngay sau đây thay cách render đó bằng InstancedMesh đọc trực tiếp texture trạng thái trong vertex shader, mở khoá hình học thật (không chỉ chấm điểm) ở quy mô hàng chục nghìn tới hàng triệu object. Track 12 (Performance) quay lại đo chính xác chi phí texture fetch mà stride sampling ở đây mới chỉ ước lượng, còn Capstone 3 ở Track 13 kết hợp toàn bộ kỹ thuật này — flow field, boids, instancing — vào một particle system tương tác hoàn chỉnh.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài đặt boids trên GPU:
+
+1. **Trọng số separation quá thấp so với alignment/cohesion.** Vì cohesion kéo boid vào tâm khối và alignment kéo boid theo vận tốc trung bình, cả hai gần như luôn "thắng" nếu separation không được nhân trọng số đủ mạnh ở cự ly gần — kết quả là cả đàn co lại thành một khối chồng lấn thay vì bay sát nhau có khoảng cách. Luôn kiểm tra: ở khoảng cách rất nhỏ, độ lớn lực separation ($1/d^2$ nhân trọng số) phải vượt hẳn tổng alignment + cohesion.
+2. **So sánh UV bằng dấu `==` để bỏ qua chính mình thay vì so khoảng cách.** `gl_FragCoord.xy / resolution.xy` và `(vec2(x, y) + 0.5) / resolution` là hai phép tính độc lập — sai số làm tròn dấu phẩy động đôi khi khiến `otherUv == uv` sai dù cùng một texel, khiến boid tự đẩy chính mình (self-repulsion), gây rung giật khó truy. Luôn dùng `dist < epsilon` để bỏ qua chính mình.
+3. **Quên khai báo chính biến làm dependency của chính nó trong `setVariableDependencies`.** `textureVelocity` cần đọc chính `textureVelocity` frame trước để cộng dồn lực lên vận tốc hiện có — bỏ sót dependency này khiến uniform sampler tương ứng không bao giờ được gán giá trị (`null`), sample một texture null trả về giá trị không xác định, lan thành NaN và làm cả render target đen sau vài frame.
+
+</Callout>

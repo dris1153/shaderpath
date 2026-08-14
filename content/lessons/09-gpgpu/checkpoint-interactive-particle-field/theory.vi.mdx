@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build khép lại module "Hành vi ở quy mô lớn": không lý thuyết mới, chỉ ghép ba kỹ thuật đã học — flow field chạy trên GPU, tương tác chuột, và instancing — thành một trường particle phản hồi con trỏ theo thời gian thực. Đây cũng chính là hạt giống cho capstone 3 (hệ particle GPU tương tác): code bạn viết ở đây, capstone sẽ mở rộng thêm chứ không viết lại từ đầu.
+
+## Yêu cầu
+
+Một compute shader cập nhật vị trí hàng chục nghìn particle mỗi frame, kết hợp curl noise làm dòng chảy nền với một lực xuyên tâm điều khiển bởi con trỏ: đẩy ra khi hover, hút vào khi giữ chuột, cường độ giảm mượt theo khoảng cách chứ không cắt cụt đột ngột. Render bằng instancing (quad hoặc point instanced), tô màu theo tốc độ từng particle. Particle không bao giờ đứng yên hoàn toàn — tắt tương tác chuột, dòng chảy nền vẫn phải giữ trường chuyển động. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Vận tốc mỗi particle là **tổng**, không phải lựa chọn: `vel = flowField(pos) + mouseForce(pos, pointer)`. Chỉ có `mouseForce` phụ thuộc con trỏ và cần TODO; phần wiring lấy vị trí con trỏ trong không gian mặt phẳng (raycasting vào một plane) đã có sẵn trong starter, không cần đụng vào.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — con trỏ phải thực sự "nặn" được hình dạng trường particle, cả đẩy lẫn hút đều hoạt động, chuyển động organic chứ không giật, và field quay lại trạng thái trôi nền khi bỏ chuột ra ngoài.

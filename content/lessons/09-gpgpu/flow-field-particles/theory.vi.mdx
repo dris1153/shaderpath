@@ -1,0 +1,55 @@
+## Từ lực đến TRƯỜNG: vận tốc lấy mẫu một vector field
+
+Track 9 tới giờ mới cho particle hai loại chuyển động: lò xo kéo về nhà (checkpoint vừa xong) và tích phân vận tốc thẳng. Cả hai đều là LỰC cục bộ — phụ thuộc vào trạng thái riêng của particle đó. Bài này đổi cách nhìn: thay vì tính một lực rồi cộng vào vận tốc, ta lấy mẫu một TRƯỜNG VECTOR tại đúng vị trí particle, và trường đó tồn tại độc lập với particle — mọi điểm trong không gian đều có một hướng "gió" riêng, particle chỉ đơn giản đi theo hướng gió tại chỗ nó đứng.
+
+Trường dùng ở đây là curl noise 3D — đúng kỹ thuật đã học ở Track 7 (Curl Noise & Flow Field), chỉ khác một chỗ quan trọng: ở Track 7, công thức curl chạy trong MỘT fragment shader để tô màu từng pixel màn hình, không có trạng thái nào tồn tại giữa các frame. Ở đây, công thức y hệt chạy bên trong COMPUTE PASS của `GPUComputationRenderer`, lấy mẫu tại vị trí 3D thật của từng particle (đọc thẳng từ texture vị trí), rồi ghi vận tốc mới ngược lại texture trạng thái. Curl 3D đầy đủ mở rộng công thức 2D thành ba trường tiềm năng độc lập $\Psi=(\psi_x,\psi_y,\psi_z)$:
+
+$$
+F=\nabla\times\Psi=\left(\frac{\partial\psi_z}{\partial y}-\frac{\partial\psi_y}{\partial z},\ \frac{\partial\psi_x}{\partial z}-\frac{\partial\psi_z}{\partial x},\ \frac{\partial\psi_y}{\partial x}-\frac{\partial\psi_x}{\partial y}\right)
+$$
+
+mỗi thành phần cần 2 lần gọi noise sai phân trung tâm, tổng 12 lần gọi `noise3()` cho một vector curl — đắt hơn bản 2D (4 lần) nhưng chạy đúng một lần mỗi particle mỗi frame, không phải mỗi pixel màn hình, nên vẫn rẻ ở quy mô 65k particle.
+
+## Steering: mix về hướng field, không phải cộng dồn lực
+
+Có hai cách hợp lý để dùng trường vector vừa lấy mẫu: CỘNG nó vào vận tốc hiện tại như một lực (`vel += field * dt`), hoặc MIX vận tốc hiện tại thẳng về hướng field:
+
+$$
+\vec v_{n+1}=\vec v_n+\alpha(\vec v_{desired}-\vec v_n),\qquad \alpha=\mathrm{clamp}(k\,\Delta t,\ 0,\ 1)
+$$
+
+với $\vec v_{desired} = \hat F \cdot \text{strength}$. Đây chính là phép nội suy exponential smoothing rời rạc — càng gần $\alpha=1$, vận tốc "vâng lời" trường gần như tức thì (particle bám sát field, đổi hướng dứt khoát ở biên các xoáy); $\alpha$ nhỏ giữ lại nhiều "quán tính" của vận tốc cũ, particle lướt qua các đổi hướng mượt hơn nhưng trễ hơn so với field thật. Cách CỘNG LỰC ngược lại: field liên tục bơm năng lượng vào hệ, vận tốc có thể tăng không giới hạn nếu không có damping riêng — đó là lý do bài này chọn steering (mix), damping chỉ còn vai trò làm mượt bổ sung chứ không phải cơ chế duy nhất chặn vận tốc phát nổ.
+
+## Vòng đời particle: tuổi, tái sinh, và vì sao phải so le
+
+Một particle bay theo curl field mãi mãi sẽ rời khỏi vùng quan sát — trường divergence-free giữ diện tích, không giữ VỊ TRÍ. Giải pháp: đếm tuổi particle trong kênh thứ 4 của texture vị trí, và khi tuổi vượt `uLifetime`, particle "tái sinh" tại một vị trí ngẫu nhiên mới, tuổi về 0. Vị trí ngẫu nhiên đó không dùng `Math.random()` từ CPU — nó là một hash xác định từ chính UV của particle cộng thời gian hiện tại, y hệt kỹ thuật hash-based randomness đã học ở Track 7, chỉ khác input là toạ độ trạng thái GPGPU thay vì toạ độ pixel màn hình.
+
+Chi tiết dễ bỏ sót: nếu MỌI particle bắt đầu ở tuổi 0, cả 65.536 particle sẽ tái sinh đồng loạt mỗi `uLifetime` giây — một cú "nháy" toàn màn hình rất lộ liễu. Demo này gieo tuổi ban đầu ngẫu nhiên trong $[0, \text{lifetime})$ khi khởi tạo texture, so le việc tái sinh đều theo thời gian: với $N=65536$ particle và lifetime $T=4.5$ giây, tốc độ tái sinh trung bình là $N/T\approx 14{,}6$ nghìn particle/giây, trải đều chứ không dồn cục — mắt người không còn nhận ra "nhịp đập" nào cả.
+
+## Trường vẽ tay: khi curl noise không đủ
+
+Curl noise cho hành vi hữu cơ "miễn phí", nhưng không kiểm soát được HÌNH DẠNG cụ thể — muốn dòng chảy uốn theo logo hay chữ cái, cần một trường do người thiết kế vẽ tay. Kỹ thuật: thay vì gọi `curlNoise(pos)`, sample một `DataTexture` 2D/3D đã upload sẵn, mỗi texel lưu một hướng field (RGB = XYZ đã chuẩn hoá về $[0,1]$):
+
+```glsl
+vec3 fieldDir = texture2D(uPaintedField, worldToFieldUV(pos)).xyz * 2.0 - 1.0;
+```
+
+`worldToFieldUV` là một phép ánh xạ tuyến tính từ không gian thế giới về $[0,1]^2$, giống hệt công thức pixel↔UV của Track 0. Phần còn lại của pipeline — mix, damping, tái sinh — không đổi một dòng nào; chỉ nguồn field thay đổi. Đây là ranh giới rõ giữa dữ liệu "vẽ tay" và dữ liệu "lăn ngẫu nhiên" mà bài Custom Attributes (Track 6) đã giới thiệu, áp dụng lại đúng nguyên xi ở quy mô field thay vì quy mô vertex.
+
+## Từ vựng tinh chỉnh: scale, strength, damping, lifetime
+
+Bốn tham số chi phối toàn bộ cảm giác chuyển động. `fieldScale` nhân vào vị trí TRƯỚC khi sample noise — càng lớn, đặc trưng field càng NHỎ (noise "co lại" trong không gian, dòng chảy rối và cục bộ hơn); càng nhỏ, đặc trưng field càng LỚN (dòng chảy mượt, xoáy rộng, gần như đồng nhất trên toàn bộ đám mây). `strength` là biên độ vận tốc mục tiêu — tuyến tính, dễ đoán. `damping` (nhân mỗi frame, luôn < 1) chỉ có tác dụng phụ trợ khi dùng steering thay vì cộng lực, nhưng vẫn đáng giữ vì nó dập những dao động nhỏ còn sót khi field đổi hướng đột ngột. `lifetime` không ảnh hưởng hình dạng dòng chảy, chỉ ảnh hưởng MẬT ĐỘ — lifetime ngắn giữ particle luôn gần vùng spawn (đám mây "đặc" hơn), lifetime dài cho particle trôi xa trước khi tái sinh (đám mây "loãng" và trải rộng hơn).
+
+## Vệt chuyển động và những gì còn thiếu
+
+Nhìn kỹ demo, particle chạy field trông "chấm rời rạc" hơn nhiều so với video quảng cáo curl-noise particle thường thấy — thứ còn thiếu là VỆT (trail): mỗi particle nên để lại một dải mờ dần phía sau thay vì chỉ là một điểm. Trail không phải một thuộc tính của particle — nó là một kỹ thuật hậu kỳ: tích luỹ frame trước vào một buffer rồi làm mờ dần trước khi vẽ chồng frame mới, đúng chủ đề của Track 10 (Post-processing). Track 9 dừng ở việc mô phỏng CHUYỂN ĐỘNG đúng; vẽ đẹp chuyển động đó là việc của track sau.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài flow field particle:
+
+1. **Cộng field trực tiếp vào vận tốc mà quên damping tương xứng.** `vel += field * strength * dt` không có gì sai về mặt cú pháp, nhưng field liên tục bơm năng lượng vào hệ mỗi frame — sau vài chục giây vận tốc tăng dần không giới hạn, particle bay xuyên khỏi khung hình. Steering (mix) tránh được lỗi này vì nó có "trần" tự nhiên: vận tốc không bao giờ vượt quá `strength`.
+2. **Quên `normalize()` hướng field trước khi nhân với strength.** Độ lớn thô của vector curl không đều khắp không gian — vùng noise "phẳng" cho vector gần như bằng 0, vùng noise dốc cho vector lớn hơn hẳn. Không chuẩn hoá khiến `strength` không còn kiểm soát tốc độ nhất quán: một số particle gần như đứng yên, số khác lao vút qua màn hình, dù cùng một giá trị strength.
+3. **Gieo tuổi ban đầu bằng 0 cho toàn bộ particle thay vì ngẫu nhiên trong `[0, lifetime)`.** Hệ vẫn chạy đúng về mặt logic, nhưng mọi particle tái sinh cùng lúc mỗi `lifetime` giây — một cú nháy toàn đám mây rất dễ nhận ra, phá vỡ cảm giác "dòng chảy liên tục" mà cả bài học hướng tới.
+
+</Callout>

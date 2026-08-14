@@ -464,6 +464,54 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/08-raymarching/volumetric-rendering-basics/theory.vi.mdx"),
     en: () => import("./lessons/08-raymarching/volumetric-rendering-basics/theory.en.mdx"),
   },
+  "boids-flocking-on-gpu": {
+    vi: () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/theory.en.mdx"),
+  },
+  "checkpoint-100k-particle-grid": {
+    vi: () => import("./lessons/09-gpgpu/checkpoint-100k-particle-grid/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/checkpoint-100k-particle-grid/theory.en.mdx"),
+  },
+  "checkpoint-cloth-flag": {
+    vi: () => import("./lessons/09-gpgpu/checkpoint-cloth-flag/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/checkpoint-cloth-flag/theory.en.mdx"),
+  },
+  "checkpoint-interactive-particle-field": {
+    vi: () => import("./lessons/09-gpgpu/checkpoint-interactive-particle-field/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/checkpoint-interactive-particle-field/theory.en.mdx"),
+  },
+  "cloth-simulation-basics": {
+    vi: () => import("./lessons/09-gpgpu/cloth-simulation-basics/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/cloth-simulation-basics/theory.en.mdx"),
+  },
+  "flow-field-particles": {
+    vi: () => import("./lessons/09-gpgpu/flow-field-particles/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/flow-field-particles/theory.en.mdx"),
+  },
+  "fluid-simulation-intro": {
+    vi: () => import("./lessons/09-gpgpu/fluid-simulation-intro/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/fluid-simulation-intro/theory.en.mdx"),
+  },
+  "gpucomputationrenderer": {
+    vi: () => import("./lessons/09-gpgpu/gpucomputationrenderer/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/gpucomputationrenderer/theory.en.mdx"),
+  },
+  "instancing-a-million-objects": {
+    vi: () => import("./lessons/09-gpgpu/instancing-a-million-objects/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/instancing-a-million-objects/theory.en.mdx"),
+  },
+  "pingpong-fbo-state-textures": {
+    vi: () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/theory.en.mdx"),
+  },
+  "transform-feedback": {
+    vi: () => import("./lessons/09-gpgpu/transform-feedback/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/transform-feedback/theory.en.mdx"),
+  },
+  "why-particles-live-on-gpu": {
+    vi: () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/theory.vi.mdx"),
+    en: () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -557,6 +605,15 @@ export const REFERENCES_REGISTRY: Partial<
   "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/references"),
   "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/references"),
   "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/references"),
+  "boids-flocking-on-gpu": () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/references"),
+  "cloth-simulation-basics": () => import("./lessons/09-gpgpu/cloth-simulation-basics/references"),
+  "flow-field-particles": () => import("./lessons/09-gpgpu/flow-field-particles/references"),
+  "fluid-simulation-intro": () => import("./lessons/09-gpgpu/fluid-simulation-intro/references"),
+  "gpucomputationrenderer": () => import("./lessons/09-gpgpu/gpucomputationrenderer/references"),
+  "instancing-a-million-objects": () => import("./lessons/09-gpgpu/instancing-a-million-objects/references"),
+  "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/references"),
+  "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/references"),
+  "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -1010,6 +1067,54 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"bề-mặt-dừng-lại-thể-tích-thì-không-hai-kiểu-raymarch","text":"Bề mặt dừng lại, thể tích thì không: hai kiểu raymarch","depth":2},{"id":"vòng-lặp-tích-luỹ-transmittance-emission-và-front-to-back-compositing","text":"Vòng lặp tích luỹ: transmittance, emission, và front-to-back compositing","depth":2},{"id":"density-field-một-quả-mây-dựng-từ-fbm-noise","text":"Density field: một quả mây dựng từ FBM noise","depth":2},{"id":"ánh-sáng-xuyên-mây-đạo-hàm-rẻ-theo-hướng-mặt-trời","text":"Ánh sáng xuyên mây: đạo hàm rẻ theo hướng mặt trời","depth":2},{"id":"số-bước-banding-và-jitter-che-băng","text":"Số bước, banding, và jitter che băng","depth":2},{"id":"chi-phí-thật-vì-sao-real-time-cần-buffer-thấp-res-và-mẹo-temporal","text":"Chi phí thật: vì sao real-time cần buffer thấp-res và mẹo temporal","depth":2}],
     en: [{"id":"surfaces-stop-volumes-dont-two-kinds-of-raymarching","text":"Surfaces Stop, Volumes Don't: Two Kinds of Raymarching","depth":2},{"id":"the-accumulation-loop-transmittance-emission-front-to-back-compositing","text":"The Accumulation Loop: Transmittance, Emission, Front-to-Back Compositing","depth":2},{"id":"density-field-a-cloud-built-from-fbm-noise","text":"Density Field: A Cloud Built From FBM Noise","depth":2},{"id":"light-through-the-cloud-a-cheap-derivative-toward-the-sun","text":"Light Through the Cloud: A Cheap Derivative Toward the Sun","depth":2},{"id":"step-count-banding-and-jitter-to-hide-it","text":"Step Count, Banding, and Jitter to Hide It","depth":2},{"id":"the-real-cost-why-real-time-needs-low-res-buffers-and-temporal-tricks","text":"The Real Cost: Why Real-Time Needs Low-Res Buffers and Temporal Tricks","depth":2}],
   },
+  "boids-flocking-on-gpu": {
+    vi: [{"id":"ba-quy-tắc-của-reynolds-separation-alignment-cohesion","text":"Ba quy tắc của Reynolds: separation, alignment, cohesion","depth":2},{"id":"separation--tránh-va-chạm-cự-ly-gần","text":"Separation — tránh va chạm cự ly gần","depth":3},{"id":"alignment--bay-cùng-hướng-đàn","text":"Alignment — bay cùng hướng đàn","depth":3},{"id":"cohesion--không-tách-đàn","text":"Cohesion — không tách đàn","depth":3},{"id":"dịch-sang-gpu-mỗi-boid-tự-lấy-mẫu-hàng-xóm-từ-texture-trạng-thái","text":"Dịch sang GPU: mỗi boid tự lấy mẫu hàng xóm từ texture trạng thái","depth":2},{"id":"vấn-đề-on-và-giải-pháp-lấy-mẫu-stride","text":"Vấn đề O(N²) và giải pháp lấy mẫu stride","depth":3},{"id":"vùng-bán-kính-và-cân-bằng-trọng-số","text":"Vùng bán kính và cân bằng trọng số","depth":2},{"id":"speed-clamping-và-edge-behavior","text":"Speed clamping và edge behavior","depth":2},{"id":"emergence-không-thủ-lĩnh-không-kế-hoạch-toàn-cục","text":"Emergence: không thủ lĩnh, không kế hoạch toàn cục","depth":2},{"id":"công-thức-tham-số-đàn-chặt-hay-đàn-lỏng","text":"Công thức tham số: đàn chặt hay đàn lỏng","depth":2},{"id":"nối-tiếp-instancing-hiệu-năng-và-particle-system-tương-tác","text":"Nối tiếp: instancing, hiệu năng, và particle system tương tác","depth":2}],
+    en: [{"id":"reynoldss-three-rules-separation-alignment-cohesion","text":"Reynolds's Three Rules: Separation, Alignment, Cohesion","depth":2},{"id":"separation--avoiding-close-range-collisions","text":"Separation — Avoiding Close-Range Collisions","depth":3},{"id":"alignment--flying-the-same-way-as-the-flock","text":"Alignment — Flying the Same Way as the Flock","depth":3},{"id":"cohesion--not-getting-left-behind","text":"Cohesion — Not Getting Left Behind","depth":3},{"id":"translating-to-the-gpu-each-boid-samples-its-own-neighbors-from-the-state-texture","text":"Translating to the GPU: Each Boid Samples Its Own Neighbors From the State Texture","depth":2},{"id":"the-on-problem-and-stride-sampling","text":"The O(N²) Problem and Stride Sampling","depth":3},{"id":"zones-and-weight-balancing","text":"Zones and Weight Balancing","depth":2},{"id":"speed-clamping-and-edge-behavior","text":"Speed Clamping and Edge Behavior","depth":2},{"id":"emergence-no-leader-no-global-plan","text":"Emergence: No Leader, No Global Plan","depth":2},{"id":"parameter-recipes-tight-swarm-vs-loose-wander","text":"Parameter Recipes: Tight Swarm vs. Loose Wander","depth":2},{"id":"where-this-leads-instancing-performance-and-the-interactive-particle-capstone","text":"Where This Leads: Instancing, Performance, and the Interactive Particle Capstone","depth":2}],
+  },
+  "checkpoint-100k-particle-grid": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-cloth-flag": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-interactive-particle-field": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "cloth-simulation-basics": {
+    vi: [{"id":"vải-như-một-lưới-mass-spring","text":"Vải như một lưới mass-spring","depth":2},{"id":"verlet-integration-vì-sao-ổn-định-hơn-euler-tường-minh","text":"Verlet integration: vì sao ổn định hơn Euler tường minh","depth":2},{"id":"trạng-thái-trên-gpu-hai-texture-vị-trí-ping-pong","text":"Trạng thái trên GPU: hai texture vị trí ping-pong","depth":2},{"id":"constraint-distance-và-cái-bẫy-jacobi-trên-gpu","text":"Constraint distance và cái bẫy Jacobi trên GPU","depth":2},{"id":"structural-shear-bend-ba-loại-constraint","text":"Structural, shear, bend: ba loại constraint","depth":3},{"id":"ghim-điểm-và-lực-trọng-lực-gió-chiếu-theo-pháp-tuyến","text":"Ghim điểm và lực: trọng lực, gió chiếu theo pháp tuyến","depth":2},{"id":"số-vòng-lặp-constraint-quyết-định-độ-dẻo","text":"Số vòng lặp constraint quyết định độ \"dẻo\"","depth":2}],
+    en: [{"id":"cloth-as-a-mass-spring-grid","text":"Cloth as a Mass-Spring Grid","depth":2},{"id":"verlet-integration-why-it-beats-explicit-euler","text":"Verlet Integration: Why It Beats Explicit Euler","depth":2},{"id":"state-on-the-gpu-two-ping-ponged-position-textures","text":"State on the GPU: Two Ping-Ponged Position Textures","depth":2},{"id":"distance-constraints-and-the-gpus-jacobi-catch","text":"Distance Constraints and the GPU's Jacobi Catch","depth":2},{"id":"structural-shear-bend-three-constraint-types","text":"Structural, Shear, Bend: Three Constraint Types","depth":3},{"id":"pinning-and-forces-constant-gravity-wind-projected-on-the-normal","text":"Pinning and Forces: Constant Gravity, Wind Projected on the Normal","depth":2},{"id":"iteration-count-decides-how-stretchy-it-looks","text":"Iteration Count Decides How \"Stretchy\" It Looks","depth":2}],
+  },
+  "flow-field-particles": {
+    vi: [{"id":"từ-lực-đến-trường-vận-tốc-lấy-mẫu-một-vector-field","text":"Từ lực đến TRƯỜNG: vận tốc lấy mẫu một vector field","depth":2},{"id":"steering-mix-về-hướng-field-không-phải-cộng-dồn-lực","text":"Steering: mix về hướng field, không phải cộng dồn lực","depth":2},{"id":"vòng-đời-particle-tuổi-tái-sinh-và-vì-sao-phải-so-le","text":"Vòng đời particle: tuổi, tái sinh, và vì sao phải so le","depth":2},{"id":"trường-vẽ-tay-khi-curl-noise-không-đủ","text":"Trường vẽ tay: khi curl noise không đủ","depth":2},{"id":"từ-vựng-tinh-chỉnh-scale-strength-damping-lifetime","text":"Từ vựng tinh chỉnh: scale, strength, damping, lifetime","depth":2},{"id":"vệt-chuyển-động-và-những-gì-còn-thiếu","text":"Vệt chuyển động và những gì còn thiếu","depth":2}],
+    en: [{"id":"from-forces-to-fields-velocity-samples-a-vector-field","text":"From Forces to FIELDS: Velocity Samples a Vector Field","depth":2},{"id":"steering-mixing-toward-the-field-not-piling-on-force","text":"Steering: Mixing Toward the Field, Not Piling On Force","depth":2},{"id":"particle-life-cycle-age-respawning-and-why-it-must-be-staggered","text":"Particle Life Cycle: Age, Respawning, and Why It Must Be Staggered","depth":2},{"id":"painted-fields-when-curl-noise-isnt-enough","text":"Painted Fields: When Curl Noise Isn't Enough","depth":2},{"id":"tuning-vocabulary-scale-strength-damping-lifetime","text":"Tuning Vocabulary: Scale, Strength, Damping, Lifetime","depth":2},{"id":"trails-and-whats-still-missing","text":"Trails, and What's Still Missing","depth":2}],
+  },
+  "fluid-simulation-intro": {
+    vi: [{"id":"ba-hướng-tiếp-cận-mô-phỏng-chất-lỏng-thời-gian-thực","text":"Ba hướng tiếp cận mô phỏng chất lỏng thời gian thực","depth":2},{"id":"sph--hạt-mang-khối-lượng-mật-độ-từ-kernel-làm-mượt","text":"SPH — hạt mang khối lượng, mật độ từ kernel làm mượt","depth":2},{"id":"pbf--ràng-buộc-vị-trí-thay-vì-tính-lực","text":"PBF — ràng buộc vị trí thay vì tính lực","depth":2},{"id":"stable-fluids-của-stam--lưới-không-phải-hạt","text":"Stable Fluids của Stam — lưới, không phải hạt","depth":2},{"id":"vì-sao-demo-fluid-nổi-tiếng-trên-web-đều-là-stable-fluids-2d","text":"Vì sao demo \"fluid\" nổi tiếng trên web đều là Stable Fluids 2D","depth":2},{"id":"chi-phí-độ-phức-tạp-và-chọn-đúng-công-cụ","text":"Chi phí, độ phức tạp và chọn đúng công cụ","depth":2},{"id":"phạm-vi-thực-tế-trên-web","text":"Phạm vi thực tế trên web","depth":2}],
+    en: [{"id":"three-approaches-to-real-time-fluid-simulation","text":"Three Approaches to Real-Time Fluid Simulation","depth":2},{"id":"sph--particles-carrying-mass-density-from-a-smoothing-kernel","text":"SPH — Particles Carrying Mass, Density from a Smoothing Kernel","depth":2},{"id":"pbf--position-constraints-instead-of-forces","text":"PBF — Position Constraints Instead of Forces","depth":2},{"id":"stams-stable-fluids--a-grid-not-particles","text":"Stam's Stable Fluids — a Grid, Not Particles","depth":2},{"id":"why-the-famous-web-fluid-demos-are-all-2d-stable-fluids","text":"Why the Famous Web \"Fluid\" Demos Are All 2D Stable Fluids","depth":2},{"id":"cost-complexity-and-picking-the-right-tool","text":"Cost, Complexity, and Picking the Right Tool","depth":2},{"id":"the-honest-scope-on-the-web","text":"The Honest Scope on the Web","depth":2}],
+  },
+  "gpucomputationrenderer": {
+    vi: [{"id":"gpucomputationrenderer-đóng-gói-lại-điều-gì","text":"GPUComputationRenderer đóng gói lại điều gì","depth":2},{"id":"khởi-tạo-texture-trạng-thái-và-khai-báo-biến-compute","text":"Khởi tạo, texture trạng thái, và khai báo biến compute","depth":2},{"id":"setvariabledependencies-và-uniform-được-tiêm-tự-động","text":"setVariableDependencies và uniform được tiêm tự động","depth":2},{"id":"init-compute-và-chỉ-số-ping-pong-dùng-chung","text":"init(), compute(), và chỉ số ping-pong dùng chung","depth":2},{"id":"resolution-define-được-tiêm-sẵn-không-phải-uniform","text":"resolution: define được tiêm sẵn, không phải uniform","depth":2},{"id":"giới-hạn-của-gpucomputationrenderer","text":"Giới hạn của GPUComputationRenderer","depth":2},{"id":"kiểu-dữ-liệu-texture-floattype-mặc-định-fallback-phải-tự-làm","text":"Kiểu dữ liệu texture: FloatType mặc định, fallback phải tự làm","depth":2},{"id":"nối-tiếp-cấu-trúc-hai-biến-này-quay-lại-ở-đâu","text":"Nối tiếp: cấu trúc hai biến này quay lại ở đâu","depth":2}],
+    en: [{"id":"what-gpucomputationrenderer-actually-wraps","text":"What GPUComputationRenderer Actually Wraps","depth":2},{"id":"setup-state-textures-and-declaring-compute-variables","text":"Setup, State Textures, and Declaring Compute Variables","depth":2},{"id":"setvariabledependencies-and-auto-injected-uniforms","text":"setVariableDependencies and Auto-Injected Uniforms","depth":2},{"id":"init-compute-and-a-shared-ping-pong-index","text":"init(), compute(), and a Shared Ping-Pong Index","depth":2},{"id":"resolution-a-pre-injected-define-not-a-uniform","text":"resolution: a Pre-Injected Define, Not a Uniform","depth":2},{"id":"gpucomputationrenderers-limits","text":"GPUComputationRenderer's Limits","depth":2},{"id":"texture-data-type-floattype-by-default-fallback-is-on-you","text":"Texture Data Type: FloatType by Default, Fallback Is on You","depth":2},{"id":"whats-next-where-this-two-variable-structure-returns","text":"What's Next: Where This Two-Variable Structure Returns","depth":2}],
+  },
+  "instancing-a-million-objects": {
+    vi: [{"id":"points-chỉ-là-pixel-object-thật-cần-instancedmesh","text":"Points chỉ là pixel: object thật cần InstancedMesh","depth":2},{"id":"hợp-nhất-vertex-shader-của-instancedmesh-đọc-thẳng-texture-gpgpu","text":"Hợp nhất: vertex shader của InstancedMesh đọc thẳng texture GPGPU","depth":2},{"id":"instancematrix-giữ-nguyên-identity-vị-trí-đến-từ-texture","text":"instanceMatrix giữ nguyên identity, vị trí đến từ texture","depth":3},{"id":"định-vị-texel-của-từng-instance-glinstanceid-hay-instanced-attribute","text":"Định vị texel của từng instance: glInstanceID hay instanced attribute","depth":3},{"id":"nối-dây-trong-three-onbeforecompile-hay-shadermaterial-riêng","text":"Nối dây trong Three: onBeforeCompile hay ShaderMaterial riêng","depth":2},{"id":"xoay-instance-theo-hướng-vận-tốc-dựng-basis-từ-vector","text":"Xoay instance theo hướng vận tốc: dựng basis từ vector","depth":2},{"id":"luật-không-đọc-ngược-compute--render-không-rời-gpu","text":"Luật \"không đọc ngược\": compute → render không rời GPU","depth":2},{"id":"thực-tế-về-quy-mô-chi-phí-vertex-texture-fetch","text":"Thực tế về quy mô: chi phí vertex texture fetch","depth":2},{"id":"so-với-cập-nhật-instancematrix-bằng-cpu","text":"So với cập nhật instanceMatrix bằng CPU","depth":2}],
+    en: [{"id":"points-are-just-pixels-real-objects-need-instancedmesh","text":"Points Are Just Pixels: Real Objects Need InstancedMesh","depth":2},{"id":"the-fusion-an-instancedmesh-vertex-shader-reading-the-gpgpu-texture-directly","text":"The Fusion: An InstancedMesh Vertex Shader Reading the GPGPU Texture Directly","depth":2},{"id":"instancematrix-stays-identity-position-comes-from-the-texture","text":"instanceMatrix Stays Identity, Position Comes From the Texture","depth":3},{"id":"locating-each-instances-texel-glinstanceid-or-an-instanced-attribute","text":"Locating Each Instance's Texel: glInstanceID or an Instanced Attribute","depth":3},{"id":"wiring-it-up-in-three-onbeforecompile-or-a-standalone-shadermaterial","text":"Wiring It Up in Three: onBeforeCompile or a Standalone ShaderMaterial","depth":2},{"id":"orienting-instances-along-velocity-building-a-basis-from-a-vector","text":"Orienting Instances Along Velocity: Building a Basis From a Vector","depth":2},{"id":"the-never-read-back-law-compute-to-render-never-leaves-the-gpu","text":"The \"Never Read Back\" Law: Compute to Render Never Leaves the GPU","depth":2},{"id":"the-scale-reality-check-vertex-texture-fetch-cost","text":"The Scale Reality Check: Vertex Texture Fetch Cost","depth":2},{"id":"versus-cpu-side-instancematrix-updates","text":"Versus CPU-Side instanceMatrix Updates","depth":2}],
+  },
+  "pingpong-fbo-state-textures": {
+    vi: [{"id":"vì-sao-không-thể-đọc-và-ghi-cùng-một-texture-trong-một-pass","text":"Vì sao không thể đọc và ghi cùng một texture trong một pass","depth":2},{"id":"ping-pong-hai-render-target-thay-phiên-đọcghi","text":"Ping-pong: hai render target thay phiên đọc/ghi","depth":2},{"id":"dựng-webglrendertarget-thủ-công-trong-threejs","text":"Dựng WebGLRenderTarget thủ công trong Three.js","depth":3},{"id":"compute-scene-quad-phủ-kín-khung-hình--camera-orthographic","text":"Compute scene: quad phủ kín khung hình + camera orthographic","depth":3},{"id":"mã-hoá-trạng-thái-vào-rgba-positionlife-và-velocity","text":"Mã hoá trạng thái vào RGBA: position/life và velocity","depth":2},{"id":"fragment-shader-compute-đọc-trạng-thái-cũ-ghi-trạng-thái-mới","text":"Fragment shader compute: đọc trạng thái cũ, ghi trạng thái mới","depth":2},{"id":"render-particle-points-đọc-uv-trỏ-vào-texture-trạng-thái","text":"Render particle: Points đọc UV trỏ vào texture trạng thái","depth":2},{"id":"hoán-đổi-tham-chiếu-trong-js--không-sao-chép-dữ-liệu","text":"Hoán đổi tham chiếu trong JS — không sao chép dữ liệu","depth":2},{"id":"độ-chính-xác-của-half-float","text":"Độ chính xác của half float","depth":2},{"id":"bài-này-dẫn-tới-đâu","text":"Bài này dẫn tới đâu","depth":2}],
+    en: [{"id":"why-you-cant-read-and-write-the-same-texture-in-one-pass","text":"Why You Can't Read and Write the Same Texture in One Pass","depth":2},{"id":"ping-pong-two-render-targets-trading-readwrite","text":"Ping-Pong: Two Render Targets Trading Read/Write","depth":2},{"id":"building-a-webglrendertarget-by-hand-in-threejs","text":"Building a WebGLRenderTarget by Hand in Three.js","depth":3},{"id":"the-compute-scene-a-screen-filling-quad--an-orthographic-camera","text":"The Compute Scene: A Screen-Filling Quad + an Orthographic Camera","depth":3},{"id":"encoding-state-into-rgba-positionlife-and-velocity","text":"Encoding State into RGBA: Position/Life and Velocity","depth":2},{"id":"the-compute-fragment-shader-read-old-state-write-new-state","text":"The Compute Fragment Shader: Read Old State, Write New State","depth":2},{"id":"rendering-particles-points-reading-a-uv-into-the-state-texture","text":"Rendering Particles: Points Reading a UV Into the State Texture","depth":2},{"id":"swapping-references-in-js--no-data-copying","text":"Swapping References in JS — No Data Copying","depth":2},{"id":"half-floats-precision","text":"Half Float's Precision","depth":2},{"id":"where-this-lesson-leads","text":"Where This Lesson Leads","depth":2}],
+  },
+  "transform-feedback": {
+    vi: [{"id":"transform-feedback-đường-đi-khác-tới-trạng-thái-sống-trên-gpu","text":"Transform feedback: đường đi khác tới \"trạng thái sống trên GPU\"","depth":2},{"id":"transformfeedbackvaryings-phải-gọi-trước-khi-link-chương-trình","text":"transformFeedbackVaryings phải gọi trước khi link chương trình","depth":2},{"id":"ghi-ra-buffer-bindbufferbase-begintransformfeedbackendtransformfeedback","text":"Ghi ra buffer: bindBufferBase, beginTransformFeedback/endTransformFeedback","depth":2},{"id":"rasterizerdiscard-pass-chỉ-để-tính-không-để-vẽ","text":"RASTERIZERDISCARD: pass chỉ để tính, không để vẽ","depth":2},{"id":"double-buffer-bằng-vao-thay-vì-texture","text":"Double-buffer bằng VAO thay vì texture","depth":2},{"id":"vì-sao-threejs-không-lộ-transform-feedback-ra-api","text":"Vì sao Three.js không lộ transform feedback ra API","depth":2},{"id":"so-với-ping-pong-texture-khi-nào-transform-feedback-thắng","text":"So với ping-pong texture: khi nào transform feedback thắng","depth":2},{"id":"webgpu-compute-hướng-đi-tiếp-theo","text":"WebGPU compute: hướng đi tiếp theo","depth":2}],
+    en: [{"id":"transform-feedback-the-other-path-to-state-living-on-the-gpu","text":"Transform Feedback: the Other Path to \"State Living on the GPU\"","depth":2},{"id":"transformfeedbackvaryings-must-run-before-linking","text":"transformFeedbackVaryings Must Run Before Linking","depth":2},{"id":"writing-to-a-buffer-bindbufferbase-begintransformfeedbackendtransformfeedback","text":"Writing to a Buffer: bindBufferBase, beginTransformFeedback/endTransformFeedback","depth":2},{"id":"rasterizerdiscard-a-pass-that-only-computes-never-draws","text":"RASTERIZERDISCARD: a Pass That Only Computes, Never Draws","depth":2},{"id":"double-buffering-with-vaos-instead-of-textures","text":"Double-Buffering with VAOs Instead of Textures","depth":2},{"id":"why-threejs-doesnt-expose-transform-feedback","text":"Why Three.js Doesn't Expose Transform Feedback","depth":2},{"id":"versus-ping-pong-textures-when-transform-feedback-wins","text":"Versus Ping-Pong Textures: When Transform Feedback Wins","depth":2},{"id":"webgpu-compute-what-comes-next","text":"WebGPU Compute: What Comes Next","depth":2}],
+  },
+  "why-particles-live-on-gpu": {
+    vi: [{"id":"giải-phẫu-vòng-lặp-particle-trên-cpu","text":"Giải phẫu vòng lặp particle trên CPU","depth":2},{"id":"băng-thông-không-phải-nút-thắt--vậy-đâu-mới-là-nút-thắt-thật","text":"Băng thông không phải nút thắt — vậy đâu mới là nút thắt thật?","depth":2},{"id":"ước-lượng-chi-phí-truyền-qua-bus","text":"Ước lượng chi phí truyền qua bus","depth":3},{"id":"ước-lượng-chi-phí-vòng-lặp-javascript","text":"Ước lượng chi phí vòng lặp JavaScript","depth":3},{"id":"phép-đảo-gpgpu-texture-là-bộ-nhớ-trạng-thái-fragment-shader-là-hàm-cập-nhật","text":"Phép đảo GPGPU: texture là bộ nhớ trạng thái, fragment shader là hàm cập nhật","depth":2},{"id":"ngưỡng-thực-tế-khi-nào-nên-chuyển-sang-gpu","text":"Ngưỡng thực tế: khi nào nên chuyển sang GPU","depth":2},{"id":"cái-giá-phải-trả-khi-chuyển-sang-gpu","text":"Cái giá phải trả khi chuyển sang GPU","depth":2},{"id":"bài-này-dẫn-tới-đâu","text":"Bài này dẫn tới đâu","depth":2}],
+    en: [{"id":"anatomy-of-the-cpu-particle-loop","text":"Anatomy of the CPU Particle Loop","depth":2},{"id":"bandwidth-isnt-the-bottleneck--so-what-is","text":"Bandwidth Isn't the Bottleneck — So What Is?","depth":2},{"id":"estimating-the-bus-transfer-cost","text":"Estimating the Bus Transfer Cost","depth":3},{"id":"estimating-the-javascript-loop-cost","text":"Estimating the JavaScript Loop Cost","depth":3},{"id":"the-gpgpu-inversion-textures-as-state-fragment-shaders-as-the-update-function","text":"The GPGPU Inversion: Textures as State, Fragment Shaders as the Update Function","depth":2},{"id":"real-world-thresholds-when-moving-to-the-gpu-pays-off","text":"Real-World Thresholds: When Moving to the GPU Pays Off","depth":2},{"id":"what-you-lose-by-moving-to-the-gpu","text":"What You Lose by Moving to the GPU","depth":2},{"id":"where-this-lesson-leads","text":"Where This Lesson Leads","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -1101,6 +1206,15 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/demo"),
   "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/demo"),
   "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/demo"),
+  "boids-flocking-on-gpu": () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/demo"),
+  "cloth-simulation-basics": () => import("./lessons/09-gpgpu/cloth-simulation-basics/demo"),
+  "flow-field-particles": () => import("./lessons/09-gpgpu/flow-field-particles/demo"),
+  "fluid-simulation-intro": () => import("./lessons/09-gpgpu/fluid-simulation-intro/demo"),
+  "gpucomputationrenderer": () => import("./lessons/09-gpgpu/gpucomputationrenderer/demo"),
+  "instancing-a-million-objects": () => import("./lessons/09-gpgpu/instancing-a-million-objects/demo"),
+  "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/demo"),
+  "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/demo"),
+  "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -1220,4 +1334,16 @@ export const EXERCISES_REGISTRY: Partial<
   "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/exercises"),
   "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/exercises"),
   "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/exercises"),
+  "boids-flocking-on-gpu": () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/exercises"),
+  "checkpoint-100k-particle-grid": () => import("./lessons/09-gpgpu/checkpoint-100k-particle-grid/exercises"),
+  "checkpoint-cloth-flag": () => import("./lessons/09-gpgpu/checkpoint-cloth-flag/exercises"),
+  "checkpoint-interactive-particle-field": () => import("./lessons/09-gpgpu/checkpoint-interactive-particle-field/exercises"),
+  "cloth-simulation-basics": () => import("./lessons/09-gpgpu/cloth-simulation-basics/exercises"),
+  "flow-field-particles": () => import("./lessons/09-gpgpu/flow-field-particles/exercises"),
+  "fluid-simulation-intro": () => import("./lessons/09-gpgpu/fluid-simulation-intro/exercises"),
+  "gpucomputationrenderer": () => import("./lessons/09-gpgpu/gpucomputationrenderer/exercises"),
+  "instancing-a-million-objects": () => import("./lessons/09-gpgpu/instancing-a-million-objects/exercises"),
+  "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/exercises"),
+  "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/exercises"),
+  "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/exercises"),
 };

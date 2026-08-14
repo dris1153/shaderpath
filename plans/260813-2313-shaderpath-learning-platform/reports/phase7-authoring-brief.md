@@ -57,6 +57,15 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - NEVER mutate `THREE.ShaderChunk` globally in a demo without restoring the original in cleanup — it leaks into every other demo on the page. Prefer per-material `onBeforeCompile` string replacement; if the lesson must demonstrate the global override, save & restore the chunk.
 - Verify Three-version specifics (chunk names, TSL imports like `three/tsl` / `three/webgpu`) against `node_modules/three` before writing — chunk names shift between releases.
 
+## GPGPU lessons (Track 9)
+
+- Demos create render targets/FBOs — EVERY `WebGLRenderTarget`, `DataTexture`, and GPUComputationRenderer's internals MUST be disposed on unmount (drei `useFBO` handles its own; manual targets go through the effect-cleanup/dispose pattern). A leaked FBO per remount is the #1 failure mode here.
+- `GPUComputationRenderer` imports from `three/addons/misc/GPUComputationRenderer.js` — verify the path and API against node_modules before writing.
+- Float render targets: WebGL2 requires the `EXT_color_buffer_float` extension to RENDER INTO float textures. Use `HalfFloatType` as the safe default for state textures (GPUComputationRenderer does this on mobile detection — check its source) and mention the fallback in theory.
+- Sim demos need a frame every visible tick: keep the established R3F pattern (`useFrame` + demand-frameloop with `invalidate()` per frame while visible) so hidden demos cost nothing. Keep demo particle counts modest (≤65k = 256² state texture) — the THEORY can talk about millions; the embedded demo must not cook laptops. One 256² sim per demo max.
+- Transform-feedback lesson: Three.js does not expose TF — that demo uses the raw-WebGL2 canvas pattern (Track 1 style: useVisibleRaf + useDisposable).
+- Mouse interaction: reuse the `uMouse` conventions from `DemoCanvas`/existing demos (pointer in plane coords), never window listeners.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

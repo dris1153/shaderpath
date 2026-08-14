@@ -1,0 +1,51 @@
+## Points Are Just Pixels: Real Objects Need InstancedMesh
+
+Everything Track 9 has rendered so far used `THREE.Points` — every particle is a flat, camera-facing square with no real geometry, nothing a light can shade convincingly. To render actual solid shapes — tetrahedra, boxes, anything with faces and normals — you need `InstancedMesh`: one draw call that stamps out N copies of the same geometry, each carrying its own transform in an `instanceMatrix` buffer. Track 6 taught updating that buffer from the CPU (a JS loop calling `setMatrixAt`); this lesson replaces that loop with the GPGPU state texture the rest of this track has been building — no JS runs per frame to place a single instance.
+
+## The Fusion: An InstancedMesh Vertex Shader Reading the GPGPU Texture Directly
+
+The core idea: an `InstancedMesh`'s vertex shader already runs many times per frame (once per vertex of every instance) — nothing stops it from calling `texture2D()` on the GPGPU state texture right there, exactly like the fragment shader in `pingpong-fbo-state-textures` reads state to update it. The compute pass (runs on a texture, nothing drawn to screen) and the render pass (draws N instances) become two back-to-back steps in the same frame, with no stop at the CPU in between.
+
+### instanceMatrix Stays Identity, Position Comes From the Texture
+
+The detail most likely to trip you up: `instanceMatrix` isn't where the dynamic position lives here. Every instance gets an identity matrix once, at mesh creation — the real position comes from adding the texture-sampled coordinate into `transformed` (the local vertex position variable) inside the vertex shader, before the harmless, identity `instanceMatrix` multiply happens at the projection step. Why not just write position into `instanceMatrix` every frame the way Track 6 did? Because that means re-uploading the entire `instanceMatrix` buffer from the CPU every frame — exactly the cost this lesson exists to remove.
+
+### Locating Each Instance's Texel: gl_InstanceID or an Instanced Attribute
+
+Every instance needs to know which texel of the state texture to read. WebGL2 exposes a vertex-shader built-in, `gl_InstanceID`, convertible to a UV coordinate with modulo arithmetic: row $= \lfloor id / W \rfloor$, column $= id \bmod W$, then $u = (\text{column} + 0.5)/W$, $v = (\text{row} + 0.5)/H$ — the exact pixel-to-UV formula from Track 0. The alternative — what this lesson's demo uses — is an `InstancedBufferAttribute` holding a UV per instance, computed once on the CPU at mesh-build time (cheap, runs only on setup/resize, never per frame) and uploaded once. Both are correct; the attribute avoids any dependence on how Three's shader translation layer happens to expose `gl_InstanceID`.
+
+## Wiring It Up in Three: onBeforeCompile or a Standalone ShaderMaterial
+
+Two paths get this texture read into the shader: write a fully custom `ShaderMaterial` (total control, but you own lighting yourself), or patch an existing `MeshStandardMaterial` via `onBeforeCompile` — keeping Three's entire PBR lighting pipeline intact, injecting the texture read into `#include <uv_vertex>` (sample position/velocity), `#include <beginnormal_vertex>` (rotate the normal), and `#include <begin_vertex>` (add the position) — the same `onBeforeCompile` technique from Track 6, now driven by GPGPU data instead of a static effect.
+
+## Orienting Instances Along Velocity: Building a Basis From a Vector
+
+A tetrahedron drifting through a flow field looks far more alive when it visibly points the way it's moving, instead of just translating without rotating. The construction: treat the normalized velocity as the `up` axis of a new local frame, pick any non-parallel reference axis (world X works), cross the two to get `right`, then cross `up` and `right` to get the third axis — three perpendicular axes assembled into a `mat3` that multiplies directly into both `transformed` (the local vertex position) and the normal — the exact cross-product basis-building technique from Track 0.
+
+## The "Never Read Back" Law: Compute to Render Never Leaves the GPU
+
+The one rule this whole pipeline can't break: never read a position back from a render target to the CPU (no `readPixels`, no `getDataURL`) and reuse that value anywhere else on the CPU — doing so forces the CPU to stall waiting on the GPU, undoing the entire reason GPGPU exists in the first place (the cost `why-particles-live-on-gpu` walked through). Every frame here, the CPU does exactly two things: call `compute()` once, and issue the `InstancedMesh`'s draw call once — nothing in between ever touches real position data.
+
+## The Scale Reality Check: Vertex Texture Fetch Cost
+
+"A million objects" in the title is the real-world target, not the demo's number (the demo stays at 16k–65k so it doesn't cook the learner's laptop — the platform caps every embedded demo at that scale). The easy detail to miss: a vertex shader runs per VERTEX, not per INSTANCE — a non-indexed tetrahedron has 12 vertices, so each instance costs $12 \times 2 = 24$ texture reads (position + velocity), not 2. At $N = 1{,}000{,}000$ instances, 60fps, total position-texture reads per second come out to
+
+$$
+1{,}000{,}000 \times 12 \times 2 \times 60 \approx 1.44 \text{ billion reads/second}
+$$
+
+— a mid-range GPU handles on the order of hundreds of millions to a few billion texture reads per second (estimate, hardware-dependent), so this already sits at or past a comfortable ceiling. That's exactly why LOD at instancing scale doesn't just save rasterization cost (fewer pixels) — it cuts directly into texture read count: lower-vertex geometry for distant instances (a 3-vertex triangle instead of a 12-vertex tetrahedron) reduces position-fetch reads in direct proportion to vertex count, not just the pixels it shades.
+
+## Versus CPU-Side instanceMatrix Updates
+
+The Track 6 lesson `instancedmesh-per-instance-attributes` measured this directly: rebuilding `instanceMatrix` in a JS loop and calling `needsUpdate = true` every frame costs CPU time that scales linearly with instance count — even a few thousand instances already eats a noticeable slice of a 16.7ms frame budget at 60fps. The GPGPU path here keeps CPU cost nearly constant whether the instance count is 16,384 or 65,536, because the CPU never touches position data at all — the entire cost moves to the GPU, which was already built to parallelize exactly this kind of work. This lesson's demo can toggle between both paths to compare the ms/frame number directly.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when combining InstancedMesh with a GPGPU state texture:
+
+1. **Assuming `instanceMatrix` defaults to identity — it defaults to all zeros.** Creating `new THREE.InstancedMesh(geo, mat, count)` without explicitly setting every instance's matrix to identity means the `instanceMatrix * vec4(transformed, 1.0)` multiply in `#include <project_vertex>` multiplies by the zero matrix — every instance collapses to the origin and vanishes, even though the texture-position code is completely correct.
+2. **Rotating `transformed` (position) by the velocity basis but forgetting to rotate the normal the same way.** Vertex positions land correctly, instances point the right direction, but lighting is computed from the old, un-rotated normal — the shape sits in the right place facing the right way, yet its shading looks subtly wrong on every face.
+3. **Leaving `frustumCulled` on for an InstancedMesh whose positions come from a texture.** Three computes frustum culling from the base geometry's bounding sphere (usually near the origin) — since instances' real positions live far outside that, a small camera turn can make Three decide the "whole object" is off-screen and skip the draw call, even though instances are still visibly rendering at their real positions.
+
+</Callout>

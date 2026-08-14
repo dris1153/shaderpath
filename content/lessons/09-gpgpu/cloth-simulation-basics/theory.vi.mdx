@@ -1,0 +1,51 @@
+## Vải như một lưới mass-spring
+
+Mô hình vải phổ biến nhất trong đồ hoạ thời gian thực là mass-spring: mỗi đỉnh lưới là một "khối lượng" điểm, nối hàng xóm bằng lò xo giữ khoảng cách cố định (constraint). Không có khối vải liền mạch nào được mô phỏng thật — chỉ vài nghìn điểm và vài chục nghìn ràng buộc, cập nhật mỗi frame. Độ tin cậy hệ thống nằm ở hai câu hỏi: tích phân vị trí theo công thức nào, và giải ràng buộc bằng thuật toán nào — cả hai chạy hàng chục nghìn lần mỗi frame nên phải sống trên GPU (lý do đã nói ở bài đầu track).
+
+## Verlet integration: vì sao ổn định hơn Euler tường minh
+
+Explicit Euler — cách tích phân "hiển nhiên" nhất — lưu vị trí và vận tốc riêng biệt, cập nhật tuần tự:
+
+$$
+\vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t, \qquad \vec{x}_{t+1} = \vec{x}_t + \vec{v}_{t+1} \, \Delta t
+$$
+
+Vấn đề nằm ở constraint cứng: một lò xo giữ khoảng cách gần tuyệt đối tương đương một phương trình vi phân "stiff" — sai số tích luỹ mỗi bước Euler bơm thêm năng lượng giả vào hệ, vải rung nảy hoặc nổ tung dù không có lực bất thường. Verlet integration né vấn đề này bằng cách không lưu vận tốc tường minh — chỉ lưu vị trí hiện tại và vị trí frame trước, suy vận tốc ngầm từ hiệu của chúng:
+
+$$
+\vec{x}_{t+1} = \vec{x}_t + (\vec{x}_t - \vec{x}_{t-1}) \cdot d + \vec{a}_t \, \Delta t^2
+$$
+
+với $d$ là damping hơi nhỏ hơn 1 (ví dụ $0.99$) để rò rỉ năng lượng mỗi bước, giúp vải tắt dần thay vì dao động vĩnh viễn. Mấu chốt: sau khi constraint-solving nắn lại vị trí, vận tốc ngầm $(\vec{x}_t - \vec{x}_{t-1})$ tự động phản ánh đúng thay đổi đó ở bước kế — không cần đồng bộ biến vận tốc riêng. Đây chính là kỹ thuật Thomas Jakobsen trình bày trong "Advanced Character Physics" (GDC 2001) — bài báo kinh điển đưa Verlet-based mass-spring vào game thời gian thực, vẫn là nền tảng phần lớn cloth/rope solver hiện nay.
+
+## Trạng thái trên GPU: hai texture vị trí ping-pong
+
+Vì Verlet cần cả $\vec{x}_t$ lẫn $\vec{x}_{t-1}$, trạng thái mô phỏng không thể chỉ là MỘT texture vị trí như các bài particle trước — cần đúng hai: `texturePosition` (vị trí hiện tại) và `texturePositionPrev` (vị trí frame trước). Với `GPUComputationRenderer`, đây là hai "variable" phụ thuộc lẫn nhau: `texturePosition` phụ thuộc chính nó VÀ `texturePositionPrev`; `texturePositionPrev` chỉ chép giá trị hiện tại của `texturePosition` mỗi frame để luôn trễ đúng một bước. Chi tiết dễ bỏ sót: `GPUComputationRenderer` tự khai báo và tự gán uniform cho dependency tên KHÁC tên biến, nhưng dependency TỰ THAM CHIẾU thì không — phải tự khai báo `uniform sampler2D texturePosition;` và tự gán `material.uniforms.texturePosition` trước khi gọi `init()`, nếu không `compute()` crash ngay ở uniform còn thiếu.
+
+## Constraint distance và cái bẫy Jacobi trên GPU
+
+Một constraint khoảng cách là phép chỉnh đơn giản: kéo hai điểm lại gần/xa nhau đúng bằng nửa chênh lệch so với chiều dài nghỉ. Trên CPU, giải Gauss-Seidel xử lý từng constraint TUẦN TỰ, mỗi constraint thấy ngay kết quả vừa chỉnh của constraint trước trong cùng vòng lặp — hội tụ nhanh. Trên GPU điều này không thể tái tạo: mỗi texel chạy trong một invocation song song, không có cách nào "thấy" kết quả vừa tính của texel bên cạnh trong CÙNG draw call — tất cả đọc từ CÙNG một texture đầu vào, không đổi suốt cả pass. Giải pháp bắt buộc là Jacobi: mỗi điểm tính độ chỉnh từ TẤT CẢ hàng xóm dựa trên texture đầu vào của pass này, lấy trung bình, ghi ra texture đầu ra — rồi lặp lại pass đó nhiều lần. Vì mỗi pass chỉ lan truyền chỉnh sửa đúng một texel, Jacobi cần NHIỀU vòng lặp hơn Gauss-Seidel để đạt cùng độ cứng — không phải chi tiết vặt, mà là ràng buộc kiến trúc nền tảng của mọi cloth solver trên GPU.
+
+### Structural, shear, bend: ba loại constraint
+
+Một lưới vải đầy đủ dùng ba loại constraint, phân biệt bằng cặp hàng xóm được nối: structural nối 4 hàng xóm trực tiếp (trên/dưới/trái/phải), giữ hình dạng và chiều dài tổng thể; shear nối 4 hàng xóm chéo, chống vải "trượt xiên" thành hình bình hành mà structural một mình không phát hiện được; bend nối các điểm cách nhau HAI bước lưới (bỏ qua điểm giữa), chống gấp nếp — thiếu bend, vải vẫn đúng chiều dài cạnh nhưng gấp sắc như giấy thay vì đàn hồi mềm mại. Demo bài này cài structural + shear (8 hàng xóm) để mã nguồn gọn; thêm bend chỉ là lặp lại khuôn mẫu `correction()` với offset gấp đôi.
+
+## Ghim điểm và lực: trọng lực, gió chiếu theo pháp tuyến
+
+Ghim (pin) dễ cài đặt nhất về cơ chế nhưng dễ quên nhất về phạm vi: một điểm bị ghim bỏ qua toàn bộ tích phân Verlet VÀ constraint-solving, luôn ghi lại đúng vị trí nghỉ ban đầu mỗi frame — mã hoá bằng mask trong kênh alpha của texture vị trí, đọc theo UV như Track 0 đã giới thiệu. Trọng lực chỉ là một hằng số cộng vào gia tốc. Gió thú vị hơn: một hướng gió không đổi làm vải phồng lên như bong bóng phẳng lì, không có cảm giác gió thật. Cách đúng là chiếu vector gió lên pháp tuyến cục bộ tại từng điểm ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$, chặn dưới 0 để gió không "hút" vải từ phía sau) — pháp tuyến ước lượng rẻ bằng cross product của hai vector nối hàng xóm ngang/dọc, đúng kỹ thuật normal-từ-gradient bài heightfield Track 8 đã dùng. Cộng thêm tín hiệu "gật gù" biến thiên theo không gian lẫn thời gian (vài sóng sin lệch tần số, rẻ hơn noise 3D thật), vải sẽ gợn sóng thay vì phồng cứng một khối.
+
+## Số vòng lặp constraint quyết định độ "dẻo"
+
+Vì Jacobi hội tụ chậm, số vòng lặp mỗi frame trực tiếp quyết định vải trông "dẻo" hay "cứng": 1-2 vòng để vải giãn dài rõ rệt dưới trọng lực trước khi constraint kịp kéo lại; 6-8 vòng gần giữ đúng chiều dài nghỉ, giống vải dệt thật. Đây là đánh đổi hiệu năng trực tiếp — mỗi vòng lặp là một full-screen draw call riêng trên toàn lưới — nên demo bài này cho chỉnh trực tiếp số vòng lặp để thấy đánh đổi đó bằng mắt.
+
+Bài tiếp theo (giới thiệu mô phỏng chất lỏng) dùng lại khung ping-pong + multi-pass này cho một bài toán khác: thay vì constraint khoảng cách, chất lỏng lưới-dựa giải hệ phương trình áp suất cần nhiều pass Jacobi/Gauss-Seidel tương tự để giữ vận tốc không phân kỳ.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài GPU cloth:
+
+1. **Quên khai báo/gán uniform cho self-dependency.** `GPUComputationRenderer` tự lo dependency tên khác, nhưng biến phụ thuộc chính nó thì không — thiếu bước gán `material.uniforms.texturePosition` thủ công làm `compute()` throw lỗi undefined ngay dòng đầu.
+2. **Đưa kết quả Jacobi relax pass cuối cùng nhầm chỗ.** Nếu texture "hiện tại" dùng cho frame sau vẫn là candidate CHƯA relax, vận tốc ngầm của Verlet ở frame kế bị tính sai — vải trông như có thêm một lực bí ẩn không nguồn gốc.
+3. **Gió không chiếu theo pháp tuyến.** Cộng thẳng vector gió hằng vào gia tốc mà không nhân $(\hat n \cdot \vec w)$ khiến cả tấm vải trôi dạt một hướng như khối cứng — dấu hiệu nhận biết là vải "bay" thay vì "gợn".
+
+</Callout>

@@ -1,0 +1,55 @@
+## From Forces to FIELDS: Velocity Samples a Vector Field
+
+Track 9 has so far given particles two kinds of motion: a spring pulling them home (the checkpoint you just finished) and straight-line velocity integration. Both are local FORCES — they depend only on that one particle's own state. This lesson flips the model: instead of computing a force and adding it to velocity, a particle samples a VECTOR FIELD at its exact position, and that field exists independently of any particle — every point in space has its own "wind" direction, and a particle simply follows whatever wind blows where it currently stands.
+
+The field here is 3D curl noise — the exact technique from Track 7 (Curl Noise & Flow Field), with one crucial difference: in Track 7, the curl formula ran inside a SINGLE fragment shader to color individual screen pixels, with no state persisting between frames. Here, the identical formula runs inside a `GPUComputationRenderer` COMPUTE PASS, sampled at each particle's real 3D position (read straight from the position texture), and the resulting velocity gets written back into the state texture. Full 3D curl extends the 2D formula into three independent potential fields $\Psi=(\psi_x,\psi_y,\psi_z)$:
+
+$$
+F=\nabla\times\Psi=\left(\frac{\partial\psi_z}{\partial y}-\frac{\partial\psi_y}{\partial z},\ \frac{\partial\psi_x}{\partial z}-\frac{\partial\psi_z}{\partial x},\ \frac{\partial\psi_y}{\partial x}-\frac{\partial\psi_x}{\partial y}\right)
+$$
+
+each component needs 2 central-difference noise calls, 12 `noise3()` calls total for one curl vector — pricier than the 2D version (4 calls) but it now runs exactly once per particle per frame, not once per screen pixel, so it's still cheap at 65k particles.
+
+## Steering: Mixing Toward the Field, Not Piling On Force
+
+There are two reasonable ways to use the sampled vector field: ADD it to the current velocity as a force (`vel += field * dt`), or MIX the current velocity straight toward the field's direction:
+
+$$
+\vec v_{n+1}=\vec v_n+\alpha(\vec v_{desired}-\vec v_n),\qquad \alpha=\mathrm{clamp}(k\,\Delta t,\ 0,\ 1)
+$$
+
+with $\vec v_{desired} = \hat F \cdot \text{strength}$. This is discrete exponential smoothing — the closer $\alpha$ gets to 1, the more velocity "obeys" the field almost instantly (particles hug the field, snapping decisively at vortex boundaries); a small $\alpha$ retains more of the old velocity's "inertia," so particles glide through direction changes more smoothly but lag behind the true field. Additive force works differently: the field keeps pumping energy into the system every frame, and velocity can grow without bound unless something dissipates it — which is exactly why this lesson picks steering (mix) instead, leaving damping as a supplementary smoother rather than the only thing standing between the system and runaway speed.
+
+## Particle Life Cycle: Age, Respawning, and Why It Must Be Staggered
+
+A particle that follows a curl field forever eventually drifts out of view — a divergence-free field preserves area, not POSITION. The fix: count each particle's age in the position texture's 4th channel, and once age exceeds `uLifetime`, respawn the particle at a fresh random position with age reset to 0. That random position never touches `Math.random()` from the CPU — it's a deterministic hash of the particle's own UV plus the current time, the same hash-based-randomness technique from Track 7, just fed GPGPU state coordinates instead of screen pixel coordinates.
+
+The detail that's easy to miss: if EVERY particle starts at age 0, all 65,536 of them respawn in lockstep every `uLifetime` seconds — a very obvious whole-screen "blink." This demo seeds each particle's starting age randomly in $[0, \text{lifetime})$ when the texture is initialized, staggering respawns evenly over time: with $N=65536$ particles and lifetime $T=4.5$ seconds, the average respawn rate is $N/T\approx 14.6$ thousand particles/second, spread evenly rather than bunched up — no "pulse" is visible to the eye at all.
+
+## Painted Fields: When Curl Noise Isn't Enough
+
+Curl noise gives organic behavior "for free," but it gives no control over a specific SHAPE — to make a flow bend around a logo or spell out letters, you need a field a designer paints by hand. The technique: instead of calling `curlNoise(pos)`, sample a pre-uploaded 2D/3D `DataTexture`, with each texel storing a field direction (RGB = XYZ normalized to $[0,1]$):
+
+```glsl
+vec3 fieldDir = texture2D(uPaintedField, worldToFieldUV(pos)).xyz * 2.0 - 1.0;
+```
+
+`worldToFieldUV` is a linear map from world space into $[0,1]^2$, the exact same pixel↔UV formula from Track 0. The rest of the pipeline — mix, damping, respawning — doesn't change a single line; only the field's source changes. This is the same clear line between "hand-painted" and "rolled" data that the Custom Attributes lesson (Track 6) introduced, applied again verbatim at field scale instead of vertex scale.
+
+## Tuning Vocabulary: Scale, Strength, Damping, Lifetime
+
+Four parameters govern the entire feel of the motion. `fieldScale` multiplies position BEFORE sampling noise — larger values shrink the field's features (noise "compresses" spatially, giving turbulent, localized flow); smaller values grow them (smooth flow, wide swirls, nearly uniform across the whole cloud). `strength` is the target velocity's magnitude — linear, predictable. `damping` (multiplied every frame, always < 1) only plays a supporting role under steering rather than additive force, but it's still worth keeping since it settles the small oscillations left over when the field changes direction sharply. `lifetime` doesn't affect the flow's shape at all, only its DENSITY — a short lifetime keeps particles near the spawn region (a "denser" cloud), a long one lets particles drift far before respawning (a "sparser," more spread-out cloud).
+
+## Trails, and What's Still Missing
+
+Look closely at the demo and the field-following particles read as far more "discrete dots" than the curl-noise particle showreels you've probably seen — what's missing is a TRAIL: each particle should leave a fading streak behind it instead of just a single point. A trail isn't a property of the particle at all — it's a post-processing technique: accumulate the previous frame into a buffer, fade it slightly, then draw the new frame on top, exactly the subject of Track 10 (Post-processing). Track 9 stops at simulating the MOTION correctly; making that motion look beautiful is the next track's job.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when building flow field particles:
+
+1. **Adding the field directly to velocity without matching damping.** `vel += field * strength * dt` isn't syntactically wrong, but the field keeps pumping energy into the system every frame — after a few dozen seconds velocity grows unbounded and particles fly clean off screen. Steering (mix) avoids this because it has a natural "ceiling": velocity never exceeds `strength`.
+2. **Forgetting to `normalize()` the field direction before scaling by strength.** The raw curl vector's magnitude isn't uniform across space — "flat" noise regions produce near-zero vectors, steep regions produce much larger ones. Skipping normalization means `strength` no longer controls speed consistently: some particles nearly stand still while others rocket across the screen, all at the same strength value.
+3. **Seeding every particle's starting age at 0 instead of randomly in `[0, lifetime)`.** The system still runs correctly in a logical sense, but every particle respawns at the exact same moment every `lifetime` seconds — a very noticeable whole-cloud blink that breaks the "continuous flow" feeling the lesson is built around.
+
+</Callout>

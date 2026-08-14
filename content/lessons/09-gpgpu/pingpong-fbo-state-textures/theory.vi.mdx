@@ -1,0 +1,108 @@
+## Vì sao không thể đọc và ghi cùng một texture trong một pass
+
+Giả sử bạn có một texture trạng thái `state`, và muốn viết một fragment shader "đọc `state`, cộng thêm gia tốc, ghi ngược lại `state`" — y hệt cách một vòng lặp CPU ghi đè lên chính mảng nó đang đọc. Trên GPU, thao tác này là **undefined behavior** theo đặc tả OpenGL/WebGL: khi cùng một texture vừa là input (sampler) vừa là output (framebuffer attachment) của cùng một draw call, driver không đảm bảo thứ tự đọc trước hay ghi trước cho từng fragment invocation chạy song song — kết quả có thể đúng ở texel này, sai ở texel khác, và khác nhau giữa các GPU. Đây gọi là **feedback loop**, và nó là lý do kỹ thuật ping-pong tồn tại.
+
+## Ping-pong: hai render target thay phiên đọc/ghi
+
+Giải pháp: dùng **hai** render target, gọi là A và B. Frame này đọc từ A, ghi vào B; frame sau đảo vai trò — đọc từ B, ghi vào A. Không texture nào từng vừa đọc vừa ghi trong cùng một draw call; A và B thay phiên nhau làm "bản nháp" cho nhau.
+
+### Dựng WebGLRenderTarget thủ công trong Three.js
+
+```js
+const options = {
+  minFilter: THREE.NearestFilter,
+  magFilter: THREE.NearestFilter,
+  type: THREE.HalfFloatType,
+  format: THREE.RGBAFormat,
+  depthBuffer: false,
+};
+const targetA = new THREE.WebGLRenderTarget(size, size, options);
+const targetB = new THREE.WebGLRenderTarget(size, size, options);
+```
+
+`NearestFilter` không phải tuỳ chọn thẩm mỹ — texel ở đây là **dữ liệu**, không phải màu sắc. Nội suy tuyến tính giữa vị trí particle #41 và #42 (hai texel cạnh nhau, thường chẳng liên quan gì đến nhau) không mang ý nghĩa vật lý nào; `LinearFilter` sẽ âm thầm làm nhoè dữ liệu thành một giá trị vô nghĩa. `HalfFloatType` giữ range và độ chính xác đủ cho phần lớn vị trí/vận tốc (chi tiết ở phần sau) trong khi chỉ tốn nửa bộ nhớ so với `FloatType`. WebGL2 cần extension `EXT_color_buffer_float` để render **vào** một texture float hoặc half-float — Three.js tự động request extension này khi tạo render target loại đó; nếu thiết bị không hỗ trợ (hiếm, chủ yếu vài GPU di động cũ), nó chỉ `console.warn` một lần rồi framebuffer coi như incomplete, texture đọc ra toàn số 0.
+
+### Compute scene: quad phủ kín khung hình + camera orthographic
+
+Để "chạy" fragment shader lên toàn bộ texture, bạn render một hình chữ nhật phủ kín NDC ($[-1,1]^2$) qua một camera orthographic — mỗi pixel của render target khớp đúng một lần gọi fragment shader:
+
+```js
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+const scene = new THREE.Scene();
+scene.add(quad);
+
+renderer.setRenderTarget(targetB);
+renderer.render(scene, camera);
+renderer.setRenderTarget(null); // luôn trả về màn hình sau khi xong
+```
+
+Không có mesh 3D thật nào ở đây — quad chỉ là một "khung" ép GPU chạy fragment shader đúng một lần cho mỗi texel của target.
+
+## Mã hoá trạng thái vào RGBA: position/life và velocity
+
+Một texture RGBA giữ đúng 4 số mỗi texel. Cách mã hoá phổ biến: kênh `.xyz` của texture "position" giữ toạ độ, kênh `.a` giữ một giá trị phụ (life, seed, hoặc bất kỳ số nào particle cần) — texture "velocity" giữ `.xyz` là vector vận tốc. Cần thêm biến (gia tốc, tuổi thọ, loại particle)? Thêm texture thứ ba, hoặc dùng multiple render targets (một draw call ghi ra nhiều texture cùng lúc) nếu muốn gộp lại thành một pass thay vì nhiều pass tuần tự.
+
+## Fragment shader compute: đọc trạng thái cũ, ghi trạng thái mới
+
+```glsl
+// velocity-update.frag — đọc buffer A, ghi ra buffer B (cho texture velocity)
+uniform sampler2D uPosition; // texture position — buffer ĐỌC
+uniform sampler2D uVelocity; // texture velocity — buffer ĐỌC
+uniform float uDelta;
+
+void main() {
+  vec3 pos = texture2D(uPosition, vUv).xyz;
+  vec3 vel = texture2D(uVelocity, vUv).xyz;
+  vel.y -= 9.8 * uDelta; // trọng lực
+  // ... va chạm biên, ghi ra kênh khác nếu cần ...
+  gl_FragColor = vec4(vel, 0.0);
+}
+```
+
+Mỗi `gl_FragColor` ở đây là một texel — một particle — được tính hoàn toàn độc lập với mọi texel khác trong cùng draw call. Đây chính là "fragment shader = hàm `map` song song" nói ở bài trước, hiện ra bằng code thật.
+
+## Render particle: Points đọc UV trỏ vào texture trạng thái
+
+`THREE.Points` cần một "vertex" cho mỗi particle để GPU biết vẽ bao nhiêu điểm — nhưng vị trí thật nằm trong texture, không trong buffer attribute. Thủ thuật chuẩn: thêm một buffer attribute riêng (`aReference`, kiểu `vec2`) giữ **toạ độ UV trỏ vào texture trạng thái** của chính particle đó; vertex shader sample texture bằng UV này để lấy vị trí thật:
+
+```glsl
+attribute vec2 aReference; // UV vào texture trạng thái, KHÔNG phải toạ độ 3D
+uniform sampler2D uTexturePosition;
+
+void main() {
+  vec3 realPosition = texture2D(uTexturePosition, aReference).xyz;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(realPosition, 1.0);
+}
+```
+
+Geometry vẫn cần một attribute `position` chuẩn (Three.js dùng nó để tính bounding sphere và xác định số vertex) — nhưng nội dung của nó không quan trọng, chỉ độ dài mảng mới quan trọng, vì vị trí hiển thị đến từ `aReference` cộng texture, không phải từ `position`.
+
+## Hoán đổi tham chiếu trong JS — không sao chép dữ liệu
+
+Sau mỗi lần compute, "hoán đổi" A và B không copy một byte dữ liệu nào — chỉ đảo hai biến tham chiếu:
+
+```js
+let read = targetA;
+let write = targetB;
+// ...render vào write, đọc từ read...
+[read, write] = [write, read]; // chỉ đổi tham chiếu, texture vật lý không di chuyển
+```
+
+Frame sau, `read` trỏ sang texture vừa được ghi ở frame trước — đúng thứ tự nhân quả, chi phí gần như bằng 0.
+
+## Độ chính xác của half float
+
+`HalfFloatType` (16-bit) có range khoảng $\pm 65{,}504$ và độ chính xác giảm dần khi giá trị lớn — quanh giá trị $1$, khoảng cách giữa hai số biểu diễn được gần $2^{-10} \approx 0.001$; quanh giá trị $1000$, khoảng cách đó nhảy lên khoảng $1$. Với vị trí particle trong một cảnh 3D thường nằm trong khoảng vài đơn vị tới vài trăm đơn vị, half float dư sức chính xác. Vấn đề chỉ xuất hiện nếu bạn dồn thẳng toạ độ thế giới thực có biên độ hàng chục nghìn đơn vị vào texture trạng thái — khi đó nên trừ đi một gốc cục bộ trước khi ghi.
+
+## Bài này dẫn tới đâu
+
+`GPUComputationRenderer` ở bài kế tiếp đóng gói chính xác bộ máy vừa dựng thủ công ở đây — hai render target, compute scene, thứ tự đọc/ghi — thành một API `addVariable`/`compute()`, để bạn không phải tự tay quản lý từng object nữa. Hiểu rõ cơ chế thủ công trước khi dùng API đóng gói là lý do track này đặt hai bài theo đúng thứ tự này.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+1. **Bind cùng một render target vừa làm input sampler vừa làm output framebuffer trong cùng draw call** — ví dụ quên đảo `read`/`write` sau swap, hoặc gán nhầm uniform texture. Kết quả sai lệch tinh vi, có khi chỉ lộ ra trên vài GPU cụ thể, cực khó debug vì driver không báo lỗi nào.
+2. **Không clamp `uDelta` sau một frame chậm hoặc tab bị ẩn rồi mở lại** — delta có thể nhảy vọt tới vài trăm mili-giây. Particle "nhảy" xuyên qua biên va chạm hoặc vận tốc nổ tung, vì tích phân Euler với delta lớn không còn ổn định số học.
+3. **Quên `renderer.setRenderTarget(null)` sau compute pass.** Three.js tiếp tục render mọi thứ sau đó — kể cả scene chính — vào render target cũ; màn hình đứng yên hoặc đen, trong khi console không báo lỗi nào vì về mặt kỹ thuật, mọi lệnh render vẫn "thành công".
+
+</Callout>

@@ -1,0 +1,11 @@
+## Goal
+
+This is the mini-build closing out Track 9: a cloth-simulated flag running entirely on the GPU, with not a single line of physics running on the CPU each frame. It merges three things this track taught separately — ping-pong state textures (module 1), `GPUComputationRenderer` as the API layer over that ping-pong, and the mass-spring + Verlet integration model from the cloth-simulation-basics lesson — into one visible compute → render pipeline, with wind, folds, and lighting.
+
+## Requirements
+
+A 64×48 cloth grid, storing position in two state textures (`texturePosition` and `texturePreviousPosition`, since Verlet integration needs both the current and the previous frame). The pole-edge column (`uv.x = 0`) stays absolutely fixed; everything else is subject to gravity plus a directional wind whose strength varies over time (gusty, noise-modulated) — wind must be projected onto the surface's estimated normal so the flag **flutters** instead of rigidly sliding sideways. Distance constraints against 8 neighbors (4 structural + 4 diagonal shear, to resist skewing) use Hooke's-law spring forces, not a multi-pass constraint solve. The display mesh's vertex shader samples `texturePosition` to place each vertex, recomputing the normal every frame from its 4 neighbors (never the flat geometry's original normal — it never changes). The fragment shader tints two tones by front/back face (`gl_FrontFacing`) multiplied by simple diffuse lighting, plus a UV-mapped stripe pattern. The physics timestep (`uDt`) must stay a fixed constant, never taken from the real per-frame delta — full details live in the Exercises section.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution: the flag flutters convincingly through each gust, the pole edge never moves, it runs 5 minutes straight without a constraint blowup (vertices flying off to infinity), lighting clearly shows surface folds, the stripes deform with the cloth's actual shape, and the frame rate stays stable throughout.

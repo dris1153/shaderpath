@@ -1,0 +1,72 @@
+## Three Approaches to Real-Time Fluid Simulation
+
+The cloth lesson before this one was a finite grid of points tied to their neighbors by distance constraints — a tidy model that runs well on a state texture. Fluid is harder because its constraint is **global**, not local: volume has to stay conserved everywhere at once, not just between one neighbor pair. Two completely different families solve that — **particle-based** (SPH, PBF) and **grid-based** (Jos Stam's Stable Fluids) — and this lesson only maps those three directions, it doesn't fully implement any of them. The demo below builds the one corner that's actually feasible in a browser tab: 2D Stable Fluids on a grid.
+
+## SPH — Particles Carrying Mass, Density from a Smoothing Kernel
+
+Smoothed Particle Hydrodynamics treats fluid as a scattered cloud of particles, each carrying mass $m$, position, velocity. There's no grid at all — density at particle $i$ is estimated by summing contributions from nearby particles, weighted down by distance through a **smoothing kernel function** $W$ (typically a cubic spline or poly6, with support radius $h$):
+
+$$
+\rho_i = \sum_j m_j\, W(\lVert \mathbf{r}_i - \mathbf{r}_j\rVert, h)
+$$
+
+Pressure at $i$ follows from how far its density deviates from rest density ($p_i \propto \rho_i - \rho_0$), and the pressure gradient (also derived from $W$'s derivative) pushes compressed particles apart. The expensive part isn't the math — it's **finding neighbors**: the sum above requires scanning every particle pair within radius $h$, and brute force is $O(N^2)$. At $N=5000$ particles that's 25 million distance checks per frame; at 100,000 it's 10 billion — without a spatial acceleration structure (spatial hashing, uniform grid binning), even a "modest" particle count is enough to kill your framerate. SPH is the natural fit for fluid with **visible surfaces and splashes** — pouring water, waves, droplets — because every particle is naturally a surface sample.
+
+## PBF — Position Constraints Instead of Forces
+
+Position Based Fluids (Macklin & Müller, 2013) keeps SPH's density formula but changes how it's used: instead of accumulating pressure forces and integrating velocity, PBF writes density as a **position constraint** every particle must satisfy:
+
+$$
+C_i(\mathbf{p}) = \frac{\rho_i}{\rho_0} - 1 = 0
+$$
+
+then solves that constraint directly on positions — the exact Position-Based Dynamics technique the cloth lesson used for distance constraints, just with a different constraint shape. "Solve, don't integrate forces" is why PBF stays stable at larger timesteps where classic force-based SPH doesn't: SPH needs a high stiffness $k$ to keep fluid "dense" enough, and a high $k$ is exactly what triggers explosive numerical oscillation. This is the technique behind most fluid particle systems in modern game engines (NVIDIA Flex, PhysX fluid).
+
+## Stam's Stable Fluids — a Grid, Not Particles
+
+The third direction drops the particle concept entirely. Space is divided into a fixed grid, each cell storing velocity (and, depending on the application, smoke density, temperature, or dye color) — exactly the state-texture pattern used throughout this track. Jos Stam (1999) reduced incompressible Navier–Stokes to a four-step update loop per frame: add external force, **advect** (move each quantity along the velocity field itself), diffuse, **project** (force the velocity field divergence-free).
+
+The advect step is what earns the name "stable": Stam uses **semi-Lagrangian advection** — for each cell, trace backward along velocity to find where that cell's content "came from" last frame, then sample there with interpolation — instead of forward (explicit Euler) integration, which blows up numerically once $\Delta t$ exceeds the CFL condition. Backward tracing stays stable for **any** $\Delta t$, at the cost of numerical diffusion (fine detail fades over time even with dissipation turned all the way off) — stable is not the same thing as accurate.
+
+The project step is exactly the divergence from the curl-noise lesson (Track 7): Helmholtz decomposition says any field $\mathbf{w}$ splits into a divergence-free part plus a pressure gradient, $\mathbf{w} = \mathbf{u} + \nabla p$. Solve for $p$ via the Poisson equation $\nabla^2 p = \nabla\cdot\mathbf{w}$, then subtract:
+
+$$
+\mathbf{u} = \mathbf{w} - \nabla p
+$$
+
+There's no closed-form solution on a discrete grid, so $p$ is solved with **Jacobi** iteration — each pass, every cell updates from its four neighbors and its own fixed divergence value:
+
+```glsl
+// one Jacobi relaxation step inside the pressure solve
+float p = (pLeft + pRight + pBottom + pTop - divergence) * 0.25;
+```
+
+More iterations pull the field closer to genuinely divergence-free — exactly the slider in the demo below.
+
+## Why the Famous Web "Fluid" Demos Are All 2D Stable Fluids
+
+The WebGL demo in Pavel Dobryakov's style (the `PavelDoGreat/WebGL-Fluid-Simulation` repo) that nearly everyone learning GLSL has seen — that's not SPH. It's Stable Fluids on a 2D grid: a "dye" texture advected by a velocity texture, mouse drags splatting force directly into both. It dominates web demos not for aesthetic reasons — for cost: a fixed grid needs no neighbor search (SPH's $O(N^2)$ problem simply doesn't exist here, sampling a neighboring texel is always $O(1)$), and every step (advect, splat, divergence, Jacobi, project) is a fullscreen-quad fragment shader reading/writing an FBO — exactly the GPGPU ping-pong foundation this track opened with. No new tool required, just more passes.
+
+## Cost, Complexity, and Picking the Right Tool
+
+| | SPH | PBF | Stable Fluids |
+|---|---|---|---|
+| Representation | Discrete particles | Discrete particles | Fixed grid (texture) |
+| Main cost driver | Neighbor search $O(N^2)$ (no binning) | Neighbor search + constraint solve iterations | Grid cells × steps × Jacobi iterations |
+| Stability | Sensitive to $\Delta t$, stiffness $k$ | More stable than force-based SPH | Unconditionally stable (advect), but numerically diffusive |
+| Reasonable web scale | A few thousand particles without binning | Similar to SPH, needs binning to reach tens of thousands | 128²–256² grid, smooth at 60fps |
+| Best for | Fluid with surfaces, splashes, droplets | Same as SPH, needs more stability | Smoke, ink, 2D screen-space effects |
+
+## The Honest Scope on the Web
+
+Bluntly: a production-quality 3D liquid simulation — water pouring in a game, splash VFX — is out of scope for a browser tab. It needs real SPH/PBF with spatial hashing, tens of thousands of particles holding 60fps, a GPU budget that's reasonable on console/native but not reasonable to compete for against the rest of a webpage. A 2D grid is the web's sweet spot: visually convincing enough (smoke, ink, mouse-reactive effects), cheap enough to leave room for everything else on the page. The demo below builds exactly that sweet spot — not because SPH/PBF are "too hard," but because it's the right engineering choice for this environment. Track 13's "interactive GPU particle system" capstone returns to this scale question, this time for pure particles that don't need incompressibility.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first reading or attempting a fluid simulation:
+
+1. **Blaming "the GPU is slow" when the algorithm is actually $O(N^2)$.** A brute-force SPH with 5000 particles tanking framerate isn't a weak GPU — it's the missing spatial structure (uniform grid/spatial hash) that would limit neighbor search to a real local neighborhood instead of the entire particle set.
+2. **Cutting Jacobi iterations to "save time" without realizing divergence hasn't actually reached zero.** The result looks blocky, weakly swirling, or has no recirculation at all — not a formula bug, just a pressure solution that hasn't converged enough; exactly what the demo's iteration slider demonstrates.
+3. **Confusing semi-Lagrangian advection's "unconditional stability" with "accuracy."** Setting dissipation to zero doesn't remove any dye color directly, yet the field still visibly fades over time — that's the inherent numerical diffusion of interpolating at every advect step, not a dissipation bug.
+
+</Callout>

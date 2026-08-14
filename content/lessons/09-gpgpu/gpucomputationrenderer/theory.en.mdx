@@ -1,0 +1,70 @@
+## What GPUComputationRenderer Actually Wraps
+
+The previous lesson built ping-pong FBOs by hand: two `WebGLRenderTarget`s, a 0/1 index tracking which one is "read" and which is "write," and hand-rolled swap logic after every frame — repeated for EACH state channel (position, velocity...) separately. `GPUComputationRenderer`, the official utility at `three/addons/misc/GPUComputationRenderer.js`, packages exactly that technique into a "compute variable" concept: each variable owns its own render target pair, swaps it, and wires its texture as another variable's shader input automatically. Reading the source directly (three@0.185.1, [GitHub](https://github.com/mrdoob/three.js/blob/master/examples/jsm/misc/GPUComputationRenderer.js)) shows it doesn't reinvent the ping-pong algorithm at all — `compute()` internally does the same thing: read the render target at the current index, write into the other one, flip the index. What's automated is the *bookkeeping*: you no longer hand-manage a target pair per variable, and you no longer manually wire one variable's output texture into another variable's shader.
+
+## Setup, State Textures, and Declaring Compute Variables
+
+`new GPUComputationRenderer(sizeX, sizeY, renderer)` only stores the compute grid's dimensions and a reference to the `WebGLRenderer` in use — no texture or render target exists yet. `gpuCompute.createTexture()` returns an empty `THREE.DataTexture` sized `sizeX × sizeY`, typed `FloatType`, whose initial data you fill in yourself via `texture.image.data` (a flat array, 4 numbers per texel in RGBA order) before using it as a seed value:
+
+```ts
+const gpuCompute = new GPUComputationRenderer(SIZE, SIZE, renderer);
+const dtPosition = gpuCompute.createTexture();
+const dtVelocity = gpuCompute.createTexture();
+// ...fill dtPosition.image.data / dtVelocity.image.data (Float32Array RGBA)...
+
+const velocityVariable = gpuCompute.addVariable("textureVelocity", velocityShader, dtVelocity);
+const positionVariable = gpuCompute.addVariable("texturePosition", positionShader, dtPosition);
+```
+
+`addVariable(name, computeFragmentShader, initialValueTexture)` registers a variable: it builds it a dedicated `ShaderMaterial` using the shader you passed as its fragment shader, while the vertex shader is always fixed — a full-screen quad baked into `GPUComputationRenderer` itself, which you can't and don't need to change. That's exactly why it's "fragment-only": every compute variable's math runs inside exactly ONE fragment shader, one texel producing one pixel.
+
+## `setVariableDependencies` and Auto-Injected Uniforms
+
+A compute variable needs to read its own previous frame and/or another variable's data to compute the next one — `setVariableDependencies(variable, [dep1, dep2, ...])` declares exactly that list. In the classic two-variable swirl: velocity depends on `[velocity, position]` (old velocity for damping, position for the radius-based swirl force), position depends on `[velocity, position]` (new velocity to integrate, old position to accumulate onto):
+
+```ts
+gpuCompute.setVariableDependencies(velocityVariable, [velocityVariable, positionVariable]);
+gpuCompute.setVariableDependencies(positionVariable, [velocityVariable, positionVariable]);
+const error = gpuCompute.init();
+if (error !== null) throw new Error(error);
+```
+
+Something the docs alone don't make obvious: `init()` turns EVERY dependency — including a variable depending on itself — into a `uniform sampler2D <variableName>;` line **prepended directly** onto your fragment shader string, and creates the matching uniform entry for it. That means you never write `uniform sampler2D texturePosition;` yourself in `texturePosition`'s own shader — just list it in the dependency array and `GPUComputationRenderer` declares it for you. Every frame, `compute()` sets `uniforms[depName].value = depVar.renderTargets[currentTextureIndex].texture` — loading the texture at the **current** index (last frame's finished result) as input, before writing the new frame's result into the other index.
+
+## `init()`, `compute()`, and a Shared Ping-Pong Index
+
+`init()` must run after every variable and dependency is declared — it actually creates two render targets per variable, renders the seed texture into both (so either buffer holds valid data from the very first frame), then prepends the uniform lines described above. Unlike most of Three's API, which throws, `init()` returns `null` when everything checks out, or an **error string** when something's wrong (for instance, a device with no vertex textures: `"No support for vertex shader textures."`) — you have to check `if (error !== null)` yourself; nothing stops execution automatically.
+
+One detail easy to miss: `currentTextureIndex` is **a single number for the entire `GPUComputationRenderer`**, not something each variable tracks independently. `compute()` loops over every variable, computes each one using the SAME read/write index pair, then flips the index exactly once at the end — every variable in one renderer always stays in lockstep in its ping-pong cycle. Read the result with `gpuCompute.getCurrentRenderTarget(variable).texture`, assigned straight into the particle render material's uniform:
+
+```ts
+gpuCompute.compute();
+particleMaterial.uniforms.texturePosition.value =
+  gpuCompute.getCurrentRenderTarget(positionVariable).texture;
+```
+
+## `resolution`: a Pre-Injected Define, Not a Uniform
+
+The constructor calls `addResolutionDefine` for every variable, setting `material.defines.resolution` to the string `"vec2(128.0, 128.0)"` — Three compiles `defines` into a `#define resolution vec2(128.0, 128.0)` line placed before the shader body. Because it's a `#define` (plain text substitution), not a `uniform`, you use `resolution` in your shader without declaring anything — but that's exactly why adding your own `uniform vec2 resolution;` breaks: the preprocessor replaces `resolution` with `vec2(128.0, 128.0)` at EVERY occurrence, including inside that very declaration, turning it into `uniform vec2 vec2(128.0, 128.0);` — a syntax error. Reading your own texel is always `gl_FragCoord.xy / resolution.xy`: unlike the Track 0 UV lesson, which had to add $+0.5$ by hand because a pixel index isn't its center, `gl_FragCoord` is already computed by the rasterizer AT the pixel center — no offset needed.
+
+## GPUComputationRenderer's Limits
+
+Three limits worth remembering, all three stemming from it being nothing more than a wrapper around a full-screen fragment pass: (1) fragment-only — there's no path to transform feedback (next lesson); (2) exactly ONE RGBA texture per variable, meaning at most 4 float values of state per variable per texel — needing more than 4 (position + life + size, say) means splitting into another variable; (3) every variable inside the SAME `GPUComputationRenderer` is forced to share one `sizeX × sizeY`, since that size is passed once at construction — wanting a different resolution grid means standing up a separate `GPUComputationRenderer` instance.
+
+## Texture Data Type: FloatType by Default, Fallback Is on You
+
+`dataType` defaults to `THREE.FloatType`, switchable via `gpuCompute.setDataType(type)`. Rendering into a float render target requires WebGL2 support for the [`EXT_color_buffer_float`](https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/) extension — not every mobile GPU has it. A close read of `GPUComputationRenderer.js`'s source shows no code that detects the device or auto-switches to `HalfFloatType` — contrary to what's often assumed, the current version does **not** fall back automatically: on a device without float render target support, `compute()` still runs without throwing anything (it never touches any check branch for this), but the framebuffer ends up incomplete and the texture reads back as garbage or solid black. To stay safe on mobile, call `gpuCompute.setDataType(THREE.HalfFloatType)` yourself before `addVariable` — lower precision, but plenty for most particle sims, and supported far more broadly.
+
+## What's Next: Where This Two-Variable Structure Returns
+
+The exact `textureVelocity`/`texturePosition` pair depending on each other from this lesson is the skeleton for most of the rest of the track: the 100k-particle-grid mini-build just adds render geometry on top, `flow-field-particles` swaps the swirl force for one sampled from curl noise, `boids-flocking-on-gpu` adds a neighbor-sampling step right inside the velocity fragment shader. The next lesson sits at the opposite end: transform feedback hits the exact same goal — "state living on the GPU" — via a completely different route, writing straight to a buffer from the vertex shader, no texture, no fragment pass at all.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common `GPUComputationRenderer` mistakes:
+
+1. **Forgetting to call `setVariableDependencies` before `init()`.** With no dependency, no `sampler2D` uniform gets prepended — a shader referencing `texturePosition`/`textureVelocity` fails to compile (undeclared identifier), or if you never reference them at all, state simply sits frozen forever since it can never read the previous frame.
+2. **Redeclaring `uniform sampler2D texturePosition;` by hand** for a variable that already lists itself as a dependency. `init()` already prepended that exact line — a hand-written second declaration is a "redefinition" compile error.
+3. **Assuming the default `FloatType` just works everywhere.** There's no automatic fallback in the current three version (verified by reading the source) — a device missing `EXT_color_buffer_float` doesn't throw anything at `init()` or `compute()`, it just silently renders the texture as garbage or solid black.
+
+</Callout>

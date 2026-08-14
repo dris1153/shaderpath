@@ -1,0 +1,69 @@
+## Giải phẫu vòng lặp particle trên CPU
+
+Cách "tự nhiên" nhất để làm một particle system: giữ vị trí (và vận tốc) của $N$ particle trong một `Float32Array`, mỗi frame chạy một vòng lặp `for` cập nhật từng phần tử, rồi báo cho GPU biết dữ liệu đã đổi.
+
+```js
+const positions = new Float32Array(particleCount * 3); // xyz mỗi particle
+const velocities = new Float32Array(particleCount * 3);
+
+function update(dt) {
+  for (let i = 0; i < particleCount; i++) {
+    const o = i * 3;
+    velocities[o + 1] -= 9.8 * dt; // trọng lực
+    positions[o] += velocities[o] * dt;
+    positions[o + 1] += velocities[o + 1] * dt;
+    positions[o + 2] += velocities[o + 2] * dt;
+  }
+  geometry.attributes.position.needsUpdate = true; // báo Three re-upload
+}
+```
+
+Ba việc xảy ra mỗi frame, đúng thứ tự: (1) JS chạy $N$ vòng lặp số học thuần trên main thread; (2) `needsUpdate = true` báo cho Three.js biết `BufferAttribute` đã bẩn; (3) ở lần render kế tiếp, Three gọi `bufferSubData` để chép **toàn bộ** mảng `positions` — không phải phần thay đổi, toàn bộ — từ RAM sang VRAM. Với vài trăm particle, ba bước này rẻ tới mức không đo được. Câu hỏi bài này trả lời: khi $N$ tăng lên hàng trăm nghìn, bước nào trong ba bước trên thực sự làm frame time phình ra?
+
+## Băng thông không phải nút thắt — vậy đâu mới là nút thắt thật?
+
+Trực giác phổ biến là đổ lỗi cho "truyền dữ liệu qua bus" — nghe hợp lý, nhưng số liệu không ủng hộ trực giác đó.
+
+### Ước lượng chi phí truyền qua bus
+
+$$
+100{,}000 \times 3 \times 4\ \text{bytes} = 1{,}200{,}000\ \text{bytes} \approx 1.2\ \text{MB / frame}
+$$
+
+$$
+1.2\ \text{MB} \times 60\ \text{fps} \approx 72\ \text{MB/s}
+$$
+
+72MB/s là con số cho 100.000 particle ở 60fps, chỉ tính riêng vị trí (`vec3`, 4 byte mỗi thành phần). Một khe PCIe Gen3 x16 điển hình có băng thông danh nghĩa khoảng 16GB/s một chiều (ước lượng, tuỳ chipset) — 72MB/s chưa tới 0.5% con số đó. Trên laptop dùng GPU tích hợp (Intel, Apple Silicon), CPU và GPU còn dùng chung một vùng RAM vật lý, nên "truyền qua bus" gần như không tồn tại theo nghĩa PCIe rời rạc. Nói cách khác: băng thông vật lý gần như không bao giờ là lý do một particle system 100k bị giật.
+
+### Ước lượng chi phí vòng lặp JavaScript
+
+Vậy chi phí thật nằm ở đâu? Một JS engine đã warm-up có thể chạy hàng chục tới hàng trăm triệu phép toán số học đơn giản mỗi giây (ước lượng, dao động mạnh theo engine và CPU) — vòng lặp cập nhật 100.000 particle × khoảng 10 phép toán (cộng vận tốc, trọng lực, ghi 3 thành phần) chỉ tốn khoảng 1 triệu phép toán, lý thuyết dưới 0.1ms. Vậy tại sao thực tế vẫn giật?
+
+Ba lý do cộng dồn, không phải một. **Một**, `TypedArray` ghi rải rác theo offset không được JIT vector hoá tốt như một phép toán ma trận thuần. **Hai**, bất kỳ allocation ẩn nào trong loop — ví dụ tạo `new THREE.Vector3()` tạm thời thay vì ghi trực tiếp vào mảng — kích hoạt garbage collector, và một lần GC pause có thể ăn vài millisecond bất ngờ, đúng lúc frame đang căng. **Ba**, `bufferSubData` không chỉ tốn thời gian copy tỉ lệ với kích thước buffer, nó còn có overhead cố định mỗi lần gọi để đồng bộ driver với GPU — overhead này lặp lại **mỗi frame**, không phải một lần duy nhất. Ba chi phí này chạy trên cùng main thread với React re-render, xử lý input, tất cả — nên chúng cộng dồn đúng vào ngân sách 16.6ms cần cho 60fps. Đây, chứ không phải bus, mới là nút thắt thật.
+
+## Phép đảo GPGPU: texture là bộ nhớ trạng thái, fragment shader là hàm cập nhật
+
+GPGPU (General-Purpose computing on GPU) lật ngược toàn bộ kiến trúc trên: thay vì CPU giữ trạng thái rồi đẩy sang GPU mỗi frame, **trạng thái sống thường trực trên GPU**, dưới dạng texture. Một texture vị trí kích thước $W \times H$ giữ $W \times H$ particle — mỗi texel là một particle, kênh RGBA của nó chính là $(x, y, z, \dots)$. Một fragment shader đóng vai trò hàm cập nhật: nó chạy song song cho từng texel, đọc trạng thái cũ của chính texel đó (và các texel khác nếu cần), tính trạng thái mới, ghi ra texture đích. Khi cần vẽ particle, vertex shader của mesh particle đọc thẳng texture trạng thái đó để lấy vị trí — không bước nào particle quay lại CPU, không `Float32Array`, không `bufferSubData`.
+
+Nguyên lý tổng quát đứng sau kỹ thuật này: **texture tương đương một mảng 2D, fragment shader tương đương một phép `map` song song** trên mảng đó. Đây là ý tưởng có trước cả compute shader — GPGPU ra đời từ giữa những năm 2000, khi lập trình viên "đánh lừa" pipeline đồ hoạ (vốn chỉ để vẽ tam giác) thành một cỗ máy tính toán song song, bằng cách render vào texture thay vì render ra màn hình. WebGL2 không có compute shader thật (đó là đặc quyền của WebGPU), nên thủ thuật texture-là-mảng này vẫn là con đường chính để làm GPGPU trong trình duyệt, và là nền tảng cho mọi bài còn lại của track này.
+
+## Ngưỡng thực tế: khi nào nên chuyển sang GPU
+
+Không có ranh giới cứng, nhưng vài mốc ước lượng hữu ích để định hướng. Dưới khoảng 10.000 particle, vòng lặp CPU thường không đáng lo — chi phí JS cộng upload nằm sâu trong ngân sách frame, và bạn giữ được toàn quyền viết logic JS tuỳ ý cho từng particle. Trên khoảng 50.000, gánh nặng JS-loop cộng GC cộng upload thường đã đủ lớn để đáng đầu tư dựng pipeline GPU. Khoảng giữa 10k–50k là vùng xám, phụ thuộc độ phức tạp mỗi particle, thiết bị mục tiêu (điện thoại tầm trung khác hẳn desktop), và việc particle có cần tương tác với logic gameplay trên CPU hay không.
+
+## Cái giá phải trả khi chuyển sang GPU
+
+GPGPU không miễn phí về mặt kỹ thuật. Bạn mất khả năng viết logic JS tuỳ ý cho từng particle — mọi hành vi phải diễn đạt lại bằng GLSL, nơi branching phức tạp và truy cập dữ liệu ngoài (ví dụ query một particle khác theo index bất kỳ) khó hoặc không thể làm gọn gàng. Đọc trạng thái ngược về CPU — để raycast, để logic game biết particle nào đang ở đâu — cực chậm: `gl.readPixels` buộc GPU đồng bộ với CPU, đình trệ pipeline đúng thứ bạn vừa cố tránh. Debug cũng khó hơn hẳn: không có `console.log` trong shader, cách thực tế nhất là render trạng thái ra màn hình dưới dạng màu để "nhìn" nó — đúng kỹ thuật bài sau sẽ dùng.
+
+## Bài này dẫn tới đâu
+
+Bài tiếp theo dựng kỹ thuật ping-pong FBO thủ công — hai render target hoán đổi vai trò đọc/ghi mỗi frame — chính là cách hiện thực hoá "texture là bộ nhớ trạng thái" vừa nói ở trên. Sau đó, `GPUComputationRenderer` đóng gói lại đúng kỹ thuật này thành một API gọn hơn; transform feedback là một hướng thay thế của riêng WebGL2. Module "Trạng thái trên GPU" khép lại bằng một lưới 100.000 particle chạy hoàn toàn trên GPU — con số mà, sau bài này, bạn đã biết chính xác vì sao CPU không kham nổi.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+1. **Đổ lỗi cho "băng thông" khi particle system giật.** Số liệu thực tế (như tính ở trên) gần như luôn cho thấy JS loop cộng GC cộng overhead gọi `bufferSubData` mới là thủ phạm, không phải dung lượng dữ liệu truyền — nghi ngờ sai chỗ khiến bạn tối ưu sai thứ (ví dụ nén dữ liệu xuống half-float) trong khi vấn đề thật nằm ở allocation trong vòng lặp.
+2. **Tạo object tạm trong vòng lặp cập nhật** — `new THREE.Vector3()`, spread một mảng, tạo closure mới mỗi lần lặp. Tưởng vô hại vì object nhỏ, nhưng đó chính là nguồn gây GC pause bất định, biểu hiện như một frame ngẫu nhiên bị giật dù trung bình vẫn mượt, cực khó tái hiện khi profiling.
+3. **Quên `needsUpdate = true` sau khi ghi trực tiếp vào mảng của `BufferAttribute`.** Particle "cập nhật" đúng trong RAM, nhưng hình vẽ trên màn hình đứng yên, vì Three.js không biết dữ liệu đã đổi nên không bao giờ gọi `bufferSubData` — không có lỗi console nào báo hiệu việc này.
+
+</Callout>

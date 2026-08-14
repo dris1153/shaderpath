@@ -1,0 +1,51 @@
+## Cloth as a Mass-Spring Grid
+
+The most common real-time cloth model is mass-spring: every grid vertex is a point "mass", linked to its neighbors by springs holding a fixed rest distance (a constraint). No continuous fabric is actually simulated — just a few thousand points and a few tens of thousands of distance constraints, updated every frame. The whole system's believability comes down to two questions: which formula integrates position over time, and which algorithm solves the constraints — both run tens of thousands of times per frame, so both need to live on the GPU (the reason argued in this track's first lesson).
+
+## Verlet Integration: Why It Beats Explicit Euler
+
+Explicit Euler — the "obvious" way to integrate — stores position and velocity separately, updating them in sequence:
+
+$$
+\vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t, \qquad \vec{x}_{t+1} = \vec{x}_t + \vec{v}_{t+1} \, \Delta t
+$$
+
+The problem shows up at stiff constraints: a spring holding an almost-rigid distance behaves like a stiff differential equation — the error accumulated at each Euler step pumps fake energy into the system, and cloth either jitters or explodes with no unusual force in sight. Verlet integration sidesteps this by never storing velocity explicitly — only the current position and the previous frame's position, with velocity inferred implicitly from their difference:
+
+$$
+\vec{x}_{t+1} = \vec{x}_t + (\vec{x}_t - \vec{x}_{t-1}) \cdot d + \vec{a}_t \, \Delta t^2
+$$
+
+where $d$ is damping slightly under 1 (say $0.99$) that bleeds a little energy each step, so cloth settles instead of oscillating forever. The key point: once constraint-solving nudges positions (next section), the implicit velocity $(\vec{x}_t - \vec{x}_{t-1})$ automatically reflects that change at the next step — no separate velocity variable to resync. This is exactly the technique Thomas Jakobsen described in "Advanced Character Physics" (GDC 2001) — the classic paper that brought Verlet-based mass-spring systems into real-time games, still the foundation of most cloth/rope solvers today.
+
+## State on the GPU: Two Ping-Ponged Position Textures
+
+Because Verlet needs both $\vec{x}_t$ and $\vec{x}_{t-1}$, the simulation's state can't be a single position texture like the earlier particle lessons — it needs exactly two: `texturePosition` (current) and `texturePositionPrev` (last frame's). With `GPUComputationRenderer`, these are two mutually dependent "variables": `texturePosition` depends on itself AND on `texturePositionPrev`; `texturePositionPrev` simply copies `texturePosition`'s current value each frame so it always lags exactly one step behind. One easy detail to miss: `GPUComputationRenderer` auto-declares and auto-fills the uniform for a dependency whose name DIFFERS from the variable's own name, but a SELF-referencing dependency is not — you must declare `uniform sampler2D texturePosition;` yourself and assign `material.uniforms.texturePosition` before calling `init()`, or `compute()` crashes on the missing uniform.
+
+## Distance Constraints and the GPU's Jacobi Catch
+
+A distance constraint is a simple correction: pull two points toward/away from each other by half the difference from their rest length. On the CPU, Gauss-Seidel processes constraints SEQUENTIALLY, each one seeing the just-corrected result of the previous constraint within the same pass — it converges fast. On the GPU this can't be reproduced: each texel runs in its own parallel invocation, with no way to "see" a neighbor texel's just-computed result within the SAME draw call — every invocation reads from the SAME input texture, unchanged for the whole pass. The forced solution is Jacobi: every point computes its correction from ALL neighbors using this pass's input texture, averages them, writes to an output texture — then the whole pass repeats several times. Because each pass only propagates a correction exactly one texel, Jacobi needs noticeably MORE iterations than Gauss-Seidel to reach the same stiffness — not a minor detail, but the fundamental architectural constraint of every GPU cloth solver.
+
+### Structural, Shear, Bend: Three Constraint Types
+
+A complete cloth grid typically uses three constraint types, distinguished by which pair of neighbors gets linked: structural links the 4 direct neighbors (up/down/left/right), mainly holding overall shape and length; shear links the 4 diagonal neighbors, resisting the fabric "skewing" into a parallelogram that structural alone can't catch; bend links points TWO grid steps apart (skipping the point in between), resisting folding — without bend, cloth holds correct edge lengths but creases sharply like paper instead of draping softly. This lesson's demo implements structural + shear (8 neighbors) to keep the source focused; adding bend is just the same `correction()` pattern with a doubled offset.
+
+## Pinning and Forces: Constant Gravity, Wind Projected on the Normal
+
+Pinning is the easiest mechanism to implement but the easiest to forget the scope of: a pinned point skips the entire Verlet integration AND constraint-solving, always writing back its original rest position every frame — encoded as a mask in the position texture's alpha channel, read by UV exactly the way Track 0 introduced. Gravity is just a constant added to acceleration. Wind is more interesting: a constant wind direction puffs the cloth up like a flat balloon, with none of the feel of real wind. The correct approach projects the wind vector onto the cloth's local normal at each point ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$, clamped at 0 so wind never "sucks" the cloth from behind) — that normal is cheaply estimated from the cross product of two vectors linking the horizontal/vertical neighbors, the exact normal-from-gradient technique Track 8's heightfield lesson used. Adding a "gusty" signal varying over both space and time (a few sine waves at mismatched frequencies, cheaper than real 3D noise) makes the cloth ripple instead of puffing up as one rigid mass.
+
+## Iteration Count Decides How "Stretchy" It Looks
+
+Because Jacobi converges slowly, the iteration count per frame directly decides whether cloth looks "stretchy" or "stiff": 1-2 iterations let cloth visibly elongate under gravity before constraints pull it back; 6-8 hold close to rest length, reading as real woven fabric. This is a direct performance tradeoff — every iteration is its own full-screen draw call over the whole grid — so this lesson's demo exposes iteration count as a live control specifically so that tradeoff is seen.
+
+The next lesson (a fluid simulation intro) reuses this exact ping-pong + multi-pass framework for a very different problem: instead of distance constraints, grid-based fluids solve a pressure equation that needs similar Jacobi/Gauss-Seidel passes to keep velocity divergence-free.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three mistakes that show up constantly when building GPU cloth:
+
+1. **Forgetting to declare/assign the self-dependency's uniform.** `GPUComputationRenderer` automatically handles a differently-named dependency, but a variable depending on itself is not — skipping the manual `material.uniforms.texturePosition` assignment makes `compute()` throw on an undefined uniform on the first frame.
+2. **Feeding the wrong texture back as "current" after relaxation.** If next frame's "current" texture is still the un-relaxed candidate, Verlet's implicit velocity next frame gets computed against the wrong reference — the cloth appears to gain a mysterious extra force from nowhere.
+3. **Wind not projected onto the normal.** Adding a constant wind vector straight into acceleration without multiplying by $(\hat n \cdot \vec w)$ makes the whole sheet drift in one direction like a rigid slab — the giveaway is cloth that "flies" instead of "ripples".
+
+</Callout>
