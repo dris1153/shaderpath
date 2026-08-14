@@ -1,0 +1,64 @@
+## Bề mặt dừng lại, thể tích thì không: hai kiểu raymarch
+
+Raymarch bề mặt (track này từ đầu tới giờ) march dọc tia bằng đúng khoảng cách an toàn mà SDF trả về, rồi DỪNG NGAY khi $f(p)$ tụt xuống dưới một ngưỡng epsilon — đó là lúc tia vừa chạm một bề mặt CÓ THẬT, ranh giới trong/ngoài rõ ràng. Không có "chạm một nửa": một điểm hoặc ở trong vật thể ($f < 0$), hoặc ngoài ($f > 0$), hoặc đúng trên bề mặt ($f \approx 0$).
+
+Thể tích (mây, khói, sương dày, thuỷ tinh mờ) không có ranh giới rạch ròi kiểu đó — mật độ vật chất thay đổi LIÊN TỤC trong một vùng không gian, có thể mỏng dần về 0 ở rìa mà không bao giờ có một mặt "$f=0$" rõ rệt để dừng lại. Vì vậy volumetric march KHÔNG dùng khoảng cách an toàn của SDF để bước — nó march bằng những BƯỚC CỐ ĐỊNH (fixed step size) xuyên suốt một vùng bao (ví dụ một hình cầu hoặc hộp bao quanh đám mây), lấy mẫu mật độ tại MỌI bước bất kể mật độ ở đó cao hay thấp, rồi TÍCH LUỸ (accumulate) — chứ không "tìm điểm dừng" như sphere tracing. Vòng lặp luôn chạy hết ngân sách bước đã định, trừ khi có early exit (phần sau).
+
+## Vòng lặp tích luỹ: transmittance, emission, và front-to-back compositing
+
+Mỗi bước march qua một "lát" (slab) vật chất dày $\Delta s$ tại mật độ $\rho$ cục bộ đóng góp hai việc: nó TỰ PHÁT XẠ (emit) một ít màu — mây trắng vì tán xạ ánh sáng mặt trời qua nó, khói đỏ vì lửa bên trong; và nó HẤP THỤ một phần ánh sáng của mọi thứ ở XA hơn (phía sau nó theo hướng camera). Gộp cả quãng đường march thành công thức cập nhật hai biến $T$ (transmittance tích luỹ, bắt đầu bằng 1) và $C$ (màu tích luỹ, bắt đầu bằng 0), theo ĐÚNG THỨ TỰ:
+
+$$
+C \leftarrow C + T\,\rho\,\Delta s\,L_e, \qquad T \leftarrow T\, e^{-\rho\,\Delta s}
+$$
+
+Thứ tự này không tuỳ tiện: $L_e$ (màu phát xạ tại bước hiện tại) phải được cộng vào TRƯỚC KHI $T$ bị nhân thêm hệ số suy hao của CHÍNH bước này — vì $T$ tại thời điểm đó đã đại diện đúng cho lượng ánh sáng còn sống sót từ MỌI bước TRƯỚC nó (gần camera hơn) tới đây, còn ánh sáng vừa phát ra tại bước hiện tại thì chưa hề bị chính bước đó cản (một điểm không tự chặn ánh sáng của chính nó). Sau khi cộng xong, MỚI cập nhật $T$ để chuẩn bị cho bước kế tiếp — xa camera hơn, cần suy hao thêm.
+
+$T$ giảm dần đơn điệu theo mỗi bước (không bao giờ tăng lại) — khi $T$ đã đủ nhỏ (ví dụ $< 0.01$), phần thể tích còn lại phía sau gần như không thể đóng góp thêm gì thấy được nữa: dừng vòng lặp sớm (early exit) tiết kiệm đúng những bước lẽ ra lãng phí.
+
+## Density field: một quả mây dựng từ FBM noise
+
+Một "quả mây" rẻ nhất để dựng: lấy một mặt nạ hình cầu MỀM (falloff giảm dần từ tâm ra rìa bằng `smoothstep`, không phải cắt cứng) nhân với FBM noise (Track 7) để phá vỡ hình cầu hoàn hảo thành những cụm bông xù, rồi trừ đi một ngưỡng để "khoét" phần loãng thành khoảng trống thay vì một khối đặc:
+
+$$
+\rho(p) = \max\big(0,\ \text{falloff}(\|p-c\|)\cdot \text{fbm}(p) - \tau\big)
+$$
+
+trong đó $c$ là tâm quả mây, $\tau$ là ngưỡng (threshold) — $\tau$ càng lớn, mây càng rỗng và lởm chởm (nhiều chỗ mật độ bị trừ về 0); $\tau$ càng nhỏ, mây càng đặc và tròn trịa gần với mặt nạ hình cầu gốc. Đây đúng là kỹ thuật y hệt bài FBM ở Track 7, chỉ khác chỗ dùng: ở đó FBM tô màu một bề mặt phẳng, ở đây FBM định nghĩa MẬT ĐỘ tại mỗi điểm trong một vùng 3D — cùng một hàm noise, khác hoàn toàn cách nó được tiêu thụ.
+
+Playground dưới đây dùng một noise 2D rẻ (tổng vài `sin()`) thay cho FBM thật để giữ đoạn code ngắn gọn — chỉnh sửa ngưỡng trực tiếp để thấy falloff × noise "khoét" mây thành từng cụm rõ hơn hay mờ dần:
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - 0.5) * 4.0;\n  float falloff = 1.0 - smoothstep(0.0, 1.3, length(p));\n\n  float n = sin(p.x * 2.0 + uTime) * 0.25 + sin(p.y * 3.1 - uTime * 0.7) * 0.25 + 0.5;\n  float density = max(falloff * n - 0.25, 0.0);\n\n  vec3 bg = vec3(0.05, 0.06, 0.1);\n  vec3 cloud = vec3(0.9, 0.9, 0.95);\n  vec3 color = mix(bg, cloud, clamp(density * 2.0, 0.0, 1.0));\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Ánh sáng xuyên mây: đạo hàm rẻ theo hướng mặt trời
+
+Muốn mây có "silver lining" (viền sáng rực phía hướng mặt trời) và bóng tối ở phần dày, cần biết: từ một điểm TRONG mây, còn bao nhiêu vật chất chắn giữa điểm đó và mặt trời? Làm đúng nghĩa là march một tia phụ hoàn chỉnh từ mỗi điểm mẫu về phía mặt trời — nhưng đó là một vòng lặp LỒNG BÊN TRONG vòng lặp chính, chi phí nhân lên theo cấp số nhân.
+
+Xấp xỉ rẻ hơn nhiều: lấy 1–2 mẫu mật độ dọc hướng mặt trời (không phải march đầy đủ), cộng lại thành một "độ dày quang học" thô, rồi suy hao màu phát xạ theo `exp()` của tổng đó:
+
+```glsl
+float thickness = density(p + sunDir * s1) + density(p + sunDir * s2);
+vec3 emitted = mix(shadowColor, litColor, exp(-thickness * k));
+```
+
+Đây CHỈ LÀ một đạo hàm 1-2 mẫu, không phải light march thật — thành thật mà nói, tán xạ ánh sáng trong một đám mây thật SÂU HƠN RẤT NHIỀU: ánh sáng nảy qua lại nhiều lần bên trong mây (multiple scattering) trước khi thoát ra, đó là lý do rìa mây thật vẫn sáng mờ ngay cả ở phía KHÔNG quay về mặt trời — hiệu ứng mà 1-2 mẫu đơn giản này hoàn toàn bỏ qua. Renderer sản xuất thật (Frostbite, Disney) dùng các xấp xỉ multiple-scattering phức tạp hơn nhiều; ở đây, 1-2 mẫu là một điểm khởi đầu "đủ thuyết phục" cho một demo thời gian thực.
+
+## Số bước, banding, và jitter che băng
+
+Bước cố định nghĩa là độ phân giải lấy mẫu mật độ dọc tia bị giới hạn bởi SỐ BƯỚC: quá ít bước bỏ lỡ những biến thiên mật độ nhanh, cho ra các dải (banding) nhìn như những lớp mỏng xếp chồng thay vì một khối mây liền mạch — y hệt hiện tượng nhìn thấy các lát cắt rời rạc của một ảnh chụp CT thay vì một khối liên tục. Tăng số bước làm mượt dần, nhưng chi phí tăng TUYẾN TÍNH theo số bước.
+
+Một mẹo rẻ để "giấu" banding mà KHÔNG cần tăng số bước: dịch điểm bắt đầu march của mỗi tia (mỗi pixel) một lượng ngẫu nhiên nhỏ trong khoảng $[0, \Delta s)$ — dùng hash theo toạ độ pixel, hoặc tốt hơn là blue noise. Banding vốn do RANH GIỚI bước trùng nhau giữa các pixel lân cận tạo thành đường rõ nét; jitter phá vỡ sự trùng khớp đó, biến đường rõ nét thành hạt nhiễu (grain) ngẫu nhiên — mắt người tha thứ nhiễu tốt hơn nhiều so với một đường kẻ sắc, dù tổng SỐ mẫu không hề đổi.
+
+## Chi phí thật: vì sao real-time cần buffer thấp-res và mẹo temporal
+
+Nhân thẳng các con số (ước lượng): 64 bước march, mỗi bước gọi FBM 4 octave, mỗi octave một lần lấy mẫu noise — đã là khoảng 256 lần evaluate noise cho MỘT pixel. Ở độ phân giải 1080p (~2 triệu pixel), một khung hình cần ước lượng hàng TRĂM TRIỆU lần evaluate noise chỉ riêng cho một đám mây, chưa tính phần còn lại của cảnh. Đây là lý do volumetric rendering thời gian thực gần như không bao giờ chạy full-res, full-rate: kỹ thuật chuẩn trong production là render thể tích vào một buffer ĐỘ PHÂN GIẢI THẤP (thường 1/4 hoặc 1/16 số pixel), rồi upsample/composite lên cảnh full-res (Track 10 sẽ nói kỹ compositing một buffer phụ lên scene chính) — kết hợp với các mẹo TEMPORAL: chỉ march một phần nhỏ số tia mỗi khung hình, dùng lại (reproject) kết quả từ khung hình trước cho phần còn lại, trải chi phí ra qua nhiều khung hình thay vì trả hết trong một khung (Track 12 sẽ đặt kỹ thuật này vào bối cảnh ngân sách hiệu năng tổng thể). Volumetric march ở bài này chạy full-res cho một quả mây vì đó là TOÀN BỘ cảnh của demo — một cảnh thật với hàng chục hệ thống khác cạnh tranh ngân sách GPU thì không có lựa chọn đó.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài volumetric march:
+
+1. **Nhầm volumetric march với surface raymarch.** Dừng ngay khi mật độ đầu tiên lớn hơn 0 (giống hệt sphere tracing dừng khi $f < \epsilon$) thay vì march hết vùng bao rồi TÍCH LUỸ — cắt cụt đám mây thành một lớp vỏ mỏng dính ở rìa gần camera nhất, mất hẳn cảm giác khối đặc dần vào trong.
+2. **Cộng $L_e$ SAU KHI đã cập nhật $T$ của chính bước đó** (đảo ngược thứ tự hai dòng cập nhật ở phần 2) — mọi lớp mây tự chặn một phần ánh sáng của chính nó trước khi nó kịp góp vào $C$, mây trông nhạt và phẳng bất thường dù mật độ đặt cao.
+3. **Đặt ngưỡng early-exit quá cao** (ví dụ $T < 0.5$) tưởng là tối ưu — dừng march khi vẫn còn 50% ánh sáng có thể xuyên qua, cắt cụt phần thể tích chưa march tới giữa chừng, méo hẳn silhouette phía xa của mây.
+
+</Callout>

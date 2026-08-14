@@ -1,0 +1,61 @@
+## Dựng vô hạn từ một: lặp không gian truy vấn
+
+Mọi kỹ thuật SDF từ đầu Track 8 tới giờ đều làm việc trên một cảnh cố định: một sphere, một box, một union nhiều hình đặt ở vị trí xác định. Domain repetition lật ngược câu hỏi: thay vì thêm object mới vào scene, biến đổi chính TOẠ ĐỘ TRUY VẤN trước khi gọi SDF, sao cho cùng một hàm khoảng cách bị đánh giá lặp đi lặp lại ở vô số vị trí khác nhau trong không gian mà bản thân đoạn code SDF không hề biết nó đang bị nhân bản. Nói ngắn gọn: đừng lặp OBJECT, lặp KHÔNG GIAN mà object được nhìn thấy trong đó.
+
+## Công thức mod kinh điển: q = mod(p + 0.5c, c) - 0.5c
+
+Với kích thước ô $c$ (một số hoặc một vector theo từng trục), công thức lặp vô hạn kinh điển gấp toạ độ truy vấn $p$ về một ô canonical duy nhất:
+
+$$
+q = \mathrm{mod}(p + 0.5c,\ c) - 0.5c
+$$
+
+`mod(x, c)` tự nó đã gấp $x$ về $[0, c)$ — nhưng gọi thẳng `mod(p, c)` đặt object ở GÓC mỗi ô (tại $q = 0$ ứng với $p$ là bội số của $c$), khiến một nửa object bị cắt lìa sang ô bên cạnh mỗi khi nó không nằm gọn quanh gốc lưới. Cộng $0.5c$ trước khi gấp rồi trừ lại sau đó chỉ là một phép dịch pha: kết quả $q$ giờ nằm trong $[-0.5c, 0.5c)$, giá trị $0$ ứng đúng TÂM mỗi ô — chính xác vị trí object cần đứng để không bao giờ bị một đường biên ô cắt ngang qua giữa. Gọi `sdSphere(q, r)` sau bước fold này coi như đặt một bản sao sphere y hệt ở tâm mọi ô trong toàn bộ không gian, chỉ với một lời gọi SDF duy nhất mỗi lần march.
+
+## Lặp theo từng trục: sàn vô hạn chỉ với xz
+
+Không nhất thiết phải fold cả ba trục cùng lúc. Chỉ áp dụng công thức trên cho $p.x$ và $p.z$, giữ nguyên $p.y$, cho ra một sàn vô hạn: cùng một object (một trụ, một khối) lặp lại đều khắp mặt phẳng ngang, còn chiều cao vẫn là một trường liên tục bình thường — union với một mặt phẳng $p.y = 0$ là đủ để có một cảnh "cột chống trời" trải dài bất tận. Ngược lại, fold cả ba trục cho ra một lưới thể tích đầy vật thể ở mọi hướng, không có khái niệm "mặt đất" — hai chế độ phục vụ hai loại cảnh hoàn toàn khác nhau, chỉ khác ở việc trục nào được đưa qua công thức fold.
+
+## Chi phí O(1): so với InstancedMesh của Track 6
+
+Track 6 dạy `InstancedMesh` — cách rasterize hàng nghìn bản sao một mesh bằng một draw call, nhưng vẫn cần cấp phát bộ nhớ cho $N$ ma trận transform, với $N$ bị chặn cứng ngay lúc tạo buffer; muốn nhiều hơn phải resize buffer đó. Domain repetition không có $N$ nào cả: bất kể camera bay xa bao nhiêu, mỗi lần gọi SDF vẫn chỉ đánh giá đúng một bản sao — bản sao trong ô mà toạ độ truy vấn hiện tại rơi vào — nên chi phí bộ nhớ lẫn chi phí tính toán mỗi query đều là $O(1)$, không phụ thuộc số lượng bản sao "nhìn thấy được", kể cả khi con số đó về lý thuyết là vô hạn. Đánh đổi: không draw call nào tận dụng được cấu trúc này — toàn bộ vô hạn đó chỉ tồn tại bên trong một fragment shader duy nhất, không có mesh hay instance nào thực sự được rasterize riêng lẻ.
+
+## Cái bẫy: mod nói dối khoảng cách ở gần biên ô
+
+Công thức fold ở trên ngầm giả định object nằm gọn trong nửa ô ($\|q\|$ nhỏ hơn $0.5c$ theo mọi hướng) — tức bản sao "chính chủ" của ô hiện tại luôn là bản sao gần nhất với mọi điểm truy vấn trong ô đó. Giả định này vỡ khi object không đối xứng quanh tâm ô, hoặc đơn giản hơn: khi ô quá chật so với kích thước object. Gần biên ô, một bản sao ở ô lân cận có thể thực sự gần điểm truy vấn hơn bản sao đã fold — nhưng SDF chỉ đánh giá đúng một bản sao (của ô hiện tại), nên giá trị trả về là một khoảng cách LỚN HƠN khoảng cách thật tới bề mặt gần nhất. Đây là vi phạm trực tiếp điều kiện Lipschitz-1 mà sphere tracing dựa vào (bài Nguyên lý sphere tracing): bước march tính từ một $d(p)$ bị thổi phồng có thể nhảy quá xa, xuyên qua bề mặt thật ở đúng vùng hai ô chạm nhau, hiện ra thành vệt răng cưa hoặc lỗ hổng ngay tại đường lưới.
+
+## Sửa hiện đại: round-based repetition và giới hạn hữu hạn
+
+Inigo Quilez, trong bài viết "Repetition" trên iquilezles.org, trình bày lại công thức trên bằng `round` thay vì `mod`:
+
+$$
+q = p - c \cdot \mathrm{round}(p / c)
+$$
+
+Hai công thức tương đương nhau cho cùng một hành vi fold-về-tâm-ô, nhưng dạng `round` sạch hơn về số học và mở khoá trực tiếp một biến thể quan trọng: LẶP HỮU HẠN. Bằng cách kẹp chỉ số ô trước khi nhân lại với $c$:
+
+$$
+\text{id} = \mathrm{clamp}\big(\mathrm{round}(p/c),\ -l,\ l\big), \qquad q = p - c \cdot \text{id}
+$$
+
+với $l$ là bán kính giới hạn tính theo số ô, mọi điểm truy vấn ngoài phạm vi $l$ ô không còn "wrap" về một bản sao ảo nào nữa — nó tiếp tục trôi ra xa dần bản sao hợp lệ cuối cùng ở biên, cho khoảng cách tăng dần đúng như một trường $N$ đối tượng thật sự hữu hạn, thay vì một bức tường vô hạn không nên tồn tại ở đó.
+
+## Biến thể theo từng cell: hash ra màu/chiều cao riêng
+
+Chỉ số ô (cell-id) tính được ngay trước bước fold — `floor(p/c + 0.5)` hay `round(p/c)`, tuỳ công thức — là một toạ độ nguyên xác định duy nhất cho mỗi ô. Đưa thẳng nó vào một hash của Track 7 (`hash31(cellId)`) cho ra một số giả ngẫu nhiên ổn định tuyệt đối theo ô: dùng số đó để scale chiều cao trước khi gọi SDF, hoặc để chọn màu ở bước shading, biến một trường lặp đơn điệu thành một cảnh trông như được dàn dựng thủ công — mỗi cell một biến thể riêng, nhưng không tốn thêm bộ nhớ nào vì hash là hàm thuần tính lại mỗi lần, không lưu trữ ở đâu cả.
+
+## Lặp gương: abs() một dòng
+
+Một biến thể nhanh đáng biết: gọi `abs(p)` (hoặc `abs(p.xz)`) ngay trước bước fold tạo ra lặp gương thay vì lặp tịnh tiến thuần — mỗi ô là ảnh phản chiếu của ô liền kề thay vì bản sao y hệt, cho hoạ tiết kiểu kính vạn hoa hay cấu trúc tinh thể đối xứng, chỉ với một dòng code thêm vào trước công thức fold đã có.
+
+Domain repetition là kỹ thuật cuối cùng trước khi module Shading khép lại: checkpoint kế tiếp ghép chính nó với normal, soft shadow và AO của hai bài trước thành một cảnh hoàn chỉnh. Xa hơn, module Khí quyển của Track 8 dùng lại chính ý tưởng "biến đổi trước khi march" này cho fog và scattering, còn Track 9 (GPGPU) áp dụng tư duy tương tự để mô phỏng hàng triệu hạt mà không cần một buffer vị trí nào lưu từng hạt riêng lẻ.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới dùng domain repetition:
+
+1. **Quên bước dịch $0.5c$ trước và sau `mod`, dùng thẳng `mod(p, c)`.** Đặt object ở góc mỗi ô thay vì tâm — nửa object bị cắt lìa sang ô bên cạnh, hiện thành một đường ráp lộ rõ giữa các bản sao thay vì một trường liền mạch.
+2. **Cell size nhỏ hơn kích thước object (bán kính hay nửa-cạnh object lớn hơn $0.5c$).** Vi phạm giả định "object nằm gọn trong nửa ô" mà công thức fold dựa vào — SDF trả về khoảng cách bị thổi phồng gần biên ô, march xuyên qua bề mặt thật (overstepping), hiện thành lỗ hổng hoặc răng cưa đúng ngay đường lưới.
+3. **Hash bằng `q` (toạ độ đã fold, đổi liên tục trong ô) thay vì `cellId` (chỉ số ô nguyên, tính trước khi fold).** Mỗi fragment trong cùng một ô nhận một màu/chiều cao khác nhau thay vì một giá trị đồng nhất cho cả cell — kết quả trông như nhiễu loang lổ chứ không phải biến thể "mỗi cell một kiểu" như mong muốn.
+
+</Callout>

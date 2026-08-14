@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Mini-build khép lại module "Shading trường khoảng cách" của Track 8: dựng một thế giới lặp vô hạn hoàn chỉnh, phủ đủ bốn kỹ thuật shading đã học trong module — normal từ gradient, soft shadow, ambient occlusion và domain repetition — trong một cảnh raymarch duy nhất, chạy mượt.
+
+## Yêu cầu
+
+Fragment shader raymarch một trường trụ (pillar) lặp vô hạn theo hai trục ngang (xz) bằng domain repetition kiểu round-based, mỗi trụ đứng trên một mặt phẳng nền cũng vô hạn; chiều cao mỗi trụ lệch nhẹ theo hash của cell-id để không đồng loạt như một dãy cột giống hệt nhau; normal ước lượng bằng kỹ thuật tetrahedron; bóng đổ mềm từ một mặt trời thấp (soft shadow theo penumbra ratio); ambient occlusion 5-tap làm tối các góc trụ tiếp đất; vật liệu hai tông màu theo chiều cao trụ; camera trôi chậm theo thời gian (`ro` biến thiên theo `uTime`) để người xem cảm nhận được sự vô hạn. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Bốn TODO đúng thứ tự trong starter code: (1) domain repetition round-based trên `p.xz`, lưu cell-id TRƯỚC khi fold để hash chiều cao; (2) normal bằng 4 lần gọi `map()` theo kỹ thuật tetrahedron; (3) soft shadow — march dọc hướng mặt trời, bắt đầu từ điểm đã dịch theo normal để tránh tự đổ bóng lên chính mình; (4) AO — lấy mẫu `map()` dọc normal ở vài khoảng cách tăng dần, trừ khoảng cách thật để đo mức độ "bị vây quanh".
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — đặc biệt chú ý biên giữa các ô lưới (không lộ đường ráp) và tốc độ khung hình khi camera trôi qua toàn bộ trường trụ.

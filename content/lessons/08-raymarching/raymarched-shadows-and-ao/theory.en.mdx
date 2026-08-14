@@ -1,0 +1,86 @@
+## Shadows by Marching Toward the Light
+
+The core idea behind raymarched shadows is surprisingly simple: from a hit point $p$, fire a second ray — not toward the camera, but **toward the light** — and march it exactly like the primary ray. If this ray hits anything before reaching the light, $p$ sits in shadow; if it marches the whole distance to the light without hitting anything, $p$ is directly lit.
+
+One detail is non-negotiable before marching: the shadow ray's origin can't sit exactly at $p$, it has to be offset a small amount along the normal, $p + \hat n \cdot \varepsilon$. The reason: $p$ already sits right on (or extremely close to) the SDF surface — marching straight from there, the very first step almost certainly reads back a distance near zero to the surface it just left, misreading that as "hit an occluder" immediately. This is called self-hit, or shadow acne, and offsetting along the normal (reusing the exact $\hat n$ from the previous lesson) is the standard fix — the surface can no longer shadow itself because the ray now starts off the $f = 0$ boundary.
+
+A hard shadow needs nothing more than a binary function: march from `mint` to `maxt`, and the moment any step reads $f(p) < \varepsilon$, return `0.0` (fully occluded); march the whole distance without a hit and return `1.0` (fully lit) — no in-between value, so the shadow's edge is always a hard step even though a real light source (the sun) has actual angular size.
+
+## Soft Shadows: Tracking the Penumbra Ratio Along the Ray
+
+Soft shadows model exactly what hard shadows ignore: a light source has real angular size, so its shadow edge should fade (a penumbra), not cut sharply. Quilez's original formula reuses data the march loop already computes — at each step, $h = f(p_t)$ is the distance to the nearest occluder, and $t$ is how far the ray has traveled. The ratio $h/t$ approximates the **angular radius** of the nearest gap as seen from the ray's origin: the smaller $h$ is relative to $t$, the more the ray is grazing right past a relatively distant occluder — the narrower that visible gap looks, the closer to fully blocked. Multiplying by a factor $k$ tunes how fast that ratio saturates into full shadow: `res = min(res, k * h / t)`, taking the **minimum** across the whole ray since a single closest near-miss is enough to determine how dark the whole shadow gets.
+
+This lesson implements Quilez's 2015 improved version, which fixes a geometric flaw in the original: the original formula treats $h$ as the perpendicular distance to an occluder measured exactly at $t$, but the true nearest occluder may actually sit at a different point along the ray, so $h/t$ misjudges things whenever the march steps land unevenly. The improved version uses the previous sample's height `ph` to build a triangle, deriving the actual perpendicular distance $d$ from the ray to the occluder's surface:
+
+$$
+y = \frac{h^2}{2 \cdot ph}, \qquad d = \sqrt{h^2 - y^2}, \qquad \text{ratio} = \frac{k \cdot d}{t - y}
+$$
+
+```glsl
+float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
+  float res = 1.0;
+  float t = mint;
+  float ph = 1e10;
+  for (int i = 0; i < 48; i++) {
+    if (t >= maxt) break;
+    float h = map(ro + rd * t);
+    if (h < 0.0008) return 0.0;
+    float y = h * h / (2.0 * ph);
+    float d = sqrt(max(h * h - y * y, 0.0));
+    res = min(res, k * d / max(0.0001, t - y));
+    ph = h;
+    t += h;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+```
+
+A small $k$ (like $k = 2$) makes the ratio saturate slowly — a very wide penumbra, shadow blur spread over a large area. A large $k$ (like $k = 32$) makes it saturate almost instantly — the penumbra collapses to nearly a hard shadow, while still keeping a faint soft edge right at the boundary.
+
+## Ambient Occlusion: Sampling the SDF Along the Normal
+
+AO answers a completely different question from shadows: not "does direct light reach this point," but "how enclosed is this point by nearby geometry, blocking indirect light (bouncing in from every direction)." The standard 5-tap technique (traced back to Quilez's "Rendering Worlds With Two Triangles" talk) samples $f$ at five increasing distances along the normal $\hat n$, comparing the actually-read distance against the distance you'd expect if nothing were in the way (that expected distance being $h$ itself):
+
+```glsl
+float calcAO(vec3 p, vec3 n) {
+  float occ = 0.0;
+  float sca = 1.0;
+  for (int i = 0; i < 5; i++) {
+    float h = 0.01 + 0.12 * float(i) / 4.0;
+    float d = map(p + n * h);
+    occ += (h - d) * sca;
+    sca *= 0.95;
+  }
+  return clamp(1.0 - 2.5 * occ, 0.0, 1.0);
+}
+```
+
+If the space around $p$ is completely empty, `map(p + n*h)` should return $\approx h$ (move $h$ units away from the surface along its outward direction, and the nearest surface is still exactly $h$ away) — the difference `h - d` is 0, contributing nothing to `occ`. If other geometry sits nearby (a concave corner, an adjacent object), `d` comes back smaller than the expected `h` — a positive difference accumulates into `occ`, weighted by a geometrically decaying `sca` ($0.95^i$) so farther samples contribute less, approximating a crude hemispherical integral with just 5 points instead of hundreds of real Monte Carlo rays.
+
+## No Shadow Map Needed: No Resolution or Bias Problems
+
+Both techniques above need **no auxiliary geometry** beyond the scene's own SDF — no second render pass from the light's point of view, no depth texture, no choosing a texture size large enough to avoid aliasing. This directly contrasts with shadow mapping in Track 3: that technique renders the entire scene from the light's viewpoint into a fixed-resolution depth texture, then compares the current fragment's depth against a value sampled from that texture — the texture's finite resolution directly causes shadow acne (striped rounding artifacts from quantized depth) and peter-panning (shadows detaching from their casters), forcing manual per-scene `bias` tuning. Raymarched shadows and AO have no resolution-discretization step at all — "accuracy" depends only on the same familiar knobs from the main march loop: step count, the hit-threshold $\varepsilon$.
+
+## Combining: Ambient·AO Plus Diffuse·Shadow
+
+The final compositing formula keeps two different kinds of light cleanly separated, each multiplied by exactly its own attenuation factor:
+
+$$
+\text{color} = \text{ambient} \cdot \text{AO} + \text{diffuse} \cdot \text{shadow}
+$$
+
+`AO` multiplies only the `ambient` term (indirect light, bouncing in from every direction) because that's precisely the kind of light AO's occlusion approximates — while `shadow` multiplies only the `diffuse` term (direct light from a specific source) because that's exactly what the shadow ray actually tests. Multiplying AO into `diffuse` as well conflates two distinct physical mechanisms into one, darkening regions the shadow ray already darkened for an unrelated reason, on top of it.
+
+## Where This Leads
+
+Both techniques in this lesson only add extra `map()` calls in places the scene already supports — no new data structure, no extra render pass — so they drop straight into any SDF scene with zero architectural changes. The next lesson (Domain Repetition) duplicates an object across infinite space using nothing but `mod()` on the query coordinate before calling `map()` — the shadows and AO learned here keep working unchanged on that repeated space, since both only care about what `map()` returns, never how it was built. The module-closing checkpoint (Infinite Grid World) combines all four techniques — normals, shadows, AO, domain repetition — into a single scene.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when implementing raymarched soft shadows and AO:
+
+1. **Forgetting to offset the shadow ray's origin along the normal.** Marching straight from $p$ (which sits exactly on the $f=0$ boundary) means the very first step almost always reads $f \approx 0$, misread as "hit an occluder immediately" — the whole scene turns pitch black because every point shadows itself (shadow acne).
+2. **Forgetting `clamp(res, 0.0, 1.0)` at the end of `softShadow`.** With a large $k$ and a first march step near an occluder's boundary, the ratio `k*d/(t-y)` can exceed 1 — multiplying that unclamped value straight into `diffuse` blows out the region right at the shadow's edge instead of fading smoothly.
+3. **Multiplying AO into the diffuse term too, not just ambient.** AO approximates blocked indirect light, not direct light (the shadow ray already handles that) — multiplying AO into diffuse double-counts the same occlusion effect, making contact points between an object and the ground look unnaturally dark and "muddy."
+
+</Callout>

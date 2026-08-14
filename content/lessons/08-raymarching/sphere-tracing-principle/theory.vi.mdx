@@ -1,0 +1,72 @@
+## Không cần hình học: cảnh là một hàm khoảng cách
+
+Mọi track trước đó dựng hình bằng vertex: tam giác, mesh, GPU rasterize từng tam giác thành pixel. Raymarching bỏ hẳn khái niệm đó. Cảnh không còn là dữ liệu hình học mà là một **hàm toán học** $f: \mathbb{R}^3 \to \mathbb{R}$ — với điểm $p$ bất kỳ, $f(p)$ trả về khoảng cách ngắn nhất từ $p$ đến bề mặt gần nhất, có dấu: âm nếu $p$ trong vật thể, dương nếu ngoài, đúng 0 trên bề mặt. Hàm này gọi là **signed distance field** (SDF) — bài `shaping-functions-and-2d-sdf` ở Track 2 đã dựng ý tưởng này ở 2D cho hình tròn; bài này lấy nguyên ý tưởng đó, chỉ đổi $p$ từ `vec2` sang `vec3`.
+
+Không có vertex nghĩa là không giới hạn hình học nào cả — $f(p)$ có thể mô tả bất kỳ hình biểu diễn được bằng công thức (các bài sau dựng dần thêm). Đổi lại, không còn phép giao tia–tam giác tường minh của rasterization — câu hỏi "tia này chạm cảnh ở đâu" phải trả lời bằng cách dò dẫm dọc tia, đó chính là phần **march** trong "raymarching".
+
+## Vì sao gọi là "sphere" tracing: bước an toàn tối đa
+
+Hart (1996) đặt tên kỹ thuật này "sphere tracing" vì nó khai thác một tính chất của $f(p)$: $|f(p)|$ chính là bán kính của một hình cầu tâm $p$ **chắc chắn rỗng** — không chứa phần nào của bề mặt cảnh. Nếu có, khoảng cách ngắn nhất từ $p$ đến bề mặt đã nhỏ hơn $|f(p)|$, mâu thuẫn với định nghĩa của $f$. Hình dung: thổi phồng một quả bóng tâm $p$ đến đúng bán kính $|f(p)|$ — bóng chạm bề mặt gần nhất nhưng chưa từng xuyên qua nó.
+
+Vì hình cầu đó rỗng theo mọi hướng, riêng dọc theo tia đang march, ta được phép bước đúng $f(p)$ đơn vị mà tuyệt đối an toàn:
+
+$$
+t_{i+1} = t_i + f(p_i), \qquad p_i = ro + t_i \cdot rd
+$$
+
+với $ro$ là gốc tia, $rd$ là hướng tia đã chuẩn hoá ($\|rd\| = 1$), $t_i$ là khoảng cách đã đi sau bước $i$. Khác với ray marching "ngây thơ" (bước cố định mỗi lần), bước ở đây **thích nghi** theo địa hình — xa cảnh thì dài, gần bề mặt thì ngắn dần, hội tụ nhanh mà không cần biết trước hình dạng cảnh.
+
+## Dựng tia từ camera: gốc, hướng, fov và aspect
+
+Cần một tia cho mỗi pixel. Gốc tia $ro$ là vị trí camera. Hướng tia dựng từ ba vector cơ sở: hướng nhìn $\hat f = \widehat{ta - ro}$ (từ camera đến điểm nhìn `ta`), hướng phải $\hat r = \widehat{\hat f \times \hat{up}}$, và hướng lên thật $\hat u = \hat r \times \hat f$ (tái tính để vuông góc chính xác với $\hat f$). Với toạ độ màn hình chuẩn hoá về $[-1, 1]$ (bài `cartesian-and-uv-space`, Track 0), fov dọc $\theta$ và tỉ lệ khung hình $a = W/H$:
+
+$$
+rd = \widehat{\hat f + (u \cdot a \cdot \tan\tfrac{\theta}{2})\,\hat r + (v \cdot \tan\tfrac{\theta}{2})\,\hat u}
+$$
+
+$\tan(\theta/2)$ scale $[-1,1]$ ra đúng góc mở camera — fov càng lớn, tia ở rìa màn hình càng lệch xa $\hat f$. Nhân thêm $a$ vào trục $u$ bù việc màn hình không vuông: thiếu nó, canvas 16∶9 làm hình tròn hoá bầu dục. Demo bài này chạy trên canvas vuông (aspect = 1) nên số hạng đó không đổi gì trong code, nhưng công thức vẫn giữ $a$ để đúng tổng quát.
+
+## Vòng lặp march: bước tới, kiểm tra hit, kiểm tra miss
+
+Có $ro$, $rd$, $f$ rồi, vòng lặp chỉ còn ba việc lặp lại: tính $f(p_i)$, kiểm tra dừng, bước tiếp.
+
+```glsl
+float t = 0.0;
+for (int i = 0; i < maxSteps; i++) {
+  vec3 p = ro + rd * t;
+  float d = f(p);
+  if (d < epsilon) break;   // hit: đủ gần bề mặt
+  t += d;
+  if (t > maxDist) break;   // miss: đã bắn ra khỏi cảnh
+}
+```
+
+Hai điều kiện dừng đối lập: `d < epsilon` là **hit** — tia đã áp sát bề mặt đủ để coi là chạm; `t > maxDist` là **miss** — đã đi đủ xa để chắc chắn không còn gì đáng march tiếp. Nếu cả hai chưa xảy ra sau `maxSteps` vòng, kết quả cũng coi là miss — nhưng đây là loại đáng lo nhất, vì không phải "tia thật sự không chạm gì" mà là "hết ngân sách trước khi kịp chạm", chủ đề hai phần tiếp theo.
+
+## maxSteps: vì sao tia lướt cạnh (grazing) làm thủng silhouette
+
+`maxSteps` thấp làm thủng lỗ ở chỗ dễ đoán nhất: rìa silhouette, nơi tia gần như lướt tiếp tuyến qua bề mặt thay vì đâm thẳng vào. Cơ chế: tại điểm $p$ gần rìa silhouette, bề mặt gần nhất KHÔNG nằm dọc hướng tia — nó lệch sang một bên. $f(p)$ vẫn nhỏ (bề mặt thật sự ở gần), nhưng bước `t += f(p)` chỉ đẩy $t$ tiến một chút dọc tia, trong khi điểm chạm thật còn cách rất xa theo đúng hướng đó. Kết quả: hàng loạt bước nhỏ, tiến rất chậm — nếu `maxSteps` hết trước khi $t$ kịp tới, tia bị coi là miss dù thực ra sẽ hit nếu march thêm vài chục bước. Vùng này dày đặc quanh silhouette vì đó chính xác là nơi góc giữa tia và bề mặt tiến gần $90°$.
+
+Tăng `maxSteps` cho thêm cơ hội hội tụ, lấp lỗ — đổi lại chi phí: mỗi bước là một lần gọi $f(p)$, và ở cảnh phức tạp, $f$ có thể tốn hàng chục phép toán mỗi lần.
+
+## epsilon: quá lớn thì lồi lõm, quá nhỏ thì banding
+
+`epsilon` định nghĩa "đủ gần bề mặt là bao nhiêu". Vì một SDF chuẩn tăng đúng 1 đơn vị khi di chuyển 1 đơn vị khoảng cách thực (tính chất Lipschitz-1, đã nhắc ở bài `shaping-functions-and-2d-sdf`), `epsilon` chính là **sai số vị trí bề mặt tính bằng đơn vị thế giới thực**. `epsilon` lớn nghĩa là điểm "hit" có thể lệch xa bề mặt thật đến từng đó đơn vị; trên mặt cong, sai số đó thành các mặt phẳng nhỏ giả không đều — bề mặt trông lồi lõm, sần sùi thay vì trơn.
+
+`epsilon` quá nhỏ gây vấn đề ngược: gần vùng march chậm (grazing, hoặc SDF chỉ là cận trên chứ không chính xác — chủ đề bài `sdf-primitives` tiếp theo), tia cần nhiều bước mới đạt ngưỡng nhỏ đó, dễ hết `maxSteps` trước khi đạt — số bước còn lại khác nhau theo từng pixel khiến bề mặt hiện thành dải rời rạc (banding) thay vì gradient mượt, đồng thời tốn hiệu năng hơn vì mỗi pixel gần bề mặt march gần hết ngân sách.
+
+## Debug bằng heatmap: nhìn thấy chi phí từng pixel
+
+Vì chi phí raymarching tỉ lệ trực tiếp với số bước, cách debug chuẩn là tô mỗi pixel theo `usedSteps / maxSteps` thay vì màu thật — một "bản đồ nhiệt" nơi xanh dương là rẻ, đỏ là đắt. Demo có đúng công cụ này: bật heatmap rồi hạ `maxSteps`, quan sát dải đỏ bám quanh silhouette mặt cầu — bằng chứng trực quan cho cơ chế grazing ray vừa giải thích, và là kỹ thuật quay lại nguyên vẹn ở bài `raymarching-optimization` cuối track khi tối ưu bounding volume và adaptive step.
+
+Vòng lặp march ở bài này mới chạy trên một $f(p)$ duy nhất, viết tay bằng công thức mặt cầu. Bài kế tiếp (`sdf-primitives`) lắp ráp bộ công cụ SDF đầy đủ — box, torus, capsule — để `map()` mô tả được nhiều hơn một hình cầu đơn độc.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi viết vòng lặp sphere tracing đầu tiên:
+
+1. **Quên chuẩn hoá `rd`.** Công thức $t_{i+1} = t_i + f(p_i)$ giả định `rd` là vector đơn vị — nếu không, `t` không còn đúng là khoảng cách thực dọc tia, bước march bị scale sai theo độ dài `rd`, hình ảnh méo phối cảnh đúng kiểu một fov sai gây ra.
+2. **Dùng `epsilon` tuyệt đối không theo tỉ lệ cảnh.** `epsilon = 0.001` hợp lý cho mặt cầu bán kính 1, nhưng vô nghĩa nếu cảnh scale lên bán kính 100 (quá nhỏ, gây banding và tốn hiệu năng) hoặc xuống 0.01 (quá lớn, gây lồi lõm rõ rệt).
+3. **Không giới hạn `maxDist`, chỉ dựa `maxSteps`.** Thiếu `t > maxDist`, mọi tia bắn ra bầu trời vẫn buộc chạy hết `maxSteps` mới dừng — lãng phí đúng số bước tối đa cho phần lớn pixel khung hình, vì bầu trời thường chiếm diện tích màn hình nhiều hơn vật thể.
+
+</Callout>

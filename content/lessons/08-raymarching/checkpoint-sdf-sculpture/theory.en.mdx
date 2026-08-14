@@ -1,0 +1,15 @@
+## Goal
+
+This is the mini-build closing out the Sphere Tracing module: no new theory, just a real raymarched sculpture built from SDF primitives, boolean ops and smooth min — proof you can weld several shapes into one continuous object, not just glue separate pieces together.
+
+## Requirements
+
+Build a stylized chess-pawn-like figure entirely from SDFs in a raymarch fragment shader: a torus base, a capsule body, a sphere head — all three welded with `opSmoothUnion` into one continuous mass. Add a collar detail with a second, thin torus, blended lightly into the body with a small `k`. Finally, carve a flat face into one side with `opSubtract` against a box — this must happen **last**, after every smin weld is done. The whole piece slowly self-rotates around its vertical axis by rotating the query point `p` before calling the scene function, not by rotating the camera. Color it with two height-based tones plus a simple Lambert term from `calcNormal` — the starter code already provides a working raymarch loop, a correct `calcNormal`, and every primitive you need; your job is only to assemble the `scene()` function. Full details live in the Exercise section below.
+
+## Structure Hint
+
+Build bottom-up: weld the base to the body first and check it reads as one piece, then weld on the head, then the collar — each step adds exactly one `opSmoothUnion` call. Only once all four masses are welded do you call `opSubtract` a single time to carve the flat face.
+
+## What "Done" Looks Like
+
+Check your result against the exercise's checklist before opening the solution — the silhouette reads as one continuous mass, the joints look soft like clay rather than pinched, the carved face is clean and flat, the rotation is smooth with no stutter, and no holes show up along the silhouette edges.

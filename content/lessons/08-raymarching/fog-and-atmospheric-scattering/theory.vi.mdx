@@ -1,0 +1,81 @@
+## Fog là một phép trộn màu có gốc vật lý: Beer-Lambert
+
+Fog trong một cảnh raymarch không phải một hiệu ứng vẽ thêm tuỳ hứng — nó mô phỏng đúng một hiện tượng vật lý: ánh sáng đi qua một môi trường có hạt lơ lửng (hơi nước, bụi, khói) bị hấp thụ và tán xạ dần trên đường đi, nên vật càng xa camera càng ít ánh sáng gốc của nó tới được ống kính, và càng nhiều ánh sáng của chính bầu khí quyển len vào thay chỗ. Kết quả nhìn thấy được là phép trộn giữa màu bề mặt (đã shading xong) và màu khí quyển (fog color), theo một tỉ lệ phụ thuộc khoảng cách.
+
+Câu hỏi là: tỉ lệ đó tăng theo khoảng cách kiểu gì? Trực giác sai phổ biến nhất là "mỗi mét thêm chặn một LƯỢNG ánh sáng cố định" (tuyến tính: `fogAmount = density * t`) — sai, vì môi trường hấp thụ theo xác suất: mỗi lớp mỏng chặn lại một PHẦN TRĂM cố định của ánh sáng còn sót lại, không phải một lượng tuyệt đối cố định. Đây chính là định luật Beer-Lambert, biểu diễn bằng transmittance $T$ — tỉ lệ ánh sáng còn sống sót sau khi đi qua khoảng cách $t$ trong môi trường có mật độ (hệ số tắt dần) $\rho$:
+
+$$
+T(t) = e^{-\rho t}
+$$
+
+Vì mỗi mét nhân thêm cùng một hệ số $e^{-\rho}$ vào phần còn lại (chứ không trừ đi một lượng cố định), $T$ giảm nhanh lúc đầu rồi chậm dần, không bao giờ chạm đúng 0 — khớp trực giác: sương mù dày cỡ nào cũng không có một khoảng cách mà "độ sáng đúng nghĩa bằng 0", chỉ tiệm cận. Từ $T$, màu cuối cùng là phép trộn tuyến tính theo $1 - T$ (phần ánh sáng ĐÃ MẤT, được thay bằng màu khí quyển):
+
+```glsl
+float T = exp(-density * t);
+vec3 color = mix(surfaceColor, fogColor, 1.0 - T);
+```
+
+Đây là toàn bộ công thức fog cơ bản — không có gì bí ẩn hơn một `exp()` và một `mix()`.
+
+## Height fog: mật độ giảm theo độ cao — tích phân có dạng đóng
+
+Fog thật không đồng đều theo chiều cao: hơi nước và bụi tụ dày ở gần mặt đất rồi loãng dần khi lên cao, giống cách một thung lũng sương buổi sáng có lớp sương đặc sát mặt đất và bầu trời quang phía trên. Mô hình hoá bằng một mật độ phụ thuộc độ cao $y$ theo hàm mũ:
+
+$$
+\rho(y) = a\, e^{-by}
+$$
+
+với $a$ là mật độ tại $y = 0$ (mặt đất) và $b$ điều khiển tốc độ loãng dần theo độ cao — $b$ lớn nghĩa là lớp sương mỏng và sát đất, $b$ nhỏ nghĩa là sương dày và trải cao. Vấn đề là công thức fog ở phần trước dùng MỘT $\rho$ hằng số dọc suốt tia — với height fog, $\rho$ đổi theo từng điểm dọc tia, nên phải LẤY TÍCH PHÂN $\rho$ dọc quãng đường march thay vì nhân đơn giản với $t$. May mắn, tích phân của một hàm mũ dọc một tia thẳng có dạng đóng, không cần thêm vòng lặp số nào:
+
+$$
+F(t) = \frac{a}{b}\, e^{-b\,y_0} \cdot \frac{1 - e^{-b\,t\,d_y}}{d_y}
+$$
+
+trong đó $y_0$ là độ cao gốc tia (ray origin) và $d_y$ là thành phần $y$ của hướng tia đã normalize. Công thức này — theo bài viết "Better Fog" của Inigo Quilez (xem Tài liệu tham khảo) — cho đúng lượng fog tích luỹ dọc một tia đi qua một trường mật độ đổi theo độ cao, chỉ với vài phép `exp()`, rẻ hơn nhiều so với march thêm một vòng lặp phụ chỉ để tính fog.
+
+## Preetham-flavored sky: tô bầu trời rẻ mà không cần Rayleigh/Mie thật
+
+Khi tia raymarch không chạm gì (background), nó vẫn cần một màu — bầu trời. Mô phỏng vật lý đầy đủ của bầu trời (tán xạ Rayleigh cho màu xanh phụ thuộc bước sóng, tán xạ Mie cho quầng sáng quanh mặt trời) là một mô hình tích phân phức tạp — tham khảo chương "Accurate Atmospheric Scattering" của Sean O'Neil (GPU Gems 2, xem Tài liệu tham khảo) nếu muốn làm đúng. Bài này dùng một xấp xỉ RẺ HƠN NHIỀU, mang phong cách mô hình Preetham (A. J. Preetham, 1999) nhưng đã đơn giản hoá cực mạnh — gọi đúng bản chất của nó: một xấp xỉ MANG TÍNH NGHỆ THUẬT, không phải vật lý thật.
+
+Hai thành phần: gradient chân trời→thiên đỉnh bằng `pow()` trên thành phần $y$ của hướng tia, mô phỏng cảm giác "xanh đậm dần khi nhìn lên" của tán xạ Rayleigh thật nhưng chỉ là một đường cong chọn bằng mắt, không có hệ số tán xạ theo bước sóng nào cả; và một quầng sáng quanh mặt trời bằng $\max(\hat r \cdot \hat s, 0)^{k}$ với $\hat r$ là hướng tia, $\hat s$ hướng mặt trời, $k$ lớn (48 trở lên) cho quầng hẹp/sắc như đĩa mặt trời, $k$ nhỏ (4–8) cho quầng rộng/mờ — chính số hạng "tán xạ về phía mặt trời" sẽ quay lại ở phần sau, lần này áp cho màu fog thay vì màu trời.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec3 zenith = vec3(0.22, 0.42, 0.82);\n  vec3 horizon = vec3(0.72, 0.80, 0.88);\n  vec3 sky = mix(horizon, zenith, pow(uv.y, 0.55));\n\n  vec2 sunUv = uMouse;\n  float sunAmount = 1.0 - clamp(distance(uv, sunUv) * 3.0, 0.0, 1.0);\n  sky += vec3(1.0, 0.85, 0.55) * pow(sunAmount, 8.0) * 1.6;\n\n  fragColor = vec4(sky, 1.0);\n}\n"} />
+
+## Inscattering: màu fog ấm lên khi nhìn về phía mặt trời
+
+$1 - T$ ở phần đầu chỉ nói BAO NHIÊU màu khí quyển trộn vào — chưa nói màu khí quyển đó LÀ màu gì. Fog thật không có một màu cố định: sương mù nhìn thẳng về phía mặt trời (tán xạ tới, forward scattering — đặc trưng của các hạt lớn hơn bước sóng ánh sáng) trông ấm và sáng hơn hẳn so với cùng lớp sương đó nhìn theo hướng khác. Hiệu ứng "inscattering" này chính là lý do sương buổi sáng ngược nắng luôn đẹp hơn sương cùng độ dày nhìn xuôi nắng.
+
+Cài đặt rẻ: dùng lại chính số hạng $\max(\hat r \cdot \hat s, 0)^{k}$ ở phần trên (k nhỏ hơn, ví dụ 4–8, cho một dải rộng thay vì một quầng hẹp), rồi trộn giữa một màu fog "lạnh" (xanh xám, mặc định) và một màu fog "ấm" (vàng cam, khi nhìn gần hướng mặt trời):
+
+```glsl
+float sunAmount = max(dot(rd, sunDir), 0.0);
+vec3 fogColor = mix(coolFog, warmFog, pow(sunAmount, 8.0));
+```
+
+Đây chính là "cú lừa" kinh điển bán cảm giác chiều sâu: một cảnh có fog đổi màu theo góc nhìn-mặt trời trông sống động và có không khí hơn hẳn so với fog một màu phẳng lì, dù chi phí thêm đúng một `pow()` và một `mix()`.
+
+## Áp dụng SAU shading, dùng đúng t đã march, và tinh chỉnh mật độ
+
+Thứ tự các phép toán quan trọng: fog LUÔN áp dụng SAU KHI đã tính xong màu bề mặt đầy đủ — lighting, bóng, AO của các bài trước — chứ không phải trộn vào albedo trước khi shading. Và khoảng cách $t$ dùng trong công thức fog phải là TỔNG quãng đường tia đã march được tới điểm va chạm (biến `t` tích luỹ suốt vòng lặp sphere tracing), không phải giá trị SDF trả về ở bước cuối cùng — giá trị đó gần 0 tại điểm chạm, mang ý nghĩa hoàn toàn khác.
+
+Chọn mật độ $\rho$ (hay $a$ cho height fog) quyết định fog "ăn" cảnh nhanh hay chậm. Một cách chọn thực dụng: chọn trước một khoảng cách tầm nhìn mong muốn $d_{vis}$ (ví dụ 30 đơn vị cảnh) — khoảng cách mà tại đó $T$ đã tụt còn khoảng 2% (một quy ước ước lượng mượn từ khí tượng học, coi vật thể tại $T = 0.02$ là "gần như khuất") — rồi suy ngược:
+
+$$
+\rho \approx \frac{-\ln(0.02)}{d_{vis}} \approx \frac{3.9}{d_{vis}}
+$$
+
+Mật độ càng lớn, fog càng dày — nhưng dày quá làm mất chi tiết ngay cả vật GẦN camera, vì $T$ tụt nhanh dù $t$ nhỏ; mật độ càng nhỏ, cảnh càng "sạch" nhưng mất hẳn cảm giác chiều sâu ở xa. Điểm cân bằng tốt: $T$ ở vật gần (vài đơn vị đầu tiên) vẫn gần 1 (gần như không fog), còn $T$ ở rìa cảnh đã tụt xuống khoảng 0.05–0.15.
+
+## Nền tảng này dẫn tới đâu
+
+Fog ở đây là một phép hoà màu thuần theo $t$ đã march — hoàn toàn nằm gọn trong shader raymarch, không cần thêm render pass nào. Track 9/10 (Post-processing) sẽ làm lại đúng ý tưởng này nhưng như một full-screen pass đọc DEPTH BUFFER của một cảnh rasterized thay vì `t` từ sphere tracing — cùng công thức $e^{-\rho t}$, chỉ khác nguồn của $t$. Bài tiếp theo trong track này (Volumetric Rendering) đẩy đúng ý tưởng "tích luỹ dọc tia" ở đây đi xa hơn: thay vì trộn MỘT LẦN theo $t$ tổng, nó tích luỹ mật độ và màu theo TỪNG BƯỚC march — fog hôm nay hoá ra chỉ là một trường hợp đặc biệt (mật độ hằng số, không dừng ở bề mặt nào) của một phép tích luỹ tổng quát hơn nhiều.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài fog trong raymarch:
+
+1. **Nhầm `t` march (đã tích luỹ) với giá trị SDF trả về ở bước cuối.** Vòng lặp sphere tracing thường dùng chung một tên biến kiểu `d` cho cả khoảng-cách-an-toàn-mỗi-bước lẫn quãng-đường-tổng — nếu vô tình đưa `d` (gần 0 tại bề mặt) vào công thức fog thay vì `t` (quãng đường thật), fog gần như không bao giờ kích hoạt dù cảnh rất sâu.
+2. **Chia cho $d_y$ (thành phần y của hướng tia) mà không chặn khi nó gần 0.** Với height fog, một tia gần như nằm ngang (nhìn thẳng ra chân trời) có $d_y \approx 0$, khiến công thức tích phân đóng chia cho một số cực nhỏ — ra `NaN`/`Inf`, biểu hiện thành các điểm ảnh chớp nháy hoặc một vệt sáng bất thường đúng ngay đường chân trời.
+3. **Áp cùng công thức fog cho cả pixel nền trời (sky) khi tia không chạm gì.** Sky đã LÀ khí quyển ở vô cực — trộn thêm một lớp fog theo công thức bề mặt lên trên nó là "fog hoá" hai lần, làm chân trời bẹt hẳn về một màu fog phẳng lì thay vì giữ gradient trời tự nhiên.
+
+</Callout>

@@ -1,0 +1,86 @@
+## Vấn đề hai thế giới: mesh rasterized và raymarch không biết gì về nhau
+
+Một R3F scene bình thường (torus knot, ánh sáng, `meshStandardMaterial`) được rasterize qua pipeline vertex → fragment tiêu chuẩn, ghi màu VÀ độ sâu vào depth buffer của canvas mỗi draw call. Một fullscreen quad raymarch, ngược lại, không biết gì về scene đó — nó chỉ có một hàm SDF và một vòng lặp march, hoàn toàn độc lập với bất cứ thứ gì Three.js đã vẽ. Vẽ cả hai lên cùng canvas theo cách "tự nhiên" nhất — mesh trước, quad raymarch sau (hoặc ngược lại) — cho ra đúng lỗi "hai thế giới": object SDF LUÔN vẽ đè lên mesh (nếu vẽ sau, không depth test) hoặc LUÔN bị mesh che (nếu vẽ trước, mesh ghi đè toàn bộ pixel). Không có thứ tự vẽ nào đúng, vì đúng/sai ở đây phụ thuộc khoảng cách THẬT của từng pixel, thứ mà một trong hai bên hoàn toàn không có.
+
+## Render mesh vào một render target có depth texture
+
+Cách sửa bắt đầu từ một quan sát: shader không thể ĐỌC depth buffer nó đang GHI (không có feedback loop hợp lệ trong WebGL). Muốn quad raymarch biết mesh nằm ở đâu, mesh phải được render riêng, vào một đích khác, cho ra một depth **texture** đọc được — đúng kỹ thuật render-to-texture đã gặp ở Track 1, áp dụng cho depth thay vì color:
+
+```ts
+const meshTarget = useFBO({ depthBuffer: true }); // drei: WebGLRenderTarget + DepthTexture
+```
+
+Mỗi frame, pass 1 ẩn object SDF, render CHỈ mesh vào `meshTarget`:
+
+```ts
+proxyRef.current.visible = false;
+gl.setRenderTarget(meshTarget);
+gl.render(scene, camera);
+```
+
+Kết quả: `meshTarget.depthTexture` chứa đúng độ sâu (đã chuẩn hoá, phi tuyến — công thức bài Depth Buffer Track 1) của mesh tại mọi pixel, sẵn sàng cho fragment shader của quad raymarch SAMPLE như một texture bình thường.
+
+## Từ depth phi tuyến về khoảng cách march: đảo công thức Track 1
+
+Bài "Depth buffer & z-fighting" đã suy ra: $\text{depth}(d) = \frac{f}{f-n}\left(1 - \frac{n}{d}\right)$, với $d$ là khoảng cách view-space thật, $n, f$ là near/far. Muốn dùng giá trị SAMPLE ĐƯỢC (một số trong $[0,1]$) làm giới hạn march, phải đảo công thức này để lấy lại $d$:
+
+$$
+d = \frac{nf}{f - \text{depth}\,(f-n)}
+$$
+
+```glsl
+float linearEyeDepth =
+  (uCameraNear * uCameraFar) /
+  (uCameraFar - meshDepth * (uCameraFar - uCameraNear));
+```
+
+$d$ ở đây là khoảng cách dọc trục nhìn của camera (view-space $z$, không phải khoảng cách Euclid tới điểm) — một điểm tại tham số $t$ dọc một tia bất kỳ có view-space $z = t \times rd_{view}.z$, nên:
+
+$$
+t_{bound} = \frac{d}{-rd_{view}.z}
+$$
+
+```glsl
+vec3 rayDirView = mat3(viewMatrix) * rayDir;
+float tBoundFromMesh = linearEyeDepth / max(-rayDirView.z, 1e-4);
+```
+
+Bỏ qua bước chia cho $-rd_{view}.z$ — dùng thẳng $d$ làm $t_{bound}$ — là sai tinh vi: đúng ở tâm màn hình (tia gần song song trục nhìn) nhưng lệch dần ra rìa màn hình (tia càng nghiêng, $t$ thật càng lớn hơn $d$), tạo cảm giác SDF "chìm" nhẹ vào mesh gần biên khung hình.
+
+## Dùng depth đó làm giới hạn march: SDF ẩn sau mesh dừng đúng
+
+Với $t_{bound}$ trong tay, giới hạn march đơn giản là $t_{max} = \min(t_{bound}, \text{MAX\_DIST})$: nếu bề mặt SDF thật sự nằm SAU mesh tại pixel này, march sẽ chạm $t_{max}$ trước khi tìm ra bề mặt, báo "miss", và fragment `discard` — pixel giữ nguyên màu mesh đã vẽ trước đó, không có surface giả nào vẽ đè lên. Đây chính xác là ý nghĩa "SDF ẩn sau mesh dừng đúng": không phải mẹo compositing màu, mà là march tự nó dừng sớm và trung thực báo không tìm thấy gì trong khoảng còn thấy được.
+
+## Chiều ngược lại: ghi gl_FragDepth để mesh ẩn sau SDF
+
+Chiều còn lại — mesh phải ẩn sau SDF khi SDF ở gần hơn — không tự động có được từ việc bound march. Quad raymarch VẪN LÀ một mesh (một sphere bao quanh blob trong demo bài này), với depth riêng do rasterizer nội suy từ chính hình học của nó — depth đó KHÔNG liên quan gì tới điểm march thật sự chạm bề mặt SDF. Phải tự tính lại: chuyển điểm chạm thế giới thực về clip space bằng đúng ma trận camera, rồi map về $[0,1]$ như driver vẫn làm:
+
+$$
+z_{ndc} = \frac{(P \cdot V \cdot p_{hit})_z}{(P \cdot V \cdot p_{hit})_w}, \qquad \text{depth} = \frac{z_{ndc} + 1}{2}
+$$
+
+```glsl
+vec4 clip = projectionMatrix * viewMatrix * vec4(hitPos, 1.0);
+float ndcDepth = clip.z / clip.w;
+gl_FragDepthEXT = ndcDepth * 0.5 + 0.5;
+```
+
+(Three.js luôn `#define gl_FragDepthEXT gl_FragDepth` bất kể `glslVersion` — viết `gl_FragDepthEXT` là quy ước an toàn, tương thích ngược.) Ghi giá trị này khiến GPU depth test tiêu chuẩn (LESS, đã bật sẵn) tự động quyết định đúng: pixel SDF gần hơn mesh → depth test thắng → SDF vẽ đè; xa hơn → depth test thua → bị loại (`discard` đã lo phần "miss hẳn"). Cái giá thật: ghi `gl_FragDepth` tắt early-Z — GPU không còn loại fragment TRƯỚC khi chạy fragment shader dựa trên depth đã biết từ rasterizer, vì depth thật chỉ có SAU khi shader chạy xong; chi phí này là ước lượng theo tài liệu GPU vendor, không đo trực tiếp được qua API web, nhưng luôn đáng nhớ: `gl_FragDepth` không miễn phí.
+
+## Kiến trúc demo: một scene, hai lần render, depth test thật
+
+Demo bài này dùng đúng một `THREE.Scene` (mesh + object SDF), gọi `gl.render()` HAI lần mỗi frame qua `useFrame` priority > 0 (kỹ thuật "portal vào pipeline R3F" đã gặp ở bài `createPortal`/`View` Track 4) — lần một ẩn SDF, render mesh vào `meshTarget` để lấy depth texture; lần hai hiện lại SDF, render cả hai vào màn hình thật, nơi depth test phần cứng của chính canvas quyết định occlusion cuối cùng. Toggle "naive overlay" tắt hẳn `material.depthTest` — tái hiện đúng lỗi mở bài: SDF luôn vẽ đè bất kể khoảng cách thật. Toggle `gl_FragDepth` chuyển giữa ghi depth đúng (từ điểm chạm) và giữ nguyên depth của chính hình cầu bao (`gl_FragCoord.z`, sai có chủ đích) — quan sát trực tiếp chiều "mesh ẩn sau SDF" gãy ở đâu khi tắt.
+
+## Khi nào kỹ thuật này đáng dùng
+
+Không phải mọi cảnh cần độ phức tạp này. Kỹ thuật hai chiều đầy đủ (bound march + ghi depth) đáng giá khi một object raymarch phải sống THẬT trong một thế giới mesh — hero shot có chất lỏng/plasma SDF bay quanh nhân vật rigged, hiệu ứng portal, hay bất kỳ cảnh nào camera có thể xoay tự do và người xem sẽ phát hiện ngay occlusion sai. Nếu SDF chỉ là background cố định (skybox, fog nền) không bao giờ giao cắt hình học thật, chi phí hai lần render mỗi frame này thường không đáng — bài fog/atmosphere trước đó của track đã đủ dùng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tích hợp raymarch với depth rasterized:
+
+1. **Dùng thẳng linear eye depth làm $t_{bound}$, quên chia cho $-rd_{view}.z$.** Đúng ở tâm màn hình, sai tăng dần ra rìa — lỗi "chìm nhẹ" ở biên khung hình rất dễ bị nhầm là artefact khác vì trung tâm ảnh luôn trông đúng.
+2. **Ghi `gl_FragDepth` bằng world-space $z$ hoặc view-space $z$ thay vì NDC đã map về $[0,1]$.** Depth buffer chỉ hiểu đúng dải $[0,1]$ theo `depthRange` mặc định — ghi một số ngoài dải đó (ví dụ world $z$ âm) khiến depth test so sánh vô nghĩa, occlusion vỡ theo cách khó truy vết vì không có lỗi biên dịch hay runtime nào báo.
+3. **Quên rằng render target dùng để lấy depth texture phải cùng kích thước pixel với canvas thật.** `gl_FragCoord.xy / uResolution` chỉ đúng khi `uResolution` khớp chính xác kích thước `meshTarget` — lệch kích thước (ví dụ quên nhân `viewport.dpr`) làm sample depth lệch UV, occlusion đúng ở giữa nhưng lệch dần ra biên.
+
+</Callout>

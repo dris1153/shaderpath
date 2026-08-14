@@ -1,0 +1,61 @@
+## Building Infinity from One: Repeating the Query Space
+
+Every SDF technique since the start of Track 8 has worked on one fixed scene: a sphere, a box, a union of shapes at set positions. Domain repetition flips the question: instead of adding objects to the scene, transform the QUERY COORDINATE itself before calling the SDF, so the exact same distance function gets evaluated over and over at countless positions in space — while the SDF code itself has no idea it's being cloned. Short version: don't repeat the object, repeat the SPACE the object is viewed through.
+
+## The Classic mod Formula: q = mod(p + 0.5c, c) - 0.5c
+
+Given a cell size $c$ (a scalar or a per-axis vector), the classic infinite-repetition formula folds the query coordinate $p$ down to a single canonical cell:
+
+$$
+q = \mathrm{mod}(p + 0.5c,\ c) - 0.5c
+$$
+
+`mod(x, c)` already folds $x$ into $[0, c)$ on its own — but calling `mod(p, c)` directly places the object at the CORNER of every cell (at $q = 0$, which lands wherever $p$ is a multiple of $c$), splitting half the object off into the neighboring cell whenever it isn't tightly hugging the grid's origin. Adding $0.5c$ before folding and subtracting it back afterward is just a phase shift: the result $q$ now lives in $[-0.5c, 0.5c)$, with $0$ landing exactly at the CENTER of every cell — precisely where the object needs to sit so no cell boundary ever cuts through its middle. Calling `sdSphere(q, r)` after this fold effectively places an identical sphere copy at the center of every cell across all of space, with just one SDF call per march step.
+
+## Repeating Per Axis: An Infinite Floor with Just xz
+
+Folding all three axes at once isn't mandatory. Applying the formula above only to $p.x$ and $p.z$, leaving $p.y$ untouched, produces an infinite floor: the same object (a pillar, a block) repeats evenly across the horizontal plane, while height stays an ordinary continuous field — unioning with a $p.y = 0$ plane is enough for an endless "forest of columns" scene. Folding all three axes instead produces a volumetric lattice filled with objects in every direction, with no notion of "ground" at all — the two modes serve entirely different kinds of scenes, differing only in which axes get routed through the fold formula.
+
+## O(1) Cost: vs. Track 6's InstancedMesh
+
+Track 6 taught `InstancedMesh` — rasterizing thousands of mesh copies with a single draw call, but still allocating memory for $N$ transform matrices, with $N$ hard-capped the moment the buffer is created; wanting more means resizing that buffer. Domain repetition has no $N$ at all: no matter how far the camera travels, every SDF call still evaluates exactly one copy — the copy inside the cell the current query coordinate happens to fall into — so both memory cost and per-query compute cost stay $O(1)$, independent of how many copies are "visible," even when that number is theoretically infinite. The tradeoff: no draw call ever leverages this structure — the entire infinity exists only inside a single fragment shader, with no mesh or instance ever rasterized individually.
+
+## The Catch: mod Lies About Distance Near Cell Borders
+
+The fold formula above silently assumes the object fits entirely within half a cell ($\|q\|$ under $0.5c$ in every direction) — that is, the "home" copy of the current cell is always the nearest copy to any query point inside that cell. That assumption breaks when the object isn't symmetric around the cell's center, or more simply: when the cell is too tight relative to the object's size. Near a cell border, a copy in a NEIGHBORING cell can genuinely be closer to the query point than the folded copy — but the SDF only ever evaluates exactly one copy (the current cell's), so the returned distance OVERESTIMATES the true distance to the nearest surface. That's a direct violation of the Lipschitz-1 condition sphere tracing depends on (see the Sphere Tracing Principle lesson): a march step computed from an inflated $d(p)$ can jump too far, stepping straight through the real surface right where two cells meet, showing up as jagged edges or holes exactly along the grid lines.
+
+## The Modern Fix: Round-Based Repetition and Finite Bounds
+
+Inigo Quilez, in his "Repetition" article on iquilezles.org, rewrites the formula above using `round` instead of `mod`:
+
+$$
+q = p - c \cdot \mathrm{round}(p / c)
+$$
+
+The two formulas are equivalent for the same fold-to-cell-center behavior, but the `round` form is numerically cleaner and directly unlocks an important variant: FINITE repetition. By clamping the cell index before multiplying it back by $c$:
+
+$$
+\text{id} = \mathrm{clamp}\big(\mathrm{round}(p/c),\ -l,\ l\big), \qquad q = p - c \cdot \text{id}
+$$
+
+with $l$ the clamp radius in cells, any query point beyond $l$ cells no longer "wraps" back to a phantom copy — it keeps drifting further from the last valid copy at the boundary, giving a distance that grows correctly for a genuinely finite field of $N$ objects, instead of an infinite wall that has no business being there.
+
+## Per-Cell Variation: Hashing a Unique Color/Height
+
+The cell id computed right before the fold step — `floor(p/c + 0.5)` or `round(p/c)`, depending on the formula — is an integer coordinate uniquely identifying each cell. Feeding it straight into a Track 7 hash (`hash31(cellId)`) produces a pseudo-random number that's perfectly stable per cell: use it to scale height before calling the SDF, or to pick a color at shading time, turning a monotonous repeated field into a scene that reads as hand-placed — every cell its own variation, at zero extra memory cost, since a hash is a pure function recomputed every time, never stored anywhere.
+
+## Mirrored Repetition: abs() in Brief
+
+One quick variant worth knowing: calling `abs(p)` (or `abs(p.xz)`) right before the fold step produces mirrored repetition instead of pure translation — every cell becomes a reflection of its neighbor rather than an identical copy, giving kaleidoscope-like patterns or symmetric crystal structures with just one extra line ahead of the existing fold formula.
+
+Domain repetition is the last technique before the Shading module closes: the next checkpoint combines it with the normals, soft shadows and AO from the previous two lessons into one complete scene. Further ahead, Track 8's Atmosphere module reuses this same "transform before marching" idea for fog and scattering, and Track 9 (GPGPU) applies the same domain-thinking to simulate millions of particles without a single position buffer storing each particle individually.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when starting out with domain repetition:
+
+1. **Skipping the $0.5c$ shift before and after `mod`, calling `mod(p, c)` directly.** Places the object at each cell's corner instead of its center — half the object splits into the neighboring cell, showing up as a visible seam between copies instead of a continuous field.
+2. **A cell size smaller than the object (the object's radius or half-extent exceeds $0.5c$).** Violates the "object fits inside half a cell" assumption the fold formula relies on — the SDF returns an inflated distance near cell borders, causing the march to step through the real surface (overstepping), showing up as holes or jagged edges exactly along the grid lines.
+3. **Hashing with `q` (the folded coordinate, which changes continuously inside a cell) instead of `cellId` (the integer cell index, computed before folding).** Every fragment inside the same cell gets a different color/height instead of one uniform value per cell — the result reads as blotchy noise instead of the intended "one variation per cell" look.
+
+</Callout>

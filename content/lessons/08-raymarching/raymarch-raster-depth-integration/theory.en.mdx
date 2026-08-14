@@ -1,0 +1,86 @@
+## The Two-Worlds Problem: a Rasterized Mesh and a Raymarch Know Nothing of Each Other
+
+A normal R3F scene (a torus knot, some lights, `meshStandardMaterial`) rasterizes through the standard vertex → fragment pipeline, writing color AND depth into the canvas's depth buffer on every draw call. A fullscreen raymarch quad, by contrast, knows nothing about that scene — it only has an SDF function and a march loop, entirely independent of anything Three.js already drew. Draw both onto the same canvas the "obvious" way — mesh first, then the raymarch quad (or the reverse) — and you get exactly the two-worlds bug: the SDF object ALWAYS draws over the mesh (if drawn second, with no depth test) or is ALWAYS hidden by it (if drawn first, since the mesh already claimed every pixel). No draw order is correct, because correctness here depends on each pixel's REAL distance — something neither side has any idea about.
+
+## Rendering the Mesh into a Render Target with a Depth Texture
+
+The fix starts from one observation: a shader can't READ the depth attachment it's currently WRITING (no valid feedback loop in WebGL). For the raymarch quad to know where the mesh sits, the mesh has to be rendered separately, into a different destination, producing a readable depth **texture** — exactly the render-to-texture technique from Track 1, applied to depth instead of color:
+
+```ts
+const meshTarget = useFBO({ depthBuffer: true }); // drei: WebGLRenderTarget + DepthTexture
+```
+
+Every frame, pass 1 hides the SDF object and renders ONLY the mesh into `meshTarget`:
+
+```ts
+proxyRef.current.visible = false;
+gl.setRenderTarget(meshTarget);
+gl.render(scene, camera);
+```
+
+The result: `meshTarget.depthTexture` holds the mesh's correct (normalized, non-linear — Track 1's depth-buffer formula) depth at every pixel, ready for the raymarch quad's fragment shader to SAMPLE like any other texture.
+
+## From Non-Linear Depth Back to a Marching Distance: Inverting Track 1's Formula
+
+The "Depth Buffer & Z-Fighting" lesson derived: $\text{depth}(d) = \frac{f}{f-n}\left(1 - \frac{n}{d}\right)$, where $d$ is the true view-space distance and $n, f$ are near/far. To use the SAMPLE-ABLE value (a number in $[0,1]$) as a march bound, that formula has to be inverted to recover $d$:
+
+$$
+d = \frac{nf}{f - \text{depth}\,(f-n)}
+$$
+
+```glsl
+float linearEyeDepth =
+  (uCameraNear * uCameraFar) /
+  (uCameraFar - meshDepth * (uCameraFar - uCameraNear));
+```
+
+$d$ here is distance along the camera's view axis (view-space $z$, not Euclidean distance to the point) — a point at parameter $t$ along an arbitrary ray has view-space $z = t \times rd_{view}.z$, so:
+
+$$
+t_{bound} = \frac{d}{-rd_{view}.z}
+$$
+
+```glsl
+vec3 rayDirView = mat3(viewMatrix) * rayDir;
+float tBoundFromMesh = linearEyeDepth / max(-rayDirView.z, 1e-4);
+```
+
+Skipping the division by $-rd_{view}.z$ — using $d$ directly as $t_{bound}$ — is a subtle bug: correct at screen center (where the ray runs nearly parallel to the view axis) but drifting off toward the edges (the more oblique the ray, the larger the real $t$ is relative to $d$), producing a faint "sinking" of the SDF into the mesh near the frame's border.
+
+## Using That Depth as a March Bound: SDF Hidden Behind the Mesh Stops Correctly
+
+With $t_{bound}$ in hand, bounding the march is simply $t_{max} = \min(t_{bound}, \text{MAX\_DIST})$: if the SDF surface genuinely sits BEHIND the mesh at this pixel, the march reaches $t_{max}$ before finding a surface, reports a miss, and the fragment `discard`s — the pixel keeps whatever the mesh already drew, with no phantom surface painted over it. That's exactly what "SDF hidden behind the mesh stops correctly" means: not a color-compositing trick, but the march itself stopping early and honestly reporting nothing found within the visible range.
+
+## The Other Direction: Writing gl_FragDepth So the Mesh Gets Hidden by the SDF
+
+The other direction — the mesh should be hidden when the SDF sits closer — doesn't come for free from bounding the march. The raymarch quad is STILL a mesh (a sphere bounding the blob in this lesson's demo), with its own rasterizer-interpolated depth from its own geometry — that depth has nothing to do with where the march actually hit the SDF surface. It has to be computed by hand: transform the real world-space hit point into clip space with the exact same camera matrices, then map it into $[0,1]$ the same way the driver would:
+
+$$
+z_{ndc} = \frac{(P \cdot V \cdot p_{hit})_z}{(P \cdot V \cdot p_{hit})_w}, \qquad \text{depth} = \frac{z_{ndc} + 1}{2}
+$$
+
+```glsl
+vec4 clip = projectionMatrix * viewMatrix * vec4(hitPos, 1.0);
+float ndcDepth = clip.z / clip.w;
+gl_FragDepthEXT = ndcDepth * 0.5 + 0.5;
+```
+
+(Three.js always `#define`s `gl_FragDepthEXT` to `gl_FragDepth` regardless of `glslVersion` — writing `gl_FragDepthEXT` is the safe, backward-compatible spelling.) Writing this value lets the GPU's standard depth test (LESS, already enabled) decide correctly on its own: an SDF pixel nearer than the mesh → depth test wins → the SDF draws over it; farther → depth test loses → rejected (the `discard` already handles the "missed entirely" case). The real cost: writing `gl_FragDepth` disables early-Z — the GPU can no longer reject a fragment BEFORE running the fragment shader based on depth known from rasterization, since the true depth only exists AFTER the shader finishes; that cost is an estimate per GPU vendor documentation, not something directly measurable through a web API, but always worth remembering: `gl_FragDepth` is not free.
+
+## The Demo's Architecture: One Scene, Two Renders, a Real Depth Test
+
+This lesson's demo uses exactly one `THREE.Scene` (mesh + SDF object), calling `gl.render()` TWICE per frame through a `useFrame` with priority > 0 (the "portal into the R3F pipeline" technique from the `createPortal`/`View` Track 4 lesson) — the first pass hides the SDF and renders the mesh into `meshTarget` to get a depth texture; the second shows the SDF again and renders both to the real screen, where the canvas's own hardware depth test decides final occlusion. The "naive overlay" toggle disables `material.depthTest` outright — reproducing the opening bug exactly: the SDF always draws over regardless of true distance. The `gl_FragDepth` toggle switches between writing the correct depth (from the hit point) and keeping the bounding sphere's own depth (`gl_FragCoord.z`, wrong on purpose) — watch directly where the "mesh hidden by SDF" direction breaks when it's off.
+
+## When This Technique Is Worth Using
+
+Not every scene needs this much machinery. The full two-way technique (bound the march + write depth) pays off when a raymarched object has to live FOR REAL inside a mesh world — a hero shot with SDF liquid/plasma orbiting a rigged character, a portal effect, or any scene where the camera can rotate freely and a viewer will immediately spot wrong occlusion. If the SDF is only a fixed background (a skybox, ambient fog) that never intersects real geometry, the cost of two renders per frame usually isn't worth it — the track's earlier fog/atmosphere lesson is already enough for that case.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when integrating raymarching with rasterized depth:
+
+1. **Using linear eye depth directly as $t_{bound}$, forgetting to divide by $-rd_{view}.z$.** Correct at screen center, increasingly wrong toward the edges — the resulting faint "sinking" near the frame border is easy to mistake for a different artifact, since the center of the image always looks right.
+2. **Writing `gl_FragDepth` from world-space or view-space $z$ instead of NDC mapped into $[0,1]$.** The depth buffer only understands the $[0,1]$ range under the default `depthRange` — writing a number outside that range (like a raw negative world $z$) makes the depth test comparison meaningless, and occlusion breaks in a way that's hard to trace since nothing throws a compile or runtime error.
+3. **Forgetting the render target used for the depth texture must match the real canvas's pixel size.** `gl_FragCoord.xy / uResolution` is only correct when `uResolution` exactly matches `meshTarget`'s size — a size mismatch (like forgetting to multiply by `viewport.dpr`) shifts the depth sample's UV, so occlusion looks right at center but drifts wrong toward the edges.
+
+</Callout>

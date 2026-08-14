@@ -1,0 +1,93 @@
+## Union, Intersection: Combining SDFs with min/max
+
+A signed distance field (SDF) returns the signed distance from a point $p$ to a surface — negative inside the solid, positive outside. Given two SDFs $d_A(p)$ and $d_B(p)$ for two separate shapes, the natural question is: what SDF describes "both shapes together"? The intuition: $p$ is closest to the combined surface when it's closest to whichever of the two shapes is nearer — so union is simply the smaller of the two values:
+
+$$
+d_{\cup}(p) = \min\big(d_A(p),\, d_B(p)\big)
+$$
+
+Intersection asks the opposite question: $p$ only counts as "inside" when it's inside **both** shapes at once. Since inside means negative, "inside both" requires both $d_A$ and $d_B$ to be negative — the stricter condition corresponds to whichever value is larger (closer to zero or positive) winning, so intersection uses max instead of min:
+
+$$
+d_{\cap}(p) = \max\big(d_A(p),\, d_B(p)\big)
+$$
+
+These two formulas — the foundation of every CSG (constructive solid geometry) operation on a distance field — cost exactly one comparison per query point, far cheaper than traditional mesh booleans (clipping triangles, finding intersection curves).
+
+## Why Subtraction's Argument Order Matters
+
+Subtraction (carving $B$ out of $A$, keeping what's left of $A$) isn't symmetric the way the two ops above are — getting the order wrong silently changes the geometry:
+
+$$
+d_{A-B}(p) = \max\big(d_A(p),\, -d_B(p)\big)
+$$
+
+Negating $d_B$ turns "inside $B$" (negative) into "outside" (positive) and vice versa — effectively turning $B$ inside-out into a mold, then intersecting $A$ with that mold ($A \cap \overline{B}$, the part of $A$ outside the hole) using max exactly as above. A concrete check: a point $p$ sitting deep inside both shapes, $d_A(p) = -0.3$, $d_B(p) = -0.1$. Subtraction gives $\max(-0.3,\, -(-0.1)) = \max(-0.3, 0.1) = 0.1$ — positive, meaning $p$ counts as **outside** the final shape, even though it truly sits inside $A$, because it also sits inside $B$ and gets carved away. Swap the order to $\max(d_B, -d_A)$ and it carves the opposite direction — $A$ out of $B$ — a completely different shape, not just harmlessly renamed variables.
+
+## Union Is Exact, Intersection/Subtraction Are Only an Upper Bound
+
+A fact rarely stated plainly: if $d_A$ and $d_B$ are both exact SDFs (true Euclidean distance to their surface), then $d_{\cup} = \min(d_A, d_B)$ **stays exact** — the point closest to the union surface really is the point closest to whichever shape is nearer. But $\max(d_A, d_B)$ (used for both intersection and subtraction) is **no longer** the true Euclidean distance near the seam where the two surfaces meet — it only guarantees a safe upper bound (1-Lipschitz, never overshoots past the surface), which keeps sphere tracing correct but may march in shorter-than-optimal steps near the seam, and the raw distance value can't be trusted for anything else that assumes physical accuracy (volume estimates, or some secondary effect reading $d$ as a real-world distance). Keep this in mind before trusting the distance field "inside" a complex intersection or subtraction.
+
+## Smooth Min: Blending Like Clay, Not a Hard Cut
+
+Plain `min()` produces a creased seam — the surface stays continuous in position (C0) at the join but its normal jumps abruptly (not C1), showing up as an unnatural sharp fold. To make two shapes flow into one another like molten clay, the min needs to soften — instead of rigidly picking the smaller value, it blends with a weight around the region where the two values are close.
+
+### Reading Quilez's h-form Formula
+
+The most common polynomial form (Inigo Quilez) computes a weight $h \in [0,1]$, then blends with it:
+
+$$
+h = \mathrm{clamp}\!\left(0.5 + 0.5\,\frac{d_B - d_A}{k},\; 0,\; 1\right)
+$$
+
+$$
+\mathrm{smin}(d_A, d_B, k) = \mathrm{mix}(d_B, d_A, h) - k\,h\,(1-h)
+$$
+
+Far from the crossover ($|d_A - d_B| \gg k$), $h$ saturates to 0 or 1, the $k\,h\,(1-h)$ term vanishes, and the formula reduces exactly to plain `min` — e.g. $d_A=0.3, d_B=-0.1, k=0.2$ gives $h = \mathrm{clamp}(0.5 - 1, 0, 1) = 0$, and the result $-0.1$ matches $\min(0.3,-0.1)$ exactly. Near the crossover it's quite different: $d_A=0.1, d_B=0.15, k=0.2$ gives $h=0.625$, `mix` $=0.11875$, then subtracting $k h(1-h)=0.047$ lands around $0.072$ — **below** even $\min(0.1, 0.15)=0.1$. That subtracted term is exactly the "dip" that carves the rounded fillet joining the two shapes instead of a sharp corner.
+
+### The Exponential Variant, and Choosing k
+
+Besides the polynomial form there's an exponential variant, smoother but costing an `exp`/`log`:
+
+$$
+\mathrm{smin}_{exp}(a, b, k) = -\frac{1}{k}\ln\!\big(e^{-ka} + e^{-kb}\big)
+$$
+
+Quilez lists further variants — root, sigmoid, quartic — differing mainly in the shape of the join curve, not in the underlying idea. The parameter $k$ is always a **blend radius measured in world space**, not an abstract multiplier: pick $k$ too small relative to the gap between the two shapes and the result is nearly a hard `min`, making the slider feel like it does nothing; pick $k$ too large relative to the shapes' own size and the two blob together into one rounded mass, losing the original silhouette entirely — a $k$ around 20–40% of the smaller shape's radius usually reads as "fused but still recognizably two forms."
+
+## Smooth Subtraction and Smooth Intersection from Smooth Min
+
+Since $\max(x,y) = -\min(-x,-y)$, every max-based op above has a smooth counterpart via the same recipe — "flip the signs, feed into smin, flip the result back":
+
+$$
+\mathrm{sIntersect}(d_A,d_B,k) = -\,\mathrm{smin}(-d_A,\,-d_B,\,k)
+$$
+
+$$
+\mathrm{sSubtract}(d_A,d_B,k) = -\,\mathrm{smin}(-d_A,\,d_B,\,k)
+$$
+
+No need to memorize each one — just remember which argument the hard `max` version negated, negate that same argument before calling `smin`, then negate the result.
+
+## Carrying Color with Distance: Material Blending
+
+Each primitive usually carries its own color or material. For a hard union, picking the material is simple: `dA < dB ? materialA : materialB` — a decisive jump right at the seam. But if the geometry has been softened with a smooth min while the material still jumps decisively, the result is a smoothly curved surface with a hard color boundary slicing across it — reading as two pieces glued together, not one continuous form. The fix: reuse the **same weight $h$** already computed inside `smin` as the `mix()` factor for color — `mix(materialB, materialA, h)`. Wherever the geometry blends, the color blends too, by construction. The checkpoint right after this lesson leans directly on this trick to color the seams between its shapes.
+
+## Building a Compound Shape Step by Step: A Mushroom from SDFs
+
+Picture assembling a stylized mushroom from just three primitives. Step 1: a sphere for the cap. Step 2: a vertical capsule for the stem, its base touching the ground and its top reaching up near the cap's center. Step 3: `smin(cap, stem, k1)` welds the two together — the stem appears to grow directly out of the cap, with no visible seam, because `smin` erased the crease between the two surfaces. Step 4: a thin torus positioned just under the cap, subtracted from the already-welded body to suggest the mushroom's gills.
+
+The order here isn't arbitrary: the torus must be carved **after** the cap and stem are already welded, not before the stem is fused on. The reason: `smin`'s extra term (the soft dip) acts on whatever distances its two inputs currently report — weld after carving, and that dip can creep back into the exact groove just cut, blurring or nearly erasing it. The practical rule: weld (`smin`) the main masses first, carve fine detail (subtraction) last, on top of the already-welded result.
+
+<Callout variant="mistake" title="Common mistakes">
+
+1. **Letting `k` hit 0 inside `smin`.** The formula divides by `k` — `k = 0` gives `0.5/0 = ±inf`, `h` becomes `NaN`, and it spreads into a black or noisy patch wherever the march passes through that point. Always `max(k, tiny_epsilon)` in code, not just a UI slider floor above zero.
+2. **Forgetting to flip the sign when writing subtraction.** Typing `max(d1, d2)` instead of `max(d1, -d2)` still compiles, still runs, still produces a shape — it's just the wrong shape (it silently becomes an intersection). No compile error flags it; the only sign is the render not matching expectations.
+3. **Applying subtraction/intersection before welding the two main masses with `smin`.** As in the mushroom example above, operation order changes the result even though `min`/`max` are each individually associative — `smin`'s correction term doesn't "know" about material already carved away earlier, and can partially fill the exact notch just cut.
+
+</Callout>
+
+## Where This Leads: Normals, Material, and PBR
+
+The next lesson (the Shading module) is where computing a normal from an SDF's gradient is formally taught — this lesson's demo already leans on a simple working `calcNormal` purely to make the shapes readable, without yet explaining why it's correct. The $h$-weighted material blending here also resurfaces in Track 11 (PBR), where the mix isn't just color but roughness/metalness between two physically real materials, and in the checkpoint right after this lesson, where an entire sculpture has to read as one continuous form rather than parts glued together.

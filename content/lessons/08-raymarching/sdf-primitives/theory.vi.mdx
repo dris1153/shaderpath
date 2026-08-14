@@ -1,0 +1,130 @@
+## Bốn primitive, một chữ ký hàm chung
+
+Bài `sphere-tracing-principle` march một cảnh có đúng một hình cầu. Track này cần bộ công cụ lớn hơn: bốn primitive nền tảng mà gần như mọi cảnh SDF phức tạp lắp ráp từ đó — **sphere**, **box**, **torus**, **capsule**. Cả bốn dùng chung chữ ký `float sdX(vec3 p, ...tham số hình...) -> float`: nhận điểm truy vấn `p` trong không gian cục bộ của hình (tâm gốc, chưa xoay), trả về khoảng cách có dấu. `map()` chỉ cần gọi đúng hàm tương ứng hình đang cần — đúng nguyên tắc "khoảng cách trước, màu sau" ở Track 2, giờ áp dụng cho việc chọn hình.
+
+Bốn công thức dưới đây lấy nguyên từ trang `distfunctions` của Inigo Quilez — thư viện tham chiếu chuẩn mà mọi raymarcher thực chiến đều dùng lại thay vì tự suy ra.
+
+## Sphere: khoảng cách đơn giản nhất
+
+Mọi điểm trên mặt cầu bán kính $r$ cách tâm đúng $r$ đơn vị, nên khoảng cách có dấu từ $p$ đến mặt cầu chỉ là khoảng cách đến tâm trừ $r$:
+
+$$
+d_{\text{sphere}}(p) = \|p\| - r
+$$
+
+```glsl
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
+```
+
+Ba primitive còn lại phức tạp hơn vì bề mặt không đối xứng tâm hoàn toàn.
+
+## Box: phép decompose q = abs(p) - b
+
+Box nửa-cạnh $b = (b_x, b_y, b_z)$ tận dụng đối xứng: nhờ `abs(p)`, chỉ cần suy luận cho một octant rồi công thức tự đúng cho cả hộp. Đặt $q = |p| - b$: $q_i > 0$ nghĩa là $p$ vượt ngoài hộp theo trục $i$ đúng $q_i$; $q_i \le 0$ nghĩa là $p$ còn cách mặt theo trục $i$ đúng $|q_i|$.
+
+$$
+d_{\text{box}}(p) = \|\max(q, 0)\| + \min\big(\max(q_x, q_y, q_z),\, 0\big)
+$$
+
+```glsl
+float sdBox(vec3 p, vec3 b) {
+  vec3 q = abs(p) - b;
+  return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+```
+
+Số hạng đầu xử lý $p$ NGOÀI hộp: `max(q, 0)` xoá các trục $p$ còn ở trong giới hạn, chỉ giữ phần vượt ra — `length()` của vector đó là khoảng cách Euclid tới điểm gần nhất trên hộp. Khi $p$ trong hộp, `max(q,0)` toàn 0 nên số hạng này bằng 0.
+
+Số hạng hai xử lý $p$ TRONG hộp: cả ba $q_i$ đều âm, `max(q_x,q_y,q_z)` chọn giá trị ÍT ÂM NHẤT — trục có khoảng cách còn lại tới mặt NHỎ NHẤT, tức mặt gần nhất. `min(..., 0)` chỉ giữ số hạng này khi âm; khi ở ngoài, biểu thức đã dương nên `min` triệt tiêu nó về 0.
+
+## Torus: một đường tròn được "thổi phồng" theo bán kính ống
+
+Torus tham số hoá bằng $t = (R, r)$: $R$ bán kính vành, $r$ bán kính ống. Torus là tập điểm cách đúng $r$ đơn vị so với một đường tròn tâm gốc bán kính $R$ nằm trong mặt phẳng $XZ$.
+
+$$
+d_{\text{torus}}(p) = \big\|\big(\|p_{xz}\| - R,\ p_y\big)\big\| - r
+$$
+
+```glsl
+float sdTorus(vec3 p, vec2 t) {
+  vec2 q = vec2(length(p.xz) - t.x, p.y);
+  return length(q) - t.y;
+}
+```
+
+`length(p.xz)` là khoảng cách từ $p$ đến trục $Y$ theo mặt ngang. Trừ $R$ cho biết $p$ lệch bao xa so với đường tròn vành — kết hợp $p_y$ tạo toạ độ 2D mới $q$ mô tả vị trí $p$ so với đường tròn đó. Vì mọi điểm trên torus cách đường tròn vành đúng $r$, khoảng cách chỉ còn `length(q) - r` — hệt công thức sphere, áp lên hệ toạ độ 2D vừa dựng.
+
+## Capsule: khoảng cách đến một đoạn thẳng bị kẹp
+
+Capsule là đoạn thẳng từ $a$ đến $b$ "thổi phồng" bán kính $r$. Cần giải trước: khoảng cách từ $p$ đến điểm GẦN NHẤT trên đoạn $[a, b]$ — chính là phép chiếu (projection) ở bài `dot-and-cross-products` (Track 0), tham số hoá bằng $h \in [0,1]$ rồi kẹp hệ số chiếu vào khoảng đó.
+
+$$
+h = \operatorname{clamp}\!\left(\frac{(p-a)\cdot(b-a)}{\|b-a\|^2},\ 0,\ 1\right), \qquad d_{\text{capsule}}(p) = \big\|(p-a) - h\,(b-a)\big\| - r
+$$
+
+```glsl
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+  vec3 pa = p - a;
+  vec3 ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba * h) - r;
+}
+```
+
+`clamp(h, 0, 1)` là toàn bộ khác biệt so với công thức chiếu gốc: bỏ nó, $h$ có thể vượt $[0,1]$, điểm gần nhất trượt lên đường thẳng vô hạn — sai với capsule thật. Với $h$ đã kẹp, `pa - ba*h` là vector đến điểm gần nhất trên đoạn, trừ $r$ biến "khoảng cách tới đoạn" thành "khoảng cách tới capsule" — hai đầu tự động bo tròn.
+
+## Kiểm chứng một SDF: raymarch hoặc contour mặt cắt
+
+Viết sai một công thức trên (nhầm dấu, quên `clamp`, quên số hạng `min`) thường KHÔNG gây lỗi biên dịch — chỉ âm thầm ra hình sai. Hai cách kiểm chứng dùng lại đúng $f(p)$ vừa viết:
+
+Cách một — **raymarch và quan sát contour tại 0**: nếu hình hiện đúng dạng mong đợi, SDF gần như chắc chắn đúng ở vùng gần 0. Nhanh nhưng chỉ kiểm tra vùng sát bề mặt.
+
+Cách hai — **tô contour trên một mặt cắt phẳng**: lấy mẫu $f(p)$ trên một lưới điểm phẳng (ví dụ $z=0$) rồi tô theo dải giá trị của $d$ thay vì chỉ theo dấu — banded coloring quen thuộc của Quilez:
+
+```glsl
+vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);
+col *= 1.0 - exp(-3.0 * abs(d));
+col *= 0.8 + 0.2 * cos(140.0 * d);
+```
+
+Cách này lộ lỗi mà raymarch đơn thuần dễ bỏ sót: nếu dải màu không đều, méo hoặc đổi hướng đột ngột quanh biên, `f` không phải khoảng cách thật (không thoả Lipschitz-1) dù contour tại 0 vẫn trông đúng. Demo bài dùng đúng kỹ thuật này ở chế độ "contour".
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - uMouse) * 3.0;\n\n  vec2 b = vec2(0.6, 0.35);\n  vec2 q = abs(p) - b;\n  float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);\n\n  vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);\n  col *= 1.0 - exp(-3.0 * abs(d));\n  col *= 0.8 + 0.2 * cos(140.0 * d);\n  col = mix(col, vec3(1.0), 1.0 - smoothstep(0.0, 0.015, abs(d)));\n\n  fragColor = vec4(col, 1.0);\n}"} />
+
+## Biến đổi primitive: xoay/dịch điểm truy vấn, không xoay/dịch hình
+
+Mỗi công thức trên giả định hình đặt tại gốc, không xoay. Bản năng sai để đặt một box lệch tâm và xoay là "biến đổi hình" — SDF không phải mesh, không có đỉnh để dịch. Cách đúng: biến đổi NGƯỢC điểm truy vấn `p` trước khi gọi hàm SDF, coi hình vẫn đứng yên tại gốc:
+
+```glsl
+vec3 toLocal(vec3 p, vec3 center, float angleY) {
+  p -= center;                       // dịch ngược lại độ dịch mong muốn
+  float a = radians(-angleY);        // xoay ngược lại góc mong muốn
+  p.xz = mat2(cos(a), -sin(a), sin(a), cos(a)) * p.xz;
+  return p;
+}
+// gọi: sdBox(toLocal(p, center, angleY), b)
+```
+
+Trừ tâm trước khi xoay (không phải sau) vì phép xoay chỉ đúng quanh gốc toạ độ — đổi thứ tự xoay quanh sai điểm. Với scale đều (hệ số $s$ trên cả ba trục), quy tắc tương tự: chia `p` cho $s$ trước khi gọi SDF, rồi NHÂN kết quả với $s$ — chia thu nhỏ không gian truy vấn, nhân bù lại đơn vị khoảng cách bị thu nhỏ theo.
+
+Scale KHÔNG ĐỀU phá vỡ kỹ thuật này: nó méo khoảng cách khác nhau theo từng hướng, không còn tồn tại hệ số nhân duy nhất nào sửa đúng kết quả ở MỌI hướng cùng lúc — hàm trả về không còn là khoảng cách Euclid thật, chỉ còn xấp xỉ, đúng chủ đề phần cuối bài.
+
+## Exact SDF vs bound SDF: march vẫn đúng, chỉ chậm hơn
+
+Cả bốn công thức trên đều **exact** — thoả Lipschitz-1 tuyệt đối: di chuyển 1 đơn vị khoảng cách thực làm $f$ thay đổi tối đa 1 đơn vị theo mọi hướng, nên $f(p)$ luôn bằng CHÍNH XÁC khoảng cách ngắn nhất tới bề mặt. Nhưng sphere tracing chỉ cần điều kiện yếu hơn để march an toàn: $f(p)$ không bao giờ ĐÁNH GIÁ QUÁ khoảng cách thật — bước `t += f(p)` vẫn không thể xuyên bề mặt miễn quả cầu bán kính $f(p)$ còn rỗng, dù $f(p)$ có thể nhỏ hơn khoảng cách thật.
+
+Một hàm chỉ đảm bảo $f(p) \le d_{\text{true}}(p)$ gọi là **bound SDF**. Vẫn march an toàn, nhưng hội tụ chậm hơn exact SDF: mỗi bước bảo thủ hơn mức cần, tốn thêm vòng lặp để tới cùng bề mặt. Primitive scale không đều ở trên là một ví dụ bound; các bài sau của track (đặc biệt fractal và domain repetition) sẽ gặp thêm nhiều bound SDF khác, nơi đánh đổi độ chính xác lấy khả năng biểu diễn hình phức tạp là hoàn toàn chấp nhận được.
+
+Bài kế tiếp (`sdf-boolean-ops-smooth-min`) ghép nhiều primitive của bài này bằng `min`/`max` — union, subtraction, intersection — rồi làm mượt ranh giới ghép bằng smooth min.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi viết và biến đổi SDF primitive:
+
+1. **Quên số hạng `min(max(q.x,q.y,q.z), 0)` trong box SDF (hoặc sai dấu).** Thiếu nó, `d` luôn không âm — điểm bên TRONG hộp báo khoảng cách 0 hoặc dương thay vì âm dần về tâm, phá vỡ mọi kỹ thuật dựa vào dấu của $d$.
+2. **Xoay điểm truy vấn theo đúng góc mong muốn thay vì góc NGƯỢC.** Đang biến đổi $p$ để mô phỏng biến đổi hình, mọi phép biến đổi phải dùng nghịch đảo — nhầm `+angleY` thay vì `-angleY` làm hình quay ngược chiều slider.
+3. **Scale điểm truy vấn không đều mà không nhận ra hậu quả.** `p / vec3(2.0, 1.0, 1.0)` không có hệ số bù nào sửa đúng ở MỌI hướng cùng lúc — quả cầu an toàn bán kính $f(p)$ nói dối về độ an toàn theo trục bị nén nhiều nhất, khiến tia xuyên qua phần hình bị nén mỏng, rõ nhất ở góc nhìn lướt cạnh — đúng cơ chế thủng silhouette đã học ở bài trước, chỉ khác nguyên nhân là SDF sai thay vì thiếu bước march.
+
+</Callout>

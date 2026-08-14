@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build đóng module Sphere Tracing: không có lý thuyết mới, chỉ có một hình điêu khắc raymarch thật sự dựng từ primitive SDF, boolean op và smooth min — chứng minh bạn ghép được nhiều khối thành một vật thể liền mạch, không phải rời rạc dán lại.
+
+## Yêu cầu
+
+Dựng một hình dạng kiểu quân cờ vua (pawn) cách điệu, hoàn toàn bằng SDF trong một fragment shader raymarch: đế là torus, thân là capsule, đầu là sphere — cả ba hàn lại bằng `opSmoothUnion` thành một khối liền. Thêm một chi tiết cổ áo (collar) bằng một torus mỏng khác, hàn nhẹ vào thân bằng smin với `k` nhỏ. Cuối cùng, khoét một mặt phẳng phẳng vào một bên khối bằng `opSubtract` với một box — thao tác này phải làm **sau cùng**, sau khi mọi smin đã hàn xong. Toàn khối tự xoay chậm quanh trục dọc bằng cách xoay điểm truy vấn `p` trước khi gọi hàm scene, không xoay camera. Tô màu hai tông theo độ cao cộng một lớp Lambert đơn giản từ `calcNormal` — starter code đã cho sẵn vòng lặp raymarch, `calcNormal` hoạt động đúng và tất cả primitive cần dùng; việc của bạn chỉ là lắp ráp hàm `scene()`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Dựng từ dưới lên: hàn đế với thân trước, xem hình đã liền chưa, rồi mới hàn thêm đầu, rồi cổ áo — mỗi bước thêm đúng một `opSmoothUnion`. Chỉ sau khi cả bốn khối đã hàn xong mới gọi `opSubtract` một lần duy nhất để khoét mặt phẳng.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — silhouette đọc như một khối liền, các đường nối mềm như đất sét chứ không nhọn, mặt bị khoét sạch phẳng, xoay mượt không giật, và không có lỗ hổng nào lộ ra ở viền silhouette.

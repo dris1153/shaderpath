@@ -1,0 +1,91 @@
+## Normal chính là gradient của SDF
+
+Một mesh có normal lưu sẵn ở từng vertex — nội suy giữa ba đỉnh là xong. Một cảnh raymarch không có vertex nào cả, chỉ có một hàm $f(p)$ trả về khoảng cách có dấu tới bề mặt gần nhất. Normal tại điểm chạm $p$, do đó, phải được **tính ra** từ chính $f$, không có sẵn ở đâu để tra cứu.
+
+Câu trả lời nằm ở gradient. Với một signed distance field đúng nghĩa (không phải xấp xỉ thô), $f$ thoả phương trình eikonal:
+
+$$
+\|\nabla f(p)\| = 1 \quad \text{với mọi } p \text{ (trừ tập ridge có đo độ-không, nơi } f \text{ không khả vi)}
+$$
+
+Trực giác: $\nabla f(p)$ chỉ theo hướng $f$ tăng nhanh nhất — với một hàm khoảng cách, "tăng nhanh nhất" nghĩa là "đi thẳng ra khỏi bề mặt theo đường ngắn nhất", tức hướng pháp tuyến. Độ dài gradient đúng bằng 1 vì di chuyển 1 đơn vị theo hướng đó làm khoảng cách tăng đúng 1 đơn vị — không nhanh hơn, không chậm hơn, đó chính là định nghĩa của một SDF chuẩn (Euclidean, không bị "co giãn" bởi phép biến đổi non-uniform). Hệ quả thực dụng: gradient của SDF không chỉ *song song* với normal, nó **là** normal — chỉ cần ước lượng $\nabla f(p)$ bằng số rồi normalize phòng sai số rời rạc hoá.
+
+## Central difference: sáu lần gọi hàm khoảng cách
+
+Cách trực tiếp nhất để ước lượng đạo hàm riêng là central difference — lùi và tiến một khoảng nhỏ $\varepsilon$ dọc mỗi trục, lấy hiệu:
+
+$$
+\frac{\partial f}{\partial x}(p) \approx \frac{f(p + \varepsilon\hat x) - f(p - \varepsilon\hat x)}{2\varepsilon}
+$$
+
+và tương tự cho $y$, $z$ — ba đạo hàm riêng, mỗi cái tốn hai lần gọi $f$, tổng cộng **sáu lần gọi** hàm `map()`:
+
+```glsl
+vec3 normalCentralDiff(vec3 p, float eps) {
+  vec2 e = vec2(eps, 0.0);
+  return normalize(vec3(
+    map(p + e.xyy) - map(p - e.xyy),
+    map(p + e.yxy) - map(p - e.yxy),
+    map(p + e.yyx) - map(p - e.yyx)
+  ));
+}
+```
+
+Để ý code trên **không chia cho $2\varepsilon$** dù công thức toán có mẫu số đó — không phải thiếu sót. `normalize()` ngay sau đó tự loại bỏ mọi hệ số vô hướng dương chung của cả ba thành phần, nên chia trước rồi normalize cho kết quả giống hệt bỏ qua phép chia, chỉ tốn thêm ba phép chia vô ích. Ví dụ tay: sphere SDF $f(p) = \|p\| - 1$ tại $p = (1,0,0)$, $\varepsilon = 0.01$: $f(1.01,0,0) - f(0.99,0,0) = 0.02$ theo trục $x$, còn $y$, $z$ triệt tiêu về $\approx 0$ do đối xứng — vector $(0.02, 0, 0)$ normalize ra $(1,0,0)$, đúng normal hướng ra ngoài, không cần biết bán kính cầu.
+
+## Kỹ thuật tetrahedron: bốn mẫu, cùng bậc chính xác
+
+Sáu lần gọi `map()` mỗi pixel có chạm là một chi phí thật trên GPU. Inigo Quilez đưa ra một cách ước lượng gradient chỉ cần **bốn mẫu**, dùng bốn đỉnh của một tứ diện đều thay vì sáu điểm dọc ba trục:
+
+```glsl
+vec3 normalTetrahedron(vec3 p, float eps) {
+  const vec2 k = vec2(1.0, -1.0);
+  return normalize(
+    k.xyy * map(p + k.xyy * eps) +
+    k.yyx * map(p + k.yyx * eps) +
+    k.yxy * map(p + k.yxy * eps) +
+    k.xxx * map(p + k.xxx * eps)
+  );
+}
+```
+
+Bốn hướng lấy mẫu $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ là bốn đỉnh của một tứ diện nội tiếp khối lập phương cạnh $2\varepsilon$. Mỗi số hạng nhân trọng số $k_i$ (chính hướng lấy mẫu) với $f$ tại điểm đó rồi cộng dồn; tổng có trọng số này triệt tiêu đúng thành phần $f(p)$ không đổi (bốn vector $k_i$ tự cộng lại bằng 0), chỉ còn lại xấp xỉ tuyến tính của gradient — cùng bậc chính xác $O(\varepsilon^2)$ như central difference sáu mẫu, không phải thô hơn. Tiết kiệm: $6 \to 4$ lần gọi `map()` là giảm đúng $\frac{6-4}{6} \approx 33\%$ chi phí tính normal — đáng kể khi `map()` là cả một cây SDF phức tạp, không chỉ một `length(p) - r`. Đây là kỹ thuật mặc định trong hầu hết shader raymarch sản xuất thật, từ Shadertoy tới game thương mại (nguồn: bài viết gốc của Quilez, phần Tham khảo).
+
+## Chọn epsilon: bo tròn cạnh sắc hay vỡ hạt vì nhiễu số thực
+
+$\varepsilon$ không có một giá trị "đúng" duy nhất — nó là bán kính vùng lấy mẫu quanh $p$, và hai thái cực đều hỏng theo hai cách khác nhau:
+
+- **Quá lớn**: gradient không còn phản ánh độ cong cục bộ tại $p$, mà là trung bình hoá trên một vùng rộng $2\varepsilon$. Ở góc sắc (như góc hộp `sdBox` trong demo), vùng lấy mẫu lớn hơn cả bán kính góc đó khiến normal "nhìn thấy" cả hai mặt kề nhau, cho ra hướng lệch hẳn khỏi normal thật — hiện thành góc bị bo tròn/vỡ facet dù hình học vẫn sắc.
+- **Quá nhỏ**: `map(p+eps) - map(p-eps)` trừ hai số dấu phẩy động rất gần nhau — catastrophic cancellation khiến chênh lệch thật do độ cong chìm dưới nhiễu làm tròn của `highp float` (độ chính xác tương đối ~$10^{-7}$). Kết quả là normal lấm tấm dù hình học mượt — cùng cơ chế lượng tử hoá mổ xẻ ở bài Precision Qualifiers (Track 2): chênh lệch càng nhỏ, khoảng cách giữa hai số biểu diễn được càng thô.
+
+Không có công thức đóng cho $\varepsilon$ tối ưu — nó phụ thuộc tỉ lệ hình học của cảnh; giá trị hay dùng trong thực tế rơi vào khoảng $10^{-4}$ đến $10^{-3}$ đơn vị thế giới (ước lượng, theo nhiều shader raymarch mã nguồn mở), đủ nhỏ so với bán kính cong nhỏ nhất trong cảnh nhưng lớn hơn nhiều bậc so với sàn nhiễu số thực.
+
+## Có normal rồi: dựng rig chiếu sáng ba đèn
+
+Một khi có $\hat n$ đáng tin, shading raymarch dùng lại đúng công thức lighting quen thuộc từ rasterization. Lambert diffuse:
+
+$$
+L_{\text{diffuse}} = \text{albedo} \cdot \max(0, \hat n \cdot \hat l)
+$$
+
+Blinn-Phong specular thay vector phản xạ bằng vector nửa đường $\hat h = \widehat{\hat l + \hat v}$ ($\hat v$ hướng về camera), rẻ hơn Phong gốc vì không cần tính phản xạ:
+
+$$
+L_{\text{spec}} = \max(0, \hat n \cdot \hat h)^{s}
+$$
+
+Rig ba đèn tiêu chuẩn cộng thêm hai nguồn sáng "miễn phí" không tốn shadow ray: **key light** (Lambert từ hướng "mặt trời" cố định) cho khối chính; **sky fill** dùng thẳng $\hat n_y$ (remap về $[0,1]$) làm cường độ — mặt hướng lên trời sáng hơn, xấp xỉ ánh sáng bầu trời mà không cần environment map; **bounce** dùng $1 - \hat n_y$ nhân màu đất, xấp xỉ ánh sáng dội từ mặt đất. Cả ba chỉ là hàm của $\hat n$, $\hat v$ đã có sẵn, không tốn thêm lần gọi `map()` nào — và quan trọng: **normal chỉ được tính đúng một lần** tại điểm chạm cuối cùng, không phải trong vòng lặp raymarch. Gọi `calcNormal` bên trong loop `for` sphere-tracing nhân chi phí sáu (hoặc bốn) lần gọi `map()` thêm với toàn bộ số bước march — một lỗi hiệu năng nghiêm trọng và không cần thiết, vì vòng lặp march chỉ cần biết "còn cách bao xa", chưa cần biết "quay mặt hướng nào".
+
+## Nền tảng này dẫn tới đâu
+
+Có normal đáng tin là điều kiện tiên quyết cho mọi kỹ thuật shading nâng cao hơn ở phần còn lại của track: bài kế tiếp dùng chính normal này để offset điểm gốc của shadow ray (tránh tự che chính bề mặt) và để lấy mẫu ambient occlusion dọc theo $\hat n$. Track 11 (PBR) sẽ thay Blinn-Phong bằng BRDF vi hạt đúng vật lý hơn, nhưng vẫn cần đúng $\hat n$ này làm đầu vào — không có gradient chính xác, không mô hình chiếu sáng nào phía sau còn ý nghĩa.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tính normal từ SDF:
+
+1. **Quên normalize sau central-diff/tetrahedron.** Cả hai công thức trả về một vector có độ dài phụ thuộc $\varepsilon$ và độ dốc cục bộ của $f$ — không tự động là vector đơn vị. Dùng thẳng vào `dot(n, lightDir)` mà chưa normalize làm sai toàn bộ cường độ sáng, đặc biệt lộ rõ khi $\varepsilon$ thay đổi (đổi $\varepsilon$ không nên đổi độ sáng, nhưng nếu quên normalize thì có).
+2. **Gọi `calcNormal` bên trong vòng lặp raymarch thay vì chỉ tại điểm chạm.** Vòng lặp sphere tracing có thể chạy 50–100 bước; tính normal ở mỗi bước nhân chi phí lên gấp 4–6 lần số bước đó một cách vô nghĩa, vì chỉ điểm chạm cuối cùng mới cần biết hướng bề mặt.
+3. **Dùng cùng một $\varepsilon$ cố định cho mọi tỉ lệ cảnh.** Một $\varepsilon$ tinh chỉnh tốt cho vật thể bán kính ~1 đơn vị sẽ bo tròn nặng nề chi tiết nhỏ hơn nhiều (ví dụ chữ khắc SDF) hoặc gây nhiễu số trên vật thể lớn hơn nhiều — $\varepsilon$ nên tỉ lệ theo kích thước hình học nhỏ nhất cần giữ chi tiết trong cảnh, không phải một hằng số toàn cục.
+
+</Callout>

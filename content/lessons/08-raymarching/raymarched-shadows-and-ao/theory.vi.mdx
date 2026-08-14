@@ -1,0 +1,86 @@
+## Bóng bằng cách march về phía nguồn sáng
+
+Ý tưởng cốt lõi của bóng raymarch đơn giản đến bất ngờ: từ điểm chạm $p$, bắn một tia thứ hai — không phải về phía camera, mà **về phía nguồn sáng** — rồi march tia đó y hệt tia chính. Nếu tia này chạm vật thể nào đó trước khi tới nguồn sáng, $p$ nằm trong bóng; nếu march hết quãng đường tới nguồn sáng mà không chạm gì, $p$ được chiếu sáng trực tiếp.
+
+Một chi tiết bắt buộc trước khi march: điểm gốc của shadow ray không được đặt đúng tại $p$, mà phải dịch ra ngoài một khoảng nhỏ dọc normal, $p + \hat n \cdot \varepsilon$. Lý do: $p$ vốn nằm rất sát (hoặc đúng trên) bề mặt SDF — march thẳng từ đó, bước march đầu tiên gần như chắc chắn đọc lại khoảng cách gần 0 tới chính bề mặt vừa xuất phát, bị hiểu nhầm là "chạm vật cản" ngay lập tức. Đây gọi là self-hit hay shadow acne, và offset theo normal (dùng lại đúng $\hat n$ từ bài trước) là cách chuẩn để tránh nó — bề mặt không tự che chính nó nữa vì điểm xuất phát đã nằm ngoài, không còn trên biên $f = 0$.
+
+Hard shadow chỉ cần một hàm nhị phân: march từ `mint` đến `maxt`, hễ gặp $f(p) < \varepsilon$ ở bước nào thì trả `0.0` (bị che hoàn toàn), march hết quãng mà không chạm gì thì trả `1.0` (sáng hoàn toàn) — không có giá trị trung gian, biên bóng luôn là một bước nhảy cứng dù bản thân nguồn sáng có kích thước thật (mặt trời không phải một điểm).
+
+## Bóng mềm: theo dõi tỉ lệ nửa tối dọc tia sáng
+
+Bóng mềm mô phỏng đúng thứ hard shadow bỏ qua: nguồn sáng có kích thước góc thật, nên biên bóng phải mờ dần (penumbra) chứ không phải một đường cắt cứng. Công thức gốc của Quilez tận dụng chính dữ liệu đã có sẵn trong vòng lặp march — tại mỗi bước, $h = f(p_t)$ là khoảng cách tới vật cản gần nhất, còn $t$ là quãng đường tia đã đi. Tỉ số $h/t$ xấp xỉ **bán kính góc** của khoảng hở gần nhất nhìn từ điểm xuất phát: $h$ càng nhỏ so với $t$ càng đi càng nghĩa là tia đang "sượt" rất sát một vật cản tương đối xa — góc nhìn thấy khoảng hở đó càng hẹp, càng gần bị che. Nhân thêm hệ số $k$ để điều khiển tốc độ tỉ số này bão hoà về bóng đầy: `res = min(res, k * h / t)`, lấy **giá trị nhỏ nhất** dọc suốt tia vì chỉ cần một điểm bị che gần nhất cũng đủ quyết định độ tối của toàn bộ bóng.
+
+Bài này cài đặt bản cải tiến của Quilez (2015), sửa lỗi hình học của công thức gốc: công thức gốc coi $h$ là khoảng cách thẳng đứng tới vật cản tại đúng $t$, nhưng vật cản gần nhất trong thực tế có thể nằm ở một điểm khác dọc tia, khiến $h/t$ đánh giá sai khi bước march không đều. Bản cải tiến dùng chiều cao mẫu trước đó `ph` để dựng một tam giác, suy ra khoảng cách vuông góc thật $d$ từ tia tới bề mặt vật cản:
+
+$$
+y = \frac{h^2}{2 \cdot ph}, \qquad d = \sqrt{h^2 - y^2}, \qquad \text{ratio} = \frac{k \cdot d}{t - y}
+$$
+
+```glsl
+float softShadow(vec3 ro, vec3 rd, float mint, float maxt, float k) {
+  float res = 1.0;
+  float t = mint;
+  float ph = 1e10;
+  for (int i = 0; i < 48; i++) {
+    if (t >= maxt) break;
+    float h = map(ro + rd * t);
+    if (h < 0.0008) return 0.0;
+    float y = h * h / (2.0 * ph);
+    float d = sqrt(max(h * h - y * y, 0.0));
+    res = min(res, k * d / max(0.0001, t - y));
+    ph = h;
+    t += h;
+  }
+  return clamp(res, 0.0, 1.0);
+}
+```
+
+$k$ nhỏ (như $k = 2$) làm tỉ số bão hoà chậm — penumbra rất rộng, bóng mờ trên diện tích lớn. $k$ lớn (như $k = 32$) làm tỉ số bão hoà nhanh — penumbra co hẹp gần như tức thời, gần giống hard shadow nhưng vẫn giữ được viền hơi mềm ở đúng ranh giới.
+
+## Ambient occlusion: lấy mẫu SDF dọc theo normal
+
+AO trả lời một câu hỏi khác hẳn shadow: không phải "nguồn sáng trực tiếp có tới được điểm này không", mà "điểm này bị hình học xung quanh bao vây, che khuất ánh sáng gián tiếp (bounce từ mọi hướng) đến mức nào". Kỹ thuật 5-tap chuẩn (bắt nguồn từ bài nói "Rendering Worlds With Two Triangles" của Quilez) lấy mẫu $f$ tại năm điểm tăng dần dọc normal $\hat n$, so sánh khoảng cách thật đọc được với khoảng cách kỳ vọng nếu không có gì che (chính $h$):
+
+```glsl
+float calcAO(vec3 p, vec3 n) {
+  float occ = 0.0;
+  float sca = 1.0;
+  for (int i = 0; i < 5; i++) {
+    float h = 0.01 + 0.12 * float(i) / 4.0;
+    float d = map(p + n * h);
+    occ += (h - d) * sca;
+    sca *= 0.95;
+  }
+  return clamp(1.0 - 2.5 * occ, 0.0, 1.0);
+}
+```
+
+Nếu không gian quanh $p$ hoàn toàn trống, `map(p + n*h)` phải trả về đúng $\approx h$ (di chuyển $h$ theo hướng ra ngoài bề mặt thì còn cách bề mặt gần nhất đúng $h$) — hiệu `h - d` bằng 0, không đóng góp gì vào `occ`. Nếu có hình học khác ở gần (một góc lõm, một vật thể khác kề bên), `d` nhỏ hơn `h` kỳ vọng — hiệu dương tích luỹ vào `occ`, và trọng số `sca` giảm dần theo cấp số nhân ($0.95^i$) để mẫu càng xa càng đóng góp ít, giống một phép tích phân bán cầu thô chỉ với 5 điểm thay vì hàng trăm tia Monte Carlo thật.
+
+## Không tốn shadow map: không có vấn đề resolution hay bias
+
+Cả hai kỹ thuật trên đều **không hình học phụ trợ nào khác** ngoài chính SDF của cảnh — không render pass thứ hai từ góc nhìn nguồn sáng, không depth texture, không cần chọn kích thước texture đủ lớn để tránh răng cưa. Đối lập trực tiếp với shadow mapping ở Track 3: kỹ thuật đó render toàn bộ cảnh từ góc nhìn ánh sáng vào một depth texture có độ phân giải cố định, rồi so sánh độ sâu fragment hiện tại với giá trị lấy mẫu từ texture đó — độ phân giải hữu hạn của texture này trực tiếp gây ra shadow acne (răng cưa dạng vằn do làm tròn độ sâu) và peter-panning (bóng tách rời khỏi vật), buộc phải tinh chỉnh `bias` bằng tay cho từng cảnh. Raymarched shadow/AO không có bước rời rạc hoá độ phân giải nào cả — "độ chính xác" chỉ phụ thuộc đúng những tham số đã quen thuộc từ bài march chính: số bước, $\varepsilon$ ngưỡng chạm.
+
+## Kết hợp màu: ambient·AO cộng diffuse·shadow
+
+Công thức tổng hợp cuối cùng tách rõ hai loại ánh sáng khác nhau, mỗi loại nhân với đúng hệ số suy giảm của nó:
+
+$$
+\text{color} = \text{ambient} \cdot \text{AO} + \text{diffuse} \cdot \text{shadow}
+$$
+
+`AO` chỉ nhân vào phần `ambient` (ánh sáng gián tiếp, bounce từ mọi hướng) vì đó chính xác là loại ánh sáng mà AO mô phỏng việc che khuất — còn `shadow` chỉ nhân vào phần `diffuse` (ánh sáng trực tiếp từ nguồn cụ thể) vì đó là loại tia shadow ray thực sự kiểm tra. Nhân AO vào cả `diffuse` là nhầm lẫn hai cơ chế vật lý khác nhau thành một, khiến vùng đã bị shadow ray làm tối lại tối thêm một lần nữa một cách không có căn cứ.
+
+## Nền tảng này dẫn tới đâu
+
+Cả hai kỹ thuật của bài này chỉ cộng thêm các lời gọi `map()` phụ vào đúng chỗ đã có — không cần cấu trúc dữ liệu mới, không cần render pass phụ — nên chúng ghép thẳng vào bất kỳ cảnh SDF nào không đổi gì về kiến trúc. Bài tiếp theo (Domain Repetition) nhân bản một object ra vô hạn không gian chỉ bằng `mod()` trên toạ độ truy vấn trước khi gọi `map()` — shadow và AO vừa học vẫn hoạt động y nguyên trên không gian lặp đó, vì cả hai chỉ quan tâm giá trị `map()` trả về, không quan tâm nó được dựng bằng cách nào. Checkpoint đóng module (Infinite Grid World) ghép cả bốn kỹ thuật — normal, bóng, AO, domain repetition — vào đúng một cảnh duy nhất.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài bóng mềm và AO trong raymarch:
+
+1. **Quên offset điểm gốc shadow ray theo normal.** March thẳng từ $p$ (đúng trên biên $f=0$) khiến bước march đầu tiên gần như luôn đọc được $f \approx 0$, bị hiểu nhầm thành "chạm vật cản ngay lập tức" — toàn cảnh hiện ra tối om vì mọi điểm tự che chính nó (shadow acne).
+2. **Quên `clamp(res, 0.0, 1.0)` ở cuối `softShadow`.** Với $k$ lớn và bước march đầu gần biên vật cản, tỉ số `k*d/(t-y)` có thể vượt quá 1 — nhân thẳng giá trị đó vào `diffuse` mà không clamp làm vùng sát biên bóng sáng loá bất thường thay vì mờ dần mượt mà.
+3. **Nhân AO vào cả thành phần diffuse, không chỉ ambient.** AO mô phỏng ánh sáng gián tiếp bị che, không phải ánh sáng trực tiếp (đã có shadow ray lo việc đó) — nhân AO vào diffuse là đếm hai lần cùng một hiệu ứng che khuất, khiến các góc tiếp xúc giữa vật và sàn tối bất thường, "bẩn" một cách không tự nhiên.
+
+</Callout>

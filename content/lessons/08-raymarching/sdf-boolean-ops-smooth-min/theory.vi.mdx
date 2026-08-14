@@ -1,0 +1,93 @@
+## Union, intersection: ghép SDF bằng min/max
+
+Một signed distance field (SDF) trả về khoảng cách ký hiệu từ một điểm $p$ đến bề mặt — âm nếu $p$ nằm trong vật thể, dương nếu ở ngoài. Có hai SDF $d_A(p)$ và $d_B(p)$ cho hai hình riêng biệt, câu hỏi tự nhiên là: SDF nào mô tả "cả hai hình gộp lại"? Trực giác: điểm $p$ gần bề mặt kết hợp nhất khi nó gần bề mặt của **hình gần nó nhất** trong hai hình — nên union chỉ đơn giản là lấy giá trị nhỏ hơn:
+
+$$
+d_{\cup}(p) = \min\big(d_A(p),\, d_B(p)\big)
+$$
+
+Intersection (giao) hỏi ngược lại: $p$ chỉ tính là "trong vật" khi nó trong **cả hai** hình cùng lúc. Vì trong là âm, "trong cả hai" nghĩa là cả $d_A$ lẫn $d_B$ đều âm — điều kiện chặt hơn ứng với giá trị lớn hơn (gần 0 hoặc dương) chiếm ưu thế, nên intersection dùng max thay vì min:
+
+$$
+d_{\cap}(p) = \max\big(d_A(p),\, d_B(p)\big)
+$$
+
+Hai công thức này — nền tảng của mọi CSG (constructive solid geometry) trên distance field — chỉ tốn đúng một phép so sánh mỗi điểm truy vấn, rẻ hơn hẳn boolean mesh truyền thống (cắt tam giác, tìm giao tuyến).
+
+## Vì sao thứ tự tham số của subtraction quan trọng
+
+Subtraction (khoét $B$ ra khỏi $A$, giữ lại phần còn của $A$) không đối xứng như hai phép trên — thứ tự viết sai là đổi luôn ý nghĩa hình học:
+
+$$
+d_{A-B}(p) = \max\big(d_A(p),\, -d_B(p)\big)
+$$
+
+Đảo dấu $d_B$ biến "trong $B$" (âm) thành "ngoài" (dương) và ngược lại — tức lộn ngược $B$ thành một cái khuôn, rồi lấy giao ($A \cap \overline{B}$, phần của $A$ nằm ngoài khuôn đó) bằng max như phần trước. Thử với số thật: điểm $p$ nằm sâu trong cả hai hình, $d_A(p) = -0.3$, $d_B(p) = -0.1$. Kết quả subtraction là $\max(-0.3,\, -(-0.1)) = \max(-0.3, 0.1) = 0.1$ — dương, tức $p$ bị coi là **ngoài** hình cuối, dù nó thực sự nằm trong $A$, vì nó cũng nằm trong $B$ nên bị khoét mất. Đổi thứ tự thành $\max(d_B, -d_A)$ khoét ngược lại — $A$ ra khỏi $B$ — một hình hoàn toàn khác, không phải chỉ đảo tên biến vô hại.
+
+## Union chính xác, intersection/subtraction chỉ là biên trên
+
+Một sự thật ít ai nói rõ: nếu $d_A$ và $d_B$ đều là SDF chính xác (đúng khoảng cách Euclid tới bề mặt), thì $d_{\cup} = \min(d_A, d_B)$ **vẫn chính xác** — điểm gần bề mặt union nhất đúng là điểm gần hình gần hơn nhất. Nhưng $\max(d_A, d_B)$ (dùng cho intersection và subtraction) thì **không** còn là khoảng cách Euclid thật ở vùng gần góc giao giữa hai bề mặt — nó chỉ đảm bảo là một biên trên an toàn (1-Lipschitz, không bao giờ bước quá xa và xuyên qua bề mặt), đủ để sphere tracing không bị lỗi, nhưng bước march có thể ngắn hơn mức tối ưu gần đường nối, và giá trị khoảng cách không dùng được cho việc khác cần độ chính xác thật (ví dụ ước lượng thể tích, hay một hiệu ứng phụ nào đó đọc trực tiếp $d$ làm khoảng cách vật lý). Ghi nhớ điều này trước khi tin tưởng distance field "bên trong" một union/intersection phức tạp.
+
+## Smooth min: pha trộn như đất sét, không cắt cứng
+
+`min()` thô tạo một đường nối gấp khúc — bề mặt tại chỗ giao nhau liên tục về vị trí (C0) nhưng normal đổi đột ngột (không C1), lộ ngay một nếp gấp sắc cạnh không tự nhiên. Muốn hai hình "chảy" vào nhau như đất sét nung chảy, cần một hàm min mềm hơn — không chọn cứng nhắc giá trị nhỏ hơn, mà pha trộn có trọng số quanh vùng hai giá trị gần bằng nhau.
+
+### Đọc công thức h-form của Quilez
+
+Dạng polynomial phổ biến nhất (Inigo Quilez) tính một trọng số $h \in [0,1]$ rồi trộn:
+
+$$
+h = \mathrm{clamp}\!\left(0.5 + 0.5\,\frac{d_B - d_A}{k},\; 0,\; 1\right)
+$$
+
+$$
+\mathrm{smin}(d_A, d_B, k) = \mathrm{mix}(d_B, d_A, h) - k\,h\,(1-h)
+$$
+
+Xa vùng giao ($|d_A - d_B| \gg k$), $h$ bão hoà về 0 hoặc 1, số hạng $k\,h\,(1-h)$ triệt tiêu, công thức rút gọn đúng về `min` thường — ví dụ $d_A=0.3, d_B=-0.1, k=0.2$: $h = \mathrm{clamp}(0.5 - 1, 0, 1) = 0$, kết quả $= -0.1$, khớp $\min(0.3,-0.1)$. Gần vùng giao thì khác hẳn: $d_A=0.1, d_B=0.15, k=0.2$ cho $h=0.625$, `mix` $=0.11875$, trừ tiếp $k h(1-h)=0.047$ ra $\approx 0.072$ — **thấp hơn** cả $\min(0.1, 0.15)=0.1$. Số hạng trừ đó chính là "hố lõm" tạo nét bo tròn nối liền hai hình, thay vì một góc nhọn.
+
+### Biến thể exponential và chọn k
+
+Ngoài polynomial còn biến thể exponential, mượt hơn nhưng tốn `exp`/`log`:
+
+$$
+\mathrm{smin}_{exp}(a, b, k) = -\frac{1}{k}\ln\!\big(e^{-ka} + e^{-kb}\big)
+$$
+
+Quilez còn liệt kê thêm root, sigmoid, quartic... — khác nhau chủ yếu ở dáng đường cong nối, không khác nhau về ý tưởng. Tham số $k$ luôn là **bán kính pha trộn trong không gian thế giới**, không phải hệ số trừu tượng: $k$ quá nhỏ so với khoảng cách hai hình gần nhau nhất thì kết quả gần như `min` cứng, kéo slider gần như vô tác dụng; $k$ quá lớn so với kích thước hình thì hai hình tan chảy thành một khối tròn xoè, mất hẳn silhouette gốc — chọn $k$ cỡ 20–40% bán kính hình nhỏ hơn trong cặp thường cho kết quả "dính liền nhưng vẫn nhận ra hai khối".
+
+## Smooth subtraction, smooth intersection: đảo dấu từ smooth min
+
+Vì $\max(x,y) = -\min(-x,-y)$, mọi phép dùng max ở trên đều có bản mềm bằng đúng công thức "đảo dấu — đưa vào smin — đảo dấu kết quả":
+
+$$
+\mathrm{sIntersect}(d_A,d_B,k) = -\,\mathrm{smin}(-d_A,\,-d_B,\,k)
+$$
+
+$$
+\mathrm{sSubtract}(d_A,d_B,k) = -\,\mathrm{smin}(-d_A,\,d_B,\,k)
+$$
+
+Không cần học thuộc — chỉ cần nhớ: hard op nào viết bằng `max` với dấu trừ ở đâu, smooth op flip đúng dấu đó trước khi gọi `smin`, rồi flip kết quả lại.
+
+## Mang màu đi theo khoảng cách: material blending
+
+Mỗi primitive thường mang theo một màu/material riêng. Với hard union, chọn material đơn giản: `dA < dB ? materialA : materialB` — một bước nhảy dứt khoát đúng ngay tại đường nối. Nhưng nếu hình học đã pha trộn mượt bằng smooth min mà material vẫn nhảy dứt khoát, kết quả là một bề mặt cong mượt mà lại có ranh giới màu sắc cứng cắt ngang — trông giả tạo, như hai khối dán lại chứ không phải một khối liền. Cách đúng: dùng lại **chính trọng số $h$** đã tính trong `smin` để làm hệ số `mix()` màu — `mix(materialB, materialA, h)`. Hình học pha trộn ở đâu, màu pha trộn đúng ở đó. Bài checkpoint ngay sau bài này dựa thẳng vào kỹ thuật này để tô màu vùng nối giữa các khối.
+
+## Dựng hình từng bước: một cây nấm từ SDF
+
+Hình dung ghép một cây nấm cách điệu chỉ từ ba primitive. Bước 1: một sphere làm mũ nấm. Bước 2: một capsule dựng đứng làm thân, đáy chạm mặt đất, đỉnh cắm vào gần tâm mũ. Bước 3: `smin(mũ, thân, k1)` hàn hai khối lại — thân "mọc" liền ra khỏi mũ, không có khe nối lộ liễu, vì smin đã xoá góc gấp giữa hai bề mặt. Bước 4: một torus mỏng đặt sát mặt dưới mũ, dùng subtraction khoét vào khối đã hàn để gợi hình nan nấm (gills).
+
+Thứ tự ở đây không tuỳ ý: torus phải khoét **sau khi** mũ và thân đã hàn xong, không phải khoét mũ trước rồi mới hàn thân vào. Lý do: `smin` có số hạng cộng thêm (hố lõm mềm) hoạt động trên khoảng cách hiện tại của cả hai đầu vào — nếu hàn sau khi khoét, phần "hố lõm" của smin có thể lấn ngược vào đúng rãnh vừa khoét, làm nó mờ đi hoặc gần như biến mất. Quy tắc thực dụng: hàn (`smin`) hết các khối chính trước, khoét chi tiết (subtraction) sau cùng, trên kết quả đã hàn.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+1. **Để `k` chạm 0 trong `smin`.** Công thức chia cho `k` — `k = 0` cho `0.5/0 = ±inf`, `h` thành `NaN`, lan ra cả bề mặt march qua điểm đó thành mảng đen/nhiễu. Luôn `max(k, epsilon_nhỏ)` trong code, không chỉ đặt min slider > 0 ở UI.
+2. **Quên đảo dấu khi viết subtraction.** Gõ nhầm `max(d1, d2)` thay vì `max(d1, -d2)` vẫn compile, vẫn chạy, vẫn cho hình — chỉ là hình sai (biến thành intersection). Không có lỗi biên dịch nào báo, chỉ nhìn ra khi hình không giống kỳ vọng.
+3. **Áp subtraction/intersection trước rồi mới `smin` hai khối chính lại.** Như ví dụ cây nấm ở trên, thứ tự phép toán đổi kết quả dù `min`/`max` từng cái tự thân có tính kết hợp — số hạng bù của `smin` không "biết" phần đã bị khoét trước đó, có thể lấp lại đúng chỗ vừa khoét.
+
+</Callout>
+
+## Từ đây đi đâu: normal, material và PBR
+
+Bài tiếp theo (module Shading) mới chính thức dạy cách tính normal từ gradient của SDF — demo của bài này đã dùng sẵn một `calcNormal` đơn giản chỉ để lên hình cho đẹp mắt, chưa giải thích tại sao nó đúng. Kỹ thuật material blending theo $h$ ở đây cũng sẽ quay lại ở Track 11 (PBR), khi trộn không chỉ màu mà cả roughness/metalness giữa hai vật liệu vật lý thật, và ở checkpoint ngay sau bài này khi cả một hình điêu khắc phải đọc được như một khối liền, không phải các mảnh dán lại.

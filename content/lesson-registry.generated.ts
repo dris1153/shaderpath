@@ -412,6 +412,58 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/07-procedural/voronoi-and-worley/theory.vi.mdx"),
     en: () => import("./lessons/07-procedural/voronoi-and-worley/theory.en.mdx"),
   },
+  "checkpoint-infinite-grid-world": {
+    vi: () => import("./lessons/08-raymarching/checkpoint-infinite-grid-world/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/checkpoint-infinite-grid-world/theory.en.mdx"),
+  },
+  "checkpoint-raymarched-vista": {
+    vi: () => import("./lessons/08-raymarching/checkpoint-raymarched-vista/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/checkpoint-raymarched-vista/theory.en.mdx"),
+  },
+  "checkpoint-sdf-sculpture": {
+    vi: () => import("./lessons/08-raymarching/checkpoint-sdf-sculpture/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/checkpoint-sdf-sculpture/theory.en.mdx"),
+  },
+  "domain-repetition": {
+    vi: () => import("./lessons/08-raymarching/domain-repetition/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/domain-repetition/theory.en.mdx"),
+  },
+  "fog-and-atmospheric-scattering": {
+    vi: () => import("./lessons/08-raymarching/fog-and-atmospheric-scattering/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/fog-and-atmospheric-scattering/theory.en.mdx"),
+  },
+  "raymarch-raster-depth-integration": {
+    vi: () => import("./lessons/08-raymarching/raymarch-raster-depth-integration/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/raymarch-raster-depth-integration/theory.en.mdx"),
+  },
+  "raymarched-shadows-and-ao": {
+    vi: () => import("./lessons/08-raymarching/raymarched-shadows-and-ao/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/raymarched-shadows-and-ao/theory.en.mdx"),
+  },
+  "raymarching-optimization": {
+    vi: () => import("./lessons/08-raymarching/raymarching-optimization/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/raymarching-optimization/theory.en.mdx"),
+  },
+  "sdf-boolean-ops-smooth-min": {
+    vi: () => import("./lessons/08-raymarching/sdf-boolean-ops-smooth-min/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/sdf-boolean-ops-smooth-min/theory.en.mdx"),
+  },
+  "sdf-normals-from-gradient": {
+    vi: () => import("./lessons/08-raymarching/sdf-normals-from-gradient/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/sdf-normals-from-gradient/theory.en.mdx"),
+  },
+  "sdf-primitives": {
+    vi: () => import("./lessons/08-raymarching/sdf-primitives/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/sdf-primitives/theory.en.mdx"),
+  },
+  "sphere-tracing-principle": {
+    vi: () => import("./lessons/08-raymarching/sphere-tracing-principle/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/sphere-tracing-principle/theory.en.mdx"),
+  },
+  "volumetric-rendering-basics": {
+    vi: () => import("./lessons/08-raymarching/volumetric-rendering-basics/theory.vi.mdx"),
+    en: () => import("./lessons/08-raymarching/volumetric-rendering-basics/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -495,6 +547,16 @@ export const REFERENCES_REGISTRY: Partial<
   "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/references"),
   "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/references"),
   "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/references"),
+  "domain-repetition": () => import("./lessons/08-raymarching/domain-repetition/references"),
+  "fog-and-atmospheric-scattering": () => import("./lessons/08-raymarching/fog-and-atmospheric-scattering/references"),
+  "raymarch-raster-depth-integration": () => import("./lessons/08-raymarching/raymarch-raster-depth-integration/references"),
+  "raymarched-shadows-and-ao": () => import("./lessons/08-raymarching/raymarched-shadows-and-ao/references"),
+  "raymarching-optimization": () => import("./lessons/08-raymarching/raymarching-optimization/references"),
+  "sdf-boolean-ops-smooth-min": () => import("./lessons/08-raymarching/sdf-boolean-ops-smooth-min/references"),
+  "sdf-normals-from-gradient": () => import("./lessons/08-raymarching/sdf-normals-from-gradient/references"),
+  "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/references"),
+  "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/references"),
+  "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -896,6 +958,58 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"ý-tưởng-rắc-điểm-hạt-giống-tô-theo-khoảng-cách-gần-nhất","text":"Ý tưởng: rắc điểm hạt giống, tô theo khoảng cách gần nhất","depth":2},{"id":"quét-33-ô-lân-cận-vì-sao-chỉ-nhìn-ô-của-mình-là-chưa-đủ","text":"Quét 3×3 ô lân cận: vì sao chỉ nhìn ô của mình là chưa đủ","depth":2},{"id":"f1-f2-và-hiệu-f2--f1-viền-ô-hữu-cơ","text":"F1, F2 và hiệu F2 − F1: viền ô hữu cơ","depth":2},{"id":"cell-id-tô-phẳng-từng-vùng-bằng-một-hash","text":"Cell-ID: tô phẳng từng vùng bằng một hash","depth":2},{"id":"ba-độ-đo-khoảng-cách-đổi-luật-đo-đổi-hẳn-hình-dạng-ô","text":"Ba độ đo khoảng cách: đổi luật đo, đổi hẳn hình dạng ô","depth":2},{"id":"jitter-từ-lưới-đều-tăm-tắp-đến-hỗn-loạn-hoàn-toàn","text":"Jitter: từ lưới đều tăm tắp đến hỗn loạn hoàn toàn","depth":2},{"id":"voronoi-mượt-xoá-điểm-gãy-đạo-hàm-bằng-log-sum-exp","text":"Voronoi mượt: xoá điểm gãy đạo hàm bằng log-sum-exp","depth":2},{"id":"ứng-dụng-và-chi-phí-đá-bùn-nứt-tế-bào","text":"Ứng dụng và chi phí: đá, bùn nứt, tế bào","depth":2}],
     en: [{"id":"the-idea-scatter-seed-points-shade-by-nearest-distance","text":"The Idea: Scatter Seed Points, Shade by Nearest Distance","depth":2},{"id":"the-3x3-neighbor-scan-why-your-own-cell-isnt-enough","text":"The 3x3 Neighbor Scan: Why Your Own Cell Isn't Enough","depth":2},{"id":"f1-f2-and-f2--f1-organic-cell-borders-for-free","text":"F1, F2, and F2 − F1: Organic Cell Borders for Free","depth":2},{"id":"cell-id-flat-coloring-each-region-with-a-hash","text":"Cell-ID: Flat-Coloring Each Region with a Hash","depth":2},{"id":"three-distance-metrics-change-the-ruler-change-the-cell-shape","text":"Three Distance Metrics: Change the Ruler, Change the Cell Shape","depth":2},{"id":"jitter-from-a-perfect-grid-to-full-chaos","text":"Jitter: From a Perfect Grid to Full Chaos","depth":2},{"id":"smooth-voronoi-erasing-the-derivative-kink-with-log-sum-exp","text":"Smooth Voronoi: Erasing the Derivative Kink with Log-Sum-Exp","depth":2},{"id":"applications-and-cost-stone-cracked-mud-cells","text":"Applications and Cost: Stone, Cracked Mud, Cells","depth":2}],
   },
+  "checkpoint-infinite-grid-world": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-raymarched-vista": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-sdf-sculpture": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "domain-repetition": {
+    vi: [{"id":"dựng-vô-hạn-từ-một-lặp-không-gian-truy-vấn","text":"Dựng vô hạn từ một: lặp không gian truy vấn","depth":2},{"id":"công-thức-mod-kinh-điển-q--modp--05c-c---05c","text":"Công thức mod kinh điển: q = mod(p + 0.5c, c) - 0.5c","depth":2},{"id":"lặp-theo-từng-trục-sàn-vô-hạn-chỉ-với-xz","text":"Lặp theo từng trục: sàn vô hạn chỉ với xz","depth":2},{"id":"chi-phí-o1-so-với-instancedmesh-của-track-6","text":"Chi phí O(1): so với InstancedMesh của Track 6","depth":2},{"id":"cái-bẫy-mod-nói-dối-khoảng-cách-ở-gần-biên-ô","text":"Cái bẫy: mod nói dối khoảng cách ở gần biên ô","depth":2},{"id":"sửa-hiện-đại-round-based-repetition-và-giới-hạn-hữu-hạn","text":"Sửa hiện đại: round-based repetition và giới hạn hữu hạn","depth":2},{"id":"biến-thể-theo-từng-cell-hash-ra-màuchiều-cao-riêng","text":"Biến thể theo từng cell: hash ra màu/chiều cao riêng","depth":2},{"id":"lặp-gương-abs-một-dòng","text":"Lặp gương: abs() một dòng","depth":2}],
+    en: [{"id":"building-infinity-from-one-repeating-the-query-space","text":"Building Infinity from One: Repeating the Query Space","depth":2},{"id":"the-classic-mod-formula-q--modp--05c-c---05c","text":"The Classic mod Formula: q = mod(p + 0.5c, c) - 0.5c","depth":2},{"id":"repeating-per-axis-an-infinite-floor-with-just-xz","text":"Repeating Per Axis: An Infinite Floor with Just xz","depth":2},{"id":"o1-cost-vs-track-6s-instancedmesh","text":"O(1) Cost: vs. Track 6's InstancedMesh","depth":2},{"id":"the-catch-mod-lies-about-distance-near-cell-borders","text":"The Catch: mod Lies About Distance Near Cell Borders","depth":2},{"id":"the-modern-fix-round-based-repetition-and-finite-bounds","text":"The Modern Fix: Round-Based Repetition and Finite Bounds","depth":2},{"id":"per-cell-variation-hashing-a-unique-colorheight","text":"Per-Cell Variation: Hashing a Unique Color/Height","depth":2},{"id":"mirrored-repetition-abs-in-brief","text":"Mirrored Repetition: abs() in Brief","depth":2}],
+  },
+  "fog-and-atmospheric-scattering": {
+    vi: [{"id":"fog-là-một-phép-trộn-màu-có-gốc-vật-lý-beer-lambert","text":"Fog là một phép trộn màu có gốc vật lý: Beer-Lambert","depth":2},{"id":"height-fog-mật-độ-giảm-theo-độ-cao--tích-phân-có-dạng-đóng","text":"Height fog: mật độ giảm theo độ cao — tích phân có dạng đóng","depth":2},{"id":"preetham-flavored-sky-tô-bầu-trời-rẻ-mà-không-cần-rayleighmie-thật","text":"Preetham-flavored sky: tô bầu trời rẻ mà không cần Rayleigh/Mie thật","depth":2},{"id":"inscattering-màu-fog-ấm-lên-khi-nhìn-về-phía-mặt-trời","text":"Inscattering: màu fog ấm lên khi nhìn về phía mặt trời","depth":2},{"id":"áp-dụng-sau-shading-dùng-đúng-t-đã-march-và-tinh-chỉnh-mật-độ","text":"Áp dụng SAU shading, dùng đúng t đã march, và tinh chỉnh mật độ","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"fog-is-a-physically-motivated-color-blend-beer-lambert","text":"Fog Is a Physically-Motivated Color Blend: Beer-Lambert","depth":2},{"id":"height-fog-density-falling-with-altitude--a-closed-form-integral","text":"Height Fog: Density Falling With Altitude — A Closed-Form Integral","depth":2},{"id":"preetham-flavored-sky-a-cheap-gradient-instead-of-real-rayleighmie","text":"Preetham-Flavored Sky: A Cheap Gradient Instead of Real Rayleigh/Mie","depth":2},{"id":"inscattering-fog-color-warming-up-toward-the-sun","text":"Inscattering: Fog Color Warming Up Toward the Sun","depth":2},{"id":"applying-fog-after-shading-using-the-real-marched-t-and-tuning-density","text":"Applying Fog AFTER Shading, Using the Real Marched t, and Tuning Density","depth":2},{"id":"where-this-foundation-leads","text":"Where This Foundation Leads","depth":2}],
+  },
+  "raymarch-raster-depth-integration": {
+    vi: [{"id":"vấn-đề-hai-thế-giới-mesh-rasterized-và-raymarch-không-biết-gì-về-nhau","text":"Vấn đề hai thế giới: mesh rasterized và raymarch không biết gì về nhau","depth":2},{"id":"render-mesh-vào-một-render-target-có-depth-texture","text":"Render mesh vào một render target có depth texture","depth":2},{"id":"từ-depth-phi-tuyến-về-khoảng-cách-march-đảo-công-thức-track-1","text":"Từ depth phi tuyến về khoảng cách march: đảo công thức Track 1","depth":2},{"id":"dùng-depth-đó-làm-giới-hạn-march-sdf-ẩn-sau-mesh-dừng-đúng","text":"Dùng depth đó làm giới hạn march: SDF ẩn sau mesh dừng đúng","depth":2},{"id":"chiều-ngược-lại-ghi-glfragdepth-để-mesh-ẩn-sau-sdf","text":"Chiều ngược lại: ghi glFragDepth để mesh ẩn sau SDF","depth":2},{"id":"kiến-trúc-demo-một-scene-hai-lần-render-depth-test-thật","text":"Kiến trúc demo: một scene, hai lần render, depth test thật","depth":2},{"id":"khi-nào-kỹ-thuật-này-đáng-dùng","text":"Khi nào kỹ thuật này đáng dùng","depth":2}],
+    en: [{"id":"the-two-worlds-problem-a-rasterized-mesh-and-a-raymarch-know-nothing-of-each-other","text":"The Two-Worlds Problem: a Rasterized Mesh and a Raymarch Know Nothing of Each Other","depth":2},{"id":"rendering-the-mesh-into-a-render-target-with-a-depth-texture","text":"Rendering the Mesh into a Render Target with a Depth Texture","depth":2},{"id":"from-non-linear-depth-back-to-a-marching-distance-inverting-track-1s-formula","text":"From Non-Linear Depth Back to a Marching Distance: Inverting Track 1's Formula","depth":2},{"id":"using-that-depth-as-a-march-bound-sdf-hidden-behind-the-mesh-stops-correctly","text":"Using That Depth as a March Bound: SDF Hidden Behind the Mesh Stops Correctly","depth":2},{"id":"the-other-direction-writing-glfragdepth-so-the-mesh-gets-hidden-by-the-sdf","text":"The Other Direction: Writing glFragDepth So the Mesh Gets Hidden by the SDF","depth":2},{"id":"the-demos-architecture-one-scene-two-renders-a-real-depth-test","text":"The Demo's Architecture: One Scene, Two Renders, a Real Depth Test","depth":2},{"id":"when-this-technique-is-worth-using","text":"When This Technique Is Worth Using","depth":2}],
+  },
+  "raymarched-shadows-and-ao": {
+    vi: [{"id":"bóng-bằng-cách-march-về-phía-nguồn-sáng","text":"Bóng bằng cách march về phía nguồn sáng","depth":2},{"id":"bóng-mềm-theo-dõi-tỉ-lệ-nửa-tối-dọc-tia-sáng","text":"Bóng mềm: theo dõi tỉ lệ nửa tối dọc tia sáng","depth":2},{"id":"ambient-occlusion-lấy-mẫu-sdf-dọc-theo-normal","text":"Ambient occlusion: lấy mẫu SDF dọc theo normal","depth":2},{"id":"không-tốn-shadow-map-không-có-vấn-đề-resolution-hay-bias","text":"Không tốn shadow map: không có vấn đề resolution hay bias","depth":2},{"id":"kết-hợp-màu-ambientao-cộng-diffuseshadow","text":"Kết hợp màu: ambient·AO cộng diffuse·shadow","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"shadows-by-marching-toward-the-light","text":"Shadows by Marching Toward the Light","depth":2},{"id":"soft-shadows-tracking-the-penumbra-ratio-along-the-ray","text":"Soft Shadows: Tracking the Penumbra Ratio Along the Ray","depth":2},{"id":"ambient-occlusion-sampling-the-sdf-along-the-normal","text":"Ambient Occlusion: Sampling the SDF Along the Normal","depth":2},{"id":"no-shadow-map-needed-no-resolution-or-bias-problems","text":"No Shadow Map Needed: No Resolution or Bias Problems","depth":2},{"id":"combining-ambientao-plus-diffuseshadow","text":"Combining: Ambient·AO Plus Diffuse·Shadow","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "raymarching-optimization": {
+    vi: [{"id":"vòng-lặp-raymarch-tiêu-thời-gian-ở-đâu","text":"Vòng lặp raymarch tiêu thời gian ở đâu","depth":2},{"id":"bounding-volume-bỏ-qua-sớm-bằng-ray-box-slab-test","text":"Bounding volume: bỏ qua sớm bằng ray-box slab test","depth":2},{"id":"adaptive-stepping-nới-bước-và-biết-khi-nào-phải-lùi-lại","text":"Adaptive stepping: nới bước và biết khi nào phải lùi lại","depth":2},{"id":"epsilon-co-giãn-theo-khoảng-cách","text":"Epsilon co giãn theo khoảng cách","depth":2},{"id":"lod-rẻ-hơn-theo-khoảng-cách-và-ngân-sách-bước","text":"LOD rẻ hơn theo khoảng cách, và ngân sách bước","depth":2},{"id":"đo-đạc-trung-thực-với-con-số","text":"Đo đạc: trung thực với con số","depth":2}],
+    en: [{"id":"where-a-raymarch-loop-spends-its-time","text":"Where a Raymarch Loop Spends Its Time","depth":2},{"id":"bounding-volumes-early-out-with-a-ray-box-slab-test","text":"Bounding Volumes: Early-Out with a Ray-Box Slab Test","depth":2},{"id":"adaptive-stepping-widening-the-step-knowing-when-to-back-off","text":"Adaptive Stepping: Widening the Step, Knowing When to Back Off","depth":2},{"id":"epsilon-that-scales-with-distance","text":"Epsilon That Scales With Distance","depth":2},{"id":"cheaper-lod-by-distance-and-a-step-budget","text":"Cheaper LOD by Distance, and a Step Budget","depth":2},{"id":"measuring-being-honest-about-the-numbers","text":"Measuring: Being Honest About the Numbers","depth":2}],
+  },
+  "sdf-boolean-ops-smooth-min": {
+    vi: [{"id":"union-intersection-ghép-sdf-bằng-minmax","text":"Union, intersection: ghép SDF bằng min/max","depth":2},{"id":"vì-sao-thứ-tự-tham-số-của-subtraction-quan-trọng","text":"Vì sao thứ tự tham số của subtraction quan trọng","depth":2},{"id":"union-chính-xác-intersectionsubtraction-chỉ-là-biên-trên","text":"Union chính xác, intersection/subtraction chỉ là biên trên","depth":2},{"id":"smooth-min-pha-trộn-như-đất-sét-không-cắt-cứng","text":"Smooth min: pha trộn như đất sét, không cắt cứng","depth":2},{"id":"đọc-công-thức-h-form-của-quilez","text":"Đọc công thức h-form của Quilez","depth":3},{"id":"biến-thể-exponential-và-chọn-k","text":"Biến thể exponential và chọn k","depth":3},{"id":"smooth-subtraction-smooth-intersection-đảo-dấu-từ-smooth-min","text":"Smooth subtraction, smooth intersection: đảo dấu từ smooth min","depth":2},{"id":"mang-màu-đi-theo-khoảng-cách-material-blending","text":"Mang màu đi theo khoảng cách: material blending","depth":2},{"id":"dựng-hình-từng-bước-một-cây-nấm-từ-sdf","text":"Dựng hình từng bước: một cây nấm từ SDF","depth":2},{"id":"từ-đây-đi-đâu-normal-material-và-pbr","text":"Từ đây đi đâu: normal, material và PBR","depth":2}],
+    en: [{"id":"union-intersection-combining-sdfs-with-minmax","text":"Union, Intersection: Combining SDFs with min/max","depth":2},{"id":"why-subtractions-argument-order-matters","text":"Why Subtraction's Argument Order Matters","depth":2},{"id":"union-is-exact-intersectionsubtraction-are-only-an-upper-bound","text":"Union Is Exact, Intersection/Subtraction Are Only an Upper Bound","depth":2},{"id":"smooth-min-blending-like-clay-not-a-hard-cut","text":"Smooth Min: Blending Like Clay, Not a Hard Cut","depth":2},{"id":"reading-quilezs-h-form-formula","text":"Reading Quilez's h-form Formula","depth":3},{"id":"the-exponential-variant-and-choosing-k","text":"The Exponential Variant, and Choosing k","depth":3},{"id":"smooth-subtraction-and-smooth-intersection-from-smooth-min","text":"Smooth Subtraction and Smooth Intersection from Smooth Min","depth":2},{"id":"carrying-color-with-distance-material-blending","text":"Carrying Color with Distance: Material Blending","depth":2},{"id":"building-a-compound-shape-step-by-step-a-mushroom-from-sdfs","text":"Building a Compound Shape Step by Step: A Mushroom from SDFs","depth":2},{"id":"where-this-leads-normals-material-and-pbr","text":"Where This Leads: Normals, Material, and PBR","depth":2}],
+  },
+  "sdf-normals-from-gradient": {
+    vi: [{"id":"normal-chính-là-gradient-của-sdf","text":"Normal chính là gradient của SDF","depth":2},{"id":"central-difference-sáu-lần-gọi-hàm-khoảng-cách","text":"Central difference: sáu lần gọi hàm khoảng cách","depth":2},{"id":"kỹ-thuật-tetrahedron-bốn-mẫu-cùng-bậc-chính-xác","text":"Kỹ thuật tetrahedron: bốn mẫu, cùng bậc chính xác","depth":2},{"id":"chọn-epsilon-bo-tròn-cạnh-sắc-hay-vỡ-hạt-vì-nhiễu-số-thực","text":"Chọn epsilon: bo tròn cạnh sắc hay vỡ hạt vì nhiễu số thực","depth":2},{"id":"có-normal-rồi-dựng-rig-chiếu-sáng-ba-đèn","text":"Có normal rồi: dựng rig chiếu sáng ba đèn","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-normal-is-the-gradient-of-the-sdf","text":"The Normal IS the Gradient of the SDF","depth":2},{"id":"central-differences-six-calls-to-the-distance-function","text":"Central Differences: Six Calls to the Distance Function","depth":2},{"id":"the-tetrahedron-technique-four-samples-same-order-of-accuracy","text":"The Tetrahedron Technique: Four Samples, Same Order of Accuracy","depth":2},{"id":"choosing-epsilon-rounding-sharp-edges-vs-breaking-up-in-float-noise","text":"Choosing Epsilon: Rounding Sharp Edges vs. Breaking Up in Float Noise","depth":2},{"id":"with-normals-unlocked-building-the-three-light-rig","text":"With Normals Unlocked: Building the Three-Light Rig","depth":2},{"id":"where-this-leads","text":"Where This Leads","depth":2}],
+  },
+  "sdf-primitives": {
+    vi: [{"id":"bốn-primitive-một-chữ-ký-hàm-chung","text":"Bốn primitive, một chữ ký hàm chung","depth":2},{"id":"sphere-khoảng-cách-đơn-giản-nhất","text":"Sphere: khoảng cách đơn giản nhất","depth":2},{"id":"box-phép-decompose-q--absp---b","text":"Box: phép decompose q = abs(p) - b","depth":2},{"id":"torus-một-đường-tròn-được-thổi-phồng-theo-bán-kính-ống","text":"Torus: một đường tròn được \"thổi phồng\" theo bán kính ống","depth":2},{"id":"capsule-khoảng-cách-đến-một-đoạn-thẳng-bị-kẹp","text":"Capsule: khoảng cách đến một đoạn thẳng bị kẹp","depth":2},{"id":"kiểm-chứng-một-sdf-raymarch-hoặc-contour-mặt-cắt","text":"Kiểm chứng một SDF: raymarch hoặc contour mặt cắt","depth":2},{"id":"biến-đổi-primitive-xoaydịch-điểm-truy-vấn-không-xoaydịch-hình","text":"Biến đổi primitive: xoay/dịch điểm truy vấn, không xoay/dịch hình","depth":2},{"id":"exact-sdf-vs-bound-sdf-march-vẫn-đúng-chỉ-chậm-hơn","text":"Exact SDF vs bound SDF: march vẫn đúng, chỉ chậm hơn","depth":2}],
+    en: [{"id":"four-primitives-one-shared-function-signature","text":"Four Primitives, One Shared Function Signature","depth":2},{"id":"sphere-the-simplest-distance-there-is","text":"Sphere: The Simplest Distance There Is","depth":2},{"id":"box-the-q--absp---b-decomposition","text":"Box: The q = abs(p) - b Decomposition","depth":2},{"id":"torus-a-circle-inflated-by-a-tube-radius","text":"Torus: A Circle \"Inflated\" by a Tube Radius","depth":2},{"id":"capsule-distance-to-a-clamped-line-segment","text":"Capsule: Distance to a Clamped Line Segment","depth":2},{"id":"verifying-an-sdf-raymarch-it-or-contour-a-cross-section","text":"Verifying an SDF: Raymarch It or Contour a Cross-Section","depth":2},{"id":"transforming-a-primitive-rotatetranslate-the-query-point-not-the-shape","text":"Transforming a Primitive: Rotate/Translate the Query Point, Not the Shape","depth":2},{"id":"exact-sdfs-vs-bound-sdfs-still-marchable-just-slower","text":"Exact SDFs vs. Bound SDFs: Still Marchable, Just Slower","depth":2}],
+  },
+  "sphere-tracing-principle": {
+    vi: [{"id":"không-cần-hình-học-cảnh-là-một-hàm-khoảng-cách","text":"Không cần hình học: cảnh là một hàm khoảng cách","depth":2},{"id":"vì-sao-gọi-là-sphere-tracing-bước-an-toàn-tối-đa","text":"Vì sao gọi là \"sphere\" tracing: bước an toàn tối đa","depth":2},{"id":"dựng-tia-từ-camera-gốc-hướng-fov-và-aspect","text":"Dựng tia từ camera: gốc, hướng, fov và aspect","depth":2},{"id":"vòng-lặp-march-bước-tới-kiểm-tra-hit-kiểm-tra-miss","text":"Vòng lặp march: bước tới, kiểm tra hit, kiểm tra miss","depth":2},{"id":"maxsteps-vì-sao-tia-lướt-cạnh-grazing-làm-thủng-silhouette","text":"maxSteps: vì sao tia lướt cạnh (grazing) làm thủng silhouette","depth":2},{"id":"epsilon-quá-lớn-thì-lồi-lõm-quá-nhỏ-thì-banding","text":"epsilon: quá lớn thì lồi lõm, quá nhỏ thì banding","depth":2},{"id":"debug-bằng-heatmap-nhìn-thấy-chi-phí-từng-pixel","text":"Debug bằng heatmap: nhìn thấy chi phí từng pixel","depth":2}],
+    en: [{"id":"no-geometry-required-the-scene-is-a-distance-function","text":"No Geometry Required: The Scene Is a Distance Function","depth":2},{"id":"why-sphere-tracing-the-maximum-safe-step","text":"Why \"Sphere\" Tracing: The Maximum Safe Step","depth":2},{"id":"building-a-ray-from-the-camera-origin-direction-fov-and-aspect","text":"Building a Ray from the Camera: Origin, Direction, FOV and Aspect","depth":2},{"id":"the-march-loop-step-check-for-a-hit-check-for-a-miss","text":"The March Loop: Step, Check for a Hit, Check for a Miss","depth":2},{"id":"maxsteps-why-grazing-rays-punch-holes-in-silhouettes","text":"maxSteps: Why Grazing Rays Punch Holes in Silhouettes","depth":2},{"id":"epsilon-too-big-is-lumpy-too-small-is-banding","text":"epsilon: Too Big Is Lumpy, Too Small Is Banding","depth":2},{"id":"debugging-with-a-heatmap-seeing-the-cost-per-pixel","text":"Debugging with a Heatmap: Seeing the Cost Per Pixel","depth":2}],
+  },
+  "volumetric-rendering-basics": {
+    vi: [{"id":"bề-mặt-dừng-lại-thể-tích-thì-không-hai-kiểu-raymarch","text":"Bề mặt dừng lại, thể tích thì không: hai kiểu raymarch","depth":2},{"id":"vòng-lặp-tích-luỹ-transmittance-emission-và-front-to-back-compositing","text":"Vòng lặp tích luỹ: transmittance, emission, và front-to-back compositing","depth":2},{"id":"density-field-một-quả-mây-dựng-từ-fbm-noise","text":"Density field: một quả mây dựng từ FBM noise","depth":2},{"id":"ánh-sáng-xuyên-mây-đạo-hàm-rẻ-theo-hướng-mặt-trời","text":"Ánh sáng xuyên mây: đạo hàm rẻ theo hướng mặt trời","depth":2},{"id":"số-bước-banding-và-jitter-che-băng","text":"Số bước, banding, và jitter che băng","depth":2},{"id":"chi-phí-thật-vì-sao-real-time-cần-buffer-thấp-res-và-mẹo-temporal","text":"Chi phí thật: vì sao real-time cần buffer thấp-res và mẹo temporal","depth":2}],
+    en: [{"id":"surfaces-stop-volumes-dont-two-kinds-of-raymarching","text":"Surfaces Stop, Volumes Don't: Two Kinds of Raymarching","depth":2},{"id":"the-accumulation-loop-transmittance-emission-front-to-back-compositing","text":"The Accumulation Loop: Transmittance, Emission, Front-to-Back Compositing","depth":2},{"id":"density-field-a-cloud-built-from-fbm-noise","text":"Density Field: A Cloud Built From FBM Noise","depth":2},{"id":"light-through-the-cloud-a-cheap-derivative-toward-the-sun","text":"Light Through the Cloud: A Cheap Derivative Toward the Sun","depth":2},{"id":"step-count-banding-and-jitter-to-hide-it","text":"Step Count, Banding, and Jitter to Hide It","depth":2},{"id":"the-real-cost-why-real-time-needs-low-res-buffers-and-temporal-tricks","text":"The Real Cost: Why Real-Time Needs Low-Res Buffers and Temporal Tricks","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -977,6 +1091,16 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/demo"),
   "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/demo"),
   "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/demo"),
+  "domain-repetition": () => import("./lessons/08-raymarching/domain-repetition/demo"),
+  "fog-and-atmospheric-scattering": () => import("./lessons/08-raymarching/fog-and-atmospheric-scattering/demo"),
+  "raymarch-raster-depth-integration": () => import("./lessons/08-raymarching/raymarch-raster-depth-integration/demo"),
+  "raymarched-shadows-and-ao": () => import("./lessons/08-raymarching/raymarched-shadows-and-ao/demo"),
+  "raymarching-optimization": () => import("./lessons/08-raymarching/raymarching-optimization/demo"),
+  "sdf-boolean-ops-smooth-min": () => import("./lessons/08-raymarching/sdf-boolean-ops-smooth-min/demo"),
+  "sdf-normals-from-gradient": () => import("./lessons/08-raymarching/sdf-normals-from-gradient/demo"),
+  "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/demo"),
+  "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/demo"),
+  "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -1083,4 +1207,17 @@ export const EXERCISES_REGISTRY: Partial<
   "perlin-and-simplex-noise": () => import("./lessons/07-procedural/perlin-and-simplex-noise/exercises"),
   "value-and-gradient-noise": () => import("./lessons/07-procedural/value-and-gradient-noise/exercises"),
   "voronoi-and-worley": () => import("./lessons/07-procedural/voronoi-and-worley/exercises"),
+  "checkpoint-infinite-grid-world": () => import("./lessons/08-raymarching/checkpoint-infinite-grid-world/exercises"),
+  "checkpoint-raymarched-vista": () => import("./lessons/08-raymarching/checkpoint-raymarched-vista/exercises"),
+  "checkpoint-sdf-sculpture": () => import("./lessons/08-raymarching/checkpoint-sdf-sculpture/exercises"),
+  "domain-repetition": () => import("./lessons/08-raymarching/domain-repetition/exercises"),
+  "fog-and-atmospheric-scattering": () => import("./lessons/08-raymarching/fog-and-atmospheric-scattering/exercises"),
+  "raymarch-raster-depth-integration": () => import("./lessons/08-raymarching/raymarch-raster-depth-integration/exercises"),
+  "raymarched-shadows-and-ao": () => import("./lessons/08-raymarching/raymarched-shadows-and-ao/exercises"),
+  "raymarching-optimization": () => import("./lessons/08-raymarching/raymarching-optimization/exercises"),
+  "sdf-boolean-ops-smooth-min": () => import("./lessons/08-raymarching/sdf-boolean-ops-smooth-min/exercises"),
+  "sdf-normals-from-gradient": () => import("./lessons/08-raymarching/sdf-normals-from-gradient/exercises"),
+  "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/exercises"),
+  "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/exercises"),
+  "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/exercises"),
 };

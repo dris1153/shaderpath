@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build closes Track 8's "Shading the Field" module: build one complete infinite-repeating world that layers all four shading techniques the module covered — gradient normals, soft shadows, ambient occlusion and domain repetition — into a single raymarched scene that runs smoothly.
+
+## Requirements
+
+The fragment shader raymarches a field of pillars repeated infinitely along the two ground axes (xz) with round-based domain repetition, each pillar standing on an equally infinite ground plane; every pillar's height varies slightly from a hash of its cell-id so the field doesn't read as one row of identical columns; normals come from the tetrahedron technique; shadows are soft, cast by a low sun via the penumbra-ratio technique; 5-tap ambient occlusion darkens where pillars meet the ground; a two-tone material varies by pillar height; the camera drifts slowly over time (`ro` animated by `uTime`) so the infinity actually reads as infinite. Full details live in the Exercises section below.
+
+## Structure Hint
+
+Four TODOs, in order, in the starter code: (1) round-based domain repetition on `p.xz`, storing the cell-id BEFORE folding so height hashing stays per-cell; (2) normals from four `map()` calls using the tetrahedron technique; (3) soft shadows — march toward the sun, starting from a point nudged along the normal to dodge self-shadowing; (4) AO — sample `map()` along the normal at a few growing distances, subtracting the real distance to measure how "boxed in" a point is.
+
+## What "Done" Looks Like
+
+Check your result against the exercises checklist before opening the solution — pay special attention to the seams between grid cells (no visible join lines) and frame rate as the camera drifts across the whole pillar field.

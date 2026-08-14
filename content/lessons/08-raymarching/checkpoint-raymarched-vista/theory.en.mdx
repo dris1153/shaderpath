@@ -1,0 +1,15 @@
+## Goal
+
+The mini-build that closes out the entire Raymarching track: build a real-time terrain vista combining every technique the track covered — sphere tracing, gradient-based normals, soft shadows, atmospheric fog, and march optimization (scaled epsilon, bounded march intervals) — into one complete scene, not just separately-understood techniques.
+
+## Requirements
+
+A heightfield built from FBM, marched with the terrain-marching technique (growing steps then a binary-search refine — NOT sphere tracing, since a heightfield has no real SDF); a low sun casting clearly directional soft shadows across ridges; coloring driven by height AND slope together (snow on flat highlands, rock on steep slopes, grass in the lowlands); exponential fog scaled by march distance, warming toward the sun; a cheap sky with sun glow; a bounded march interval — the sky above the terrain's max height skips marching entirely, no wasted work; a slow camera flight through the scene. Full details live in the Exercises section below.
+
+## Structure Hint
+
+The starter code already provides the full library (`fbm`, `terrainHeight`, `raymarchTerrain`, `terrainNormal`, `terrainShadow`), fully working — your job is to WIRE it together in the right order inside `main()`, across 6 TODOs: bound the march interval, call the march, compute the normal, compute the shadow, color by height+slope, then fog. Order matters here — each later step reads the previous one's result.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — pay special attention to the mountain silhouette staying hole-free (a sign the march step is growing too fast) and snow sticking only to flat highlands, never bleeding onto steep slopes.

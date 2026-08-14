@@ -1,0 +1,64 @@
+## Surfaces Stop, Volumes Don't: Two Kinds of Raymarching
+
+Surface raymarching (everything in this track so far) marches along a ray by exactly the safe distance an SDF returns, then STOPS the instant $f(p)$ drops below an epsilon threshold — that's the moment the ray has hit a REAL surface, with a clean inside/outside boundary. There's no "half a hit": a point is either inside a solid ($f < 0$), outside ($f > 0$), or right on the surface ($f \approx 0$).
+
+Volumes (clouds, smoke, thick fog, frosted glass) don't have that kind of clean boundary — matter density varies CONTINUOUSLY through a region of space, thinning toward 0 at the edges without ever presenting a crisp "$f=0$" surface to stop at. So a volumetric march does NOT use an SDF's safe distance to step — it marches in FIXED steps through a bounding region (say, a sphere or box wrapping the cloud), sampling density at EVERY step regardless of whether that density is high or low, then ACCUMULATING — it doesn't "search for a stopping point" the way sphere tracing does. The loop always runs its full step budget, unless early exit kicks in (more on that below).
+
+## The Accumulation Loop: Transmittance, Emission, Front-to-Back Compositing
+
+Each march step crossing a "slab" of matter with thickness $\Delta s$ at local density $\rho$ contributes two things: it EMITS its own bit of color — white for a cloud scattering sunlight through it, red for smoke lit by fire inside it; and it ABSORBS part of the light coming from anything FARTHER away (behind it, from the camera's point of view). Folding the whole march into an update rule for two running variables — $T$ (accumulated transmittance, starting at 1) and $C$ (accumulated color, starting at 0) — gives, in EXACTLY this order:
+
+$$
+C \leftarrow C + T\,\rho\,\Delta s\,L_e, \qquad T \leftarrow T\, e^{-\rho\,\Delta s}
+$$
+
+This order isn't arbitrary: $L_e$ (the color emitted at the current step) has to be added BEFORE $T$ gets multiplied by this step's own attenuation factor — because at that point $T$ already correctly represents how much light survived from every step BEFORE it (closer to the camera) to reach here, while the light just emitted at the current step hasn't been blocked by that same step yet (a point doesn't absorb its own emitted light). Only after adding does $T$ get updated, to prepare for the next step — farther from the camera, needing further attenuation.
+
+$T$ decreases monotonically at every step (it never climbs back up) — once $T$ is small enough (say, $< 0.01$), whatever volume remains farther along the ray can no longer contribute anything visible: exiting the loop early (early exit) saves exactly the steps that would otherwise be wasted.
+
+## Density Field: A Cloud Built From FBM Noise
+
+The cheapest "cloud" you can build: take a SOFT spherical mask (falloff fading from center to edge via `smoothstep`, not a hard cutoff) multiplied by FBM noise (Track 7) to break the perfect sphere into puffy clumps, then subtract a threshold to carve the thin parts into gaps instead of a solid blob:
+
+$$
+\rho(p) = \max\big(0,\ \text{falloff}(\|p-c\|)\cdot \text{fbm}(p) - \tau\big)
+$$
+
+where $c$ is the cloud's center and $\tau$ is a threshold — a larger $\tau$ makes the cloud emptier and more jagged (more places where density gets subtracted down to 0); a smaller $\tau$ makes it denser and closer to the original round mask. This is the exact same technique as the Track 7 FBM lesson, just used differently: there, FBM colors a flat surface; here, FBM defines the DENSITY at every point in a 3D region — the same noise function, put to a completely different use.
+
+The playground below swaps in a cheap 2D noise (a sum of a couple `sin()`s) instead of real FBM to keep the snippet short — edit the threshold directly to see falloff × noise carve the cloud into sharper clumps or fade it back out:
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - 0.5) * 4.0;\n  float falloff = 1.0 - smoothstep(0.0, 1.3, length(p));\n\n  float n = sin(p.x * 2.0 + uTime) * 0.25 + sin(p.y * 3.1 - uTime * 0.7) * 0.25 + 0.5;\n  float density = max(falloff * n - 0.25, 0.0);\n\n  vec3 bg = vec3(0.05, 0.06, 0.1);\n  vec3 cloud = vec3(0.9, 0.9, 0.95);\n  vec3 color = mix(bg, cloud, clamp(density * 2.0, 0.0, 1.0));\n\n  fragColor = vec4(color, 1.0);\n}\n"} />
+
+## Light Through the Cloud: A Cheap Derivative Toward the Sun
+
+To get a "silver lining" (a bright rim on the side facing the sun) and darker shading in the thick parts, you need to know: from a point INSIDE the cloud, how much matter still stands between it and the sun? Doing this properly means marching a full secondary ray from every sample point toward the sun — but that's a loop NESTED inside the main loop, with cost multiplying accordingly.
+
+A much cheaper approximation: take 1–2 density samples along the sun direction (not a full march), sum them into a rough "optical thickness," then attenuate the emitted color by an `exp()` of that sum:
+
+```glsl
+float thickness = density(p + sunDir * s1) + density(p + sunDir * s2);
+vec3 emitted = mix(shadowColor, litColor, exp(-thickness * k));
+```
+
+This is ONLY a 1-2-tap derivative, not a real light march — and honestly, real scattering inside a cloud runs FAR DEEPER than this: light bounces around many times inside the cloud (multiple scattering) before escaping, which is why a real cloud's edge still glows softly even on the side facing AWAY from the sun — an effect this simple 1-2-tap trick completely ignores. Production renderers (Frostbite, Disney) use far more elaborate multiple-scattering approximations; here, 1-2 taps is a "convincing enough" starting point for a real-time demo.
+
+## Step Count, Banding, and Jitter to Hide It
+
+A fixed step size means the sampling resolution along the ray's density is bounded by the STEP COUNT: too few steps miss fast density variation, producing visible bands (banding) that read as stacked thin layers rather than one continuous cloud — the same look as seeing discrete CT-scan slices instead of a continuous volume. More steps smooth this out, but cost grows LINEARLY with step count.
+
+A cheap trick to "hide" banding WITHOUT adding steps: offset each ray's (each pixel's) march starting point by a small random amount within $[0, \Delta s)$ — using a hash of the pixel coordinate, or better, blue noise. Banding exists because neighboring pixels' step BOUNDARIES line up into a crisp edge; jitter breaks that alignment, turning a crisp edge into random grain — the human eye forgives noise far more readily than a sharp line, even though the total sample COUNT hasn't changed at all.
+
+## The Real Cost: Why Real-Time Needs Low-Res Buffers and Temporal Tricks
+
+Multiplying the numbers straight out (an estimate): 64 march steps, each calling a 4-octave FBM, each octave one noise sample — that's already roughly 256 noise evaluations for a SINGLE pixel. At 1080p (~2 million pixels), one frame needs on the order of HUNDREDS OF MILLIONS of noise evaluations for just one cloud, before counting the rest of the scene. This is why real-time volumetric rendering almost never runs at full resolution, full rate: the standard production technique is rendering the volume into a LOW-RESOLUTION buffer (often 1/4 or 1/16 the pixel count), then upsampling/compositing it onto the full-res scene (Track 10 covers compositing a secondary buffer onto the main scene in depth) — combined with TEMPORAL tricks: marching only a small fraction of rays each frame, reprojecting the previous frame's result for the rest, spreading the cost across many frames instead of paying it all in one (Track 12 places this technique in the context of an overall performance budget). This lesson's volumetric march runs full-res for one cloud precisely because that cloud IS the entire demo scene — a real scene with dozens of other systems competing for GPU budget doesn't get that luxury.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when wiring up a volumetric march:
+
+1. **Confusing a volumetric march with surface raymarching.** Stopping the instant density is first greater than 0 (exactly like sphere tracing stopping at $f < \epsilon$) instead of marching the whole bounding region and ACCUMULATING — this shears the cloud down to a thin shell stuck at the nearest edge to the camera, losing any sense of a volume that thickens toward its interior.
+2. **Adding $L_e$ AFTER updating that same step's $T$** (swapping the two update lines from the accumulation section) — every layer of cloud blocks part of its own emitted light before it can contribute to $C$, making the cloud look unnaturally dim and flat no matter how high the density is set.
+3. **Setting the early-exit threshold too high** (say, $T < 0.5$) thinking it's an optimization — stopping the march while 50% of the light could still pass through cuts off unmarched volume midway, visibly distorting the cloud's silhouette on its far side.
+
+</Callout>

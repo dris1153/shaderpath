@@ -1,0 +1,81 @@
+## Fog Is a Physically-Motivated Color Blend: Beer-Lambert
+
+Fog in a raymarched scene isn't an arbitrary effect bolted on for looks — it models a real physical process: light traveling through a medium full of suspended particles (water vapor, dust, smoke) gets absorbed and scattered along the way, so the farther an object sits from the camera, the less of its own light survives to the lens, and the more the atmosphere's own light leaks in to fill the gap. What you actually see is a blend between the shaded surface color and an atmosphere color, at a ratio that depends on distance.
+
+The question is: how does that ratio grow with distance? The most common wrong intuition is "every extra meter blocks a fixed AMOUNT of light" (linear: `fogAmount = density * t`) — wrong, because a participating medium absorbs probabilistically: every thin slab blocks a fixed PERCENTAGE of whatever light is still left, not a fixed absolute amount. That's the Beer-Lambert law, expressed through transmittance $T$ — the fraction of light that survives crossing a distance $t$ through a medium with density (extinction coefficient) $\rho$:
+
+$$
+T(t) = e^{-\rho t}
+$$
+
+Because every meter multiplies the remainder by the same factor $e^{-\rho}$ (rather than subtracting a fixed amount), $T$ falls fast at first and then slows down, never quite touching 0 — matching intuition: no matter how thick the fog, there's no distance where visibility is truly exactly zero, only asymptotically close. From $T$, the final color is a linear blend by $1 - T$ (the fraction of light that's LOST, replaced by the atmosphere color):
+
+```glsl
+float T = exp(-density * t);
+vec3 color = mix(surfaceColor, fogColor, 1.0 - T);
+```
+
+That's the entire base fog formula — nothing more mysterious than one `exp()` and one `mix()`.
+
+## Height Fog: Density Falling With Altitude — A Closed-Form Integral
+
+Real fog isn't uniform with height: water vapor and dust pool thick near the ground and thin out with altitude, the way a morning valley has dense fog right at ground level under a clear sky above. Model this with a height-dependent density $y$ as an exponential:
+
+$$
+\rho(y) = a\, e^{-by}
+$$
+
+where $a$ is the density at $y = 0$ (ground level) and $b$ controls how fast it thins with altitude — a large $b$ means a thin fog layer hugging the ground, a small $b$ means a thick fog layer stretching high. The trouble is the earlier fog formula uses a SINGLE constant $\rho$ along the whole ray — with height fog, $\rho$ changes at every point along the ray, so you need to INTEGRATE $\rho$ along the marched path instead of simply multiplying by $t$. Fortunately, integrating an exponential along a straight ray has a closed form — no numerical loop required:
+
+$$
+F(t) = \frac{a}{b}\, e^{-b\,y_0} \cdot \frac{1 - e^{-b\,t\,d_y}}{d_y}
+$$
+
+where $y_0$ is the ray origin's height and $d_y$ is the y-component of the normalized ray direction. This formula — from Inigo Quilez's "Better Fog" article (see References) — gives the exact fog amount accumulated along a ray through a height-varying density field, using only a handful of `exp()` calls, far cheaper than marching a second loop just to compute fog.
+
+## Preetham-Flavored Sky: A Cheap Gradient Instead of Real Rayleigh/Mie
+
+When a raymarch ray hits nothing (background), it still needs a color — the sky. Fully simulating sky physics (Rayleigh scattering for wavelength-dependent blue, Mie scattering for the glow around the sun) is a genuinely complex integral model — see Sean O'Neil's "Accurate Atmospheric Scattering" chapter (GPU Gems 2, see References) if you want to do it properly. This lesson uses a MUCH CHEAPER approximation, loosely in the spirit of the Preetham model (A. J. Preetham, 1999) but drastically simplified — and it's worth naming what it actually is: an ARTISTIC approximation, not real physics.
+
+Two pieces: a horizon-to-zenith gradient using `pow()` on the y-component of the ray direction, echoing the "bluer as you look up" feel of real Rayleigh scattering but really just a hand-picked curve with no wavelength-dependent scattering coefficients anywhere; and a glow around the sun using $\max(\hat r \cdot \hat s, 0)^{k}$, where $\hat r$ is the ray direction, $\hat s$ the sun direction, a large $k$ (48+) for a tight, sharp disk-like glow, a small $k$ (4–8) for a wide, soft one — the exact "scattering toward the sun" term that returns in the next section, this time applied to the fog color instead of the sky color.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec3 zenith = vec3(0.22, 0.42, 0.82);\n  vec3 horizon = vec3(0.72, 0.80, 0.88);\n  vec3 sky = mix(horizon, zenith, pow(uv.y, 0.55));\n\n  vec2 sunUv = uMouse;\n  float sunAmount = 1.0 - clamp(distance(uv, sunUv) * 3.0, 0.0, 1.0);\n  sky += vec3(1.0, 0.85, 0.55) * pow(sunAmount, 8.0) * 1.6;\n\n  fragColor = vec4(sky, 1.0);\n}\n"} />
+
+## Inscattering: Fog Color Warming Up Toward the Sun
+
+$1 - T$ in the first section only says HOW MUCH atmosphere color mixes in — it says nothing about WHAT that atmosphere color actually is. Real fog doesn't have one fixed color: fog looked at straight toward the sun (forward scattering — the signature of particles larger than the wavelength of light) reads noticeably warmer and brighter than the exact same fog layer viewed in another direction. This "inscattering" effect is exactly why backlit morning fog always looks more beautiful than the same-thickness fog seen with the sun behind you.
+
+Cheap to implement: reuse the same $\max(\hat r \cdot \hat s, 0)^{k}$ term from above (a smaller $k$, say 4–8, for a wide band instead of a tight glow), then blend between a "cool" fog color (blue-grey, the default) and a "warm" fog color (amber/orange, when looking near the sun direction):
+
+```glsl
+float sunAmount = max(dot(rd, sunDir), 0.0);
+vec3 fogColor = mix(coolFog, warmFog, pow(sunAmount, 8.0));
+```
+
+This is the classic trick that sells depth: a scene where the fog changes color with view-sun angle reads as noticeably more alive and atmospheric than flat, single-color fog, for the added cost of exactly one `pow()` and one `mix()`.
+
+## Applying Fog AFTER Shading, Using the Real Marched t, and Tuning Density
+
+Order of operations matters: fog is ALWAYS applied AFTER the full surface color has already been computed — lighting, shadows, AO from earlier lessons — never blended into the albedo before shading. And the distance $t$ used in the fog formula must be the TOTAL distance the ray has marched to the hit point (the `t` variable accumulated across the sphere-tracing loop), not the SDF's return value at the final step — that value sits near 0 at the surface and means something entirely different.
+
+Choosing the density $\rho$ (or $a$ for height fog) decides how fast fog eats the scene. A practical way to pick it: decide on a desired visibility distance $d_{vis}$ first (say, 30 scene units) — the distance at which $T$ has dropped to about 2% (an estimate borrowed from meteorology's convention that an object at $T = 0.02$ counts as "practically invisible") — then solve backward:
+
+$$
+\rho \approx \frac{-\ln(0.02)}{d_{vis}} \approx \frac{3.9}{d_{vis}}
+$$
+
+A higher density eats the scene faster — but too high starts killing detail even on objects CLOSE to the camera, since $T$ drops fast even at small $t$; too low keeps the scene "clean" but loses all sense of depth in the distance. A good balance: $T$ on near objects (the first few units) still sits close to 1 (barely any fog), while $T$ at the far edge of the scene has dropped to roughly 0.05–0.15.
+
+## Where This Foundation Leads
+
+Fog here is a pure color blend keyed to the marched $t$ — it lives entirely inside the raymarch shader, no extra render pass required. Track 9/10 (Post-processing) revisits this exact idea as a full-screen pass reading a rasterized scene's DEPTH BUFFER instead of sphere tracing's `t` — same $e^{-\rho t}$ formula, just a different source for $t$. The next lesson in this track (Volumetric Rendering) pushes the "accumulate along the ray" idea here further: instead of blending ONCE using a total $t$, it accumulates density and color at EVERY march STEP — today's fog turns out to be a special case (constant density, never stopping at a surface) of a much more general accumulation.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when wiring up fog in a raymarcher:
+
+1. **Confusing the accumulated march `t` with the SDF's return value at the final step.** Sphere-tracing loops often reuse the same variable name, something like `d`, for both the per-step safe distance and the running total distance — accidentally feeding `d` (near 0 at the surface) into the fog formula instead of `t` (the real distance traveled) means fog almost never activates, no matter how deep the scene is.
+2. **Dividing by $d_y$ (the ray direction's y-component) without guarding near zero.** With height fog, a nearly horizontal ray (looking straight at the horizon) has $d_y \approx 0$, sending the closed-form integral's division toward a tiny number — the result is `NaN`/`Inf`, showing up as flickering pixels or a stray bright streak right along the horizon line.
+3. **Applying the same fog formula to sky pixels when the ray hits nothing.** The sky already IS the atmosphere at infinity — blending an extra layer of surface-style fog on top of it double-fogs the horizon, flattening it into a single flat fog color instead of keeping its natural sky gradient.
+
+</Callout>

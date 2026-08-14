@@ -1,0 +1,91 @@
+## The Normal IS the Gradient of the SDF
+
+A mesh keeps a normal stored at every vertex — interpolate across the triangle and you're done. A raymarched scene has no vertices at all, only a function $f(p)$ returning the signed distance to the nearest surface. The normal at a hit point $p$ has to be **computed** from $f$ itself — there's nowhere else to look it up.
+
+The answer sits in the gradient. For a true signed distance field (not a coarse approximation), $f$ satisfies the eikonal equation:
+
+$$
+\|\nabla f(p)\| = 1 \quad \text{everywhere (except a measure-zero ridge set where } f \text{ isn't differentiable)}
+$$
+
+Intuition: $\nabla f(p)$ points in the direction $f$ grows fastest — and for a distance function, "grows fastest" literally means "moves straight away from the surface along the shortest path," which is exactly the normal direction. The gradient's length equals 1 precisely because moving one unit in that exact direction increases the distance by exactly one unit — no faster, no slower, which is the defining property of a proper (Euclidean, non-warped) SDF. The practical payoff: a SDF's gradient isn't just *parallel* to the normal, it **is** the normal — numerically estimate $\nabla f(p)$, normalize to be safe against discretization error, and you're done.
+
+## Central Differences: Six Calls to the Distance Function
+
+The most direct way to estimate a partial derivative is a central difference — step a small $\varepsilon$ forward and backward along each axis and take the difference:
+
+$$
+\frac{\partial f}{\partial x}(p) \approx \frac{f(p + \varepsilon\hat x) - f(p - \varepsilon\hat x)}{2\varepsilon}
+$$
+
+and likewise for $y$ and $z$ — three partial derivatives, two calls to $f$ each, **six calls to `map()`** total:
+
+```glsl
+vec3 normalCentralDiff(vec3 p, float eps) {
+  vec2 e = vec2(eps, 0.0);
+  return normalize(vec3(
+    map(p + e.xyy) - map(p - e.xyy),
+    map(p + e.yxy) - map(p - e.yxy),
+    map(p + e.yyx) - map(p - e.yyx)
+  ));
+}
+```
+
+Notice the code **never divides by $2\varepsilon$** even though the formula has that denominator — that's not an oversight. The `normalize()` call right after divides by the vector's length, a division that cancels out any shared positive scalar factor across all three components; dividing by $2\varepsilon$ first and then normalizing produces the identical result as skipping the division, just with three wasted divides. A hand check: sphere SDF $f(p) = \|p\| - 1$ at $p = (1,0,0)$ (exactly on the boundary), $\varepsilon = 0.01$: $f(1.01,0,0) - f(0.99,0,0) = 0.01 - (-0.01) = 0.02$ along $x$, while the $y$ and $z$ axes give symmetric samples that cancel to a difference of $\approx 0$ — the un-normalized vector $(0.02, 0, 0)$ normalizes to $(1,0,0)$, the correct outward normal, without ever needing to know the sphere's radius.
+
+## The Tetrahedron Technique: Four Samples, Same Order of Accuracy
+
+Six `map()` calls per shaded pixel is real GPU cost. Inigo Quilez's alternative estimates the same gradient from just **four samples**, placed at the vertices of a regular tetrahedron instead of six points along three axes:
+
+```glsl
+vec3 normalTetrahedron(vec3 p, float eps) {
+  const vec2 k = vec2(1.0, -1.0);
+  return normalize(
+    k.xyy * map(p + k.xyy * eps) +
+    k.yyx * map(p + k.yyx * eps) +
+    k.yxy * map(p + k.yxy * eps) +
+    k.xxx * map(p + k.xxx * eps)
+  );
+}
+```
+
+The four sample directions are $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ — the four vertices of a tetrahedron inscribed in a cube of side $2\varepsilon$. Each term multiplies the sample direction $k_i$ (also its weight) by $f$ evaluated there, and the four are summed; that weighted sum exactly cancels the constant $f(p)$ term (its coefficient sums to zero because the four $k_i$ vectors themselves sum to zero), leaving a linear estimate of the gradient — the same order of accuracy (error $O(\varepsilon^2)$) as the six-sample central difference, not a cruder approximation. The saving: $6 \to 4$ `map()` calls is exactly a $\frac{6-4}{6} \approx 33\%$ cut in normal cost — meaningful once `map()` is a real SDF tree (many primitives, many boolean ops), not just a bare `length(p) - r`. This is the default technique in nearly every production raymarching shader, on Shadertoy and in shipped games alike (source: Quilez's original writeup, linked in References).
+
+## Choosing Epsilon: Rounding Sharp Edges vs. Breaking Up in Float Noise
+
+There's no single "correct" $\varepsilon$ — it's the radius of the sampling neighborhood around $p$, and both extremes fail in different ways:
+
+- **Too large**: the estimated gradient stops reflecting local curvature at $p$ and instead averages over a region $2\varepsilon$ wide. At a sharp corner (like the box corner built with `sdBox` in this lesson's demo), a sampling radius bigger than that corner's own rounding makes the normal "see" both adjacent faces at once, averaging into a direction well off the true normal — showing up as rounded, faceted edges even though the underlying geometry is still perfectly sharp.
+- **Too small**: `map(p+eps) - map(p-eps)` subtracts two floating-point numbers that are nearly identical — that subtraction's low-order digits (catastrophic cancellation) let the real signal (the curvature-driven difference) sink below `highp float`'s rounding noise (relative precision ~$10^{-7}$). The result is a speckled, non-smooth normal even on perfectly smooth geometry — the same quantization mechanism dissected in the Precision Qualifiers lesson (Track 2): the larger a value (or the smaller a difference between two values), the coarser the gap between representable numbers gets.
+
+There's no closed-form optimum for $\varepsilon$ — it depends on the scene's geometric scale; values in practice tend to land around $10^{-4}$ to $10^{-3}$ world units (an estimate, drawn from common open-source raymarching shaders), small enough relative to the smallest curvature radius in the scene, yet many orders of magnitude above the float-precision noise floor.
+
+## With Normals Unlocked: Building the Three-Light Rig
+
+Once a trustworthy $\hat n$ exists, raymarch shading reuses the exact lighting formulas familiar from rasterization. Lambert diffuse:
+
+$$
+L_{\text{diffuse}} = \text{albedo} \cdot \max(0, \hat n \cdot \hat l)
+$$
+
+Blinn-Phong specular replaces the reflection vector with a half-vector $\hat h = \widehat{\hat l + \hat v}$ ($\hat v$ points toward the camera), cheaper than classic Phong since it skips computing a reflection:
+
+$$
+L_{\text{spec}} = \max(0, \hat n \cdot \hat h)^{s}
+$$
+
+The standard raymarch three-light rig adds two more "free" light sources that cost zero shadow rays: a **key light** (Lambert from a fixed "sun" direction) for the main mass; a **sky fill** that uses $\hat n_y$ directly (the normal's $y$ component, remapped to $[0,1]$) as intensity — faces pointing up read brighter, approximating scattered sky light without any environment map; and a **bounce** term using $1 - \hat n_y$ (faces pointing down) tinted by a ground color, approximating light bounced back off the floor. All three are pure functions of $\hat n$ and $\hat v$, already in hand — no extra `map()` calls needed — and critically: **the normal is computed exactly once**, at the final hit point of each pixel, never inside the sphere-tracing loop. Getting this backwards — calling `calcNormal` inside the marching `for` loop — multiplies the six (or four) `map()` calls by the entire step count, a serious and entirely avoidable performance bug, since the march loop only ever needs "how far to the surface," never "which way does it face."
+
+## Where This Leads
+
+A trustworthy normal is the prerequisite for every more advanced shading technique in the rest of this track: the next lesson uses this exact normal to offset a shadow ray's origin (avoiding self-intersection) and to sample ambient occlusion along $\hat n$. Track 11 (PBR) later swaps Blinn-Phong for a physically grounded microfacet BRDF, but it still needs this same accurate $\hat n$ as input — without a correct gradient, no lighting model downstream means anything.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when computing normals from an SDF:
+
+1. **Forgetting to normalize after central-diff/tetrahedron.** Both formulas return a vector whose length depends on $\varepsilon$ and the local slope of $f$ — not automatically a unit vector. Feeding that straight into `dot(n, lightDir)` without normalizing throws off the whole lighting intensity, most visibly when $\varepsilon$ changes (changing $\varepsilon$ shouldn't change brightness, but without normalize it does).
+2. **Calling `calcNormal` inside the raymarch loop instead of only at the hit point.** A sphere-tracing loop can run 50–100 steps; computing the normal at every step multiplies cost by 4–6x that step count for no reason, since only the final hit point ever needs a surface direction.
+3. **Reusing one fixed $\varepsilon$ across every scene scale.** An $\varepsilon$ tuned well for an object with a ~1-unit radius will heavily round out much smaller details (engraved SDF text, for instance) or produce float noise on much larger objects — $\varepsilon$ should scale with the smallest geometric feature that needs to stay crisp, not stay a single global constant.
+
+</Callout>

@@ -1,0 +1,75 @@
+## Vòng lặp raymarch tiêu thời gian ở đâu
+
+Chi phí một frame raymarch xấp xỉ tích của ba số: số pixel, số bước march trung bình mỗi pixel, và chi phí một lần gọi hàm SDF. Ở DPR 2 trên màn hình 1920×1080, số pixel đã là ~8.3 triệu (ước lượng, theo cách đếm invocation của Track 2) — nhân thêm 80-100 bước march mỗi pixel (con số điển hình cho một cảnh sphere-tracing chưa tối ưu) và một SDF có vài phép `min`/`smin` mỗi bước, tổng số phép tính GPU phải chạy mỗi frame dễ vượt nửa tỷ. Ba bài trước của track này (soft shadow, AO, domain repetition) đều làm hàm SDF phức tạp hơn — nghĩa là chi phí *mỗi bước* tăng, trong khi bài này tấn công thừa số còn lại: bớt *số bước*. Ba kỹ thuật dưới đây không đổi hình ảnh cuối cùng (hoặc chỉ đổi rất ít) — chúng cắt bớt công việc lãng phí trong chính vòng lặp march.
+
+## Bounding volume: bỏ qua sớm bằng ray-box slab test
+
+Ý tưởng đơn giản đến mức dễ bị bỏ qua: nếu một tia chắc chắn không thể chạm vùng có vật thể, đừng march nó — kiểm tra giao điểm với một hình bao (bounding volume) rẻ hơn nhiều so với SDF thật, xong bỏ qua toàn bộ vòng lặp cho tia đó. Bài viết "Bounding Volumes" của Inigo Quilez mô tả đúng kỹ thuật này cho raymarching: bọc cảnh (hoặc từng object) bằng một sphere hay box đơn giản, test giao điểm analytic trước khi march.
+
+Với box, cách chuẩn là **slab method**: tính khoảng giao $[t_{near}, t_{far}]$ trên từng trục rồi giao ba khoảng lại:
+
+```glsl
+vec2 intersectBox(vec3 ro, vec3 rd, vec3 bmin, vec3 bmax) {
+  vec3 invD = 1.0 / rd;
+  vec3 t0s = (bmin - ro) * invD;
+  vec3 t1s = (bmax - ro) * invD;
+  vec3 tsm = min(t0s, t1s);
+  vec3 tbg = max(t0s, t1s);
+  float tNear = max(max(tsm.x, tsm.y), tsm.z);
+  float tFar = min(min(tbg.x, tbg.y), tbg.z);
+  return vec2(tNear, tFar);
+}
+```
+
+Nếu $t_{far} < \max(t_{near}, 0)$, tia trượt hoàn toàn khỏi box — **bỏ qua march, không gọi SDF một lần nào**. Đây chính là cột "sky" trong demo của bài: camera đặt thấp, nhìn lướt qua một cánh đồng cột trụ lặp lại; phần bầu trời phía trên box bao không hề chạm SDF, nên bật heatmap sẽ thấy nó giữ nguyên màu xanh lạnh (0 bước) trong khi vùng cột trụ hiện dải nhiệt từ vàng đến đỏ theo đúng số bước thật đã march. Nếu tia CÓ chạm box, đừng march từ $t=0$: bắt đầu ngay tại $t_0 = \max(t_{near}, 0)$ — điểm tia đi vào box — và dừng cứng tại $t_1 = t_{far}$ — điểm tia rời box. Khoảng march co lại đúng bằng đoạn tia thật sự cắt qua vùng có vật thể, bất kể camera đứng xa box bao nhiêu.
+
+## Adaptive stepping: nới bước và biết khi nào phải lùi lại
+
+Sphere tracing tiêu chuẩn bước đúng bằng $d(p)$ — khoảng cách an toàn tối đa, không hơn không kém, nên hội tụ an toàn nhưng chậm ở những vùng SDF "nhìn xa mà đi gần" (bề mặt gần song song với tia). Over-relaxation nới bước lên $d(p) \times \omega$ với $\omega > 1$ để hội tụ nhanh hơn — nhưng nới quá tay có thể khiến quả cầu an toàn của bước sau **không còn phủ kín** vùng vừa đi qua, march "nhảy" xuyên qua một chi tiết mỏng và bỏ lỡ giao điểm thật. Keinert et al. giải quyết đúng vấn đề này trong "Enhanced Sphere Tracing" (Eurographics 2014): theo dõi bán kính an toàn của bước trước, và khi phát hiện bước hiện tại có thể đã vượt quá vùng đó, lùi lại một bước bảo thủ thay vì tin tưởng mù quáng vào $\omega$.
+
+Bản giản lược dùng trong demo của bài — đủ để thấy artefact, không phải bản đầy đủ của paper — là một "sign/step-back heuristic": so `stepLen` sắp thực hiện với tổng bán kính an toàn hai điểm liên tiếp, lùi về bước bảo thủ nếu phát hiện chồng lấn không đủ:
+
+```glsl
+float stepLen = d * uRelax;
+if (uRelax > 1.01 && (d + prevD) < prevStep) {
+  stepLen = max(prevStep - prevD, eps);
+}
+```
+
+Ở $\omega \approx 1.0$–$1.4$, march trông giống hệt bản không nới; kéo `uRelax` qua khoảng $1.6$, artefact bắt đầu lộ — những vết lõm hoặc lỗ nhỏ ở cạnh cột trụ, nơi bước nới đã nhảy qua đúng vùng cần dừng lại. Đó không phải lỗi implementation — đó CHÍNH LÀ giới hạn thật của kỹ thuật, thứ paper gốc giải bằng một thuật toán chặt chẽ hơn nhiều so với heuristic rút gọn ở đây.
+
+## Epsilon co giãn theo khoảng cách
+
+Ngưỡng dừng march $\varepsilon$ (khi $d(p) < \varepsilon$ thì coi là đã chạm bề mặt) thường được chọn cố định — nhưng một pixel màn hình phủ một vùng không gian thế giới thực CÀNG RỘNG khi điểm march càng xa camera (góc nhìn cố định, khoảng cách vật lý mỗi pixel tăng tuyến tính theo $t$). Epsilon cố định quá nhỏ so với "kích thước một pixel" ở khoảng cách xa buộc march lãng phí thêm bước chỉ để đạt độ chính xác dưi ngưỡng mắt người phân biệt được — còn epsilon cố định quá lớn thì ăn mòn silhouette ở cận cảnh. Giải pháp: cho epsilon tỉ lệ thuận với $t$:
+
+$$
+\varepsilon(t) = \varepsilon_0 \cdot \max(t, 1)
+$$
+
+```glsl
+float eps = (uDistScaledEps > 0.5) ? 0.001 * max(t, 1.0) : 0.001;
+```
+
+Tắt cờ này trong demo và phóng to phần cột trụ xa nhất: cạnh silhouette hiện vết "gặm" nhẹ — pixel xa bị buộc march tới độ chính xác dư thừa mà vẫn không đổi màu cuối cùng, chỉ tốn thêm bước. Bật lại, cạnh mượt hơn VÀ số bước trung bình giảm — cùng một dòng code giải quyết cả hai vấn đề vì chúng cùng gốc: precision không cần thiết ở xa.
+
+## LOD rẻ hơn theo khoảng cách, và ngân sách bước
+
+Cùng logic epsilon áp dụng cho chính hàm SDF: một scene phức tạp (domain warping, nhiều octave FBM trộn vào height field, như checkpoint cuối track sẽ dùng) không cần đủ chi tiết ở khoảng cách xa — một pixel xa không đủ độ phân giải để "nhìn thấy" octave cao tần dù có tính hay không (đúng lập luận Nyquist đã gặp ở bài FBM). Giảm số octave/detail term theo $t$ trước khi march tới đó là một dạng LOD rẻ, không cần cấu trúc dữ liệu gì thêm — chỉ một `if (t > threshold)` hoặc `mix` giữa phiên bản chi tiết và rút gọn của hàm SDF.
+
+Tất cả kỹ thuật trên đều nhắm tới cùng một ngân sách: **số bước tối đa mỗi pixel**. Bài "Nguyên lý sphere tracing" mở track đã giới thiệu `MAX_STEPS` như một giới hạn cứng chống treo GPU — bài này biến nó thành một ngân sách được TUNE có chủ đích: heatmap hiện số bước thật mỗi pixel tiêu tốn, cho phép nhìn ra "điểm nóng" (thường là silhouette hoặc vùng gần-song-song) rồi quyết định đầu tư bounding volume, relax, hay LOD vào đúng chỗ thay vì tăng `MAX_STEPS` một cách mù quáng.
+
+## Đo đạc: trung thực với con số
+
+Nền tảng này expose `data-frames` trên container demo — đếm tick RAF thật, dùng để kiểm chứng canvas dừng render khi rời viewport (spec §8.3), không phải một benchmark FPS chuẩn. Số "bước/pixel" trong demo bài này lấy từ việc render lại đúng shader ở độ phân giải 24×24 rồi đọc kênh alpha đã mã hoá `steps/MAX_STEPS` — một phép đo THẬT, không phải số bịa, nhưng vẫn chỉ là ước lượng trên mẫu nhỏ, gắn nhãn rõ ràng thay vì giả vờ chính xác tuyệt đối. Muốn số đáng tin hơn khi build sản phẩm thật, dùng Chrome DevTools GPU profiler hoặc Spector.js (Track 12) — nhưng ngay cả khi đó, hãy công bố số đo kèm điều kiện đo (GPU nào, độ phân giải nào), đừng công bố một con số "nhanh hơn X%" trần trụi không ngữ cảnh.
+
+Bài tiếp theo của track khép một vòng khác: kết hợp raymarch với một scene rasterized thật (Three.js mesh), nơi chính bounding volume vừa học ở đây quay lại dưới một hình dạng khác — depth buffer của scene mesh trở thành giới hạn march tự nhiên.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi tối ưu raymarch:
+
+1. **Test bounding volume nhưng vẫn march từ $t=0$.** Bỏ qua tia trượt là đúng, nhưng nếu tia CÓ chạm box mà vẫn march từ 0 thay vì từ $t_{near}$, toàn bộ đoạn "trước box" vẫn bị march lãng phí — bounding volume chỉ phát huy hết tác dụng khi cả hai nửa (skip khi miss, dịch điểm bắt đầu khi hit) đều làm.
+2. **Nới over-relaxation mà không có bước lùi khi overshoot.** $\omega > 1$ không có heuristic kiểm tra là một canh bạc: hình ảnh có thể đúng ở phần lớn cảnh rồi vỡ đột ngột (lỗ, vết lõm) ở đúng vùng hình học mỏng — loại lỗi im lặng, không log ra console, chỉ hiện khi nhìn kỹ silhouette.
+3. **Coi số đo trên máy mình là số đo phổ quát.** Một con số "bước/pixel" hay "ms/frame" đo trên GPU desktop rời không nói lên gì về GPU tích hợp hay di động (Track 12 sẽ nói kỹ tile-based rendering) — luôn gắn nhãn thiết bị đo, đừng suy rộng từ một mẫu.
+
+</Callout>

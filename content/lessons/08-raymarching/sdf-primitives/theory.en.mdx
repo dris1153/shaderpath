@@ -1,0 +1,130 @@
+## Four Primitives, One Shared Function Signature
+
+The `sphere-tracing-principle` lesson marched a scene containing exactly one sphere. This track needs a bigger toolkit: four foundational primitives that nearly every complex SDF scene assembles from — **sphere**, **box**, **torus**, **capsule**. All four share one signature: `float sdX(vec3 p, ...shape params...) -> float`, taking a query point `p` in the shape's local space (centered at the origin, unrotated) and returning a signed distance. `map()` just calls whichever one is needed — the same "distance first, color second" principle from Track 2, now applied to picking a shape.
+
+The four formulas below come straight from Inigo Quilez's `distfunctions` page — the reference library nearly every working raymarcher reaches for instead of re-deriving these from scratch.
+
+## Sphere: The Simplest Distance There Is
+
+Every point on a sphere of radius $r$ sits exactly $r$ units from the center, so the signed distance from $p$ to the sphere is just the distance to the center minus $r$:
+
+$$
+d_{\text{sphere}}(p) = \|p\| - r
+$$
+
+```glsl
+float sdSphere(vec3 p, float r) {
+  return length(p) - r;
+}
+```
+
+The remaining three primitives are more involved because their surfaces aren't fully centrally symmetric.
+
+## Box: The q = abs(p) - b Decomposition
+
+A box with half-extents $b = (b_x, b_y, b_z)$ exploits symmetry: thanks to `abs(p)`, you only need to reason about one octant and the formula is automatically correct for the whole box. Let $q = |p| - b$: $q_i > 0$ means $p$ overshoots the box along axis $i$ by $q_i$; $q_i \le 0$ means $p$ sits $|q_i|$ units short of that face.
+
+$$
+d_{\text{box}}(p) = \|\max(q, 0)\| + \min\big(\max(q_x, q_y, q_z),\, 0\big)
+$$
+
+```glsl
+float sdBox(vec3 p, vec3 b) {
+  vec3 q = abs(p) - b;
+  return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+```
+
+The first term handles $p$ OUTSIDE the box: `max(q, 0)` zeroes any axis where $p$ is still within bounds, keeping only the overshoot — `length()` of that vector is the Euclidean distance to the nearest point on the box. Inside the box, `max(q, 0)` is entirely zero.
+
+The second term handles $p$ INSIDE the box: all three $q_i$ are negative, and `max(q_x, q_y, q_z)` picks the LEAST negative one — the axis with the SMALLEST remaining margin, i.e. the nearest face. `min(..., 0)` only keeps this term when negative; outside, the inner expression is already positive, so `min` zeroes it out.
+
+## Torus: A Circle "Inflated" by a Tube Radius
+
+A torus is parameterized by $t = (R, r)$: $R$ is the ring radius, $r$ the tube radius. A torus is every point exactly $r$ units from a circle of radius $R$, centered at the origin, lying in the $XZ$ plane.
+
+$$
+d_{\text{torus}}(p) = \big\|\big(\|p_{xz}\| - R,\ p_y\big)\big\| - r
+$$
+
+```glsl
+float sdTorus(vec3 p, vec2 t) {
+  vec2 q = vec2(length(p.xz) - t.x, p.y);
+  return length(q) - t.y;
+}
+```
+
+`length(p.xz)` is $p$'s distance from the $Y$ axis across the horizontal plane. Subtracting $R$ tells you how far $p$ sits from the ring circle — combined with $p_y$, that forms a new 2D coordinate $q$ describing $p$'s position relative to that circle. Since every point on the torus sits exactly $r$ units from the ring, the distance reduces to `length(q) - r` — the sphere formula, applied to this newly built 2D coordinate.
+
+## Capsule: Distance to a Clamped Line Segment
+
+A capsule is a segment from $a$ to $b$ "inflated" by a radius $r$. First solve: the distance from $p$ to the CLOSEST point on the segment $[a, b]$ — exactly the projection formula from `dot-and-cross-products` (Track 0), parameterized by $h \in [0, 1]$ and clamped into that range.
+
+$$
+h = \operatorname{clamp}\!\left(\frac{(p-a)\cdot(b-a)}{\|b-a\|^2},\ 0,\ 1\right), \qquad d_{\text{capsule}}(p) = \big\|(p-a) - h\,(b-a)\big\| - r
+$$
+
+```glsl
+float sdCapsule(vec3 p, vec3 a, vec3 b, float r) {
+  vec3 pa = p - a;
+  vec3 ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  return length(pa - ba * h) - r;
+}
+```
+
+`clamp(h, 0, 1)` is the entire difference from the raw projection formula: drop it, and $h$ can run outside $[0,1]$, sliding the closest point onto the infinite line — wrong for a real capsule. With $h$ clamped, `pa - ba*h` is the vector to the closest point on the segment, and subtracting $r$ turns "distance to the segment" into "distance to the capsule" — both ends round out automatically.
+
+## Verifying an SDF: Raymarch It or Contour a Cross-Section
+
+Getting one of the four formulas wrong (a flipped sign, a dropped `clamp`, a missing `min` term) usually does NOT throw a compile error — it just quietly renders the wrong shape. Two ways to verify, both reusing the exact $f(p)$ just written:
+
+Option one — **raymarch it and eyeball the zero contour**: if the shape looks right, the SDF is almost certainly correct near zero. Fast, but only checks the region right at the surface.
+
+Option two — **color a flat cross-section by contour bands**: sample $f(p)$ across a flat grid of points (say, $z=0$) and color by $d$'s full range of values rather than just its sign — Quilez's familiar banded-coloring technique:
+
+```glsl
+vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);
+col *= 1.0 - exp(-3.0 * abs(d));
+col *= 0.8 + 0.2 * cos(140.0 * d);
+```
+
+This exposes bugs a plain raymarch can miss: if the bands look uneven, warped, or change direction abruptly near the boundary, `f` isn't a true distance (it fails Lipschitz-1) even though the zero contour still looks correct. This lesson's demo uses exactly this technique in "contour" mode.
+
+<Playground source={"void main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  vec2 p = (uv - uMouse) * 3.0;\n\n  vec2 b = vec2(0.6, 0.35);\n  vec2 q = abs(p) - b;\n  float d = length(max(q, 0.0)) + min(max(q.x, q.y), 0.0);\n\n  vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);\n  col *= 1.0 - exp(-3.0 * abs(d));\n  col *= 0.8 + 0.2 * cos(140.0 * d);\n  col = mix(col, vec3(1.0), 1.0 - smoothstep(0.0, 0.015, abs(d)));\n\n  fragColor = vec4(col, 1.0);\n}"} />
+
+## Transforming a Primitive: Rotate/Translate the Query Point, Not the Shape
+
+Every formula above assumes the shape sits at the origin, unrotated. To place a box off-center and rotated, the wrong instinct is to "transform the shape" — an SDF isn't a mesh, there are no vertices to move. The correct move: transform the query point `p` INVERSELY before calling the SDF, and treat the shape as if it never left the origin:
+
+```glsl
+vec3 toLocal(vec3 p, vec3 center, float angleY) {
+  p -= center;                       // undo the intended translation
+  float a = radians(-angleY);        // undo the intended rotation
+  p.xz = mat2(cos(a), -sin(a), sin(a), cos(a)) * p.xz;
+  return p;
+}
+// call: sdBox(toLocal(p, center, angleY), b)
+```
+
+Subtracting the center BEFORE rotating matters because rotation is only correct around the origin — swap the order and you rotate around the wrong point. Uniform scale (the same factor $s$ on all axes) follows the same pattern: divide `p` by $s$ before calling the SDF, then MULTIPLY the returned distance by $s$ — dividing shrinks the query space, multiplying corrects the distance units back.
+
+NON-uniform scale breaks this entirely: it distorts distance differently per direction, so no single multiplier corrects the result correctly in EVERY direction at once — the function stops being a true Euclidean distance and becomes an approximation, the last section's topic.
+
+## Exact SDFs vs. Bound SDFs: Still Marchable, Just Slower
+
+All four formulas above are **exact** — they satisfy Lipschitz-1 strictly: moving 1 unit of real-world distance changes $f$ by at most 1 unit in every direction, so $f(p)$ always equals the EXACT shortest distance to the surface. But sphere tracing only needs a weaker condition to march safely: $f(p)$ must never OVERESTIMATE the true distance — the step `t += f(p)` still can't tunnel through a surface as long as the sphere of radius $f(p)$ stays empty, even if $f(p)$ underestimates.
+
+A function that only guarantees $f(p) \le d_{\text{true}}(p)$ is called a **bound SDF**. It still marches safely, but converges slower than an exact SDF: every step is more conservative than needed, costing extra iterations to reach the same surface. The non-uniformly-scaled primitive above is one example; later lessons in this track (especially fractals and domain repetition) will run into more bound SDFs, where trading exactness for the ability to describe a complex shape at all is entirely worth it.
+
+The next lesson (`sdf-boolean-ops-smooth-min`) combines multiple primitives from this lesson using `min`/`max` — union, subtraction, intersection — then smooths the combined boundary with a smooth minimum.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when writing and transforming SDF primitives:
+
+1. **Dropping the `min(max(q.x,q.y,q.z), 0)` term in the box SDF (or flipping its sign).** Without it, `d` is never negative — points INSIDE the box report 0 or positive instead of increasingly negative toward the center, breaking anything relying on $d$'s sign.
+2. **Rotating the query point by the intended angle instead of its INVERSE.** Since you're transforming $p$ to simulate transforming the shape, every transform needs inverting — `+angleY` instead of `-angleY` makes the shape spin backward relative to the slider.
+3. **Non-uniformly scaling the query point without accounting for the consequences.** `p / vec3(2.0, 1.0, 1.0)` has no single correction factor that fixes the result in EVERY direction at once — the safety sphere of radius $f(p)$ lies about safety along the most-compressed axis, letting the ray tunnel through the thinned part of the shape, especially visible at grazing angles — the exact silhouette-hole mechanism from the previous lesson, now caused by a wrong SDF instead of an insufficient step budget.
+
+</Callout>

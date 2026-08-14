@@ -1,0 +1,72 @@
+## No Geometry Required: The Scene Is a Distance Function
+
+Every earlier track built shapes from vertices: a triangle is three points, a mesh is thousands of triangles, and the GPU rasterizes each triangle into pixels. Raymarching drops that idea entirely. The scene stops being geometric data (a vertex buffer, an index buffer) and becomes a **mathematical function** $f: \mathbb{R}^3 \to \mathbb{R}$ — for any point $p$ in space, $f(p)$ returns the signed shortest distance from $p$ to the scene's nearest surface: negative inside an object, positive outside, exactly 0 on the surface. This function is a **signed distance field** (SDF) — the `shaping-functions-and-2d-sdf` lesson back in Track 2 built exactly this idea in 2D for a circle; this lesson takes the same idea and swaps $p$ from a `vec2` to a `vec3`.
+
+No vertices means no geometric limit at all — $f(p)$ can describe any shape expressible as a formula: a sphere, a fractal, or the union of dozens of shapes (later lessons in this track build those up gradually). In exchange, there's no more explicit ray–triangle intersection from rasterization — the question "where does this ray hit the scene" has to be answered by probing along the ray, which is exactly the **march** in "raymarching."
+
+## Why "Sphere" Tracing: The Maximum Safe Step
+
+Hart (1996) named this technique "sphere tracing" because it exploits one specific property of $f(p)$: the value $|f(p)|$ is the radius of a sphere centered at $p$ that is **guaranteed empty** — it contains no part of the scene's surface. If it did, the true shortest distance from $p$ to the surface would already be smaller than $|f(p)|$, contradicting $f$'s own definition. Picture standing at $p$ and inflating a balloon centered there to exactly radius $|f(p)|$ — it touches the nearest surface but never pokes through it.
+
+Because that sphere is empty in EVERY direction, stepping specifically along the ray being marched by exactly $f(p)$ units is completely safe — you can never "tunnel through" a surface sitting right in front of you, since the nearest surface is still at least $f(p)$ away:
+
+$$
+t_{i+1} = t_i + f(p_i), \qquad p_i = ro + t_i \cdot rd
+$$
+
+where $ro$ is the ray origin, $rd$ is the normalized ray direction ($\|rd\| = 1$), and $t_i$ is the distance traveled along the ray after step $i$. This is the core difference from "naive" ray marching (stepping by a fixed amount every time): the step here **adapts** to the terrain — long strides far from the scene, shrinking strides near a surface, converging quickly without ever knowing the scene's shape in advance.
+
+## Building a Ray from the Camera: Origin, Direction, FOV and Aspect
+
+Before marching, every pixel needs a ray. The ray origin $ro$ is the camera position. The direction is built from three basis vectors: the forward look direction $\hat f = \widehat{ta - ro}$ (from the camera toward a look target `ta`), a right direction $\hat r = \widehat{\hat f \times \hat{up}}$, and the camera's true up direction $\hat u = \hat r \times \hat f$ (recomputed so it's exactly perpendicular to $\hat f$, rather than reusing world-up directly). With screen coordinates already normalized to $[-1, 1]$ (the `cartesian-and-uv-space` lesson back in Track 0), a vertical field of view $\theta$, and an aspect ratio $a = W/H$:
+
+$$
+rd = \widehat{\hat f + (u \cdot a \cdot \tan\tfrac{\theta}{2})\,\hat r + (v \cdot \tan\tfrac{\theta}{2})\,\hat u}
+$$
+
+$\tan(\theta/2)$ scales the $[-1,1]$ range to match the camera's actual opening angle — the wider the fov, the larger this factor, the further rays at the screen edge bend away from $\hat f$, and the more pronounced the "wide-angle lens" look. Multiplying the $u$ term by $a$ compensates for a non-square screen: skip it and a 16:9 canvas turns a circle into an oval. This lesson's demo runs on a square canvas (aspect = 1), so that factor changes nothing in the code, but the formula keeps $a$ in for generality.
+
+## The March Loop: Step, Check for a Hit, Check for a Miss
+
+With $ro$, $rd$ and $f$ in hand, the main loop repeats exactly three things: evaluate $f(p_i)$, check whether to stop, step forward.
+
+```glsl
+float t = 0.0;
+for (int i = 0; i < maxSteps; i++) {
+  vec3 p = ro + rd * t;
+  float d = f(p);
+  if (d < epsilon) break;   // hit: close enough to the surface
+  t += d;
+  if (t > maxDist) break;   // miss: shot past the scene
+}
+```
+
+The two stopping conditions mean opposite things: `d < epsilon` is a **hit** — the ray has pressed close enough to a surface to count as touching it; `t > maxDist` is a **miss** — the ray has traveled far enough that there's provably nothing ahead worth marching toward (say, straight into open sky). If neither condition fires within `maxSteps` iterations, the result also counts as a miss — but this is the most concerning kind, because it isn't "the ray genuinely hits nothing," it's "ran out of budget before it could," the subject of the next two sections.
+
+## maxSteps: Why Grazing Rays Punch Holes in Silhouettes
+
+A low `maxSteps` punches holes in exactly the most predictable place: silhouette edges, where a ray nearly grazes a surface tangentially instead of driving straight into it. The mechanism: at a point $p$ near a silhouette edge, the nearest surface does NOT sit along the ray's direction — it sits off to one side. $f(p)$ stays small (there really is a surface nearby), but the step `t += f(p)` only nudges $t$ forward a little along the ray, while the actual point of intersection (if there is one) is still far away along that exact direction. The result: a run of small steps, crawling slowly along the ray — and if `maxSteps` runs out before $t$ gets there, the loop exits on the "out of budget" branch, and the ray is treated as a miss even though it would have hit given a few dozen more steps. This region clusters densely around silhouettes precisely because that's where the angle between the ray and the surface approaches $90°$.
+
+Raising `maxSteps` gives those rays more room to converge, filling in the holes — at a cost: every step is one more call to $f(p)$, and in a complex scene, $f$ can cost dozens of operations per call.
+
+## epsilon: Too Big Is Lumpy, Too Small Is Banding
+
+`epsilon` defines "how close counts as close enough." Because a proper SDF grows by exactly 1 unit for every 1 unit of real-world distance traveled (the Lipschitz-1 property mentioned in the `shaping-functions-and-2d-sdf` lesson), `epsilon` isn't some abstract number — it's literally **the surface-position error, measured in real world units**. A large `epsilon` means the recorded "hit" point can sit that many units away from the true surface; on a curved surface, that error shows up as small, uneven fake facets — the surface reads as lumpy and rough instead of smooth.
+
+Too small an `epsilon` causes the opposite problem: near regions that march slowly (grazing rays, or an SDF that's only a bound rather than exact — the subject of the next lesson, `sdf-primitives`), a ray needs far more steps to reach that tiny threshold, easily running out of `maxSteps` before it gets there — and since the remaining step budget at cutoff differs pixel to pixel, the surface renders as discrete bands instead of a smooth gradient, while also costing more performance because every near-surface pixel marches through nearly the whole budget.
+
+## Debugging with a Heatmap: Seeing the Cost Per Pixel
+
+Because raymarching's cost scales directly with step count, every raymarcher's standard debugging trick is coloring each pixel by `usedSteps / maxSteps` instead of its real color — a "heatmap" where blue is cheap and red is expensive. This lesson's demo ships exactly that tool: turn on the heatmap, lower `maxSteps`, and watch a red band cling tightly to the sphere's silhouette — direct visual proof of the exact grazing-ray mechanism just explained, and a technique that returns unchanged in the `raymarching-optimization` lesson at the end of this track when tuning bounding volumes and adaptive steps.
+
+This lesson's march loop only ever runs on a single $f(p)$, hand-written as a sphere formula. The next lesson (`sdf-primitives`) assembles a full SDF toolkit — box, torus, capsule — so `map()` can describe more than one lonely sphere.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when writing your first sphere tracing loop:
+
+1. **Forgetting to normalize `rd`.** The formula $t_{i+1} = t_i + f(p_i)$ assumes `rd` is a unit vector — otherwise `t` no longer represents real-world distance traveled along the ray, the march step gets scaled by `rd`'s length, and the image distorts in perspective exactly the way a wrong fov would.
+2. **Using an absolute `epsilon` that ignores scene scale.** `epsilon = 0.001` is reasonable for a radius-1 sphere, but meaningless if the scene is scaled up to radius 100 (too tiny, causing banding and wasted performance) or down to radius 0.01 (too large, causing obvious lumpiness).
+3. **Skipping `maxDist` and relying on `maxSteps` alone.** Without a `t > maxDist` check, every ray shot into open sky (hitting nothing) is still forced to run the full `maxSteps` before the loop ends — wasting exactly the maximum step count on most of the frame's pixels, since sky typically covers far more screen area than any object.
+
+</Callout>

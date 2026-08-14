@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Mini-build khép lại toàn bộ track Raymarching: dựng một vista địa hình chạy thời gian thực, tổng hợp mọi kỹ thuật đã học — sphere tracing, normal từ gradient, bóng mềm, fog khí quyển, và tối ưu march (epsilon co giãn, giới hạn khoảng march) — thành một cảnh hoàn chỉnh, không chỉ đọc hiểu từng kỹ thuật tách rời.
+
+## Yêu cầu
+
+Một heightfield dựng từ FBM, march bằng kỹ thuật terrain marching (bước tăng dần rồi nhị phân tinh chỉnh — KHÔNG phải sphere tracing, vì heightfield không có SDF thật); mặt trời thấp tạo bóng mềm rõ hướng trên các sườn núi; tô màu theo độ cao VÀ độ dốc kết hợp (tuyết trên vùng cao-phẳng, đá trên vùng dốc, cỏ ở vùng thấp); sương mù hàm mũ theo khoảng cách march, ấm dần về phía mặt trời; bầu trời rẻ tiền có sun glow; march bị chặn khoảng — bầu trời phía trên độ cao tối đa của địa hình tự bỏ qua, không march vô ích; camera bay chậm xuyên cảnh. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Gợi ý cấu trúc
+
+Starter code đã cho sẵn toàn bộ thư viện (`fbm`, `terrainHeight`, `raymarchTerrain`, `terrainNormal`, `terrainShadow`) chạy hoàn chỉnh — việc của bạn là LẮP RÁP đúng thứ tự trong `main()` qua 6 TODO: march bị chặn khoảng, gọi march, tính normal, tính bóng, tô màu theo cao+dốc, rồi fog. Thứ tự này quan trọng — mỗi bước sau đọc kết quả của bước trước.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — đặc biệt chú ý đường viền núi không bị thủng lỗ (dấu hiệu march bước quá nhanh) và tuyết chỉ bám đúng vùng cao-phẳng chứ không tràn xuống sườn dốc.

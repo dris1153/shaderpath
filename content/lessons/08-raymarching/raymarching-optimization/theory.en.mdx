@@ -1,0 +1,75 @@
+## Where a Raymarch Loop Spends Its Time
+
+A raymarch frame's cost is roughly the product of three numbers: pixel count, average march steps per pixel, and the cost of one SDF call. At DPR 2 on a 1920×1080 screen that's already ~8.3 million pixels (estimate, using Track 2's invocation counting) — multiply by 80-100 march steps per pixel (a typical figure for an untuned sphere-tracing scene) and an SDF with a handful of `min`/`smin` calls per step, and the total GPU work per frame easily crosses half a billion operations. The track's last three lessons (soft shadows, AO, domain repetition) all made the SDF function itself heavier — raising the cost *per step* — while this lesson attacks the other factor: cutting the *number of steps*. The three techniques below don't change the final image (or barely do) — they cut wasted work out of the march loop itself.
+
+## Bounding Volumes: Early-Out with a Ray-Box Slab Test
+
+The idea is simple enough to be easy to skip: if a ray provably can't reach any geometry, don't march it — test against a bounding volume that's far cheaper than the real SDF, and skip the entire loop for that ray. Inigo Quilez's "Bounding Volumes" article describes exactly this technique for raymarching: wrap the scene (or an object) in a simple sphere or box, and test that analytically before marching.
+
+For a box, the standard approach is the **slab method**: compute the entry/exit interval $[t_{near}, t_{far}]$ per axis, then intersect the three intervals:
+
+```glsl
+vec2 intersectBox(vec3 ro, vec3 rd, vec3 bmin, vec3 bmax) {
+  vec3 invD = 1.0 / rd;
+  vec3 t0s = (bmin - ro) * invD;
+  vec3 t1s = (bmax - ro) * invD;
+  vec3 tsm = min(t0s, t1s);
+  vec3 tbg = max(t0s, t1s);
+  float tNear = max(max(tsm.x, tsm.y), tsm.z);
+  float tFar = min(min(tbg.x, tbg.y), tbg.z);
+  return vec2(tNear, tFar);
+}
+```
+
+If $t_{far} < \max(t_{near}, 0)$, the ray misses the box entirely — **skip marching, no SDF call at all**. That's exactly the sky column in this lesson's demo: the camera sits low, grazing across a field of repeated pillars; the sky above the bounding box never touches the SDF, so switching on the heatmap keeps it a cool, flat blue (0 steps) while the pillar region shows a real yellow-to-red gradient matching actual steps marched. If the ray DOES hit the box, don't march from $t=0$: start right at $t_0 = \max(t_{near}, 0)$ — where the ray enters the box — and hard-stop at $t_1 = t_{far}$ — where it exits. The march interval shrinks to exactly the span the ray actually crosses through occupied space, regardless of how far the camera sits from the box.
+
+## Adaptive Stepping: Widening the Step, Knowing When to Back Off
+
+Standard sphere tracing steps by exactly $d(p)$ — the maximum safe distance, no more, no less — so it converges safely but slowly wherever the SDF "looks far but travels close" (a surface nearly parallel to the ray). Over-relaxation widens the step to $d(p) \times \omega$ with $\omega > 1$ to converge faster — but push it too far and the next step's safe sphere may no longer **fully cover** the region just crossed, letting the march jump straight through a thin feature and miss the real intersection. Keinert et al. solve exactly this in "Enhanced Sphere Tracing" (Eurographics 2014): track the previous step's safe radius, and when the current step looks like it may have overshot that coverage, fall back to a conservative step instead of trusting $\omega$ blindly.
+
+The simplified version used in this lesson's demo — enough to see the artifact, not the paper's full algorithm — is a "sign/step-back heuristic": compare the upcoming `stepLen` against the combined safe radius of two consecutive samples, and fall back to a conservative step when the overlap looks insufficient:
+
+```glsl
+float stepLen = d * uRelax;
+if (uRelax > 1.01 && (d + prevD) < prevStep) {
+  stepLen = max(prevStep - prevD, eps);
+}
+```
+
+Around $\omega \approx 1.0$–$1.4$, the march looks identical to the unrelaxed version; drag `uRelax` past roughly $1.6$, and artifacts start showing — small dents or holes at pillar edges, exactly where a widened step jumped past the spot it should have stopped at. That's not an implementation bug — it IS the technique's real limit, the one the original paper solves with a far more rigorous algorithm than the shortened heuristic here.
+
+## Epsilon That Scales With Distance
+
+The march's stopping threshold $\varepsilon$ (treat the surface as hit once $d(p) < \varepsilon$) is usually picked as a fixed constant — but a screen pixel covers MORE real-world space the farther a march point sits from the camera (fixed field of view, physical size per pixel growing linearly with $t$). A fixed epsilon that's too small relative to "one pixel's size" at long range forces the march to burn extra steps chasing precision the eye can't resolve anyway — while a fixed epsilon that's too large erodes silhouettes up close. The fix: scale epsilon directly with $t$:
+
+$$
+\varepsilon(t) = \varepsilon_0 \cdot \max(t, 1)
+$$
+
+```glsl
+float eps = (uDistScaledEps > 0.5) ? 0.001 * max(t, 1.0) : 0.001;
+```
+
+Flip this flag off in the demo and zoom into the farthest pillars: the silhouette edge shows a faint "gnawed" look — distant pixels are forced to march to needless precision without the final color even changing, just extra steps burned. Flip it back on, and the edge sharpens up AND the average step count drops — one line fixes both, because they share the same root cause: unnecessary precision far away.
+
+## Cheaper LOD by Distance, and a Step Budget
+
+The same logic behind scaled epsilon applies to the SDF function itself: a complex scene (domain warping, several FBM octaves blended into a height field, like the track's closing checkpoint will use) doesn't need full detail at long range — a distant pixel simply lacks the resolution to "see" a high-frequency octave whether it's computed or not (the same Nyquist argument from the FBM lesson). Dropping octave/detail terms past a distance threshold, before marching that far, is a cheap form of LOD — no extra data structure needed, just an `if (t > threshold)` or a `mix` between the detailed and reduced SDF.
+
+Every technique above targets the same budget: **maximum steps per pixel**. The track's opening lesson introduced `MAX_STEPS` as a hard cap against hanging the GPU — this lesson turns it into a budget you TUNE on purpose: the heatmap shows real per-pixel step cost, revealing "hot spots" (usually silhouettes or near-parallel regions) so you can invest bounding volumes, relaxation, or LOD exactly where they pay off instead of blindly raising `MAX_STEPS`.
+
+## Measuring: Being Honest About the Numbers
+
+This platform exposes `data-frames` on a demo's container — a real RAF tick counter, used to verify a canvas stops rendering off-screen (spec §8.3), not a proper FPS benchmark. The "steps/pixel" figure in this lesson's demo comes from re-rendering the exact same shader at 24×24 resolution and reading back an alpha channel encoding `steps/MAX_STEPS` — a REAL measurement, not a made-up number, but still just an estimate over a small sample, labeled as such instead of pretending to perfect accuracy. For numbers you can trust when shipping a real product, reach for the Chrome DevTools GPU profiler or Spector.js (Track 12) — and even then, publish the measurement alongside its conditions (which GPU, which resolution), never a bare "X% faster" with no context.
+
+The track's next lesson closes a different loop: combining raymarching with a real rasterized scene (a Three.js mesh), where the bounding-volume idea from this lesson comes back in a different shape — a mesh scene's depth buffer becomes the march's natural bound.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when optimizing a raymarch:
+
+1. **Testing the bounding volume but still marching from $t=0$.** Skipping a missed ray is correct, but if a ray DOES hit the box and still marches from 0 instead of $t_{near}$, the whole "before the box" span is still wasted — a bounding volume only pays off fully when both halves happen: skip on miss, shift the start point on hit.
+2. **Widening over-relaxation with no step-back on overshoot.** $\omega > 1$ with no overshoot check is a gamble: the image can look correct across most of the scene and then break suddenly (a hole, a dent) exactly at thin geometry — a silent failure, nothing logged to the console, visible only on close inspection of a silhouette.
+3. **Treating a measurement from your own machine as universal.** A "steps/pixel" or "ms/frame" figure measured on a discrete desktop GPU says nothing about an integrated or mobile GPU (Track 12 covers tile-based rendering in depth) — always label the device you measured on, don't generalize from one sample.
+
+</Callout>
