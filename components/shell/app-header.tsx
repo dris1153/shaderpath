@@ -8,6 +8,7 @@ import { ThemeToggle } from "./theme-toggle";
 export async function AppHeader() {
   const t = await getTranslations("app");
   const tNav = await getTranslations("nav");
+  const tA11y = await getTranslations("a11y");
 
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur">
@@ -16,7 +17,10 @@ export async function AppHeader() {
           <Link href="/" className="font-semibold tracking-tight">
             {t("name")}
           </Link>
-          <nav className="text-muted-foreground flex items-center gap-4 text-sm">
+          <nav
+            aria-label={tA11y("mainNav")}
+            className="text-muted-foreground flex items-center gap-4 text-sm"
+          >
             <Link href="/roadmap" className="hover:text-foreground transition-colors">
               {tNav("roadmap")}
             </Link>

@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Shaderpath
 
-## Getting Started
+A self-hosted, single-user learning platform for Three.js / WebGL / GLSL / GSAP — from zero to senior. 14 tracks, 162 bilingual units (Vietnamese default, English), interactive demos, a GLSL playground, exercises with spaced repetition, notes, and progress tracking. All progress lives in a local SQLite file; nothing leaves your machine.
 
-First, run the development server:
+## Requirements
+
+- Node.js 20+ and pnpm 9+
+- Windows, macOS, or Linux (better-sqlite3 ships prebuilt binaries; no build tools needed)
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev        # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+First boot creates `data/progress.db` and applies migrations automatically (via `instrumentation.ts`). No setup step.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Production:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm build      # regenerates lesson registry + search index, then next build
+pnpm start
+```
 
-## Learn More
+## Database & migrations
 
-To learn more about Next.js, take a look at the following resources:
+- SQLite (WAL) at `data/progress.db` — gitignored, contains only your progress/notes/settings. Lesson content lives in code (`content/`), never in the DB.
+- Migrations in `drizzle/` are applied automatically on boot. Deleting `data/` entirely is safe: the next boot recreates and migrates a fresh DB.
+- `SHADERPATH_DB=<path>` overrides the DB location (tests use this).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Backup & restore
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Two options:
 
-## Deploy on Vercel
+1. **In-app (recommended):** Settings (gear icon) → Data → *Export* downloads `shaderpath-progress-<date>.json` (version-tagged). *Import* validates the file, previews row counts, auto-downloads a backup of the current state, then applies as replace or merge — all in one transaction.
+2. **File copy:** stop the app, copy `data/progress.db` (and `-wal`/`-shm` siblings if present). Restore by copying back.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Imports with a mismatched `schemaVersion` are rejected outright — re-export from the same app version instead of hand-editing the JSON.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Content authoring
+
+- `content/tracks/*.ts` — track/module/lesson metadata (slugs are frozen; renaming breaks notes/bookmarks).
+- `content/lessons/<track>/<slug>/` — `theory.vi.mdx`, `theory.en.mdx`, `references.ts`, `exercises.ts`, `demo.tsx` (+ sibling `.vert`/`.frag`).
+- `pnpm gen:registry` regenerates the typed registry after adding files; `pnpm lint:content` is the quality gate (bilingual heading parity, citations, exercise rules).
+
+## Checks
+
+```bash
+pnpm typecheck        # tsc --noEmit
+pnpm lint             # eslint
+pnpm vitest run       # unit tests
+pnpm test:e2e         # playwright (boots its own server on :3100, fresh DB per run)
+pnpm audit:guards     # no-custom-css + strict-TS guards + full content lint
+```
+
+## Quality tiers
+
+Demos auto-detect a quality tier (GPU string + device memory + a short frame probe) on first visit and cap canvas DPR/effects accordingly. Override it any time in Settings — the manual choice is persisted and always wins.

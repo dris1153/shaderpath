@@ -41,7 +41,14 @@ export async function ModuleAccordion({
                       total: stats.coreTotal,
                     })}
                   </span>
-                  <Progress value={stats.percent} className="w-24" />
+                  <Progress
+                    value={stats.percent}
+                    aria-label={`${mod.title[locale]}: ${t("coreProgress", {
+                      completed: stats.coreCompleted,
+                      total: stats.coreTotal,
+                    })}`}
+                    className="w-24"
+                  />
                 </span>
               </div>
             </AccordionTrigger>

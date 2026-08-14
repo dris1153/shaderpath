@@ -9,6 +9,7 @@ import { QualityProvider } from "@/components/providers/quality-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
+import { SkipLink } from "@/components/shell/skip-link";
 import { CommandProvider } from "@/components/command/command-provider";
 import { getQualityTierSetting } from "@/lib/settings-read";
 import "../globals.css";
@@ -67,6 +68,7 @@ export default async function LocaleLayout({
             <QueryProvider>
               <QualityProvider initialTier={initialTier}>
                 <TooltipProvider>
+                  <SkipLink />
                   <AppHeader />
                   {children}
                   <Toaster />

@@ -84,37 +84,39 @@ export async function LessonSidebar({
   const modules = getModulesOfTrack(trackId);
 
   return (
-    <ScrollArea className="h-[calc(100vh-7rem)]">
-      <div className="pr-3 pb-8">
-        <Link
-          href={`/track/${track.id}`}
-          className="text-muted-foreground hover:text-foreground text-xs font-medium tracking-wide uppercase"
-        >
-          {t("backToTrack")} · {track.title[locale]}
-        </Link>
-        <Accordion defaultValue={[currentModuleId]} className="mt-2">
-          {modules.map((mod) => (
-            <AccordionItem key={mod.id} value={mod.id}>
-              <AccordionTrigger className="text-sm">
-                {mod.title[locale]}
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="flex flex-col gap-0.5">
-                  {getLessonsOfModule(mod.id).map((lesson) => (
-                    <LessonLink
-                      key={lesson.slug}
-                      lesson={lesson}
-                      locale={locale}
-                      active={lesson.slug === currentSlug}
-                      progress={progress}
-                    />
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </ScrollArea>
+    <nav aria-label={t("openNav")}>
+      <ScrollArea className="h-[calc(100vh-7rem)]">
+        <div className="pr-3 pb-8">
+          <Link
+            href={`/track/${track.id}`}
+            className="text-muted-foreground hover:text-foreground text-xs font-medium tracking-wide uppercase"
+          >
+            {t("backToTrack")} · {track.title[locale]}
+          </Link>
+          <Accordion defaultValue={[currentModuleId]} className="mt-2">
+            {modules.map((mod) => (
+              <AccordionItem key={mod.id} value={mod.id}>
+                <AccordionTrigger className="text-sm">
+                  {mod.title[locale]}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="flex flex-col gap-0.5">
+                    {getLessonsOfModule(mod.id).map((lesson) => (
+                      <LessonLink
+                        key={lesson.slug}
+                        lesson={lesson}
+                        locale={locale}
+                        active={lesson.slug === currentSlug}
+                        progress={progress}
+                      />
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+      </ScrollArea>
+    </nav>
   );
 }

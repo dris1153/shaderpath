@@ -32,7 +32,14 @@ const withMDX = createMDX({
       ["rehype-slug"],
       [
         "@shikijs/rehype",
-        { themes: { light: "github-light", dark: "github-dark" } },
+        // high-contrast variants: plain github-light/dark fail WCAG AA color-contrast
+        // on several token colors (axe color-contrast, serious) — a11y sweep, phase 10.
+        {
+          themes: {
+            light: "github-light-high-contrast",
+            dark: "github-dark-high-contrast",
+          },
+        },
       ],
     ],
   },

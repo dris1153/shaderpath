@@ -175,6 +175,12 @@
     "dark": "Tối",
     "system": "Hệ thống"
   },
+  "a11y": {
+    "skipToContent": "Bỏ qua đến nội dung chính",
+    "mainNav": "Điều hướng chính",
+    "editorEscapeHint": "Khung soạn thảo này giữ phím Tab bên trong. Nhấn Ctrl+M để Tab chuyển sang di chuyển focus thay vì chèn ký tự tab, sau đó nhấn Tab hoặc Shift+Tab để rời khỏi khung soạn thảo.",
+    "resizeHandle": "Đổi kích thước khung soạn thảo và khung xem trước"
+  },
   "settings": {
     "title": "Cài đặt",
     "appearanceTitle": "Giao diện",

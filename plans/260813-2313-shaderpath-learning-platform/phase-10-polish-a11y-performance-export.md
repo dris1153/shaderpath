@@ -87,9 +87,9 @@ Perf sweep: lighthouse CI on 6 routes + bundle analyzer + memory-leak playwright
 
 ## Todo List
 
-- [ ] axe scan + fixes on all route classes
-- [ ] Keyboard navigation pass incl. overlays and Monaco escape
-- [ ] `prefers-reduced-motion` support
+- [x] axe scan + fixes on all route classes (`tests/e2e/a11y.spec.ts`, 8 routes, 0 serious/critical)
+- [x] Keyboard navigation pass incl. overlays and Monaco escape (`tests/e2e/keyboard-nav.spec.ts`)
+- [x] `prefers-reduced-motion` support (`lib/hooks/use-prefers-reduced-motion.ts`, wired into `lib/hooks/use-gsap-context.ts`)
 - [ ] Quality tier detect + persist + override (A4)
 - [ ] Export route + import route with `schemaVersion` + transactional apply
 - [ ] Settings page/sheet (locale, theme, quality, data)

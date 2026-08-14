@@ -78,8 +78,12 @@ export default async function LessonPage({
   );
 
   return (
-    <div className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]">
-      <aside className="hidden lg:block">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]"
+    >
+      <aside aria-label={t("openNav")} className="hidden lg:block">
         <div className="sticky top-20">{sidebar}</div>
       </aside>
 
@@ -166,7 +170,7 @@ export default async function LessonPage({
         <LessonFooterNav slug={lesson.slug} locale={locale} />
       </article>
 
-      <aside className="hidden xl:block">
+      <aside aria-label={t("onThisPage")} className="hidden xl:block">
         <div className="sticky top-20">
           <LessonToc toc={toc} />
         </div>
@@ -176,6 +180,6 @@ export default async function LessonPage({
         slug={lesson.slug}
         initialScrollPercent={progressRow?.scrollPercent ?? 0}
       />
-    </div>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -19,23 +20,28 @@ export function CodeEditor({
   language?: string;
   onChange: (v: string) => void;
 }) {
+  const t = useTranslations("a11y");
   const { resolvedTheme } = useTheme();
 
   return (
-    <Editor
-      language={language}
-      theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
-      value={value}
-      onChange={(v) => onChange(v ?? "")}
-      options={{
-        minimap: { enabled: false },
-        fontSize: 13,
-        wordWrap: "on",
-        scrollBeyondLastLine: false,
-        automaticLayout: true,
-        tabSize: 2,
-        padding: { top: 12 },
-      }}
-    />
+    <>
+      <p className="sr-only">{t("editorEscapeHint")}</p>
+      <Editor
+        language={language}
+        theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
+        value={value}
+        onChange={(v) => onChange(v ?? "")}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 13,
+          wordWrap: "on",
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          padding: { top: 12 },
+          ariaLabel: t("editorEscapeHint"),
+        }}
+      />
+    </>
   );
 }

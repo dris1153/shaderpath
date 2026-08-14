@@ -47,7 +47,13 @@ export async function TrackCard({
           </span>
         </div>
         <CardDescription>{track.summary[locale]}</CardDescription>
-        <Progress value={stats.percent} />
+        <Progress
+          value={stats.percent}
+          aria-label={`${track.title[locale]}: ${t("coreProgress", {
+            completed: stats.coreCompleted,
+            total: stats.coreTotal,
+          })}`}
+        />
       </CardHeader>
       <CardContent>
         <ModuleAccordion modules={modules} locale={locale} progress={progress} />

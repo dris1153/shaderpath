@@ -39,7 +39,7 @@ export default async function TrackPage({
   const modules = getModulesOfTrack(track.id);
 
   return (
-    <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
+    <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 py-10">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -56,7 +56,14 @@ export default async function TrackPage({
       </h1>
       <p className="text-muted-foreground mt-2">{track.summary[locale]}</p>
       <div className="mt-4 flex items-center gap-3">
-        <Progress value={stats.percent} className="w-48" />
+        <Progress
+          value={stats.percent}
+          aria-label={`${track.title[locale]}: ${t("coreProgress", {
+            completed: stats.coreCompleted,
+            total: stats.coreTotal,
+          })}`}
+          className="w-48"
+        />
         <span className="text-muted-foreground text-xs tabular-nums">
           {t("coreProgress", {
             completed: stats.coreCompleted,

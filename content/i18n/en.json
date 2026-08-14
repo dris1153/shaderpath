@@ -175,6 +175,12 @@
     "dark": "Dark",
     "system": "System"
   },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "mainNav": "Main navigation",
+    "editorEscapeHint": "This code editor traps the Tab key. Press Ctrl+M to toggle Tab so it moves focus instead of inserting a tab character, then press Tab or Shift+Tab to leave the editor.",
+    "resizeHandle": "Resize editor and preview panels"
+  },
   "settings": {
     "title": "Settings",
     "appearanceTitle": "Appearance",

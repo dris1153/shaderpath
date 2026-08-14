@@ -46,7 +46,7 @@ export default async function DashboardPage() {
     );
 
   return (
-    <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+    <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
       <h1 className="text-3xl font-semibold tracking-tight">{t("welcome")}</h1>
       <p className="text-muted-foreground mt-2">{tApp("tagline")}</p>
       <Card className="mt-8">
@@ -63,7 +63,11 @@ export default async function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-4">
-          <Progress value={stats.percent} className="w-64" />
+          <Progress
+            value={stats.percent}
+            aria-label={t("progressTitle")}
+            className="w-64"
+          />
           {continueLesson && (
             <Button
               nativeButton={false}

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, type RefObject } from "react";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import type { Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
@@ -29,6 +30,7 @@ export function GlslEditor({
   errors: GlslError[];
   handleRef?: RefObject<EditorHandle | null>;
 }) {
+  const t = useTranslations("a11y");
   const { resolvedTheme } = useTheme();
   const monacoRef = useRef<Monaco | null>(null);
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -60,34 +62,38 @@ export function GlslEditor({
   }, [errors]);
 
   return (
-    <Editor
-      language="glsl"
-      theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
-      value={value}
-      onChange={(v) => onChange(v ?? "")}
-      beforeMount={registerGlslLanguage}
-      onMount={(ed, monaco) => {
-        editorRef.current = ed;
-        monacoRef.current = monaco;
-        if (handleRef) {
-          handleRef.current = {
-            revealLine: (line) => {
-              ed.revealLineInCenter(line);
-              ed.setPosition({ lineNumber: line, column: 1 });
-              ed.focus();
-            },
-          };
-        }
-      }}
-      options={{
-        minimap: { enabled: false },
-        fontSize: 13,
-        wordWrap: "on",
-        scrollBeyondLastLine: false,
-        automaticLayout: true,
-        tabSize: 2,
-        padding: { top: 12 },
-      }}
-    />
+    <>
+      <p className="sr-only">{t("editorEscapeHint")}</p>
+      <Editor
+        language="glsl"
+        theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
+        value={value}
+        onChange={(v) => onChange(v ?? "")}
+        beforeMount={registerGlslLanguage}
+        onMount={(ed, monaco) => {
+          editorRef.current = ed;
+          monacoRef.current = monaco;
+          if (handleRef) {
+            handleRef.current = {
+              revealLine: (line) => {
+                ed.revealLineInCenter(line);
+                ed.setPosition({ lineNumber: line, column: 1 });
+                ed.focus();
+              },
+            };
+          }
+        }}
+        options={{
+          minimap: { enabled: false },
+          fontSize: 13,
+          wordWrap: "on",
+          scrollBeyondLastLine: false,
+          automaticLayout: true,
+          tabSize: 2,
+          padding: { top: 12 },
+          ariaLabel: t("editorEscapeHint"),
+        }}
+      />
+    </>
   );
 }

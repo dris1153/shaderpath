@@ -63,7 +63,10 @@
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
+  /* Darkened from the shadcn default (L 0.577) — at 0.577 the Alert
+     variant="destructive" text (rendered at 90% opacity) fell to ~4.49:1
+     against white, just under WCAG AA's 4.5:1 (axe color-contrast, serious). */
+  --destructive: oklch(0.5 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);

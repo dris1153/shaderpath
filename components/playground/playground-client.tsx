@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -28,6 +29,7 @@ export function PlaygroundClient({
   /** Fires on editor edits — used by shader exercises to autosave userCode */
   onSourceChange?: (source: string) => void;
 }) {
+  const tA11y = useTranslations("a11y");
   const [snippets, setSnippets] = useState(initialSnippets);
   const [snippetId, setSnippetId] = useState<number | null>(null);
   const [source, setSource] = useState(initialSource ?? DEFAULT_FRAGMENT);
@@ -84,7 +86,7 @@ export function PlaygroundClient({
             handleRef={editorHandle}
           />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        <ResizableHandle withHandle aria-label={tA11y("resizeHandle")} />
         <ResizablePanel defaultSize={50} minSize={25}>
           <ShaderPreview source={liveSource} onCompile={onCompile} />
         </ResizablePanel>
