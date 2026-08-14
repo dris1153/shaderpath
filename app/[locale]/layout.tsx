@@ -8,6 +8,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
+import { CommandProvider } from "@/components/command/command-provider";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
@@ -62,6 +63,7 @@ export default async function LocaleLayout({
                 <AppHeader />
                 {children}
                 <Toaster />
+                <CommandProvider />
               </TooltipProvider>
             </QueryProvider>
           </ThemeProvider>

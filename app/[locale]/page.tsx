@@ -2,8 +2,11 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { LESSONS } from "@/content/curriculum";
 import type { Locale } from "@/content/types";
-import { isUnlocked, overallCompletion } from "@/lib/curriculum";
+import { getLesson, isUnlocked, overallCompletion } from "@/lib/curriculum";
 import { getProgressMap, getTotalTimeSeconds } from "@/lib/progress-read";
+import { getDueReviews } from "@/lib/review-read";
+import { DueToday } from "@/components/dashboard/due-today";
+import type { LessonSlug } from "@/content/slugs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +28,12 @@ export default async function DashboardPage() {
   const progress = getProgressMap();
   const stats = overallCompletion(progress);
   const hours = Math.round(getTotalTimeSeconds() / 360) / 10;
+
+  const due: { slug: string; title: string }[] = [];
+  for (const r of getDueReviews(new Date())) {
+    const lesson = getLesson(r.lessonSlug as LessonSlug);
+    if (lesson) due.push({ slug: lesson.slug, title: lesson.title[locale] });
+  }
 
   // Continue where the learner left off: first in_progress, else first unlocked core not done
   const continueLesson =
@@ -65,6 +74,8 @@ export default async function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <DueToday due={due} />
     </main>
   );
 }

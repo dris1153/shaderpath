@@ -2,8 +2,9 @@
 
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { lessonProgress, studySessions } from "@/db/schema";
+import { lessonProgress, reviewQueue, studySessions } from "@/db/schema";
 import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
+import { nextDueDate } from "@/lib/srs";
 
 // Client input is untrusted even single-user: validate slug, clamp numbers.
 const VALID_SLUGS = new Set<string>(LESSON_SLUGS);
@@ -70,6 +71,19 @@ export async function markComplete(slug: string, confidence?: number) {
         startedAt: sql`COALESCE(${lessonProgress.startedAt}, ${Math.floor(Date.now() / 1000)})`,
       },
     })
+    .run();
+
+  // SRS (spec §6.2.11): completion enters the review queue due tomorrow.
+  // An existing schedule is never reset by re-completing.
+  db.insert(reviewQueue)
+    .values({
+      lessonSlug: slug,
+      intervalDays: 1,
+      easeFactor: 2.5,
+      dueAt: nextDueDate(1, new Date()),
+      reviewCount: 0,
+    })
+    .onConflictDoNothing({ target: reviewQueue.lessonSlug })
     .run();
 }
 

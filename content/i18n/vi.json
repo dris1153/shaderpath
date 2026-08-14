@@ -5,7 +5,65 @@
   },
   "nav": {
     "roadmap": "Lộ trình",
-    "playground": "Playground"
+    "playground": "Playground",
+    "notes": "Ghi chú",
+    "stats": "Thống kê"
+  },
+  "notes": {
+    "title": "Ghi chú & Bookmark",
+    "subtitle": "{notes} ghi chú · {bookmarks} bookmark",
+    "empty": "Chưa có gì — bôi đen văn bản trong bài học để ghi chú hoặc bookmark một mục.",
+    "notesHeading": "Ghi chú",
+    "bookmarks": "Bookmark",
+    "addNote": "Ghi chú",
+    "bookmarkSection": "Bookmark mục này",
+    "bookmarkLesson": "Bookmark bài học",
+    "notePlaceholder": "Viết ghi chú của bạn…",
+    "saveNote": "Lưu ghi chú",
+    "save": "Lưu",
+    "cancel": "Huỷ",
+    "edit": "Sửa",
+    "delete": "Xoá",
+    "noteSaved": "Đã lưu ghi chú",
+    "noteDeleted": "Đã xoá ghi chú",
+    "sectionBookmarked": "Đã bookmark mục",
+    "bookmarkRemoved": "Đã bỏ bookmark",
+    "saveError": "Không lưu được — thử lại"
+  },
+  "palette": {
+    "placeholder": "Tìm bài học, hành động… (Ctrl+K)",
+    "empty": "Không tìm thấy kết quả",
+    "lessons": "Bài học",
+    "actions": "Hành động",
+    "goRoadmap": "Mở Lộ trình",
+    "goPlayground": "Mở Playground",
+    "goNotes": "Mở Ghi chú",
+    "goStats": "Mở Thống kê",
+    "toggleTheme": "Đổi giao diện sáng/tối",
+    "switchLocale": "Switch to English"
+  },
+  "stats": {
+    "title": "Thống kê học tập",
+    "currentStreak": "Streak hiện tại",
+    "longestStreak": "Streak dài nhất",
+    "totalTime": "Tổng thời gian",
+    "lessonsCompleted": "Bài đã xong",
+    "exercisesCompleted": "Bài tập đã xong",
+    "days": "{n} ngày",
+    "heatmapTitle": "Hoạt động 26 tuần gần đây",
+    "heatmapCell": "{date}: {minutes} phút",
+    "distributionTitle": "Phân bố theo track",
+    "noData": "Chưa có dữ liệu — học một bài để bắt đầu."
+  },
+  "review": {
+    "title": "{count} bài cần ôn hôm nay",
+    "subtitle": "Tự đánh giá mức độ nhớ để lên lịch lần ôn tiếp theo (SM-2).",
+    "grade_again": "Quên",
+    "grade_hard": "Khó",
+    "grade_good": "Nhớ",
+    "grade_easy": "Dễ",
+    "graded": "Đã lên lịch lần ôn tiếp theo",
+    "gradeError": "Không lưu được — thử lại"
   },
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",

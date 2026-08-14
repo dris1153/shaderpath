@@ -5,7 +5,65 @@
   },
   "nav": {
     "roadmap": "Roadmap",
-    "playground": "Playground"
+    "playground": "Playground",
+    "notes": "Notes",
+    "stats": "Stats"
+  },
+  "notes": {
+    "title": "Notes & Bookmarks",
+    "subtitle": "{notes} notes · {bookmarks} bookmarks",
+    "empty": "Nothing yet — select text inside a lesson to add a note or bookmark a section.",
+    "notesHeading": "Notes",
+    "bookmarks": "Bookmarks",
+    "addNote": "Add note",
+    "bookmarkSection": "Bookmark section",
+    "bookmarkLesson": "Bookmark lesson",
+    "notePlaceholder": "Write your note…",
+    "saveNote": "Save note",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "noteSaved": "Note saved",
+    "noteDeleted": "Note deleted",
+    "sectionBookmarked": "Section bookmarked",
+    "bookmarkRemoved": "Bookmark removed",
+    "saveError": "Save failed — try again"
+  },
+  "palette": {
+    "placeholder": "Search lessons, actions… (Ctrl+K)",
+    "empty": "No results",
+    "lessons": "Lessons",
+    "actions": "Actions",
+    "goRoadmap": "Open Roadmap",
+    "goPlayground": "Open Playground",
+    "goNotes": "Open Notes",
+    "goStats": "Open Stats",
+    "toggleTheme": "Toggle light/dark theme",
+    "switchLocale": "Chuyển sang tiếng Việt"
+  },
+  "stats": {
+    "title": "Learning statistics",
+    "currentStreak": "Current streak",
+    "longestStreak": "Longest streak",
+    "totalTime": "Total time",
+    "lessonsCompleted": "Lessons done",
+    "exercisesCompleted": "Exercises done",
+    "days": "{n} days",
+    "heatmapTitle": "Last 26 weeks of activity",
+    "heatmapCell": "{date}: {minutes} min",
+    "distributionTitle": "Time by track",
+    "noData": "No data yet — study a lesson to get started."
+  },
+  "review": {
+    "title": "{count} lessons due for review",
+    "subtitle": "Grade how well you remember to schedule the next review (SM-2).",
+    "grade_again": "Again",
+    "grade_hard": "Hard",
+    "grade_good": "Good",
+    "grade_easy": "Easy",
+    "graded": "Next review scheduled",
+    "gradeError": "Save failed — try again"
   },
   "dashboard": {
     "welcome": "Welcome to Shaderpath",

@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P2
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14)
 - **Effort:** ~14h
 - **Description:** Personal-knowledge layer on top of reading: highlight→note, bookmarks, Cmd+K search across lessons, stats page (heatmap/streak/hours/track distribution), and SM-2-lite spaced repetition feeding the dashboard.
 
@@ -91,15 +91,15 @@ dashboard → dueToday() (WHERE due_at <= now, indexed) → review flow → grad
 
 ## Todo List
 
-- [ ] `lib/date-buckets.ts` + tests (DST/midnight)
-- [ ] `lib/srs.ts` SM-2-lite + tests
-- [ ] Notes server actions + selection popover + `/notes` page
-- [ ] Bookmarks (D5) toggle + listing
-- [ ] Search index generator + build wiring
-- [ ] Command palette (lessons, tags, content, quick actions)
-- [ ] Stats page: heatmap, streak, hours, track distribution
-- [ ] Dashboard due-today + review grading flow
-- [ ] e2e: palette navigation, note persistence
+- [x] `lib/date-buckets.ts` + tests (DST/midnight)
+- [x] `lib/srs.ts` SM-2-lite + tests
+- [x] Notes server actions + selection popover + `/notes` page
+- [x] Bookmarks (D5) toggle + listing
+- [x] Search index generator + build wiring
+- [x] Command palette (lessons, tags, content, quick actions)
+- [x] Stats page: heatmap, streak, hours, track distribution
+- [x] Dashboard due-today + review grading flow
+- [x] e2e: palette navigation, note persistence
 
 ## Success Criteria
 
@@ -131,6 +131,21 @@ dashboard → dueToday() (WHERE due_at <= now, indexed) → review flow → grad
 ## Rollback
 
 Revert phase commit; dashboard falls back to progress-only. Tables persist (Phase 1) — orphan notes/bookmarks stay readable after re-enabling.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Deviations:**
+- Heatmap = plain CSS grid divs (GitHub-style isn't a recharts chart type); track distribution uses recharts via the shadcn `ChartContainer` as spec'd.
+- Selection popover is a manually-positioned floating Card (fixed at the selection rect) — shadcn Popover's anchor model doesn't fit arbitrary text ranges.
+- Heading-level bookmarks ride the selection popover ("Bookmark section") instead of TOC buttons; lesson-level toggle sits beside the header.
+- Review grading happens inline on the dashboard card (Quên/Khó/Nhớ/Dễ per lesson) — no separate review route.
+- Notes/bookmarks list is a plain grouped list (`ponytail`: virtualize if it ever passes a few hundred rows).
+- `build` script now regenerates the lesson registry + search index before `next build` — generated artifacts can't go stale.
+- CommandDialog (shadcn) wraps only the Dialog — `Command shouldFilter={false}` nests inside; palette does its own diacritic-folded ranking (`fold("Toạ độ") = "toa do"`).
+
+**E2E lesson:** Ctrl+K and selection listeners attach post-hydration — tests wrap the trigger in `expect().toPass` retries (same family as the Monaco lesson from Phase 5).
+
+**Verification run:** typecheck ✓ · eslint ✓ · vitest 53/53 (19 new: SM-2 sequence/clamps, streaks incl. DST + 3-day gap + same-day sessions, weeksGrid, search fold/ranking) ✓ · build ✓ (`/stats` + `/notes` routes live) · e2e 18/18 (palette search→navigate, selection→note→/notes roundtrip, stats empty-state) ✓. §9 DoD: dashboard đọc đúng streak (qua stats helpers dùng chung) và danh sách bài đến hạn ôn từ `review_queue`.
 
 ## Next Steps
 

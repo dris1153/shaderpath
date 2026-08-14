@@ -24,6 +24,18 @@ export async function AppHeader() {
             >
               {tNav("playground")}
             </Link>
+            <Link
+              href="/notes"
+              className="hover:text-foreground hidden transition-colors sm:inline"
+            >
+              {tNav("notes")}
+            </Link>
+            <Link
+              href="/stats"
+              className="hover:text-foreground hidden transition-colors sm:inline"
+            >
+              {tNav("stats")}
+            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-1">

@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "tsx scripts/gen-lesson-registry.ts && tsx scripts/gen-search-index.ts && next build",
+    "gen:search": "tsx scripts/gen-search-index.ts",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",

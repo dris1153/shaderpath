@@ -11,6 +11,7 @@ import type { LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
 import { getLesson, isUnlocked } from "@/lib/curriculum";
 import { getProgressMap, getProgressRow } from "@/lib/progress-read";
+import { isLessonBookmarked } from "@/lib/notes-read";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +21,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ExerciseSection } from "@/components/exercise/exercise-section";
+import { BookmarkToggle } from "@/components/notes/bookmark-toggle";
+import { LessonNotesLayer } from "@/components/notes/lesson-notes-layer";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { LessonHeader } from "@/components/lesson/lesson-header";
 import { LessonToc } from "@/components/lesson/lesson-toc";
@@ -113,7 +116,15 @@ export default async function LessonPage({
           )}
         </div>
 
-        <LessonHeader lesson={lesson} locale={locale} />
+        <div className="relative">
+          <div className="absolute top-0 right-0">
+            <BookmarkToggle
+              slug={lesson.slug}
+              initialBookmarked={isLessonBookmarked(lesson.slug)}
+            />
+          </div>
+          <LessonHeader lesson={lesson} locale={locale} />
+        </div>
 
         {!unlocked && (
           <Alert className="mt-6">
@@ -128,9 +139,11 @@ export default async function LessonPage({
         )}
 
         {Theory ? (
-          <div className="mt-2">
-            <Theory />
-          </div>
+          <LessonNotesLayer slug={lesson.slug}>
+            <div className="mt-2">
+              <Theory />
+            </div>
+          </LessonNotesLayer>
         ) : (
           <Alert className="mt-8">
             <AlertTitle>{t("contentComingSoonTitle")}</AlertTitle>
