@@ -73,6 +73,13 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - Half-float composer targets for HDR lessons (`new EffectComposer(gl, new WebGLRenderTarget(w, h, { type: HalfFloatType }))` — verify constructor signature in node_modules; bloom-on-HDR claims must match what the installed UnrealBloomPass actually does).
 - Keep demo scenes light (a few meshes + lights) — the EFFECT is the subject; embedded pass chains cap at ~3 passes; use half-resolution internal targets where the technique allows.
 
+## PBR lessons (Track 11)
+
+- EVERY formula in KaTeX with derivation steps shown; every physical number (F0 values, IOR, albedo ranges) verified against a cited reference (Real-Time Rendering / learnopengl PBR / Filament docs / Karis's UE4 course notes — all citable URLs). No un-sourced constants.
+- No binary HDRI assets: IBL demos build environments procedurally — `RoomEnvironment` from `three/addons/environments/RoomEnvironment.js` through `PMREMGenerator` (verify in node_modules), or a generated equirect `DataTexture`/CanvasTexture gradient-sky. `scene.environment` from PMREM output. Theory teaches real HDRI loading (RGBELoader) as code-in-prose; demos state real HDRIs arrive with real projects.
+- PMREM render targets and generated env textures are disposables — same discipline as Track 9/10.
+- R3F Canvas defaults ACES tone mapping — lessons manipulating exposure/tonemapping set `gl.toneMapping`/`toneMappingExposure` explicitly and restore on unmount (renderer is shared across demos on the page!).
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

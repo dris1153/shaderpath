@@ -1,0 +1,49 @@
+## Why "Plastic" Is the Right Word for This PBR Failure
+
+When a senior artist looks at a render and says "this looks plastic," they aren't reaching for a vague metaphor — they're describing a very specific set of physical tells: a surface that reflects identically at every point instead of showing micro-variation, color that reads flat with no depth, and a highlight that's hard and dead instead of soft with the surrounding environment visible in it. Real injection-molded plastic genuinely has those exact properties — a uniformly finished surface, no fingerprints, no wear. The problem is that most materials that AREN'T plastic end up with the same tell the moment their PBR setup goes wrong — and since all seven causes below produce the same "plastic signature," diagnosing the actual cause matters far more than randomly nudging parameters until it "looks less fake."
+
+## 1–2. Roughness Too Low and Uniform, Albedo at the Wrong Value
+
+No real surface has perfectly uniform roughness — fingerprints, dust, and micro-scratches all make roughness drift slightly from point to point. Setting one fixed, low roughness (say $0.05$) across an entire object produces a sharp specular lobe that's UNIFORM everywhere — exactly how an injection-molded surface reflects light. The fix: a roughness map (or procedural noise) adding small variation (±0.03–0.08) around the base value. A second, independent cause that often travels alongside it: albedo set to the wrong absolute value, or worse, already carrying baked-in shadow/lighting information. PBR albedo must be the material's PURE color under flat white light — per Lagarde's reference chart (cited below), charcoal sits around $0.04$, fresh snow around $0.8$–$0.9$; most everyday materials fall somewhere in that range. An albedo that's too dark (near $0$), or one with a shadow painted directly into the texture, leaves the renderer nothing to work with — the surface stays dark no matter how it's lit, or shows a double shadow (one painted in, one the renderer computes on top).
+
+## 3. Weak or Wrong Fresnel From Misusing Metalness
+
+Fresnel — the effect that makes every surface reflect harder at a grazing angle — is governed directly by $F_0$, the reflectance at a straight-on viewing angle. For dielectrics (plastic, wood, skin, almost everything that isn't a metal), $F_0$ comes from the index of refraction (IOR) via the Fresnel formula at $0°$:
+
+$$
+F_0 = \left(\frac{n_1 - n_2}{n_1 + n_2}\right)^2
+$$
+
+For air ($n_1 \approx 1$) against typical plastic ($n_2 \approx 1.5$): $F_0 = \left(\frac{1.5-1}{1.5+1}\right)^2 = \left(\frac{0.5}{2.5}\right)^2 = 0.04$ — that familiar $0.04$ constant comes directly from this, not from thin air. The common mistake: setting `metalness` to something in between (say $0.5$) on a material that's fundamentally a dielectric, "because it looked nicer." The metalness/roughness workflow treats metalness as nearly always BINARY ($0$ or $1$) — an in-between value makes the renderer blend two entirely different reflectance models (a dielectric's real diffuse albedo plus a fixed low $F_0$; a metal's zero diffuse and $F_0$ equal to the material's own color) into a "hybrid" material that doesn't exist in nature — a surface with a flat plastic-like base color AND a faint, misplaced metallic sheen.
+
+## 4. IBL Absent or Exposure-Mismatched: a "Dead" Light Source
+
+A handful of point/directional lights never make an object feel "alive" — each one produces exactly one sharp highlight dot, while the rest of the surface receives almost no reflected light at all. Environment lighting (IBL) is what makes specular read as a CONTINUOUS surface property, because it supplies incoming light from every direction at once instead of one. Missing `scene.environment` entirely, or having it but with `toneMappingExposure` set wrong (too low and the IBL all but vanishes, too high and everything blows out together), produces exactly the "dead highlight" tell — an isolated bright dot on an otherwise flat, dark surface, the classic sign of an asset that was never actually placed into a real environment.
+
+## 5. Missing AO/Contact Shadows: the Floating Look
+
+Ambient occlusion approximates indirect light getting blocked in crevices, corners, and contact points — without it, an object sitting on a floor has no dark region tying it visually to that floor, and the eye immediately reads "this object isn't actually touching the ground." That's why an object missing AO always looks like it's floating, even when its Y position is perfectly correct. The cheapest fix that doesn't require baking a real AO map: a contact shadow — a soft dark patch right at the touch point, which can be as simple as an alpha-blended decal.
+
+## 6. Normal Map at the Wrong Scale or Missing Entirely
+
+Skipping a normal map entirely erases every piece of micro surface detail (grooves, grain, structural roughness) — the surface reads as "blown glass," unnaturally smooth for whatever shape it's supposed to have. Going the other way, a `normalScale` set too high exaggerates detail into unnatural, harsh noise; set too low, it all but disables the map even when the right texture is assigned. Both extremes break the material's read, just in opposite directions.
+
+## 7. Tone Mapping Off: Linear Output Reads "Washed Out"
+
+Leaving tone mapping off (`NoToneMapping`) means linear color values above $1.0$ get HARD CLIPPED to white instead of rolling off smoothly the way ACES or any other filmic curve does — the result is highlights losing all detail, abrupt tonal transitions, and an overall image that reads washed out and flat, missing the subtle contrast a proper curve preserves. Since R3F's `<Canvas>` defaults to `ACESFilmicToneMapping`, this mistake usually happens when someone ACCIDENTALLY disables it (or sets `toneMapped={false}` in the wrong place on a material) while debugging something unrelated, then forgets to turn it back on.
+
+## Triage Order: Lighting First, Then Materials, Then Maps
+
+The seven causes above aren't independent in some random order — they follow a sensible triage order. Always check LIGHTING first (is IBL present, is exposure correct, is tone mapping on) — because if lighting is wrong, no material parameter can save the scene, and time spent tweaking roughness on a scene that's fundamentally underlit is wasted. Only after that check BASE MATERIAL properties (albedo, metalness, Fresnel) — parameters that affect the whole surface at once. Detail MAPS (roughness variation, normal, AO) come last — those micro-adjustments only mean anything once the lighting and material foundation is already correct. The fix-it philosophy that goes with this order: change exactly ONE cause at a time, capture a before/after, then move to the next — changing several things at once means you'll never know exactly which change made the difference, and risks accidentally "fixing" a scene by stacking two errors that happen to cancel out instead of actually correcting either one.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes in the DIAGNOSTIC PROCESS itself, not in the list of seven causes above:
+
+1. **Changing several parameters at once and concluding "looks less plastic now."** There's no way to isolate which change actually mattered — the next time the same failure shows up on a different scene, the lesson doesn't transfer.
+2. **Fixing detail maps (normal, AO) before fixing lighting.** A flawless normal map stays invisible if the scene has no IBL to reflect into — effort spent on a triage step out of order is nearly wasted.
+3. **Believing "looks nicer" means "more physically correct."** Metalness $0.5$ sometimes looks more eye-catching from one specific camera angle, but is entirely wrong physically — it'll show under a different angle or lighting, while the correct fix stays stable across every condition.
+
+</Callout>
+
+The track-closing checkpoint (checkpoint-studio-lighting-setup) applies this exact diagnostic list in reverse: instead of finding and fixing errors in an existing scene, you build a three-point studio lighting setup correctly from the start, where every decision (key:fill ratio, exposure, AO) traces back to exactly one of the seven causes covered here.

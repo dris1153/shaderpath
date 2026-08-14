@@ -1,0 +1,51 @@
+## Shadow Mapping: A Quick Recap (Callback to Track 3)
+
+The Lights & Shadow Maps lesson (Track 3) built the core mechanism: render the scene once from the light's point of view (`light.shadow.camera`) into a depth texture — the shadow map — then, in the main pass, compare a fragment's real depth (transformed into light space) against the value stored in the shadow map at that same coordinate. Deeper than the stored value means something is blocking the light at that point — the fragment is in shadow. The four flags `renderer.shadowMap.enabled`, `light.castShadow`, `mesh.castShadow`, `mesh.receiveShadow`, plus the `bias`/`normalBias` pair that fights acne and peter-panning, were already covered there in detail — this lesson assumes you have that down, and moves on to problems that only show up once a raw shadow map isn't good enough.
+
+## Three Diseases of a Raw Shadow Map
+
+A one-sample-per-texel shadow map suffers from three distinct failure modes. **Aliasing**: one shadow-map texel represents a real-world area roughly $\frac{\text{frustumWidth}}{\text{mapSize}}$ wide — once that area, projected onto the screen, exceeds one pixel, the shadow edge shows up as a blocky staircase following the texel grid; widening a shadow camera's frustum "just to be safe" without raising `mapSize` to match directly grows that ratio, making aliasing worse. **Acne and peter-panning** were already covered in Track 3: the same root cause (a shadow map stores one value representing a whole area, not a point), two opposite symptoms depending on whether `bias` is too small or too large. **Hard 1-bit edges**: a raw depth comparison is a `step()` function — in shadow or not, nothing in between — so even with bias tuned correctly, the shadow's edge is still a sharp, jagged line, nothing like the soft shadows a real area light (sunlight through atmosphere, a softbox) actually produces.
+
+## PCF: Filtering the COMPARISON, Not the Depth Map
+
+Percentage-Closer Filtering, from the original Reeves, Salesin, and Cook paper (SIGGRAPH 1987), solves the hard-edge problem with an idea that's easy to get backward: do NOT blur the shadow map before comparing — doing that would mix depth values from a near object and a far one, producing a completely wrong comparison right at silhouette edges. Instead, PCF samples the COMPARISON itself at several nearby coordinates (each returning a binary in-shadow/out-of-shadow result), then averages those binary results into a continuous percentage — "percentage closer," literally. Reading `shadowmap_pars_fragment.glsl.js` directly in the installed three.js 0.185: `SHADOWMAP_TYPE_PCF` takes 5 samples distributed on a Vogel disk, rotated per pixel with Interleaved Gradient Noise, and each sample already gets a free hardware 4-tap PCF from `sampler2DShadow` with `LinearFilter` — roughly 20 filtered taps total, producing a dithered soft edge instead of fixed banding.
+
+## shadowMap.type in three.js: Four Constants, and One Surprise Confirmed From Source
+
+There are four values for `renderer.shadowMap.type`: `BasicShadowMap` (a single sample, `NearestFilter`, hard binary — cheapest and worst-looking), `PCFShadowMap` (the default, described above), `PCFSoftShadowMap`, and `VSMShadowMap`. Reading `WebGLShadowMap.js` directly in the three.js version installed in this project (0.185.1) reveals something most older tutorials get wrong now: when `this.type === PCFSoftShadowMap`, the code calls `warn('PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.')` and silently reassigns `this.type = PCFShadowMap` — meaning in the current three.js, choosing PCFSoft produces a result **bit-for-bit identical** to plain PCF, no separate wider bilinear kernel like it had in older three.js versions. This lesson's demo still exposes all four options so you can verify this yourself.
+
+## VSM: Storing Mean and Variance Instead of Raw Depth, Bounded by Chebyshev
+
+Variance Shadow Maps (Donnelly and Lauritzen, I3D 2006) change the representation entirely: instead of storing one raw depth per texel and comparing it as a binary test, VSM stores two statistics of the depth distribution inside each texel — the mean $\mu$ and the mean of squares (from which variance $\sigma^2$ follows) — packed into the R/G channels of a `HalfFloatType` render target. Reading `WebGLShadowMap.js`: after the raw depth pass, VSM runs two separable blur passes (vertical, then horizontal; `VSM_SAMPLES` defaults to 8, radius controlled by `shadow.radius`) to compute a smoothed $\mu, \sigma$ over a neighborhood — a standard two-pass moment-combination. When shading, Chebyshev's inequality gives an upper bound on the probability that a fragment is lit:
+
+$$
+p_{max} = \frac{\sigma^2}{\sigma^2 + d^2}, \qquad d = z_{fragment} - \mu
+$$
+
+three.js further remaps this through $\text{clamp}\left(\frac{p_{max} - 0.3}{0.65},\ 0,\ 1\right)$ (a constant read directly from `shadowmap_pars_fragment.glsl.js`) to reduce **light bleeding** — the artifact where Chebyshev's bound is too loose when the depth distribution has two separate clusters (a near occluder and a far one), letting a faint gray halo leak through a region that should be fully lit right behind the near occluder. The biggest win of storing (mean, variance) instead of raw depth: it's just ordinary color data, filterable, blurrable, and mipmappable with every normal texture-filtering trick — something a PCF-style depth-compare sampler simply can't do (mipmapping a `sampler2DShadow` sensibly isn't a thing). One quirk worth remembering: with `VSMShadowMap` active, every mesh with `receiveShadow = true` also gets drawn into the shadow map as if it had `castShadow = true` too (visible directly in `renderObject()`) — unlike PCF or Basic.
+
+## CSM: Splitting the Frustum Into Cascades, Each With Its Own Shadow Map
+
+The underlying problem behind everything above: ONE shadow map can't simultaneously be detailed enough near the camera and cover a huge outdoor scene, because texel density is fixed across the whole light frustum. Cascaded Shadow Maps solve this by splitting the CAMERA's frustum (not the light's) into N slices along depth — the slice near the camera is small and gets its own shadow map covering just that small area (dense texels, high detail); the far slice is much larger and gets its own shadow map covering that larger area (sparser texels, acceptable since aliasing is harder to notice far from the eye). It's the exact same lever as the "aliasing" section above, just applied separately per slice instead of one giant frustum. Three real split modes exist in three.js's `CSM` module (`three/addons/csm/CSM.js`, already available inside this repo's installed `three` package — no extra dependency needed): `uniform` (evenly split), `logarithmic` (very thin near slices, very thick far ones), and `practical` (the default, blending both), alongside a default of `cascades = 3` and `shadowMapSize = 2048`. This lesson stops at the concept level and points to the real module; the demo below doesn't wire up full CSM (that needs multiple coordinated lights/cameras) — that's out of scope for a single-light demo.
+
+## A Practical Tuning Table
+
+| Technique | Suggested mapSize | bias | normalBias | radius/blur |
+|---|---|---|---|---|
+| Basic | 1024-2048 | just enough to clear acne (no filtering to hide the rest) | prefer this before raw bias | no effect (confirmed in three's own docs) |
+| PCF/PCFSoft | 1024-2048 | small, since 5-tap filtering already softens things somewhat | 0.01-0.05 for curved surfaces | Vogel-disk radius; too large blurs the shadow's true shape |
+| VSM | 512-1024 (cheaper, needs less bias precision) | near zero, VSM is less acne-prone | still worth keeping a little | higher `blurSamples`/`radius` = softer BUT more prone to light bleeding |
+
+## Where This Connects Later
+
+The shadow map built in Track 3 and softened in this lesson is still light from ONE directional source — the "Why Your Assets Look Like Plastic" lesson points out that missing soft shadowing from environment lighting (IBL) is one common reason a scene still looks fake even when the shadow-mapping technique itself is correct; Track 12 (Performance) returns to the real cost of many shadow-casting lights, especially CSM's 3+ simultaneous shadow maps, on mobile hardware.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common PCF/VSM/CSM mistakes:
+
+1. **Assuming `PCFSoftShadowMap` is always softer than `PCFShadowMap`.** In the three.js version installed in this project, `PCFSoftShadowMap` has been deprecated and now silently runs identically to `PCFShadowMap` (confirmed directly in `WebGLShadowMap.js`, with a console warning) — picking it isn't wrong, but expecting a separate, wider kernel is wrong for the currently installed version.
+2. **Raising VSM's `shadow.radius`/`blurSamples` to "fix" light bleeding.** The blur radius only softens the shadow's edge — it doesn't shrink the depth-distribution variance that makes Chebyshev's bound loose in the first place; cranking radius up often makes the gray bleed halo SPREAD FURTHER instead of disappearing. The real fix is tightening the shadow camera's frustum, or accepting the light-bleed remap already baked into the shader.
+3. **Widening the shadow camera's frustum "to be safe" without raising `mapSize` to match.** Texel footprint = frustumWidth/mapSize — widening the frustum while keeping mapSize fixed directly enlarges each texel's real-world footprint, worsening aliasing by the exact formula from the "three diseases" section, even if bias/normalBias are already tuned correctly.
+
+</Callout>

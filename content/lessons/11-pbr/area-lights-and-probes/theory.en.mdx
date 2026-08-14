@@ -1,0 +1,73 @@
+## A Point Light Is a Mathematical Point — Real Light Always Has Area
+
+`PointLight` and `DirectionalLight` are convenient abstractions: a location with zero extent, or a single direction with zero angular spread. They're convenient because the math stays simple — every shaded point only needs one vector $\hat L$. But no real light source is a point. A bulb has a filament or a diffuser with real surface area; a studio softbox, a window, an LED strip — all of them subtend a nonzero solid angle from any surface point they illuminate. That physical area is exactly what produces three effects a point light can never produce on its own: soft-edged shadows (penumbra) that widen with distance from the occluder; falloff that reads as gradual instead of a single hard specular dot; and — the tell in any product photo — a **shaped highlight**: a rectangular softbox reflects as a rectangle on a glossy surface, a window reflects as a window. A point light's reflection in a mirror-like surface is always an infinitesimal dot; an area light's reflection has a recognizable silhouette, because that reflection is literally showing you the shape of the visible light source.
+
+## Why Area Lights Are Hard: the BRDF Integral Has No Closed Form
+
+For a point light, the rendering equation's integral collapses to a single evaluation at one direction. For an area light, outgoing radiance requires integrating the BRDF times cosine over the whole solid angle the light's surface subtends:
+
+$$
+L_o = \int_{\Omega_{\text{light}}} f_r(\omega_i, \omega_o)\,(\mathbf{n}\cdot\omega_i)\,L_i \; d\omega_i
+$$
+
+For a pure Lambertian (diffuse) BRDF, this integral has a closed form for polygonal lights — the exact same classic form-factor math radiosity used back in the 1990s. But for the GGX specular lobe every modern PBR material uses, $f_r$ has no closed-form antiderivative over an arbitrary polygon — the function is a sharp peak whose shape depends on roughness, and no known technique integrates it exactly at real-time cost. This is precisely why specular area lights stayed "too expensive for real-time" for years: the only exact approach is numerically sampling many points on the light's surface per shaded pixel — exactly what path tracers do, and not something a 16ms frame budget can absorb.
+
+## LTC: Approximating the GGX Lobe With a Linearly Transformed Cosine
+
+The 2016 solution from Heitz, Dupuy, Hill and Neubelt (Linearly Transformed Cosines — cited below) doesn't try to integrate GGX directly. Instead, it APPROXIMATES the GGX lobe with a clamped cosine lobe — the ONE shape that does have an exact closed form over an arbitrary polygon, the same classic radiosity formula — but warped by a linear transform (a $3\times3$ matrix) so its peak and spread match GGX's at that specific roughness and viewing angle. Because the transform is linear, you can transform the light polygon's vertices by the INVERSE of that matrix, integrate the plain clamped cosine over the transformed polygon using the ready-made closed form, then map the result back. The only per-pixel unknown is which matrix to use — that depends solely on roughness and the angle between the normal and the view direction, so it's precomputed once offline for every (roughness, angle) pair and stored as a lookup table (LUT). Reading three.js's own `lights_physical_pars_fragment.glsl.js` source confirms exactly this: every fragment computes `uv = vec2(roughness, sqrt(1 - dot(N,V)))`, samples two LUT textures at that coordinate, then reconstructs a $3\times3$ inverse matrix right inside the shader from the fetched texels — literally the "matrix per (roughness, angle) from a LUT" described above, not a metaphor.
+
+## RectAreaLight in Three.js: How to Use It and Its Real Limits
+
+`RectAreaLight` implements the LTC technique above, with a few constraints worth knowing before reaching for it — read straight from `RectAreaLight.js` and `RectAreaLightUniformsLib.js`:
+
+```ts
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
+
+RectAreaLightUniformsLib.init(); // required once, before any RectAreaLight renders
+
+const panel = new THREE.RectAreaLight(0xfff4e0, 6, 3, 1.6); // color, intensity, width, height
+panel.position.set(0, 3, 2);
+panel.lookAt(0, 0, 0);
+scene.add(panel);
+panel.add(new RectAreaLightHelper(panel)); // the helper MUST be added as the light's child
+```
+
+`RectAreaLightUniformsLib.init()` loads two data-texture LUTs (each $64\times64$, the source comment states "roughly 80kb in size," precomputed via numerical fitting from the `selfshadow/ltc_code` repo) into `UniformsLib`. Skipping that call before rendering means the shader samples an LUT texture that was never assigned — the light effectively loses its specular contribution entirely. Three more limits worth remembering: **only PBR materials receive this light** (the `RectAreaLight.js` doc comment states plainly "Only PBR materials are supported" — `MeshBasicMaterial`/`MeshLambertMaterial` won't react to it); **there's no shadow support whatsoever** — no shadow-map path exists for this light type anywhere in three.js, so `castShadow` simply has no effect, and any scene needing contact shadows must add a separate shadow-casting light; and `width`/`height` are REAL world-unit dimensions that directly shape the reflected highlight — the wider the panel, the further the reflection streak stretches on a glossy surface in that direction.
+
+## Light Probes: Packing Local Irradiance Into Spherical Harmonics
+
+`LightProbe` (a core three.js class) stores lighting not as an image, but as a compact function: a low-order Spherical Harmonics expansion (`SphericalHarmonics3` — third order, meaning bands $l=0,1,2$). The idea is exactly a Fourier series, just on a sphere instead of a line: any function defined over a sphere can be approximated as a weighted sum of fixed SH basis functions:
+
+$$
+L(\omega) \approx \sum_{l=0}^{2}\sum_{m=-l}^{l} c_l^m \, Y_l^m(\omega)
+$$
+
+where $Y_l^m$ are the fixed basis functions and $c_l^m$ are the stored coefficients — 9 of them total (each band $l$ contributes $2l+1$ coefficients: $1 + 3 + 5 = 9$), each itself an RGB vector, so 27 floats in all. SH reconstructs smooth, low-frequency signals well (diffuse irradiance is exactly that, since convolving with a cosine lobe is itself a low-pass filter regardless of how sharp the original lighting was) but reconstructs sharp features poorly — which is exactly why three.js documents `LightProbe` as strictly "diffuse light probes," functionally equivalent to an irradiance environment map, not a replacement for the prefiltered mip chain that handles sharp specular reflections. `SphericalHarmonics3.getIrradianceAt(normal)` evaluates exactly the sum above (already weighted for the irradiance form) for a given surface normal — 27 floats standing in for what would otherwise be a full cubemap to store and sample.
+
+## Interpolating Between Probes: the Classic Way to Bank Static Indirect Light
+
+`LightProbeGenerator.fromCubeTexture` / `fromCubeRenderTarget` (read directly from `node_modules/three/examples/jsm/lights/LightProbeGenerator.js`) builds a probe by capturing a real cubemap at one point in space, then projecting it onto 9 SH coefficients with proper solid-angle weighting per texel — the technique traces back to the Ramamoorthi & Hanrahan paper cited below. A single probe is only correct AT the exact point it was captured, under a "locally constant" assumption for some neighborhood around it — fine for a small object, visibly wrong across a large room with distinct lighting zones. The classic static-GI answer (the one that shipped before full lightmap baking took over): place MULTIPLE probes at different points, then interpolate between the nearest ones based on the shaded object's position, using exactly `SphericalHarmonics3.lerp(sh, alpha)`:
+
+```ts
+import { LightProbeGenerator } from "three/addons/lights/LightProbeGenerator.js";
+
+const probeA = await LightProbeGenerator.fromCubeRenderTarget(renderer, cubeTargetA);
+const probeB = await LightProbeGenerator.fromCubeRenderTarget(renderer, cubeTargetB);
+
+const blended = probeA.sh.clone().lerp(probeB.sh, 0.5); // halfway between the two zones, alpha from real position
+```
+
+Why probes beat a single global environment map: an interior with visually distinct lit zones — a sunlit window bay, a dim hallway, a corner tinted by a colored accent light — has genuinely different incoming light in each zone. One shared HDRI/environment averages all of that into a single wrong "compromise" everywhere, while probes placed at each zone capture that zone's real bounced color, and interpolation smooths the walk between zones instead of a visible color pop.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common RectAreaLight and light-probe mistakes:
+
+1. **Forgetting to call `RectAreaLightUniformsLib.init()`.** The LTC LUTs never get loaded into `UniformsLib`, so the light effectively loses its specular contribution — easy to misdiagnose as a wrong `intensity` or wrong position when the actual cause is one missing setup call before the first render.
+2. **Expecting `RectAreaLight` to cast shadows on its own.** No shadow-map path exists for this light type in three.js — setting `castShadow = true` does nothing, and any contact shadow needs a separate light (usually a dim `DirectionalLight`/`SpotLight`) added just for that job.
+3. **Using one global probe/environment for a space with visually distinct lighting zones.** The indirect light color ends up "averaged wrong" everywhere instead of correct per zone — the tell is an object sitting in a dim corner still picking up the color of a bright zone far away.
+
+</Callout>
+
+The next lesson (why-assets-look-like-plastic) reuses this exact RectAreaLight and environment setup as two of the common causes behind a fake-looking PBR scene, and the track-closing checkpoint makes RectAreaLight the key light in a full three-point studio setup alongside IBL.

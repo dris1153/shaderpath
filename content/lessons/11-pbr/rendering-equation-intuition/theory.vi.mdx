@@ -1,0 +1,65 @@
+## Một phương trình duy nhất đứng sau mọi model ánh sáng (Kajiya, 1986)
+
+Trước 1986, đồ hoạ máy tính có hàng chục "công thức ánh sáng" rời rạc — Lambert, Phong, Blinn. James Kajiya gộp tất cả vào một phương trình tích phân duy nhất, **rendering equation**, chứng minh mọi model ánh sáng từng có hoặc sẽ có chỉ là trường hợp riêng hoặc xấp xỉ của nó:
+
+$$
+L_o(x, \omega_o) = L_e(x, \omega_o) + \int_{\Omega} f_r(x, \omega_i, \omega_o)\, L_i(x, \omega_i)\, (n \cdot \omega_i)\, d\omega_i
+$$
+
+Ký hiệu: $x$ là điểm đang tô màu, $\omega_o$ là hướng ánh sáng rời khỏi $x$ (thường về camera), $\omega_i$ là một hướng ánh sáng có thể tới $x$, $n$ là pháp tuyến tại $x$, $\Omega$ là bán cầu phía trên bề mặt. Cả track PBR chỉ xoay quanh việc xấp xỉ từng ký hiệu này tốt hơn — bài này không dạy giải phương trình, mà dạy *đọc* nó.
+
+## Vế trái: Lo(x, ωo) — thứ camera thực sự nhìn thấy
+
+$L_o(x, \omega_o)$ (outgoing radiance) là lượng ánh sáng rời $x$ theo đúng hướng $\omega_o$. Khi ray từ camera chạm bề mặt tại $x$, màu bạn gán cho pixel đó chính là $L_o$ tính theo hướng ngược về camera — không hơn không kém. Mọi fragment shader bạn từng viết, kể cả `gl_FragColor = vec4(1.0)`, đều đang trả lời "$L_o$ ở đây bằng bao nhiêu" — chỉ phần lớn chưa trả lời có căn cứ vật lý.
+
+## Le(x, ωo) — bề mặt tự phát sáng bao nhiêu
+
+$L_e$ (emitted radiance) là ánh sáng bề mặt tự tạo ra, không phụ thuộc ánh sáng chiếu vào. Tường, da, gỗ — gần như mọi vật quanh bạn — có $L_e = 0$: chỉ phản chiếu, không tự phát sáng. Dây tóc bóng đèn, mặt trời, hay `emissiveMap` trong Three.js thì $L_e$ khác 0. Đây là số hạng "miễn phí" duy nhất — không tích phân, không đệ quy, tra thẳng từ material.
+
+## fr(x, ωi, ωo) — BRDF: bề mặt "tái phân phối" ánh sáng ra sao
+
+BRDF trả lời: ánh sáng tới từ $\omega_i$, bao nhiêu phần bật ra đúng hướng $\omega_o$? Đây là số hạng mã hoá "chất liệu". Nhựa mờ tán xạ gần đều mọi hướng — $f_r$ gần hằng số. Kim loại đánh bóng dồn gần hết năng lượng vào một chóp hẹp quanh hướng phản chiếu gương — $f_r$ là hàm nhọn, đổi dữ dội theo cả bốn góc. Mô tả chính xác $f_r$ là chủ đề bài kế (BRDF & Microfacet) và bài Fresnel — hai bài đó đang xây một $f_r$ tốt hơn cho đúng phương trình này.
+
+## cosθ — luật cosine của Lambert: diện tích chiếu, không phải "độ nghiêng"
+
+Số hạng $(n \cdot \omega_i)$ không phải hệ số làm tối tuỳ ý — nó là hệ quả hình học bắt buộc. Một chùm sáng tiết diện cố định, chiếu xiên góc $\theta$, trải năng lượng lên diện tích LỚN HƠN so với chiếu thẳng góc — diện tích chiếu thực nhận năng lượng chỉ còn:
+
+$$
+dA_\perp = dA \cos\theta
+$$
+
+Cùng năng lượng trải trên diện tích lớn hơn, mật độ năng lượng trên mỗi đơn vị diện tích giảm đúng theo $\cos\theta$ — vật lý thật, không phải hiệu ứng nghệ thuật, và là lý do mặt trời buổi trưa nóng hơn hẳn lúc hoàng hôn dù tổng photon phát ra không đổi. Ở $\theta=90°$, $\cos\theta=0$: dùng $\max(0, n\cdot\omega_i)$ để chặn giá trị âm khi ánh sáng tới từ phía sau bề mặt.
+
+## Tích phân trên bán cầu Ω — ánh sáng tới từ MỌI hướng cùng lúc
+
+$\int_\Omega \ldots d\omega_i$ nghĩa là: về nguyên lý, ánh sáng tới đồng thời từ MỌI hướng trong bán cầu phía trên $x$ — bầu trời, ánh sáng dội từ mọi bề mặt khác nhìn thấy được, một đèn area có diện tích thật chứ không phải điểm toán học. `PointLight` quen dùng trong Three.js là một mẹo giản lược, co cả tích phân này về đúng một hướng nên tính ngay được, không cần tích phân số — ánh sáng thật không bao giờ hoạt động theo kiểu đó.
+
+## Vì sao real-time không giải được chính xác: Li là Lo của người khác
+
+Đây là điểm khiến phương trình khó, không chỉ là tích phân dài: $L_i(x, \omega_i)$ — ánh sáng tới $x$ từ $\omega_i$ — chính là $L_o$ của bất cứ bề mặt (hoặc nguồn sáng) nào nằm theo hướng đó. Tính $L_o$ tại một điểm cần biết $L_o$ tại mọi điểm nó nhìn thấy, mà những điểm đó lại cần $L_o$ tại điểm CHÚNG nhìn thấy — đệ quy vô hạn, chính là định nghĩa "global illumination": không có công thức đóng cho cảnh phức tạp thật. Mọi renderer chỉ đang chọn điểm dừng trong chuỗi đệ quy đó rồi xấp xỉ phần còn lại.
+
+## Path tracing: ước lượng tích phân bằng Monte Carlo
+
+Path tracing không giải phương trình bằng đại số — nó ước lượng bằng thống kê: bắn nhiều tia ngẫu nhiên nảy quanh cảnh theo xác suất có trọng số bởi $f_r$, lấy trung bình hàng trăm "đường đi" độc lập; theo luật số lớn, trung bình đó hội tụ về giá trị thật của tích phân — đây chính là **Monte Carlo integration**. Càng nhiều mẫu, nhiễu càng giảm, nhưng chi phí tỉ lệ thuận số mẫu — lý do một khung path-traced mất vài phút và vẫn còn nhiễu sau 32 mẫu mỗi pixel.
+
+## Lambert, Phong, ambient: những cú xấp xỉ thô của cùng một phương trình
+
+Lambert thay $f_r$ bằng hằng số $\text{albedo}/\pi$, thay tích phân bán cầu bằng tổng hữu hạn qua vài đèn điểm biết trước hướng — hết tích phân, hết đệ quy. Phong/Blinn-Phong cộng thêm chóp specular $\cos^n(\text{angle})$ hoàn toàn tự chế — chọn vì *trông giống* highlight, không phải $f_r$ thật của vật liệu nào. Ambient light kinh điển chỉ là lời thú nhận "tích phân bán cầu ước chừng khoảng này" — một màu hằng số thay cho cả số hạng tích phân, vì tính đúng từng pixel là bất khả thi trên phần cứng thập niên 1990.
+
+## Cả track PBR là chuỗi xấp xỉ ngày càng tốt hơn cho từng số hạng
+
+Bài kế (BRDF & Microfacet) thay "hằng số $f_r$" bằng Cook-Torrance $D \cdot G \cdot F$, hàm có nguồn gốc vật lý thật từ roughness và metalness. Các bài IBL thay "màu ambient đoán mò" bằng xấp xỉ tính sẵn của tích phân bán cầu, lấy mẫu từ environment map thật. Các bài shadow thay giả định "ánh sáng luôn tới được mọi điểm" bằng visibility gắn vào $L_i$ — điểm trong bóng tối có $L_i = 0$ theo hướng đèn đó. Mọi bài sau đây trong Track 11 trả lời đúng một câu hỏi: hôm nay xấp xỉ số hạng nào của phương trình Kajiya, gần đúng tới đâu mà không phải trả chi phí như path tracing.
+
+## Đọc phương trình như kỹ sư, không phải nhà toán học
+
+Bạn sẽ không bao giờ cần tự giải phương trình này. Kỹ năng thật là: nhìn vào BẤT KỲ công thức ánh sáng nào — shader thừa kế từ đồng nghiệp, đoạn trong paper, lõi `MeshStandardMaterial` — và chỉ ngay ra đâu là $L_e$, đâu là $L_i$, đâu là $f_r$, có bỏ quên cosine không, có thay tích phân bằng tổng qua 3 đèn không, đánh đổi đó chấp nhận được ở đâu và lộ sai ở đâu. Hai bài tiếp xây $f_r$ chi tiết hơn; các bài IBL xây tích phân $\int_\Omega L_i$ chi tiết hơn; các bài shadow xây lại chính xác khi nào $L_i = 0$. Phần còn lại của track chỉ là quay về đúng phương trình này, mỗi lần với một số hạng sắc nét hơn.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi đọc rendering equation:
+
+1. **Coi Lambert/Phong là "xấp xỉ tệ" thay vì trường hợp riêng hợp lệ trong đúng giả định của nó.** Lambert đúng khi vật liệu khuếch tán hoàn toàn và bạn chấp nhận vài đèn điểm rời rạc; nó chỉ "sai" khi bị áp ngoài đúng giả định đó (dùng cho kim loại, hoặc kỳ vọng tự có bóng đổ mềm từ môi trường).
+2. **Hiểu nhầm "PBR" nghĩa là giải chính xác phương trình.** PBR chỉ có nghĩa xấp xỉ có NGUỒN GỐC VẬT LÝ thật (D/G/F dẫn xuất từ model microfacet, năng lượng bảo toàn) — vẫn là xấp xỉ, khác Lambert/Phong ở *độ chặt chẽ*, không phải ở việc "không còn là xấp xỉ".
+3. **Quên số hạng cosine hoặc dùng sai dạng của nó.** Cộng thẳng $L_i$ vào tổng mà không nhân $\max(0, n\cdot\omega_i)$ khiến bề mặt sáng đều bất kể góc chiếu; dùng `abs(dot(n, l))` thay vì `max(0, dot(n, l))` còn tệ hơn — ánh sáng "xuyên" qua mặt sau và vẫn thắp sáng phần quay lưng nguồn sáng.
+
+</Callout>

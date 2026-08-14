@@ -1,0 +1,84 @@
+## Từ N nguồn sáng rời rạc đến toàn bộ môi trường
+
+Rendering equation ở bài đầu track này viết ánh sáng ra tại một điểm là tích phân trên toàn bộ hemisphere: $L_o = \int_{\Omega} L_i(\omega_i)\,f_r(\omega_i,\omega_o)\,(N\cdot\omega_i)\,d\omega_i$. Với một `PointLight` hay `DirectionalLight`, $L_i$ chỉ khác 0 theo đúng một hướng — tích phân sụp thành một số hạng duy nhất, tính trực tiếp không cần xấp xỉ gì thêm. Image-based lighting (IBL) đổi hẳn giả định đó: $L_i$ giờ khác 0 theo **mọi** hướng cùng lúc, vì mỗi texel của environment map là một nguồn sáng riêng. Một cubemap 256×256/mặt có hơn 393.000 texel — không thể lặp qua từng texel đó cho mỗi pixel mỗi frame. IBL giải quyết bằng cách tách tích phân thành hai nửa độc lập, mỗi nửa precompute **một lần** thành một texture, và shader tại runtime chỉ còn việc sample texture đó.
+
+## Nửa diffuse: irradiance map
+
+### Convolve theo cosine: irradiance là gì
+
+BRDF Lambertian là hằng số ($\text{albedo}/\pi$), nên nó kéo được ra khỏi tích phân, để lại đúng phần phụ thuộc môi trường — gọi là irradiance:
+
+$$
+E(N) = \int_{\Omega} L_i(\omega_i)\,(N\cdot\omega_i)\,d\omega_i, \qquad L_{o,\text{diff}} = \frac{\text{albedo}}{\pi}\,E(N)
+$$
+
+Điểm mấu chốt: $E$ chỉ phụ thuộc hướng pháp tuyến $N$, không phụ thuộc hướng nhìn — nên precompute được một lần cho mọi hướng $N$ có thể, lưu vào một texture nhỏ đánh chỉ số theo hướng (kỹ thuật kinh điển, ví dụ ở learnopengl: một cubemap chỉ cỡ 32×32/mặt là đủ). Lý do texture này nhỏ được: phép convolve theo cosine là một bộ lọc low-pass cực mạnh — nó xoá sạch mọi chi tiết tần số cao của environment gốc, kết quả gần như chỉ còn vài hoạ tiết mượt. Đây là lý do một irradiance map luôn "mờ" dù HDRI gốc sắc nét đến đâu.
+
+## Nửa specular: prefiltered environment
+
+### Mip chain: mỗi mức roughness một lần blur GGX
+
+Specular của Cook-Torrance không kéo ra khỏi tích phân được như Lambertian, vì số hạng $D$ (phân bố microfacet) phụ thuộc cả roughness lẫn half-vector. Xấp xỉ thực dụng: precompute, với từng mức roughness, environment trông thế nào sau khi convolve bởi đúng GGX lobe của roughness đó — "prefiltered environment". Mip 0 lưu bản roughness≈0 (gương sắc nét, độ phân giải đầy đủ), mip cao hơn lưu roughness tăng dần, mỗi mip blur bằng GGX VNDF importance sampling (Heitz 2018) — đúng kỹ thuật `PMREMGenerator` của Three.js dùng, ghi rõ trong docblock của class. Lúc shading, lấy vector phản xạ $R = \text{reflect}(-V, N)$ rồi sample chính prefiltered map đó ở mip tương ứng roughness — không dựa mip tự động qua screen-space derivative, vì một tia phản xạ từ một pixel không có "footprint" để GPU tự suy ra mip.
+
+## Split-sum approximation: ghép hai nửa lại đúng cách
+
+Karis (Epic Games, khoá SIGGRAPH 2013 "Physically Based Shading in Theory and Practice") đề xuất xấp xỉ tích phân specular đầy đủ bằng **tích** của hai tích phân tách rời thay vì một tích phân kép duy nhất:
+
+$$
+\int_{\Omega} L_i\,f_r\,(N\cdot\omega_i)\,d\omega_i \;\approx\; \underbrace{\int_{\Omega} L_i\,D\,(N\cdot\omega_i)\,d\omega_i}_{\text{prefiltered environment}} \;\times\; \underbrace{\int_{\Omega} f_r\,(N\cdot\omega_i)\,d\omega_i}_{\text{BRDF LUT}}
+$$
+
+Thừa số đầu chính là prefiltered environment ở trên (phụ thuộc roughness và $R$, không phụ thuộc $F_0$ vật liệu). Thừa số sau chỉ phụ thuộc roughness và góc $N\cdot V$ — hoàn toàn không phụ thuộc environment — nên precompute được **một lần duy nhất, dùng chung cho mọi scene**, lưu vào một LUT 2D nhỏ đánh chỉ số theo $(\text{roughness}, N\cdot V)$, trả về một cặp scale/bias áp lên $F_0$ của vật liệu:
+
+$$
+\text{specular}_{\text{IBL}} \approx \text{PrefilteredEnvMap}(R,\rho)\times\big(F_0\cdot\text{scale}(N{\cdot}V,\rho) + F_{90}\cdot\text{bias}(N{\cdot}V,\rho)\big)
+$$
+
+Đây là xấp xỉ không chính xác tuyệt đối — tách một tích phân kép thành tích hai tích phân đơn không tương đương đại số với bản gốc, và âm thầm làm mất năng lượng multi-bounce ở roughness cao (vật liệu hơi tối hơn thực tế ở mức nhám lớn — artifact "energy loss" mà Fdez-Agüera multi-scattering bù lại sau này). Nhưng nó biến một tích phân kép đắt đỏ mỗi pixel thành đúng hai lần sample texture, nên gần như mọi renderer real-time đều dùng.
+
+## PMREMGenerator của Three.js: từ scene/HDRI ra một texture
+
+`PMREMGenerator` là bản cài đặt toàn bộ pipeline prefilter của Three, nằm ngay trong core (không cần addon):
+
+```ts
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envRT = pmrem.fromScene(environmentScene); // hoặc pmrem.fromEquirectangular(hdriTexture)
+scene.environment = envRT.texture;
+```
+
+`.fromScene(scene, sigma?, near?, far?, options?)` render scene đó ra cubemap rồi prefilter — đây chính là cách `RoomEnvironment` (một scene nhỏ gồm hộp và panel phát sáng) tạo ra ambience mà không cần file HDRI thật. `.fromEquirectangular(texture)` nhận thẳng một ảnh equirect 2:1 có sẵn (HDRI load bằng `RGBELoader`, hoặc bất kỳ equirect procedural nào) và prefilter ảnh đó.
+
+Một chi tiết nên kiểm tra tận nguồn thay vì tin truyền miệng: Three **không** lưu hai texture riêng (irradiance cubemap + prefiltered specular cubemap) mà dựng đúng MỘT atlas nhiều mip theo scheme "CubeUV" (`cube_uv_reflection_fragment.glsl.js`) — mỗi mip tile cả sáu mặt cube vào một texture 2D phẳng, sample qua hàm tự viết `textureCubeUV()` thay vì `textureCube` thường, vì mipmap cubemap chuẩn không biểu diễn được "mỗi mip cần một convolution kernel khác nhau". Diffuse irradiance tái dùng đúng atlas đó ở mip mờ nhất: `getIBLIrradiance()` trong `envmap_physical_pars_fragment.glsl.js` gọi `textureCubeUV(envMap, N, 1.0)` — roughness=1.0, đỉnh mip chain — thay vì chạy một convolve cosine riêng. Lối tắt này (GGX blur ở roughness=1 không tương đương toán học với cosine convolve thật) đủ gần về thị giác để bỏ hẳn việc lưu một texture thứ hai.
+
+## scene.environment, envMapIntensity và nơi Three giấu BRDF LUT
+
+Gán kết quả PMREM vào `scene.environment` (thay vì `.envMap` của từng material) khiến MỌI `MeshStandardMaterial`/`MeshPhysicalMaterial` trong scene tự động nhận IBL — không cần wiring thủ công cho từng vật liệu, đây chính là lý do IBL thay thế hẳn cách cũ "thêm point light cho đủ sáng". `material.envMapIntensity` (mặc định 1) chỉ là hệ số nhân riêng cho phần đóng góp từ IBL — không đụng tới light trực tiếp, nên đây mới là núm chỉnh đúng cho "studio sáng bao nhiêu" mà không làm cháy sáng key light.
+
+BRDF LUT (thừa số thứ hai của split-sum) nằm trong `lights_physical_pars_fragment.glsl.js`, hàm `EnvironmentBRDF()`: `vec2 fab = texture2D(dfgLUT, vec2(roughness, dotNV)).rg; return specularColor * fab.x + specularF90 * fab.y;` — đúng công thức scale/bias ở trên. Ở bản Three.js project này dùng, LUT không tính trên GPU lúc runtime (khác nhiều engine/tutorial cũ hay render nó vào render target lúc khởi động) — nó bake sẵn thành một `DataTexture` 16×16 `RG16F` (`DFGLUTData.js`, "4096 samples per texel"), nhúng thẳng vào bundle JS, upload một lần làm uniform `dfgLUT`. Đánh đổi hợp lý: zero chi phí warm-up GPU, đổi lại độ phân giải cố định 16×16 — chấp nhận được vì LUT vốn mượt, tần số thấp.
+
+## Thực hành: RoomEnvironment cho ambience studio, RGBELoader cho HDRI thật
+
+Muốn ambience nhanh, không phụ thuộc asset nhị phân nào (đúng ràng buộc của các checkpoint/demo trong khoá này), `RoomEnvironment` từ `three/addons/environments/RoomEnvironment.js` kết hợp `PMREMGenerator.fromScene()` là đủ — nó chỉ là một scene nhỏ gồm hộp màu và panel phát sáng, dựng thuần bằng code. Với một dự án thật muốn đúng một mood cụ thể (hoàng hôn, softbox studio, trời âm u), load hẳn một file `.hdr`:
+
+```ts
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+
+new RGBELoader().load("/hdri/studio.hdr", (hdri) => {
+  hdri.mapping = THREE.EquirectangularReflectionMapping;
+  const envRT = pmremGenerator.fromEquirectangular(hdri);
+  scene.environment = envRT.texture;
+  hdri.dispose();
+});
+```
+
+Demo dưới đây không thể kèm HDRI nhị phân, nên đổi qua lại giữa `RoomEnvironment` và hai gradient equirect procedural nhỏ — đi đúng con đường code `fromEquirectangular`/`fromScene` mà một HDRI thật cũng sẽ đi qua. Bài tiếp theo (`hdri-exposure-tonemapping`) tiếp nối đúng chỗ phần thực hành này dừng lại: một khi đã load được HDRI thật, dải sáng của nó vẫn cần `toneMappingExposure` canh chỉnh lại mới ra đúng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi làm việc với IBL trong Three.js:
+
+1. **Tưởng `envMapIntensity` là intensity ánh sáng chung, ảnh hưởng cả light trực tiếp.** Nó chỉ nhân vào phần IBL — một scene có `envMapIntensity=3` nhưng `DirectionalLight` yếu vẫn nhìn phẳng, vì specular highlight của light trực tiếp đi qua một code path hoàn toàn khác, không đọc `envMapIntensity`.
+2. **Tưởng Three dựng riêng một irradiance cubemap cho diffuse.** Như đã chỉ ra ở trên, `getIBLIrradiance()` tái dùng đúng atlas CubeUV đã prefilter, sample ở mip mờ nhất — không có pass convolve cosine riêng nào cả.
+3. **Quên dispose render target PMREM (và scene/texture nguồn) sau khi build environment.** Mỗi lần rebuild (ví dụ đổi environment qua một control) mà không `.dispose()` render target cũ trước sẽ rò rỉ nguyên một render target nhiều mip — cộng dồn nhanh nếu người dùng đổi qua đổi lại.
+
+</Callout>

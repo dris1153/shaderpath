@@ -1,0 +1,57 @@
+## What an HDRI Actually Stores: Radiance Far Beyond What a Screen Can Show
+
+An HDRI (High Dynamic Range Image) doesn't store display color the way a PNG or JPEG does — it stores **radiance**, the actual light energy arriving from every direction in an environment, and real-world radiance spans an enormous range. Wikipedia's "Orders of magnitude (luminance)" table lists the solar disk at noon around $1.6 \times 10^9\ \text{cd/m}^2$, while a clear blue sky at noon sits around $1 \times 10^4\ \text{cd/m}^2$ — a ratio near $10^5$, roughly **5 orders of magnitude** between the sun's disk and the sky right next to it. Google's Filament documentation measured real outdoor light in California on a clear day: at noon, the sun alone contributes about $105{,}000\ \text{lux}$, an area lit only by the sky (no direct sun) sits around $25{,}000\ \text{lux}$, and a full moon is stated at roughly $1\ \text{lux}$. An outdoor HDRI with the sun inside the frame therefore has to encode both an extremely bright region (the sun's disk) and very dark regions (shadows, narrow gaps) in the same image — nothing can be clipped anywhere, because any point in the frame might later light up an object.
+
+The previous lesson (IBL: Irradiance Maps & Prefiltered Environments) used `PMREMGenerator` to convolve an environment map into diffuse irradiance and specular data for IBL; this lesson focuses on the other end — taking that raw radiance and getting it onto a screen without burning away detail.
+
+## Storage Formats: RGBE and OpenEXR in One Paragraph
+
+Two formats dominate encoding radiance outside $[0,1]$. **RGBE** (Radiance HDR, invented by Greg Ward) packs each pixel into 4 bytes: three color bytes (R, G, B) plus one **shared exponent** byte, decoded as $c = \text{mantissa} \times 2^{(e - 128)} / 255$ — exactly the formula three.js's own `HDRLoader.js` implements (three renamed `RGBELoader` to `HDRLoader` as of r180; `RGBELoader` now only exists as a deprecated alias). That's cheap — 4 bytes/pixel, same footprint as an ordinary 8-bit RGBA texture — but the shared exponent means color precision is comparatively coarse. **OpenEXR** (Industrial Light & Magic's industry standard) stores each channel as an independent 16-bit half-float instead — far more precise, and it supports extra layers/channels (depth, alpha, ID masks), at the cost of a larger file. Three's HDRLoader decodes a `.hdr` (RGBE) file into a `Float32Array` or `Uint16Array` (half-float) and sets `texture.colorSpace = LinearSRGBColorSpace` — meaning this data does NOT go through sRGB decoding like an ordinary image, because it's already linear light, not gamma-corrected display color.
+
+## Choosing an HDRI by Scene Intent: Thinking Like a Photographer
+
+Picking an HDRI is exactly like a photographer picking a lighting setup — three common choices correspond to three completely different "lighting rigs":
+
+- **Outdoor sun** (the demo's "sun" preset): an extremely hard, extremely small, extremely bright key — sharp shadows, high contrast, exactly like a cloudless midday shoot.
+- **Overcast**: almost no directional source at all — the entire sky glows evenly, functioning as one giant softbox wrapped around the scene, shadows nearly vanish, and dynamic range stays low.
+- **Studio**: a couple of small, controlled bright patches (real key/fill softboxes) against a neutral backdrop — the goal is a pleasing reflection on glossy material, not overall scene illumination.
+
+One detail that's easy to miss: interior HDRIs usually skew warmer (tungsten fixtures, light bouncing off colored walls) while exterior HDRIs skew cooler (daylight around 5500-6500K) — dropping an "interior-looking" object into an exterior HDRI without rebalancing white balance makes the material read wrong even when every PBR formula in the scene is correct.
+
+## Exposure: A Multiply BEFORE Tone Mapping, Not After
+
+`toneMappingExposure` isn't an image effect — it's a linear multiplier applied to HDR color **before** the tone-mapping curve runs. This follows exactly the pipeline the Track 10 lesson (Tone Mapping + LUT) traced through `OutputPass`: `RenderPass` renders raw linear HDR, and `OutputPass` is the only place that reads `renderer.toneMapping` and `toneMappingExposure`, encoding to sRGB right after. The full formula:
+
+$$
+c_{out} = f_{tonemap}(E \cdot c_{linear})
+$$
+
+where $E$ is `toneMappingExposure` and $f_{tonemap}$ is Reinhard/ACES/AgX. Photography's "stop" intuition maps directly onto it: doubling $E$ is **+1 stop**, so $E = 2^{n}$ for $n$ stops. This lesson's demo exposes the slider in stops rather than a raw multiplier, matching how real 3D software presents exposure.
+
+## Why Exposure Isn't the Same as Post-Hoc Brightness
+
+Because $E$ multiplies BEFORE $f_{tonemap}$, it moves the whole scene to a different region of the curve — it can push shadow detail out of the toe (light compression, detail preserved) or push the whole scene into the shoulder (heavy compression, starting to flatten toward white). Turning up "brightness" after the image is already tone-mapped is a completely different operation: the data is already packed into $[0,1]$ and already compressed into the curve's exact shape — multiplying again just pushes every pixel (including ones already at 1.0) higher and clips them at the screen's ceiling, without re-placing anything on a curve that has already finished running. The demo builds exactly this contrast: raise exposure, and the sun disk and the sky around it stay distinguishable (ACES/AgX still compress two different inputs into two different outputs); raise the naive "post brightness" slider to the same perceived brightness instead, and both regions glue to white together — the information is gone for good, and no multiply afterward can bring it back.
+
+## Tone Mapping on a Real HDRI: the Shoulder Shows Up on the Sun's Disk
+
+The Track 10 lesson already covered how Reinhard compresses per channel and "desaturates" highlights; on a genuinely extreme sun disk (the demo's "sun" preset is about 50x brighter than the sky around it), that effect is at its most visible: Reinhard blends the sun's disk and the sky right next to it into one flat white patch. ACES and AgX, thanks to shoulders fitted specifically for extreme highlights, keep a smooth transition around the sun's disk instead of an abrupt cutoff — exactly why both are preferred whenever a direct light source sits inside the frame.
+
+## A Practical Calibration Workflow: Subject First, Emissives Next, Grade Last
+
+The real production order looks like this: (1) **expose for the subject** — imagine placing an 18%-gray reference card (the standard photographic metering target) on the main object, and adjust exposure until it lands in the middle of the curve, not the toe or the shoulder; (2) **check emissive materials** — anything with `toneMapped = false` (Track 10's Bloom Done Right lesson) is completely unaffected by exposure or tone mapping, so skipping this check means those materials can end up visibly mismatched in tone once exposure has changed; (3) **grade last** — LUT color grading (Track 10) is designed for already-tone-mapped images, so it always comes after exposure/tone mapping, never before.
+
+## Poly Haven: A Real, Free, CC0 Source for HDRIs
+
+This lesson's demo generates its HDRIs from code since the repo ships no binary assets, but in a real project, [Poly Haven](https://polyhaven.com/hdris) is a widely used, high-quality HDRI source — its entire library is CC0 (public domain), free for commercial use with no attribution required. Download a `.hdr` or `.exr` file, load it with `HDRLoader` (or `EXRLoader` for `.exr`), set `texture.mapping = THREE.EquirectangularReflectionMapping`, then feed it through `PMREMGenerator.fromEquirectangular()` — the exact pipeline the previous IBL lesson built, just swapping a code-generated `DataTexture` for a real image file.
+
+Locking in exposure and tone mapping here sets up both the next lesson (Shadow Techniques) and, further out, "Why Your Assets Look Like Plastic" — mis-set IBL exposure is one of the most common reasons a material with objectively correct roughness/metalness still reads as fake.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common exposure and tone-mapping mistakes on an HDRI:
+
+1. **Confusing exposure with raising a light's or emissive's intensity.** Exposure is a single multiplier applied EVENLY to the whole scene before tone mapping; raising one light's `intensity` instead changes the relative balance between sources (that light gets brighter RELATIVE to the others) — both look like "making the scene brighter" but produce completely different contrast and shadow behavior.
+2. **Turning up post-hoc brightness to "save" a badly exposed scene instead of fixing exposure.** Post-hoc data already sits in $[0,1]$, already compressed by the tone-mapping curve — multiplying it further just pushes pixels already near 1.0 into the screen's ceiling and clips them, without re-placing anything on the curve the way real exposure does.
+3. **Forgetting that `toneMapped = false` materials ignore exposure and tone mapping entirely.** After adjusting exposure for the whole scene, emissive materials using this flag (neon signs, UI markers) keep their old brightness unchanged — easy to mistake for a rendering bug when it's really just step (2) of the calibration workflow above getting skipped.
+
+</Callout>

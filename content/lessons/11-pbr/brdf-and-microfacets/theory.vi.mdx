@@ -1,0 +1,106 @@
+## Macro thô ráp = triệu gương vi mô: giả thuyết microfacet
+
+Bài trước dừng lại ở việc gọi $f_r$ (BRDF) là "hàm mã hoá chất liệu" mà không nói nó trông thế nào. Microfacet theory trả lời bằng một giả thuyết đơn giản: bất kỳ bề mặt nào, dù thô ráp cỡ nào với mắt thường, ở thang vi mô (nhỏ hơn một pixel) là tập hợp hàng triệu mặt phẳng cực nhỏ — **microfacet** — mà MỖI cái là một gương hoàn hảo tuân đúng định luật phản xạ (góc tới = góc phản xạ). "Độ nhám" bạn thấy không phải phản xạ khuếch tán kỳ diệu — nó là kết quả thống kê của hàng triệu gương nhỏ chĩa hàng triệu hướng khác nhau, khiến phản xạ gương thật bị xé ra thành một chóp rộng thay vì một tia duy nhất.
+
+## Roughness là gì về mặt thống kê: độ tán của pháp tuyến vi mô
+
+Roughness, trong khung microfacet, không phải con số mờ hồ — nó là **độ lệch chuẩn của phân bố hướng pháp tuyến vi mô** quanh pháp tuyến vĩ mô $n$ lưu trong mesh. Roughness $=0$: mọi microfacet chĩa đúng theo $n$, bề mặt là gương hoàn hảo. Roughness tiến gần $1$: pháp tuyến vi mô toả gần như ngẫu nhiên quanh $n$, chóp phản xạ bị kéo dãn cực rộng, trông gần như khuếch tán dù vẫn là hàng triệu phản xạ gương chồng lên nhau. Vì vậy roughness luôn được biểu diễn bằng một hàm phân bố xác suất, không phải một hằng số nhân — nó chính là tham số hình dạng của phân bố đó.
+
+## Cook-Torrance: fr = D·G·F / (4(n·v)(n·l))
+
+Công thức Cook-Torrance (Cook & Torrance, 1982) dịch giả thuyết microfacet trên thành một BRDF specular dùng được:
+
+$$
+f_{r}^{\text{spec}}(x, \omega_i, \omega_o) = \frac{D(h)\, G(\omega_i, \omega_o)\, F(\omega_i, h)}{4\,(n\cdot\omega_o)(n\cdot\omega_i)}
+$$
+
+với $h = \text{normalize}(\omega_i + \omega_o)$ là **half-vector** — hướng nằm giữa hướng tới và hướng nhìn, chính là hướng một microfacet PHẢI chĩa vào để phản xạ $\omega_i$ thẳng ra $\omega_o$. D, G, F là ba câu hỏi độc lập nhân lại với nhau — mỗi câu ứng với bài kế hoặc phần dưới đây.
+
+## D — GGX/Trowbridge-Reitz: bao nhiêu microfacet chĩa đúng hướng h
+
+$D(h)$ trả lời: trong hàng triệu microfacet, bao nhiêu phần trăm có pháp tuyến trùng $h$ — có khả năng phản xạ $\omega_i$ ra đúng $\omega_o$? Đây là hàm phân bố theo $(n\cdot h)$, dạng phổ biến nhất hiện nay là **GGX** (Trowbridge-Reitz), viết theo Walter et al. (2007):
+
+$$
+D(h) = \frac{\alpha^2}{\pi\big((n\cdot h)^2(\alpha^2 - 1) + 1\big)^2}, \qquad \alpha = \text{roughness}^2
+$$
+
+Bình phương roughness thành $\alpha$ không phải trang trí — là remap của Karis (2013) để thanh trượt roughness "cảm giác tuyến tính" hơn với mắt người, thay vì dồn hết thay đổi vào đoạn đầu nếu dùng roughness thẳng. $\alpha$ càng nhỏ, mẫu số càng nhạy với $(n\cdot h)$, lobe càng nhọn — GGX có "đuôi" dài hơn hẳn các phân bố cũ (Beckmann, Blinn-Phong), tức highlight có quầng mờ lan rộng thay vì cắt cụt, khớp hơn với vật liệu đo thật.
+
+## G — Smith shadowing-masking: vì sao thiếu G làm rìa "cháy sáng"
+
+$G(\omega_i, \omega_o)$ trả lời câu khác hẳn D: trong các microfacet CÓ pháp tuyến đúng $h$, bao nhiêu phần thực sự nhìn thấy được cả ánh sáng lẫn camera — không bị microfacet lân cận che? Ở góc xiên, các rãnh nhỏ tự che nhau theo hai cách: **shadowing** (chặn ánh sáng tới trước khi chạm microfacet đang xét) và **masking** (chặn tia phản xạ trước khi tới camera). Cách phổ biến nhất là Smith kết hợp Schlick-GGX cho từng hướng rồi nhân lại:
+
+$$
+G(\omega_i,\omega_o) = G_1(\omega_o)\,G_1(\omega_i), \qquad G_1(x) = \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+$$
+
+$k$ dùng đúng remap cho ánh sáng trực tiếp từ Karis (2013) — IBL dùng $k$ khác, gặp lại ở bài Image-Based Lighting. Bỏ qua $G$ (chỉ dùng $D \cdot F$), rìa bề mặt cong ở góc xiên sáng bất thường: đang đếm TẤT CẢ microfacet chĩa đúng $h$ mà không trừ phần bị che lẫn nhau — phản xạ ra nhiều năng lượng hơn thực có, vi phạm bảo toàn năng lượng, rõ nhất ở rìa hình cầu.
+
+## F — Fresnel (Schlick): phản chiếu luôn gắt hơn ở góc xiên
+
+$F$ trả lời: trong ánh sáng chạm microfacet pháp tuyến $h$, bao nhiêu phần trăm phản xạ (thay vì khúc xạ vào vật liệu)? Bài sau đào sâu vật lý đằng sau nó — ở đây dùng thẳng xấp xỉ Schlick, đủ chính xác cho hầu hết use-case và là công thức mọi engine thực dùng:
+
+$$
+F(\omega_i, h) \approx F_0 + (1 - F_0)\big(1 - (\omega_i\cdot h)\big)^5
+$$
+
+với $F_0$ là phản xạ tại góc tới vuông góc — chất điện môi (nhựa, gỗ, da) $F_0 \approx 0.04$ theo quy ước phổ biến, kim loại thì $F_0$ chính là màu albedo (điểm mấu chốt của workflow metalness ở bài sau).
+
+## Chuẩn hoá 4(n·v)(n·l) và cân bằng năng lượng kd
+
+Mẫu số $4(n\cdot v)(n\cdot l)$ không phải hệ số tự do — xuất phát từ phép đổi biến khi chuyển tích phân từ "không gian microfacet" sang "không gian $\omega_i,\omega_o$" trong dẫn xuất gốc (Cook & Torrance, 1982), cần để $f_r$ giữ đúng đơn vị BRDF. Vì specular đã "lấy" một phần năng lượng phản xạ ($F$), phần còn lại cho khuếch tán phải trừ đúng phần đó — đây là ý nghĩa $k_d = (1-F)(1-\text{metalness})$: nhân thêm $(1-\text{metalness})$ vì kim loại không có tán xạ khuếch tán (ánh sáng không phản xạ gương bị electron tự do hấp thụ), diffuse dùng đúng $k_d \cdot \text{albedo}/\pi$ — công thức Lambert bài trước, nhân thêm hệ số cân bằng năng lượng.
+
+## Cài GLSL từ đầu: dựng Cook-Torrance từng bước
+
+Ghép năm mảnh (D, G, F, chuẩn hoá, cân bằng năng lượng) thành fragment shader hoàn chỉnh — chính là shader demo bên dưới dùng:
+
+```glsl
+float D_GGX(vec3 N, vec3 H, float roughness) {
+  float a = roughness * roughness;
+  float a2 = a * a;
+  float ndoth = max(dot(N, H), 0.0);
+  float denom = ndoth * ndoth * (a2 - 1.0) + 1.0;
+  return a2 / (3.14159265 * denom * denom + 1e-7);
+}
+
+float G1_SchlickGGX(float ndotx, float k) {
+  return ndotx / (ndotx * (1.0 - k) + k);
+}
+
+float G_Smith(vec3 N, vec3 V, vec3 L, float roughness) {
+  float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+  return G1_SchlickGGX(max(dot(N, V), 0.0), k) * G1_SchlickGGX(max(dot(N, L), 0.0), k);
+}
+
+vec3 F_Schlick(float cosTheta, vec3 F0) {
+  return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// N, V, L, H already normalized; radiance = incoming light color/intensity
+vec3 cookTorrance(vec3 N, vec3 V, vec3 L, vec3 H, vec3 albedo, float roughness, float metalness, vec3 radiance) {
+  vec3 F0 = mix(vec3(0.04), albedo, metalness);
+  float D = D_GGX(N, H, roughness);
+  float G = G_Smith(N, V, L, roughness);
+  vec3 F = F_Schlick(max(dot(H, V), 0.0), F0);
+
+  vec3 specular = (D * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 1e-4);
+  vec3 kd = (vec3(1.0) - F) * (1.0 - metalness);
+  vec3 diffuse = kd * albedo / 3.14159265;
+
+  return (diffuse + specular) * radiance * max(dot(N, L), 0.0);
+}
+```
+
+## "Roughness quyết định tất cả": trực giác thị giác cần nhớ
+
+Nhìn lại D, G, F: $D$ phụ thuộc roughness qua $\alpha$; $G$ phụ thuộc roughness qua $k$; chỉ $F$ hoàn toàn không phụ thuộc roughness. Hệ quả trực quan: giữ nguyên metalness và ánh sáng, chỉ kéo roughness từ $0$ lên $1$, highlight specular co từ một chấm gần như hoàn hảo (roughness thấp: $D$ nhọn quanh $h=n$, $G$ gần bằng 1 vì ít bị che) giãn thành quầng mờ phủ gần nửa quả cầu (roughness cao: $D$ gần phẳng, $G$ giảm mạnh ở rìa). Đây là lý do dân đồ hoạ hay nói "roughness map quan trọng hơn albedo map" — albedo sai màu vẫn "có vẻ đúng chất liệu", nhưng roughness sai giá trị làm cả bề mặt trông như nhựa giả ngay lập tức, dù màu đúng tuyệt đối.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi cài Cook-Torrance từ đầu:
+
+1. **Quên epsilon ở mẫu số $4(n\cdot v)(n\cdot l)$.** Ở góc nhìn cực xiên, $(n\cdot v)$ hoặc $(n\cdot l)$ tiến gần 0, chia không epsilon cho ra `NaN`/`Inf` lan ra vùng rìa — "viền đen kỳ lạ" hoặc "viền trắng cháy" quanh silhouette là dấu hiệu kinh điển.
+2. **Dùng chung một $k$ cho cả G (direct light) lẫn IBL.** Karis (2013) định nghĩa hai công thức $k$ khác nhau — dùng nhầm direct-light cho IBL (hoặc ngược lại) không lỗi biên dịch, chỉ âm thầm sai độ sáng specular, khó phát hiện nếu không so reference.
+3. **Quên nhân $(1-\text{metalness})$ vào $k_d$.** Thiếu hệ số này, quả cầu kim loại hoàn toàn ($\text{metalness}=1$) vẫn có lớp diffuse mờ phủ lên specular — kim loại trông như bị sơn phủ nhựa mờ thay vì phản chiếu thuần khiết, một nguyên nhân phổ biến khiến vật liệu kim loại "trông giả" (chủ đề bài "Vì sao asset trông như nhựa" cuối track).
+
+</Callout>

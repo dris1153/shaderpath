@@ -1,0 +1,57 @@
+## HDRI thực sự lưu gì: radiance vượt xa những gì màn hình hiển thị được
+
+HDRI (High Dynamic Range Image) không lưu màu hiển thị như PNG hay JPEG — nó lưu **radiance**, năng lượng ánh sáng thật đến từ mỗi hướng, và radiance thực tế trải trên một dải cực rộng. Theo bảng "Orders of magnitude (luminance)" của Wikipedia, đĩa mặt trời giữa trưa có độ chói khoảng $1.6 \times 10^9\ \text{cd/m}^2$, còn bầu trời trong xanh giữa trưa chỉ khoảng $1 \times 10^4\ \text{cd/m}^2$ — tỉ lệ $\sim 10^5$, tức **5 bậc độ lớn** giữa đĩa mặt trời và bầu trời quanh nó. Tài liệu Filament của Google đo thực tế ở California: lúc 12 giờ trưa, mặt trời một mình đóng góp $\sim 105{,}000\ \text{lux}$, vùng chỉ nhận ánh sáng bầu trời khoảng $\sim 25{,}000\ \text{lux}$, và trăng tròn chỉ $\sim 1\ \text{lux}$. Một HDRI ngoài trời có mặt trời lọt khung vì vậy phải mã hoá đúng cả vùng cực sáng lẫn vùng rất tối trong cùng một ảnh — không thể "cắt cụt" ở đâu, vì bất kỳ điểm nào trong khung cũng có thể chiếu sáng vật thể sau này.
+
+Bài trước (IBL: Irradiance & Prefiltered Environment) đã dùng `PMREMGenerator` để convolve một environment map thành irradiance/specular cho IBL; bài này tập trung vào bước ngược lại — từ radiance thô đó, làm sao đưa được lên màn hình mà không "cháy" hết chi tiết.
+
+## Định dạng lưu trữ: RGBE và OpenEXR trong một đoạn
+
+Hai định dạng phổ biến nhất mã hoá radiance ngoài khoảng $[0,1]$. **RGBE** (Radiance HDR, phát minh bởi Greg Ward) lưu mỗi pixel bằng 4 byte: ba byte màu (R, G, B) cộng một byte **số mũ chung**, giải mã bằng $c = \text{mantissa} \times 2^{(e - 128)} / 255$ — đúng công thức `HDRLoader.js` của three.js cài đặt (three đổi tên `RGBELoader` thành `HDRLoader` từ bản r180, `RGBELoader` giờ chỉ là alias deprecated). Cách này rẻ (4 byte/pixel, ngang một texture 8-bit RGBA) nhưng số mũ dùng chung cho cả ba kênh nên độ chính xác màu thô hơn. **OpenEXR** (chuẩn của Industrial Light & Magic) lưu mỗi kênh bằng nửa-float 16-bit độc lập — chính xác hơn, hỗ trợ thêm layer (depth, alpha, ID mask), đổi lại file nặng hơn. HDRLoader giải mã `.hdr` (RGBE) thành `Float32Array`/`Uint16Array` (half-float) và gán `texture.colorSpace = LinearSRGBColorSpace` — dữ liệu này KHÔNG qua giải mã sRGB như ảnh thường, vì nó vốn đã là ánh sáng tuyến tính.
+
+## Chọn HDRI theo ý đồ cảnh: góc nhìn của một nhiếp ảnh gia
+
+Chọn HDRI không khác một nhiếp ảnh gia chọn ánh sáng hiện trường — ba lựa chọn phổ biến ứng với ba "thiết bị chiếu sáng" khác hẳn nhau:
+
+- **Nắng ngoài trời** (preset "sun" trong demo): key cực gắt, cực nhỏ, cực sáng — bóng đổ sắc nét, tương phản cao, như chụp giữa trưa không mây.
+- **Trời âm u**: gần như không nguồn hướng nào — cả bầu trời phát sáng đều, như một softbox khổng lồ bọc quanh cảnh, bóng mềm gần biến mất, dynamic range thấp.
+- **Studio**: vài mảng sáng nhỏ có kiểm soát (softbox key/fill thật), nền trung tính — mục tiêu là phản chiếu đẹp trên vật liệu bóng, không phải chiếu sáng tổng thể.
+
+Chi tiết hay bị bỏ qua: HDRI nội thất thường ấm hơn (đèn tungsten, ánh sáng dội tường màu) còn HDRI ngoại thất lạnh hơn (ánh sáng ngày ~5500-6500K) — đặt vật thể "nội thất" vào HDRI ngoại thất mà không cân lại white balance khiến vật liệu sai tông dù mọi công thức PBR đều đúng.
+
+## Exposure: nhân TRƯỚC khi tone map, không phải sau
+
+`toneMappingExposure` không phải một hiệu ứng hình ảnh — nó là một số nhân tuyến tính áp vào màu HDR **trước khi** đường cong tone mapping chạy. Đúng luồng pipeline mà bài Track 10 (Tone Mapping + LUT) đã lần theo `OutputPass`: `RenderPass` render ra linear HDR thô, `OutputPass` mới là nơi duy nhất đọc `renderer.toneMapping` và `toneMappingExposure`, rồi mới encode sang sRGB. Công thức đầy đủ:
+
+$$
+c_{out} = f_{tonemap}(E \cdot c_{linear})
+$$
+
+với $E$ = `toneMappingExposure`, $f_{tonemap}$ là Reinhard/ACES/AgX. Trực giác "stop" từ nhiếp ảnh áp dụng y hệt: mỗi lần nhân đôi $E$ là **+1 stop**, tức $E = 2^{n}$ với $n$ là số stop. Demo bài này để slider theo đơn vị stop thay vì số nhân trực tiếp, đúng cách các phần mềm 3D thực tế trình bày exposure.
+
+## Vì sao exposure không giống chỉnh sáng hậu kỳ
+
+Vì $E$ nhân TRƯỚC $f_{tonemap}$, nó dịch chuyển toàn bộ cảnh tới một vùng khác trên đường cong — có thể đẩy bóng đổ ra khỏi toe (nén ít, giữ chi tiết) hoặc đẩy cả cảnh vào shoulder (nén nhiều, bắt đầu bệt trắng). Vặn "brightness" sau khi ảnh đã tone-map là chuyện khác hẳn: dữ liệu lúc đó đã nằm gọn trong $[0,1]$, đã nén đúng hình dạng đường cong — nhân thêm chỉ đẩy MỌI pixel (kể cả pixel đã chạm 1.0) cao hơn rồi cắt cụt ở biên màn hình, không "định vị lại" được gì vì đường cong đã chạy xong. Demo minh hoạ đúng cặp đối chứng này: kéo exposure lên, đĩa mặt trời và bầu trời vẫn phân biệt được (ACES/AgX vẫn nén hai giá trị khác nhau thành hai output khác nhau); kéo "hậu kỳ brightness" naive lên cùng mức sáng cảm nhận, cả hai vùng cùng dán chặt về trắng — thông tin mất vĩnh viễn, không phép nhân nào sau đó lấy lại được.
+
+## Tone mapping trên HDRI thật: shoulder khác biệt rõ trên đĩa mặt trời
+
+Bài Track 10 đã nói Reinhard nén theo từng kênh độc lập nên "bạc màu" vùng sáng; trên một đĩa mặt trời cực sáng (preset "sun" ở demo, sáng gấp ~50 lần bầu trời quanh nó), hiệu ứng này lộ rõ nhất: Reinhard làm đĩa mặt trời và vùng trời sát cạnh gần như hoà thành một mảng trắng phẳng lì. ACES và AgX, nhờ shoulder fit riêng cho vùng cực sáng, giữ được viền chuyển êm quanh đĩa mặt trời thay vì cắt cụt đột ngột — đúng lý do cả hai được ưa chuộng cho cảnh có nguồn sáng trực tiếp lọt khung hình.
+
+## Quy trình hiệu chỉnh thực dụng: chủ thể trước, emissive sau, rồi mới grade
+
+Thứ tự thực tế trong production: (1) **expose cho chủ thể** — tưởng tượng đặt một thẻ xám 18% (chuẩn đo sáng nhiếp ảnh) lên vật thể chính, chỉnh exposure để nó rơi vào giữa đường cong, không phải toe hay shoulder; (2) **kiểm tra vật liệu emissive** — vật liệu `toneMapped = false` (bài Bloom Done Right, Track 10) hoàn toàn không bị exposure/tone mapping ảnh hưởng, quên kiểm tra riêng dễ khiến chúng lệch tông so với phần còn lại sau khi exposure đã đổi; (3) **grade sau cùng** — LUT color grading (Track 10) được thiết kế cho ảnh đã tone-map, nên luôn là bước cuối.
+
+## Polyhaven: nguồn HDRI thật, miễn phí và CC0
+
+Demo bài này sinh HDRI bằng code vì repo không chứa asset nhị phân, nhưng trong dự án thật, [Poly Haven](https://polyhaven.com/hdris) là nguồn HDRI chất lượng cao dùng rộng rãi trong ngành — toàn bộ thư viện license CC0, dùng thương mại không cần ghi công. Tải `.hdr`/`.exr`, load bằng `HDRLoader` (hoặc `EXRLoader`), gán `texture.mapping = THREE.EquirectangularReflectionMapping`, đưa qua `PMREMGenerator.fromEquirectangular()` — đúng luồng bài IBL trước đã dựng, chỉ khác nguồn ảnh là file thật thay vì `DataTexture` sinh bằng code.
+
+Nắm chắc cặp exposure/tone-mapping ở đây là nền cho bài tiếp theo (Shadow Techniques) và xa hơn là "Vì sao Asset của bạn trông như Nhựa" — exposure IBL đặt sai là một nguyên nhân phổ biến khiến vật liệu tưởng đã đúng roughness/metalness vẫn trông không thật.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với exposure và tone mapping trên HDRI:
+
+1. **Nhầm exposure với tăng cường độ đèn/emissive.** Exposure là một số nhân ĐỀU áp lên toàn cảnh trước tone map; tăng `intensity` của một đèn cụ thể lại thay đổi tỉ lệ tương đối giữa các nguồn sáng (đèn đó sáng hơn HẲN so với các đèn khác) — hai thao tác trông có vẻ "làm sáng cảnh" nhưng cho kết quả hoàn toàn khác nhau về contrast và bóng đổ.
+2. **Vặn brightness hậu kỳ để "cứu" một cảnh phơi sáng sai thay vì sửa exposure.** Dữ liệu hậu kỳ đã nằm trong $[0,1]$ và đã bị nén theo đường cong tone map — nhân thêm chỉ đẩy pixel đã gần 1.0 chạm biên và cắt cụt, không tái định vị được gì trên đường cong như exposure thật sự làm.
+3. **Quên vật liệu `toneMapped = false` không phản ứng với exposure/tone mapping.** Sau khi chỉnh exposure cho toàn cảnh, các vật liệu emissive dùng cờ này (đèn neon, marker UI...) vẫn giữ nguyên độ sáng cũ — dễ nhầm là bug render, thực chất là quên bước (2) trong quy trình hiệu chỉnh ở trên.
+
+</Callout>

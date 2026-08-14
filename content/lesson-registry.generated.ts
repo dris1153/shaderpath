@@ -552,6 +552,50 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/10-postprocessing/writing-custom-passes/theory.vi.mdx"),
     en: () => import("./lessons/10-postprocessing/writing-custom-passes/theory.en.mdx"),
   },
+  "area-lights-and-probes": {
+    vi: () => import("./lessons/11-pbr/area-lights-and-probes/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/area-lights-and-probes/theory.en.mdx"),
+  },
+  "brdf-and-microfacets": {
+    vi: () => import("./lessons/11-pbr/brdf-and-microfacets/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/brdf-and-microfacets/theory.en.mdx"),
+  },
+  "checkpoint-material-study": {
+    vi: () => import("./lessons/11-pbr/checkpoint-material-study/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/checkpoint-material-study/theory.en.mdx"),
+  },
+  "checkpoint-studio-lighting-setup": {
+    vi: () => import("./lessons/11-pbr/checkpoint-studio-lighting-setup/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/checkpoint-studio-lighting-setup/theory.en.mdx"),
+  },
+  "fresnel-and-schlick": {
+    vi: () => import("./lessons/11-pbr/fresnel-and-schlick/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/fresnel-and-schlick/theory.en.mdx"),
+  },
+  "hdri-exposure-tonemapping": {
+    vi: () => import("./lessons/11-pbr/hdri-exposure-tonemapping/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/hdri-exposure-tonemapping/theory.en.mdx"),
+  },
+  "ibl-irradiance-and-prefilter": {
+    vi: () => import("./lessons/11-pbr/ibl-irradiance-and-prefilter/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/ibl-irradiance-and-prefilter/theory.en.mdx"),
+  },
+  "metalness-roughness-workflow": {
+    vi: () => import("./lessons/11-pbr/metalness-roughness-workflow/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/metalness-roughness-workflow/theory.en.mdx"),
+  },
+  "rendering-equation-intuition": {
+    vi: () => import("./lessons/11-pbr/rendering-equation-intuition/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/rendering-equation-intuition/theory.en.mdx"),
+  },
+  "shadow-techniques-pcf-vsm-csm": {
+    vi: () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/theory.en.mdx"),
+  },
+  "why-assets-look-like-plastic": {
+    vi: () => import("./lessons/11-pbr/why-assets-look-like-plastic/theory.vi.mdx"),
+    en: () => import("./lessons/11-pbr/why-assets-look-like-plastic/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -662,6 +706,15 @@ export const REFERENCES_REGISTRY: Partial<
   "ssao": () => import("./lessons/10-postprocessing/ssao/references"),
   "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/references"),
   "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/references"),
+  "area-lights-and-probes": () => import("./lessons/11-pbr/area-lights-and-probes/references"),
+  "brdf-and-microfacets": () => import("./lessons/11-pbr/brdf-and-microfacets/references"),
+  "fresnel-and-schlick": () => import("./lessons/11-pbr/fresnel-and-schlick/references"),
+  "hdri-exposure-tonemapping": () => import("./lessons/11-pbr/hdri-exposure-tonemapping/references"),
+  "ibl-irradiance-and-prefilter": () => import("./lessons/11-pbr/ibl-irradiance-and-prefilter/references"),
+  "metalness-roughness-workflow": () => import("./lessons/11-pbr/metalness-roughness-workflow/references"),
+  "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/references"),
+  "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/references"),
+  "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -1203,6 +1256,50 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"pass-hợp-đồng-tối-thiểu-mọi-hiệu-ứng-hậu-kỳ-phải-theo","text":"Pass: hợp đồng tối thiểu mọi hiệu ứng hậu kỳ phải theo","depth":2},{"id":"fullscreenquad-không-hề-là-một-quad","text":"FullScreenQuad không hề là một quad","depth":2},{"id":"dựng-một-pass-từng-bước-heat-shimmer","text":"Dựng một pass từng bước: heat shimmer","depth":2},{"id":"renderpass-là-ngoại-lệ-ghi-thẳng-vào-readbuffer","text":"RenderPass là ngoại lệ: ghi thẳng vào readBuffer","depth":2},{"id":"test-một-pass-độc-lập-trước-khi-ghép-chuỗi","text":"Test một pass độc lập trước khi ghép chuỗi","depth":2},{"id":"shaderpass-đủ-dùng-khi-nào-và-khi-nào-cần-tự-viết-pass","text":"ShaderPass đủ dùng khi nào, và khi nào cần tự viết Pass","depth":2},{"id":"pmndrs-effect-một-hợp-đồng-khác-hẳn","text":"pmndrs Effect: một hợp đồng khác hẳn","depth":2}],
     en: [{"id":"pass-the-minimal-contract-every-post-effect-follows","text":"Pass: The Minimal Contract Every Post-Effect Follows","depth":2},{"id":"fullscreenquad-isnt-actually-a-quad","text":"FullScreenQuad Isn't Actually a Quad","depth":2},{"id":"building-a-pass-step-by-step-heat-shimmer","text":"Building a Pass Step by Step: Heat Shimmer","depth":2},{"id":"renderpass-is-the-exception-it-writes-straight-into-readbuffer","text":"RenderPass Is the Exception: It Writes Straight into readBuffer","depth":2},{"id":"test-a-pass-in-isolation-before-chaining-it","text":"Test a Pass in Isolation Before Chaining It","depth":2},{"id":"when-shaderpass-suffices-and-when-a-custom-pass-is-worth-it","text":"When ShaderPass Suffices, and When a Custom Pass Is Worth It","depth":2},{"id":"the-pmndrs-effect-a-genuinely-different-contract","text":"The pmndrs Effect: A Genuinely Different Contract","depth":2}],
   },
+  "area-lights-and-probes": {
+    vi: [{"id":"đèn-điểm-là-một-điểm-toán-học--ánh-sáng-thật-luôn-có-diện-tích","text":"Đèn điểm là một điểm toán học — ánh sáng thật luôn có diện tích","depth":2},{"id":"vì-sao-area-light-khó-tích-phân-brdf-không-có-nghiệm-đóng","text":"Vì sao Area Light khó: tích phân BRDF không có nghiệm đóng","depth":2},{"id":"ltc-xấp-xỉ-lobe-ggx-bằng-một-cosine-bị-biến-đổi-tuyến-tính","text":"LTC: xấp xỉ lobe GGX bằng một cosine bị biến đổi tuyến tính","depth":2},{"id":"rectarealight-trong-threejs-cách-dùng-và-giới-hạn-thật","text":"RectAreaLight trong Three.js: cách dùng và giới hạn thật","depth":2},{"id":"light-probe-đóng-gói-irradiance-cục-bộ-bằng-spherical-harmonics","text":"Light Probe: đóng gói irradiance cục bộ bằng Spherical Harmonics","depth":2},{"id":"nội-suy-giữa-nhiều-probe-cách-kinh-điển-để-để-dành-ánh-sáng-gián-tiếp-tĩnh","text":"Nội suy giữa nhiều probe: cách kinh điển để \"để dành\" ánh sáng gián tiếp tĩnh","depth":2}],
+    en: [{"id":"a-point-light-is-a-mathematical-point--real-light-always-has-area","text":"A Point Light Is a Mathematical Point — Real Light Always Has Area","depth":2},{"id":"why-area-lights-are-hard-the-brdf-integral-has-no-closed-form","text":"Why Area Lights Are Hard: the BRDF Integral Has No Closed Form","depth":2},{"id":"ltc-approximating-the-ggx-lobe-with-a-linearly-transformed-cosine","text":"LTC: Approximating the GGX Lobe With a Linearly Transformed Cosine","depth":2},{"id":"rectarealight-in-threejs-how-to-use-it-and-its-real-limits","text":"RectAreaLight in Three.js: How to Use It and Its Real Limits","depth":2},{"id":"light-probes-packing-local-irradiance-into-spherical-harmonics","text":"Light Probes: Packing Local Irradiance Into Spherical Harmonics","depth":2},{"id":"interpolating-between-probes-the-classic-way-to-bank-static-indirect-light","text":"Interpolating Between Probes: the Classic Way to Bank Static Indirect Light","depth":2}],
+  },
+  "brdf-and-microfacets": {
+    vi: [{"id":"macro-thô-ráp--triệu-gương-vi-mô-giả-thuyết-microfacet","text":"Macro thô ráp = triệu gương vi mô: giả thuyết microfacet","depth":2},{"id":"roughness-là-gì-về-mặt-thống-kê-độ-tán-của-pháp-tuyến-vi-mô","text":"Roughness là gì về mặt thống kê: độ tán của pháp tuyến vi mô","depth":2},{"id":"cook-torrance-fr--dgf--4nvnl","text":"Cook-Torrance: fr = D·G·F / (4(n·v)(n·l))","depth":2},{"id":"d--ggxtrowbridge-reitz-bao-nhiêu-microfacet-chĩa-đúng-hướng-h","text":"D — GGX/Trowbridge-Reitz: bao nhiêu microfacet chĩa đúng hướng h","depth":2},{"id":"g--smith-shadowing-masking-vì-sao-thiếu-g-làm-rìa-cháy-sáng","text":"G — Smith shadowing-masking: vì sao thiếu G làm rìa \"cháy sáng\"","depth":2},{"id":"f--fresnel-schlick-phản-chiếu-luôn-gắt-hơn-ở-góc-xiên","text":"F — Fresnel (Schlick): phản chiếu luôn gắt hơn ở góc xiên","depth":2},{"id":"chuẩn-hoá-4nvnl-và-cân-bằng-năng-lượng-kd","text":"Chuẩn hoá 4(n·v)(n·l) và cân bằng năng lượng kd","depth":2},{"id":"cài-glsl-từ-đầu-dựng-cook-torrance-từng-bước","text":"Cài GLSL từ đầu: dựng Cook-Torrance từng bước","depth":2},{"id":"roughness-quyết-định-tất-cả-trực-giác-thị-giác-cần-nhớ","text":"\"Roughness quyết định tất cả\": trực giác thị giác cần nhớ","depth":2}],
+    en: [{"id":"rough-at-macro-scale--millions-of-micro-mirrors-the-microfacet-hypothesis","text":"Rough at Macro Scale = Millions of Micro-Mirrors: the Microfacet Hypothesis","depth":2},{"id":"what-roughness-actually-is-statistically-the-spread-of-micro-normals","text":"What Roughness Actually Is, Statistically: the Spread of Micro-Normals","depth":2},{"id":"cook-torrance-fr--dgf--4nvnl","text":"Cook-Torrance: fr = D·G·F / (4(n·v)(n·l))","depth":2},{"id":"d--ggxtrowbridge-reitz-how-many-microfacets-point-exactly-along-h","text":"D — GGX/Trowbridge-Reitz: How Many Microfacets Point Exactly Along h","depth":2},{"id":"g--smith-shadowing-masking-why-skipping-g-makes-edges-glow-too-bright","text":"G — Smith Shadowing-Masking: Why Skipping G Makes Edges \"Glow Too Bright\"","depth":2},{"id":"f--fresnel-schlick-reflection-always-gets-harder-at-grazing-angles","text":"F — Fresnel (Schlick): Reflection Always Gets Harder at Grazing Angles","depth":2},{"id":"the-4nvnl-normalization-and-energy-balance-via-kd","text":"The 4(n·v)(n·l) Normalization and Energy Balance via kd","depth":2},{"id":"building-the-glsl-implementation-step-by-step","text":"Building the GLSL Implementation Step by Step","depth":2},{"id":"roughness-rules-everything-the-visual-intuition-to-keep","text":"\"Roughness Rules Everything\": the Visual Intuition to Keep","depth":2}],
+  },
+  "checkpoint-material-study": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"structure-hint","text":"Structure Hint","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-studio-lighting-setup": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"gợi-ý-cấu-trúc","text":"Gợi ý cấu trúc","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"suggested-structure","text":"Suggested Structure","depth":2},{"id":"definition-of-done","text":"Definition of Done","depth":2}],
+  },
+  "fresnel-and-schlick": {
+    vi: [{"id":"hiệu-ứng-quan-sát-được-nhìn-xuống-hồ-nhìn-ngang-mặt-nước","text":"Hiệu ứng quan sát được: nhìn xuống hồ, nhìn ngang mặt nước","depth":2},{"id":"vì-sao-có-fresnel-lệch-chỉ-số-khúc-xạ-và-phương-trình-đầy-đủ-nặng","text":"Vì sao có Fresnel: lệch chỉ số khúc xạ, và phương trình đầy đủ (nặng)","depth":2},{"id":"xấp-xỉ-schlick-1994-công-thức-và-vì-sao-chọn-luỹ-thừa-5","text":"Xấp xỉ Schlick (1994): công thức và vì sao chọn luỹ thừa 5","depth":2},{"id":"f0-cho-vật-liệu-phi-kim-công-thức-từ-ior-và-con-số-004-vạn-năng","text":"F0 cho vật liệu phi kim: công thức từ IOR, và con số 0.04 vạn năng","depth":2},{"id":"kim-loại-f0-chính-là-màu-không-phải-một-con-số","text":"Kim loại: F0 chính là màu, không phải một con số","depth":2},{"id":"mọi-bề-mặt-đều-có-fresnel--kể-cả-nhựa-đường-giấy-và-fake-fresnel","text":"Mọi bề mặt đều có Fresnel — kể cả nhựa đường, giấy, và \"fake Fresnel\"","depth":2}],
+    en: [{"id":"the-observable-effect-looking-down-into-a-tank-looking-across-the-water","text":"The Observable Effect: Looking Down Into a Tank, Looking Across the Water","depth":2},{"id":"where-it-comes-from-mismatched-refractive-index-and-the-full-equations","text":"Where It Comes From: Mismatched Refractive Index, and the Full Equations","depth":2},{"id":"the-schlick-approximation-1994-the-formula-and-why-the-5th-power","text":"The Schlick Approximation (1994): the Formula, and Why the 5th Power","depth":2},{"id":"f0-for-dielectrics-the-ior-formula-and-the-universal-004-default","text":"F0 for Dielectrics: the IOR Formula, and the Universal 0.04 Default","depth":2},{"id":"metals-f0-is-the-color-not-a-number","text":"Metals: F0 IS the Color, Not a Number","depth":2},{"id":"every-surface-has-fresnel--even-asphalt-paper-and-fake-fresnel","text":"Every Surface Has Fresnel — Even Asphalt, Paper, and \"Fake Fresnel\"","depth":2}],
+  },
+  "hdri-exposure-tonemapping": {
+    vi: [{"id":"hdri-thực-sự-lưu-gì-radiance-vượt-xa-những-gì-màn-hình-hiển-thị-được","text":"HDRI thực sự lưu gì: radiance vượt xa những gì màn hình hiển thị được","depth":2},{"id":"định-dạng-lưu-trữ-rgbe-và-openexr-trong-một-đoạn","text":"Định dạng lưu trữ: RGBE và OpenEXR trong một đoạn","depth":2},{"id":"chọn-hdri-theo-ý-đồ-cảnh-góc-nhìn-của-một-nhiếp-ảnh-gia","text":"Chọn HDRI theo ý đồ cảnh: góc nhìn của một nhiếp ảnh gia","depth":2},{"id":"exposure-nhân-trước-khi-tone-map-không-phải-sau","text":"Exposure: nhân TRƯỚC khi tone map, không phải sau","depth":2},{"id":"vì-sao-exposure-không-giống-chỉnh-sáng-hậu-kỳ","text":"Vì sao exposure không giống chỉnh sáng hậu kỳ","depth":2},{"id":"tone-mapping-trên-hdri-thật-shoulder-khác-biệt-rõ-trên-đĩa-mặt-trời","text":"Tone mapping trên HDRI thật: shoulder khác biệt rõ trên đĩa mặt trời","depth":2},{"id":"quy-trình-hiệu-chỉnh-thực-dụng-chủ-thể-trước-emissive-sau-rồi-mới-grade","text":"Quy trình hiệu chỉnh thực dụng: chủ thể trước, emissive sau, rồi mới grade","depth":2},{"id":"polyhaven-nguồn-hdri-thật-miễn-phí-và-cc0","text":"Polyhaven: nguồn HDRI thật, miễn phí và CC0","depth":2}],
+    en: [{"id":"what-an-hdri-actually-stores-radiance-far-beyond-what-a-screen-can-show","text":"What an HDRI Actually Stores: Radiance Far Beyond What a Screen Can Show","depth":2},{"id":"storage-formats-rgbe-and-openexr-in-one-paragraph","text":"Storage Formats: RGBE and OpenEXR in One Paragraph","depth":2},{"id":"choosing-an-hdri-by-scene-intent-thinking-like-a-photographer","text":"Choosing an HDRI by Scene Intent: Thinking Like a Photographer","depth":2},{"id":"exposure-a-multiply-before-tone-mapping-not-after","text":"Exposure: A Multiply BEFORE Tone Mapping, Not After","depth":2},{"id":"why-exposure-isnt-the-same-as-post-hoc-brightness","text":"Why Exposure Isn't the Same as Post-Hoc Brightness","depth":2},{"id":"tone-mapping-on-a-real-hdri-the-shoulder-shows-up-on-the-suns-disk","text":"Tone Mapping on a Real HDRI: the Shoulder Shows Up on the Sun's Disk","depth":2},{"id":"a-practical-calibration-workflow-subject-first-emissives-next-grade-last","text":"A Practical Calibration Workflow: Subject First, Emissives Next, Grade Last","depth":2},{"id":"poly-haven-a-real-free-cc0-source-for-hdris","text":"Poly Haven: A Real, Free, CC0 Source for HDRIs","depth":2}],
+  },
+  "ibl-irradiance-and-prefilter": {
+    vi: [{"id":"từ-n-nguồn-sáng-rời-rạc-đến-toàn-bộ-môi-trường","text":"Từ N nguồn sáng rời rạc đến toàn bộ môi trường","depth":2},{"id":"nửa-diffuse-irradiance-map","text":"Nửa diffuse: irradiance map","depth":2},{"id":"convolve-theo-cosine-irradiance-là-gì","text":"Convolve theo cosine: irradiance là gì","depth":3},{"id":"nửa-specular-prefiltered-environment","text":"Nửa specular: prefiltered environment","depth":2},{"id":"mip-chain-mỗi-mức-roughness-một-lần-blur-ggx","text":"Mip chain: mỗi mức roughness một lần blur GGX","depth":3},{"id":"split-sum-approximation-ghép-hai-nửa-lại-đúng-cách","text":"Split-sum approximation: ghép hai nửa lại đúng cách","depth":2},{"id":"pmremgenerator-của-threejs-từ-scenehdri-ra-một-texture","text":"PMREMGenerator của Three.js: từ scene/HDRI ra một texture","depth":2},{"id":"sceneenvironment-envmapintensity-và-nơi-three-giấu-brdf-lut","text":"scene.environment, envMapIntensity và nơi Three giấu BRDF LUT","depth":2},{"id":"thực-hành-roomenvironment-cho-ambience-studio-rgbeloader-cho-hdri-thật","text":"Thực hành: RoomEnvironment cho ambience studio, RGBELoader cho HDRI thật","depth":2}],
+    en: [{"id":"from-n-discrete-lights-to-the-whole-environment","text":"From N discrete lights to the whole environment","depth":2},{"id":"diffuse-half-the-irradiance-map","text":"Diffuse half: the irradiance map","depth":2},{"id":"cosine-convolution-what-irradiance-actually-is","text":"Cosine convolution: what irradiance actually is","depth":3},{"id":"specular-half-the-prefiltered-environment","text":"Specular half: the prefiltered environment","depth":2},{"id":"the-mip-chain-one-roughness-one-ggx-blur-per-level","text":"The mip chain: one roughness, one GGX blur per level","depth":3},{"id":"the-split-sum-approximation-recombining-the-two-halves-correctly","text":"The split-sum approximation: recombining the two halves correctly","depth":2},{"id":"threejss-pmremgenerator-from-a-scene-or-hdri-to-one-texture","text":"Three.js's PMREMGenerator: from a scene or HDRI to one texture","depth":2},{"id":"sceneenvironment-envmapintensity-and-where-three-hides-the-brdf-lut","text":"scene.environment, envMapIntensity and where Three hides the BRDF LUT","depth":2},{"id":"practice-roomenvironment-for-studio-ambience-rgbeloader-for-real-hdris","text":"Practice: RoomEnvironment for studio ambience, RGBELoader for real HDRIs","depth":2}],
+  },
+  "metalness-roughness-workflow": {
+    vi: [{"id":"hai-con-số-mô-tả-gần-như-mọi-vật-liệu","text":"Hai con số mô tả gần như mọi vật liệu","depth":2},{"id":"metalness-không-phải-blend--đó-là-rerouting-kênh","text":"Metalness không phải blend — đó là REROUTING kênh","depth":2},{"id":"bộ-texture-chuẩn-mỗi-map-một-vai-trò-sai-một-cái-là-lộ-ngay","text":"Bộ texture chuẩn: mỗi map một vai trò, sai một cái là lộ ngay","depth":2},{"id":"specularglossiness-chuẩn-cũ-hơn-và-vì-sao-metalrough-thắng","text":"Specular/Glossiness: chuẩn cũ hơn, và vì sao metal/rough thắng","depth":2},{"id":"ánh-xạ-vào-meshstandardmaterial-channel-packing-và-srgb-vs-linear","text":"Ánh xạ vào MeshStandardMaterial: channel packing và sRGB vs linear","depth":2}],
+    en: [{"id":"two-numbers-describe-almost-every-material","text":"Two Numbers Describe Almost Every Material","depth":2},{"id":"metalness-isnt-a-blend--its-channel-rerouting","text":"Metalness Isn't a Blend — It's Channel Rerouting","depth":2},{"id":"the-standard-map-set-each-map-one-job-and-what-breaks-when-its-wrong","text":"The Standard Map Set: Each Map, One Job, and What Breaks When It's Wrong","depth":2},{"id":"specularglossiness-the-older-standard-and-why-metalrough-won","text":"Specular/Glossiness: the Older Standard, and Why Metal/Rough Won","depth":2},{"id":"mapping-into-meshstandardmaterial-channel-packing-and-srgb-vs-linear","text":"Mapping Into MeshStandardMaterial: Channel Packing and sRGB vs. Linear","depth":2}],
+  },
+  "rendering-equation-intuition": {
+    vi: [{"id":"một-phương-trình-duy-nhất-đứng-sau-mọi-model-ánh-sáng-kajiya-1986","text":"Một phương trình duy nhất đứng sau mọi model ánh sáng (Kajiya, 1986)","depth":2},{"id":"vế-trái-lox-ωo--thứ-camera-thực-sự-nhìn-thấy","text":"Vế trái: Lo(x, ωo) — thứ camera thực sự nhìn thấy","depth":2},{"id":"lex-ωo--bề-mặt-tự-phát-sáng-bao-nhiêu","text":"Le(x, ωo) — bề mặt tự phát sáng bao nhiêu","depth":2},{"id":"frx-ωi-ωo--brdf-bề-mặt-tái-phân-phối-ánh-sáng-ra-sao","text":"fr(x, ωi, ωo) — BRDF: bề mặt \"tái phân phối\" ánh sáng ra sao","depth":2},{"id":"cosθ--luật-cosine-của-lambert-diện-tích-chiếu-không-phải-độ-nghiêng","text":"cosθ — luật cosine của Lambert: diện tích chiếu, không phải \"độ nghiêng\"","depth":2},{"id":"tích-phân-trên-bán-cầu-ω--ánh-sáng-tới-từ-mọi-hướng-cùng-lúc","text":"Tích phân trên bán cầu Ω — ánh sáng tới từ MỌI hướng cùng lúc","depth":2},{"id":"vì-sao-real-time-không-giải-được-chính-xác-li-là-lo-của-người-khác","text":"Vì sao real-time không giải được chính xác: Li là Lo của người khác","depth":2},{"id":"path-tracing-ước-lượng-tích-phân-bằng-monte-carlo","text":"Path tracing: ước lượng tích phân bằng Monte Carlo","depth":2},{"id":"lambert-phong-ambient-những-cú-xấp-xỉ-thô-của-cùng-một-phương-trình","text":"Lambert, Phong, ambient: những cú xấp xỉ thô của cùng một phương trình","depth":2},{"id":"cả-track-pbr-là-chuỗi-xấp-xỉ-ngày-càng-tốt-hơn-cho-từng-số-hạng","text":"Cả track PBR là chuỗi xấp xỉ ngày càng tốt hơn cho từng số hạng","depth":2},{"id":"đọc-phương-trình-như-kỹ-sư-không-phải-nhà-toán-học","text":"Đọc phương trình như kỹ sư, không phải nhà toán học","depth":2}],
+    en: [{"id":"one-equation-behind-every-lighting-model-kajiya-1986","text":"One Equation Behind Every Lighting Model (Kajiya, 1986)","depth":2},{"id":"the-left-side-lox-ωo--what-the-camera-actually-sees","text":"The Left Side: Lo(x, ωo) — What the Camera Actually Sees","depth":2},{"id":"lex-ωo--how-much-the-surface-emits-on-its-own","text":"Le(x, ωo) — How Much the Surface Emits on Its Own","depth":2},{"id":"frx-ωi-ωo--the-brdf-how-a-surface-redistributes-light","text":"fr(x, ωi, ωo) — the BRDF: How a Surface Redistributes Light","depth":2},{"id":"cosθ--lamberts-cosine-law-projected-area-not-tilt-darkening","text":"cosθ — Lambert's Cosine Law: Projected Area, Not \"Tilt Darkening\"","depth":2},{"id":"the-hemisphere-integral-ω--light-arrives-from-everywhere-at-once","text":"The Hemisphere Integral Ω — Light Arrives From EVERYWHERE at Once","depth":2},{"id":"why-real-time-cant-solve-it-exactly-li-is-someone-elses-lo","text":"Why Real-Time Can't Solve It Exactly: Li Is Someone Else's Lo","depth":2},{"id":"path-tracing-estimating-the-integral-with-monte-carlo","text":"Path Tracing: Estimating the Integral with Monte Carlo","depth":2},{"id":"lambert-phong-ambient-crude-approximations-of-the-same-equation","text":"Lambert, Phong, Ambient: Crude Approximations of the Same Equation","depth":2},{"id":"the-whole-pbr-track-is-a-chain-of-better-approximations-term-by-term","text":"The Whole PBR Track Is a Chain of Better Approximations, Term by Term","depth":2},{"id":"reading-the-equation-as-an-engineer-not-a-mathematician","text":"Reading the Equation as an Engineer, Not a Mathematician","depth":2}],
+  },
+  "shadow-techniques-pcf-vsm-csm": {
+    vi: [{"id":"shadow-mapping-nhắc-lại-nhanh-callback-track-3","text":"Shadow mapping: nhắc lại nhanh (callback Track 3)","depth":2},{"id":"ba-căn-bệnh-của-shadow-map-thô","text":"Ba căn bệnh của shadow map thô","depth":2},{"id":"pcf-lọc-phép-so-sánh-không-lọc-bản-đồ-độ-sâu","text":"PCF: lọc phép SO SÁNH, không lọc bản đồ độ sâu","depth":2},{"id":"shadowmaptype-trong-threejs-bốn-hằng-số-và-một-bất-ngờ-xác-nhận-từ-source","text":"shadowMap.type trong three.js: bốn hằng số, và một bất ngờ xác nhận từ source","depth":2},{"id":"vsm-lưu-mean--variance-thay-vì-lưu-depth-thô-chặn-trên-bằng-chebyshev","text":"VSM: lưu mean & variance thay vì lưu depth thô, chặn trên bằng Chebyshev","depth":2},{"id":"csm-chia-frustum-thành-nhiều-lát-mỗi-lát-một-shadow-map-riêng","text":"CSM: chia frustum thành nhiều lát, mỗi lát một shadow map riêng","depth":2},{"id":"bảng-tinh-chỉnh-thực-dụng","text":"Bảng tinh chỉnh thực dụng","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"shadow-mapping-a-quick-recap-callback-to-track-3","text":"Shadow Mapping: A Quick Recap (Callback to Track 3)","depth":2},{"id":"three-diseases-of-a-raw-shadow-map","text":"Three Diseases of a Raw Shadow Map","depth":2},{"id":"pcf-filtering-the-comparison-not-the-depth-map","text":"PCF: Filtering the COMPARISON, Not the Depth Map","depth":2},{"id":"shadowmaptype-in-threejs-four-constants-and-one-surprise-confirmed-from-source","text":"shadowMap.type in three.js: Four Constants, and One Surprise Confirmed From Source","depth":2},{"id":"vsm-storing-mean-and-variance-instead-of-raw-depth-bounded-by-chebyshev","text":"VSM: Storing Mean and Variance Instead of Raw Depth, Bounded by Chebyshev","depth":2},{"id":"csm-splitting-the-frustum-into-cascades-each-with-its-own-shadow-map","text":"CSM: Splitting the Frustum Into Cascades, Each With Its Own Shadow Map","depth":2},{"id":"a-practical-tuning-table","text":"A Practical Tuning Table","depth":2},{"id":"where-this-connects-later","text":"Where This Connects Later","depth":2}],
+  },
+  "why-assets-look-like-plastic": {
+    vi: [{"id":"vì-sao-nhựa-là-từ-đúng-để-mô-tả-lỗi-pbr","text":"Vì sao \"nhựa\" là từ đúng để mô tả lỗi PBR","depth":2},{"id":"12-roughness-quá-thấp-và-đều-albedo-sai-giá-trị","text":"1–2. Roughness quá thấp và đều, albedo sai giá trị","depth":2},{"id":"3-fresnel-yếu-hoặc-sai-vì-dùng-metalness-không-đúng-cách","text":"3. Fresnel yếu hoặc sai vì dùng metalness không đúng cách","depth":2},{"id":"4-ibl-vắng-mặt-hoặc-lệch-exposure-nguồn-sáng-chết","text":"4. IBL vắng mặt hoặc lệch exposure: nguồn sáng \"chết\"","depth":2},{"id":"5-thiếu-aocontact-shadow-vật-thể-trông-lơ-lửng","text":"5. Thiếu AO/contact shadow: vật thể trông lơ lửng","depth":2},{"id":"6-normal-map-sai-scale-hoặc-thiếu-hẳn","text":"6. Normal map sai scale hoặc thiếu hẳn","depth":2},{"id":"7-tone-mapping-tắt-output-tuyến-tính-trông-bạc-màu","text":"7. Tone mapping tắt: output tuyến tính trông \"bạc màu\"","depth":2},{"id":"thứ-tự-chẩn-đoán-ánh-sáng-trước-vật-liệu-sau-map-cuối-cùng","text":"Thứ tự chẩn đoán: ánh sáng trước, vật liệu sau, map cuối cùng","depth":2}],
+    en: [{"id":"why-plastic-is-the-right-word-for-this-pbr-failure","text":"Why \"Plastic\" Is the Right Word for This PBR Failure","depth":2},{"id":"12-roughness-too-low-and-uniform-albedo-at-the-wrong-value","text":"1–2. Roughness Too Low and Uniform, Albedo at the Wrong Value","depth":2},{"id":"3-weak-or-wrong-fresnel-from-misusing-metalness","text":"3. Weak or Wrong Fresnel From Misusing Metalness","depth":2},{"id":"4-ibl-absent-or-exposure-mismatched-a-dead-light-source","text":"4. IBL Absent or Exposure-Mismatched: a \"Dead\" Light Source","depth":2},{"id":"5-missing-aocontact-shadows-the-floating-look","text":"5. Missing AO/Contact Shadows: the Floating Look","depth":2},{"id":"6-normal-map-at-the-wrong-scale-or-missing-entirely","text":"6. Normal Map at the Wrong Scale or Missing Entirely","depth":2},{"id":"7-tone-mapping-off-linear-output-reads-washed-out","text":"7. Tone Mapping Off: Linear Output Reads \"Washed Out\"","depth":2},{"id":"triage-order-lighting-first-then-materials-then-maps","text":"Triage Order: Lighting First, Then Materials, Then Maps","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -1311,6 +1408,15 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "ssao": () => import("./lessons/10-postprocessing/ssao/demo"),
   "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/demo"),
   "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/demo"),
+  "area-lights-and-probes": () => import("./lessons/11-pbr/area-lights-and-probes/demo"),
+  "brdf-and-microfacets": () => import("./lessons/11-pbr/brdf-and-microfacets/demo"),
+  "fresnel-and-schlick": () => import("./lessons/11-pbr/fresnel-and-schlick/demo"),
+  "hdri-exposure-tonemapping": () => import("./lessons/11-pbr/hdri-exposure-tonemapping/demo"),
+  "ibl-irradiance-and-prefilter": () => import("./lessons/11-pbr/ibl-irradiance-and-prefilter/demo"),
+  "metalness-roughness-workflow": () => import("./lessons/11-pbr/metalness-roughness-workflow/demo"),
+  "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/demo"),
+  "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/demo"),
+  "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -1452,4 +1558,15 @@ export const EXERCISES_REGISTRY: Partial<
   "ssao": () => import("./lessons/10-postprocessing/ssao/exercises"),
   "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/exercises"),
   "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/exercises"),
+  "area-lights-and-probes": () => import("./lessons/11-pbr/area-lights-and-probes/exercises"),
+  "brdf-and-microfacets": () => import("./lessons/11-pbr/brdf-and-microfacets/exercises"),
+  "checkpoint-material-study": () => import("./lessons/11-pbr/checkpoint-material-study/exercises"),
+  "checkpoint-studio-lighting-setup": () => import("./lessons/11-pbr/checkpoint-studio-lighting-setup/exercises"),
+  "fresnel-and-schlick": () => import("./lessons/11-pbr/fresnel-and-schlick/exercises"),
+  "hdri-exposure-tonemapping": () => import("./lessons/11-pbr/hdri-exposure-tonemapping/exercises"),
+  "ibl-irradiance-and-prefilter": () => import("./lessons/11-pbr/ibl-irradiance-and-prefilter/exercises"),
+  "metalness-roughness-workflow": () => import("./lessons/11-pbr/metalness-roughness-workflow/exercises"),
+  "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/exercises"),
+  "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/exercises"),
+  "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/exercises"),
 };

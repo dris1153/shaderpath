@@ -1,0 +1,84 @@
+## From N discrete lights to the whole environment
+
+The rendering equation from this track's first lesson writes outgoing light at a point as an integral over the whole hemisphere: $L_o = \int_{\Omega} L_i(\omega_i)\,f_r(\omega_i,\omega_o)\,(N\cdot\omega_i)\,d\omega_i$. With a `PointLight` or `DirectionalLight`, $L_i$ is nonzero along exactly one direction — the integral collapses to a single term, computed directly with no approximation needed. Image-based lighting (IBL) flips that assumption entirely: $L_i$ is now nonzero from **every** direction at once, because every texel of an environment map is its own tiny light source. A 256×256-per-face cubemap has over 393,000 texels — no shader can loop over all of them per pixel per frame. IBL solves this by splitting the integral into two independent halves, precomputing each one **once** into a texture, so the runtime shader is left doing nothing more than a texture sample.
+
+## Diffuse half: the irradiance map
+
+### Cosine convolution: what irradiance actually is
+
+The Lambertian BRDF is a constant ($\text{albedo}/\pi$), so it factors straight out of the integral, leaving only the environment-dependent part — irradiance:
+
+$$
+E(N) = \int_{\Omega} L_i(\omega_i)\,(N\cdot\omega_i)\,d\omega_i, \qquad L_{o,\text{diff}} = \frac{\text{albedo}}{\pi}\,E(N)
+$$
+
+The key point: $E$ depends only on the normal direction $N$, never on view direction — so it can be precomputed once for every possible $N$ and stored in a texture indexed by direction (the classic technique; learnopengl, for instance, gets away with a cubemap as small as 32×32 per face). The reason this texture can stay tiny: cosine convolution is an extremely aggressive low-pass filter — it wipes out essentially all high-frequency detail from the source environment, leaving behind little more than a handful of smooth gradients. That's why an irradiance map always looks "blurry" no matter how sharp the source HDRI was.
+
+## Specular half: the prefiltered environment
+
+### The mip chain: one roughness, one GGX blur per level
+
+Cook-Torrance specular can't be factored out of the integral the way Lambertian can, since the $D$ term (microfacet distribution) depends on both roughness and the half-vector. The practical approximation: precompute, for each roughness value, what the environment looks like after being convolved with that roughness's exact GGX lobe — a "prefiltered environment." Store mip 0 as the roughness≈0 version (a sharp mirror, full resolution), with higher mips holding progressively higher roughness, each blurred via GGX VNDF importance sampling (Heitz 2018) — the same technique Three.js's `PMREMGenerator` uses, cited right in the class's docblock. At shading time, take the reflection vector $R = \text{reflect}(-V, N)$ and sample that same prefiltered map at the mip level matching roughness — not relying on automatic mip selection via screen-space derivatives, since a single reflection ray from one pixel has no footprint for the GPU to infer a mip from.
+
+## The split-sum approximation: recombining the two halves correctly
+
+Karis (Epic Games, SIGGRAPH 2013 course "Physically Based Shading in Theory and Practice") approximates the full specular integral as a **product** of two separately integrated pieces instead of one joint double integral:
+
+$$
+\int_{\Omega} L_i\,f_r\,(N\cdot\omega_i)\,d\omega_i \;\approx\; \underbrace{\int_{\Omega} L_i\,D\,(N\cdot\omega_i)\,d\omega_i}_{\text{prefiltered environment}} \;\times\; \underbrace{\int_{\Omega} f_r\,(N\cdot\omega_i)\,d\omega_i}_{\text{BRDF LUT}}
+$$
+
+The first factor is exactly the prefiltered environment above (depends on roughness and $R$, not on the material's $F_0$ at all). The second factor depends only on roughness and the angle $N\cdot V$ — not on the environment whatsoever — so it can be precomputed **exactly once, shared by every scene**, stored in a small 2D LUT indexed by $(\text{roughness}, N\cdot V)$ that returns a scale/bias pair applied to the material's $F_0$:
+
+$$
+\text{specular}_{\text{IBL}} \approx \text{PrefilteredEnvMap}(R,\rho)\times\big(F_0\cdot\text{scale}(N{\cdot}V,\rho) + F_{90}\cdot\text{bias}(N{\cdot}V,\rho)\big)
+$$
+
+This is a genuinely inexact approximation — splitting one double integral into a product of two single integrals isn't algebraically identical to the original, and it quietly loses multi-bounce energy at high roughness (materials look slightly too dark at extreme roughness, the well-known "energy loss" artifact that later work like Fdez-Agüera's multi-scattering compensation addresses). But it turns an expensive per-pixel double integral into exactly two texture fetches, which is why nearly every real-time renderer uses it anyway.
+
+## Three.js's PMREMGenerator: from a scene or HDRI to one texture
+
+`PMREMGenerator` is Three's implementation of the whole prefiltering pipeline, and it ships in core (no addon needed):
+
+```ts
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envRT = pmrem.fromScene(environmentScene); // or pmrem.fromEquirectangular(hdriTexture)
+scene.environment = envRT.texture;
+```
+
+`.fromScene(scene, sigma?, near?, far?, options?)` renders the given scene to a cubemap and then prefilters it — this is exactly how `RoomEnvironment` (a small scene of colored boxes and emissive panels) produces ambience without needing a real HDRI file. `.fromEquirectangular(texture)` instead takes an existing 2:1 equirectangular image (an HDRI loaded through `RGBELoader`, or any procedural equirect texture) and prefilters that.
+
+One detail worth verifying against the source rather than trusting folklore: Three does **not** store two separate textures (an irradiance cubemap plus a prefiltered specular cubemap). It builds exactly one texture — a multi-mip atlas packed with a scheme it calls "CubeUV" (`cube_uv_reflection_fragment.glsl.js`): each cube face is tiled at progressively lower resolution per mip level, and all six faces of every mip are packed into one flat 2D texture, sampled through a hand-written `textureCubeUV()` helper instead of a plain `textureCube` — because a real mipmapped cubemap can't express "this mip needs a completely different convolution kernel than automatic trilinear filtering would produce." The diffuse irradiance lookup then reuses that exact same atlas at its blurriest mip: `getIBLIrradiance()` in `envmap_physical_pars_fragment.glsl.js` calls `textureCubeUV(envMap, N, 1.0)` — passing roughness=1.0, the very top of the mip chain — as its irradiance approximation, instead of running a separate cosine convolution pass. It's a shortcut (a GGX blur at roughness=1 isn't mathematically identical to a true cosine convolution) but visually close enough to skip building and storing a second texture entirely.
+
+## scene.environment, envMapIntensity and where Three hides the BRDF LUT
+
+Assigning the PMREM output to `scene.environment` (instead of each material's own `.envMap`) makes EVERY `MeshStandardMaterial`/`MeshPhysicalMaterial` in the scene pick it up automatically — no per-material wiring required, which is exactly why IBL displaced "just add more point lights" as the default lighting approach. `material.envMapIntensity` (default 1) is purely a multiplier on the IBL contribution — it never touches direct lights, which is why it's the right knob for "how bright is my studio" without also blowing out a key light.
+
+The BRDF LUT (the split-sum's second factor from above) lives in `lights_physical_pars_fragment.glsl.js`, in the `EnvironmentBRDF()` function: `vec2 fab = texture2D(dfgLUT, vec2(roughness, dotNV)).rg; return specularColor * fab.x + specularF90 * fab.y;` — exactly the scale/bias formula above. In the Three.js version this project runs, the LUT isn't computed on the GPU at runtime (older engines and tutorials often render one into a render target on startup) — it ships as a precomputed 16×16 `RG16F` `DataTexture` (`DFGLUTData.js`, "4096 samples per texel") baked directly into the JS bundle, uploaded once as the `dfgLUT` uniform whenever a physical material is in use. A sensible trade: zero GPU warm-up cost, at the cost of a fixed 16×16 resolution — acceptable since the LUT is smooth and low-frequency by construction.
+
+## Practice: RoomEnvironment for studio ambience, RGBELoader for real HDRIs
+
+For fast, dependency-free ambience (the constraint every checkpoint/demo in this course lives under), `RoomEnvironment` from `three/addons/environments/RoomEnvironment.js` combined with `PMREMGenerator.fromScene()` is enough — it's just a small scene of colored boxes and emissive panels, built entirely from code. For a real project wanting one specific mood (a sunset, a studio softbox, an overcast sky), load an actual `.hdr` file instead:
+
+```ts
+import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+
+new RGBELoader().load("/hdri/studio.hdr", (hdri) => {
+  hdri.mapping = THREE.EquirectangularReflectionMapping;
+  const envRT = pmremGenerator.fromEquirectangular(hdri);
+  scene.environment = envRT.texture;
+  hdri.dispose();
+});
+```
+
+The demo below can't ship a binary HDRI, so it swaps between `RoomEnvironment` and two small procedural equirect gradients instead — walking the exact same `fromEquirectangular`/`fromScene` code path a real HDRI would take. The next lesson (`hdri-exposure-tonemapping`) picks up exactly where this practical section stops: once a real HDRI is loaded, its dynamic range still needs `toneMappingExposure` tuning before it looks right.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three common mistakes when working with IBL in Three.js:
+
+1. **Treating `envMapIntensity` as a general light intensity that also affects direct lights.** It only scales the IBL contribution — a scene with `envMapIntensity=3` but a weak `DirectionalLight` still looks flat, because direct-light specular highlights go through a completely separate code path that never reads `envMapIntensity`.
+2. **Assuming Three builds a separate irradiance cubemap for diffuse.** As shown above, `getIBLIrradiance()` reuses the exact same prefiltered CubeUV atlas at its blurriest mip — there is no separate cosine-convolution pass at all.
+3. **Forgetting to dispose the PMREM render target (and the source scene/texture) after building an environment.** Every rebuild (e.g. swapping environments through a control) that skips `.dispose()`ing the old render target first leaks a full multi-mip render target — it adds up fast if a user toggles environments back and forth.
+
+</Callout>

@@ -1,0 +1,15 @@
+## Goal
+
+This mini-build closes out the PBR track: build a real studio-quality product shot, combining every technique this track covered — RectAreaLight, IBL, exposure/tone mapping, and RectAreaLight's real shadow limitation — into a classic three-point lighting setup. There's no new theory here; what's graded is correctly COMBINING what you already know, with a clear reason behind every number, not just calling the right APIs.
+
+## Requirements
+
+Build a three-point setup: the **key** is a `RectAreaLight` (softbox) placed at roughly a 45°/45° angle to the subject; the **fill** isn't a separate light at all but the IBL's own strength (`scene.environmentIntensity`), kept well below the key; the **rim** is a small, bright `RectAreaLight` placed behind the subject to separate its silhouette from the dark background. Since `RectAreaLight` has no shadow support (covered in the area-lights-and-probes lesson), the shadow must come from a separate light — aimed the same direction as the key, with negligible lighting contribution of its own, existing purely to `castShadow` — configured for `PCFSoftShadowMap`, free of shadow acne. The scene needs a `RoomEnvironment` through `PMREMGenerator` as the reflection bed, a glossy pedestal floor, and a showcased object using a purely parameter-driven procedural material (no textures/binary assets at all). Tune `toneMappingExposure` so highlights keep detail instead of blowing out.
+
+## Suggested Structure
+
+The classic studio key:fill ratio is roughly 4:1 — approximate it by setting `environmentIntensity` low enough relative to the key's intensity that shadows read with real contrast, while shadow areas still keep some visible detail instead of going fully black.
+
+## Definition of Done
+
+Check against the checklist in the Exercises section before opening the solution — the three-point ratio reads clearly by eye, the floor's reflection is shaped correctly by the key panel, shadows are soft and acne-free, exposure doesn't lose highlight detail, the rim separates the silhouette from the background, and every GPU resource is disposed cleanly on unmount.

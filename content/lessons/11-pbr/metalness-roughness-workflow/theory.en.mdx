@@ -1,0 +1,44 @@
+## Two Numbers Describe Almost Every Material
+
+The previous lesson stopped at $F(\theta)$: how much a surface reflects at a given angle, with $F_0$ as the starting point at normal incidence. Left open: where does an artist get $F_0$, and where does a reflection's "blurriness" (not just strength) come from? The **metalness/roughness workflow** — the standard nearly every modern real-time engine (Unreal, Unity, Three.js's `MeshStandardMaterial`) is built around — answers with two numbers in $[0,1]$ plus a base color (albedo). `metalness` decides where $F_0$ comes from and whether diffuse exists at all; `roughness` decides how sharp or blurred the microfacet distribution is (the $D$ term from `brdf-and-microfacets`). Those two numbers plus albedo reconstruct nearly everything your eye uses to tell "plastic" from "polished metal."
+
+## Metalness Isn't a Blend — It's Channel Rerouting
+
+The most common misunderstanding: `metalness` does **not** blend a non-metal look with a metal look. It **reroutes** the same albedo value into two entirely different physical roles:
+
+- `metalness = 0`: $F_0$ falls back to the constant $0.04$ (previous lesson), and **albedo becomes the diffuse color** — light tints inside the material and scatters back out, how plastic, wood, and skin behave.
+- `metalness = 1`: $F_0 = \text{albedo}$ ("F0 IS the metal's color"), and **diffuse drops to zero** — metals don't transmit light inward at all.
+
+No blending of two rendered "looks" — just one input whose role gets swapped entirely. Filament's PBR guide (google.github.io/filament/Filament.md.html) states plainly: *"Metallic is almost a binary value... Intermediate values are meant for transitions between surface types (metal to rust for instance)."* No real material is "half-metal" at the microscopic level. An in-between value is only meaningful in two cases: (1) **mask boundaries** — the edge between clean metal and rusted/painted regions, where mipmap filtering naturally produces intermediate values even from a binary mask; (2) **deliberate transitions** — an intentionally painted rust/grime gradient. Outside those, $0.5$ across a whole surface is a physically nonexistent combination.
+
+## The Standard Map Set: Each Map, One Job, and What Breaks When It's Wrong
+
+This workflow usually ships with five maps:
+
+- **Albedo/baseColor** — pure color, **no lighting/shadow/AO baked in**. Wrong: photographing a texture in sunlight and using it as albedo — the shadow gets frozen in, doesn't rotate with the scene's light.
+- **Metalness** — a 0/1 mask. Wrong: too soft a threshold makes a metal region read as non-metal, losing its reflection outright.
+- **Roughness** — the most "artistic" channel: no direct physical instrument measures it, mostly hand-painted from observed wear, fingerprints, dust. Wrong (too low/uniform): unnaturally sharp, uniform reflections — the single biggest reason an asset "looks like plastic" (its own lesson later in this track).
+- **Normal** (tangent-space, a Track 3 callback): RGB encoding a micro-normal offset, changing shading only, never the silhouette. Wrong: forgetting it leaves surfaces flat and detail-less; or a map authored with left-handed (DirectX-style) convention left un-flipped — `MeshStandardMaterial` handles this via `normalScale` (a `Vector2`, default `(1,1)`), and forgetting to negate its $y$ makes bumps read as dents.
+- **AO** — darkens crevices where ambient light struggles to reach. Per Three.js's source (`aomap_fragment`), AO **only multiplies indirect lighting** (`indirectDiffuse`, `indirectSpecular`), never direct lights. Common mistake: expecting AO to darken a directly-lit face too — if crevices aren't darkening despite an `aoMap`, the scene likely has only direct lights and no ambient/indirect light for AO to multiply.
+
+## Specular/Glossiness: the Older Standard, and Why Metal/Rough Won
+
+Before metalness/roughness, the industry had a parallel standard: **specular/glossiness** — artists painted an explicit specular RGB color (standing in for $F_0$) plus a glossiness channel (roughness's inverse). glTF once had `KHR_materials_pbrSpecularGlossiness` (now archived, no longer core glTF 2.0). Three reasons metal/rough won for real-time: (1) **memory** — specular needs full RGB, metalness needs one grayscale channel; (2) **built-in physical constraints** — spec/gloss lets an artist paint an arbitrary specular color onto a surface that still has diffuse, a combination real physics forbids; metalness enforces that by construction; (3) **lossy conversion** — no reliable way to infer "metal or not" from a measured specular color alone. In fairness: spec/gloss still lives on in offline/VFX pipelines (Arnold, V-Ray) where artistic control outweighs texture footprint.
+
+## Mapping Into MeshStandardMaterial: Channel Packing and sRGB vs. Linear
+
+`MeshStandardMaterial` maps those five onto `map`, `metalnessMap`, `roughnessMap`, `normalMap`, `aoMap`. Straight from Three's shader chunk source (r185): `roughnessmap_fragment.glsl.js` reads the **G channel**, `metalnessmap_fragment.glsl.js` the **B channel**, `aomap_fragment.glsl.js` the **R channel** — all three comments say: *"compatible with a combined OcclusionRoughnessMetallic (RGB) texture."* This is the **channel-packing** convention: pack all three grayscale maps into ONE RGB image ("ORM"), assign the **same texture object** to all three properties — Three only reads the channel it needs. One image file, three roles, far fewer texture binds and less VRAM than three separate images.
+
+This follows Track 0's decode–compute–encode rule exactly: `MeshStandardMaterial`'s JSDoc says `map` "represents color data" and needs `SRGBColorSpace`, while `normalMap`/`roughnessMap`/`metalnessMap`/`aoMap` "represent non-color data" and must stay `NoColorSpace` (the `Texture` default). The wrong-colorspace bug isn't theoretical: forgetting `texture.colorSpace = SRGBColorSpace` means the GPU never decodes gamma at sample time — an sRGB-encoded pixel (`0.5`, only ≈21% of true light energy per Track 0's own formula) flows into lighting as if already linear, then still gets sRGB-encoded once more at output — the result looks **washed out, over-bright** (not darker), since encoding stacks on a value that was already too high. Turning on `SRGBColorSpace` and calling `texture.needsUpdate = true` makes the GPU re-upload with the correct format — skip that `needsUpdate` and nothing visibly changes.
+
+The `checkpoint-material-study` lesson right after asks you to build a grid of spheres sweeping metalness × roughness to cross-check all this visually; the IBL lessons later in this track return to this exact albedo/metalness/roughness trio to decide how environment light blends.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common metalness/roughness workflow mistakes:
+
+1. **Swapping or removing a map and forgetting `material.needsUpdate = true`.** Whether a map exists is a compile-time `#ifdef` baked into the shader program — Three doesn't detect `material.metalnessMap = null`; the already-compiled program runs unchanged, looking like nothing happened despite no syntax error. The same root cause Track 6's `onBeforeCompile` lesson already ran into.
+2. **Painting `metalness = 0.5` uniformly to make a surface "look sort of metal, sort of not."** Per Filament, this combination doesn't exist in nature; the result is a flat, unconvincing gray surface — an in-between value is only valid at a mask boundary or deliberate transition, never a "safe" way to dodge the metal-or-not decision.
+3. **Mixing up color space: forgetting `SRGBColorSpace` on albedo, or applying it to a data map.** The first produces the washed-out result analyzed above; the second incorrectly gamma-decodes values that were never light energy, distorting shading in a way that's hard to trace since it doesn't look directly related to color.
+
+</Callout>

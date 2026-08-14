@@ -1,0 +1,44 @@
+## Hai con số mô tả gần như mọi vật liệu
+
+Bài trước dừng ở $F(\theta)$: bề mặt phản xạ bao nhiêu theo góc nhìn, với $F_0$ là điểm khởi đầu tại góc vuông góc. Câu hỏi bỏ ngỏ: hoạ sĩ lấy $F_0$ ở đâu, và độ "nhoè" phản xạ (không chỉ độ mạnh) tới từ đâu? **Metalness/roughness workflow** — chuẩn mà gần mọi engine thời gian thực (Unreal, Unity, Three.js `MeshStandardMaterial`) dựng quanh nó — trả lời bằng hai con số trong $[0,1]$ cộng một màu nền (albedo). `metalness` quyết định $F_0$ lấy từ đâu và có diffuse hay không; `roughness` quyết định microfacet nhọn hay tù (số hạng $D$ Cook-Torrance, bài `brdf-and-microfacets`). Hai con số này cộng albedo dựng lại gần trọn cách mắt phân biệt "đây là nhựa" hay "đây là kim loại đánh bóng".
+
+## Metalness không phải blend — đó là REROUTING kênh
+
+Điểm dễ hiểu sai nhất: `metalness` **không** trộn giữa vẻ ngoài phi kim và kim loại. Nó **định tuyến lại** đúng một giá trị albedo vào hai vai trò vật lý khác hẳn nhau:
+
+- `metalness = 0`: $F_0$ lấy hằng số $0.04$ (bài trước), **albedo là màu khuếch tán** — ánh sáng nhuộm màu bên trong vật liệu rồi tán xạ ra, cơ chế của nhựa, gỗ, da.
+- `metalness = 1`: $F_0 = \text{albedo}$ ("F0 chính là màu kim loại"), **diffuse bằng 0** — kim loại không truyền ánh sáng vào trong.
+
+Không có phép trộn hai "kết quả render" — chỉ một input bị đổi vai trò triệt để. Filament's PBR guide (google.github.io/filament/Filament.md.html) nói thẳng: *"Metallic is almost a binary value... Intermediate values are meant for transitions between surface types (metal to rust for instance)"* — không vật liệu thật nào "nửa kim loại" ở cấp vi mô. Giá trị giữa $0$ và $1$ chỉ có ý nghĩa ở hai trường hợp: (1) **ranh giới mask** — biên giữa vùng kim loại sạch và rỉ sét/sơn phủ, nơi lọc mipmap tự nhiên tạo giá trị trung gian dù hoạ sĩ chỉ vẽ mask nhị phân; (2) **chuyển tiếp có chủ đích** — dải rỉ sét/bẩn vẽ mờ dần. Ngoài hai trường hợp đó, $0.5$ cho cả bề mặt là tổ hợp không vật lý.
+
+## Bộ texture chuẩn: mỗi map một vai trò, sai một cái là lộ ngay
+
+Workflow này thường đi cùng năm map:
+
+- **Albedo/baseColor** — màu thuần, **không nướng sẵn ánh sáng/bóng/AO**. Sai: chụp texture dưới nắng dùng thẳng làm albedo — bóng "đóng băng" trong texture, không xoay theo ánh sáng scene.
+- **Metalness** — mask 0/1. Sai: threshold quá mờ khiến vùng lẽ ra kim loại đọc thành phi kim, mất phản chiếu đặc trưng.
+- **Roughness** — kênh "nghệ thuật" nhất: không máy đo trực tiếp, hoạ sĩ vẽ dựa vết mòn, vân tay, bụi quan sát được. Sai (quá thấp/đều): phản chiếu gắt đồng nhất bất thường — nguyên nhân số một khiến asset "trông như nhựa" (bài riêng cuối track).
+- **Normal** (tangent-space, callback Track 3): RGB mã hoá pháp tuyến vi mô lệch khỏi pháp tuyến thật, chỉ đổi shading không đổi silhouette. Sai: quên gắn map → bề mặt phẳng lì; hoặc map xuất theo quy ước tay trái (DirectX, Y ngược) mà không đảo — `MeshStandardMaterial` xử lý qua `normalScale` (`Vector2`, mặc định `(1,1)`), quên đảo dấu $y$ làm vết lồi trông như lõm.
+- **AO** — làm tối khe rãnh khó lọt ánh sáng môi trường. Theo mã nguồn Three.js (`aomap_fragment`), AO **chỉ nhân vào ánh sáng gián tiếp** (`indirectDiffuse`, `indirectSpecular`), không đụng đèn trực tiếp. Sai hay gặp: tưởng AO tối luôn cả mặt hứng đèn trực tiếp — nếu khe rãnh không tối dù đã gắn `aoMap`, khả năng cảnh chỉ có đèn trực tiếp, thiếu ánh sáng gián tiếp để AO nhân vào.
+
+## Specular/Glossiness: chuẩn cũ hơn, và vì sao metal/rough thắng
+
+Trước metalness/roughness, ngành có chuẩn song song: **specular/glossiness** — hoạ sĩ sơn trực tiếp màu specular RGB (thay $F_0$) cộng kênh glossiness (nghịch đảo roughness). glTF từng có `KHR_materials_pbrSpecularGlossiness` (nay archive, không còn trong lõi glTF 2.0). Ba lý do met/rough thắng ở thời gian thực: (1) **bộ nhớ** — specular cần đủ RGB, metalness chỉ một kênh xám; (2) **ràng buộc vật lý cài sẵn** — spec/gloss cho phép sơn màu specular tuỳ ý lên bề mặt còn diffuse, tổ hợp vật lý thật không cho phép; metalness ép buộc ràng buộc đó từ thiết kế; (3) **chuyển đổi mất mát** — không suy ngược đáng tin "pixel này có phải kim loại" từ một màu specular đo được. Công bằng mà nói: spec/gloss vẫn sống trong pipeline offline/VFX (Arnold, V-Ray) nơi kiểm soát nghệ thuật quan trọng hơn dung lượng texture.
+
+## Ánh xạ vào MeshStandardMaterial: channel packing và sRGB vs linear
+
+`MeshStandardMaterial` ánh xạ năm map trên vào `map`, `metalnessMap`, `roughnessMap`, `normalMap`, `aoMap`. Đọc từ mã nguồn shader chunk Three.js (r185): `roughnessmap_fragment.glsl.js` lấy **kênh G**, `metalnessmap_fragment.glsl.js` lấy **kênh B**, `aomap_fragment.glsl.js` lấy **kênh R** — cả ba comment đều ghi: *"compatible with a combined OcclusionRoughnessMetallic (RGB) texture"*. Đây là quy ước **channel packing**: gộp ba map xám vào MỘT ảnh RGB ("ORM"), gán **cùng một texture object** cho cả ba thuộc tính — Three chỉ đọc đúng kênh nó cần. Một file ảnh, ba vai trò, giảm hẳn bind texture và VRAM so với ba ảnh xám riêng.
+
+Đúng quy tắc decode–compute–encode của Track 0: JSDoc `MeshStandardMaterial` ghi `map` "represents color data" cần `SRGBColorSpace`, còn `normalMap`/`roughnessMap`/`metalnessMap`/`aoMap` "represents non-color data" phải giữ `NoColorSpace` (mặc định của `Texture`). Bug sai color space không phải lý thuyết suông: quên `texture.colorSpace = SRGBColorSpace` khiến GPU không giải mã gamma lúc sample — pixel sRGB đã mã hoá (`0.5` ≈ chỉ 21% năng lượng ánh sáng thật, Track 0) bị đưa thẳng vào lighting như thể đã linear, rồi vẫn bị mã hoá sRGB lần nữa ở output — kết quả ảnh **nhạt màu, cháy sáng giả** (không phải tối đi), vì encode chồng lên giá trị vốn đã cao hơn thực tế. Bật đúng `SRGBColorSpace` và gọi `texture.needsUpdate = true` để GPU tải lại đúng định dạng — thiếu `needsUpdate`, đổi `colorSpace` sau khi texture đã upload sẽ không có tác dụng.
+
+Bài `checkpoint-material-study` ngay sau yêu cầu dựng dãy quả cầu quét lưới metalness × roughness để đối chiếu bằng mắt; các bài IBL nửa sau track quay lại đúng bộ albedo/metalness/roughness để quyết định cách trộn ánh sáng môi trường.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với metalness/roughness workflow:
+
+1. **Đổi/gỡ một map rồi quên `material.needsUpdate = true`.** Map tồn tại hay không là `#ifdef` biên dịch sẵn vào shader — Three không tự phát hiện `material.metalnessMap = null`, chương trình đã compile chạy y nguyên, như "không đổi gì" dù code không lỗi cú pháp. Đúng lỗi Track 6 (`onBeforeCompile`) đã gặp dưới hình hài khác.
+2. **Sơn `metalness = 0.5` đều khắp một bề mặt để "trông vừa kim loại vừa không".** Theo Filament, tổ hợp này không tồn tại trong tự nhiên; kết quả là bề mặt xám mờ, không thuyết phục ở cả hai hướng — giá trị giữa chỉ hợp lệ tại ranh giới mask hoặc dải chuyển tiếp có chủ đích.
+3. **Gán nhầm color space: quên `SRGBColorSpace` cho albedo, hoặc lỡ gán nó cho map dữ liệu.** Trường hợp đầu làm ảnh nhạt/cháy sáng giả như trên; trường hợp sau giải mã gamma sai lên giá trị pháp tuyến/độ nhám vốn không phải năng lượng ánh sáng, méo shading theo cách khó truy vì không liên quan trực tiếp tới màu nhìn thấy.
+
+</Callout>

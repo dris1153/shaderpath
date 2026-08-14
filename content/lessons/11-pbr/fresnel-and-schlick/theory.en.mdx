@@ -1,0 +1,82 @@
+## The Observable Effect: Looking Down Into a Tank, Looking Across the Water
+
+Stand at the edge of a fish tank and look straight down: the water is nearly transparent, and you see the gravel and the fish clearly. Same tank, same lighting — just crouch down and look almost parallel to the surface, and it suddenly turns into a mirror, reflecting the ceiling, the fish inside barely visible. Nothing about the water changed, only the viewing angle did. This is the Fresnel effect (after Augustin-Jean Fresnel): the fraction of light **reflected** versus **transmitted** at a surface depends on viewing angle, rising sharply as that angle approaches 90° (a "grazing angle").
+
+## Where It Comes From: Mismatched Refractive Index, and the Full Equations
+
+Every transparent material has an **index of refraction** (IOR), $n$, describing how much light bends and slows entering it versus air ($n_{air} \approx 1$). Wherever two media with different $n$ meet, some light reflects back, the rest refracts and transmits through. The exact physics is the **full Fresnel equations**: derived from Maxwell's boundary conditions, split into two polarization components (s, p) each with its own trigonometric formula depending on angle and both IORs, then averaged for unpolarized light. This form is worked through in *Real-Time Rendering* and pbr-book.org, and offline/film renderers still use it — but it's far too expensive at 60fps. That's why real-time PBR almost always reaches for a much cheaper approximation instead.
+
+## The Schlick Approximation (1994): the Formula, and Why the 5th Power
+
+Christophe Schlick proposed a simple polynomial approximation in 1994:
+
+$$
+F(\theta) = F_0 + (1 - F_0)(1 - \cos\theta)^5
+$$
+
+$\theta$ is the angle between the normal and the view direction; $F_0$ is reflectance at **normal incidence** ($\theta=0°$ — the "looking straight down" case above). At $\theta=0°$: $\cos\theta=1$, so $F=F_0$. As $\theta \to 90°$: $(1-\cos\theta)^5 \to 1$, so $F \to 1$ — near-total reflection, no matter how small $F_0$ started. Exactly what the demo below runs every pixel:
+
+```glsl
+float schlickFresnel(float F0, float cosTheta) {
+  float t = clamp(1.0 - cosTheta, 0.0, 1.0);
+  return F0 + (1.0 - F0) * pow(t, 5.0);
+}
+```
+
+Why exactly 5, not 2 or 3? It's a **curve fit** — Schlick picked the exponent that best matches the real Fresnel curve for dielectrics. Lower powers climb too slowly: around $70°$–$85°$, where the real curve has already swung up close to 1, a power-2 approximation still sits noticeably lower, visibly weakening the grazing mirror effect. Power 5 tracks the real curve closely across the practically observed angle range, within roughly 1% — accurate enough that Filament, learnopengl.com, and essentially every PBR shader treat 5 as the unquestioned default.
+
+<Playground source={"void main() {\n  vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;\n  uv.x *= uResolution.x / uResolution.y;\n\n  float r = 0.65;\n  float d = length(uv);\n  if (d > r) {\n    fragColor = vec4(0.05, 0.06, 0.1, 1.0);\n    return;\n  }\n\n  // Fake sphere normal from a 2D disc position (orthographic front view)\n  vec2 p = uv / r;\n  float z = sqrt(max(0.0, 1.0 - dot(p, p)));\n  vec3 N = vec3(p, z);\n  vec3 V = vec3(0.0, 0.0, 1.0);\n  float cosTheta = max(dot(N, V), 0.0);\n\n  float F0 = 0.04;\n  float F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);\n\n  vec3 base = vec3(0.12, 0.22, 0.5);\n  vec3 rim = vec3(1.0, 0.98, 0.9);\n  vec3 color = mix(base, rim, F);\n\n  fragColor = vec4(color, 1.0);\n}"} />
+
+The fake sphere above (built from a 2D disc position, not a real mesh) runs the exact Schlick formula with $F_0=0.04$: dark center (facing straight on), rim brightening toward near-white (the edge is where the fake normal turns near-perpendicular to the view) — try changing `F0` to see how fast that rim brightens.
+
+## F0 for Dielectrics: the IOR Formula, and the Universal 0.04 Default
+
+Setting $\theta=0°$ in the full dielectric equations collapses to:
+
+$$
+F_0 = \left(\frac{n_1 - n_2}{n_1 + n_2}\right)^2
+$$
+
+With $n_1=1$ (air), $n_2$ the material's IOR. Three examples, IOR from Wikipedia's "List of refractive indices" (589nm), cross-checked against the Filament Materials Guide's reflectance table:
+
+- **Water**, $n=1.33$: $F_0 \approx \left(\frac{0.33}{2.33}\right)^2 \approx 0.0201$ → **≈ 2%**.
+- **Glass/plastic**, $n=1.5$: $F_0 = \left(\frac{0.5}{2.5}\right)^2 = 0.04$ → exactly **4%**.
+- **Diamond**, $n=2.42$: $F_0 \approx \left(\frac{1.42}{3.42}\right)^2 \approx 0.1724$ → **≈ 17%** — learnopengl.com notes dielectric base reflectivity essentially never exceeds $0.17$.
+
+```js
+function f0FromIOR(n2, n1 = 1) {
+  return ((n1 - n2) / (n1 + n2)) ** 2;
+}
+f0FromIOR(1.33); // ≈ 0.0201 — water
+f0FromIOR(2.42); // ≈ 0.1724 — diamond
+```
+
+Because most everyday dielectrics (skin, plastic, fabric, wood, most liquids) cluster into the $0.02$–$0.05$ band, Filament states outright "Default value: 4%," and $F_0=0.04$ has become the universal default nearly every PBR shader (Unreal, Unity, `MeshStandardMaterial`) falls back to at `metalness=0` — the gap is small enough to be invisible.
+
+## Metals: F0 IS the Color, Not a Number
+
+Metals have a **complex** IOR — the imaginary part means extreme absorption, so light can't travel more than a few dozen nanometers in, and metals have **no** diffuse: every color you see is reflected light. The conductor Fresnel formula is even heavier than the dielectric one, and complex IOR varies per wavelength — a metal's $F_0$ is **three** numbers (R, G, B), not one. Real-time PBR takes a shortcut: measure $F_0$ off real samples, store it as an RGB table. From the Filament Materials Guide (sRGB):
+
+| Metal | F0 (R, G, B) |
+| --- | --- |
+| Gold | (1.00, 0.85, 0.57) |
+| Copper | (0.97, 0.74, 0.62) |
+| Iron | (0.77, 0.78, 0.78) |
+
+Plug those into the **exact same** Schlick formula (each channel independent) — at $\theta=0°$, $F=F_0$, so a gold sphere viewed head-on IS $(1.00, 0.85, 0.57)$. At grazing angles, $F$ still trends toward $(1,1,1)$ — the familiar white edge highlight on polished metal. Assigning $F_0$ this way is exactly what the next lesson's metalness/roughness workflow is built on.
+
+## Every Surface Has Fresnel — Even Asphalt, Paper, and "Fake Fresnel"
+
+Fresnel isn't reserved for "shiny" materials: asphalt (a low, flat-looking dielectric $F_0$ head-on) still throws a bright streak toward a low sun — Fresnel at a very grazing angle on a rough surface. Paper, brushed aluminum, even skin brighten subtly at their edges. That's why "everything gets a little shiny at grazing angles" is a near-universal PBR rule. In stylized shading — Track 6's `onBeforeCompile` lesson already brushed against real Schlick math — there's a cheaper cousin: **fake Fresnel**/rim lighting, the same `pow(1.0 - dot(N, V), k)` shape but with an artist-chosen $k$ and color, disconnected from any real $F_0$ or IOR.
+
+This lesson treats $F(\theta)$ as a number (or RGB triplet) for a whole surface. The next lesson turns $F_0$ into an artist-facing metalness switch across a texture set; the IBL lessons later in this track reuse this exact Schlick term $(1-\cos\theta)^5$, roughness-aware, to blend environment reflections.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common Fresnel/Schlick mistakes:
+
+1. **Treating $F_0=0.04$ as universal, including for metals.** Metal $F_0$ sits in $0.5$–$1.0$ and is colored; assigning $0.04$ to a sphere meant to be gold makes it reflect like dull plastic.
+2. **Forgetting to `clamp`/`max` $\cos\theta$ before `pow`.** At silhouette edges or with interpolated normals on low-poly meshes, `dot(N, V)` can go slightly negative; `pow()` with a negative base is undefined per the GLSL spec, producing flickering black artifacts right at edges — the `clamp` in `schlickFresnel` exists for exactly this.
+3. **Hardcoding $F$ to a constant while still calling it "Fresnel."** A small $F_0$ (water's $0.02$) doesn't mean weak reflectance everywhere — at grazing angles $F$ still climbs toward 1. Disabling the angle term (the demo's "Schlick vs constant" toggle) makes water at a low camera angle lose its characteristic glare.
+
+</Callout>

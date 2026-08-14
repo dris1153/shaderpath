@@ -1,0 +1,15 @@
+## Goal
+
+This is the mini-build that closes out the BRDF Theory module: no new theory, just a 36-sphere grid forcing you to visually cross-check Fresnel, Schlick and the metalness/roughness workflow you just learned. If the theory is right, this grid must "look right" against those predictions; get one line of code wrong and your eyes will catch a row or column that looks fake.
+
+## Requirements
+
+Build a 6×6 sphere grid in React Three Fiber: the horizontal axis sweeps `metalness` from 0 to 1, the vertical axis sweeps `roughness` from 0 to 1, each axis split into 6 even steps (0, 0.2, 0.4, 0.6, 0.8, 1.0). The whole grid sits under a procedural environment built from `RoomEnvironment` via `PMREMGenerator` (no real HDRI) plus exactly one key light. Label both axes with drei's `Text` or `Html`. Once it's built, write down your observations (as a code comment) cross-checked against theory: Fresnel brightening at grazing angles on the dielectric row (metalness=0), reflections tinted by the albedo color on the metal row (metalness=1), roughness progressively blurring the env reflection exactly according to which mip it reads, and why the middle row (metalness≈0.5) looks physically wrong.
+
+## Structure Hint
+
+Only ONE `SphereGeometry` shared across all 36 spheres, built once with `useMemo`; each sphere gets its own `MeshStandardMaterial` with `metalness`/`roughness` computed from its row/column index via a small helper. Build the environment once in an effect, assign it to `scene.environment`, and dispose it fully on unmount.
+
+## What "Done" Looks Like
+
+Check against the checklist in the exercises section before opening the solution — the grid is correct on both axes, Fresnel is visible at grazing angles, metal tints reflections, the dielectric row keeps a neutral F0, the environment never leaks on unmount, and you've written down your observation about why the "half-metal" row looks physically wrong.

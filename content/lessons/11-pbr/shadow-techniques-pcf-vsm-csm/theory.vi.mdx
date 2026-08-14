@@ -1,0 +1,51 @@
+## Shadow mapping: nhắc lại nhanh (callback Track 3)
+
+Bài Lights & Shadow Maps (Track 3) đã dựng cơ chế gốc: render scene một lần từ góc nhìn ánh sáng (`light.shadow.camera`) vào một texture độ sâu — shadow map — rồi ở pass chính, so sánh độ sâu thật của fragment (chuyển sang light space) với giá trị đã lưu tại đúng toạ độ đó. Sâu hơn giá trị đã lưu nghĩa là có vật cản trước ánh sáng — nằm trong bóng. Bốn cờ `renderer.shadowMap.enabled`/`castShadow`/`receiveShadow` và cặp `bias`/`normalBias` chống acne/peter-panning đã nói kỹ ở đó — bài này giả định bạn đã nắm, đi tiếp vào những vấn đề chỉ lộ ra khi shadow map thô chưa đủ.
+
+## Ba căn bệnh của shadow map thô
+
+Một shadow map một-mẫu-mỗi-texel mắc ba loại lỗi. **Aliasing**: một texel đại diện cho vùng thế giới thực rộng $\frac{\text{frustumWidth}}{\text{mapSize}}$ — vùng đó chiếu lên màn hình lớn hơn một pixel là biên bóng hiện thành bậc thang theo lưới texel; mở rộng frustum shadow camera "cho chắc" mà không tăng `mapSize` tương ứng trực tiếp phóng to phép chia này. **Acne và peter-panning** đã nói ở Track 3: cùng một nguyên nhân gốc (shadow map lưu một giá trị đại diện cho cả vùng, không phải điểm), hai triệu chứng đối lập tuỳ `bias` quá nhỏ hay quá lớn. **Biên cứng 1-bit**: phép so sánh depth thô là hàm `step()` — trong bóng hoặc không, không trung gian — nên dù bias đúng, biên bóng vẫn răng cưa sắc lẹm, chẳng giống bóng mềm mà ánh sáng diện tích thật (mặt trời qua khí quyển, softbox) tạo ra.
+
+## PCF: lọc phép SO SÁNH, không lọc bản đồ độ sâu
+
+Percentage-Closer Filtering, từ bài báo gốc của Reeves, Salesin và Cook (SIGGRAPH 1987), giải quyết vấn đề biên cứng bằng một ý tưởng dễ nhầm: KHÔNG làm mờ shadow map trước khi so sánh — làm vậy trộn lẫn depth của vật gần và vật xa, sinh so sánh sai hoàn toàn ở cạnh silhouette. Thay vào đó, PCF lấy mẫu phép SO SÁNH nhiều lần ở toạ độ lân cận (mỗi lần trả nhị phân trong/ngoài bóng), rồi lấy trung bình các kết quả đó thành tỉ lệ phần trăm liên tục — "percentage closer" đúng nghĩa đen. Đọc trực tiếp `shadowmap_pars_fragment.glsl.js` trong three.js 0.185: `SHADOWMAP_TYPE_PCF` lấy 5 mẫu phân bố theo đĩa Vogel, xoay ngẫu nhiên mỗi pixel bằng Interleaved Gradient Noise, mỗi mẫu tự có 4-tap PCF phần cứng miễn phí nhờ `sampler2DShadow` với `LinearFilter` — tương đương ~20 tap đã lọc, cho biên mềm có nhiễu dither thay vì banding cố định.
+
+## shadowMap.type trong three.js: bốn hằng số, và một bất ngờ xác nhận từ source
+
+Bốn giá trị `renderer.shadowMap.type`: `BasicShadowMap` (so sánh 1 mẫu, `NearestFilter`, nhị phân cứng — rẻ nhất, xấu nhất), `PCFShadowMap` (mặc định, mô tả ở trên), `PCFSoftShadowMap`, và `VSMShadowMap`. Đọc trực tiếp `WebGLShadowMap.js` trong bản three.js cài ở dự án này (0.185.1) lộ ra một chi tiết hầu hết tutorial cũ không còn đúng: khi `this.type === PCFSoftShadowMap`, code gọi `warn('PCFSoftShadowMap has been deprecated. Using PCFShadowMap instead.')` rồi tự gán lại `this.type = PCFShadowMap` — nghĩa là ở bản three hiện tại, chọn PCFSoft cho kết quả **giống hệt bit-for-bit** với PCF thường, không còn kernel bilinear-mở-rộng riêng như các bản three cũ. Demo bài này vẫn để cả bốn lựa chọn để bạn tự kiểm chứng điều này bằng mắt.
+
+## VSM: lưu mean & variance thay vì lưu depth thô, chặn trên bằng Chebyshev
+
+Variance Shadow Maps (Donnelly & Lauritzen, I3D 2006) đổi hẳn cách biểu diễn: thay vì lưu một depth thô rồi so sánh nhị phân, VSM lưu hai thống kê của phân bố depth trong mỗi texel — trung bình $\mu$ và bình phương trung bình (từ đó suy ra phương sai $\sigma^2$) — vào kênh R/G của một render target `HalfFloatType`. Đọc `WebGLShadowMap.js`: sau pass depth thô, VSM chạy thêm hai pass blur tách trục (dọc rồi ngang, `VSM_SAMPLES` mặc định 8 mẫu, bán kính theo `shadow.radius`) để tính $\mu,\sigma$ mượt trên một vùng lân cận — đúng phép toán trung bình cộng dồn qua hai lượt. Khi shading, bất đẳng thức Chebyshev cho một chặn trên xác suất fragment được chiếu sáng:
+
+$$
+p_{max} = \frac{\sigma^2}{\sigma^2 + d^2}, \qquad d = z_{fragment} - \mu
+$$
+
+three.js còn remap kết quả này qua $\text{clamp}\left(\frac{p_{max} - 0.3}{0.65},\ 0,\ 1\right)$ (hằng số đọc trực tiếp từ source) để giảm **light bleeding** — chặn Chebyshev quá lỏng khi phân bố depth có hai cụm tách biệt (vật cản gần và xa), khiến một quầng xám nhạt "rò" qua vùng lẽ ra phải sáng hoàn toàn ngay sau vật cản gần. Cái lợi lớn nhất của (mean, variance) thay vì depth thô: đây chỉ là dữ liệu màu bình thường, blur/mipmap/lọc được bằng mọi phép texture-filtering thông thường — thứ một `sampler2DShadow` kiểu PCF không mipmap hợp lý được. Một quirk đáng nhớ: khi `VSMShadowMap` bật, mọi mesh `receiveShadow = true` cũng tự động được vẽ vào shadow map như thể `castShadow = true` (thấy trực tiếp trong `renderObject()`) — khác hẳn PCF/Basic.
+
+## CSM: chia frustum thành nhiều lát, mỗi lát một shadow map riêng
+
+Vấn đề nền của mọi kỹ thuật trên: MỘT shadow map không thể vừa chi tiết gần camera vừa phủ hết cảnh ngoài trời rộng, vì độ phân giải texel cố định trên toàn frustum ánh sáng. Cascaded Shadow Maps chia frustum của CAMERA (không phải light) thành N lát theo chiều sâu — lát gần camera nhỏ, nhận shadow map riêng phủ đúng vùng đó (texel dày, chi tiết cao); lát xa lớn hơn, nhận shadow map riêng phủ vùng lớn (texel thưa hơn, chấp nhận được vì xa mắt khó thấy răng cưa). Y hệt đòn bẩy ở phần "aliasing" trên, chỉ khác là áp dụng RIÊNG cho từng lát. Ba chế độ chia lát có thật trong module `CSM` của three.js (`three/addons/csm/CSM.js`, có sẵn trong `node_modules/three`, không cần cài thêm gói): `uniform`, `logarithmic` (lát gần rất mỏng, lát xa rất dày), và `practical` (mặc định, pha trộn cả hai) — cùng `cascades` mặc định 3, `shadowMapSize` mặc định 2048. Bài này dừng ở mức khái niệm và chỉ đường đến module thật; demo dưới không dựng CSM đầy đủ (cần nhiều light/camera phối hợp) — ngoài phạm vi một demo một-đèn.
+
+## Bảng tinh chỉnh thực dụng
+
+| Kỹ thuật | mapSize gợi ý | bias | normalBias | radius/blur |
+|---|---|---|---|---|
+| Basic | 1024-2048 | vừa đủ hết acne (không có filtering để che bớt) | ưu tiên trước bias thô | không có tác dụng (tài liệu three xác nhận) |
+| PCF/PCFSoft | 1024-2048 | nhỏ, vì 5-tap đã tự làm mềm phần nào | 0.01-0.05 cho bề mặt cong | bán kính đĩa Vogel, quá lớn gây nhoè sai hình dạng bóng |
+| VSM | 512-1024 (đỡ tốn vì không cần bias tinh) | gần 0, VSM ít nhạy acne hơn | vẫn nên giữ một chút | `blurSamples`/`radius` cao hơn = mềm hơn NHƯNG dễ light-bleed hơn |
+
+## Kết nối về sau
+
+Shadow map dựng ở Track 3 và làm mềm ở bài này vẫn là ánh sáng từ MỘT nguồn định hướng — bài "Vì sao Asset của bạn trông như Nhựa" sẽ chỉ ra rằng thiếu bóng đổ mềm từ ánh sáng môi trường (IBL) là một trong những lý do phổ biến khiến cảnh trông giả dù shadow map kỹ thuật đã đúng; Track 12 (Performance) quay lại chi phí thật của nhiều shadow-casting light, đặc biệt CSM với 3+ shadow map cùng lúc, trên thiết bị di động.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với PCF/VSM/CSM:
+
+1. **Tin rằng `PCFSoftShadowMap` luôn mềm hơn `PCFShadowMap`.** Ở bản three.js cài trong dự án này, `PCFSoftShadowMap` đã bị deprecated và tự động chạy y hệt `PCFShadowMap` (xác nhận trực tiếp từ `WebGLShadowMap.js`, kèm cảnh báo console) — chọn nó không sai, nhưng kỳ vọng một kernel rộng hơn riêng biệt là sai với bản three hiện tại.
+2. **Tăng `shadow.radius`/`blurSamples` của VSM để "sửa" light bleeding.** Bán kính blur chỉ làm biên bóng mềm hơn, không thu hẹp được phương sai của phân bố depth gây ra chặn Chebyshev lỏng — tăng radius nhiều khi làm quầng xám bleed LAN RỘNG hơn thay vì biến mất; hướng sửa đúng là thu hẹp frustum shadow camera hoặc chấp nhận remap light-bleed đã có sẵn trong shader.
+3. **Mở rộng frustum shadow camera "cho chắc" mà không tăng `mapSize` tương ứng.** Texel footprint = frustumWidth/mapSize — mở rộng frustum mà giữ nguyên mapSize trực tiếp phóng to từng texel trong thế giới thực, tăng aliasing đúng theo công thức ở phần "ba căn bệnh", dù bias/normalBias đã tinh chỉnh đúng.
+
+</Callout>

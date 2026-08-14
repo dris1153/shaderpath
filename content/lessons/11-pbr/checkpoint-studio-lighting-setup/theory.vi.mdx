@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là mini-build khép lại Track PBR: dựng một cảnh trình bày sản phẩm (product shot) đạt chất lượng studio thật, ghép đúng mọi kỹ thuật đã học trong track — RectAreaLight, IBL, exposure/tone mapping, và giới hạn đổ bóng thật của RectAreaLight — vào một bố cục ba điểm sáng (three-point lighting) kinh điển. Không có lý thuyết mới ở đây; cái được chấm là khả năng PHỐI HỢP đúng, có lý do rõ ràng cho từng con số, không phải chỉ gọi đúng API.
+
+## Yêu cầu
+
+Dựng bố cục ba điểm sáng: **key** là một `RectAreaLight` (softbox) đặt góc khoảng 45°/45° so với vật thể; **fill** không phải một đèn riêng mà là cường độ của IBL (`scene.environmentIntensity`) giữ ở mức thấp hơn hẳn key; **rim** là một `RectAreaLight` nhỏ, sáng, đặt phía sau vật thể để tách viền silhouette khỏi nền tối. Vì `RectAreaLight` không hỗ trợ đổ bóng (đã học ở bài area-lights-and-probes), bóng đổ phải đến từ một đèn phụ riêng — cùng hướng với key, cường độ chiếu sáng gần như không đáng kể, chỉ tồn tại để `castShadow` — cấu hình `PCFSoftShadowMap`, không răng cưa (acne). Cảnh cần một `RoomEnvironment` qua `PMREMGenerator` làm nền phản chiếu, một sàn bệ (pedestal) bóng, và vật thể trưng bày dùng vật liệu procedural thuần tham số (không texture/asset nhị phân nào). Tinh chỉnh `toneMappingExposure` sao cho highlight vẫn giữ chi tiết, không cháy trắng.
+
+## Gợi ý cấu trúc
+
+Tỉ lệ key:fill kinh điển trong nhiếp ảnh studio là khoảng 4:1 — ước lượng bằng cách đặt `environmentIntensity` ở mức đủ thấp so với intensity của key để bóng đổ có độ tương phản rõ nhưng vùng tối vẫn còn chi tiết, không đen kịt hoàn toàn.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần Bài tập trước khi mở solution — tỉ lệ ba điểm sáng đọc được bằng mắt, phản chiếu trên sàn có hình dạng đúng theo panel key, bóng mềm và không răng cưa, exposure không làm mất chi tiết highlight, silhouette tách khỏi nền nhờ rim, và mọi tài nguyên GPU được dispose sạch khi unmount.

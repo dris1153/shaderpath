@@ -1,0 +1,73 @@
+## Đèn điểm là một điểm toán học — ánh sáng thật luôn có diện tích
+
+`PointLight` và `DirectionalLight` là trừu tượng hoá tiện lợi: một điểm không kích thước, hoặc một hướng duy nhất không góc mở — tiện vì mỗi điểm bề mặt chỉ cần đúng một vector $\hat L$ để tính lighting. Nhưng không nguồn sáng thật nào là một điểm. Một bóng đèn có dây tóc hoặc mặt khuếch tán với diện tích thật; một softbox studio, một khung cửa sổ, một dải LED — tất cả chiếm một góc khối (solid angle) khác 0 nhìn từ bất kỳ điểm bề mặt nào chúng chiếu sáng. Diện tích vật lý đó tạo ra ba hiệu ứng đèn điểm không bao giờ tự có: bóng đổ mềm (penumbra) rộng dần theo khoảng cách tới vật cản; độ suy giảm sáng "êm" thay vì một điểm specular cứng; và — dấu hiệu dễ nhận nhất trong ảnh sản phẩm — một **highlight có hình dạng**: softbox chữ nhật phản chiếu thành hình chữ nhật trên bề mặt bóng, khung cửa sổ phản chiếu thành hình cửa sổ. Phản chiếu của đèn điểm trên mặt gương luôn là một chấm vô cùng nhỏ; phản chiếu của đèn diện tích có hình dạng nhận ra được, vì nó đang cho bạn thấy chính hình dạng nguồn sáng.
+
+## Vì sao Area Light khó: tích phân BRDF không có nghiệm đóng
+
+Với đèn điểm, tích phân trong rendering equation suy biến thành một phép tính tại một hướng. Với đèn diện tích, radiance ra đòi hỏi tích phân BRDF nhân cosine trên toàn bộ góc khối mà bề mặt đèn chiếm:
+
+$$
+L_o = \int_{\Omega_{\text{light}}} f_r(\omega_i, \omega_o)\,(\mathbf{n}\cdot\omega_i)\,L_i \; d\omega_i
+$$
+
+Với BRDF diffuse (Lambertian) thuần tuý, tích phân này có nghiệm đóng cho đèn đa giác — đúng toán form-factor kinh điển của radiosity từ những năm 1990. Nhưng với lobe specular GGX mà mọi vật liệu PBR hiện đại dùng, $f_r$ không có nguyên hàm đóng trên một đa giác bất kỳ — hàm số là một đỉnh nhọn có hình dạng phụ thuộc roughness, không kỹ thuật nào tích phân chính xác nó với chi phí rẻ theo thời gian thực. Đây chính xác là lý do đèn diện tích specular từng "quá đắt cho real-time" nhiều năm: cách duy nhất chính xác là lấy mẫu số nhiều điểm trên bề mặt đèn cho mỗi pixel — đúng kiểu path tracing làm, không khả thi cho một khung hình 16ms.
+
+## LTC: xấp xỉ lobe GGX bằng một cosine bị biến đổi tuyến tính
+
+Lời giải năm 2016 của Heitz, Dupuy, Hill và Neubelt (Linearly Transformed Cosines — trích dẫn bên dưới) không cố tích phân GGX trực tiếp. Thay vào đó, họ XẤP XỈ lobe GGX bằng một lobe cosine bị kẹp (clamped cosine) — dạng DUY NHẤT có nghiệm đóng chính xác trên một đa giác bất kỳ — nhưng bị biến dạng bởi một phép biến đổi tuyến tính (ma trận $3\times3$) sao cho hình dạng khớp với đỉnh nhọn và độ trải của GGX tại đúng roughness và góc nhìn đó. Vì phép biến đổi tuyến tính, ta biến đổi các đỉnh đa giác đèn bằng ma trận NGHỊCH ĐẢO của nó, tích phân cosine kẹp thuần tuý trên đa giác đã biến đổi bằng công thức đóng có sẵn, rồi quy đổi kết quả trở lại. Ẩn số duy nhất mỗi pixel là "dùng ma trận nào" — chỉ phụ thuộc roughness và góc giữa pháp tuyến với hướng nhìn, nên tính trước một lần (offline) cho mọi cặp (roughness, góc) rồi lưu thành bảng tra (LUT). Đọc thẳng mã nguồn `lights_physical_pars_fragment.glsl.js` của three.js xác nhận đúng ý này: mỗi fragment tính `uv = vec2(roughness, sqrt(1 - dot(N,V)))`, lấy mẫu hai texture LUT tại toạ độ đó, rồi dựng lại ma trận nghịch đảo $3\times3$ ngay trong shader từ các texel đọc được — chính là "ma trận theo (roughness, góc) từ một LUT" nói ở trên, không phải ẩn dụ.
+
+## RectAreaLight trong Three.js: cách dùng và giới hạn thật
+
+`RectAreaLight` implement đúng kỹ thuật LTC ở trên, với vài ràng buộc cần biết trước khi dùng — đọc trực tiếp từ mã nguồn `RectAreaLight.js` và `RectAreaLightUniformsLib.js`:
+
+```ts
+import { RectAreaLightUniformsLib } from "three/addons/lights/RectAreaLightUniformsLib.js";
+import { RectAreaLightHelper } from "three/addons/helpers/RectAreaLightHelper.js";
+
+RectAreaLightUniformsLib.init(); // bắt buộc, gọi một lần trước khi render bất kỳ RectAreaLight nào
+
+const panel = new THREE.RectAreaLight(0xfff4e0, 6, 3, 1.6); // color, intensity, width, height
+panel.position.set(0, 3, 2);
+panel.lookAt(0, 0, 0);
+scene.add(panel);
+panel.add(new RectAreaLightHelper(panel)); // helper PHẢI là con của light
+```
+
+`RectAreaLightUniformsLib.init()` nạp hai data texture LUT ($64\times64$, comment mã nguồn ghi "khoảng 80kb", tính sẵn bằng numerical fitting từ repo `selfshadow/ltc_code`) vào `UniformsLib`. Quên gọi hàm này nghĩa là shader lấy mẫu một texture LUT chưa gán — ánh sáng mất hẳn phần specular. Ba giới hạn khác đáng nhớ: **chỉ vật liệu PBR mới nhận ánh sáng này** (`RectAreaLight.js` ghi thẳng "Only PBR materials are supported"); **không hỗ trợ đổ bóng** dưới mọi hình thức — `castShadow` vô tác dụng, phải kết hợp thêm đèn khác nếu cảnh cần bóng tiếp xúc; và `width`/`height` là kích thước THẬT theo world unit — panel càng rộng, vệt phản chiếu càng kéo dài theo đúng hướng đó.
+
+## Light Probe: đóng gói irradiance cục bộ bằng Spherical Harmonics
+
+`LightProbe` (class lõi của three.js) lưu ánh sáng không phải dưới dạng ảnh, mà dưới dạng một hàm số gọn: khai triển Spherical Harmonics bậc thấp (`SphericalHarmonics3` — bậc ba, các "band" $l=0,1,2$). Ý tưởng giống chuỗi Fourier nhưng trên mặt cầu: bất kỳ hàm số nào trên mặt cầu đều xấp xỉ được bằng tổng có trọng số của các hàm cơ sở SH cố định:
+
+$$
+L(\omega) \approx \sum_{l=0}^{2}\sum_{m=-l}^{l} c_l^m \, Y_l^m(\omega)
+$$
+
+trong đó $Y_l^m$ là các hàm cơ sở cố định, còn $c_l^m$ là hệ số được lưu — 9 giá trị (mỗi band $l$ góp $2l+1$ hệ số: $1 + 3 + 5 = 9$), mỗi hệ số là một vector RGB nên tổng cộng 27 số thực. SH tái tạo tốt tín hiệu MƯỢT/tần số thấp (irradiance diffuse đúng vậy, vì tích phân với cosine lobe vốn đã là bộ lọc thông thấp lên ánh sáng gốc dù gốc có sắc nét đến đâu) nhưng tái tạo kém chi tiết sắc nét — đó là lý do `LightProbe` trong three.js chỉ dành cho "diffuse light probes", tương đương một irradiance environment map, không thay được prefiltered mipmap cho phản chiếu specular sắc nét. `SphericalHarmonics3.getIrradianceAt(normal)` chính là phép tính tổng SH trên (đã nhân trọng số dạng irradiance) cho một pháp tuyến cho trước — 27 số thực thay cho việc lưu và sample một cubemap đầy đủ.
+
+## Nội suy giữa nhiều probe: cách kinh điển để "để dành" ánh sáng gián tiếp tĩnh
+
+`LightProbeGenerator.fromCubeTexture` / `fromCubeRenderTarget` (đọc trong `node_modules/three/examples/jsm/lights/LightProbeGenerator.js`) dựng một probe bằng cách chụp cubemap thật tại một điểm rồi chiếu (project) nó lên 9 hệ số SH theo trọng số góc khối từng texel — kỹ thuật gốc từ bài báo Ramamoorthi & Hanrahan trích dẫn bên dưới. Một probe chỉ đúng cho ĐÚNG điểm nó được chụp, giả định "gần đúng không đổi" trong một vùng lân cận nhỏ — chấp nhận được cho vật nhỏ, sai lệch rõ cho một phòng lớn có nhiều vùng ánh sáng khác nhau. Giải pháp GI tĩnh kinh điển (trước khi có lightmap bake toàn phần): đặt NHIỀU probe, rồi nội suy giữa các probe gần nhất theo vị trí vật thể đang tô, dùng đúng `SphericalHarmonics3.lerp(sh, alpha)`:
+
+```ts
+import { LightProbeGenerator } from "three/addons/lights/LightProbeGenerator.js";
+
+const probeA = await LightProbeGenerator.fromCubeRenderTarget(renderer, cubeTargetA);
+const probeB = await LightProbeGenerator.fromCubeRenderTarget(renderer, cubeTargetB);
+
+const blended = probeA.sh.clone().lerp(probeB.sh, 0.5); // giữa hai vùng, alpha theo vị trí thật
+```
+
+Vì sao probe thắng một environment map toàn cục duy nhất: một nội thất có các vùng chiếu sáng khác biệt rõ rệt — góc cửa sổ ngập nắng, hành lang tối, góc bị nhuộm màu bởi đèn accent — có ánh sáng gián tiếp THẬT SỰ khác nhau ở mỗi vùng. Một HDRI dùng chung sẽ trung bình hoá tất cả thành một "thoả hiệp" sai khắp nơi; các probe đặt đúng chỗ ghi lại đúng màu ánh sáng dội của từng vùng, và phép nội suy làm chuyển tiếp mượt giữa các vùng thay vì một cú "giật màu" đột ngột.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với RectAreaLight và light probe:
+
+1. **Quên gọi `RectAreaLightUniformsLib.init()`.** LUT LTC chưa nạp vào `UniformsLib`, ánh sáng mất hẳn phần specular — dễ nhầm tưởng do sai `intensity`/vị trí, trong khi nguyên nhân chỉ là thiếu một dòng gọi trước khi render.
+2. **Kỳ vọng `RectAreaLight` tự đổ bóng.** Không shadow map nào được cài cho loại đèn này — `castShadow = true` vô tác dụng, phải thêm một đèn khác (thường một `DirectionalLight`/`SpotLight` mờ) riêng cho việc đổ bóng.
+3. **Dùng một probe/environment toàn cục cho không gian có nhiều vùng chiếu sáng khác hẳn nhau.** Màu ánh sáng gián tiếp bị "lai" sai khắp nơi thay vì đúng riêng từng vùng — vật thể ở góc tối vẫn ánh lên màu vùng sáng cách đó rất xa.
+
+</Callout>
+
+Bài tiếp theo (why-assets-look-like-plastic) dùng lại đúng RectAreaLight và environment ở đây như hai nguyên nhân phổ biến khiến cảnh PBR nhìn giả — checkpoint khép track ghép RectAreaLight làm đèn chủ (key light) trong một bố cục ba điểm sáng studio hoàn chỉnh cùng IBL.

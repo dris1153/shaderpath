@@ -1,0 +1,106 @@
+## Rough at Macro Scale = Millions of Micro-Mirrors: the Microfacet Hypothesis
+
+The previous lesson left $f_r$ (the BRDF) as "the function that encodes a material" without saying what it actually looks like. Microfacet theory answers that with a surprisingly simple hypothesis: any surface, no matter how rough it looks to the naked eye, is at a micro scale (far smaller than a single pixel) a sea of millions of tiny flat facets — **microfacets** — and EACH one is a perfect mirror obeying the ordinary law of reflection (angle in = angle out). The "roughness" you perceive isn't the material magically scattering light diffusely — it's the statistical result of those millions of tiny mirrors pointing in millions of different directions, so the true mirror reflection gets torn apart into a broad lobe instead of a single ray.
+
+## What Roughness Actually Is, Statistically: the Spread of Micro-Normals
+
+Roughness, inside the microfacet framework, isn't a vague slider value — it's the **standard deviation of the distribution of micro-normal directions** around the macro normal $n$ you actually store on the mesh. Roughness $= 0$: every microfacet points exactly along $n$, the surface behaves like a perfect mirror. Roughness approaching $1$: micro-normals scatter almost randomly across a wide cone around $n$, so the mirror-reflection lobe stretches out enormously wide, ending up looking nearly diffuse even though it's still, physically, millions of individual mirror reflections stacked on top of each other. That's why roughness is always represented as a probability distribution's shape parameter, never as a plain multiplier — it literally IS that distribution's shape parameter.
+
+## Cook-Torrance: fr = D·G·F / (4(n·v)(n·l))
+
+The Cook-Torrance formula (Cook & Torrance, 1982) is how the microfacet hypothesis above gets translated into an actually usable specular BRDF:
+
+$$
+f_{r}^{\text{spec}}(x, \omega_i, \omega_o) = \frac{D(h)\, G(\omega_i, \omega_o)\, F(\omega_i, h)}{4\,(n\cdot\omega_o)(n\cdot\omega_i)}
+$$
+
+where $h = \text{normalize}(\omega_i + \omega_o)$ is the **half-vector** — the direction exactly between the incoming and outgoing directions, i.e. the direction a microfacet WOULD have to point to bounce $\omega_i$ straight into $\omega_o$. The three letters D, G, F are three independent questions this formula answers separately, then multiplies together — each one maps to either the next lesson or a section below.
+
+## D — GGX/Trowbridge-Reitz: How Many Microfacets Point Exactly Along h
+
+$D(h)$ answers: out of millions of microfacets, what fraction have their normal aligned exactly with $h$ — i.e. are actually capable of bouncing $\omega_i$ into $\omega_o$? It's a probability distribution over $(n\cdot h)$, and the form used almost everywhere today is **GGX** (also called Trowbridge-Reitz), written exactly as in Walter et al. (2007):
+
+$$
+D(h) = \frac{\alpha^2}{\pi\big((n\cdot h)^2(\alpha^2 - 1) + 1\big)^2}, \qquad \alpha = \text{roughness}^2
+$$
+
+Squaring roughness into $\alpha$ isn't decoration — it's Karis's (2013) remap so a roughness slider "feels linear" to a human eye (the first half of the slider changes the lobe shape as much as the second half, instead of dumping most of the visible change into the first few percent of a raw-roughness slider). The smaller $\alpha$ is, the more sensitive the denominator becomes to $(n\cdot h)$, the sharper the lobe — GGX is well known for having a longer "tail" than older distributions (Beckmann, Blinn-Phong) far from the lobe center, meaning a highlight gets a soft, spreading halo instead of an abrupt cutoff, which matches measured real materials better.
+
+## G — Smith Shadowing-Masking: Why Skipping G Makes Edges "Glow Too Bright"
+
+$G(\omega_i, \omega_o)$ answers an entirely different question from D: out of the microfacets that DO have a normal aligned with $h$, how many actually have an unobstructed view of both the incoming light and the camera — i.e. aren't hidden behind their neighboring microfacets? At grazing angles, the tiny grooves on a surface start blocking each other in two distinct ways: **shadowing** (a microfacet blocks incoming light before it reaches the one being shaded) and **masking** (a microfacet blocks the reflected ray before it reaches the camera). The most common way to compute $G$ is Smith's approximation combined with Schlick-GGX per direction, multiplied together (this separation is valid under the assumption the two effects are statistically independent):
+
+$$
+G(\omega_i,\omega_o) = G_1(\omega_o)\,G_1(\omega_i), \qquad G_1(x) = \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+$$
+
+That $k$ value uses the exact remap Karis (2013) defines for direct analytic lights — IBL uses a different $k$, which you'll meet again in the Image-Based Lighting lesson. Drop $G$ entirely (using only $D \cdot F$) and a curved surface's silhouette edges light up abnormally bright: you're counting EVERY microfacet aligned with $h$ without subtracting the ones hidden behind their own neighbors — reflecting out more energy than the surface actually received, an energy-conservation violation that's most visible right at a sphere's edge.
+
+## F — Fresnel (Schlick): Reflection Always Gets Harder at Grazing Angles
+
+$F$ answers: of the light striking a microfacet with normal $h$, what fraction reflects (instead of refracting into the material)? The next lesson digs into the physics behind it — here it's enough to use the Schlick approximation directly, accurate enough for nearly every use case and the exact formula every production engine reaches for:
+
+$$
+F(\omega_i, h) \approx F_0 + (1 - F_0)\big(1 - (\omega_i\cdot h)\big)^5
+$$
+
+where $F_0$ is the reflectance at normal incidence ($0°$) — for dielectrics (plastic, wood, skin) $F_0 \approx 0.04$ by common convention, while for metals $F_0$ IS the material's albedo color (this is the crucial fact the metalness workflow, covered in a later lesson, is built on).
+
+## The 4(n·v)(n·l) Normalization and Energy Balance via kd
+
+The $4(n\cdot v)(n\cdot l)$ denominator isn't a free-floating scaling factor — it falls out of a change of variables when converting the integral from "microfacet space" into "$\omega_i,\omega_o$ space" during Cook-Torrance's original derivation (Cook & Torrance, 1982), needed to keep $f_r$'s units correct as a BRDF. Since the specular term above already "claims" the fraction of energy that got reflected ($F$), whatever's left for diffuse scattering has to subtract exactly that fraction, or the surface would paint out more light than it physically received — that's the meaning of $k_d = (1-F)(1-\text{metalness})$: the extra $(1-\text{metalness})$ factor exists because metals, in theory, have zero diffuse scattering at all (any light that doesn't specularly reflect gets absorbed by free electrons instead), and diffuse then uses exactly $k_d \cdot \text{albedo}/\pi$ — the same Lambert formula from the previous lesson, just multiplied by this energy-balancing factor.
+
+## Building the GLSL Implementation Step by Step
+
+Assembling all five pieces (D, G, F, normalization, energy balance) into one working fragment shader — exactly what the demo below runs:
+
+```glsl
+float D_GGX(vec3 N, vec3 H, float roughness) {
+  float a = roughness * roughness;
+  float a2 = a * a;
+  float ndoth = max(dot(N, H), 0.0);
+  float denom = ndoth * ndoth * (a2 - 1.0) + 1.0;
+  return a2 / (3.14159265 * denom * denom + 1e-7);
+}
+
+float G1_SchlickGGX(float ndotx, float k) {
+  return ndotx / (ndotx * (1.0 - k) + k);
+}
+
+float G_Smith(vec3 N, vec3 V, vec3 L, float roughness) {
+  float k = (roughness + 1.0) * (roughness + 1.0) / 8.0;
+  return G1_SchlickGGX(max(dot(N, V), 0.0), k) * G1_SchlickGGX(max(dot(N, L), 0.0), k);
+}
+
+vec3 F_Schlick(float cosTheta, vec3 F0) {
+  return F0 + (1.0 - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+}
+
+// N, V, L, H already normalized; radiance = incoming light color/intensity
+vec3 cookTorrance(vec3 N, vec3 V, vec3 L, vec3 H, vec3 albedo, float roughness, float metalness, vec3 radiance) {
+  vec3 F0 = mix(vec3(0.04), albedo, metalness);
+  float D = D_GGX(N, H, roughness);
+  float G = G_Smith(N, V, L, roughness);
+  vec3 F = F_Schlick(max(dot(H, V), 0.0), F0);
+
+  vec3 specular = (D * G * F) / (4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 1e-4);
+  vec3 kd = (vec3(1.0) - F) * (1.0 - metalness);
+  vec3 diffuse = kd * albedo / 3.14159265;
+
+  return (diffuse + specular) * radiance * max(dot(N, L), 0.0);
+}
+```
+
+## "Roughness Rules Everything": the Visual Intuition to Keep
+
+Look at the three formulas D, G, F once more: $D$ depends on roughness directly through $\alpha$; $G$ depends on roughness through $k$; only $F$ has no roughness dependence at all. The visual consequence: holding metalness and lighting fixed, sweep the roughness slider from $0$ to $1$ and you'll watch the specular highlight shrink from a near-perfect dot (low roughness: $D$ is razor-sharp around $h=n$, $G$ is close to 1 since little gets self-shadowed) and stretch into a soft glow covering nearly half the sphere (high roughness: $D$ goes nearly flat, $G$ drops sharply near the edges). That's exactly why graphics people say "the roughness map matters more than the albedo map" — a wrong-colored albedo still "reads" as roughly the right material, but a wrong roughness value makes an entire surface look like fake plastic instantly, no matter how perfectly correct the color is.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when implementing Cook-Torrance from scratch:
+
+1. **Forgetting the epsilon in the $4(n\cdot v)(n\cdot l)$ denominator.** At extreme grazing angles, $(n\cdot v)$ or $(n\cdot l)$ approach 0, and dividing without an epsilon produces `NaN`/`Inf` that bleeds across the surface's edge region — a strange black rim or blown-out white rim around a silhouette is the textbook symptom.
+2. **Reusing the same $k$ for both direct-light G and IBL.** Karis (2013) defines two different $k$ formulas — one for direct analytic lights, one for environment (IBL) lighting — using the direct-light formula for IBL (or vice versa) causes no compile error, it just silently skews specular brightness, which is hard to catch without comparing against a reference.
+3. **Forgetting to multiply $(1-\text{metalness})$ into $k_d$.** Without that factor, a fully metallic sphere ($\text{metalness}=1$) still gets a faint diffuse layer on top of its specular response — the metal ends up looking coated in a thin layer of dull plastic instead of reflecting purely, one of the most common reasons metallic materials "read as fake" (the exact subject of this track's later "Why Your Assets Look Like Plastic" lesson).
+
+</Callout>

@@ -1,0 +1,65 @@
+## One Equation Behind Every Lighting Model (Kajiya, 1986)
+
+Before 1986, computer graphics had a scattered pile of "lighting formulas" — Lambert, Phong, Blinn — each invented separately for one specific effect. James Kajiya folded all of them into one integral equation, the **rendering equation**, proving every lighting model that ever existed or ever will is a special case or an approximation of it:
+
+$$
+L_o(x, \omega_o) = L_e(x, \omega_o) + \int_{\Omega} f_r(x, \omega_i, \omega_o)\, L_i(x, \omega_i)\, (n \cdot \omega_i)\, d\omega_i
+$$
+
+Notation: $x$ is the point being shaded, $\omega_o$ is the direction light leaves $x$ in (usually toward the camera), $\omega_i$ is one possible incoming direction, $n$ is the surface normal at $x$, $\Omega$ is the hemisphere above the surface. The entire PBR track only revolves around approximating each of these symbols better — this lesson doesn't teach you to solve the equation, it teaches you to *read* it.
+
+## The Left Side: Lo(x, ωo) — What the Camera Actually Sees
+
+$L_o(x, \omega_o)$ (outgoing radiance) is how much light leaves $x$ headed exactly toward $\omega_o$. When a camera ray hits a surface at $x$, the color you assign that pixel IS $L_o$ evaluated back toward the camera — nothing more. Every fragment shader you've written, down to a bare `gl_FragColor = vec4(1.0)`, already answers "what is $L_o$ here" — most just don't answer it with any physical grounding.
+
+## Le(x, ωo) — How Much the Surface Emits on Its Own
+
+$L_e$ (emitted radiance) is light a surface generates by itself, independent of anything shining on it. For walls, skin, wood — nearly everything around you — $L_e = 0$: they only reflect, never emit. For a lightbulb's filament, the sun, or a Three.js `emissiveMap`, $L_e$ is nonzero. It's the one genuinely free term in the whole equation — no integral, no recursion, just a value read off the material.
+
+## fr(x, ωi, ωo) — the BRDF: How a Surface Redistributes Light
+
+The BRDF answers: light arrives from $\omega_i$, what fraction bounces back out toward $\omega_o$? This term encodes a surface's material identity. Matte plastic scatters incoming light nearly evenly in every direction — $f_r$ is close to constant. Polished metal concentrates almost all energy into a narrow cone around the mirror direction — $f_r$ is a sharp function, swinging wildly across all four input angles. Describing $f_r$ accurately is exactly the subject of the next lesson (BRDFs & the Microfacet Model) and the Fresnel lesson after it — both are, at heart, building a better $f_r$ for this same equation.
+
+## cosθ — Lambert's Cosine Law: Projected Area, Not "Tilt Darkening"
+
+The $(n \cdot \omega_i)$ term isn't an arbitrary darkening knob — it's a forced geometric consequence. A light beam with fixed cross-section, striking at angle $\theta$ from the normal, spreads that energy over a LARGER patch than striking head-on — the projected area actually receiving it shrinks to:
+
+$$
+dA_\perp = dA \cos\theta
+$$
+
+Since the same energy now covers a larger area, energy density per unit area falls off exactly as $\cos\theta$ — a physical fact, not an artistic trick, and why noon sunlight feels hotter than sunset sunlight even though the sun emits the same photon flux all day. At $\theta=90°$, $\cos\theta=0$: no projected area left, so $\max(0, n\cdot\omega_i)$ is what clamps negative values when light arrives from behind the surface.
+
+## The Hemisphere Integral Ω — Light Arrives From EVERYWHERE at Once
+
+$\int_\Omega \ldots d\omega_i$ means, in principle, light arrives simultaneously from EVERY direction across the hemisphere above $x$: the sky, light bounced off every other visible surface, an area light with real physical extent rather than a mathematical point. The `PointLight` you reach for in Three.js is a convenient shortcut — it collapses the entire integral to one direction, which is exactly why it evaluates instantly with no numerical integration. Real light never actually behaves that way.
+
+## Why Real-Time Can't Solve It Exactly: Li Is Someone Else's Lo
+
+This is what makes the equation genuinely hard, not just a long integral: $L_i(x, \omega_i)$ — light arriving at $x$ from $\omega_i$ — is, by definition, the outgoing radiance $L_o$ of whatever surface sits in that direction. Computing $L_o$ at one point needs $L_o$ at every point it can see, which needs $L_o$ at every point THOSE points can see, recursing without end — the literal mathematical definition of "global illumination," with no closed-form solution for a scene of real complexity. Every renderer only chooses where to cut off this infinite recursion and approximate the rest.
+
+## Path Tracing: Estimating the Integral with Monte Carlo
+
+Path tracing doesn't solve the integral algebraically — it estimates it statistically. For each pixel it fires many random rays that bounce around the scene with probabilities weighted by $f_r$, averages hundreds to thousands of independent "paths," and by the law of large numbers that average converges toward the integral's true value — exactly **Monte Carlo integration**, the same tool used anywhere an integral is too complex to solve directly. More samples means less noise, but cost scales directly with sample count — why a path-traced frame can take minutes and still show visible noise after 32 samples per pixel.
+
+## Lambert, Phong, Ambient: Crude Approximations of the Same Equation
+
+Lambert swaps $f_r$ for a constant $\text{albedo}/\pi$ and replaces the hemisphere integral with a finite sum over a handful of point lights with known directions — no integral, no recursion left: $L_o \approx L_e + \sum_{\text{lights}} \frac{\text{albedo}}{\pi} L_i \max(0, n\cdot\omega_i)$. Phong/Blinn-Phong bolts on a $\cos^n(\text{angle})$ specular lobe that's entirely made up — chosen because it *looks* like a highlight, not because it's the real $f_r$ of any material. The classic ambient term is really an honest confession: "the hemisphere integral is probably around this much" — one flat color standing in for the entire integral, because evaluating it correctly per pixel was impossible on 1990s hardware.
+
+## The Whole PBR Track Is a Chain of Better Approximations, Term by Term
+
+The next lesson (BRDFs & the Microfacet Model) replaces the "constant $f_r$" guess with Cook-Torrance's $D \cdot G \cdot F$, a function grounded in real roughness and metalness physics. The IBL lessons replace the "guessed ambient color" with a precomputed approximation of that same hemisphere integral, sampled from a real environment map. The shadow lessons replace "light always reaches every point" with an actual visibility term baked into $L_i$ — a point in shadow simply has $L_i = 0$ from that light's direction. Every lesson after this one in Track 11 answers exactly one question: which term of Kajiya's equation are we approximating today, and how much closer to correct can we get without paying path tracing's cost.
+
+## Reading the Equation as an Engineer, Not a Mathematician
+
+You will never need to solve this equation by hand. The real skill is looking at ANY lighting formula — a shader inherited from a coworker, a snippet in a paper, the internals of Three.js's `MeshStandardMaterial` — and immediately pointing out: which piece is $L_e$, which is $L_i$, which is $f_r$, did they drop the cosine term, did they replace the integral with a sum over 3 lights, and where that tradeoff holds up or visibly breaks. The next two lessons build a sharper $f_r$ (microfacets, Fresnel); the IBL lessons build a sharper $\int_\Omega L_i \ldots d\omega_i$; the shadow lessons build a sharper answer to "when is $L_i$ zero." Everything left in this track is coming back to this one equation, again and again, each time with one term made more precise.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when reading the rendering equation:
+
+1. **Treating Lambert/Phong as "bad approximations" instead of valid special cases under their own assumptions.** Lambert is correct when a material is genuinely fully diffuse and you accept a handful of discrete point lights; it only "breaks" outside that assumption — say, on metal, or expecting it to produce soft ambient shadowing on its own.
+2. **Assuming "PBR" means the equation is solved exactly.** PBR only means the approximations are PHYSICALLY GROUNDED (D/G/F derived and measured from a real microfacet model, energy conserved) — still an approximation, differing from Lambert/Phong in *rigor*, not in ceasing to be an approximation.
+3. **Dropping the cosine term or applying the wrong form of it.** Adding $L_i$ straight in without $\max(0, n\cdot\omega_i)$ makes a surface equally bright regardless of angle; using `abs(dot(n, l))` instead of `max(0, dot(n, l))` is worse — it lets light leak through to the back of a surface and lights up the side facing away from the source.
+
+</Callout>

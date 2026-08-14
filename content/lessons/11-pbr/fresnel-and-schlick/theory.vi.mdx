@@ -1,0 +1,82 @@
+## Hiệu ứng quan sát được: nhìn xuống hồ, nhìn ngang mặt nước
+
+Đứng ở mép bể cá, nhìn thẳng xuống: nước gần như trong suốt, thấy rõ sỏi đáy bể và con cá. Cùng bể cá đó, cùng ánh sáng đó — chỉ cúi thấp xuống, nhìn gần song song mặt nước — bề mặt đột nhiên thành gương, phản chiếu trần nhà, con cá bên trong gần như biến mất. Không gì trong nước thay đổi, chỉ góc nhìn đổi. Đây là hiệu ứng Fresnel (theo tên Augustin-Jean Fresnel): tỉ lệ ánh sáng **phản xạ** so với **truyền qua** tại một bề mặt phụ thuộc góc nhìn, tăng rất nhanh khi góc tiến về 90° ("grazing angle").
+
+## Vì sao có Fresnel: lệch chỉ số khúc xạ, và phương trình đầy đủ (nặng)
+
+Mọi vật liệu trong suốt có **chỉ số khúc xạ** (IOR), ký hiệu $n$, mô tả ánh sáng bị bẻ hướng và chậm lại bao nhiêu khi vào vật liệu đó so với không khí ($n_{air} \approx 1$). Nơi hai môi trường khác $n$ tiếp giáp, một phần ánh sáng phản xạ ngược, phần còn lại khúc xạ rồi truyền tiếp. Vật lý chính xác là **phương trình Fresnel đầy đủ**: xuất phát từ điều kiện biên của Maxwell, tách hai thành phần phân cực (s, p) với công thức lượng giác riêng theo góc tới và cả hai IOR, rồi lấy trung bình cho ánh sáng tự nhiên. Dạng đầy đủ này nằm trong *Real-Time Rendering* và pbr-book.org, vẫn dùng ở render offline/phim — nhưng quá nặng cho 60fps thời gian thực. Vì vậy PBR thời gian thực gần như luôn dùng một xấp xỉ rẻ hơn nhiều.
+
+## Xấp xỉ Schlick (1994): công thức và vì sao chọn luỹ thừa 5
+
+Christophe Schlick đề xuất năm 1994 một xấp xỉ đa thức đơn giản:
+
+$$
+F(\theta) = F_0 + (1 - F_0)(1 - \cos\theta)^5
+$$
+
+$\theta$ là góc giữa pháp tuyến và hướng nhìn; $F_0$ là phản xạ tại **góc tới vuông góc** ($\theta=0°$ — "nhìn thẳng xuống hồ" ở trên). Khi $\theta=0°$: $\cos\theta=1$, $F=F_0$. Khi $\theta \to 90°$: $(1-\cos\theta)^5 \to 1$, $F \to 1$ — phản xạ gần hoàn toàn dù $F_0$ nhỏ tới đâu. Đúng hàm demo bên dưới chạy mỗi pixel:
+
+```glsl
+float schlickFresnel(float F0, float cosTheta) {
+  float t = clamp(1.0 - cosTheta, 0.0, 1.0);
+  return F0 + (1.0 - F0) * pow(t, 5.0);
+}
+```
+
+Vì sao luỹ thừa 5, không phải 2 hay 3? Đây là một phép **fit đường cong** — Schlick chọn số mũ khớp gần nhất hình dạng Fresnel thật của điện môi. Luỹ thừa thấp tăng quá chậm: ở $70°$–$85°$, nơi phản xạ thật đã dựng gần thẳng đứng, luỹ thừa 2 vẫn thấp hơn đáng kể, làm gương ở góc xiên yếu đi. Luỹ thừa 5 bám sát đường cong thật trong dải góc thực tế, sai số dưới ~1% — đủ để Filament, learnopengl.com và gần mọi shader PBR coi 5 là mặc định không bàn cãi.
+
+<Playground source={"void main() {\n  vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;\n  uv.x *= uResolution.x / uResolution.y;\n\n  float r = 0.65;\n  float d = length(uv);\n  if (d > r) {\n    fragColor = vec4(0.05, 0.06, 0.1, 1.0);\n    return;\n  }\n\n  // Fake pháp tuyến hình cầu nhìn thẳng diện (orthographic front view)\n  vec2 p = uv / r;\n  float z = sqrt(max(0.0, 1.0 - dot(p, p)));\n  vec3 N = vec3(p, z);\n  vec3 V = vec3(0.0, 0.0, 1.0);\n  float cosTheta = max(dot(N, V), 0.0);\n\n  float F0 = 0.04;\n  float F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);\n\n  vec3 base = vec3(0.12, 0.22, 0.5);\n  vec3 rim = vec3(1.0, 0.98, 0.9);\n  vec3 color = mix(base, rim, F);\n\n  fragColor = vec4(color, 1.0);\n}"} />
+
+Quả cầu giả (dựng từ vị trí 2D trong đường tròn, không phải mesh 3D) chạy đúng công thức Schlick với $F_0=0.04$: tâm tối (nhìn thẳng), rìa sáng dần gần trắng (rìa là nơi pháp tuyến gần vuông góc hướng nhìn) — đổi `F0` trong code để thấy rìa sáng đổi tốc độ ra sao.
+
+## F0 cho vật liệu phi kim: công thức từ IOR, và con số 0.04 vạn năng
+
+Đặt $\theta=0°$ vào phương trình Fresnel đầy đủ cho điện môi rút gọn về:
+
+$$
+F_0 = \left(\frac{n_1 - n_2}{n_1 + n_2}\right)^2
+$$
+
+Với $n_1=1$ (không khí), $n_2$ là IOR vật liệu. Ba ví dụ, IOR tra từ Wikipedia "List of refractive indices" (589nm), đối chiếu phần trăm phản xạ với Filament Materials Guide:
+
+- **Nước**, $n=1.33$: $F_0 \approx \left(\frac{0.33}{2.33}\right)^2 \approx 0.0201$ → **≈ 2%**.
+- **Kính/nhựa**, $n=1.5$: $F_0 = \left(\frac{0.5}{2.5}\right)^2 = 0.04$ → đúng **4%**.
+- **Kim cương**, $n=2.42$: $F_0 \approx \left(\frac{1.42}{3.42}\right)^2 \approx 0.1724$ → **≈ 17%** — learnopengl.com ghi nhận: phản xạ nền điện môi gần như không bao giờ vượt $0.17$.
+
+```js
+function f0FromIOR(n2, n1 = 1) {
+  return ((n1 - n2) / (n1 + n2)) ** 2;
+}
+f0FromIOR(1.33); // ≈ 0.0201 — nước
+f0FromIOR(2.42); // ≈ 0.1724 — kim cương
+```
+
+Vì đa số điện môi đời thường (da, nhựa, vải, gỗ, hầu hết chất lỏng) rơi vào dải hẹp $0.02$–$0.05$, Filament ghi thẳng "Default value: 4%", và $F_0=0.04$ trở thành mặc định vạn năng gần mọi shader PBR (Unreal, Unity, `MeshStandardMaterial`) khi `metalness=0` — sai lệch vài phần trăm nhỏ tới mức mắt không phân biệt được.
+
+## Kim loại: F0 chính là màu, không phải một con số
+
+Kim loại có IOR **phức** — phần ảo mô tả hấp thụ cực mạnh, ánh sáng không truyền quá vài chục nanomet, nên kim loại **không có** diffuse: mọi màu thấy trên bề mặt là ánh sáng phản xạ. Công thức Fresnel cho vật dẫn còn nặng hơn bản điện môi, và IOR phức khác nhau theo bước sóng — $F_0$ kim loại là **ba số** (R, G, B), không phải một. PBR thời gian thực đi tắt: đo trực tiếp từ mẫu thật, lưu bảng màu. Bảng của Filament Materials Guide (sRGB):
+
+| Kim loại | F0 (R, G, B) |
+| --- | --- |
+| Vàng | (1.00, 0.85, 0.57) |
+| Đồng | (0.97, 0.74, 0.62) |
+| Sắt | (0.77, 0.78, 0.78) |
+
+Cắm thẳng ba số vào **đúng công thức Schlick** trên (mỗi kênh riêng) — tại $\theta=0°$, $F=F_0$, nên quả cầu vàng nhìn thẳng diện chính là $(1.00, 0.85, 0.57)$. Ở góc xiên, $F$ vẫn tiến về $(1,1,1)$ — vệt sáng trắng quen thuộc ở rìa kim loại đánh bóng. Gán $F_0$ kiểu này là chủ đề chính của bài tiếp theo: metalness/roughness.
+
+## Mọi bề mặt đều có Fresnel — kể cả nhựa đường, giấy, và "fake Fresnel"
+
+Fresnel không phải đặc quyền vật liệu "bóng": nhựa đường ($F_0$ thấp, gần như xám phẳng nhìn thẳng) vẫn loé sáng thành vệt khi lái xe hướng mặt trời thấp — Fresnel ở góc quan sát rất xiên trên bề mặt gồ ghề. Giấy, kim loại chải xước, da người cũng sáng nhẹ hơn ở rìa. Vì vậy "mọi bề mặt hơi bóng ở góc xiên" gần như quy luật phổ quát trong PBR. Trong shading cách điệu (Track 6's `onBeforeCompile` đã chạm tới Schlick thật) tồn tại người anh em rẻ hơn: **fake Fresnel**/rim light, dùng đúng hình dạng `pow(1.0 - dot(N,V), k)` nhưng $k$ và màu tự chọn, không bắt nguồn từ $F_0$/IOR thật — chỉ tạo viền phát sáng theo silhouette.
+
+Bài này dừng ở $F(\theta)$ như một con số (hay RGB) cho toàn bề mặt. Bài tiếp theo biến $F_0$ thành công tắc metalness cho hoạ sĩ trên cả bộ texture; các bài IBL nửa sau track tái dùng đúng số hạng Schlick $(1-\cos\theta)^5$, cộng hiệu chỉnh roughness, để trộn phản xạ môi trường.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với Fresnel và Schlick:
+
+1. **Coi $F_0=0.04$ là hằng số dùng được cho mọi vật liệu, kể cả kim loại.** $F_0$ kim loại nằm trong $0.5$–$1.0$ và có màu; gán $0.04$ cho quả cầu lẽ ra là vàng khiến nó phản xạ như nhựa xỉn, mất hẳn ánh kim.
+2. **Quên `clamp`/`max` $\cos\theta$ trước khi đưa vào `pow`.** Ở rìa silhouette hoặc pháp tuyến nội suy trên mesh ít vertex, `dot(N,V)` có thể âm nhẹ; `pow()` cơ số âm cho kết quả không xác định theo GLSL spec, gây artifact chớp đen/NaN đúng ở viền — dòng `clamp` trong `schlickFresnel` tồn tại vì lý do này.
+3. **Gán $F$ một hằng số cố định (bỏ qua $\theta$) mà vẫn tưởng đó là "Fresnel".** $F_0$ nhỏ (nước, $0.02$) không có nghĩa bề mặt luôn phản xạ yếu — ở góc xiên $F$ vẫn tiến gần 1. Tắt số hạng góc (công tắc "Schlick vs hằng số" trong demo) làm mặt nước ở góc quay thấp mất hẳn độ loé gương đặc trưng.
+
+</Callout>

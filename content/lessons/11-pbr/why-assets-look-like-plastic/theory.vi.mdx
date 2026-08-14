@@ -1,0 +1,49 @@
+## Vì sao "nhựa" là từ đúng để mô tả lỗi PBR
+
+Khi một nghệ sĩ senior nhìn một render và nói "trông nhựa quá", họ không nói ẩn dụ suông — họ mô tả một tập dấu hiệu vật lý rất cụ thể: bề mặt phản chiếu đều tăm tắp ở mọi điểm thay vì có vi-biến-thiên, màu sắc bẹt không chiều sâu, highlight cứng và chết thay vì mềm và có môi trường phản chiếu vào. Nhựa injection-molded thật sự có đúng những tính chất đó — bề mặt gia công đồng nhất, không dấu vân tay, không mài mòn. Vấn đề là hầu hết vật liệu KHÔNG PHẢI nhựa lại vô tình có cùng dấu hiệu khi setup PBR sai — và vì bảy nguyên nhân dưới đây đều tạo ra cùng một "chữ ký nhựa", chẩn đoán đúng nguyên nhân quan trọng hơn nhiều so với chỉnh ngẫu nhiên từng tham số tới khi nhìn "đỡ giả".
+
+## 1–2. Roughness quá thấp và đều, albedo sai giá trị
+
+Bề mặt thật không bao giờ có roughness đồng nhất tuyệt đối — dấu vân tay, bụi, vết xước vi mô làm roughness dao động nhẹ từ điểm này sang điểm khác. Đặt một roughness cố định thấp (vd. $0.05$) cho toàn vật thể tạo ra lobe specular sắc và ĐỀU ở mọi nơi — chính xác cách nhựa đúc phản xạ ánh sáng. Cách sửa: một roughness map (hoặc noise procedural) cộng thêm biến thiên nhỏ (±0.03–0.08) quanh giá trị cơ sở. Nguyên nhân thứ hai độc lập nhưng thường đi kèm: albedo sai giá trị tuyệt đối, hoặc tệ hơn, đã có sẵn bóng đổ/ánh sáng "nướng" (baked) vào texture màu. PBR albedo phải là màu THUẦN của vật liệu dưới ánh sáng trắng đều — theo bảng tham chiếu của Lagarde (trích dẫn bên dưới), than củi có albedo khoảng $0.04$, tuyết mới rơi khoảng $0.8$–$0.9$; hầu hết vật liệu đời thường nằm trong khoảng đó. Albedo quá tối (gần $0$) hoặc có vệt bóng vẽ sẵn khiến renderer không còn chỗ để ánh sáng thật "làm việc" — bề mặt tối om bất kể chiếu sáng thế nào, hoặc có bóng đổ kép.
+
+## 3. Fresnel yếu hoặc sai vì dùng metalness không đúng cách
+
+Fresnel — hiệu ứng bề mặt phản chiếu gắt hơn ở góc nhìn xiên — chi phối trực tiếp bởi $F_0$, giá trị phản xạ ở góc nhìn vuông góc. Với vật liệu điện môi (nhựa, gỗ, da, hầu hết mọi thứ không phải kim loại), $F_0$ tính từ chiết suất (IOR) theo công thức Fresnel tại góc $0°$:
+
+$$
+F_0 = \left(\frac{n_1 - n_2}{n_1 + n_2}\right)^2
+$$
+
+Với không khí ($n_1 \approx 1$) và nhựa điển hình ($n_2 \approx 1.5$): $F_0 = \left(\frac{1.5-1}{1.5+1}\right)^2 = \left(\frac{0.5}{2.5}\right)^2 = 0.04$ — con số $0.04$ quen thuộc chính là từ đây, không phải hằng số tuỳ tiện. Lỗi hay gặp: đặt `metalness` giữa chừng (vd. $0.5$) cho một vật liệu vốn là điện môi, "vì nhìn có vẻ đẹp hơn". Workflow metalness/roughness dùng metalness gần như luôn NHỊ PHÂN ($0$ hoặc $1$) — giá trị giữa chừng khiến renderer trộn hai model phản xạ hoàn toàn khác nhau (điện môi có albedo diffuse thật + $F_0$ thấp cố định; kim loại không diffuse, $F_0$ chính là màu vật liệu), cho ra một chất liệu "lai" không tồn tại trong tự nhiên — bề mặt vừa tô đều như nhựa vừa có ánh kim nhẹ sai chỗ.
+
+## 4. IBL vắng mặt hoặc lệch exposure: nguồn sáng "chết"
+
+Một vài đèn điểm/directional không bao giờ đủ để một vật thể trông "sống" — chúng chỉ tạo đúng một chấm highlight sắc mỗi đèn, còn phần còn lại của bề mặt gần như không nhận phản chiếu nào. Environment lighting (IBL) mới là thứ khiến specular đọc được như một bề mặt LIÊN TỤC, vì nó cung cấp ánh sáng tới từ MỌI hướng thay vì một hướng. Thiếu hẳn `scene.environment`, hoặc có nhưng `toneMappingExposure` đặt sai (quá thấp khiến IBL gần như biến mất, quá cao khiến mọi thứ cháy sáng đồng loạt), cho ra đúng "highlight chết" — một chấm sáng cô lập trên nền tối phẳng lì, dấu hiệu kinh điển của asset "chưa đặt vào môi trường thật".
+
+## 5. Thiếu AO/contact shadow: vật thể trông lơ lửng
+
+Ambient occlusion mô phỏng ánh sáng gián tiếp bị chặn ở các khe/góc/điểm tiếp xúc — không có nó, một vật thể đặt trên sàn không có bất kỳ điểm tối nào nối liền nó với mặt sàn, và mắt người đọc ngay ra "vật thể này không THẬT SỰ chạm sàn". Đây là lý do vật thể thiếu AO luôn trông "lơ lửng" dù vị trí Y hoàn toàn đúng. Fix rẻ nhất không cần bake AO map: một contact shadow — một vệt tối mềm ngay dưới điểm tiếp xúc, có thể chỉ là một decal alpha-blend đơn giản.
+
+## 6. Normal map sai scale hoặc thiếu hẳn
+
+Thiếu normal map hoàn toàn khiến mọi chi tiết bề mặt vi mô (rãnh, vân, độ nhám cấu trúc) biến mất — bề mặt đọc như "thổi thuỷ tinh", mượt bất thường so với hình dạng lẽ ra phải có kết cấu. Ngược lại, `normalScale` đặt quá cao làm chi tiết bị phóng đại thành nhiễu gắt không tự nhiên; đặt quá thấp gần như vô hiệu hoá map dù đã gán đúng texture. Cả hai đầu cực đều phá vỡ cảm giác vật liệu, chỉ theo hai hướng ngược nhau.
+
+## 7. Tone mapping tắt: output tuyến tính trông "bạc màu"
+
+Không bật tone mapping (`NoToneMapping`) nghĩa là giá trị màu tuyến tính vượt quá $1.0$ bị CẮT CỨNG (hard clip) về trắng thay vì cuộn (roll off) mượt như ACES hay các đường cong filmic khác làm — kết quả là vùng sáng mất hết chi tiết, chuyển tông đột ngột, và toàn cảnh trông "bạc màu", phẳng lì thiếu tương phản tinh tế. Vì R3F's `<Canvas>` mặc định đã bật `ACESFilmicToneMapping`, lỗi này thường xảy ra khi ai đó VÔ TÌNH tắt nó (hoặc đặt `toneMapped={false}` sai chỗ trên vật liệu) khi debug một hiệu ứng khác rồi quên bật lại.
+
+## Thứ tự chẩn đoán: ánh sáng trước, vật liệu sau, map cuối cùng
+
+Bảy nguyên nhân trên không độc lập ngẫu nhiên — chúng có một THỨ TỰ triage hợp lý. Luôn kiểm tra ÁNH SÁNG trước (IBL có mặt và exposure đúng chưa, tone mapping có bật chưa) — vì nếu ánh sáng sai, không tham số vật liệu nào cứu được cảnh, và bạn sẽ lãng phí thời gian chỉnh roughness cho một cảnh vốn dĩ đang thiếu sáng. Sau đó mới tới VẬT LIỆU cơ bản (albedo, metalness, Fresnel) — những tham số ảnh hưởng toàn bộ bề mặt. Cuối cùng mới tới MAP chi tiết (roughness variation, normal, AO) — những thứ tinh chỉnh vi mô chỉ có ý nghĩa khi nền tảng ánh sáng và vật liệu đã đúng. Triết lý sửa lỗi đi kèm: đổi ĐÚNG MỘT nguyên nhân mỗi lần, chụp trước/sau, rồi mới đổi tiếp — đổi nhiều thứ cùng lúc khiến bạn không bao giờ biết chính xác thay đổi nào tạo ra khác biệt, và dễ "sửa" nhầm bằng cách chồng hai lỗi triệt tiêu nhau một cách tình cờ thay vì thật sự sửa đúng.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất trong chính QUÁ TRÌNH chẩn đoán, không phải trong danh sách bảy nguyên nhân ở trên:
+
+1. **Đổi nhiều tham số cùng lúc rồi kết luận "đỡ nhựa hơn".** Không có cách nào tách được thay đổi nào thật sự tạo ra khác biệt — lần sau gặp lỗi tương tự trên cảnh khác, bài học không lặp lại được.
+2. **Sửa map chi tiết (normal, AO) trước khi sửa ánh sáng.** Một normal map hoàn hảo vẫn vô hình nếu cảnh không có IBL để phản chiếu vào — công sức bỏ vào bước triage sai thứ tự gần như phí hoàn toàn.
+3. **Tin rằng "trông đẹp hơn" nghĩa là "đúng vật lý hơn".** Metalness $0.5$ đôi khi trông bắt mắt hơn dưới một góc camera cụ thể, nhưng sai hoàn toàn về vật lý — sẽ lộ rõ dưới góc nhìn khác hoặc ánh sáng khác, trong khi bản sửa đúng ổn định trên mọi điều kiện.
+
+</Callout>
+
+Checkpoint khép track (checkpoint-studio-lighting-setup) áp dụng chính danh sách chẩn đoán này ở chiều ngược lại: thay vì tìm và sửa lỗi trên một cảnh có sẵn, bạn dựng một cảnh studio ba điểm sáng đúng ngay từ đầu, với từng quyết định (tỉ lệ key:fill, exposure, AO) đều truy được về đúng một trong bảy nguyên nhân đã học ở đây.

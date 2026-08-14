@@ -1,0 +1,15 @@
+## Mục tiêu
+
+Đây là bài mini-build khép lại module BRDF Theory: không có lý thuyết mới, chỉ có một lưới 36 quả cầu buộc bạn đối chiếu trực tiếp bằng mắt với Fresnel, Schlick và workflow metalness/roughness vừa học. Nếu lý thuyết đúng, lưới này phải "trông đúng" theo đúng dự đoán; code sai một chỗ, mắt sẽ thấy ngay một hàng hoặc cột trông giả.
+
+## Yêu cầu
+
+Dựng một lưới 6×6 quả cầu bằng React Three Fiber: trục ngang quét `metalness` từ 0 đến 1, trục dọc quét `roughness` từ 0 đến 1, mỗi trục chia đều 6 mức (0, 0.2, 0.4, 0.6, 0.8, 1.0). Toàn bộ lưới đặt dưới một environment procedural dựng bằng `RoomEnvironment` qua `PMREMGenerator` (không HDRI thật) cộng đúng một key light. Gắn nhãn hai trục bằng `Text` hoặc `Html` của drei. Sau khi dựng xong, viết lại quan sát của bạn (dạng comment trong code) đối chiếu với lý thuyết: Fresnel sáng lên ở góc nhìn xiên trên hàng dielectric (metalness=0), phản xạ ở hàng kim loại (metalness=1) nhuốm màu albedo, roughness làm mờ dần phản xạ env đúng theo mip nó đọc, và vì sao hàng giữa (metalness≈0.5) trông sai vật lý.
+
+## Gợi ý cấu trúc
+
+Chỉ một `SphereGeometry` dùng chung cho cả 36 quả cầu, tạo một lần bằng `useMemo`; mỗi quả cầu có `MeshStandardMaterial` riêng với `metalness`/`roughness` tính từ chỉ số hàng/cột bằng một hàm nhỏ. Environment build một lần trong effect, gán vào `scene.environment`, dispose đầy đủ khi unmount.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở solution — lưới đúng cả hai trục, Fresnel thấy rõ ở góc xiên, kim loại nhuốm màu, dielectric giữ F0 trung tính, environment không rò rỉ khi unmount, và bạn đã viết ra quan sát về hàng "nửa kim loại" trông sai vật lý thế nào.
