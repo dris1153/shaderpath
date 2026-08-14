@@ -7,6 +7,7 @@ import { useTheme } from "next-themes";
 import type { Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MONACO_FONT_FAMILY, remeasureOnFontReady } from "@/lib/monaco-font";
 import type { GlslError } from "@/lib/glsl/parse-error";
 import { registerGlslLanguage } from "./glsl-language";
 
@@ -73,6 +74,7 @@ export function GlslEditor({
         onMount={(ed, monaco) => {
           editorRef.current = ed;
           monacoRef.current = monaco;
+          remeasureOnFontReady(monaco);
           if (handleRef) {
             handleRef.current = {
               revealLine: (line) => {
@@ -86,6 +88,7 @@ export function GlslEditor({
         options={{
           minimap: { enabled: false },
           fontSize: 13,
+          fontFamily: MONACO_FONT_FAMILY,
           wordWrap: "on",
           scrollBeyondLastLine: false,
           automaticLayout: true,

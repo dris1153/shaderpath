@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Google_Sans, Google_Sans_Code } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -12,25 +12,27 @@ import { AppHeader } from "@/components/shell/app-header";
 import { SkipLink } from "@/components/shell/skip-link";
 import { CommandProvider } from "@/components/command/command-provider";
 import { getQualityTierSetting } from "@/lib/settings-read";
-import { getFontPreloadHrefs } from "@/lib/font-preloads";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
 
 // "vietnamese" subset is required — the default locale's diacritics otherwise
 // fall back to the system font and the late swap re-records LCP (§9 phase 10).
-// display "optional": no late swap repaint (which re-records LCP on text) —
-// on a self-hosted app the fonts come from disk cache after the first visit.
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// "vietnamese" subset is required — the default locale's diacritics otherwise
+// fall back to the system font. Variable fonts: one file per family.
+// Next 16.3 has no fallback-metric overrides for these families yet and logs a
+// warning; measured CLS is still 0 because the fonts are preloaded and served
+// locally. Keeping the default so we pick the overrides up automatically.
+const googleSans = Google_Sans({
+  variable: "--font-google-sans",
   subsets: ["latin", "latin-ext", "vietnamese"],
-  display: "optional",
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const googleSansCode = Google_Sans_Code({
+  variable: "--font-google-sans-code",
   subsets: ["latin", "latin-ext", "vietnamese"],
-  display: "optional",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -61,21 +63,10 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${googleSans.variable} ${googleSansCode.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
-        {/* React hoists these to <head>; see lib/font-preloads.ts for why. */}
-        {getFontPreloadHrefs().map((href) => (
-          <link
-            key={href}
-            rel="preload"
-            as="font"
-            type="font/woff2"
-            crossOrigin="anonymous"
-            href={href}
-          />
-        ))}
         <NextIntlClientProvider>
           <ThemeProvider
             attribute="class"

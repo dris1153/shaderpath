@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MONACO_FONT_FAMILY, remeasureOnFontReady } from "@/lib/monaco-font";
 
 const Editor = dynamic(() => import("@monaco-editor/react"), {
   ssr: false,
@@ -31,9 +32,11 @@ export function CodeEditor({
         theme={resolvedTheme === "dark" ? "vs-dark" : "light"}
         value={value}
         onChange={(v) => onChange(v ?? "")}
+        onMount={(_ed, monaco) => remeasureOnFontReady(monaco)}
         options={{
           minimap: { enabled: false },
           fontSize: 13,
+          fontFamily: MONACO_FONT_FAMILY,
           wordWrap: "on",
           scrollBeyondLastLine: false,
           automaticLayout: true,
