@@ -4,6 +4,12 @@ glTF (viết tắt của GL Transmission Format, do Khronos Group — cùng nhó
 
 So với các định dạng cũ: `.obj` chỉ có geometry và material rất cơ bản (không animation, không PBR chuẩn), toàn bộ ở dạng text nên phải parse từng dòng; `.fbx` có animation và material tốt hơn nhưng là định dạng nhị phân đóng của Autodesk, thư viện đọc phải reverse-engineer cấu trúc. glTF thì công khai, có JSON schema chính thức, và tồn tại ở hai hình thức: `.gltf` (JSON + `.bin` chứa buffer + texture rời, tiện debug vì đọc được bằng mắt) hoặc gộp thành một file `.glb` nhị phân duy nhất — web gần như luôn dùng `.glb` vì chỉ cần đúng một HTTP request.
 
+<Figure
+  src="/figures/03-threejs/gltf-file-anatomy.svg"
+  alt="Cấu trúc một asset glTF: tài liệu JSON, buffer .bin, ảnh; chuỗi gián tiếp accessor → bufferView → buffer; biến thể .glb một file; và vị trí Draco với meshopt"
+  caption="Ba tầng gián tiếp accessor → bufferView → buffer là lý do loader chỉ cần copy byte thay vì parse lại, và cũng chính là hai chỗ Draco với meshopt cắm vào."
+/>
+
 ## GLTFLoader: nạp bất đồng bộ, rồi duyệt scene graph
 
 ```js

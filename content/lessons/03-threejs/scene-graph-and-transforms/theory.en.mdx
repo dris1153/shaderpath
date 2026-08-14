@@ -4,6 +4,12 @@ Mesh, Group, Light, Camera — everything you add to a scene inherits from `Obje
 
 `.matrix` is purely a **local** transform, describing that object relative to itself — it knows nothing about its parent. Once an object sits inside a hierarchy (via `parent.add(child)`), Three.js also computes `.matrixWorld`, the matrix actually used for rendering, by chaining: `matrixWorld = parent.matrixWorld × this.matrix`. That's the "parent-child matrix chain" Track 0 mentioned without a concrete object to demonstrate it — Three.js walks down from the scene root, computing each object's `matrixWorld` in exactly that order inside `updateMatrixWorld()`, recursing into every child.
 
+<Figure
+  src="/figures/03-threejs/scene-graph-world-matrix.svg"
+  alt="The sun → planetGroup → moonGroup → moon scene graph beside the rule worldMatrix = parent.worldMatrix × localMatrix and the accumulated product along the path to moon"
+  caption="A node's world transform is stored nowhere — it is the running product along its own path from the root, which is exactly why reparenting changes the result."
+/>
+
 ## Local vs World Space: Move the Parent, Children Follow for Free
 
 An object's `.position`/`.quaternion`/`.scale` are always interpreted **relative to its direct parent** — never absolute world coordinates, unless that object is a direct child of `scene` itself (whose transform is identity). The key consequence: moving or rotating a parent object automatically carries every descendant along in world space — without touching a single line of the children's own transform properties — because each child's `matrixWorld` gets recomputed every frame from the chain through its parent's fresh `matrixWorld`. That's why "group things, then rotate the group" is always cheaper and more correct than manually recomputing every object's world position by hand.

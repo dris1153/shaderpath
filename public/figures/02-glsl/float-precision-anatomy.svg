@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 552" width="620" height="552" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .field { font-size: 12px; font-weight: 600; }
+    .cell { font-size: 13px; }
+    .key { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .count { font-size: 11px; fill: var(--muted); }
+    .sup { font-size: 9px; }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-acc { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 1.5; }
+    .ink-acc { fill: var(--accent-ink); }
+    .tick { stroke: var(--line); stroke-width: 0.75; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+
+  <!-- ============ part 1: bit anatomy ============ -->
+  <text class="title" x="40" y="22">Anatomy of a float: what each field buys you</text>
+  <text class="note" x="40" y="40">Field widths drawn to scale — one tick per bit.</text>
+
+  <text class="lbl" x="40" y="64">highp — GLSL ES 3.00 requires this storage format: IEEE-754 binary32 (32 bits)</text>
+  <rect class="box" x="40" y="72" width="15" height="28" />
+  <rect class="box" x="55" y="72" width="120" height="28" />
+  <rect class="box-acc" x="175" y="72" width="345" height="28" />
+  <path class="tick" d="M70,72 L70,79 M85,72 L85,79 M100,72 L100,79 M115,72 L115,79 M130,72 L130,79 M145,72 L145,79 M160,72 L160,79" />
+  <path class="tick" d="M190,72 L190,79 M205,72 L205,79 M220,72 L220,79 M235,72 L235,79 M250,72 L250,79 M265,72 L265,79 M280,72 L280,79 M295,72 L295,79 M310,72 L310,79 M325,72 L325,79 M340,72 L340,79 M355,72 L355,79 M370,72 L370,79 M385,72 L385,79 M400,72 L400,79 M415,72 L415,79 M430,72 L430,79 M445,72 L445,79 M460,72 L460,79 M475,72 L475,79 M490,72 L490,79 M505,72 L505,79" />
+  <text class="field" x="47" y="92" text-anchor="middle">S</text>
+  <text class="field" x="115" y="92" text-anchor="middle">exponent</text>
+  <text class="field ink-acc" x="347" y="92" text-anchor="middle">mantissa</text>
+  <text class="count" x="40" y="116">1 bit</text>
+  <text class="count" x="115" y="116" text-anchor="middle">8 bits</text>
+  <text class="count" x="347" y="116" text-anchor="middle">23 bits</text>
+
+  <text class="lbl" x="40" y="144">mediump — often implemented as IEEE-754 binary16, the half float (16 bits)</text>
+  <rect class="box" x="40" y="152" width="15" height="28" />
+  <rect class="box" x="55" y="152" width="75" height="28" />
+  <rect class="box-acc" x="130" y="152" width="150" height="28" />
+  <path class="tick" d="M70,152 L70,159 M85,152 L85,159 M100,152 L100,159 M115,152 L115,159" />
+  <path class="tick" d="M145,152 L145,159 M160,152 L160,159 M175,152 L175,159 M190,152 L190,159 M205,152 L205,159 M220,152 L220,159 M235,152 L235,159 M250,152 L250,159 M265,152 L265,159" />
+  <text class="field" x="47" y="172" text-anchor="middle">S</text>
+  <text class="field" x="92" y="172" text-anchor="middle">exponent</text>
+  <text class="field ink-acc" x="205" y="172" text-anchor="middle">mantissa</text>
+  <text class="count" x="40" y="196">1 bit</text>
+  <text class="count" x="92" y="196" text-anchor="middle">5 bits</text>
+  <text class="count" x="205" y="196" text-anchor="middle">10 bits</text>
+  <text class="note" x="300" y="164">Same tick size as the strip above —</text>
+  <text class="note" x="300" y="182">13 mantissa and 3 exponent bits gone.</text>
+
+  <text class="note" x="40" y="224">The exponent field sets the range: how large or small a value can get.</text>
+  <text class="note" x="40" y="242">The mantissa field sets the relative precision: the gap between neighbouring values.</text>
+
+  <path class="rule" d="M40,264 L580,264" />
+
+  <!-- ============ part 2: what the spec floor actually is ============ -->
+  <text class="title" x="40" y="292">GLSL ES 3.00 minimum guarantees (§4.5.1)</text>
+  <text class="note" x="40" y="310">A conforming driver must meet these floors. Hardware may exceed them; it may never fall below.</text>
+
+  <text class="note" x="40" y="336">qualifier</text>
+  <text class="note" x="170" y="336">minimum range</text>
+  <text class="note" x="380" y="336">minimum precision</text>
+  <path class="rule" d="M40,344 L580,344" />
+
+  <text class="key" x="40" y="368">highp</text>
+  <text class="cell" x="170" y="368">as IEEE-754: (-2<tspan class="sup" dy="-5">126</tspan><tspan dy="5">, 2</tspan><tspan class="sup" dy="-5">127</tspan><tspan dy="5">)</tspan></text>
+  <text class="cell" x="380" y="368">relative 2<tspan class="sup" dy="-5">-24</tspan></text>
+  <path class="rule" d="M40,378 L580,378" />
+
+  <text class="key" x="40" y="402">mediump</text>
+  <text class="cell" x="170" y="402">(-2<tspan class="sup" dy="-5">14</tspan><tspan dy="5">, 2</tspan><tspan class="sup" dy="-5">14</tspan><tspan dy="5">)</tspan></text>
+  <text class="cell" x="380" y="402">relative 2<tspan class="sup" dy="-5">-10</tspan></text>
+  <path class="rule" d="M40,412 L580,412" />
+
+  <text class="key" x="40" y="436">lowp</text>
+  <text class="cell" x="170" y="436">(-2, 2)</text>
+  <text class="cell" x="380" y="436">absolute 2<tspan class="sup" dy="-5">-8</tspan></text>
+  <path class="rule" d="M40,446 L580,446" />
+
+  <text class="note" x="40" y="470">binary32's 23 stored mantissa bits + 1 implicit bit give exactly the relative 2<tspan class="sup" dy="-4">-24</tspan><tspan dy="4"> above;</tspan></text>
+  <text class="note" x="40" y="488">binary16's 10 stored bits clear the mediump floor of relative 2<tspan class="sup" dy="-4">-10</tspan><tspan dy="4">.</tspan></text>
+  <text class="note" x="40" y="510">lowp's floor is absolute, not relative: even steps of 2<tspan class="sup" dy="-4">-8</tspan><tspan dy="4"> across the whole [-2, 2] range.</tspan></text>
+  <text class="note" x="40" y="532">GLSL ES 1.00 (WebGL 1) set a far lower highp floor: (-2<tspan class="sup" dy="-4">62</tspan><tspan dy="4">, 2</tspan><tspan class="sup" dy="-4">62</tspan><tspan dy="4">) at relative 2</tspan><tspan class="sup" dy="-4">-16</tspan><tspan dy="4">.</tspan></text>
+</svg>

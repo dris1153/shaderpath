@@ -4,6 +4,12 @@ Mesh, Group, Light, Camera — mọi thứ bạn add vào scene đều kế th�
 
 `.matrix` chỉ là transform **cục bộ**, tính riêng object đó với chính nó — nó không biết gì về cha. Khi object nằm trong một hierarchy (qua `parent.add(child)`), Three.js còn tính thêm `.matrixWorld`, ma trận thật sự dùng để vẽ, bằng cách nhân dồn: `matrixWorld = parent.matrixWorld × this.matrix`. Đây chính là "chuỗi nhân ma trận cha-con" Track 0 đã nhắc tới nhưng chưa có object thật để minh hoạ — Three.js đi từ root scene xuống, tính `matrixWorld` từng object theo đúng thứ tự đó trong `updateMatrixWorld()`, đệ quy xuống từng child.
 
+<Figure
+  src="/figures/03-threejs/scene-graph-world-matrix.svg"
+  alt="Cây scene graph sun → planetGroup → moonGroup → moon đặt cạnh quy tắc worldMatrix = parent.worldMatrix × localMatrix và tích ma trận dồn theo đường đi tới moon"
+  caption="Transform world của một node không được lưu ở đâu cả — nó là tích ma trận dồn dọc đúng đường đi từ root xuống, nên đổi cha là đổi luôn kết quả cuối cùng."
+/>
+
 ## Local space vs world space: cha di chuyển, con "được" theo miễn phí
 
 `.position`/`.quaternion`/`.scale` của một object luôn được hiểu **tương đối với cha trực tiếp** — không bao giờ là toạ độ world tuyệt đối, trừ khi object đó chính là con trực tiếp của `scene` (cha có transform identity). Hệ quả quan trọng nhất: dịch chuyển hoặc xoay một object cha tự động kéo theo mọi object con di chuyển đúng theo world space — dù không đụng một dòng code nào vào transform của con — vì `matrixWorld` của con được tính lại mỗi frame từ chuỗi nhân với `matrixWorld` cha mới. Đây là lý do "nhóm rồi xoay cả nhóm" luôn rẻ và đúng hơn tính lại vị trí world cho từng object riêng lẻ bằng tay.

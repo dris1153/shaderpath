@@ -4,6 +4,12 @@ Animation trong Three.js không phải một API đơn lẻ mà là ba lớp tá
 
 Ví von dễ nhớ: AnimationClip giống một file nhạc trên đĩa — chỉ là dữ liệu; AnimationMixer giống một đầu phát gắn cố định trong phòng (root object); AnimationAction giống nút play cộng núm chỉnh âm lượng cho một lượt phát cụ thể — cùng một đầu phát có thể "phát" nhiều bài cùng lúc với âm lượng khác nhau, đó chính là cơ chế crossfade ở phần sau. Ba lớp tách biệt vì lý do thực dụng: một clip ("walk") phát lại được trên bất kỳ root nào có cùng cấu trúc thuộc tính, và một root phát được nhiều clip cùng lúc để crossfade — gộp cả ba trách nhiệm vào một object sẽ không cho phép cả hai việc đó.
 
+<Figure
+  src="/figures/03-threejs/animation-mixer-graph.svg"
+  alt="Đồ thị object của animation: AnimationMixer gắn với một root Object3D, các AnimationAction, AnimationClip và mảng KeyframeTrack, kèm biểu đồ crossfade hai weight cộng lại bằng 1"
+  caption="Chỉ AnimationAction giữ trạng thái phát — nên crossfade không đụng tới clip một chút nào, nó chỉ là hai con số weight cộng lại bằng 1 trên cùng một root."
+/>
+
 ## AnimationClip: dữ liệu keyframe thuần
 
 Một `AnimationClip` chỉ có ba trường chính: `name`, `duration` (giây) và `tracks` — mảng `KeyframeTrack`. Mỗi track nhắm vào đúng một thuộc tính của đúng một object, dưới dạng path chuỗi (ví dụ `".position"` hoặc `"Bone_Head.quaternion"`), kèm mảng `times` (giây, tăng dần) và mảng `values` phẳng — mỗi keyframe chiếm đúng số component của thuộc tính đó: 3 số cho vector3, 4 số cho quaternion. Vì clip không giữ tham chiếu tới object thật — chỉ giữ path dạng chuỗi — cùng một clip áp được lên bất kỳ object nào có cấu trúc thuộc tính khớp path, đây là lý do một clip "walk" export từ một rig chạy được trên rig khác miễn tên bone khớp nhau.

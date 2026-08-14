@@ -6,6 +6,12 @@ Vertex shader trong GLSL ES có sẵn precision mặc định cho `float` (là `
 
 Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơn nhưng kém chính xác hơn" — đặc tả GLSL ES 3.00 (Bảng 4.7) quy định rõ hai con số SÀN tối thiểu mỗi driver bắt buộc phải đạt được: độ chính xác tương đối (tương đương số bit mantissa) và dải giá trị biểu diễn được (tương đương số bit exponent). Phần cứng thật thường tốt hơn sàn này, không bao giờ tệ hơn.
 
+<Figure
+  src="/figures/02-glsl/float-precision-anatomy.svg"
+  alt="Dải bit của float 32-bit và half float 16-bit vẽ cùng một tỉ lệ, đánh dấu độ rộng các trường sign, exponent, mantissa, phía dưới là bảng dải giá trị và độ chính xác tối thiểu mà GLSL ES 3.00 yêu cầu cho highp, mediump, lowp"
+  caption="Dải giá trị và độ chính xác là hai ngân sách riêng do hai trường bit riêng quyết định, nên 'mediump là một nửa highp' là mô hình sai — mantissa mất hơn một nửa số bit trong khi exponent chỉ nhường đúng ba bit."
+/>
+
 ### highp: gần với float 32-bit chuẩn, mantissa tối thiểu 16 bit
 
 `highp` đảm bảo dải tối thiểu $[-2^{62}, 2^{62}]$ và độ chính xác tương đối tối thiểu $2^{-16}$ (tương đương mantissa $\geq 16$ bit) — thấp hơn con số sàn của IEEE 754 single-precision thật (mantissa 23 bit), nhưng trong thực tế gần như mọi GPU đang bán ra (kể cả mobile) triển khai `highp` bằng đúng float 32-bit đầy đủ.

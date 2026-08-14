@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 584" width="640" height="584" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --bias-fill: #fef3c7;
+      --bias-stroke: #d97706;
+      --bias-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --bias-fill: #422006;
+        --bias-stroke: #f59e0b;
+        --bias-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .formula { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .legend { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .title-bias { fill: var(--bias-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-pass { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-bias { fill: var(--bias-fill); stroke: var(--bias-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- pass 1: depth from the light -->
+  <rect class="box-pass" x="90" y="16" width="460" height="78" rx="8" />
+  <text class="title title-accent" x="320" y="42" text-anchor="middle">Pass 1: render the scene from the light</text>
+  <text class="note" x="320" y="61" text-anchor="middle">camera = light.shadow.camera (Orthographic for a DirectionalLight)</text>
+  <text class="note" x="320" y="79" text-anchor="middle">only meshes with castShadow = true are drawn — depth, no colour</text>
+  <path class="arrow" d="M320,94 L320,118" marker-end="url(#head)" />
+
+  <!-- the shadow map itself -->
+  <rect class="box" x="90" y="120" width="460" height="78" rx="8" />
+  <text class="title" x="320" y="146" text-anchor="middle">Shadow map — a depth texture</text>
+  <text class="note" x="320" y="165" text-anchor="middle">mapSize × mapSize texels, one depth value each:</text>
+  <text class="note" x="320" y="183" text-anchor="middle">how far the nearest surface is from the light</text>
+  <path class="arrow" d="M320,198 L320,222" marker-end="url(#head)" />
+
+  <!-- pass 2: compare against it -->
+  <rect class="box-pass" x="90" y="224" width="460" height="58" rx="8" />
+  <text class="title title-accent" x="320" y="250" text-anchor="middle">Pass 2: render the scene from the camera</text>
+  <text class="note" x="320" y="269" text-anchor="middle">each fragment of a receiveShadow surface runs these three steps</text>
+  <path class="arrow" d="M320,282 L320,304" marker-end="url(#head)" />
+
+  <rect class="box-bias" x="110" y="306" width="420" height="58" rx="8" />
+  <text class="formula title-bias" x="320" y="331" text-anchor="middle">shadowCoord = shadow.matrix × (worldPos + N·normalBias)</text>
+  <text class="note" x="320" y="350" text-anchor="middle">bias 1 — shift the sample point along the surface normal N</text>
+  <path class="arrow" d="M320,364 L320,384" marker-end="url(#head)" />
+
+  <rect class="box" x="110" y="386" width="420" height="58" rx="8" />
+  <text class="formula" x="320" y="411" text-anchor="middle">shadowCoord.xyz /= shadowCoord.w</text>
+  <text class="note" x="320" y="430" text-anchor="middle">perspective divide: xy become texture coords, z the depth</text>
+  <path class="arrow" d="M320,444 L320,464" marker-end="url(#head)" />
+
+  <rect class="box-bias" x="110" y="466" width="420" height="58" rx="8" />
+  <text class="formula title-bias" x="320" y="491" text-anchor="middle">shadowCoord.z + bias &lt;= depth stored at shadowCoord.xy</text>
+  <text class="note" x="320" y="510" text-anchor="middle">true -&gt; lit; false -&gt; something nearer the light blocks it</text>
+
+  <!-- legend -->
+  <rect class="box-bias" x="110" y="543" width="16" height="14" rx="3" />
+  <text class="legend" x="136" y="549">where a depth bias is applied:</text>
+  <text class="legend" x="136" y="566">too little leaves shadow acne, too much causes peter-panning</text>
+</svg>

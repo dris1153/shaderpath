@@ -4,6 +4,12 @@ glTF (GL Transmission Format, designed by the Khronos Group — the same group b
 
 Compare that to older formats: `.obj` only carries basic geometry and materials (no animation, no standard PBR), and it's plain text, so it has to be parsed line by line. `.fbx` has better animation and material support but is Autodesk's closed binary format — a reader library has to reverse-engineer its structure instead of following a public schema. glTF is open, ships with an official JSON schema, and comes in two shapes: `.gltf` (a JSON description plus a `.bin` buffer and loose textures — handy for debugging since it's human-readable) or bundled into a single binary `.glb` file. The web almost always ships `.glb`, since it needs exactly one HTTP request.
 
+<Figure
+  src="/figures/03-threejs/gltf-file-anatomy.svg"
+  alt="The anatomy of a glTF asset: the JSON document, .bin buffers, images; the accessor → bufferView → buffer indirection chain; the single-file .glb variant; and where Draco and meshopt sit"
+  caption="That three-level accessor → bufferView → buffer indirection is why a loader can copy bytes instead of re-parsing them, and it is exactly where Draco and meshopt each hook in."
+/>
+
 ## GLTFLoader: Loading Asynchronously, Then Walking the Scene Graph
 
 ```js

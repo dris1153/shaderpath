@@ -58,6 +58,12 @@ $$
 
 Một ảnh JPEG "nhẹ" 400KB trên đĩa hoá ra chiếm hơn 21MB VRAM sau khi upload và sinh mipmap — trực giác "file nhỏ nên nhẹ" của lập trình web thông thường gây hiểu lầm nghiêm trọng ở đây.
 
+<Figure
+  src="/figures/03-threejs/mipmap-pyramid-ktx2.svg"
+  alt="Kim tự tháp mipmap với tổng chuỗi hội tụ về 4/3, đặt cạnh so sánh PNG/JPEG bị giải nén thành RGBA thô trong VRAM với KTX2 giữ nguyên trạng thái nén"
+  caption="Con số quyết định không nằm ở kích thước file trên đĩa mà ở định dạng đang nằm trong VRAM — và chỉ KTX2 mới còn nén sau khi upload xong."
+/>
+
 ## Nén thật trên GPU: KTX2 và Basis Universal
 
 Khác PNG/JPG, KTX2 (định dạng container bọc dữ liệu Basis Universal supercompressed) chứa dữ liệu mà GPU **sample được trực tiếp ở dạng đã nén** — VRAM giữ nguyên trạng thái nén suốt vòng đời texture, không riêng lúc nằm trên đĩa. `KTX2Loader` transcode dữ liệu Basis sang đúng định dạng nén GPU-native của thiết bị đang chạy (BC7/BC1 trên desktop, ASTC trên phần lớn GPU di động, ETC2 trên một số Android, PVRTC trên iOS đời cũ) — một file `.ktx2` duy nhất, nhiều đích transcode khác nhau tuỳ máy:

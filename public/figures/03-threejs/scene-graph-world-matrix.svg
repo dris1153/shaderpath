@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 348" width="640" height="348" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .node { font-size: 13px; font-weight: 600; }
+    .formula { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .type { font-weight: 400; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .edge { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .walk { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-accent" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- left column: the scene graph as a tree -->
+  <text class="note" x="24" y="22">updateMatrixWorld() walks top-down</text>
+  <path class="walk" d="M22,42 L22,316" marker-end="url(#head-accent)" />
+
+  <rect class="box" x="36" y="40" width="150" height="34" rx="6" />
+  <text class="node" x="48" y="61">Scene</text>
+
+  <path class="edge" d="M48,74 L48,107 L56,107" />
+  <rect class="box" x="56" y="90" width="150" height="34" rx="6" />
+  <text class="node" x="68" y="111">sun<tspan class="type">  Mesh</tspan></text>
+
+  <path class="edge" d="M68,124 L68,157 L76,157" />
+  <rect class="box" x="76" y="140" width="150" height="34" rx="6" />
+  <text class="node" x="88" y="161">planetGroup<tspan class="type">  Group</tspan></text>
+
+  <path class="edge" d="M88,174 L88,257 M88,207 L96,207 M88,257 L96,257" />
+  <rect class="box" x="96" y="190" width="150" height="34" rx="6" />
+  <text class="node" x="108" y="211">planet<tspan class="type">  Mesh</tspan></text>
+
+  <rect class="box" x="96" y="240" width="150" height="34" rx="6" />
+  <text class="node" x="108" y="261">moonGroup<tspan class="type">  Group</tspan></text>
+
+  <path class="edge" d="M108,274 L108,307 L116,307" />
+  <rect class="box-accent" x="116" y="290" width="150" height="34" rx="6" />
+  <text class="node title-accent" x="128" y="311">moon<tspan class="type">  Mesh</tspan></text>
+
+  <!-- right column: the rule that makes the tree work -->
+  <rect class="box-accent" x="300" y="40" width="324" height="58" rx="8" />
+  <text class="formula title-accent" x="462" y="66" text-anchor="middle">worldMatrix = parent.worldMatrix × localMatrix</text>
+  <text class="note" x="462" y="85" text-anchor="middle">one multiply per node, parents resolved first</text>
+  <path class="arrow" d="M462,98 L462,124" marker-end="url(#head)" />
+
+  <rect class="box" x="300" y="126" width="324" height="106" rx="8" />
+  <text class="title" x="316" y="150">moon.matrixWorld</text>
+  <text class="formula" x="316" y="174">= sun.matrix × planetGroup.matrix</text>
+  <text class="formula" x="316" y="193">  × moonGroup.matrix × moon.matrix</text>
+  <text class="note" x="316" y="215">Scene.matrixWorld is identity, so it drops out</text>
+
+  <rect class="box" x="300" y="252" width="324" height="58" rx="8" />
+  <text class="title" x="462" y="277" text-anchor="middle">localMatrix = T · R · S</text>
+  <text class="note" x="462" y="296" text-anchor="middle">updateMatrix() packs .position/.quaternion/.scale</text>
+</svg>

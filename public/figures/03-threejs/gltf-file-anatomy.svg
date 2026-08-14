@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 520" width="640" height="520" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --ext-fill: #fef3c7;
+      --ext-stroke: #d97706;
+      --ext-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --ext-fill: #422006;
+        --ext-stroke: #f59e0b;
+        --ext-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .item { font-size: 12px; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .title-ext { fill: var(--ext-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-ext { fill: var(--ext-fill); stroke: var(--ext-stroke); stroke-width: 2; }
+    .container { fill: none; stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- the two shapes the same asset ships in -->
+  <rect class="container" x="24" y="24" width="290" height="116" rx="8" />
+  <text class="title" x="169" y="46" text-anchor="middle">.gltf</text>
+  <rect class="box" x="38" y="54" width="262" height="24" rx="5" />
+  <text class="item" x="169" y="70" text-anchor="middle">model.gltf — the JSON document</text>
+  <rect class="box" x="38" y="82" width="262" height="24" rx="5" />
+  <text class="item" x="169" y="98" text-anchor="middle">model.bin — the binary buffer</text>
+  <rect class="box" x="38" y="110" width="262" height="24" rx="5" />
+  <text class="item" x="169" y="126" text-anchor="middle">textures/*.png — images</text>
+
+  <rect class="box" x="350" y="24" width="266" height="116" rx="8" />
+  <text class="title" x="483" y="48" text-anchor="middle">.glb</text>
+  <text class="note" x="483" y="72" text-anchor="middle">the same content in one binary file:</text>
+  <text class="note" x="483" y="90" text-anchor="middle">a JSON chunk, then a BIN chunk</text>
+  <text class="note" x="483" y="114" text-anchor="middle">one HTTP request instead of three</text>
+
+  <!-- the indirection chain -->
+  <text class="title" x="24" y="176">Bytes to a typed attribute: the indirection chain</text>
+  <text class="note" x="24" y="198">meshes[0].primitives[0].attributes.POSITION: 0</text>
+  <path class="arrow" d="M60,204 L60,214" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="216" width="180" height="90" rx="8" />
+  <text class="title" x="114" y="240" text-anchor="middle">accessors[0]</text>
+  <text class="note" x="114" y="258" text-anchor="middle">VEC3, FLOAT (5126)</text>
+  <text class="note" x="114" y="275" text-anchor="middle">count 24</text>
+  <text class="note" x="114" y="296" text-anchor="middle">what the bytes mean</text>
+  <path class="arrow" d="M204,261 L220,261" marker-end="url(#head)" />
+
+  <rect class="box" x="224" y="216" width="180" height="90" rx="8" />
+  <text class="title" x="314" y="240" text-anchor="middle">bufferViews[0]</text>
+  <text class="note" x="314" y="258" text-anchor="middle">buffer 0, ARRAY_BUFFER</text>
+  <text class="note" x="314" y="275" text-anchor="middle">byteOffset 0, length 288</text>
+  <text class="note" x="314" y="296" text-anchor="middle">which slice of it</text>
+  <path class="arrow" d="M404,261 L420,261" marker-end="url(#head)" />
+
+  <rect class="box" x="424" y="216" width="180" height="90" rx="8" />
+  <text class="title" x="514" y="240" text-anchor="middle">buffers[0]</text>
+  <text class="note" x="514" y="258" text-anchor="middle">byteLength 936</text>
+  <text class="note" x="514" y="275" text-anchor="middle">.bin file, .glb BIN chunk</text>
+  <text class="note" x="514" y="296" text-anchor="middle">or an inline data: URI</text>
+
+  <path class="arrow" d="M514,306 L514,322 L320,322 L320,336" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="24" y="338" width="592" height="58" rx="8" />
+  <text class="title title-accent" x="320" y="364" text-anchor="middle">THREE.BufferAttribute — geometry.attributes.position</text>
+  <text class="note" x="320" y="383" text-anchor="middle">GLTFLoader copies that byte slice straight in; no per-vertex parsing</text>
+
+  <!-- where the two compression extensions attach -->
+  <rect class="box-ext" x="24" y="420" width="290" height="82" rx="8" />
+  <text class="title title-ext" x="169" y="444" text-anchor="middle">Draco</text>
+  <text class="note" x="169" y="462" text-anchor="middle">KHR_draco_mesh_compression</text>
+  <text class="note" x="169" y="479" text-anchor="middle">on mesh.primitives[i]: one encoded</text>
+  <text class="note" x="169" y="496" text-anchor="middle">bufferView replaces the attributes</text>
+
+  <rect class="box-ext" x="326" y="420" width="290" height="82" rx="8" />
+  <text class="title title-ext" x="471" y="444" text-anchor="middle">meshopt</text>
+  <text class="note" x="471" y="462" text-anchor="middle">EXT_meshopt_compression</text>
+  <text class="note" x="471" y="479" text-anchor="middle">on bufferViews[i]: the byte stream</text>
+  <text class="note" x="471" y="496" text-anchor="middle">is expanded before an accessor reads it</text>
+</svg>

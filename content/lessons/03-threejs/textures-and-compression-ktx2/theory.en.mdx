@@ -58,6 +58,12 @@ $$
 
 A "lightweight" 400KB JPEG on disk ends up occupying over 21MB of VRAM once uploaded and mipmapped — the "small file means light" intuition from everyday web dev is actively misleading here.
 
+<Figure
+  src="/figures/03-threejs/mipmap-pyramid-ktx2.svg"
+  alt="The mipmap pyramid whose series converges to 4/3, beside a comparison of PNG/JPEG decoded to raw RGBA in VRAM versus KTX2 staying compressed"
+  caption="The number that decides your budget is not the file size on disk but the format sitting in VRAM — and only KTX2 is still compressed once the upload is done."
+/>
+
 ## Real GPU-Side Compression: KTX2 and Basis Universal
 
 Unlike PNG/JPG, KTX2 (a container format wrapping Basis Universal supercompressed data) holds data the GPU **can sample directly while still compressed** — VRAM stays compressed for the texture's entire lifetime, not just on disk. `KTX2Loader` transcodes the Basis-encoded data into whatever GPU-native compressed format the running device actually supports (BC7/BC1 on desktop, ASTC on most mobile GPUs, ETC2 on some Android hardware, PVRTC on older iOS) — one `.ktx2` file, multiple possible transcode targets picked at runtime:

@@ -1,0 +1,217 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 760" width="620" height="760" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .stage { font-size: 13px; font-weight: 600; }
+    .code { font-size: 12px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .eq { font-size: 13px; font-weight: 600; }
+    .lane { font-size: 12px; font-weight: 600; }
+    .lane-idle { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .lane-on { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .lane-off { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 3; }
+    .ink-on { fill: var(--accent-ink); }
+    .ink-off { fill: var(--muted); }
+    .ghost { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- ============ section 1: divergent ============ -->
+  <text class="title" x="40" y="22">Divergent branch: lanes in one warp disagree</text>
+  <text class="note" x="40" y="40">8 lanes drawn here; real hardware locks 32 (warp) or 64 (wavefront) lanes into lockstep.</text>
+
+  <text class="code" x="40" y="64">if (x &gt; 0.5) evaluated per lane:</text>
+
+  <!-- row A: arrival -->
+  <rect class="lane-idle" x="40" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="75" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="110" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="145" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="180" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="215" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="250" y="72" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="285" y="72" width="30" height="24" rx="4" />
+  <text class="lane" x="55" y="89" text-anchor="middle">T</text>
+  <text class="lane" x="90" y="89" text-anchor="middle">F</text>
+  <text class="lane" x="125" y="89" text-anchor="middle">T</text>
+  <text class="lane" x="160" y="89" text-anchor="middle">T</text>
+  <text class="lane" x="195" y="89" text-anchor="middle">F</text>
+  <text class="lane" x="230" y="89" text-anchor="middle">T</text>
+  <text class="lane" x="265" y="89" text-anchor="middle">T</text>
+  <text class="lane" x="300" y="89" text-anchor="middle">F</text>
+  <text class="note" x="350" y="84">5 lanes true, 3 lanes false —</text>
+  <text class="note" x="350" y="100">one instruction stream, two answers.</text>
+
+  <path class="arrow" d="M178,104 L178,124" marker-end="url(#head)" />
+
+  <!-- row B: pass 1, then branch -->
+  <text class="stage" x="40" y="142">Pass 1 — then branch</text>
+  <rect class="lane-on" x="40" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="75" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="110" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="145" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="180" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="215" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="250" y="150" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="285" y="150" width="30" height="24" rx="4" />
+  <text class="lane ink-on" x="55" y="167" text-anchor="middle">T</text>
+  <text class="lane ink-off" x="90" y="167" text-anchor="middle">F</text>
+  <text class="lane ink-on" x="125" y="167" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="160" y="167" text-anchor="middle">T</text>
+  <text class="lane ink-off" x="195" y="167" text-anchor="middle">F</text>
+  <text class="lane ink-on" x="230" y="167" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="265" y="167" text-anchor="middle">T</text>
+  <text class="lane ink-off" x="300" y="167" text-anchor="middle">F</text>
+  <text class="note" x="350" y="162">all 8 lanes issue the then code;</text>
+  <text class="note" x="350" y="178">the 3 false lanes commit nothing.</text>
+
+  <path class="arrow" d="M178,182 L178,202" marker-end="url(#head)" />
+
+  <!-- row C: pass 2, else branch -->
+  <text class="stage" x="40" y="220">Pass 2 — else branch</text>
+  <rect class="lane-off" x="40" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="75" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="110" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="145" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="180" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="215" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-off" x="250" y="228" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="285" y="228" width="30" height="24" rx="4" />
+  <text class="lane ink-off" x="55" y="245" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="90" y="245" text-anchor="middle">F</text>
+  <text class="lane ink-off" x="125" y="245" text-anchor="middle">T</text>
+  <text class="lane ink-off" x="160" y="245" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="195" y="245" text-anchor="middle">F</text>
+  <text class="lane ink-off" x="230" y="245" text-anchor="middle">T</text>
+  <text class="lane ink-off" x="265" y="245" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="300" y="245" text-anchor="middle">F</text>
+  <text class="note" x="350" y="240">same lockstep, opposite mask:</text>
+  <text class="note" x="350" y="256">the 5 true lanes are masked now.</text>
+
+  <path class="arrow" d="M178,260 L178,280" marker-end="url(#head)" />
+
+  <!-- row D: reconverge -->
+  <text class="stage" x="40" y="298">Reconverge</text>
+  <rect class="lane-on" x="40" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="75" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="110" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="145" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="180" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="215" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="250" y="306" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="285" y="306" width="30" height="24" rx="4" />
+  <text class="lane ink-on" x="55" y="323" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="90" y="323" text-anchor="middle">F</text>
+  <text class="lane ink-on" x="125" y="323" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="160" y="323" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="195" y="323" text-anchor="middle">F</text>
+  <text class="lane ink-on" x="230" y="323" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="265" y="323" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="300" y="323" text-anchor="middle">F</text>
+  <text class="note" x="350" y="323">mask cleared, whole warp active.</text>
+
+  <!-- cost bar: both sides paid -->
+  <text class="note" x="40" y="388">warp time</text>
+  <rect class="lane-on" x="110" y="374" width="150" height="20" rx="4" />
+  <rect class="lane-on" x="260" y="374" width="110" height="20" rx="4" />
+  <text class="lane ink-on" x="185" y="388" text-anchor="middle">cost(then)</text>
+  <text class="lane ink-on" x="315" y="388" text-anchor="middle">cost(else)</text>
+
+  <text class="eq" x="40" y="420">time = cost(then) + cost(else) — not the max, not just the side a lane took.</text>
+
+  <path class="rule" d="M40,446 L580,446" />
+
+  <!-- ============ section 2: non-divergent ============ -->
+  <text class="title" x="40" y="474">Non-divergent: every lane in the warp agrees</text>
+  <text class="note" x="40" y="492">The condition reads a uniform, so it holds the same value in every lane of the warp.</text>
+
+  <text class="code" x="40" y="516">if (uUseB &gt; 0.5) evaluated per lane:</text>
+
+  <!-- row A2: arrival, all true -->
+  <rect class="lane-idle" x="40" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="75" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="110" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="145" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="180" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="215" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="250" y="524" width="30" height="24" rx="4" />
+  <rect class="lane-idle" x="285" y="524" width="30" height="24" rx="4" />
+  <text class="lane" x="55" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="90" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="125" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="160" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="195" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="230" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="265" y="541" text-anchor="middle">T</text>
+  <text class="lane" x="300" y="541" text-anchor="middle">T</text>
+  <text class="note" x="350" y="541">8 of 8 lanes true — nothing to split.</text>
+
+  <path class="arrow" d="M178,556 L178,576" marker-end="url(#head)" />
+
+  <!-- row B2: single pass -->
+  <text class="stage" x="40" y="594">One pass — then branch only</text>
+  <rect class="lane-on" x="40" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="75" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="110" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="145" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="180" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="215" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="250" y="602" width="30" height="24" rx="4" />
+  <rect class="lane-on" x="285" y="602" width="30" height="24" rx="4" />
+  <text class="lane ink-on" x="55" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="90" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="125" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="160" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="195" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="230" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="265" y="619" text-anchor="middle">T</text>
+  <text class="lane ink-on" x="300" y="619" text-anchor="middle">T</text>
+  <text class="note" x="350" y="614">no lane is masked, and the else</text>
+  <text class="note" x="350" y="630">side is never fetched or issued.</text>
+
+  <!-- cost bar: one side only, ghost shows the divergent total -->
+  <text class="note" x="40" y="672">warp time</text>
+  <rect class="ghost" x="110" y="658" width="260" height="20" rx="4" />
+  <rect class="lane-on" x="110" y="658" width="150" height="20" rx="4" />
+  <text class="lane ink-on" x="185" y="672" text-anchor="middle">cost(then)</text>
+  <text class="note" x="382" y="672">dashed: the divergent total</text>
+
+  <text class="eq" x="40" y="704">time = cost(then) — the branch nobody took costs nothing at all.</text>
+
+  <!-- legend -->
+  <rect class="lane-idle" x="40" y="728" width="16" height="14" rx="3" />
+  <text class="note" x="62" y="739">lane before the branch</text>
+  <rect class="lane-on" x="204" y="728" width="16" height="14" rx="3" />
+  <text class="note" x="226" y="739">active: commits results</text>
+  <rect class="lane-off" x="376" y="728" width="16" height="14" rx="3" />
+  <text class="note" x="398" y="739">masked: runs, commits nothing</text>
+</svg>

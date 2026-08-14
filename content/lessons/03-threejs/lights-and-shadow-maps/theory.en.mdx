@@ -17,6 +17,12 @@ ground.receiveShadow = true; // 4. another mesh: this mesh READS the shadow map 
 
 The four flags are independent because they serve two different pipeline stages. `castShadow` decides whether an object gets rendered in a **secondary pass** — a full re-render of the scene from the light's point of view into a depth texture, the shadow map. `receiveShadow` decides whether an object **samples** that shadow map while computing its color in the main pass. A sphere with `castShadow = true` but a ground plane with `receiveShadow = false` will cast a perfectly correct shadow into the shadow map, yet the ground renders completely shadow-free because it never looks the shadow map up while shading.
 
+<Figure
+  src="/figures/03-threejs/shadow-map-two-pass.svg"
+  alt="The two shadow-map passes: pass 1 renders depth from the light into a depth texture, pass 2 projects each fragment into light space and compares depth, with both bias insertion points marked"
+  caption="A shadow is not a geometric projection but a depth comparison — which is why every acne or peter-panning artifact traces back to the two marked places where bias is added."
+/>
+
 ## Shadow Camera & Frustum: The Light's Field of View, Not Yours
 
 A shadow map is fundamentally a depth image captured from the light's point of view — so it needs its own camera, held at `light.shadow.camera`. For a `DirectionalLight`, that's an `OrthographicCamera` (parallel rays don't converge) with `left/right/top/bottom/near/far` defining a box — only what sits inside that box gets rendered into the shadow map. Anything outside this frustum simply doesn't exist for the shadow pass, no matter how visible it is in your main camera — the result is a shadow that vanishes abruptly right at the box's edge, a bug-looking artifact that's actually just a frustum sized too tight for the scene.

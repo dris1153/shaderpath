@@ -10,6 +10,12 @@ Mô hình tinh thần dễ gây hiểu lầm nhất khi mới viết fragment sh
 
 Điều gì xảy ra khi một `if` bên trong warp cho ra kết quả khác nhau giữa các lane — ví dụ 20 lane đi vào nhánh `true`, 12 lane còn lại đi vào nhánh `false`? Phần cứng không thể chạy hai lệnh khác nhau cùng lúc cho cùng một warp (đó là định nghĩa của lockstep), nên nó làm điều duy nhất có thể: chạy **tuần tự cả hai nhánh** cho toàn bộ warp, dùng một **execution mask** để tắt ghi kết quả ở những lane không thuộc nhánh đang chạy. Lượt 1: toàn bộ 32 lane "chạy" đoạn code của nhánh `true`, nhưng chỉ 20 lane thật sự ghi kết quả, 12 lane còn lại bị mask im lặng. Lượt 2: đảo lại cho nhánh `false`. Tổng chi phí xấp xỉ **tổng** chi phí hai nhánh cộng lại, cho toàn bộ warp — không phải trung bình, không phải "ai đi đường nào trả tiền đường đó". Đây gọi là **divergence** (phân kỳ), và nó là lý do duy nhất khiến `if` trên GPU khác hẳn `if` trên CPU.
 
+<Figure
+  src="/figures/02-glsl/warp-divergence.svg"
+  alt="Một warp 8 lane gặp một if phân kỳ: lượt 1 chạy nhánh then với các lane false bị mask, lượt 2 chạy nhánh else với các lane true bị mask, rồi warp hội tụ lại; bên dưới là warp không phân kỳ chỉ chạy đúng một nhánh"
+  caption="Hoá đơn được quyết định bởi những nhánh mà cả warp phải đi qua, không phải bởi nhánh mà từng lane muốn đi — đó chính là lý do điều kiện đồng nhất trong cả warp mới là loại rẻ."
+/>
+
 ## Khi nào if gần như miễn phí: rẽ nhánh trên điều kiện đồng nhất
 
 Nếu điều kiện của `if` giống hệt nhau cho mọi lane trong warp — ví dụ rẽ nhánh theo một biến `uniform` (cùng giá trị cho mọi pixel trong cả draw call) — thì không có gì để phân kỳ: cả warp cùng đi một nhánh, phần cứng chỉ chạy đúng nhánh đó, không tốn thêm gì so với không có `if`. Rẽ nhánh trên uniform gần như miễn phí theo đúng nghĩa đen. Vấn đề chỉ nảy sinh khi điều kiện phụ thuộc vào dữ liệu **thay đổi theo từng pixel** — toạ độ UV, kết quả một phép `distance`, một giá trị noise — vì khi đó các lane lân cận trong cùng một warp gần như chắc chắn sẽ bất đồng tại một số biên nào đó của điều kiện.

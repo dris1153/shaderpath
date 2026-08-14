@@ -6,6 +6,12 @@ GLSL ES vertex shaders come with a built-in default precision for `float` (`high
 
 The three precision qualifiers aren't a vague "faster but less accurate" dial — the GLSL ES 3.00 spec (Table 4.7) pins down two hard FLOOR numbers every driver must meet: relative precision (equivalent to a mantissa bit count) and representable range (equivalent to an exponent bit count). Real hardware is usually better than this floor, never worse.
 
+<Figure
+  src="/figures/02-glsl/float-precision-anatomy.svg"
+  alt="Bit strips for a 32-bit float and a 16-bit half float drawn to the same scale, with the sign, exponent and mantissa field widths marked, above a table of the minimum range and precision GLSL ES 3.00 requires for highp, mediump and lowp"
+  caption="Range and precision are two separate budgets bought with two separate fields, so 'mediump is half of highp' is the wrong mental model — the mantissa loses more than half its bits while the exponent gives up only three."
+/>
+
 ### highp: Close to a Real 32-Bit Float, at Least 16 Mantissa Bits
 
 `highp` guarantees a range of at least $[-2^{62}, 2^{62}]$ and a relative precision of at least $2^{-16}$ (mantissa $\geq 16$ bits) — lower than genuine IEEE 754 single precision's floor (a 23-bit mantissa), but in practice almost every GPU shipping today, mobile included, implements `highp` as a full 32-bit float.

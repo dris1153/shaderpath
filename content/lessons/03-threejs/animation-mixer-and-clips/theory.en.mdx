@@ -4,6 +4,12 @@ Animation in Three.js isn't a single API but three separate layers, each respons
 
 A useful analogy: an AnimationClip is like a music file on disk — just data. An AnimationMixer is like a playback device wired into one room (the root object). An AnimationAction is like a play button plus a volume fader for one specific playthrough — the same device can "play" several tracks at once at different volumes, which is exactly the crossfade mechanism covered later. The three layers stay separate for practical reasons: one clip ("walk") can replay on any root that shares the same property structure, and one root can play several clips at once to crossfade between them — folding all three responsibilities into a single object would rule out both.
 
+<Figure
+  src="/figures/03-threejs/animation-mixer-graph.svg"
+  alt="The animation object graph: an AnimationMixer bound to one root Object3D, its AnimationActions, AnimationClips and KeyframeTrack arrays, plus a crossfade chart where two weights sum to 1"
+  caption="Only the AnimationAction carries play state — so a crossfade never touches the clips at all, it is just two weight numbers summing to 1 on the same root."
+/>
+
 ## AnimationClip: Pure Keyframe Data
 
 An `AnimationClip` has three main fields: `name`, `duration` (seconds), and `tracks` — an array of `KeyframeTrack`. Each track targets exactly one property on exactly one object, addressed by a string path (e.g. `".position"` or `"Bone_Head.quaternion"`), plus a `times` array (seconds, increasing) and a flat `values` array — each keyframe occupying exactly as many components as that property needs: 3 for a vector3, 4 for a quaternion. Because a clip holds no reference to a real object — only a string path — the same clip applies to any object whose property structure matches that path, which is why a "walk" clip exported from one rig plays back correctly on a different rig as long as the bone names match.

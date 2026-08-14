@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 466" width="640" height="466" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .formula { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .mip { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- the mip chain, drawn to scale on a shared baseline -->
+  <text class="title" x="24" y="26">The mip pyramid</text>
+
+  <rect class="mip" x="40" y="76" width="104" height="104" rx="3" />
+  <rect class="mip" x="164" y="128" width="52" height="52" rx="3" />
+  <rect class="mip" x="236" y="154" width="26" height="26" rx="2" />
+  <rect class="mip" x="282" y="167" width="13" height="13" rx="1" />
+  <rect class="mip" x="315" y="173" width="7" height="7" />
+  <text class="note" x="338" y="180">…</text>
+
+  <text class="note" x="92" y="198" text-anchor="middle">2048²</text>
+  <text class="note" x="190" y="198" text-anchor="middle">1024²</text>
+  <text class="note" x="249" y="198" text-anchor="middle">512²</text>
+  <text class="note" x="24" y="222">each level halves the width, so it holds a quarter of the area</text>
+
+  <rect class="box-accent" x="400" y="76" width="216" height="104" rx="8" />
+  <text class="formula title-accent" x="508" y="106" text-anchor="middle">1 + 1/4 + 1/16 + … = 4/3</text>
+  <text class="note" x="508" y="126" text-anchor="middle">the whole chain adds +33%</text>
+  <text class="note" x="508" y="143" text-anchor="middle">over level 0 alone</text>
+  <text class="note" x="508" y="164" text-anchor="middle">2048² RGBA8: 16 MB -&gt; 21.3 MB</text>
+
+  <!-- what the two encodings leave in VRAM -->
+  <text class="title" x="24" y="258">What actually sits in VRAM</text>
+
+  <rect class="box" x="24" y="274" width="140" height="70" rx="8" />
+  <text class="title" x="94" y="302" text-anchor="middle">PNG / JPEG</text>
+  <text class="note" x="94" y="320" text-anchor="middle">400 KB on disk</text>
+  <path class="arrow" d="M164,309 L312,309" marker-end="url(#head)" />
+  <text class="note" x="240" y="301" text-anchor="middle">decoded on load</text>
+
+  <rect class="box" x="316" y="274" width="300" height="70" rx="8" />
+  <text class="title" x="466" y="298" text-anchor="middle">Raw RGBA8 in VRAM</text>
+  <text class="note" x="466" y="316" text-anchor="middle">32 bits/pixel — the file's compression is gone</text>
+  <text class="note" x="466" y="333" text-anchor="middle">2048² with mips ≈ 21.3 MB</text>
+
+  <rect class="box" x="24" y="360" width="140" height="70" rx="8" />
+  <text class="title" x="94" y="388" text-anchor="middle">KTX2 / BasisU</text>
+  <text class="note" x="94" y="406" text-anchor="middle">one file, any GPU</text>
+  <path class="arrow" d="M164,395 L312,395" marker-end="url(#head)" />
+  <text class="note" x="240" y="387" text-anchor="middle">transcoded on load</text>
+
+  <rect class="box-accent" x="316" y="360" width="300" height="70" rx="8" />
+  <text class="title title-accent" x="466" y="384" text-anchor="middle">BCn / ASTC / ETC2 in VRAM</text>
+  <text class="note" x="466" y="402" text-anchor="middle">4–8 bits/pixel, still compressed</text>
+  <text class="note" x="466" y="419" text-anchor="middle">the sampler decodes on each fetch</text>
+
+  <text class="note" x="24" y="454">KTX2Loader.detectSupport(renderer) picks the target format for the device</text>
+</svg>
