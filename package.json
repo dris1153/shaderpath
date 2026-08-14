@@ -12,6 +12,7 @@
     "db:generate": "drizzle-kit generate",
     "gen:registry": "tsx scripts/gen-lesson-registry.ts",
     "gen:shots": "tsx scripts/render-reference-shots.ts",
+    "audit:math": "tsx scripts/audit-math-width.ts",
     "lint:content": "tsx scripts/lint-content.ts",
     "check:css": "tsx scripts/check-no-custom-css.ts",
     "check:ts-strict": "tsx scripts/check-strict-ts.ts",
