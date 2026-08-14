@@ -1,0 +1,56 @@
+## Một cảnh, nhiều thiết bị: thiết kế theo tier, không giảm đều
+
+Bản năng đầu tiên khi nghĩ về "chạy tốt trên máy yếu" thường là: giữ nguyên mọi thứ, chỉ giảm resolution hoặc tắt vài effect khi máy chậm. Cách này cho ra một phiên bản trông như bị cắt xén — thiếu ánh sáng, thiếu hiệu ứng, rõ ràng là "bản rẻ tiền" của bản gốc. Cách đúng ngược lại: **thiết kế cái NHÌN ở từng tier trước**, rồi mới viết code chọn tier lúc runtime. Tier thấp không phải "tier cao nhưng thiếu vài thứ" — nó là một bản thiết kế riêng, cố ý đơn giản hoá vật liệu và hiệu ứng theo hướng vẫn đẹp ở đúng tầm của nó. Một `MeshBasicMaterial` phẳng, màu bão hoà, ít chi tiết thường trông "có chủ đích" hơn nhiều so với `MeshStandardMaterial` bị thiếu ánh sáng vì tắt bớt light để tiết kiệm — cùng là giảm chi phí GPU, nhưng một cái là quyết định thẩm mỹ, cái kia là tai nạn.
+
+## Benchmark ngắn: tín hiệu trung thực nhất
+
+Cách đáng tin nhất để biết một thiết bị thuộc tier nào không phải đoán qua thông số phần cứng — mà là **đo trực tiếp**: render vài chục frame với đúng loại tải mà cảnh thật sẽ có (đúng số particle, đúng vật liệu), đọc frame-time EMA (exponential moving average) của những frame đó, rồi quyết định tier xuất phát dựa trên số đo thật. Chạy bước này ngay trong màn hình loading — người dùng đang chờ dữ liệu tải, một vài trăm mili-giây "âm thầm" benchmark không tốn thêm thời gian cảm nhận được. Không có heuristic phần cứng nào trung thực bằng cách này, vì nó đo đúng cái quan trọng: cảnh CỦA BẠN chạy nhanh cỡ nào trên context WebGL THẬT của máy đó, chứ không phải suy luận gián tiếp từ tên GPU hay dung lượng RAM.
+
+## Heuristics phần cứng: hữu ích nhưng có giới hạn thật
+
+Khi không có thời gian benchmark (hoặc muốn có ước lượng sớm hơn), có vài API tĩnh đọc nhanh, nhưng mỗi cái đều có giới hạn cần biết rõ:
+
+- **`WEBGL_debug_renderer_info`** trả về chuỗi GPU thật (`UNMASKED_RENDERER_WEBGL`) — hữu ích để nhận diện GPU cụ thể, nhưng đây cũng là một vector fingerprinting nên các trình duyệt hiện đại đã giảm độ chi tiết của chuỗi này, và Firefox tắt hẳn extension này khi bật `privacy.resistFingerprinting`. Đừng xây logic quan trọng phụ thuộc hoàn toàn vào chuỗi này còn nguyên vẹn.
+- **`navigator.deviceMemory`** trả về RAM ước lượng theo GB, cố ý làm tròn về luỹ thừa của 2 gần nhất (0.5, 1, 2, 4, 8...) để giảm rủi ro fingerprinting — và chỉ tồn tại trên trình duyệt nền Chromium; Safari và Firefox không triển khai API này.
+- **`navigator.hardwareConcurrency`** trả về số lõi logic (có thể gồm hyperthreading), được hỗ trợ rộng hơn nhiều (Baseline, hầu hết trình duyệt hiện đại) — nhưng trình duyệt có quyền báo số THẤP hơn số lõi thật, và số lõi logic không nói gì về xung nhịp hay hiệu năng từng lõi.
+- **`devicePixelRatio`** không phải tín hiệu năng lực — nó là một HỆ SỐ TẢI. DPR 3 trên một điện thoại flagship nghĩa là render gấp 9 lần số pixel so với DPR 1 ở cùng kích thước màn hình logic; dùng DPR để nhân thêm vào ước lượng tải, không dùng nó để suy luận GPU "mạnh" hay "yếu".
+
+## Thiết kế 3 tier: một config object, không rải if/else
+
+Một bảng tier thực dụng cho một cảnh 3D vừa phải:
+
+| Tier | DPR | Postfx | Particle | Vật liệu |
+| --- | --- | --- | --- | --- |
+| High | full (tới 2) | tất cả pass | 65.000 | lit đầy đủ |
+| Medium | giới hạn 1.5 | chỉ bloom | 16.000 | lit đầy đủ |
+| Low | 1 | không postfx | 4.000 | đơn giản (unlit) |
+
+Chi tiết bảng này không quan trọng bằng CÁCH tổ chức code: mọi tham số nằm trong **một object cấu hình** (`{ dpr, particleCount, postfxPasses, material }`), và mọi nơi trong code TIÊU THỤ object đó — không có `if (tier === "low") { ... } else if (tier === "medium") { ... }` rải rác khắp scene. Khi cần thêm tier thứ 4, hoặc chỉnh một con số, chỉ sửa MỘT chỗ. Demo bên dưới dựng đúng pattern này: một object tra cứu theo tier, mọi thành phần scene chỉ đọc config, không tự quyết định gì.
+
+## Thích nghi khi đang chạy: watchdog, EMA và hysteresis
+
+Benchmark lúc khởi động chỉ cho biết trạng thái BAN ĐẦU — một cảnh có thể nặng dần lên khi người chơi vào khu vực nhiều hiệu ứng hơn, hoặc máy nóng lên và GPU tự throttle xung nhịp. Cần một watchdog chạy suốt: giữ một EMA của frame time,
+
+$$
+\text{ema}_t = \alpha \cdot \Delta t + (1-\alpha)\cdot \text{ema}_{t-1}
+$$
+
+với $\alpha$ nhỏ (ví dụ $0.1$) để mượt hoá nhiễu từng frame đơn lẻ. Nếu `ema` vượt ngưỡng xấu liên tục qua vài lần lấy mẫu (không phải một lần — một khung hình bị giật do GC hay tải asset không nên làm rớt tier ngay), hạ một tier. Nếu `ema` tốt hơn ngưỡng an toàn liên tục đủ lâu, có thể nâng lại một tier. Đây chính là **thermostat pattern**: hai ngưỡng khác nhau (ngưỡng hạ cao hơn ngưỡng nâng) cộng với yêu cầu giữ liên tục qua nhiều mẫu — gọi là **hysteresis** — để tránh flip-flop qua lại giữa hai tier mỗi vài giây, gây giật hình còn tệ hơn cả việc giữ nguyên một tier hơi thấp. Drei — dependency có sẵn của platform này — có sẵn component `PerformanceMonitor` triển khai đúng ý tưởng này (tham số `bounds`, `flipflops`, callback `onIncline`/`onDecline`/`onFallback`); demo bên dưới tự dựng lại watchdog thủ công để thấy rõ cơ chế, nhưng trong dự án thật, `PerformanceMonitor` là lựa chọn hợp lý thay vì viết lại từ đầu.
+
+## R3F: những đòn bẩy thật để thi hành một tier
+
+Ba chỗ trong R3F trực tiếp thi hành config: prop `dpr` của `<Canvas>` (nhận số hoặc khoảng `[min, max]`, chính là nơi "DPR giới hạn 1.5" của tier medium trở thành sự thật); mount/unmount có điều kiện cho các component effect nặng (đừng chỉ set `enabled={false}` nếu component vẫn tốn chi phí dựng cây/uniform khi tắt — bỏ hẳn khỏi cây JSX nếu tier không cần); và prop số lượng particle truyền thẳng vào component sinh instance, chứ không phải một mảng cố định rồi ẩn bớt bằng `visible={false}` (instance ẩn vẫn tốn draw call).
+
+## Tôn trọng lựa chọn thủ công của người dùng
+
+"Auto" hữu ích, nhưng không nên là lựa chọn DUY NHẤT. Một số người dùng biết rõ máy mình và muốn ép tier cao dù benchmark nói ngược lại (ví dụ đang cắm sạc, sẵn sàng đánh đổi pin lấy chất lượng); một số khác muốn ép tier thấp để tiết kiệm pin trên máy mạnh. Một toggle nhỏ trong settings — không cần nổi bật — để chọn tier thủ công, và khi người dùng đã chọn thủ công, watchdog PHẢI dừng tự ý đổi tier, dù frame time có tệ tới đâu. Đây không phải chi tiết UX phụ — nó là hợp đồng: benchmark và watchdog chỉ nên can thiệp khi người dùng chưa can thiệp.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dựng adaptive quality:
+
+1. **Cho watchdog đổi tier ngay sau MỘT mẫu frame-time xấu.** Một lần giật hình do garbage collection hay asset đang tải không phản ánh hiệu năng thật của thiết bị — thiếu hysteresis khiến tier nhảy lên xuống liên tục, trải nghiệm còn tệ hơn giữ nguyên một tier hơi thấp suốt.
+2. **Tin `navigator.deviceMemory`/chuỗi GPU debug là tuyệt đối, quên rằng chúng có thể vắng mặt hoặc bị làm mờ.** Code phụ thuộc cứng vào các API này mà không có fallback (ví dụ mặc định về medium khi API trả `undefined`) sẽ crash hoặc chọn sai tier trên chính những trình duyệt tôn trọng privacy nhất.
+3. **Giữ mọi thứ ở tier cao rồi chỉ ẩn bằng `visible={false}` thay vì thật sự KHÔNG dựng nó.** Một mesh ẩn vẫn có trong scene graph, vẫn được traverse, và tuỳ trường hợp vẫn phát sinh draw call — tier thấp phải nghĩa là component đó không hề tồn tại trong cây React, không phải "có nhưng vô hình".
+
+</Callout>

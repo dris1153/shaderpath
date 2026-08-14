@@ -1,0 +1,49 @@
+## Hai thế giới GPU: immediate-mode và tile-based (deferred)
+
+Một GPU desktop kiểu **immediate-mode** làm đúng như tên gọi: mỗi draw call vẽ trực tiếp vào framebuffer nằm trong VRAM ngay khi rasterizer sinh ra fragment — không có bước "xem trước toàn cảnh" nào. Vertex shader chạy, rasterize, fragment shader chạy, kết quả ghi (hoặc blend) thẳng vào bộ nhớ khung hình. Đây là mô hình phần lớn code WebGL/Three.js viết ra ngầm giả định, vì hầu hết demo online đo trên GPU desktop.
+
+GPU mobile (Mali của ARM, PowerVR của Imagination, Adreno của Qualcomm) không hoạt động vậy. Chúng dùng kiến trúc **tile-based (deferred) rendering**: màn hình chia thành các ô nhỏ — Mali dùng tile $16\times16$ pixel theo tài liệu chính thức của ARM, các hãng khác dùng kích thước tương tự (nguyên tắc giống nhau dù con số mỗi thế hệ chip có thể khác). Giai đoạn đầu (tiling/binning) không vẽ gì cả — nó duyệt hình học của frame, tính tam giác nào rơi vào tile nào, ghi vào danh sách primitive riêng cho từng tile. Sau đó GPU xử lý **từng tile một, trọn vẹn**: color/depth/stencil buffer của tile đó sống hoàn toàn trong bộ nhớ on-chip cực nhanh suốt quá trình vẽ; chỉ khi tile xong, kết quả mới ghi **một lần duy nhất** ra framebuffer thật trong bộ nhớ ngoài.
+
+## Vì sao tile tồn tại: bộ nhớ ngoài là kẻ giết pin
+
+Kiến trúc này tồn tại không vì nó "hay" về lý thuyết, mà vì di động sống chết bằng pin. Đọc/ghi bộ nhớ ngoài (DRAM off-chip) tốn năng lượng hơn nhiều lần so với đọc/ghi cùng lượng dữ liệu trên SRAM on-chip — điều tài liệu tối ưu hoá của ARM nhắc đi nhắc lại. Một renderer immediate-mode có thể đọc-sửa-ghi framebuffer VRAM hàng chục lần mỗi pixel (mỗi lớp blend là một round-trip) mà chẳng ai để ý trên desktop, vì GPU desktop có băng thông khổng lồ và cắm điện trực tiếp. Trên di động, mỗi round-trip ra bộ nhớ ngoài là nhiệt và pin thật — động lực khiến ARM, Imagination và Qualcomm cùng hội tụ về kiến trúc tile dù thiết kế nội bộ khác nhau.
+
+## Overdraw: cái giá của mỗi lớp pixel chồng lên nhau
+
+**Overdraw** là số lần một pixel bị vẽ trong cùng một frame — bị 5 tam giác che phủ (dù chỉ 1 cái hiện ra) có overdraw bằng 5. Trên desktop, GPU mạnh và có nhiều mẹo ẩn giấu chi phí này nên overdraw vừa phải gần như vô hình trên đồng hồ FPS. Trên tile GPU, overdraw không đốt băng thông bộ nhớ NGOÀI kiểu desktop, vì mỗi tile vẫn nằm gọn on-chip trong lúc vẽ — nhưng vẫn đốt trọn ALU và fillrate của shader core, và với transparency (trọng tâm bài này) nó còn đốt cả bandwidth thật, vì buộc đọc-ghi ngay trong tile theo đúng kiểu immediate-mode.
+
+## Opaque có early-Z/HSR giúp — transparency thì không
+
+Với hình học **opaque**, cả hai họ GPU tile lớn đều loại fragment bị che trước khi chạy fragment shader. Imagination gọi cơ chế của họ là **Hidden Surface Removal (HSR)** — theo tài liệu kiến trúc PowerVR, HSR đủ hiệu quả để loại bỏ HOÀN TOÀN overdraw trên cảnh opaque thuần tuý, vì toàn bộ hình học trong tile đã biết trước khi tô màu bắt đầu (đúng nghĩa "deferred"). ARM Mali dùng **early-ZS** kết hợp **Forward Pixel Kill (FPK)** — FPK loại thêm fragment bị che mà early-ZS bỏ sót, chạy sau early-ZS nhưng trước khi shader thật sự thực thi. Tài liệu ARM GPU Best Practices cũng nói rõ giới hạn của FPK: thường thất bại với tam giác quá nhỏ, shader truy cập framebuffer trực tiếp, hoặc depth test bị trì hoãn (late ZS) — early-ZS vẫn luôn tiết kiệm năng lượng hơn.
+
+Với **transparency**, toàn bộ cơ chế trên vô hiệu. Blending phụ thuộc thứ tự vẽ: màu cuối phụ thuộc lớp nào trước, lớp nào sau, nên GPU không thể "bỏ qua" lớp bị che vì lớp phía sau vẫn góp phần vào kết quả blend. Mọi lớp transparent chồng lên đều BẮT BUỘC chạy fragment shader, sắp theo thứ tự xa-trước-gần-sau. Chồng 5 mặt phẳng full-screen bán trong suốt nghĩa là GPU tô cùng pixel 5 lần — không có cách nào lách, dù desktop hay tile GPU đắt nhất. Claim "sort" này không cần tin suông: Three.js — dependency của chính platform này — sắp render list opaque bằng `painterSortStable` (ưu tiên `material.id` trước, `z` chỉ là tiêu chí phụ) và transparent bằng `reversePainterSortStable` (`b.z - a.z`, xa trước gần sau); đọc trực tiếp `node_modules/three/src/renderers/webgl/WebGLRenderLists.js` để tự kiểm tra.
+
+## Đo overdraw: additive-blend visualization
+
+Không API WebGL nào trả thẳng "overdraw factor" — nhưng có kỹ thuật kinh điển để NHÌN THẤY nó: vẽ lại toàn cảnh với mọi vật liệu thay bằng màu trắng, alpha thấp cố định, blending **additive** thay vì blend thường. Additive cộng dồn màu: một pixel vẽ đè 1 lần ra xám nhạt, đè 5 lần ra gần trắng — độ sáng cuối chính là bản đồ nhiệt overdraw, đọc bằng mắt không cần công cụ ngoài. Đây đúng là cách chế độ Overdraw trong Scene view của Unity hoạt động; demo bên dưới dựng lại kỹ thuật này bằng tay.
+
+## Hai hệ quả ít ai ngờ
+
+Vì nội dung một tile chỉ tồn tại on-chip tới khi "resolve" (ghi ra ngoài), thao tác nào buộc GPU đọc lại framebuffer NGAY GIỮA lúc đang vẽ vào chính nó đều phá vỡ tối ưu — GPU phải flush tile sớm để có dữ liệu mà đọc. Quy tắc nằm lòng: đừng đọc cái bạn đang ghi. Ping-pong giữa hai render target trong postprocessing (pass N render vào target A, pass N+1 dùng A làm input và ghi vào B) hoàn toàn ổn, vì mỗi pass là một lần resolve trọn vẹn. Nhưng gọi `gl.readPixels()` hay `renderer.readRenderTargetPixels()` ngay khi render target đó vẫn đang là target đang vẽ thì có.
+
+Hệ quả tích cực hiếm hoi: MSAA gần như miễn phí trên tile GPU, vì mọi sample đã nằm sẵn trong tile memory on-chip nên resolve diễn ra ngay tại chỗ — không cần buffer multisample riêng cỡ gấp N lần trong VRAM, không cần blit resolve đọc-ghi toàn khung hình như desktop.
+
+## Ba cách giảm overdraw thực chiến
+
+1. **Sắp opaque front-to-back**: nếu engine không tự làm triệt để (Three.js chỉ dùng `z` làm tiêu chí phụ SAU `material.id`), tự set `renderOrder` cho vật lớn, gần camera để chúng vẽ trước, giúp early-Z/HSR loại nhiều fragment phía sau hơn.
+2. **Cắt gọn diện tích quad trong suốt**: một particle system dùng quad $96\times96$px cho sprite tròn $20$px tốn diện tích fragment gấp $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ so với quad khít bounding box — mọi pixel trong suốt "thừa" vẫn chạy shader và blend, dù alpha cuối bằng 0.
+3. **Cân nhắc alphaTest/discard**: `discard` giả lập opaque nghe hấp dẫn nhưng có đánh đổi — GPU không biết trước fragment sẽ bị discard cho tới khi shader ĐÃ chạy xong, nên early-Z/HSR không loại được nó trước khi tô màu. Vẫn rẻ hơn true alpha blending, nhưng không rẻ như opaque thật.
+
+## Kết nối về Track 10 và bài tiếp theo
+
+Track 10 đã nói fillrate của một chuỗi postprocessing tăng theo số pass; bài này thêm một lớp: trên tile GPU, mỗi pass ping-pong giữa hai render target buộc tile resolve rồi tái tạo lại, nên số pass ảnh hưởng mobile nặng hơn con số fillrate desktop gợi ý — lý do thực dụng để cắt bớt pass trên thiết bị yếu, chủ đề chính của bài **Adaptive Quality Tiers** ngay sau đây.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi nghĩ về overdraw trên mobile:
+
+1. **Coi `discard`/alphaTest ngang hàng với early-Z thật.** GPU chỉ biết một fragment "chết" SAU khi shader đã chạy tới lệnh discard — hidden-surface removal không thể loại nó trước khi tô màu như opaque thật, nên `discard` tiết kiệm băng thông ghi/blend nhưng không tiết kiệm chi phí chạy shader.
+2. **Tin rằng Three.js luôn vẽ opaque theo đúng thứ tự front-to-back tuyệt đối.** `painterSortStable` ưu tiên gộp theo `material.id` TRƯỚC, `z` chỉ là tiêu chí phụ — một cảnh có hàng trăm mesh dùng chung material nhưng nằm ở độ sâu rất khác nhau không được đảm bảo thứ tự front-to-back, phải tự set `renderOrder` nếu cần chắc chắn.
+3. **Gọi `readPixels`/đọc render target ngay giữa lúc đang vẽ vào nó rồi chỉ test trên desktop.** Desktop devtools không thấy gì bất thường vì immediate-mode không có khái niệm "tile flush" — nhưng trên mobile, thao tác này buộc GPU resolve tile sớm, gây GPU stall lớn mà chỉ profiler mobile thật (hoặc throttle CPU/GPU trong Chrome DevTools) mới lộ ra.
+
+</Callout>

@@ -1,0 +1,11 @@
+## Mục tiêu
+
+Mini-build đầu tiên của Track 12: không lý thuyết mới, một cảnh R3F **cố tình dựng chậm** với đúng 3 bottleneck cài sẵn — bạn phải dùng profiler để tìm ra chúng, không được đoán. Đây là bài kiểm tra thật cho hai bài trước: đo trước khi tối ưu (`profiling-webgl-tools`) và draw call/batching/instancing (`draw-calls-batching-instancing`).
+
+## Yêu cầu
+
+`starterCode` trong phần Bài tập bên dưới dựng sẵn một scene với 3 vấn đề cùng lúc: 800 mesh riêng lẻ mỗi cái tự `.clone()` material của nó, một khối "phập phồng" build lại toàn bộ geometry mỗi frame, và một ánh sáng phụ (fill light) mang shadow map 4096×4096 dù gần như không đóng góp gì cho ảnh cuối. Công cụ đo — `renderer.info.render.calls`, `renderer.info.memory`, và một đồng hồ frame-time EMA — đã có sẵn và chạy đúng trong `PerfMeter`, không cần viết lại. Việc của bạn: đọc số đo, xác định đúng cả 3 bottleneck bằng bằng chứng chứ không phải đọc code rồi đoán, sửa từng cái bằng kỹ thuật đã học, và viết bảng before/after ngay trong comment ở cuối file.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở `solutionCode` — đặc biệt: draw call giảm từ khoảng 800 xuống còn khoảng 5, không còn phép cấp phát nào lặp lại bên trong `useFrame`, và hình ảnh cuối cùng (vị trí, màu sắc, hiệu ứng) không đổi so với trước khi sửa.

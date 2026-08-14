@@ -596,6 +596,58 @@ export const LESSON_REGISTRY: Partial<
     vi: () => import("./lessons/11-pbr/why-assets-look-like-plastic/theory.vi.mdx"),
     en: () => import("./lessons/11-pbr/why-assets-look-like-plastic/theory.en.mdx"),
   },
+  "adaptive-quality-tiers": {
+    vi: () => import("./lessons/12-performance/adaptive-quality-tiers/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/adaptive-quality-tiers/theory.en.mdx"),
+  },
+  "asset-pipeline-draco-ktx2": {
+    vi: () => import("./lessons/12-performance/asset-pipeline-draco-ktx2/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/asset-pipeline-draco-ktx2/theory.en.mdx"),
+  },
+  "checkpoint-asset-diet": {
+    vi: () => import("./lessons/12-performance/checkpoint-asset-diet/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/checkpoint-asset-diet/theory.en.mdx"),
+  },
+  "checkpoint-mobile-ready-scene": {
+    vi: () => import("./lessons/12-performance/checkpoint-mobile-ready-scene/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/checkpoint-mobile-ready-scene/theory.en.mdx"),
+  },
+  "checkpoint-profile-and-fix": {
+    vi: () => import("./lessons/12-performance/checkpoint-profile-and-fix/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/checkpoint-profile-and-fix/theory.en.mdx"),
+  },
+  "culling-and-lod": {
+    vi: () => import("./lessons/12-performance/culling-and-lod/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/culling-and-lod/theory.en.mdx"),
+  },
+  "dispose-and-leak-hunting": {
+    vi: () => import("./lessons/12-performance/dispose-and-leak-hunting/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/dispose-and-leak-hunting/theory.en.mdx"),
+  },
+  "draw-calls-batching-instancing": {
+    vi: () => import("./lessons/12-performance/draw-calls-batching-instancing/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/draw-calls-batching-instancing/theory.en.mdx"),
+  },
+  "mobile-tile-gpus-and-overdraw": {
+    vi: () => import("./lessons/12-performance/mobile-tile-gpus-and-overdraw/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/mobile-tile-gpus-and-overdraw/theory.en.mdx"),
+  },
+  "nextjs-ssr-hydration-canvas": {
+    vi: () => import("./lessons/12-performance/nextjs-ssr-hydration-canvas/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/nextjs-ssr-hydration-canvas/theory.en.mdx"),
+  },
+  "profiling-webgl-tools": {
+    vi: () => import("./lessons/12-performance/profiling-webgl-tools/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/profiling-webgl-tools/theory.en.mdx"),
+  },
+  "shader-compilation-stalls": {
+    vi: () => import("./lessons/12-performance/shader-compilation-stalls/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/shader-compilation-stalls/theory.en.mdx"),
+  },
+  "texture-memory-budget": {
+    vi: () => import("./lessons/12-performance/texture-memory-budget/theory.vi.mdx"),
+    en: () => import("./lessons/12-performance/texture-memory-budget/theory.en.mdx"),
+  },
 };
 
 export const REFERENCES_REGISTRY: Partial<
@@ -715,6 +767,16 @@ export const REFERENCES_REGISTRY: Partial<
   "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/references"),
   "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/references"),
   "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/references"),
+  "adaptive-quality-tiers": () => import("./lessons/12-performance/adaptive-quality-tiers/references"),
+  "asset-pipeline-draco-ktx2": () => import("./lessons/12-performance/asset-pipeline-draco-ktx2/references"),
+  "culling-and-lod": () => import("./lessons/12-performance/culling-and-lod/references"),
+  "dispose-and-leak-hunting": () => import("./lessons/12-performance/dispose-and-leak-hunting/references"),
+  "draw-calls-batching-instancing": () => import("./lessons/12-performance/draw-calls-batching-instancing/references"),
+  "mobile-tile-gpus-and-overdraw": () => import("./lessons/12-performance/mobile-tile-gpus-and-overdraw/references"),
+  "nextjs-ssr-hydration-canvas": () => import("./lessons/12-performance/nextjs-ssr-hydration-canvas/references"),
+  "profiling-webgl-tools": () => import("./lessons/12-performance/profiling-webgl-tools/references"),
+  "shader-compilation-stalls": () => import("./lessons/12-performance/shader-compilation-stalls/references"),
+  "texture-memory-budget": () => import("./lessons/12-performance/texture-memory-budget/references"),
 };
 
 export const TOC_REGISTRY: Partial<
@@ -1300,6 +1362,58 @@ export const TOC_REGISTRY: Partial<
     vi: [{"id":"vì-sao-nhựa-là-từ-đúng-để-mô-tả-lỗi-pbr","text":"Vì sao \"nhựa\" là từ đúng để mô tả lỗi PBR","depth":2},{"id":"12-roughness-quá-thấp-và-đều-albedo-sai-giá-trị","text":"1–2. Roughness quá thấp và đều, albedo sai giá trị","depth":2},{"id":"3-fresnel-yếu-hoặc-sai-vì-dùng-metalness-không-đúng-cách","text":"3. Fresnel yếu hoặc sai vì dùng metalness không đúng cách","depth":2},{"id":"4-ibl-vắng-mặt-hoặc-lệch-exposure-nguồn-sáng-chết","text":"4. IBL vắng mặt hoặc lệch exposure: nguồn sáng \"chết\"","depth":2},{"id":"5-thiếu-aocontact-shadow-vật-thể-trông-lơ-lửng","text":"5. Thiếu AO/contact shadow: vật thể trông lơ lửng","depth":2},{"id":"6-normal-map-sai-scale-hoặc-thiếu-hẳn","text":"6. Normal map sai scale hoặc thiếu hẳn","depth":2},{"id":"7-tone-mapping-tắt-output-tuyến-tính-trông-bạc-màu","text":"7. Tone mapping tắt: output tuyến tính trông \"bạc màu\"","depth":2},{"id":"thứ-tự-chẩn-đoán-ánh-sáng-trước-vật-liệu-sau-map-cuối-cùng","text":"Thứ tự chẩn đoán: ánh sáng trước, vật liệu sau, map cuối cùng","depth":2}],
     en: [{"id":"why-plastic-is-the-right-word-for-this-pbr-failure","text":"Why \"Plastic\" Is the Right Word for This PBR Failure","depth":2},{"id":"12-roughness-too-low-and-uniform-albedo-at-the-wrong-value","text":"1–2. Roughness Too Low and Uniform, Albedo at the Wrong Value","depth":2},{"id":"3-weak-or-wrong-fresnel-from-misusing-metalness","text":"3. Weak or Wrong Fresnel From Misusing Metalness","depth":2},{"id":"4-ibl-absent-or-exposure-mismatched-a-dead-light-source","text":"4. IBL Absent or Exposure-Mismatched: a \"Dead\" Light Source","depth":2},{"id":"5-missing-aocontact-shadows-the-floating-look","text":"5. Missing AO/Contact Shadows: the Floating Look","depth":2},{"id":"6-normal-map-at-the-wrong-scale-or-missing-entirely","text":"6. Normal Map at the Wrong Scale or Missing Entirely","depth":2},{"id":"7-tone-mapping-off-linear-output-reads-washed-out","text":"7. Tone Mapping Off: Linear Output Reads \"Washed Out\"","depth":2},{"id":"triage-order-lighting-first-then-materials-then-maps","text":"Triage Order: Lighting First, Then Materials, Then Maps","depth":2}],
   },
+  "adaptive-quality-tiers": {
+    vi: [{"id":"một-cảnh-nhiều-thiết-bị-thiết-kế-theo-tier-không-giảm-đều","text":"Một cảnh, nhiều thiết bị: thiết kế theo tier, không giảm đều","depth":2},{"id":"benchmark-ngắn-tín-hiệu-trung-thực-nhất","text":"Benchmark ngắn: tín hiệu trung thực nhất","depth":2},{"id":"heuristics-phần-cứng-hữu-ích-nhưng-có-giới-hạn-thật","text":"Heuristics phần cứng: hữu ích nhưng có giới hạn thật","depth":2},{"id":"thiết-kế-3-tier-một-config-object-không-rải-ifelse","text":"Thiết kế 3 tier: một config object, không rải if/else","depth":2},{"id":"thích-nghi-khi-đang-chạy-watchdog-ema-và-hysteresis","text":"Thích nghi khi đang chạy: watchdog, EMA và hysteresis","depth":2},{"id":"r3f-những-đòn-bẩy-thật-để-thi-hành-một-tier","text":"R3F: những đòn bẩy thật để thi hành một tier","depth":2},{"id":"tôn-trọng-lựa-chọn-thủ-công-của-người-dùng","text":"Tôn trọng lựa chọn thủ công của người dùng","depth":2}],
+    en: [{"id":"one-scene-many-devices-design-by-tier-dont-just-degrade-uniformly","text":"One Scene, Many Devices: Design by Tier, Don't Just Degrade Uniformly","depth":2},{"id":"a-short-benchmark-the-most-truthful-signal","text":"A Short Benchmark: The Most Truthful Signal","depth":2},{"id":"hardware-heuristics-useful-with-real-limits","text":"Hardware Heuristics: Useful, With Real Limits","depth":2},{"id":"designing-3-tiers-one-config-object-not-ifelse-scattered-everywhere","text":"Designing 3 Tiers: One Config Object, Not if/else Scattered Everywhere","depth":2},{"id":"adapting-at-runtime-watchdog-ema-and-hysteresis","text":"Adapting at Runtime: Watchdog, EMA and Hysteresis","depth":2},{"id":"r3f-the-real-levers-that-enforce-a-tier","text":"R3F: The Real Levers That Enforce a Tier","depth":2},{"id":"respecting-the-users-manual-choice","text":"Respecting the User's Manual Choice","depth":2}],
+  },
+  "asset-pipeline-draco-ktx2": {
+    vi: [{"id":"hai-miền-nén-khác-nhau-hình-học-và-texture","text":"Hai miền nén khác nhau: hình học và texture","depth":2},{"id":"nén-hình-học-với-draco-lượng-tử-hoá-rồi-entropy-code","text":"Nén hình học với Draco: lượng tử hoá rồi entropy-code","depth":2},{"id":"nén-texture-với-ktx2basis-universal-transcode-đúng-lúc-chạy","text":"Nén texture với KTX2/Basis Universal: transcode đúng lúc chạy","depth":2},{"id":"nối-draco-và-ktx2-vào-cùng-một-gltfloader","text":"Nối Draco và KTX2 vào cùng một GLTFLoader","depth":2},{"id":"tự-động-hoá-bằng-gltf-transform","text":"Tự động hoá bằng gltf-transform","depth":2},{"id":"cli-một-lệnh-cho-cả-pipeline","text":"CLI: một lệnh cho cả pipeline","depth":3},{"id":"script-lập-trình-khi-cli-không-đủ-linh-hoạt","text":"Script lập trình: khi CLI không đủ linh hoạt","depth":3},{"id":"meshopt-lựa-chọn-thay-draco","text":"meshopt: lựa chọn thay Draco","depth":2},{"id":"khi-nào-không-nên-nén","text":"Khi nào KHÔNG nên nén","depth":2},{"id":"pipeline-thật-của-bài-học-này-không-có-file-nhị-phân","text":"Pipeline thật của bài học này: không có file nhị phân","depth":2}],
+    en: [{"id":"two-different-compression-domains-geometry-and-textures","text":"Two Different Compression Domains: Geometry and Textures","depth":2},{"id":"compressing-geometry-with-draco-quantize-then-entropy-code","text":"Compressing Geometry with Draco: Quantize, Then Entropy-Code","depth":2},{"id":"compressing-textures-with-ktx2basis-universal-transcoding-at-runtime","text":"Compressing Textures with KTX2/Basis Universal: Transcoding at Runtime","depth":2},{"id":"wiring-draco-and-ktx2-into-the-same-gltfloader","text":"Wiring Draco and KTX2 into the Same GLTFLoader","depth":2},{"id":"automating-it-with-gltf-transform","text":"Automating It with gltf-transform","depth":2},{"id":"cli-one-command-for-the-whole-pipeline","text":"CLI: One Command for the Whole Pipeline","depth":3},{"id":"scripting-when-the-cli-isnt-flexible-enough","text":"Scripting: When the CLI Isn't Flexible Enough","depth":3},{"id":"meshopt-an-alternative-to-draco","text":"meshopt: An Alternative to Draco","depth":2},{"id":"when-not-to-compress","text":"When NOT to Compress","depth":2},{"id":"this-lessons-real-pipeline-no-binary-files","text":"This Lesson's Real Pipeline: No Binary Files","depth":2}],
+  },
+  "checkpoint-asset-diet": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-mobile-ready-scene": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "checkpoint-profile-and-fix": {
+    vi: [{"id":"mục-tiêu","text":"Mục tiêu","depth":2},{"id":"yêu-cầu","text":"Yêu cầu","depth":2},{"id":"thế-nào-là-xong","text":"Thế nào là \"xong\"","depth":2}],
+    en: [{"id":"goal","text":"Goal","depth":2},{"id":"requirements","text":"Requirements","depth":2},{"id":"what-done-looks-like","text":"What \"Done\" Looks Like","depth":2}],
+  },
+  "culling-and-lod": {
+    vi: [{"id":"frustum-culling-tự-động-cơ-chế-thật-bên-trong-threejs","text":"Frustum culling tự động: cơ chế thật bên trong Three.js","depth":2},{"id":"khi-bounding-sphere-test-thất-bại","text":"Khi bounding-sphere test thất bại","depth":2},{"id":"chi-phí-của-chính-phép-test-và-vì-sao-group-không-tự-cull","text":"Chi phí của chính phép test, và vì sao Group không tự cull","depth":2},{"id":"occlusion-culling-phần-threejs-không-tự-lo","text":"Occlusion culling: phần Three.js không tự lo","depth":2},{"id":"lod-chuỗi-chi-tiết-chuyển-theo-khoảng-cách-camera","text":"LOD: chuỗi chi tiết chuyển theo khoảng cách camera","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"automatic-frustum-culling-the-real-mechanism-inside-threejs","text":"Automatic Frustum Culling: the Real Mechanism Inside Three.js","depth":2},{"id":"when-the-bounding-sphere-test-fails","text":"When the Bounding-Sphere Test Fails","depth":2},{"id":"the-cost-of-the-test-itself-and-why-a-group-doesnt-self-cull","text":"The Cost of the Test Itself, and Why a Group Doesn't Self-Cull","depth":2},{"id":"occlusion-culling-the-part-threejs-doesnt-handle-for-you","text":"Occlusion Culling: the Part Three.js Doesn't Handle For You","depth":2},{"id":"lod-a-detail-chain-that-swaps-by-camera-distance","text":"LOD: a Detail Chain That Swaps by Camera Distance","depth":2},{"id":"where-this-goes-next","text":"Where This Goes Next","depth":2}],
+  },
+  "dispose-and-leak-hunting": {
+    vi: [{"id":"ảo-giác-gc-js-dọn-được-gpu-thì-không","text":"Ảo giác GC: JS dọn được, GPU thì không","depth":2},{"id":"danh-sách-phải-tự-dispose","text":"Danh sách phải tự dispose","depth":2},{"id":"dispose-thực-sự-làm-gì","text":"dispose() thực sự làm gì","depth":2},{"id":"r3f-tự-lo-gì--và-khoảng-trống-mà-usedisposable-lấp","text":"R3F tự lo gì — và khoảng trống mà useDisposable lấp","depth":2},{"id":"săn-leak-thật-rendererinfo-trước-heap-snapshot-sau","text":"Săn leak thật: renderer.info trước, heap snapshot sau","depth":2},{"id":"bốn-hình-dạng-leak-hay-gặp-nhất","text":"Bốn hình dạng leak hay gặp nhất","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-gc-illusion-js-gets-collected-the-gpu-doesnt","text":"The GC Illusion: JS Gets Collected, the GPU Doesn't","depth":2},{"id":"the-dispose-list","text":"The Dispose List","depth":2},{"id":"what-dispose-actually-does","text":"What dispose() Actually Does","depth":2},{"id":"what-r3f-handles--and-exactly-where-usedisposable-fills-the-gap","text":"What R3F Handles — and Exactly Where useDisposable Fills the Gap","depth":2},{"id":"hunting-leaks-for-real-rendererinfo-first-heap-snapshots-second","text":"Hunting Leaks for Real: renderer.info First, Heap Snapshots Second","depth":2},{"id":"the-four-classic-leak-shapes","text":"The Four Classic Leak Shapes","depth":2},{"id":"where-this-leads-from-here","text":"Where This Leads From Here","depth":2}],
+  },
+  "draw-calls-batching-instancing": {
+    vi: [{"id":"draw-call-tốn-gì-và-tốn-ở-đâu","text":"Draw call tốn gì và tốn ở đâu","depth":2},{"id":"đếm-draw-call-cho-đúng-rendererinforendercalls","text":"Đếm draw call cho đúng: renderer.info.render.calls","depth":2},{"id":"bậc-thang-bậc-1-material-dùng-chung","text":"Bậc thang bậc 1: material dùng chung","depth":2},{"id":"bậc-thang-bậc-2-gộp-tĩnh-với-buffergeometryutilsmergegeometries","text":"Bậc thang bậc 2: gộp tĩnh với BufferGeometryUtils.mergeGeometries","depth":2},{"id":"bậc-thang-bậc-3-instancedmesh","text":"Bậc thang bậc 3: InstancedMesh","depth":2},{"id":"bậc-thang-bậc-4-batchedmesh--câu-trả-lời-mới-hơn","text":"Bậc thang bậc 4: BatchedMesh — câu trả lời mới hơn","depth":2},{"id":"chọn-đúng-kỹ-thuật-theo-hình-dạng-cảnh","text":"Chọn đúng kỹ thuật theo hình dạng cảnh","depth":2},{"id":"kết-nối-về-sau","text":"Kết nối về sau","depth":2}],
+    en: [{"id":"what-a-draw-call-costs-and-where","text":"What a Draw Call Costs, and Where","depth":2},{"id":"counting-draw-calls-correctly-rendererinforendercalls","text":"Counting Draw Calls Correctly: renderer.info.render.calls","depth":2},{"id":"fix-ladder-rung-1-shared-materials","text":"Fix Ladder, Rung 1: Shared Materials","depth":2},{"id":"fix-ladder-rung-2-static-merging-with-buffergeometryutilsmergegeometries","text":"Fix Ladder, Rung 2: Static Merging With BufferGeometryUtils.mergeGeometries","depth":2},{"id":"fix-ladder-rung-3-instancedmesh","text":"Fix Ladder, Rung 3: InstancedMesh","depth":2},{"id":"fix-ladder-rung-4-batchedmesh--the-newer-answer","text":"Fix Ladder, Rung 4: BatchedMesh — the Newer Answer","depth":2},{"id":"choosing-the-right-technique-for-the-scenes-shape","text":"Choosing the Right Technique for the Scene's Shape","depth":2},{"id":"where-this-connects-next","text":"Where This Connects Next","depth":2}],
+  },
+  "mobile-tile-gpus-and-overdraw": {
+    vi: [{"id":"hai-thế-giới-gpu-immediate-mode-và-tile-based-deferred","text":"Hai thế giới GPU: immediate-mode và tile-based (deferred)","depth":2},{"id":"vì-sao-tile-tồn-tại-bộ-nhớ-ngoài-là-kẻ-giết-pin","text":"Vì sao tile tồn tại: bộ nhớ ngoài là kẻ giết pin","depth":2},{"id":"overdraw-cái-giá-của-mỗi-lớp-pixel-chồng-lên-nhau","text":"Overdraw: cái giá của mỗi lớp pixel chồng lên nhau","depth":2},{"id":"opaque-có-early-zhsr-giúp--transparency-thì-không","text":"Opaque có early-Z/HSR giúp — transparency thì không","depth":2},{"id":"đo-overdraw-additive-blend-visualization","text":"Đo overdraw: additive-blend visualization","depth":2},{"id":"hai-hệ-quả-ít-ai-ngờ","text":"Hai hệ quả ít ai ngờ","depth":2},{"id":"ba-cách-giảm-overdraw-thực-chiến","text":"Ba cách giảm overdraw thực chiến","depth":2},{"id":"kết-nối-về-track-10-và-bài-tiếp-theo","text":"Kết nối về Track 10 và bài tiếp theo","depth":2}],
+    en: [{"id":"two-gpu-worlds-immediate-mode-and-tile-based-deferred","text":"Two GPU Worlds: Immediate-Mode and Tile-Based (Deferred)","depth":2},{"id":"why-tiles-exist-external-memory-is-the-battery-killer","text":"Why Tiles Exist: External Memory Is the Battery Killer","depth":2},{"id":"overdraw-the-cost-of-every-pixel-painted-twice","text":"Overdraw: The Cost of Every Pixel Painted Twice","depth":2},{"id":"opaque-gets-early-zhsr-help--transparency-doesnt","text":"Opaque Gets Early-Z/HSR Help — Transparency Doesn't","depth":2},{"id":"measuring-overdraw-additive-blend-visualization","text":"Measuring Overdraw: Additive-Blend Visualization","depth":2},{"id":"two-unexpected-consequences","text":"Two Unexpected Consequences","depth":2},{"id":"three-practical-ways-to-cut-overdraw","text":"Three Practical Ways to Cut Overdraw","depth":2},{"id":"connecting-back-to-track-10-and-whats-next","text":"Connecting Back to Track 10, and What's Next","depth":2}],
+  },
+  "nextjs-ssr-hydration-canvas": {
+    vi: [{"id":"server-không-có-webgl--điều-đó-thực-sự-phá-vỡ-cái-gì","text":"Server không có WebGL — điều đó thực sự phá vỡ cái gì","depth":2},{"id":"nextdynamic-với-ssr-false--công-cụ-tiêu-chuẩn-đặt-boundary-ở-đâu","text":"next/dynamic với ssr: false — công cụ tiêu chuẩn, đặt boundary ở đâu","depth":2},{"id":"chiến-lược-placeholder-giữ-chỗ-để-không-vỡ-layout","text":"Chiến lược placeholder: giữ chỗ để không vỡ layout","depth":2},{"id":"suspense-lazy-loading-phía-client-và-bảo-vệ-fcplcp","text":"Suspense, lazy loading phía client, và bảo vệ FCP/LCP","depth":2},{"id":"kỷ-luật-bundle-threedrei-nằm-ở-chunk-demo-không-phải-chunk-trang","text":"Kỷ luật bundle: three/drei nằm ở chunk demo, không phải chunk trang","depth":2},{"id":"pattern-hydration-safe-mounted-state-gate-và-suppresshydrationwarning-trung-thực","text":"Pattern hydration-safe: mounted-state gate, và suppressHydrationWarning trung thực","depth":2},{"id":"nền-tảng-này-dẫn-tới-đâu","text":"Nền tảng này dẫn tới đâu","depth":2}],
+    en: [{"id":"the-server-has-no-webgl--what-that-actually-breaks","text":"The Server Has No WebGL — What That Actually Breaks","depth":2},{"id":"nextdynamic-with-ssr-false--the-standard-tool-and-where-the-boundary-goes","text":"next/dynamic with ssr: false — the Standard Tool, and Where the Boundary Goes","depth":2},{"id":"the-placeholder-strategy-reserve-space-before-it-shows-up","text":"The Placeholder Strategy: Reserve Space Before It Shows Up","depth":2},{"id":"suspense-client-side-lazy-loading-and-protecting-fcplcp","text":"Suspense, Client-Side Lazy Loading, and Protecting FCP/LCP","depth":2},{"id":"bundle-discipline-threedrei-live-in-the-demo-chunk-not-the-page-chunk","text":"Bundle Discipline: three/drei Live in the Demo Chunk, Not the Page Chunk","depth":2},{"id":"hydration-safe-patterns-the-mounted-state-gate-and-honest-suppresshydrationwarning","text":"Hydration-Safe Patterns: the Mounted-State Gate, and Honest suppressHydrationWarning","depth":2},{"id":"where-this-leads-from-here","text":"Where This Leads From Here","depth":2}],
+  },
+  "profiling-webgl-tools": {
+    vi: [{"id":"đo-trước-đừng-đoán-giáo-điều-measure-first","text":"Đo trước, đừng đoán: giáo điều measure-first","depth":2},{"id":"rendererinfo-bộ-đếm-miễn-phí-luôn-bật","text":"renderer.info: bộ đếm miễn phí, luôn bật","depth":2},{"id":"fps-meter-và-frame-time-1667ms-không-phải-số-ma-thuật","text":"FPS meter và frame time: 16.67ms không phải số ma thuật","depth":2},{"id":"chrome-devtools-performance-đọc-flame-chart-phân-biệt-cpu-bound-và-gpu-bound","text":"Chrome DevTools Performance: đọc flame chart, phân biệt CPU-bound và GPU-bound","depth":2},{"id":"spectorjs-mổ-xẻ-từng-draw-call","text":"Spector.js: mổ xẻ từng draw call","depth":2},{"id":"renderdoc-và-công-cụ-gpu-vendor-khi-nào-cần-và-vì-sao-hay-trục-trặc-với-trình-duyệt","text":"RenderDoc và công cụ GPU vendor: khi nào cần, và vì sao hay trục trặc với trình duyệt","depth":2},{"id":"case-study-bộ-đo-tự-thân-của-shaderpath","text":"Case study: bộ đo tự thân của Shaderpath","depth":2},{"id":"sơ-đồ-chẩn-đoán-bắt-đầu-từ-đâu","text":"Sơ đồ chẩn đoán: bắt đầu từ đâu","depth":2}],
+    en: [{"id":"measure-first-dont-guess","text":"Measure First, Don't Guess","depth":2},{"id":"rendererinfo-the-free-always-on-counters","text":"renderer.info: The Free, Always-On Counters","depth":2},{"id":"fps-meters-and-frame-time-1667ms-isnt-a-magic-number","text":"FPS Meters and Frame Time: 16.67ms Isn't a Magic Number","depth":2},{"id":"chrome-devtools-performance-reading-the-flame-chart-telling-cpu-bound-from-gpu-bound","text":"Chrome DevTools Performance: Reading the Flame Chart, Telling CPU-Bound from GPU-Bound","depth":2},{"id":"spectorjs-dissecting-every-draw-call","text":"Spector.js: Dissecting Every Draw Call","depth":2},{"id":"renderdoc-and-gpu-vendor-tools-when-you-need-them-and-why-theyre-finicky-with-browsers","text":"RenderDoc and GPU Vendor Tools: When You Need Them, and Why They're Finicky With Browsers","depth":2},{"id":"case-study-shaderpaths-own-instrumentation","text":"Case Study: Shaderpath's Own Instrumentation","depth":2},{"id":"diagnostic-flow-where-to-start","text":"Diagnostic Flow: Where to Start","depth":2}],
+  },
+  "shader-compilation-stalls": {
+    vi: [{"id":"bí-ẩn-cái-giật-hình-giữa-cảnh","text":"Bí ẩn cái giật hình giữa cảnh","depth":2},{"id":"vì-sao-cùng-một-material-đôi-khi-vẫn-compile-hai-lần","text":"Vì sao \"cùng một material\" đôi khi vẫn compile hai lần","depth":2},{"id":"từ-đâu-ra-hàng-chục-biến-thể-phép-nhân-define","text":"Từ đâu ra hàng chục biến thể: phép nhân #define","depth":2},{"id":"pre-warm-bằng-renderercompile-kiểm-soát-thời-điểm-không-xoá-chi-phí","text":"Pre-warm bằng renderer.compile(): kiểm soát THỜI ĐIỂM, không xoá chi phí","depth":2},{"id":"compileasync-và-khrparallelshadercompile-đường-không-chặn","text":"compileAsync và KHRparallelshadercompile: đường không chặn","depth":2},{"id":"giảm-biến-thể-kỷ-luật-tại-nguồn","text":"Giảm biến thể: kỷ luật tại nguồn","depth":2},{"id":"đo-frame-đầu-tiên-so-với-steady-state","text":"Đo: frame đầu tiên so với steady-state","depth":2},{"id":"từ-đây-tới-asset-pipeline","text":"Từ đây tới asset pipeline","depth":2}],
+    en: [{"id":"the-mid-scene-hitch-mystery","text":"The Mid-Scene Hitch Mystery","depth":2},{"id":"why-the-same-material-can-still-compile-twice","text":"Why \"The Same Material\" Can Still Compile Twice","depth":2},{"id":"where-dozens-of-variants-come-from-the-define-multiplication","text":"Where Dozens of Variants Come From: The #define Multiplication","depth":2},{"id":"pre-warming-with-renderercompile-controlling-when-not-erasing-the-cost","text":"Pre-Warming with renderer.compile(): Controlling WHEN, Not Erasing the Cost","depth":2},{"id":"compileasync-and-khrparallelshadercompile-the-non-blocking-path","text":"compileAsync and KHRparallelshadercompile: The Non-Blocking Path","depth":2},{"id":"reducing-variants-discipline-at-the-source","text":"Reducing Variants: Discipline at the Source","depth":2},{"id":"measuring-first-frame-vs-steady-state","text":"Measuring: First Frame vs. Steady-State","depth":2},{"id":"from-here-to-the-asset-pipeline","text":"From Here to the Asset Pipeline","depth":2}],
+  },
+  "texture-memory-budget": {
+    vi: [{"id":"vram-kẻ-ăn-bộ-nhớ-âm-thầm-nhất-trong-scene","text":"VRAM: kẻ ăn bộ nhớ âm thầm nhất trong scene","depth":2},{"id":"công-thức-dung-lượng-thật-của-một-texture-trên-gpu","text":"Công thức: dung lượng thật của một texture trên GPU","depth":2},{"id":"float-và-half-float-nhân-đôi-chi-phí","text":"Float và half-float nhân đôi chi phí","depth":2},{"id":"thuế-render-target-chi-phí-ẩn-trong-hậu-kỳ","text":"Thuế render target: chi phí ẩn trong hậu kỳ","depth":2},{"id":"lập-ngân-sách-cho-một-thiết-bị-cụ-thể","text":"Lập ngân sách cho một thiết bị cụ thể","depth":2},{"id":"vì-sao-độ-phân-giải-không-đồng-nghĩa-chất-lượng","text":"Vì sao độ phân giải không đồng nghĩa chất lượng","depth":2},{"id":"nén-gpu-native-cách-sửa-thật-sự","text":"Nén GPU-native: cách sửa thật sự","depth":2},{"id":"đo-và-dọn-rendererinfo-và-dispose","text":"Đo và dọn: renderer.info và dispose","depth":2},{"id":"từ-đây-tới-pipeline-nén-thật","text":"Từ đây tới pipeline nén thật","depth":2}],
+    en: [{"id":"vram-the-silent-memory-eater-in-your-scene","text":"VRAM: The Silent Memory Eater in Your Scene","depth":2},{"id":"the-formula-a-textures-real-gpu-footprint","text":"The Formula: A Texture's Real GPU Footprint","depth":2},{"id":"float-and-half-float-double-the-cost","text":"Float and Half-Float Double the Cost","depth":2},{"id":"the-render-target-tax-a-hidden-post-processing-cost","text":"The Render-Target Tax: A Hidden Post-Processing Cost","depth":2},{"id":"budgeting-for-a-specific-device","text":"Budgeting for a Specific Device","depth":2},{"id":"why-resolution-isnt-the-same-as-quality","text":"Why Resolution Isn't the Same as Quality","depth":2},{"id":"gpu-native-compression-the-real-fix","text":"GPU-Native Compression: The Real Fix","depth":2},{"id":"measuring-and-cleaning-up-rendererinfo-and-dispose","text":"Measuring and Cleaning Up: renderer.info and dispose","depth":2},{"id":"from-here-to-a-real-compression-pipeline","text":"From Here to a Real Compression Pipeline","depth":2}],
+  },
 };
 
 export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
@@ -1417,6 +1531,16 @@ export const DEMO_REGISTRY: Partial<Record<LessonSlug, LessonModuleLoader>> = {
   "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/demo"),
   "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/demo"),
   "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/demo"),
+  "adaptive-quality-tiers": () => import("./lessons/12-performance/adaptive-quality-tiers/demo"),
+  "asset-pipeline-draco-ktx2": () => import("./lessons/12-performance/asset-pipeline-draco-ktx2/demo"),
+  "culling-and-lod": () => import("./lessons/12-performance/culling-and-lod/demo"),
+  "dispose-and-leak-hunting": () => import("./lessons/12-performance/dispose-and-leak-hunting/demo"),
+  "draw-calls-batching-instancing": () => import("./lessons/12-performance/draw-calls-batching-instancing/demo"),
+  "mobile-tile-gpus-and-overdraw": () => import("./lessons/12-performance/mobile-tile-gpus-and-overdraw/demo"),
+  "nextjs-ssr-hydration-canvas": () => import("./lessons/12-performance/nextjs-ssr-hydration-canvas/demo"),
+  "profiling-webgl-tools": () => import("./lessons/12-performance/profiling-webgl-tools/demo"),
+  "shader-compilation-stalls": () => import("./lessons/12-performance/shader-compilation-stalls/demo"),
+  "texture-memory-budget": () => import("./lessons/12-performance/texture-memory-budget/demo"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
@@ -1569,4 +1693,17 @@ export const EXERCISES_REGISTRY: Partial<
   "rendering-equation-intuition": () => import("./lessons/11-pbr/rendering-equation-intuition/exercises"),
   "shadow-techniques-pcf-vsm-csm": () => import("./lessons/11-pbr/shadow-techniques-pcf-vsm-csm/exercises"),
   "why-assets-look-like-plastic": () => import("./lessons/11-pbr/why-assets-look-like-plastic/exercises"),
+  "adaptive-quality-tiers": () => import("./lessons/12-performance/adaptive-quality-tiers/exercises"),
+  "asset-pipeline-draco-ktx2": () => import("./lessons/12-performance/asset-pipeline-draco-ktx2/exercises"),
+  "checkpoint-asset-diet": () => import("./lessons/12-performance/checkpoint-asset-diet/exercises"),
+  "checkpoint-mobile-ready-scene": () => import("./lessons/12-performance/checkpoint-mobile-ready-scene/exercises"),
+  "checkpoint-profile-and-fix": () => import("./lessons/12-performance/checkpoint-profile-and-fix/exercises"),
+  "culling-and-lod": () => import("./lessons/12-performance/culling-and-lod/exercises"),
+  "dispose-and-leak-hunting": () => import("./lessons/12-performance/dispose-and-leak-hunting/exercises"),
+  "draw-calls-batching-instancing": () => import("./lessons/12-performance/draw-calls-batching-instancing/exercises"),
+  "mobile-tile-gpus-and-overdraw": () => import("./lessons/12-performance/mobile-tile-gpus-and-overdraw/exercises"),
+  "nextjs-ssr-hydration-canvas": () => import("./lessons/12-performance/nextjs-ssr-hydration-canvas/exercises"),
+  "profiling-webgl-tools": () => import("./lessons/12-performance/profiling-webgl-tools/exercises"),
+  "shader-compilation-stalls": () => import("./lessons/12-performance/shader-compilation-stalls/exercises"),
+  "texture-memory-budget": () => import("./lessons/12-performance/texture-memory-budget/exercises"),
 };

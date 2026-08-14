@@ -1,0 +1,41 @@
+## Ảo giác GC: JS dọn được, GPU thì không
+
+Garbage collector của JavaScript rất giỏi ở đúng một việc: dọn object JS hết tham chiếu. Vấn đề là một `THREE.Texture` chỉ là cái vỏ JS mỏng — bản thân dữ liệu pixel thật, sau khi upload, sống trong một `WebGLTexture` phía driver GPU, hoàn toàn ngoài tầm với của GC. Xoá biến `texture`, để nó rời khỏi scope, thậm chí gọi `texture = null` — GC sẽ dọn sạch object JS đó ở lần thu gom kế tiếp, nhưng `WebGLTexture` tương ứng trên VRAM thì **không ai đụng tới**, vì GC không biết nó tồn tại. Kết quả là bộ nhớ GPU bị "mồ côi" (orphaned): còn sống, còn chiếm chỗ, nhưng không object JS nào trỏ tới nó để dọn nữa — leak kiểu này không hiện trong `performance.memory` (đo JS heap) mà chỉ hiện ra khi driver từ chối cấp thêm context hoặc hệ điều hành bắt đầu swap. Đây là ảo giác nguy hiểm nhất khi mới học disposal: code "trông sạch" (không còn biến nào giữ tham chiếu) không có nghĩa là GPU đã sạch.
+
+## Danh sách phải tự dispose
+
+Bốn nhóm object có `.dispose()` và đều cấp phát tài nguyên GPU thật: **geometry** (buffer vertex/index), **material** (chương trình shader biên dịch + trạng thái), **texture** — kể cả từng **map slot** riêng lẻ gắn trên material (`map`, `normalMap`, `roughnessMap`, `metalnessMap`, `aoMap`, `emissiveMap`, `alphaMap`, `envMap`, ... `MeshStandardMaterial` một mình đã có 11 slot texture khác nhau), **`WebGLRenderTarget`** (FBO dùng cho render-to-texture hay pass hậu kỳ), và cuối cùng chính **renderer**. Điểm dễ bỏ sót nhất: `material.dispose()` **không** cascade xuống các texture gắn trên nó — material chỉ biết giải phóng chương trình shader của chính nó, không đụng tới bất kỳ map nào bạn gán vào. Một material dùng 4 map (albedo, normal, roughness, AO) mà chỉ gọi `material.dispose()` thì 4 texture đó vẫn nguyên trên VRAM. Con số cụ thể: một texture RGBA8 $512 \times 512$ (không mipmap) chiếm đúng $512 \times 512 \times 4 = 1{,}048{,}576$ byte $= 1\text{ MiB}$ trên GPU; bỏ quên dispose nó qua $n$ lần mount thì VRAM mồ côi cộng dồn tuyến tính, $V(n) = n \times 1\text{ MiB}$ — 12 lần mount đã là 12 MiB âm thầm, không hề xuất hiện trong `performance.memory`.
+
+## `dispose()` thực sự làm gì
+
+Đọc thẳng mã nguồn Three.js (bản 0.185): `BufferGeometry.dispose()`, `Texture.dispose()`, `Material.dispose()` đều chỉ làm đúng một việc — `this.dispatchEvent({ type: 'dispose' })`. Lệnh gọi này **không** đụng tới GPU. Việc dọn thật nằm ở các manager nội bộ của `WebGLRenderer` (`WebGLGeometries`, `WebGLTextures`, ...): lần đầu một object được render, manager tương ứng gắn listener cho sự kiện `'dispose'` của nó; khi listener cháy, nó gọi `gl.deleteBuffer`/`gl.deleteTexture` thật và xoá entry khỏi `WebGLProperties` — một `WeakMap` nội bộ ánh xạ object Three.js sang handle GPU. Hệ quả thực dụng: `dispose()` trên object **chưa từng render** là no-op an toàn (không có `__webglInit` để dọn); dùng lại object đó sau dispose (`needsUpdate = true`, render lại) khiến Three chỉ upload lại từ đầu — dispose rẻ và an toàn để gọi bất cứ lúc nào. `renderer.dispose()` cũng vậy: gỡ listener context-lost, xoá `WebGLProperties` và cache nội bộ (program cache, render list) — nhưng **không** phá context hay canvas; render tiếp sau khi gọi nó, driver vẫn còn, Three chỉ build lại state từ đầu.
+
+## R3F tự lo gì — và khoảng trống mà `useDisposable` lấp
+
+R3F tự gọi `.dispose()` cho object nào **chính reconciler của nó khởi tạo** từ tag JSX (`<boxGeometry />` → `new THREE.BoxGeometry()` nằm trong sổ sách R3F) khi component chứa tag đó unmount; muốn tắt cơ chế này (geometry dùng chung giữa nhiều mesh) thì đặt `dispose={null}`. Khoảng trống còn lại — và đúng là khoảng trống lớn nhất trong thực tế — là mọi thứ bạn `new THREE.X()` **ngoài** JSX rồi gắn qua `<primitive object={...} />`, dựng trong `useEffect`/`useMemo`, hay một `WebGLRenderTarget` tự tạo cho pass phụ: R3F không theo dõi những object này, dispose chúng là việc của bạn.
+
+`lib/hooks/use-disposable.ts` của nền tảng này là câu trả lời cho đúng khoảng trống đó. API mỏng: `register(obj)` đẩy một Three.js-disposable vào mảng nội bộ rồi trả nguyên lại (dùng inline ngay chỗ `new`); `registerFn(fn)` nhận callback dọn dẹp bất kỳ cho thứ không có `.dispose()` (huỷ listener, cancel RAF). Khi unmount, `disposeAll()` chạy `fns` trước rồi mới `objects`, cả hai theo **LIFO** (tạo sau, dọn trước) — thứ tự này không tuỳ tiện: dừng vòng lặp/listener trước, dispose GPU resource sau, để không callback nào còn chạy đọc phải geometry vừa bị dispose. Mỗi lệnh gọi bọc `try/catch` riêng nên một cleanup lỗi không chặn các cleanup còn lại — đúng hook demo bên dưới dùng để phân biệt nhánh "sạch" khỏi hai nhánh "rò rỉ".
+
+## Săn leak thật: renderer.info trước, heap snapshot sau
+
+Công cụ đầu tiên, rẻ nhất, luôn bật trước: `renderer.info.memory.geometries`/`.textures` — số resource GPU **đang sống**, tăng khi tạo, giảm đúng lúc listener `'dispose'` cháy. Component đúng phải cho hai con số này quay về baseline sau mỗi chu kỳ mount/unmount; thử một lần rồi kết luận "ổn" là sai phương pháp kinh điển — leak chỉ lộ diện qua nhiều chu kỳ lặp, cùng triết lý polling mà e2e của nền tảng này đã dùng cho tính năng khác (`data-frames` + `expect.poll` thay vì `sleep` cố định, spec §8.3): đọc số liên tục qua nhiều chu kỳ, đừng đoán từ một lần chụp.
+
+Khi số đã xác nhận có leak, bước hai là Chrome DevTools → tab Memory → Heap Snapshot, ba bước: chụp (baseline) → hành động (mount rồi unmount component nghi ngờ vài lần) → chụp lại. Chuyển snapshot thứ hai sang **Comparison** để so với snapshot đầu — cột "# Delta"/"Size Delta" lộ ngay constructor nào tăng ròng qua chu kỳ (gõ "Texture" hay "BufferGeometry" vào ô lọc class để thu hẹp). Click một instance còn sống mở cây **Retainers** phía dưới, đọc từ dưới lên: mỗi dòng là "ai đang giữ tham chiếu tới object này" — đi ngược cây đó thường lộ thủ phạm thật (một closure, một mảng module-level, một `Map` cache) chứ không phải chính object bị nghi oan.
+
+## Bốn hình dạng leak hay gặp nhất
+
+Ngoài lỗi "quên gọi dispose" hiển nhiên, bốn hình dạng sau đánh lừa cả người cẩn thận: **event listener giữ tham chiếu scene** — `window.addEventListener('resize', () => scene.traverse(...))` không gỡ trong cleanup giữ nguyên cả `scene` sống mãi qua closure; **cache ở module scope** — một `Map<string, THREE.Texture>` khai báo ngoài component để "tái sử dụng" nhưng không bao giờ evict entry cũ; **vòng lặp RAF sống sót qua unmount** — gọi `requestAnimationFrame` thủ công ngoài `useFrame`/`useVisibleRaf` rồi quên `cancelAnimationFrame` trong cleanup, y hệt bug mà `useVisibleRaf` của nền tảng này được viết ra để tránh (IntersectionObserver dừng/tiếp tục RAF, luôn `cancelAnimationFrame` khi container rời DOM); và **closure trong callback GSAP/ScrollTrigger** (Track 5) giữ tham chiếu mesh/material bên trong `onUpdate` mà không `revert()` timeline khi component gỡ.
+
+## Nền tảng này dẫn tới đâu
+
+Bài kế (`nextjs-ssr-hydration-canvas`) quay lại đúng vòng đời mount/unmount này từ góc độ khác: điều gì xảy ra khi cả component còn chưa kịp mount trên client. Track 9 (GPGPU) nhân đôi kỷ luật dispose ở đây cho từng `WebGLRenderTarget` trong vòng ping-pong; bài `texture-memory-budget` sau đó dùng lại chính phép tính dung lượng texture để lập ngân sách VRAM cho cả cảnh — biết chính xác cái gì đang leak là bước bắt buộc trước khi tính được ngân sách đó có đủ hay không.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dispose GPU resource:
+
+1. **Dispose material nhưng quên từng map slot gắn trên nó.** `material.dispose()` không cascade xuống `map`/`normalMap`/`roughnessMap`/... — mỗi texture slot là một object riêng, cần `texture.dispose()` độc lập, kể cả khi material "trông như" đã được dọn.
+2. **Tưởng `renderer.dispose()` cũng phá context/canvas như `loseContext()`.** Nó chỉ xoá cache nội bộ (`WebGLProperties`, program cache) và gỡ listener context-lost — context WebGL vẫn sống. Gọi nó trong cleanup của một component con, trong khi `<Canvas>`/`DemoCanvas` cha đã tự quản lý vòng đời renderer, là dư thừa và có thể phá lịch dispose của chính R3F.
+3. **Kết luận "không leak" sau một lần thử.** `renderer.info.memory` chỉ lộ leak khi so sánh qua **nhiều** chu kỳ mount/unmount — một lần mount/unmount duy nhất gần như luôn "trông ổn" kể cả khi mỗi chu kỳ đang âm thầm cộng dồn vài đối tượng.
+
+</Callout>

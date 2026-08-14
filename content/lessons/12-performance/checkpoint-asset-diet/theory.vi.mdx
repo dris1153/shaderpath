@@ -1,0 +1,11 @@
+## Mục tiêu
+
+Đây là mini-build thứ hai của Track 12: không có lý thuyết mới, chỉ có một cảnh cố tình dựng "béo" cần bạn áp toàn bộ tư duy nén/rightsize đã học ở `texture-memory-budget`, `culling-and-lod` và `asset-pipeline-draco-ktx2` vào cùng một chỗ. Repo không chứa asset nhị phân thật, nên "béo" ở đây là các phiên bản procedural đứng thay cho asset nặng: texture $4096 \times 4096$ trên prop nhỏ cỡ nắm tay, environment map dạng float chưa nén ở độ phân giải đầy đủ, geometry nhiều segment ở khắp nơi, không LOD cho vật nặng nhất, và `frustumCulled` bị tắt vô cớ trên mọi mesh.
+
+## Yêu cầu
+
+Rightsize từng texture theo texel density thực tế trên màn hình, ghi rõ quyết định định dạng nén dưới dạng comment cho từng asset (không nén file thật được, nhưng phải nêu đúng sẽ dùng gì); giảm segment count có giải thích bằng lý do màn hình cần bao nhiêu; dựng `THREE.LOD` cho hero với ít nhất hai mức thấp hơn; trả `frustumCulled` về mặc định; audit dispose đầy đủ. Deliverable là một bảng before/after: cột dung lượng file dùng số ước lượng có công thức, cột VRAM và draw call đo sống bằng `renderer.info`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+
+## Thế nào là "xong"
+
+Đối chiếu kết quả với checklist trong phần bài tập trước khi mở solution — VRAM đo được giảm ít nhất 50%, draw call giảm, không mất chất lượng nhìn thấy ở khoảng cách bình thường, mỗi quyết định có lý do riêng, dispose sạch, và bảng before/after đầy đủ cả hai loại cột.

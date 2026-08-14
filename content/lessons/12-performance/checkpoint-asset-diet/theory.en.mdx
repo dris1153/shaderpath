@@ -1,0 +1,11 @@
+## Goal
+
+This is Track 12's second mini-build: no new theory, just a scene deliberately built "fat" that requires applying everything learned in `texture-memory-budget`, `culling-and-lod`, and `asset-pipeline-draco-ktx2` in one place. The repo carries no real binary assets, so "fat" here means procedural stand-ins for heavy assets: a $4096 \times 4096$ texture on a fist-sized prop, an uncompressed full-resolution float environment map, high-segment geometry everywhere, no LOD on the heaviest object, and `frustumCulled` disabled for no reason on every mesh.
+
+## Requirements
+
+Rightsize every texture to its actual on-screen texel density, documenting the compression-format decision as a comment for each asset (you can't actually compress a file here, but you must state what you'd use); cut segment counts with a justification based on real screen coverage; build a `THREE.LOD` for the hero with at least two levels below full detail; restore `frustumCulled` to its default; run a full disposal audit. The deliverable is a before/after table: the file-size column uses formula-driven estimates, the VRAM and draw-call columns use live numbers from `renderer.info`. Full details live in the Exercises section below.
+
+## What "Done" Looks Like
+
+Check your result against the checklist in the exercises section before opening the solution — measured VRAM drops by at least 50%, draw calls drop, no visible quality loss at a normal viewing distance, every decision has its own justification, disposal is clean, and the before/after table is complete on both column types.

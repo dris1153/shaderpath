@@ -1,0 +1,47 @@
+## Đo trước, đừng đoán: giáo điều measure-first
+
+Tối ưu một cảnh 3D chưa từng đo là đoán mò có căn cứ nghe hợp lý. Chuyện thường gặp: dev thấy cảnh giật, đoán "chắc do quá nhiều tam giác", dành nửa ngày giảm poly count của model — cảnh vẫn giật y hệt, vì bottleneck thật là một `useEffect` tính lại toàn bộ geometry mỗi frame trên CPU, không liên quan gì tới GPU. Trực giác không sai hoàn toàn — quá nhiều tam giác THỰC SỰ có thể là bottleneck — vấn đề là có ít nhất năm nguyên nhân khác nhau đều tạo ra đúng một triệu chứng: "cảnh giật". Không đo, bạn đang chọn ngẫu nhiên trong năm khả năng đó. Phần còn lại của bài là một bậc thang công cụ, xếp đúng thứ tự nên dùng: rẻ và luôn sẵn có trước, nặng và chuyên biệt sau — cộng một sơ đồ chẩn đoán để biết dừng ở bậc nào.
+
+## renderer.info: bộ đếm miễn phí, luôn bật
+
+Mọi `THREE.WebGLRenderer` đã có sẵn `renderer.info`, không cần cài gì. `info.render.calls` và `info.render.triangles` đếm đúng việc driver vừa làm trong lệnh `render()` gần nhất — cả hai **tự reset về 0 mỗi frame** (`autoReset` mặc định `true`, xác nhận trong `WebGLInfo.js` của three@0.185.1). Đọc con số này một lần rồi coi là "tổng" cho cả phiên là sai — phải đọc lại MỖI frame, ngay sau frame đó render xong. Ngược lại, `info.memory.geometries` và `info.memory.textures` **không reset theo frame** — đếm số geometry/texture thực sự sống trên GPU, tăng khi tạo mới, giảm khi gọi đúng `.dispose()`. `info.programs` là mảng shader program đã compile (`null` cho tới lần render đầu) — độ dài của nó là số program VARIANT đang tồn tại, số sẽ quay lại ở bài "Đứng hình do Compile Shader" sau này. Ba nhóm số này, đọc đúng cách, đã trả lời phần lớn câu hỏi "cảnh này nặng ở đâu" mà chưa cần mở công cụ nào khác.
+
+## FPS meter và frame time: 16.67ms không phải số ma thuật
+
+$$
+\text{ngân sách 1 frame ở 60fps} = \frac{1000}{60} \approx 16.67\text{ms}
+$$
+
+FPS là số liệu TRUNG BÌNH trên một khoảng thời gian, và trung bình che giấu chính xác thứ cần thấy: một cảnh chạy ổn định 60fps suốt một phút, xen giữa một lần đứng hình 300ms (garbage collection, hoặc nút "Gây spike" trong demo dưới), vẫn có thể báo "trung bình 59fps" — số đẹp, trải nghiệm tệ. Đây là lý do dân chuyên nói "frame time, không phải FPS": đo trực tiếp số mili-giây mỗi frame tốn (một EMA — exponential moving average — cộng dồn `delta * (giá_trị_mới - EMA_cũ)`, khoảng 15 dòng, không cần `stats.js`), rồi nhìn PHƯƠNG SAI theo thời gian, không chỉ trung bình. Demo dưới vẽ chuỗi này thành sparkline: mỗi cột một frame thật, vạch trắng đánh dấu ngân sách 16.67ms — bấm nút spike và nhìn đúng một cột vọt lên trong khi FPS trung bình gần như không nhúc nhích.
+
+## Chrome DevTools Performance: đọc flame chart, phân biệt CPU-bound và GPU-bound
+
+Bấm Record trong tab Performance, tương tác vài giây, dừng lại — kết quả là flame chart theo thời gian. Track "Main" xếp chồng mọi việc main thread làm: khối vàng dài là "Scripting" (code JS, kể cả việc build lệnh `gl.*`), khối tím là rendering/painting của DOM (thường không liên quan canvas WebGL). Task dài hơn 50ms bị gắn cờ đỏ "Long Task" — đúng ngưỡng nút spike trong demo cố tình vượt qua (150ms) để bạn thấy cờ đỏ xuất hiện thật. Track "GPU" riêng, hiện thời gian GPU thực sự bận. Cách phân biệt: Main đầy khối Scripting trong khi GPU rảnh — CPU-bound (nghẽn JS hoặc phí submit draw call). Main hầu như trống nhưng canvas vẫn giật và GPU luôn kín — GPU-bound (nghẽn fill-rate hoặc fragment shader). Xác nhận nghi ngờ GPU-bound bằng "phép thử giảm resolution": hạ `devicePixelRatio` xuống 0.5 (control DPR dưới demo làm đúng việc này qua `gl.setPixelRatio`) — nếu cảnh đột nhiên mượt hẳn dù draw call và JS không đổi, bottleneck nằm ở số pixel GPU phải tô.
+
+## Spector.js: mổ xẻ từng draw call
+
+Spector.js (extension trình duyệt hoặc gói npm độc lập, không phải phần phụ thuộc của dự án này) bắt đúng MỘT frame và liệt kê toàn bộ lệnh `gl.*` đã chạy theo thứ tự, nhóm theo từng draw call. Bấm vào một draw call, nó hiện toàn bộ trạng thái GPU tại thời điểm đó: program đang bind, giá trị từng uniform, texture ở từng unit, cấu hình `vertexAttribPointer`, cả khung hình NGAY SAU draw call đó. Cái Spector.js lộ rõ mà `renderer.info` không thấy: các STATE CHANGE THỪA giữa những draw call liền kề — ví dụ bind lại đúng một texture 40 lần liên tiếp dù không đổi, hoặc `useProgram` bị gọi nhiều hơn số program thực sự khác nhau (dấu hiệu thứ tự vẽ đang phá cơ chế sort-theo-material của Three.js). Đúng công cụ khi `renderer.info` đã xác nhận "có nhiều draw call" nhưng cần biết chính xác draw call nào lãng phí và lãng phí kiểu gì.
+
+## RenderDoc và công cụ GPU vendor: khi nào cần, và vì sao hay trục trặc với trình duyệt
+
+RenderDoc bắt native API call (OpenGL/Vulkan/D3D thật, không phải WebGL đã qua lớp trừu tượng) trực tiếp từ một process. Trình duyệt chạy WebGL qua ANGLE và tách GPU process khỏi process chính vì lý do sandbox — gắn RenderDoc vào đúng process đó thường cần flag khởi động đặc biệt, hay lỗi phiên bản, và kết quả capture đôi khi là lệnh ANGLE dịch ra chứ không phải đúng lệnh WebGL bạn gọi. Nói thẳng: đây KHÔNG phải công cụ dùng hằng ngày cho WebGL — nó dành cho khi bốn bậc thang trên đã xác nhận vấn đề nằm dưới tầng WebGL, lúc đó độ phức tạp setup mới đáng công.
+
+## Case study: bộ đo tự thân của Shaderpath
+
+Nền tảng bạn đang học là ví dụ sống. `lib/hooks/use-visible-frameloop.ts` gắn `data-frames` lên container mỗi lần `requestAnimationFrame` tick — để `tests/e2e/demo-viewport-pause.spec.ts` có con số THẬT để `poll()` thay vì `waitForTimeout` cố định (sleep cố định trong test là đoán mò y hệt tối ưu chưa đo). `components/viz/demo-canvas.tsx` dùng chính hook đó để chỉ gọi `invalidate()` khi container còn trong viewport — canvas cuộn khỏi màn hình dừng tick ngay, đo được bằng đúng `data-frames` đó. Và `scripts/gen-lesson-registry.ts` sinh `DEMO_REGISTRY` để mỗi demo nạp qua `next/dynamic` đúng lúc trang cần — không kéo `three` vào bundle của trang chưa có canvas. Cả ba đều là "đo/kiểm soát trước, tối ưu sau" áp dụng ở tầng hạ tầng.
+
+## Sơ đồ chẩn đoán: bắt đầu từ đâu
+
+Thứ tự thực dụng: (1) nhìn `renderer.info` và frame-time meter trước — rẻ nhất, luôn bật, xác nhận có thật sự chậm và chậm ổn định hay chậm từng cơn. (2) Nếu chậm ổn định, mở DevTools Performance ghi vài giây, đọc flame chart để phân loại CPU-bound hay GPU-bound. (3) Nghi GPU-bound thì xác nhận bằng phép thử DPR 0.5. (4) Nghi CPU-bound thì bắt một frame bằng Spector.js, so `info.render.calls` với con số kỳ vọng, tìm state change thừa. (5) Chỉ với tới RenderDoc khi bốn bước trên đều không giải thích được.
+
+Bài tiếp theo — Draw Call, Batching & Instancing — dùng thẳng `renderer.info.render.calls` vừa học đọc ở đây làm thước đo trước/sau cho từng kỹ thuật gộp draw call; checkpoint cuối module yêu cầu bạn tự chạy đúng quy trình chẩn đoán năm bước này trên một cảnh cố tình dựng chậm.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi mới cầm công cụ profiling:
+
+1. **Tin vào FPS trung bình mà không nhìn phương sai.** Một cảnh 59fps trung bình vẫn có thể chứa cú đứng hình 300ms làm người dùng khó chịu — trung bình là thống kê tổng hợp, che mất đúng frame gây khó chịu; phải nhìn chuỗi frame-time theo thời gian, không phải một con số tổng kết.
+2. **Đọc `renderer.info.render.calls` mà quên nó tự reset mỗi frame.** Đọc ở thời điểm sai (giữa hai lần render, hoặc cộng dồn qua nhiều frame tưởng là "tổng") ra giá trị vô nghĩa — phải đọc lại đúng ngay sau MỖI lần `render()`, không cache hay trung bình hoá thủ công.
+3. **Mặc định "chậm vì đây là 3D nên chắc do GPU".** Phần lớn cảnh WebGL chậm vì lý do CPU — hàng nghìn draw call, hoặc JS tính lại thứ không cần thiết mỗi frame — nhảy thẳng vào tối ưu fragment shader trước khi mở flame chart kiểm tra track Main là lãng phí thời gian ở sai tầng.
+
+</Callout>

@@ -1,0 +1,49 @@
+## Two GPU Worlds: Immediate-Mode and Tile-Based (Deferred)
+
+A desktop-style **immediate-mode** GPU does exactly what the name says: every draw call paints straight into the framebuffer sitting in VRAM the moment the rasterizer produces a fragment — there's no "look at the whole scene first" step. Vertex shader runs, rasterize, fragment shader runs, the result gets written (or blended) directly into video memory. This is the model almost every line of WebGL/Three.js code silently assumes, simply because most demos online are measured on desktop GPUs.
+
+Mobile GPUs (ARM's Mali, Imagination's PowerVR, Qualcomm's Adreno) don't work that way. They use a **tile-based (deferred) rendering** architecture: the screen splits into small regions — Mali uses $16\times16$-pixel tiles per ARM's own architecture documentation, and other vendors use similarly small tiles (the exact number shifts by generation, but the principle is identical). The first stage (tiling/binning) draws nothing at all — it walks the frame's geometry, figures out which triangle lands in which tile, and writes a per-tile primitive list. The GPU then processes **one tile at a time, completely**: that tile's color/depth/stencil buffer lives entirely in blazing-fast on-chip memory the whole time it's drawn; only once the tile is finished does the result get written **exactly once** to the real framebuffer out in external memory.
+
+## Why Tiles Exist: External Memory Is the Battery Killer
+
+This architecture doesn't exist because it's theoretically elegant — it exists because mobile devices live and die by battery. Reading or writing off-chip DRAM costs many times more energy than reading or writing the same data on on-chip SRAM — a point ARM's optimization documentation repeats often. An immediate-mode renderer can read-modify-write the VRAM framebuffer dozens of times per pixel (every blend layer is one round trip) and nobody notices on desktop, because desktop GPUs have enormous bandwidth and a wall socket. On mobile, every one of those external round trips is real heat and real battery drain — the shared motivation behind ARM, Imagination, and Qualcomm converging on tile architectures despite very different internal designs.
+
+## Overdraw: The Cost of Every Pixel Painted Twice
+
+**Overdraw** is how many times a pixel gets drawn within one frame — covered by 5 triangles (even if only 1 ends up visible) means an overdraw of 5. On desktop, GPUs are powerful enough to hide moderate overdraw almost entirely from the FPS counter. On tile GPUs, overdraw doesn't burn EXTERNAL bandwidth the desktop way, since each tile stays resident on-chip while drawn — but it still burns the shader core's full ALU and fillrate budget, and with transparency (this lesson's core topic) it burns real bandwidth too, since it forces immediate-mode-style read/write right inside the tile.
+
+## Opaque Gets Early-Z/HSR Help — Transparency Doesn't
+
+For **opaque** geometry, both major tile-GPU families drop occluded fragments before the fragment shader runs. Imagination calls theirs **Hidden Surface Removal (HSR)** — per PowerVR's own architecture documentation, HSR is efficient enough to eliminate overdraw ENTIRELY on purely opaque scenes, because all of a tile's geometry is known before shading begins (the literal meaning of "deferred"). ARM Mali uses **early-ZS** combined with **Forward Pixel Kill (FPK)** — FPK removes additional occluded fragments early-ZS missed, running after early-ZS but before the shader executes. ARM's GPU Best Practices documentation is explicit about FPK's limits too: it commonly fails on very small triangles, shaders that access the framebuffer directly, or deferred (late) depth testing — early-ZS is always the more energy-efficient guarantee.
+
+For **transparency**, none of this applies. Blending is order-dependent: the final color depends on which layer drew first and which came after, so the GPU can't "skip" a layer occluded by the one in front, because the layer behind still contributes to the final blend. Every stacked transparent layer is FORCED to run its fragment shader, sorted back-to-front. Stacking 5 semi-transparent full-screen planes means the GPU shades the same pixel 5 times — no way around it, on desktop or the most expensive tile GPU money can buy. This sorting claim doesn't need to be taken on faith: Three.js — a dependency of this very platform — sorts the opaque list with `painterSortStable` (grouping by `material.id` first, `z` only as a tiebreaker) and the transparent list with `reversePainterSortStable` (`b.z - a.z`, farthest first), directly readable in `node_modules/three/src/renderers/webgl/WebGLRenderLists.js`.
+
+## Measuring Overdraw: Additive-Blend Visualization
+
+No WebGL API hands back an "overdraw factor" directly — but there's a classic technique to SEE it: redraw the whole scene with every material swapped for a fixed low-alpha white color, using **additive** blending instead of normal blending. Additive accumulates color: a pixel drawn once comes out faint gray, drawn 5 times comes out nearly white — the resulting brightness IS the overdraw heatmap, readable by eye with no external tooling. This is literally how Unity's Scene view Overdraw shading mode works; the demo below rebuilds the exact technique by hand.
+
+## Two Unexpected Consequences
+
+Because a tile's contents only exist in on-chip memory until it "resolves" (gets written out), anything that forces the GPU to read the framebuffer back RIGHT WHILE it's still drawing into it breaks the optimization — the GPU has to flush the tile early just to have something to read. The rule to keep: don't read what you're writing. Ping-ponging between two render targets in postprocessing (pass N renders into target A, pass N+1 uses A as input and writes into B) is completely fine, since each pass is one full resolve before the next starts. But calling `gl.readPixels()` or `renderer.readRenderTargetPixels()` while that render target is still being drawn into is not.
+
+A rare upside: MSAA is nearly free on tile GPUs, since every sample already lives in on-chip tile memory, so the resolve happens right there — no separate multisample buffer N times the size in VRAM, no separate resolve blit reading and writing the whole frame like on desktop.
+
+## Three Practical Ways to Cut Overdraw
+
+1. **Sort opaque front-to-back.** If your engine doesn't do this thoroughly (Three.js only uses `z` as a tiebreaker AFTER `material.id`), set `renderOrder` yourself on large, near-camera objects so they draw first, giving early-Z/HSR more fragments behind them to reject.
+2. **Trim transparent quad area.** A particle system using a $96\times96$px quad for a $20$px visible circle costs roughly $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ more shaded fragment area than a quad fitted to the content — every "wasted" transparent pixel still runs the shader and blends, even at zero final alpha.
+3. **Weigh the alphaTest/discard tradeoff.** `discard` to fake "opaque" sounds appealing but has a real cost: the GPU can't know a fragment will be discarded until AFTER the shader has already run, so early-Z/HSR can't reject it ahead of shading. Still cheaper than true alpha blending, but not as cheap as real opaque geometry.
+
+## Connecting Back to Track 10, and What's Next
+
+Track 10 already covered how a postprocessing chain's fillrate grows with pass count; this lesson adds a layer: on tile GPUs, every pass ping-ponging between two render targets forces the tile to resolve and rebuild, so pass count hits mobile harder than desktop fillrate numbers alone suggest — a practical reason to trim passes on weaker devices, exactly the subject of the very next lesson, **Adaptive Quality Tiers**.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three of the most common mistakes when reasoning about mobile overdraw:
+
+1. **Treating `discard`/alphaTest as equivalent to real early-Z.** The GPU only learns a fragment is "dead" AFTER the shader has already run to the discard instruction — hidden-surface removal can't reject it ahead of shading the way it does for true opaque geometry, so `discard` saves write/blend bandwidth but not shader execution cost.
+2. **Assuming Three.js always draws opaque objects in strict front-to-back order.** `painterSortStable` groups by `material.id` FIRST, with `z` only as a tiebreaker — a scene with hundreds of meshes sharing one material but sitting at very different depths gets no guaranteed front-to-back order; set `renderOrder` yourself when it actually matters.
+3. **Calling `readPixels`/reading a render target mid-frame and testing only on desktop.** Desktop devtools show nothing unusual because immediate-mode has no concept of a "tile flush" — but on mobile this forces an early tile resolve and a real GPU stall that only a genuine mobile profiler (or CPU/GPU throttling in Chrome DevTools) will reveal.
+
+</Callout>

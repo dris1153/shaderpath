@@ -80,6 +80,14 @@ Work context: `D:\Workspace\Personal\Webs\learning-3d`. You own ONLY the lesson 
 - PMREM render targets and generated env textures are disposables — same discipline as Track 9/10.
 - R3F Canvas defaults ACES tone mapping — lessons manipulating exposure/tonemapping set `gl.toneMapping`/`toneMappingExposure` explicitly and restore on unmount (renderer is shared across demos on the page!).
 
+## Performance lessons (Track 12)
+
+- THIS PLATFORM is the case study: cite its real code where it embodies the lesson (`lib/hooks/use-disposable.ts`, `lib/hooks/use-visible-raf.ts`, `components/viz/demo-canvas.tsx` demand-frameloop, the generated registry's `next/dynamic` demo loading, `data-frames` counters, playwright polling instead of sleeps). Read those files before citing them.
+- Numbers rule (spec §10): measurements presented as "đo trên máy dev"/"measured on the dev machine" or clearly labeled estimates. NEVER include machine identifiers, usernames, real file paths with user names, or GPU serial-ish strings in prose/outputs — generic "a mid-range laptop GPU" style only.
+- Demos measure honestly where cheap (renderer.info.render.calls, performance.now EMA, renderer.info.memory) — the platform's established readout patterns.
+- No new dependencies (stats.js, spector) — TEACH the tools with real usage walkthroughs in prose; demos build minimal equivalents inline (an FPS meter is ~15 lines).
+- Asset-pipeline lesson: no binary assets in repo (Track 3 rule) — embedded glTF JSON via GLTFLoader.parse stays the demo pattern; Draco/KTX2/gltf-transform taught with real CLI commands + wiring code in prose, demos state real compressed assets arrive with real projects.
+
 ## Self-verify (parallel-safe)
 
 1. `pnpm lint:content --require math` (or `webgl`) — YOUR lessons must contribute zero errors; missing-folder errors for lessons you don't own are expected.

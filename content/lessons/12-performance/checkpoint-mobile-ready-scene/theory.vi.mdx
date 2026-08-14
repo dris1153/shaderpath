@@ -1,0 +1,11 @@
+## Mục tiêu
+
+Mini-build cuối cùng của Track 12: không lý thuyết mới, tổng hợp toàn bộ track thành một sản phẩm chạy được. Bạn nhận một cảnh **desktop-maxed** — cố tình dựng để chỉ chạy tốt trên máy dev mạnh — và phải biến nó thành **mobile-ready**, dùng đúng kỹ thuật của cả track: tier chất lượng (`adaptive-quality-tiers`), overdraw trên GPU tile-based (`mobile-tile-gpus-and-overdraw`), dispose đúng qua nhiều chu kỳ mount/unmount (`dispose-and-leak-hunting`), và canvas mount an toàn (`nextjs-ssr-hydration-canvas`).
+
+## Yêu cầu
+
+`starterCode` trong phần Bài tập bên dưới dựng một scene với 4 vấn đề cố tình cài sẵn cùng lúc: 200.000 particle không tier hoá, blending cộng dồn (additive) trên toàn bộ particle gây overdraw nặng, shadow map $4096 \times 4096$ cố định, và DPR không giới hạn (`dpr={[1, 3]}`). Việc của bạn: dựng một object config tier (`low`/`mid`/`high`) cùng một benchmark phát hiện tier khởi điểm; gắn một watchdog frame-time **có hysteresis** (không dao động qua lại liên tục khi frame time dập dềnh quanh ngưỡng) để chuyển tier động lúc chạy; dispose đúng particle geometry/material qua `useDisposable` sao cho `renderer.info.memory` không tăng dần qua nhiều chu kỳ mount/unmount; giới hạn DPR theo tier; và cắt overdraw đo được (giảm opacity/tắt bloom ở tier thấp). Quy trình xác nhận — DevTools Performance tab với CPU throttle 4× và 6× — là **một phần bắt buộc của bài build**, phải viết thành comment ngay trong code, không chỉ làm ở ngoài rồi báo miệng.
+
+## Thế nào là "xong"
+
+Đối chiếu với checklist trong phần bài tập trước khi mở `solutionCode` — đặc biệt: FPS ổn định ở cả hai mức throttle, tier chuyển bậc mượt (không nhấp nháy qua lại), 10 chu kỳ mount/unmount không làm `renderer.info.memory.geometries` tăng dần, và có bảng đo before/after đầy đủ ngay trong file.

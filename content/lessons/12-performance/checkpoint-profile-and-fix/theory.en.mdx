@@ -1,0 +1,11 @@
+## Goal
+
+Track 12's first mini-build: no new theory, an R3F scene **deliberately built slow** with exactly 3 planted bottlenecks — you have to find them with a profiler, not by guessing. This is the real test for the two lessons before it: measure before optimizing (`profiling-webgl-tools`) and draw calls/batching/instancing (`draw-calls-batching-instancing`).
+
+## Requirements
+
+The `starterCode` in the Exercises section below ships a scene with 3 problems at once: 800 individual meshes each `.clone()`-ing its own material, a "throbbing" blob that rebuilds its entire geometry every frame, and a secondary fill light carrying a 4096×4096 shadow map despite barely contributing to the final image. The measurement tools — `renderer.info.render.calls`, `renderer.info.memory`, and a frame-time EMA clock — already exist and work correctly inside `PerfMeter`, no need to rebuild them. Your job: read the numbers, identify all 3 bottlenecks with evidence rather than reading the code and guessing, fix each one with the techniques already covered, and write a before/after table right in a comment at the end of the file.
+
+## What "Done" Looks Like
+
+Check against the checklist in the exercises section before opening `solutionCode` — in particular: draw calls drop from around 800 to around 5, no allocation repeats inside `useFrame` anymore, and the final visuals (positions, colors, effect) are unchanged from before the fix.

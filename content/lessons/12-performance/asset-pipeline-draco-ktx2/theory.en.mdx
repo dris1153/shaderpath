@@ -1,0 +1,119 @@
+## Two Different Compression Domains: Geometry and Textures
+
+A heavy `.glb` file is usually heavy for two independent reasons, and each one needs a completely different compression technique. Geometry (position, normal, uv, index) is numeric data — it compresses by reducing precision (quantization) and then entropy-coding the leftovers, the same lossless-compression philosophy as ZIP, just specialized for 3D meshes. Textures are raster images instead — the GPU needs to sample them directly, so JPEG/PNG (formats meant to compress for *storage*) don't help: they still get fully decoded to raw RGBA before landing in VRAM, exactly what the `textures-and-compression-ktx2` lesson showed with $2048^2 \times 4 \approx 16\text{MB}$. The two problems are independent — a model might need heavy geometry compression but have light textures, or the reverse — and a real pipeline always handles each domain separately before merging everything back into one final `.glb`.
+
+## Compressing Geometry with Draco: Quantize, Then Entropy-Code
+
+Draco (Google, open source) does two things in sequence. First, quantization: instead of storing `position` as `float32` (32 bits per component), Draco stores it with far fewer fixed bits (commonly 11–14 bits for position, 7–10 for normal, 10–12 for uv by default — configurable via `quantization bits`, cited: the Draco README). Second, entropy coding: the mesh's connectivity graph (which vertices form which triangles) gets compressed with an Edgebreaker variant — an algorithm that exploits the fact that most meshes are one connected surface, encoding a few bits per triangle instead of storing raw indices. The combined result: dense-polygon meshes typically shrink geometry size by over 90% (source: the Draco project's README), equivalent to a compression ratio of
+
+$$
+\text{ratio} = 1 - \frac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}} \approx 0.9
+$$
+
+The price is runtime decode cost: the browser must fetch an extra WASM decoder (`draco_decoder.wasm`, a few hundred KB) and spend CPU time decompressing before the mesh is usable — for a mesh with a few hundred thousand vertices, decode can take tens of milliseconds (an estimate), worth showing a loading state for rather than treating as instant. This wiring is verified against `three`'s current API (`node_modules/three/examples/jsm/loaders/DRACOLoader.js`):
+
+```js
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("/draco/"); // copied from node_modules/three/examples/jsm/libs/draco/
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader); // returns "this" -- chainable
+```
+
+## Compressing Textures with KTX2/Basis Universal: Transcoding at Runtime
+
+KTX2 solves exactly the problem Draco doesn't touch: textures. The KTX2 container wraps **Basis Universal supercompressed** data — an intermediate format that `KTX2Loader` transcodes (not decompress-then-recompress, but a direct block-structure conversion) into whatever GPU-native compressed format the current device actually supports: BC7/BC1 on desktop, ASTC on most modern mobile GPUs, ETC2 on older Android hardware (source: the KHR_texture_basisu spec). That's the "double win" over JPEG/PNG: JPEG only compresses *in transit over the network* — the texture still gets fully decoded to raw RGBA once it lands in VRAM; KTX2 compresses *both*, because the GPU samples the compressed data directly — VRAM never "unpacks" back to full RGBA8. A practical estimate: common GPU-compressed formats sit around 4–8 bits per pixel, versus 32 bits per pixel for raw RGBA8:
+
+$$
+\text{bytes}_{\text{KTX2}} \approx W \times H \times \frac{\text{bpp}}{8}, \qquad \text{bpp} \in [4, 8]
+$$
+
+roughly 4–8× lighter than a fully decoded texture, at near-comparable visual quality (the real ratio depends on the target format and image content). This wiring is verified against `node_modules/three/examples/jsm/loaders/KTX2Loader.js`:
+
+```js
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+
+const ktx2Loader = new KTX2Loader();
+ktx2Loader.setTranscoderPath("/basis/"); // copied from .../libs/basis/
+ktx2Loader.detectSupport(renderer); // MUST be called before load -- picks the target format from the GPU
+```
+
+## Wiring Draco and KTX2 into the Same GLTFLoader
+
+A real production glTF file usually uses both extensions at once (`KHR_draco_mesh_compression` for geometry, `KHR_texture_basisu` for textures) — `GLTFLoader` exposes exactly three `set*Loader` methods to register both before calling `load()`:
+
+```js
+const loader = new GLTFLoader()
+  .setDRACOLoader(dracoLoader)
+  .setKTX2Loader(ktx2Loader) // returns "this" -- read straight from GLTFLoader.js's source
+  .setMeshoptDecoder(MeshoptDecoder); // if the file uses EXT_meshopt_compression instead of Draco
+
+loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
+```
+
+The order is mandatory: all three `set*Loader` calls must run **before** `load()`/`parse()` — calling them afterward has no effect, since `GLTFLoader` only looks these auxiliary loaders up while parsing the matching extension.
+
+## Automating It with gltf-transform
+
+The runtime wiring above is only the second half of the pipeline — the first half is turning a raw, uncompressed `.glb` into a production-ready file, and doing that by hand per-file doesn't scale. `gltf-transform` (the CLI and Node.js library by Don McCurdy) is the standard tool for this.
+
+### CLI: One Command for the Whole Pipeline
+
+```sh
+npx @gltf-transform/cli optimize input.glb output.glb \
+  --compress draco \
+  --texture-compress ktx2
+```
+
+(source: gltf-transform.dev/cli — `optimize` bundles several steps: pruning unused nodes, deduping, compressing geometry via `--compress draco|meshopt`, and compressing textures via `--texture-compress ktx2|webp|avif`). When textures need finer control — for example, normal maps should use UASTC rather than ETC1S, since ETC1S loses more detail — two dedicated commands give exact per-step control:
+
+```sh
+npx @gltf-transform/cli uastc input.glb tmp.glb \
+  --slots "{normalTexture,occlusionTexture,metallicRoughnessTexture}" \
+  --level 4 --rdo --rdo-lambda 4 --zstd 18
+npx @gltf-transform/cli etc1s tmp.glb output.glb --quality 255
+```
+
+(source: the project's CLI docs — UASTC for detail-critical maps like normal/ORM, ETC1S for base color since it trades detail loss for a higher compression ratio).
+
+### Scripting: When the CLI Isn't Flexible Enough
+
+Batch processing (a CI build step, or logic that picks parameters per asset type) uses the Node.js API directly:
+
+```js
+import { NodeIO } from "@gltf-transform/core";
+import { draco, prune, dedup } from "@gltf-transform/functions";
+
+const io = new NodeIO();
+const document = await io.read("input.glb");
+
+await document.transform(prune(), dedup(), draco());
+await io.write("output.glb", document);
+```
+
+One thing worth being honest about: programmatic KTX2 compression (`toKTX2`) currently does NOT live in the public `@gltf-transform/functions` package — it only exists internally in the `cli` package, which spawns the Basis Universal encoder/transcoder directly (source: the project's GitHub issue #675). A batch script that needs KTX2 textures typically `spawn`s the `gltf-transform etc1s`/`uastc` CLI itself as a child process rather than importing a function — not a limitation of your setup, but a real limitation of the library as of this writing.
+
+## meshopt: An Alternative to Draco
+
+`meshoptimizer` (Arseny Kapoulkine) takes a different approach: it reorders vertices to exploit the GPU cache and quantizes data in a way that's friendly to gzip/brotli, rather than writing its own entropy coder like Draco — in exchange, client-side decode is noticeably faster than Draco's (per the project's own benchmarks, an estimate), trading away a clear file-size edge for near-comparable size instead. The `loading-gltf-draco-meshopt` lesson (Track 3) already compared the two in depth — the short version: favor Draco when a one-time download size is the main bottleneck, favor meshopt when an app loads many models back-to-back and cumulative decode speed matters more.
+
+## When NOT to Compress
+
+Compression isn't free — it always costs decode CPU and build-pipeline complexity. Measure before deciding: a model that's already a few hundred KB on a fast network (broadband, same region as the CDN) is often NOT worth compressing, since the cumulative WASM decode time can end up slower than just downloading the raw file — especially true for small meshes (under a few thousand vertices), where decoder startup cost dominates. The practical rule: measure `network time` vs. `decode time` with the exact tools from the `profiling-webgl-tools` lesson, and only compress once the numbers prove a real win — never compress by reflex.
+
+## This Lesson's Real Pipeline: No Binary Files
+
+This repo carries no real binary assets (a rule running through Track 3) — so the demo below reuses the exact `GLTFLoader.parse()` pattern on a glTF JSON embedded right in a `.ts` file, with zero network requests, and its calculator only produces **estimates** from the formulas above, not real compression output. Once your own project has real `.glb` files and textures, the exact `gltf-transform` commands and `DRACOLoader`/`KTX2Loader` wiring above are all you need to add — there's no hidden "mystery step". The `checkpoint-asset-diet` right after this applies this whole mindset (plus the culling/LOD from earlier lessons) to a scene that's deliberately overloaded, measured with `renderer.info` instead of guesswork.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when building an asset compression pipeline:
+
+1. **Calling `setKTX2Loader`/`setDRACOLoader` after `load()` has already run.** All three methods just attach a reference to the auxiliary loader on the instance — `GLTFLoader` looks them up while parsing the matching extension, so registering late does nothing; the most common symptom is `KTX2Loader: Missing initialization with .detectSupport()` (source: the actual error message in `KTX2Loader.js`) from forgetting to call `detectSupport(renderer)` before `load()`.
+2. **Using ETC1S for every texture type, including normal maps.** ETC1S compresses aggressively but loses high-frequency detail — fine for base color, but visibly grainy on normal/roughness maps; UASTC preserves detail better at a lower compression ratio, the right choice for data maps.
+3. **Compressing a small model by reflex without measuring first.** The one-time cost of fetching the WASM decoder (a few hundred KB, plus init time) can easily outweigh the bytes saved on a mesh with a few thousand vertices — always measure `network time` vs. `decode time` before adding a compression step to the pipeline.
+
+</Callout>

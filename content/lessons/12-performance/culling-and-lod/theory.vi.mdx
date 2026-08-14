@@ -1,0 +1,62 @@
+## Frustum culling tự động: cơ chế thật bên trong Three.js
+
+Mỗi frame, trước khi phát sinh draw call, `WebGLRenderer` duyệt scene graph và quyết định object nào đáng vẽ. Với mỗi `Mesh`/`Line`/`Points` có `frustumCulled = true` (mặc định), renderer gọi `Frustum.intersectsObject(object)` — không kiểm tra từng vertex, mà kiểm tra đúng MỘT hình cầu bao (bounding sphere). Cơ chế, đọc thẳng từ mã nguồn: lấy `geometry.boundingSphere` (tính một lần từ vị trí gốc — bind-pose — của toàn bộ vertex, cache lại), copy và `applyMatrix4(object.matrixWorld)` để chuyển tâm/bán kính sang world space, rồi so khoảng cách tâm với cả 6 mặt phẳng frustum (rút ra từ `projectionMatrix * matrixWorldInverse` của camera). Object bị loại nếu tâm nằm xa hơn bán kính về phía sau bất kỳ mặt nào trong 6 mặt đó.
+
+Một chi tiết đáng nhớ trong `applyMatrix4`: bán kính nhân với `matrix.getMaxScaleOnAxis()` — trục scale LỚN NHẤT, không phải trung bình. Object bị scale không đều (kéo dài X, giữ nguyên Y/Z) có bounding sphere rộng hơn hình thật ở hai trục còn lại — an toàn (không cull nhầm object đang hiện), nhưng bỏ lỡ một phần cơ hội culling.
+
+## Khi bounding-sphere test thất bại
+
+Bounding sphere tính đúng MỘT LẦN từ vị trí gốc của geometry trên CPU, không biết vertex shader làm gì SAU đó. Hai trường hợp nền tảng này từng chạm tới:
+
+- **Mesh bị displace bằng vertex shader.** Bài `checkpoint-waving-flag` (Track 6) di chuyển vertex lá cờ ngay trong vertex shader bằng hàm sóng theo thời gian — vị trí THẬT trên màn hình đổi liên tục, nhưng `geometry.boundingSphere` đứng yên ở hình phẳng ban đầu. Camera lùi đủ xa để bounding sphere gốc rời frustum trong khi lá cờ (đã bị sóng đẩy) vẫn hiện trên màn hình — cờ biến mất đột ngột dù mắt còn thấy nó. Sửa bằng cách tự mở rộng `boundingSphere` đủ bao trùm biên độ displacement lớn nhất, hoặc đặt `mesh.frustumCulled = false` cho riêng mesh đó, chấp nhận nó luôn vào render list dù đang ngoài khung hình.
+- **`InstancedMesh` chỉ có MỘT bounding sphere cho TẤT CẢ instance.** `computeBoundingSphere()` của nó hợp (union) bounding sphere từng instance thành một sphere duy nhất bao hết. Hệ quả: culling chạy ở cấp cả `InstancedMesh` — chỉ cần một instance còn trong khung hình, toàn bộ hàng nghìn instance khác (kể cả những cái rất xa) vẫn vào đúng một draw call. Đây chính là điều bài `instancing-a-million-objects` (Track 9) ngầm giả định: instancing đánh đổi số draw call cực thấp lấy khả năng culling từng-object — hai thứ không miễn phí cùng lúc.
+
+## Chi phí của chính phép test, và vì sao Group không tự cull
+
+Một lần test — biến đổi tâm sphere bằng ma trận, so với 6 mặt phẳng — chỉ vài chục phép toán dấu phẩy động; với 10.000 object mỗi frame, tổng chi phí ước lượng vẫn dưới một phần nghìn giây trên CPU hiện đại, gần như miễn phí so với công GPU nó tiết kiệm được. Nhưng phép test này KHÔNG phân cấp: `Group` không tự được test frustum — renderer chỉ kiểm tra `object.visible === false` rồi bỏ qua toàn bộ subtree nếu cờ đó được đặt; ngược lại nó luôn đi xuống từng con và test riêng từng mesh lá, bất kể cha có nằm ngoài khung hình hay không. Nói cách khác, "group hierarchies giúp culling" không tự động đúng — chỉ đúng khi BẠN chủ động đặt `group.visible = false` cho một khu vực đã biết chắc ngoài tầm nhìn, biến một phép kiểm tra thành hàng trăm phép bị bỏ qua cùng lúc. Đây là kỹ thuật "zone culling" quay lại ở mục occlusion bên dưới.
+
+## Occlusion culling: phần Three.js không tự lo
+
+Frustum culling loại object NGOÀI khung nhìn; nó không biết object BỊ CHE bởi object khác dù cả hai đều trong khung nhìn — một bức tường trước cả căn phòng vẫn khiến Three.js vẽ đầy đủ căn phòng phía sau, tốn fillrate vô ích. Three.js không có occlusion culling tự động — quyết định có chủ đích, không phải thiếu sót: occlusion đúng nghĩa (biết TỪNG pixel thật sự bị che) cần depth đã render, một bài toán con-gà-quả-trứng với chính việc render.
+
+WebGL2 có occlusion query object thật: `gl.createQuery()` cộng `gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, query)` bọc quanh việc vẽ bounding box, rồi hỏi GPU "có pixel nào vượt qua depth test không". Nhưng kết quả BẤT ĐỒNG BỘ — `gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)` thường chỉ trả `true` sau 1-2 frame, và bản thân query tốn thêm một draw call phụ mỗi object. Với scene vài trăm object, chi phí quản lý hàng trăm query thường VƯỢT chi phí cứ vẽ luôn — đây là lý do occlusion query GPU hiếm khi đáng giá trong code người dùng, dù API tồn tại thật.
+
+Câu trả lời thực dụng hơn là thiết kế cấp độ (level design) kết hợp zone culling thủ công: chia scene thành khu vực biết trước (phòng, tầng, chunk địa hình), bật/tắt `Object3D.visible` (hoặc `group.visible`, đúng kỹ thuật ở mục trên) theo khu vực camera đang đứng — rẻ, dễ suy luận, không cần đo GPU bất đồng bộ, và bao phủ đúng những trường hợp occlusion lớn nhất trong hầu hết game/showcase 3D.
+
+## LOD: chuỗi chi tiết chuyển theo khoảng cách camera
+
+`THREE.LOD` là container quản lý nhiều phiên bản chi tiết của cùng một object. API tối giản — `addLevel(object, distance, hysteresis?)` — thêm một mesh, hiển thị khi khoảng cách từ camera đến LOD $\geq$ `distance` đó (và nhỏ hơn distance level kế tiếp). Cơ chế cập nhật nằm trong vòng lặp render: mỗi frame, nếu `lod.autoUpdate` (mặc định `true`), renderer tự gọi `lod.update(camera)` — tính khoảng cách từ `camera.position` đến `lod.matrixWorld` chia cho `camera.zoom`, bật `visible` đúng một level, tắt các level còn lại.
+
+```ts
+const lod = new THREE.LOD();
+lod.addLevel(highDetailMesh, 0);
+lod.addLevel(midDetailMesh, 8);
+lod.addLevel(billboardMesh, 20);
+scene.add(lod); // renderer tự gọi lod.update(camera) mỗi frame
+```
+
+Vấn đề kinh điển của threshold cứng là **hysteresis (giật hình ở biên)**: camera dao động qua đúng ranh giới 8m khiến level đổi qua lại nhiều lần/giây, gây "popping" rõ mắt. Tham số thứ ba `hysteresis` (0 đến 1) co ranh giới lại một chút CHỈ KHI level đó đang hiển thị — tạo vùng đệm bất đối xứng, giảm tần suất đổi nhưng không triệt tiêu hoàn toàn popping; giải pháp triệt để hơn (cross-fade hai mesh bằng opacity) tốn thêm draw call — bài này nêu trung thực đánh đổi, không nhận đã giải quyết xong.
+
+Sinh level chi tiết thường KHÔNG tự động lúc runtime trong dự án thật. `SimplifyModifier` (thư mục addons) giảm vertex bằng edge-collapse, nhưng chất lượng luôn kém hơn nghệ sĩ 3D tự dựng mesh tay với ngân sách polygon riêng từng khoảng cách — công cụ tự động hợp cho prototype, không hợp asset cuối ship sản phẩm. LOD cũng áp dụng cho MATERIAL: đổi `MeshStandardMaterial` (PBR đầy đủ, tốn nhất) sang `MeshLambertMaterial`/`MeshBasicMaterial` ở xa — mắt khó phân biệt specular/roughness của object chỉ vài pixel màn hình, trong khi fragment shader rẻ hơn hẳn.
+
+Ngưỡng LOD nên nghĩ theo **screen-coverage** thay vì khoảng cách thô: cùng 10m, object bán kính 0.2m và object bán kính 5m chiếm diện tích màn hình khác hẳn nhau. Kích thước biểu kiến (pixel dọc), với FOV dọc $\theta$ và chiều cao viewport $H$, xấp xỉ:
+
+$$
+s_{\text{px}} \approx \frac{H \cdot r}{d \cdot \tan(\theta / 2)}
+$$
+
+`THREE.LOD` chỉ dùng $d$ thô — muốn đúng screen-coverage phải tự tính $s_{\text{px}}$ mỗi frame rồi tự quyết định level. Ví dụ: $H = 1080$px, $\theta = 50°$ nên $\tan(25°) \approx 0.4663$; object $r = 0.2$m ở $d = 10$m cho $s_{\text{px}} \approx \dfrac{1080 \times 0.2}{10 \times 0.4663} \approx 46$px — đủ nhỏ để hợp lý chuyển billboard, dù $d = 10$m theo ngưỡng thô có thể vẫn đang ở mức chi tiết cao.
+
+## Kết nối về sau
+
+Ba kỹ thuật của bài này quay lại nhiều lần ở phần còn lại Track 12: `texture-memory-budget` tính ngân sách bộ nhớ cho đúng object CÒN được vẽ sau khi culling/LOD đã cắt bớt; `mobile-tile-gpus-and-overdraw` mở rộng vấn đề "vẽ thứ bị che" sang overdraw GPU mobile, nơi cái giá đắt hơn desktop nhiều lần; `adaptive-quality-tiers` dùng LOD-cho-material như một trục điều chỉnh chất lượng theo tier thiết bị, không chỉ theo khoảng cách camera.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất với culling và LOD:
+
+1. **Tưởng object bị vertex-shader displace vẫn được cull đúng.** `boundingSphere` tính từ vị trí GỐC trên CPU, không biết vertex shader di chuyển đỉnh đi đâu — object biến mất sớm dù mắt vẫn thấy nó. Mở rộng bounding sphere thủ công hoặc tắt `frustumCulled` cho riêng mesh đó.
+2. **Đặt `distance` của `addLevel` giống nhau cho mọi object bất kể kích thước thật.** Object nhỏ và object lớn ở cùng khoảng cách chiếm diện tích màn hình khác hẳn nhau — ngưỡng nên tính theo screen-coverage ($s_{\text{px}}$ ở trên), không phải một con số mét cố định copy giữa các object khác kích thước.
+3. **Đặt `group.visible = false` rồi tưởng con của nó vẫn được test frustum bình thường.** Ngược lại: `visible = false` chặn toàn bộ subtree khỏi cả traversal lẫn test — hữu ích cho zone culling có chủ đích, nhưng dễ gây bug nếu tưởng nhầm nó chỉ ẩn hình chứ không ảnh hưởng logic render bên dưới.
+
+</Callout>

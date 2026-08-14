@@ -1,0 +1,56 @@
+## One Scene, Many Devices: Design by Tier, Don't Just Degrade Uniformly
+
+The first instinct when thinking about "runs fine on weak hardware" is usually: keep everything the same, just lower the resolution or flip off a few effects when the device is slow. That produces a version that visibly looks cut-down — missing lighting, missing effects, obviously a "cheap version" of the original. The right approach is the opposite: **design the LOOK at each tier first**, then write the code that picks a tier at runtime. A low tier isn't "the high tier minus a few things" — it's its own design, deliberately simplifying materials and effects in a way that still looks good at its own level. A flat `MeshBasicMaterial` with saturated color and less detail usually reads as "intentional" far more than a `MeshStandardMaterial` that just looks under-lit because some lights got disabled to save cost — both cut GPU cost, but one is an aesthetic decision and the other is an accident.
+
+## A Short Benchmark: The Most Truthful Signal
+
+The most trustworthy way to know which tier a device belongs to isn't guessing from hardware specs — it's **measuring directly**: render a few dozen frames of the exact kind of load the real scene will have (the real particle count, the real materials), read the frame-time EMA (exponential moving average) of those frames, and decide the starting tier from that actual measurement. Run this step right during the loading screen — the user is already waiting for data to load, so a few hundred milliseconds of "silent" benchmarking costs no perceptible extra time. No hardware heuristic is as honest as this, because it measures the thing that actually matters: how fast YOUR scene runs on that device's REAL WebGL context, not an indirect guess from a GPU name or a RAM figure.
+
+## Hardware Heuristics: Useful, With Real Limits
+
+When there's no time to benchmark (or an earlier estimate is wanted), a few static APIs are quick to read, but each has a real limit worth knowing:
+
+- **`WEBGL_debug_renderer_info`** returns a real GPU string (`UNMASKED_RENDERER_WEBGL`) — useful for identifying a specific GPU, but it's also a fingerprinting vector, so modern browsers have reduced how detailed that string is, and Firefox disables the extension outright when `privacy.resistFingerprinting` is on. Don't build important logic that fully depends on this string staying intact.
+- **`navigator.deviceMemory`** returns approximate RAM in GB, deliberately rounded to the nearest power of two (0.5, 1, 2, 4, 8...) to reduce fingerprinting risk — and it only exists on Chromium-based browsers; Safari and Firefox don't implement it.
+- **`navigator.hardwareConcurrency`** returns the logical core count (which can include hyperthreading), and is far more broadly supported (Baseline, most modern browsers) — but the browser is allowed to report a number LOWER than the real core count, and a logical core count says nothing about clock speed or per-core performance.
+- **`devicePixelRatio`** is not a capability signal — it's a LOAD MULTIPLIER. DPR 3 on a flagship phone means rendering 9× the pixels of DPR 1 at the same logical screen size; use DPR to multiply into a load estimate, not to infer whether a GPU is "strong" or "weak."
+
+## Designing 3 Tiers: One Config Object, Not if/else Scattered Everywhere
+
+A practical tier table for a moderate 3D scene:
+
+| Tier | DPR | Postfx | Particles | Material |
+| --- | --- | --- | --- | --- |
+| High | full (up to 2) | all passes | 65,000 | full lit |
+| Medium | capped at 1.5 | bloom only | 16,000 | full lit |
+| Low | 1 | no postfx | 4,000 | simple (unlit) |
+
+The exact numbers in this table matter less than HOW the code is organized: every parameter lives in **one config object** (`{ dpr, particleCount, postfxPasses, material }`), and every part of the code CONSUMES that object — there's no `if (tier === "low") { ... } else if (tier === "medium") { ... }` scattered across the scene. Adding a fourth tier, or tweaking a single number, means changing exactly ONE place. The demo below builds exactly this pattern: one lookup object keyed by tier, every scene piece just reads the config, none of them decide anything on their own.
+
+## Adapting at Runtime: Watchdog, EMA and Hysteresis
+
+A startup benchmark only tells you the INITIAL state — a scene can get heavier as a player enters a more effect-dense area, or the device heats up and the GPU throttles its own clock. A watchdog needs to run continuously: keep an EMA of frame time,
+
+$$
+\text{ema}_t = \alpha \cdot \Delta t + (1-\alpha)\cdot \text{ema}_{t-1}
+$$
+
+with a small $\alpha$ (say $0.1$) to smooth out single-frame noise. If `ema` stays above a bad threshold across several consecutive samples (not just one — a single stutter from GC or an asset load shouldn't instantly drop a tier), drop one tier. If `ema` stays comfortably below a safe threshold long enough, it's fine to raise a tier back up. This is the **thermostat pattern**: two different thresholds (the drop threshold set higher than the raise threshold) plus a requirement to hold steady across multiple samples — called **hysteresis** — to avoid flip-flopping between two tiers every few seconds, which stutters worse than just staying on a slightly-too-low tier. Drei — already a dependency of this platform — ships a `PerformanceMonitor` component implementing exactly this idea (`bounds`, `flipflops` parameters, `onIncline`/`onDecline`/`onFallback` callbacks); the demo below builds its own watchdog by hand to make the mechanism visible, but in a real project `PerformanceMonitor` is the sensible choice over rewriting it from scratch.
+
+## R3F: The Real Levers That Enforce a Tier
+
+Three places in R3F directly enforce a config: the `dpr` prop on `<Canvas>` (accepts a number or a `[min, max]` range — exactly where medium tier's "DPR capped at 1.5" becomes real); conditionally mounting heavy effect components (don't just set `enabled={false}` if the component still pays the cost of building its tree/uniforms while disabled — drop it entirely from the JSX tree if the tier doesn't need it); and a particle-count prop passed straight into the component that generates instances, not a fixed-size array with some instances hidden via `visible={false}` (a hidden instance still costs a draw call).
+
+## Respecting the User's Manual Choice
+
+"Auto" is useful, but it shouldn't be the ONLY option. Some users know their own device and want to force a high tier even against what the benchmark says (plugged into power, willing to trade battery for quality); others want to force a low tier to save battery on a powerful machine. A small toggle in settings — it doesn't need to be prominent — lets someone pick a tier manually, and once a user has chosen manually, the watchdog MUST stop changing the tier on its own, no matter how bad frame time gets. This isn't a minor UX detail — it's a contract: the benchmark and the watchdog should only intervene when the user hasn't.
+
+<Callout variant="mistake" title="Common mistakes">
+
+Three of the most common mistakes when building adaptive quality:
+
+1. **Letting the watchdog switch tiers after a SINGLE bad frame-time sample.** One stutter from garbage collection or an asset still loading doesn't reflect the device's real performance — without hysteresis the tier bounces up and down constantly, which is a worse experience than just staying on a slightly-too-low tier the whole time.
+2. **Trusting `navigator.deviceMemory`/the GPU debug string as absolute, forgetting they can be missing or blurred.** Code that hard-depends on these APIs with no fallback (say, defaulting to medium when the API returns `undefined`) will crash or pick the wrong tier on exactly the browsers that respect user privacy the most.
+3. **Keeping everything at the high tier and just hiding it with `visible={false}` instead of not building it at all.** A hidden mesh is still in the scene graph, still gets traversed, and in many cases still generates a draw call — a low tier has to mean that component doesn't exist in the React tree at all, not "exists but invisible."
+
+</Callout>

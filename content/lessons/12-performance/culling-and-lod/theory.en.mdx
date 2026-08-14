@@ -1,0 +1,62 @@
+## Automatic Frustum Culling: the Real Mechanism Inside Three.js
+
+Every frame, before a single draw call is issued, `WebGLRenderer` walks the scene graph deciding which objects are worth drawing. For every `Mesh`/`Line`/`Points` with `frustumCulled = true` (the default), the renderer calls `Frustum.intersectsObject(object)` — it checks exactly ONE bounding sphere, not every vertex. The mechanism, read straight from the source: grab `geometry.boundingSphere` (computed once from the vertices' original — bind-pose — positions, then cached), copy it and `applyMatrix4(object.matrixWorld)` to move the center/radius into world space, then compare that center's distance against all 6 frustum planes (derived from the camera's `projectionMatrix * matrixWorldInverse`). The object gets dropped if its center sits farther than its radius behind any one of those 6 planes.
+
+One detail worth remembering inside `applyMatrix4`: the radius gets multiplied by `matrix.getMaxScaleOnAxis()` — the LARGEST scale axis, not the average. An object scaled unevenly (stretched along X, unchanged on Y/Z) ends up with a bounding sphere wider than its true shape on the other two axes — safe (never wrongly culls something actually on screen), but it gives up some culling opportunity.
+
+## When the Bounding-Sphere Test Fails
+
+The bounding sphere is computed exactly ONCE from the geometry's original CPU-side positions, and knows nothing about what the vertex shader does afterward. Two cases this platform has already run into:
+
+- **A mesh displaced by its vertex shader.** The `checkpoint-waving-flag` lesson (Track 6) moves the flag's vertices right inside the vertex shader with a time-based wave — its real on-screen position keeps changing, but `geometry.boundingSphere` stays put at the original flat shape. Pull the camera back far enough that the original bounding sphere leaves the frustum while the wave-displaced flag is still visible, and the flag vanishes abruptly even though the eye still sees it. Fix it by manually expanding `boundingSphere` to cover the largest displacement amplitude, or set `mesh.frustumCulled = false` for that one mesh, accepting that it always lands in the render list even when off-screen.
+- **`InstancedMesh` has exactly ONE bounding sphere for ALL instances.** Its `computeBoundingSphere()` unions every instance's sphere into a single combined one. The consequence: culling only runs at the level of the whole `InstancedMesh` — as long as one instance is inside the frustum, all the other thousands (including far-away ones) still get pushed into that one draw call. This is exactly what `instancing-a-million-objects` (Track 9) implicitly assumes: instancing trades an extremely low draw-call count for per-object culling — the two don't come free together.
+
+## The Cost of the Test Itself, and Why a Group Doesn't Self-Cull
+
+A single test — transforming a sphere's center by a matrix, comparing it against 6 planes — costs only a few dozen floating-point operations; for 10,000 objects per frame, the estimated total stays well under a millisecond on a modern CPU, close to free next to the GPU work it saves. But this test is NOT hierarchical: a `Group` is never itself frustum-tested — the renderer only checks `object.visible === false` and skips the whole subtree if that's set; otherwise it always descends into every child and tests each leaf mesh individually, regardless of whether their parent sits off-screen. In other words, "group hierarchies help culling" isn't automatically true — only when YOU deliberately set `group.visible = false` for a whole area known to be out of view, turning one check into hundreds of skipped checks at once. This is the "zone culling" technique that returns in the occlusion section below.
+
+## Occlusion Culling: the Part Three.js Doesn't Handle For You
+
+Frustum culling drops objects OUTSIDE the view; it knows nothing about objects HIDDEN behind others even when both sit inside the view — a wall in front of an entire room still makes Three.js draw the whole room behind it, wasting fillrate. Three.js has no automatic occlusion culling — a deliberate decision, not an oversight: real occlusion (knowing exactly which pixels are hidden) needs already-rendered depth information, a chicken-and-egg problem with rendering itself.
+
+WebGL2 does have real occlusion query objects: `gl.createQuery()` plus `gl.beginQuery(gl.ANY_SAMPLES_PASSED_CONSERVATIVE, query)` wrapped around drawing a bounding box, then asking the GPU "did any pixel pass the depth test". But the result is ASYNCHRONOUS — `gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)` typically only returns `true` 1-2 frames later, and the query itself costs an extra draw call per object checked. For a scene with a few hundred objects, managing hundreds of queries usually EXCEEDS the cost of just drawing everything anyway — why GPU occlusion queries are rarely worth it in userland code, even though the API is real.
+
+The far more practical answer is level design combined with manual zone culling: split the scene into known-ahead-of-time areas (rooms, floors, terrain chunks), then toggle `Object3D.visible` (or `group.visible`, the technique above) based on which zone the camera sits in — cheap, easy to reason about, no asynchronous GPU readback, and it covers exactly the biggest occlusion cases in most games/3D showcases.
+
+## LOD: a Detail Chain That Swaps by Camera Distance
+
+`THREE.LOD` is a container managing several detail versions of the same object. The API is minimal — `addLevel(object, distance, hysteresis?)` — adds a mesh, shown when the camera-to-LOD distance is $\geq$ that `distance` (and less than the next level's). The update mechanism lives in the render loop: every frame, if `lod.autoUpdate` (default `true`), the renderer calls `lod.update(camera)` itself — distance from `camera.position` to `lod.matrixWorld`, divided by `camera.zoom`, turning `visible` on for exactly one level and off for the rest.
+
+```ts
+const lod = new THREE.LOD();
+lod.addLevel(highDetailMesh, 0);
+lod.addLevel(midDetailMesh, 8);
+lod.addLevel(billboardMesh, 20);
+scene.add(lod); // the renderer calls lod.update(camera) every frame automatically
+```
+
+The classic problem with hard distance thresholds is **hysteresis (popping at the boundary)**: the camera oscillating across the 8m line flips the level several times a second, producing visible popping. The third parameter, `hysteresis` (0 to 1), shrinks the boundary slightly ONLY while that level is shown — an asymmetric buffer that reduces how often the flip happens without fully eliminating popping; the more thorough fix (cross-fading two meshes by opacity) costs an extra draw call — this lesson states the tradeoff honestly rather than claiming it's solved.
+
+Generating the detail levels themselves usually isn't automated at runtime in real projects. `SimplifyModifier` (in the addons folder) reduces vertex count via edge-collapse, but automated quality is consistently worse than a 3D artist rebuilding the mesh by hand with a polygon budget per distance — reasonable for prototyping, not for final shipped assets. LOD also applies to MATERIALS: swapping `MeshStandardMaterial` (full PBR, most expensive) for `MeshLambertMaterial`/`MeshBasicMaterial` at a distance — the eye can barely tell apart specular/roughness on an object covering a few screen pixels, while the fragment shader gets noticeably cheaper.
+
+LOD thresholds should be thought of in **screen coverage** rather than raw distance: at the same 10m, an object with a 0.2m radius and one with a 5m radius cover very different amounts of screen space. The apparent on-screen size (vertical pixels), given a vertical FOV $\theta$ and viewport height $H$, is approximately:
+
+$$
+s_{\text{px}} \approx \frac{H \cdot r}{d \cdot \tan(\theta / 2)}
+$$
+
+`THREE.LOD` only uses raw $d$ — true screen-coverage behavior means computing $s_{\text{px}}$ yourself every frame and deciding the level from that. Example: $H = 1080$px, $\theta = 50°$ so $\tan(25°) \approx 0.4663$; an object with $r = 0.2$m at $d = 10$m gives $s_{\text{px}} \approx \dfrac{1080 \times 0.2}{10 \times 0.4663} \approx 46$px — small enough to reasonably switch to a billboard, even though a raw $d = 10$m threshold might still sit in the high-detail range.
+
+## Where This Goes Next
+
+All three techniques from this lesson return repeatedly through the rest of Track 12: `texture-memory-budget` computes a memory budget for exactly the objects STILL drawn after culling/LOD has trimmed most away; `mobile-tile-gpus-and-overdraw` extends this "drawing what's hidden" problem to overdraw on mobile GPUs, where the cost is many times steeper; `adaptive-quality-tiers` uses LOD-for-materials as a quality axis driven by device tier, not just camera distance.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes with culling and LOD:
+
+1. **Assuming a vertex-shader-displaced object still gets culled correctly.** `boundingSphere` is computed from the ORIGINAL positions on the CPU and knows nothing about where the vertex shader moves vertices — the object disappears too early even though the eye still sees it. Manually expand the bounding sphere or disable `frustumCulled` for that one mesh.
+2. **Setting the same `addLevel` `distance` for every object regardless of its real size.** A small object and a large one at the same distance cover very different amounts of screen space — thresholds should come from screen coverage ($s_{\text{px}}$ above), not one fixed meter value copied across differently sized objects.
+3. **Setting `group.visible = false` and assuming its children still get tested by the frustum as normal.** The opposite is true: `visible = false` blocks the whole subtree from both traversal and testing — useful for deliberate zone culling, but an easy source of bugs if mistaken for something that only hides visuals without touching render logic underneath.
+
+</Callout>

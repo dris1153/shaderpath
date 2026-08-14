@@ -1,0 +1,11 @@
+## Goal
+
+Track 12's final mini-build: no new theory, a synthesis of the whole track into one working artifact. You're handed a **desktop-maxed** scene — deliberately built to run well only on a strong dev machine — and have to make it **mobile-ready**, using the track's actual techniques: quality tiers (`adaptive-quality-tiers`), overdraw on tile-based mobile GPUs (`mobile-tile-gpus-and-overdraw`), correct disposal across repeated mount/unmount cycles (`dispose-and-leak-hunting`), and a safely-mounted canvas (`nextjs-ssr-hydration-canvas`).
+
+## Requirements
+
+The `starterCode` in the Exercises section below ships a scene with 4 problems planted at once: 200,000 untiered particles, additive blending across all of them causing heavy overdraw, a fixed $4096 \times 4096$ shadow map, and an uncapped DPR (`dpr={[1, 3]}`). Your job: build a tier config object (`low`/`mid`/`high`) plus a detection benchmark for the starting tier; wire up a frame-time watchdog **with hysteresis** (no flip-flopping when frame time hovers near a threshold) to switch tiers dynamically at runtime; dispose the particle geometry/material correctly through `useDisposable` so `renderer.info.memory` doesn't creep upward across repeated mount/unmount cycles; cap DPR per tier; and trim measurable overdraw (lower opacity/disable bloom at low tier). The verification procedure — DevTools Performance tab with CPU throttle 4× and 6× — is a **required part of this build**, written as a comment right in the code, not just done offscreen and reported verbally.
+
+## What "Done" Looks Like
+
+Check against the checklist in the exercises section before opening `solutionCode` — in particular: stable FPS at both throttle levels, tiers switch smoothly (no oscillating back and forth), 10 mount/unmount cycles don't grow `renderer.info.memory.geometries`, and a complete before/after table exists right in the file.

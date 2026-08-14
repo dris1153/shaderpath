@@ -1,0 +1,48 @@
+## Draw call tốn gì và tốn ở đâu
+
+Mỗi lần `renderer.render()` chạy, MỖI mesh riêng biệt cần ít nhất một lệnh `gl.drawElements`/`gl.drawArrays` — một draw call. Phí của lệnh này nằm gần hết ở CPU, TRƯỚC KHI GPU vẽ pixel nào: driver phải xác thực toàn bộ trạng thái pipeline đang bind (chương trình shader, buffer, texture unit, blend mode), dựng command buffer, rồi chuyển nó qua ranh giới driver. Đây là phí CỐ ĐỊNH trên mỗi LẦN GỌI, gần như không phụ thuộc số tam giác trong mesh đó — ước lượng, khoảng 0.01–0.05ms CPU mỗi draw call trên desktop hiện đại. Nghe nhỏ, nhưng nhân với số lượng: 1000 draw call một mình đã ăn 10–50ms CPU, vượt xa ngân sách 16.67ms của MỘT frame, trước khi GPU render bất cứ thứ gì. Đây chính là "thuế draw call" — bài này là cả một bậc thang kỹ thuật để trả thuế đó ít lần nhất có thể.
+
+## Đếm draw call cho đúng: renderer.info.render.calls
+
+`gl.info.render.calls` (bài "Công cụ Profiling" trước đó đã giới thiệu) là sự thật duy nhất đáng tin, tự reset mỗi frame. Con số này CÓ THỂ vượt quá số mesh trong scene: mỗi light đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn CỦA NÓ — 50 mesh với 2 shadow-casting light cho ra 150 call (50 pass chính + 50×2 pass shadow), không phải 50. Một material cần nhiều pass GL (một số thiết lập depth-prepass hoặc transparency) cũng nhân thêm. Đọc con số này đúng ngay sau `render()`, đừng kỳ vọng nó khớp 1:1 với `scene.children.length` khi có shadow map trong cảnh.
+
+## Bậc thang bậc 1: material dùng chung
+
+Callback bài "Memoizing Geometry & Materials" ở Track 4: dùng lại MỘT instance material cho nhiều mesh giảm số lần `gl.useProgram` phải đổi program (driver phải re-validate state mỗi lần đổi) — nhưng KHÔNG giảm số draw call. Vẫn N mesh, N lần gọi vẽ, vì mỗi mesh vẫn là một node transform riêng. Việc này gần như miễn phí và luôn nên làm, nhưng tự nó không giải quyết thuế draw call — nó dọn đường cho hai bậc kế tiếp, hai bậc THỰC SỰ đưa N lệnh vẽ về một.
+
+## Bậc thang bậc 2: gộp tĩnh với BufferGeometryUtils.mergeGeometries
+
+Import từ `three/addons/utils/BufferGeometryUtils.js` (đã xác minh path này khớp export `./addons/*` → `./examples/jsm/*` trong `package.json` của `three@0.185.1`). `mergeGeometries(geometries, useGroups = false)` đòi hỏi MỌI geometry đầu vào có cùng bộ attribute (cùng tên, cùng `itemSize`) — trộn một geometry có UV với một geometry không có UV trả về `null` kèm `console.error`, không throw exception im lặng. Gộp geometry PHÁ HUỶ danh tính từng object: phải bake transform vào vertex position của TỪNG bản sao trước khi gộp (`geometry.clone().translate(x, y, z)` cho từng vị trí), vì kết quả là MỘT BufferGeometry, MỘT Mesh, MỘT transform — frustum culling tự động của Three giờ cull cả khối gộp như MỘT bounding sphere duy nhất, không còn per-object. Đúng khi vật thể THỰC SỰ tĩnh vĩnh viễn (đá, cây cỏ bake từ level editor); sai ngay khi cần di chuyển, ẩn hay đổi màu một mảnh riêng lẻ sau đó.
+
+## Bậc thang bậc 3: InstancedMesh
+
+Callback InstancedMesh ở Track 6/9: cùng geometry + cùng material, nhưng GIỮ danh tính từng bản sao — `setMatrixAt(i, matrix)` + `instanceMatrix.needsUpdate = true` (hoặc `setColorAt`) cho phép mỗi bản sao có transform/màu riêng, mà vẫn chỉ tốn ĐÚNG MỘT `gl.drawElementsInstanced`. Xác nhận trong `WebGLInfo.js`: `render.calls` chỉ tăng 1 mỗi lần gọi update, bất kể `instanceCount`, chỉ `render.triangles` mới nhân theo số instance. Lựa chọn đúng cho đúng tình huống "500 vật thể giống hệt, khác vị trí/xoay, có thể cần đổi runtime" — demo bên dưới đo trực tiếp con số này.
+
+## Bậc thang bậc 4: BatchedMesh — câu trả lời mới hơn
+
+Xác minh thật trong `node_modules/three/src/objects/BatchedMesh.js` của bản `three@0.185.1` đang cài: `THREE.BatchedMesh` tồn tại và là API ổn định ở bản này. Constructor `new THREE.BatchedMesh(maxInstanceCount, maxVertexCount, maxIndexCount, material)` cấp phát sẵn buffer GPU theo giới hạn khai báo trước. `addGeometry(geometry)` đăng ký một geometry KHÁC HẲN (không chỉ transform khác của cùng một geometry như InstancedMesh) và trả về `geometryId`; `addInstance(geometryId)` trả về `instanceId` để gọi `setMatrixAt(instanceId, matrix)`/`setColorAt`. Khác biệt cốt lõi so với InstancedMesh: BatchedMesh gộp được NHIỀU geometry khác nhau (hộp, cầu, nón) trong cùng draw call qua multi-draw, mỗi instance bật/tắt riêng bằng `setVisibleAt(instanceId, visible)` — giải quyết đúng ca "nhiều object nhỏ khác hình dạng, cùng material" mà cả `mergeGeometries` (đòi attribute giống hệt, không toggle riêng lẻ được) lẫn InstancedMesh (chỉ một geometry) đều không xử lý được.
+
+## Chọn đúng kỹ thuật theo hình dạng cảnh
+
+| Tình huống | Kỹ thuật |
+| --- | --- |
+| Cùng geometry, N transform khác nhau, có thể cần đổi lúc chạy | InstancedMesh |
+| Nhiều geometry khác nhau, cùng material, cần ẩn/hiện riêng lẻ | BatchedMesh |
+| Vật thể tĩnh vĩnh viễn, không bao giờ di chuyển/ẩn riêng lẻ | mergeGeometries |
+| Chỉ vài chục mesh | Material dùng chung là đủ, đừng làm phức tạp thêm |
+
+Texture khác nhau giữa các object phá hỏng cả ba kỹ thuật trên (chúng cần CÙNG material). Fix kinh điển: gộp nhiều texture nhỏ vào một texture atlas, chỉnh UV của từng object để chỉ sample đúng vùng của nó — đổi lấy việc phải tự pad biên atlas để tránh bleed khi lọc mipmap.
+
+## Kết nối về sau
+
+Checkpoint ngay sau đây (Profile & Sửa cảnh chậm) ghép thẳng bài này với bài Profiling Tools: dùng `renderer.info` để xác nhận bottleneck là draw call thật, áp đúng kỹ thuật ở trên, rồi trình bày số đo trước/sau. Bài "GPU Mobile dạng Tile & Overdraw" cuối track quay lại đúng chủ đề "chi phí vẽ" nhưng từ phía FRAGMENT — phần đối xứng GPU-bound của câu chuyện CPU-bound bài này vừa kể.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi giảm draw call:
+
+1. **Dùng chung material rồi kỳ vọng draw call giảm.** Material dùng chung chỉ giảm số lần đổi program — draw call vẫn bằng đúng số mesh, vì mỗi mesh vẫn là một node transform riêng cần một lệnh vẽ riêng.
+2. **Gộp tĩnh (`mergeGeometries`) những object cần di chuyển hoặc ẩn/hiện độc lập.** Transform đã bake cứng vào geometry ngay lúc gộp — muốn di chuyển "một" object trong khối gộp sau đó là bất khả thi trừ khi gộp lại từ đầu mỗi frame, tự triệt tiêu lợi ích ban đầu; cần chuyển động độc lập thì dùng InstancedMesh ngay từ đầu, không dùng merge.
+3. **Coi `render.calls` luôn bằng số mesh trong scene.** Shadow-casting light nhân số pass, khiến con số thực tế cao hơn kỳ vọng — dễ kết luận nhầm "instancing không có tác dụng" khi thực ra main pass đã giảm đúng như mong đợi, phần dư ra là các pass shadow không liên quan tới kỹ thuật vừa áp dụng.
+
+</Callout>

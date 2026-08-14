@@ -1,0 +1,53 @@
+## VRAM: The Silent Memory Eater in Your Scene
+
+Open DevTools and try to find it: there's no `gl.getTextureMemoryUsage()`, no `renderer.info.memory.textureBytes`. Neither the WebGL spec nor Three.js gives you a way to just ask the browser "how many bytes is this texture using on the GPU" — browsers deliberately hide that number, partly to avoid leaking a hardware fingerprint. The consequence: the only way to know a scene's VRAM budget is to compute it yourself, from exactly three things you already know the moment you create a texture — its size, its format, and whether it has mipmaps. This lesson builds that formula, then uses it to set a real budget for a specific device, because textures — not geometry, not draw calls — are usually what eats the most VRAM in a typical 3D scene.
+
+## The Formula: A Texture's Real GPU Footprint
+
+A GPU-resident texture costs:
+
+$$
+B = W \times H \times b \times k
+$$
+
+where $W, H$ are width/height in pixels, $b$ is bytes per texel (4 for RGBA8 — 1 byte/channel × 4 channels; 8 for half-float RGBA — 2 bytes/channel × 4 channels), and $k$ is the mipmap factor: $k=1$ with no mipmaps, $k=4/3$ with them. That $4/3$ comes from the geometric series $1 + 1/4 + 1/16 + \dots = 4/3$ — the base mip's cost plus every smaller mip stacked on top, each one a quarter the area of the last.
+
+Applied to a $2048 \times 2048$ RGBA8 texture: $B = 2048 \times 2048 \times 4 = 16{,}777{,}216$ bytes, exactly 16MB; with mipmaps, $\approx 21.3$ MB. Double each side to $4096 \times 4096$: base $= 64$ MB, with mipmaps $\approx 85.3$ MB — exactly **four** times that $21.3$ MB figure, despite the side length only doubling. The reason: doubling each dimension quadruples the texel count ($W \times H$), not doubles it; the $4/3$ mip factor is identical at both sizes, so it contributes nothing to that $4\times$ ratio.
+
+## Float and Half-Float Double the Cost
+
+Track 9 uses textures to store state — particle position, velocity — instead of color. Those values need precision beyond 8-bit's $[0,255]$ range, so state textures always use `HalfFloatType` (2 bytes/channel) or `FloatType` (4 bytes/channel) instead of the default `UnsignedByteType`. For half-float RGBA, $b=8$ instead of $4$ — double the footprint even with size and mipmaps unchanged: a $2048\times2048$ half-float state texture with no mipmaps (render targets usually skip them) already costs $2048\times2048\times8=32$ MB, exactly double an RGBA8 color texture at the same size, also with no mipmaps ($16$ MB). Format isn't a footnote — it multiplies directly into the formula, exactly like size does.
+
+## The Render-Target Tax: A Hidden Post-Processing Cost
+
+A texture budget can't stop at assets you loaded — post-processing passes (Track 10) allocate their own render targets, and those buffers pay the exact same formula. three.js's `EffectComposer` (the installed version, 0.185.1) defaults to `HalfFloatType` for both of its internal ping-pong render targets. A $1920\times1080$ canvas at `devicePixelRatio=2` actually renders into a $3840\times2160$ buffer: each one costs $3840\times2160\times8\approx63.3$ MB, doubled for the ping-pong pair to $\approx126.6$ MB — a cost that exists even with zero color textures in the scene, purely from enabling `EffectComposer`. A heavy pass like `UnrealBloomPass` adds its own chain of mip-sized render targets on top of that (the `bloom-done-right` lesson measured it).
+
+## Budgeting for a Specific Device
+
+No API tells you a device's hard VRAM budget upfront — overshoot it and there's no clean error, the WebGL context just gets silently killed by the browser, freezing the canvas until (if ever) it's restored. A few **estimated** numbers, which swing wildly by driver/OS so don't treat them as exact: a laptop with an integrated GPU (sharing system RAM) is typically safe for only around 1–2GB dedicated to a single browser tab; a mid-range phone is considerably less. A minimal budget worksheet: sum the MB of every texture that will be resident at once (the formula above) plus the render-target tax (previous section), then deliberately leave at least 30–40% of that estimated budget as headroom for geometry, secondary buffers, and the OS itself — don't push to 100%.
+
+## Why Resolution Isn't the Same as Quality
+
+An object covering roughly $200\times200$ screen pixels can only ever display 40,000 distinct texels in a given frame. Mapping a $2048\times2048$ texture (~4.2 million texels) onto it means $200^2/2048^2\approx0.95\%$ of those texels ever actually reach the screen. Mipmaps help the GPU pick a smaller mip when the object is far away — improving filtering quality and sampling speed — but they don't erase a single byte from VRAM: every mip level, including the full-size base, stays fully resident per the formula above. Resolution should match the object's actual on-screen texel density, not a number that "sounds sharp."
+
+## GPU-Native Compression: The Real Fix
+
+PNG/JPEG-style compression only saves download bandwidth — `texImage2D` always decodes an image back to raw RGBA bytes before pushing it to the GPU, so a 200KB JPEG still costs the full RGBA8 footprint computed above once it's uploaded; it saves nothing on VRAM. Real GPU-native compressed formats — S3TC/DXT (desktop), ETC2 (WebGL2/Android baseline), ASTC (newer devices) — work fundamentally differently: the data stays in its compressed block form INSIDE VRAM, and the GPU's texture unit decodes individual blocks on the fly while sampling, running 4 to 8 times smaller than RGBA8 depending on the format. The catch: none of those three formats runs everywhere — which is exactly why the KTX2 container and the Basis Universal codec exist: compress once, then transcode client-side to whatever GPU format the current device actually supports. The `asset-pipeline-draco-ktx2` lesson covers that pipeline in detail.
+
+## Measuring and Cleaning Up: renderer.info and dispose
+
+`renderer.info.memory.textures` is a number Three.js already tracks, readable live in the demo below — but it's a COUNT of live texture objects, not megabytes: a $256\times256$ texture and a $4096\times4096$ texture both add exactly "1" to it. It's useful for hunting leaks (the count only drops when `texture.dispose()` is actually called, the same discipline from Track 4), not for estimating a budget — that still needs the formula above.
+
+## From Here to a Real Compression Pipeline
+
+The next lesson, `shader-compilation-stalls`, leaves memory behind for time — same "measure before optimizing" spirit, but measuring shader compile milliseconds instead of texture megabytes. Further out, `asset-pipeline-draco-ktx2` returns to the exact GPU-native compression question from the section above, with real tools: `gltf-transform`, `KTX2Loader`, and a CLI script that actually runs.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when estimating a texture budget:
+
+1. **Forgetting to multiply by $b$ for the format, or by $k=4/3$ when mipmaps are on.** Switching from RGBA8 to half-float without doubling $b$, or enabling mipmaps without the extra $4/3$, throws a budget estimate off by tens of percent — enough that a scene that "just fits" was actually over budget all along.
+2. **Treating `renderer.info.memory.textures` as "MB in use."** It's an object count, not bytes — a $512\times512$ texture and a $4096\times4096$ texture both add exactly $1$ to it, so basing a budget decision on it always gives the wrong answer.
+3. **Assuming PNG/JPEG is "already compressed, so it's safe."** `texImage2D` decodes back to raw RGBA before uploading — a lightweight JPG still costs the full RGBA8 footprint on the GPU, saving nothing over an uncompressed image; only real GPU-native compression (S3TC/ETC2/ASTC, via KTX2) keeps that compression inside VRAM.
+
+</Callout>

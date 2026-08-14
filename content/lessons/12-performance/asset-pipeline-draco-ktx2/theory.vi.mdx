@@ -1,0 +1,119 @@
+## Hai miền nén khác nhau: hình học và texture
+
+Một file `.glb` nặng thường nặng vì hai lý do độc lập, và mỗi lý do cần một kỹ thuật nén khác hẳn nhau. Geometry (position, normal, uv, index) là dữ liệu số — nén được bằng cách giảm độ chính xác (lượng tử hoá) rồi nén phần dư bằng entropy coding, đúng triết lý nén dữ liệu không mất mát của ZIP nhưng chuyên biệt cho mesh 3D. Texture lại là ảnh raster — GPU cần sample trực tiếp nên không thể dùng JPEG/PNG (định dạng nén để *lưu trữ*, phải giải mã hoàn toàn ra RGBA thô trước khi lên VRAM, như bài `textures-and-compression-ktx2` đã chỉ ra qua công thức $2048^2 \times 4 \approx 16\text{MB}$). Hai bài toán này độc lập: một model có thể cần nén geometry nặng nhưng texture nhẹ, hoặc ngược lại — pipeline thật luôn xử lý riêng từng miền rồi mới gộp lại thành một file `.glb` cuối.
+
+## Nén hình học với Draco: lượng tử hoá rồi entropy-code
+
+Draco (Google, mã nguồn mở) làm hai việc tuần tự. Bước một, lượng tử hoá: thay vì lưu `position` dạng `float32` (32 bit/thành phần), Draco lưu bằng một số bit cố định nhỏ hơn nhiều (mặc định thường 11–14 bit cho position, 7–10 bit cho normal, 10–12 bit cho uv — con số cấu hình được qua `quantization bits`, cited: README Draco). Bước hai, entropy coding: đồ thị connectivity của mesh (thứ tự vertex tạo thành tam giác) được nén bằng một biến thể của Edgebreaker — thuật toán tận dụng việc phần lớn mesh liền mạch để mã hoá bằng vài bit trên mỗi tam giác thay vì lưu index thô. Kết quả cộng gộp: mesh dày polygon thường giảm hơn 90% dung lượng geometry (nguồn: README dự án Draco), tương đương tỉ lệ nén
+
+$$
+\text{ratio} = 1 - \frac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}} \approx 0.9
+$$
+
+Cái giá là chi phí giải mã runtime: trình duyệt phải tải thêm decoder WASM (`draco_decoder.wasm`, vài trăm KB) và tốn CPU giải nén trước khi mesh dùng được — với mesh vài trăm nghìn vertex, decode có thể mất vài chục mili-giây (ước lượng), đáng để hiện loading state thay vì coi là tức thời. Wiring xác nhận đúng với API hiện tại của `three` (`node_modules/three/examples/jsm/loaders/DRACOLoader.js`):
+
+```js
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath("/draco/"); // copy từ node_modules/three/examples/jsm/libs/draco/
+
+const loader = new GLTFLoader();
+loader.setDRACOLoader(dracoLoader); // trả về "this" -- chainable
+```
+
+## Nén texture với KTX2/Basis Universal: transcode đúng lúc chạy
+
+KTX2 giải quyết đúng vấn đề mà Draco không đụng tới: texture. Container KTX2 bọc dữ liệu **Basis Universal supercompressed** — một định dạng trung gian mà `KTX2Loader` transcode (không phải giải nén rồi nén lại, mà chuyển thẳng cấu trúc block) sang đúng định dạng nén GPU-native của thiết bị đang chạy: BC7/BC1 trên desktop, ASTC trên phần lớn GPU di động hiện đại, ETC2 trên Android đời cũ hơn (nguồn: đặc tả KHR_texture_basisu). Đây là "cú đúp lợi ích" so với JPEG/PNG: JPEG chỉ nén *khi truyền tải qua mạng*, texture vẫn giải mã đầy đủ ra raw RGBA khi lên VRAM; KTX2 nén *cả hai*, vì GPU sample trực tiếp dữ liệu đã nén — VRAM không bao giờ "nở" ra RGBA8 đầy đủ. Ước lượng thực dụng: định dạng nén GPU phổ biến nằm trong khoảng 4–8 bit/pixel, so với 32 bit/pixel RGBA8 thô:
+
+$$
+\text{bytes}_{\text{KTX2}} \approx W \times H \times \frac{\text{bpp}}{8}, \qquad \text{bpp} \in [4, 8]
+$$
+
+nhẹ hơn khoảng 4–8 lần so với texture đã giải mã, ở chất lượng gần tương đương (tỉ lệ thật phụ thuộc định dạng đích và nội dung ảnh). Wiring xác nhận đúng với `node_modules/three/examples/jsm/loaders/KTX2Loader.js`:
+
+```js
+import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
+
+const ktx2Loader = new KTX2Loader();
+ktx2Loader.setTranscoderPath("/basis/"); // copy từ .../libs/basis/
+ktx2Loader.detectSupport(renderer); // BẮT BUỘC gọi trước load -- chọn định dạng đích theo GPU
+```
+
+## Nối Draco và KTX2 vào cùng một GLTFLoader
+
+Một file glTF production thật thường dùng cả hai extension cùng lúc (`KHR_draco_mesh_compression` cho geometry, `KHR_texture_basisu` cho texture) — `GLTFLoader` có đúng ba hàm `set*Loader` để đăng ký cả hai trước khi `load()`:
+
+```js
+const loader = new GLTFLoader()
+  .setDRACOLoader(dracoLoader)
+  .setKTX2Loader(ktx2Loader) // trả về "this" -- đọc trực tiếp từ source GLTFLoader.js
+  .setMeshoptDecoder(MeshoptDecoder); // nếu file dùng EXT_meshopt_compression thay Draco
+
+loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
+```
+
+Thứ tự bắt buộc: cả ba `set*Loader` phải chạy **trước** `load()`/`parse()` — gọi sau khi đã load xong không có tác dụng, vì `GLTFLoader` chỉ tra cứu các loader phụ này khi gặp extension tương ứng trong lúc parse.
+
+## Tự động hoá bằng gltf-transform
+
+Wiring runtime ở trên chỉ là nửa sau của pipeline — nửa trước là biến file `.glb` gốc (chưa nén) thành file production-ready, và làm tay từng file không scale. `gltf-transform` (CLI + thư viện Node.js của Don McCurdy) là công cụ chuẩn cho việc này.
+
+### CLI: một lệnh cho cả pipeline
+
+```sh
+npx @gltf-transform/cli optimize input.glb output.glb \
+  --compress draco \
+  --texture-compress ktx2
+```
+
+(nguồn: gltf-transform.dev/cli — `optimize` gộp nhiều bước: prune node thừa, dedupe, nén geometry bằng `--compress draco|meshopt`, nén texture bằng `--texture-compress ktx2|webp|avif`). Với texture cần kiểm soát chi tiết hơn (ví dụ normal map nên dùng UASTC thay vì ETC1S vì ETC1S mất chi tiết mạnh hơn), hai lệnh riêng cho kết quả chính xác từng bước:
+
+```sh
+npx @gltf-transform/cli uastc input.glb tmp.glb \
+  --slots "{normalTexture,occlusionTexture,metallicRoughnessTexture}" \
+  --level 4 --rdo --rdo-lambda 4 --zstd 18
+npx @gltf-transform/cli etc1s tmp.glb output.glb --quality 255
+```
+
+(nguồn: tài liệu CLI của dự án — UASTC cho map cần giữ chi tiết (normal/ORM), ETC1S cho base color vì chấp nhận mất chi tiết đổi lấy tỉ lệ nén cao hơn).
+
+### Script lập trình: khi CLI không đủ linh hoạt
+
+Xử lý hàng loạt (build step CI, hoặc logic chọn tham số theo từng loại asset) dùng thẳng API Node.js:
+
+```js
+import { NodeIO } from "@gltf-transform/core";
+import { draco, prune, dedup } from "@gltf-transform/functions";
+
+const io = new NodeIO();
+const document = await io.read("input.glb");
+
+await document.transform(prune(), dedup(), draco());
+await io.write("output.glb", document);
+```
+
+Một điểm cần trung thực: nén KTX2 lập trình (`toKTX2`) hiện KHÔNG nằm trong gói `@gltf-transform/functions` công khai — nó chỉ tồn tại nội bộ trong gói `cli`, spawn thẳng ra decoder/encoder Basis Universal (nguồn: GitHub issue #675 của dự án). Script batch xử lý texture KTX2 vì vậy thường `spawn` chính CLI `gltf-transform etc1s`/`uastc` như một child process thay vì import hàm — không phải giới hạn của bạn, mà là giới hạn thật của thư viện tại thời điểm viết bài này.
+
+## meshopt: lựa chọn thay Draco
+
+`meshoptimizer` (Arseny Kapoulkine) đi hướng khác: sắp lại vertex để tận dụng cache GPU và lượng tử hoá theo cách thân thiện với gzip/brotli, thay vì tự viết entropy coder như Draco — bù lại, decode ở client nhanh hơn Draco đáng kể (theo benchmark của chính dự án, ước lượng), đổi lấy tỉ lệ nén file gần tương đương chứ không vượt trội. Bài `loading-gltf-draco-meshopt` (Track 3) đã so sánh chi tiết khi nào chọn cái nào — nguyên tắc ngắn gọn: ưu tiên Draco khi kích thước tải một lần là bottleneck chính, ưu tiên meshopt khi ứng dụng nạp liên tục nhiều model và tốc độ decode dồn dập quan trọng hơn.
+
+## Khi nào KHÔNG nên nén
+
+Nén không miễn phí — luôn có chi phí decode CPU và độ phức tạp build pipeline. Đo trước khi quyết định: một model vài trăm KB tải trên mạng nhanh (broadband, cùng khu vực với CDN) thường KHÔNG đáng nén, vì thời gian giải mã WASM cộng dồn có thể còn chậm hơn thời gian tải file thô — đặc biệt đúng với mesh nhỏ (dưới vài nghìn vertex) nơi chi phí khởi tạo decoder chiếm phần lớn thời gian. Quy tắc thực dụng: đo `network time` vs `decode time` bằng chính công cụ ở bài `profiling-webgl-tools`, chỉ nén khi số đo chứng minh lợi ích thật, không nén theo phản xạ.
+
+## Pipeline thật của bài học này: không có file nhị phân
+
+Repo này không chứa asset nhị phân thật (quy tắc xuyên suốt từ Track 3) — nên demo dưới đây dùng lại đúng pattern `GLTFLoader.parse()` trên một glTF JSON nhúng sẵn trong file `.ts`, không có request mạng nào, và bộ tính toán chỉ đưa ra con số **ước lượng** dựa trên công thức ở trên, không phải kết quả nén thật. Khi dự án của bạn có file `.glb`/texture thật, đúng lệnh `gltf-transform` và đúng wiring `DRACOLoader`/`KTX2Loader` ở trên là tất cả những gì cần thêm — không có bước "bí ẩn" nào bị giấu đi. Checkpoint `checkpoint-asset-diet` ngay sau đây áp toàn bộ tư duy này (cộng cả culling/LOD của các bài trước) lên một cảnh cố tình quá tải, đo bằng `renderer.info` thay vì suy đoán.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi dựng pipeline nén asset:
+
+1. **Gọi `setKTX2Loader`/`setDRACOLoader` sau khi đã gọi `load()`.** Cả ba hàm chỉ gắn tham chiếu loader phụ vào instance — `GLTFLoader` tra cứu chúng lúc parse extension, nên đăng ký muộn không có tác dụng gì, lỗi thường gặp nhất là `KTX2Loader: Missing initialization with .detectSupport()` (nguồn: thông báo lỗi thật trong `KTX2Loader.js`) vì quên gọi `detectSupport(renderer)` trước `load()`.
+2. **Dùng ETC1S cho mọi loại texture, kể cả normal map.** ETC1S nén mạnh nhưng mất chi tiết cao tần — chấp nhận được cho base color, nhưng làm normal map/roughness map nhiễu hạt rõ rệt; UASTC giữ chi tiết tốt hơn với tỉ lệ nén thấp hơn, đúng lựa chọn cho các map dữ liệu.
+3. **Nén một model nhỏ theo phản xạ mà không đo trước.** Chi phí tải decoder WASM lần đầu (vài trăm KB, cộng thời gian khởi tạo) có thể vượt hẳn dung lượng tiết kiệm được trên một mesh vài nghìn vertex — luôn đo `network time` vs `decode time` trước khi thêm bước nén vào pipeline.
+
+</Callout>

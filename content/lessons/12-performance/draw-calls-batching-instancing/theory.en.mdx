@@ -1,0 +1,48 @@
+## What a Draw Call Costs, and Where
+
+Every time `renderer.render()` runs, EACH distinct mesh needs at least one `gl.drawElements`/`gl.drawArrays` call — a draw call. Almost all of its cost sits on the CPU, BEFORE the GPU shades a single pixel: the driver has to validate the entire bound pipeline state (shader program, buffers, texture units, blend mode), build a command buffer, and cross the driver boundary. This is a FIXED tax per CALL, almost independent of how many triangles that mesh has — estimate, roughly 0.01–0.05ms of CPU overhead per draw call on a modern desktop browser. Sounds tiny, but multiply it out: 1000 draw calls alone eat 10–50ms of CPU, blowing past a single frame's 16.67ms budget before the GPU renders anything at all. That's the "draw-call tax" — this lesson is a ladder of techniques for paying it as few times as possible.
+
+## Counting Draw Calls Correctly: renderer.info.render.calls
+
+`gl.info.render.calls` (introduced in the previous "Profiling Tools" lesson) is the only ground truth, resetting every frame. It CAN exceed your scene's mesh count: every shadow-casting light re-renders shadow-casting objects from ITS OWN view — 50 meshes with 2 shadow-casting lights produce 150 calls (50 main-pass + 50×2 shadow-pass), not 50. A material needing multiple GL passes (certain depth-prepass or transparency setups) multiplies it further. Read this number right after `render()`, and don't expect it to match `scene.children.length` 1:1 the moment shadow maps enter the scene.
+
+## Fix Ladder, Rung 1: Shared Materials
+
+Callback to the Track 4 "Memoizing Geometry & Materials" lesson: reusing ONE material instance across many meshes cuts how often `gl.useProgram` has to switch programs (the driver re-validates state on every switch) — but does NOT cut draw-call count. Still N meshes, still N draw calls, since each mesh remains its own transform node. This is nearly free and always worth doing, but it doesn't solve the draw-call tax by itself — it sets up the next two rungs, which actually do collapse N calls into one.
+
+## Fix Ladder, Rung 2: Static Merging With BufferGeometryUtils.mergeGeometries
+
+Import from `three/addons/utils/BufferGeometryUtils.js` (verified against `three@0.185.1`'s `package.json`, where the `./addons/*` export maps to `./examples/jsm/*`). `mergeGeometries(geometries, useGroups = false)` requires every input geometry to share the exact same set of attributes (same names, same `itemSize`) — mixing a geometry with UVs against one without returns `null` with a `console.error`, not a silent throw. Merging DESTROYS per-object identity: every copy's transform must be baked into its own vertex positions BEFORE merging (`geometry.clone().translate(x, y, z)` per position), since the result is ONE BufferGeometry, ONE Mesh, ONE transform — Three's automatic frustum culling now culls the whole merged blob as a SINGLE bounding sphere, no longer per object. Correct when objects are GENUINELY static forever (rocks, foliage baked from a level editor); wrong the moment you need to move, hide, or recolor one piece independently.
+
+## Fix Ladder, Rung 3: InstancedMesh
+
+Callback to the Track 6/9 InstancedMesh lessons: same geometry + same material, but KEEPS per-copy identity — `setMatrixAt(i, matrix)` + `instanceMatrix.needsUpdate = true` (or `setColorAt`) lets each copy carry its own transform/color, while still costing exactly ONE `gl.drawElementsInstanced` call. Confirmed in `WebGLInfo.js`: `render.calls` only increments by 1 per update call regardless of `instanceCount` — only `render.triangles` scales with instance count. The right pick for "500 identical objects, different positions/rotations, possibly changing at runtime" — the demo below measures this number directly.
+
+## Fix Ladder, Rung 4: BatchedMesh — the Newer Answer
+
+Verified for real in the installed `three@0.185.1` at `node_modules/three/src/objects/BatchedMesh.js`: `THREE.BatchedMesh` exists and is stable API by this version. Constructor `new THREE.BatchedMesh(maxInstanceCount, maxVertexCount, maxIndexCount, material)` pre-allocates GPU buffers sized to the limits you declare upfront. `addGeometry(geometry)` registers a DIFFERENT geometry (not just a different transform of the same one, unlike InstancedMesh) and returns a `geometryId`; `addInstance(geometryId)` returns an `instanceId` you feed to `setMatrixAt(instanceId, matrix)`/`setColorAt`. The core difference from InstancedMesh: BatchedMesh can hold MULTIPLE distinct geometries (a box, a sphere, a cone) in the same draw call via multi-draw, each instance individually toggleable with `setVisibleAt(instanceId, visible)` — solving exactly the "many differently-shaped small objects, same material" case that neither `mergeGeometries` (needs identical attributes, no per-instance toggling) nor InstancedMesh (one geometry only) can cover.
+
+## Choosing the Right Technique for the Scene's Shape
+
+| Situation | Technique |
+| --- | --- |
+| Same geometry, N different transforms, possibly changing at runtime | InstancedMesh |
+| Several different geometries, same material, need to show/hide individually | BatchedMesh |
+| Permanently static objects, never moved or hidden individually | mergeGeometries |
+| Only a few dozen meshes | Shared material is enough, don't overengineer it |
+
+Different textures per object break all three techniques above (they all require the SAME material). The classic fix: pack several small textures into one texture atlas, adjust each object's UV to sample only its own region — the tradeoff is padding the atlas seams yourself to avoid mip-level bleed.
+
+## Where This Connects Next
+
+The checkpoint right after this — Profile & Fix a Slow Scene — pairs this lesson directly with Profiling Tools: use `renderer.info` to confirm the bottleneck really is draw calls, apply the right technique above, then present before/after numbers. The later "Mobile Tile-Based GPUs & Overdraw" lesson circles back to the same "cost of drawing" topic from the FRAGMENT side — the GPU-bound counterpart to this lesson's CPU-bound story.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when cutting draw calls:
+
+1. **Sharing a material and expecting draw calls to drop.** A shared material only cuts program switches — draw calls stay exactly equal to mesh count, since each mesh remains its own transform node needing its own draw command.
+2. **Static-merging (`mergeGeometries`) objects that need to move or show/hide independently.** Transforms are baked hard into the geometry at merge time — moving "one" object inside the merged blob afterward is impossible short of re-merging from scratch every frame, which erases the original benefit; use InstancedMesh from the start whenever independent motion is needed.
+3. **Assuming `render.calls` always equals scene mesh count.** Shadow-casting lights multiply the number of passes, pushing the real number higher than expected — easy to wrongly conclude "instancing didn't work" when the main pass actually dropped exactly as expected and the leftover calls are unrelated shadow passes.
+
+</Callout>

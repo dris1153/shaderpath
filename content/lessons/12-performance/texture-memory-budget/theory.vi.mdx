@@ -1,0 +1,53 @@
+## VRAM: kẻ ăn bộ nhớ âm thầm nhất trong scene
+
+Mở DevTools và thử tìm: không có `gl.getTextureMemoryUsage()`, không có `renderer.info.memory.textureBytes`. Cả đặc tả WebGL lẫn Three.js đều không cho cách nào hỏi thẳng trình duyệt "texture này đang chiếm bao nhiêu byte trên GPU" — trình duyệt cố tình giấu con số này, một phần để tránh lộ dấu vân tay phần cứng. Hệ quả: cách duy nhất biết ngân sách VRAM của một scene là tự tính nó, từ đúng ba thứ đã biết ngay khi tạo texture — kích thước, định dạng, và có mipmap hay không. Bài này dựng công thức đó rồi dùng nó lập ngân sách thật cho một thiết bị cụ thể, vì texture — không phải geometry hay draw call — thường là thứ ăn VRAM nhiều nhất trong một scene 3D điển hình.
+
+## Công thức: dung lượng thật của một texture trên GPU
+
+Một texture GPU-resident chiếm:
+
+$$
+B = W \times H \times b \times k
+$$
+
+với $W, H$ là chiều rộng/cao tính bằng pixel, $b$ là số byte mỗi texel (4 cho RGBA8 — 1 byte/kênh × 4 kênh; 8 cho half-float RGBA — 2 byte/kênh × 4 kênh), và $k$ là hệ số mipmap: $k=1$ nếu không tạo mipmap, $k=4/3$ nếu có. Hệ số $4/3$ đến từ chuỗi hình học $1 + 1/4 + 1/16 + \dots = 4/3$ — dung lượng mip gốc cộng dồn với mọi mip nhỏ hơn, mỗi mip chỉ bằng $1/4$ diện tích mip trước.
+
+Áp vào một texture RGBA8 $2048 \times 2048$: $B = 2048 \times 2048 \times 4 = 16{,}777{,}216$ byte, đúng 16MB; bật mipmap thành $\approx 21{,}3$ MB. Tăng gấp đôi cạnh lên $4096 \times 4096$: base $=64$ MB, có mip $\approx 85{,}3$ MB — gấp đúng **bốn** lần con số $21{,}3$ MB ở trên, dù cạnh chỉ gấp đôi. Lý do: gấp đôi mỗi chiều làm số texel ($W \times H$) tăng gấp bốn chứ không phải gấp đôi; hệ số mip $4/3$ giống nhau ở cả hai kích thước nên không góp phần vào tỉ lệ $4\times$ này.
+
+## Float và half-float nhân đôi chi phí
+
+Track 9 dùng texture để lưu trạng thái (vị trí, vận tốc hạt) thay vì màu — những giá trị đó cần độ chính xác vượt $[0,255]$ của 8-bit, nên state texture luôn dùng `HalfFloatType` (2 byte/kênh) hoặc `FloatType` (4 byte/kênh) thay vì `UnsignedByteType` mặc định. Với RGBA half-float, $b=8$ thay vì $4$ — gấp đôi dung lượng ngay cả khi kích thước và mipmap giữ nguyên: một texture $2048\times2048$ half-float không mipmap (render target thường tắt mipmap) đã nặng $2048\times2048\times8=32$ MB, gấp đôi đúng một texture màu RGBA8 cùng kích thước, cùng không mipmap ($16$ MB). Format không phải chi tiết vặt — nó nhân thẳng vào công thức, y hệt kích thước.
+
+## Thuế render target: chi phí ẩn trong hậu kỳ
+
+Ngân sách texture không chỉ tính asset bạn tải lên — pass hậu kỳ (Track 10) tự cấp phát render target riêng, và những buffer đó ăn đúng công thức trên. `EffectComposer` của three.js (bản đang cài, 0.185.1) mặc định gán `HalfFloatType` cho cả hai render target ping-pong nội bộ. Một canvas $1920\times1080$ ở `devicePixelRatio=2` thực chất render vào buffer $3840\times2160$: mỗi buffer nặng $3840\times2160\times8\approx63{,}3$ MB, nhân đôi vì có hai buffer ping-pong thành $\approx126{,}6$ MB — tồn tại dù scene không có texture màu nào, chỉ vì bật `EffectComposer`. Pass nặng như `UnrealBloomPass` còn cộng thêm một chuỗi mip-render-target riêng của chính nó (bài `bloom-done-right` đã đo).
+
+## Lập ngân sách cho một thiết bị cụ thể
+
+Không API nào cho biết trước ngân sách VRAM cứng của một thiết bị — vượt quá nó không báo lỗi rõ ràng, WebGL context bị trình duyệt âm thầm huỷ, canvas đứng hình cho tới khi (nếu) được khôi phục. Vài con số **ước lượng**, dao động mạnh theo driver/OS nên đừng coi là chính xác: một laptop dùng GPU tích hợp (chia sẻ RAM hệ thống) thường chỉ an toàn dùng khoảng 1–2GB cho riêng một tab trình duyệt; điện thoại tầm trung còn thấp hơn nhiều. Một bảng ngân sách tối thiểu: cộng dồn MB của mọi texture sẽ resident cùng lúc (công thức mục trên) cộng thuế render target (mục trên), rồi chủ động chừa lại ít nhất 30–40% ngân sách ước lượng cho geometry, buffer phụ và chính hệ điều hành — không đẩy sát 100%.
+
+## Vì sao độ phân giải không đồng nghĩa chất lượng
+
+Một model chiếm khoảng $200\times200$ pixel màn hình chỉ hiển thị tối đa 40.000 texel tại bất kỳ khung hình nào. Gán cho nó texture $2048\times2048$ (~4,2 triệu texel) nghĩa là $200^2/2048^2\approx0{,}95\%$ số texel từng thực sự lên màn hình. Mipmap giúp GPU chọn mip nhỏ hơn khi vật ở xa — cải thiện chất lượng lọc và tốc độ sample — nhưng không xoá một byte nào khỏi VRAM: mọi mip level, kể cả mip gốc, vẫn resident đầy đủ theo đúng công thức đã tính. Độ phân giải cần khớp với mật độ texel thực tế trên màn hình (texel density), không phải một con số "nghe cho nét".
+
+## Nén GPU-native: cách sửa thật sự
+
+Nén ảnh kiểu PNG/JPEG chỉ tiết kiệm băng thông tải xuống — `texImage2D` luôn giải nén ảnh về đúng mảng byte RGBA thô trước khi đẩy lên GPU, nên một JPEG 200KB vẫn tốn đúng dung lượng RGBA8 đã tính ở trên một khi đã upload, không tiết kiệm gì trên VRAM. Định dạng nén GPU thật sự — S3TC/DXT (desktop), ETC2 (baseline Android/WebGL2), ASTC (thiết bị mới hơn) — khác hẳn về bản chất: dữ liệu nằm nguyên ở dạng nén trong VRAM, texture unit của GPU tự giải mã từng block khi sample, nhỏ hơn RGBA8 từ 4 đến 8 lần tuỳ định dạng. Vấn đề: không định dạng nào trong ba cái trên chạy được trên mọi thiết bị — đó là lý do container KTX2 cùng codec Basis Universal tồn tại: nén một lần, transcode phía client sang đúng định dạng GPU hiện có. Bài `asset-pipeline-draco-ktx2` đi vào chi tiết luồng này.
+
+## Đo và dọn: renderer.info và dispose
+
+`renderer.info.memory.textures` là con số Three.js theo dõi sẵn, đọc được ngay trong demo bên dưới — nhưng đó là số lượng texture object đang sống, không phải megabyte: một texture $256\times256$ và một texture $4096\times4096$ đều tính là "1" như nhau. Dùng nó để săn leak (số chỉ giảm khi gọi đúng `texture.dispose()`, y hệt kỷ luật học ở Track 4), không dùng nó để ước tính ngân sách — việc đó vẫn cần công thức ở trên.
+
+## Từ đây tới pipeline nén thật
+
+Bài tiếp theo, `shader-compilation-stalls`, rời khỏi bộ nhớ để nói về thời gian — cùng tinh thần "đo trước khi tối ưu", nhưng đo mili-giây compile shader thay vì megabyte texture. Xa hơn, `asset-pipeline-draco-ktx2` quay lại đúng câu hỏi nén GPU-native ở mục trên bằng công cụ thật: `gltf-transform`, `KTX2Loader`, và một script CLI chạy được.
+
+<Callout variant="mistake" title="Lỗi hay gặp">
+
+Ba lỗi hay gặp nhất khi ước tính ngân sách texture:
+
+1. **Quên nhân $b$ theo format hoặc quên nhân $k=4/3$ khi bật mipmap.** Đổi từ RGBA8 sang half-float mà không nhân đôi $b$, hoặc bật mipmap mà không nhân thêm $4/3$, khiến ước tính ngân sách sai lệch hàng chục phần trăm — đủ để một scene "vừa đủ" thực ra đã vượt ngân sách từ lâu.
+2. **Coi `renderer.info.memory.textures` là "MB đang dùng".** Đó là số lượng object, không phải byte — một texture $512\times512$ và một texture $4096\times4096$ đều cộng đúng $1$ vào con số này, nên dựa vào nó để quyết định ngân sách luôn cho kết quả sai.
+3. **Nghĩ PNG/JPEG "đã nén rồi nên an toàn".** `texImage2D` giải nén về RGBA thô trước khi upload — một ảnh JPG nhẹ vẫn tốn đúng dung lượng RGBA8 đầy đủ trên GPU, không tiết kiệm gì so với ảnh chưa nén; chỉ định dạng nén GPU thật sự (S3TC/ETC2/ASTC, qua KTX2) mới giữ được mức nén đó trong VRAM.
+
+</Callout>

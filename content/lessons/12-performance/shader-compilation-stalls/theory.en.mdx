@@ -1,0 +1,41 @@
+## The Mid-Scene Hitch Mystery
+
+A scene has been running smoothly for a few seconds, the camera hasn't even moved, and then one frame freezes for anywhere from tens to hundreds of milliseconds (an estimate — it's device-dependent) right as a new object appears: a fresh particle, an LOD swapping detail level, a material that just enabled one more feature. It isn't a logic bug, and it isn't the garbage collector: WebGL compiles and links a shader program completely lazily, on the exact first time that program is asked to draw something — not the moment you call `new THREE.ShaderMaterial()` or `new THREE.MeshStandardMaterial()`. Reading `WebGLRenderer.js` directly confirms it: `getProgram()` is only ever called from inside the render path, when `needsProgramChange` flips to `true` for the object about to be drawn — meaning the compile cost always lands on the frame that's currently rendering, on the same main thread drawing everything else.
+
+## Why "The Same Material" Can Still Compile Twice
+
+Three doesn't cache a program per material — it caches per a cache key assembled from the material PLUS the context of the mesh drawing it. Reading `WebGLPrograms.js`, the `getProgramCacheKey` function folds in: every `#define` (from `parameters.defines`), then a batch of parameters like `numDirLights`, `numPointLights`, `numSpotLights`, `shadowMapType`, `toneMapping`, plus a whole set of independent boolean flags (map, envMap, vertexColors, clearcoat, instancing, and more) — only appending `material.customProgramCacheKey()` at the very end. The direct consequence: one single JavaScript `material` object, assigned to two meshes sitting in two different lighting contexts (mesh A under 2 point lights, mesh B under 3), gets Three to compile TWO different programs for "the same material" — both stored in `materialProperties.programs`, a Map keyed by cache key, living inside that very material.
+
+## Where Dozens of Variants Come From: The #define Multiplication
+
+Every independent feature multiplies the variant count — it doesn't add to it: toggling `map` (2 states) × toggling fog (2) × shadow type — none/PCF/VSM (3) × toggling skinning (2) is already $2\times2\times3\times2=24$ distinct programs in the worst case, from just four features. A real scene rarely hits all 24 combinations at once, but every additional feature turned on (anisotropy, clearcoat, iridescence — each its own flag in that same cache key) doubles or triples that number. The riskiest pattern is material variants that surface gradually through interaction: each new feature combination that enters the viewport compiles for the first time right then — exactly while the user is interacting, not while a loading screen is still up.
+
+## Pre-Warming with renderer.compile(): Controlling WHEN, Not Erasing the Cost
+
+`renderer.compile(scene, camera)` (verified directly in `WebGLRenderer.js`) traverses the entire `scene`, calling `prepareMaterial()` on every material it finds — internally, `prepareMaterial` calls `getProgram()` directly, forcing Three to compile and link right there, synchronously, inside this one call. That means `compile()` doesn't make the compile cost disappear — it just MOVES that cost to a moment you choose, typically right after assets finish loading but before the scene is shown, behind a loading screen. Calling `compile()` in the middle of user interaction still causes exactly the hitch you were trying to avoid — just several variants compiling at once instead of one, sometimes worse.
+
+## compileAsync and KHR_parallel_shader_compile: The Non-Blocking Path
+
+`renderer.compileAsync(scene, camera)` (also verified directly in `WebGLRenderer.js` 0.185.1) calls the same `compile()` above to kick off the programs, then returns a `Promise` that polls `program.isReady()` every 10ms — the "ready yet?" check is only truly non-blocking when the `KHR_parallel_shader_compile` extension is available: the GPU driver compiles on a separate thread, and JavaScript is free to poll instead of stalling. Without that extension, `compileAsync` effectively finishes the instant the synchronous call above completes — falling back to `compile()`'s exact blocking behavior. Used correctly: `await renderer.compileAsync(scene, camera)` before ever attaching that scene to the visible canvas — never reveal the scene first and compile after.
+
+## Reducing Variants: Discipline at the Source
+
+The cheapest way to cut compile count isn't pre-warming — it's never creating the variant in the first place. One concrete trick: instead of toggling `material.map = texture` then `material.map = null` (every null/has-texture switch flips the `USE_MAP` define, forcing a recompile), assign a fixed $1\times1$ white texture when "off" — `map` always exists, the define never changes, no new compile happens, only the sampled pixel content changes. Track 6 already taught the other half of this discipline: if `onBeforeCompile` has to branch on a runtime variable, you must set `customProgramCacheKey` yourself — otherwise Three's default `.toString()` can't tell two closures with identical function text apart, and two variants that look different silently share one compiled program.
+
+## Measuring: First Frame vs. Steady-State
+
+The right measurement here isn't "average FPS" — an average hides exactly what you're looking for. Measure `performance.now()` around each frame's `gl.render()` call, and compare the FIRST frame that draws a new program against the one immediately after (program already cached): that gap IS the real compile cost, measured on whatever machine is running the demo, not a fixed number printed in this article. `renderer.info.programs` — also verified directly in the source, a live array of `WebGLProgram` objects — gives a checkable number: its length only grows on a fresh compile, and stays flat when redrawing a variant that's already known. Honestly: this very page hasn't pre-warmed its own demos either when you load it — the first frame you see already paid the exact compile stall this lesson is describing, nobody just measured it for you.
+
+## From Here to the Asset Pipeline
+
+The next lesson, `asset-pipeline-draco-ktx2`, leaves compile time behind for download bandwidth again — Draco compressing geometry, KTX2/Basis compressing textures exactly as the `texture-memory-budget` lesson promised. Both lessons share one principle: measure first with real tools (`renderer.info`, DevTools), then decide what to optimize.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when dealing with shader compilation stalls:
+
+1. **Calling `renderer.compile()` right at the moment of user interaction** (say, inside an "add object" callback) instead of before the scene is shown — it's still the exact same synchronous compile cost, just relocated from "when the object is added" to "when compile() is called," never erased.
+2. **Toggling `material.map` between `null` and a texture to switch an effect on/off.** Every switch flips the `USE_MAP` define, forcing Three to recompile the program on every click, even though it looks like a plain runtime property change.
+3. **Assuming `compileAsync()` is always non-blocking.** If the browser or driver doesn't support `KHR_parallel_shader_compile`, it silently falls back to `compile()`'s synchronous behavior, with no warning that it happened.
+
+</Callout>

@@ -1,0 +1,47 @@
+## Measure First, Don't Guess
+
+Optimizing a 3D scene you've never measured is educated guessing dressed up as engineering. The classic story: a dev sees a scene stutter, assumes "too many triangles," spends half a day cutting the model's poly count — the stutter doesn't move an inch, because the real bottleneck was a `useEffect` rebuilding an entire geometry every frame on the CPU, nothing to do with the GPU at all. The instinct wasn't crazy — too many triangles genuinely can be the bottleneck — the problem is that at least five unrelated causes all produce the exact same symptom: "the scene stutters." Without measuring, you're picking blindly among those five. The rest of this lesson is a tool ladder, ordered the way you should reach for them: cheap and always-on first, heavy and specialized last — plus a diagnostic flow for knowing when to stop climbing.
+
+## renderer.info: The Free, Always-On Counters
+
+Every `THREE.WebGLRenderer` already carries `renderer.info` — nothing to install. `info.render.calls` and `info.render.triangles` count exactly what the driver just did in the most recent `render()` call, and both **reset to 0 every single frame** (`autoReset` defaults to `true` — confirmed in three@0.185.1's `WebGLInfo.js`, whose `reset()` clears `calls`/`triangles`/`points`/`lines` before each new render). Reading `info.render.calls` once and treating it as some session-wide total is wrong — it has to be re-read every frame, right after that frame finishes rendering. `info.memory.geometries` and `info.memory.textures` behave the opposite way: they do **not** reset per frame — they track how many geometries/textures are actually resident on the GPU, going up on creation and down only when you call `.dispose()` correctly. `info.programs` is the array of compiled shader programs (`null` until the first render) — its length is the number of distinct program VARIANTS currently alive, a number that comes back in this track's later "Shader Compilation Stalls" lesson. Read correctly, these three counter groups already answer most of "where is this scene heavy" before you open a single other tool.
+
+## FPS Meters and Frame Time: 16.67ms Isn't a Magic Number
+
+$$
+\text{one-frame budget at 60fps} = \frac{1000}{60} \approx 16.67\text{ms}
+$$
+
+FPS is an AVERAGE over some time window, and averages hide exactly what you need to see: a scene running a steady 60fps for a full minute, with one 300ms stall buried in the middle (a GC pause, or the "spike" button in the demo below), can still report "average 59fps" — a pretty number describing a bad experience. That's why professionals say "frame time, not FPS": measure the raw milliseconds each frame costs directly (an inline meter is just one EMA — exponential moving average — variable accumulating `delta * (newValue - oldEMA)`, about 15 lines, no `stats.js` needed), then look at the VARIANCE of that sequence over time, not just its mean. The demo below draws that exact sequence as a sparkline: every bar is a real frame, the white line marks the 16.67ms budget — hit the spike button and watch exactly one bar shoot up while the average FPS number barely twitches.
+
+## Chrome DevTools Performance: Reading the Flame Chart, Telling CPU-Bound from GPU-Bound
+
+Hit Record in the Performance tab, interact for a few seconds, stop — the result is a time-ordered flame chart. The "Main" track stacks everything the main thread did: every long yellow block is "Scripting" (your JS, including the work of building the `gl.*` commands the driver has to process), every purple block is DOM rendering/painting (usually unrelated to a WebGL canvas). A task longer than 50ms gets auto-flagged red as a "Long Task" — exactly the threshold the demo's spike button deliberately blows past (150ms) so you see that red flag fire for real. The "GPU" track sits separately, showing actual GPU busy time. The read that separates the two bottleneck types: Main packed with long Scripting blocks while GPU sits mostly idle — CPU-bound (stuck on JS or draw-call submission tax). Main mostly empty but the canvas still stutters while GPU stays saturated — GPU-bound (stuck on fill-rate or fragment-shader math). Confirm a GPU-bound suspicion with the "resolution reduction test": temporarily drop `devicePixelRatio` to 0.5 (the DPR control below does exactly this through `gl.setPixelRatio`) — if the scene suddenly runs smooth without a single line of JS or draw-call count changing, the bottleneck is the number of pixels the GPU has to shade.
+
+## Spector.js: Dissecting Every Draw Call
+
+Spector.js (a browser extension or standalone npm package — not a dependency of this project) captures exactly one frame and lists every `gl.*` command that ran, in order, grouped by draw call. Click into any draw call and it shows the full GPU state at that moment: which program was bound, every uniform's value, which texture sits in each unit, the `vertexAttribPointer` layout, even the framebuffer contents immediately AFTER that draw call. What Spector.js exposes that `renderer.info` never can: REDUNDANT STATE CHANGES between adjacent draw calls — the same texture rebound 40 times in a row despite never changing, or `useProgram` firing far more often than the actual number of distinct materials (a sign your draw order defeats Three's internal material-sort optimization). This is the right tool once `renderer.info` has confirmed "there are a lot of draw calls" but you need to know precisely which one is wasteful and how.
+
+## RenderDoc and GPU Vendor Tools: When You Need Them, and Why They're Finicky With Browsers
+
+RenderDoc captures native API calls (real OpenGL/Vulkan/D3D, not WebGL wrapped in an abstraction layer) directly from a process. Browsers instead run WebGL through ANGLE and split GPU work into its own process for sandboxing — attaching RenderDoc to that process usually needs special launch flags, breaks across versions often, and what you capture is sometimes the ANGLE-translated commands rather than the exact WebGL calls you wrote. Bluntly: this is not a daily-driver tool for WebGL — it's for when the four rungs above have already confirmed the problem lives below the WebGL layer (a suspected driver quirk, or behavior differing across specific GPU vendors), at which point the setup overhead finally pays for itself.
+
+## Case Study: Shaderpath's Own Instrumentation
+
+The platform you're learning on is a live example. `lib/hooks/use-visible-frameloop.ts` stamps a `data-frames` attribute onto the container every time its `requestAnimationFrame` loop ticks — not for decoration, but so `tests/e2e/demo-viewport-pause.spec.ts` has a real number to `poll()` instead of a fixed `waitForTimeout` (a hardcoded sleep in a test is the same guessing-without-measuring habit this lesson warns against). `components/viz/demo-canvas.tsx` uses that same hook to only call `invalidate()` while the container sits inside the viewport — a canvas scrolled off-screen stops ticking immediately, verifiable through that very counter. And `scripts/gen-lesson-registry.ts` generates `DEMO_REGISTRY` so each demo loads through `next/dynamic` exactly when its lesson page needs it — never pulling `three` into the bundle of a page with no canvas at all. All three are "measure/control first, optimize second" applied at the infrastructure layer.
+
+## Diagnostic Flow: Where to Start
+
+A practical order: (1) check `renderer.info` and the frame-time meter first — cheapest, always on, confirms whether it's actually slow and whether the slowness is steady or bursty. (2) If steady, open DevTools Performance, record a few seconds, read the flame chart to classify CPU-bound vs GPU-bound. (3) Suspect GPU-bound? Confirm with the DPR 0.5 test. (4) Suspect CPU-bound? Capture a frame with Spector.js, compare `info.render.calls` against expectations, look for redundant state changes. (5) Only reach for RenderDoc once none of the previous steps explain what you're seeing.
+
+The next lesson — Draw Calls, Batching & Instancing — uses the exact `renderer.info.render.calls` counter you just learned to read as the before/after measurement for every merging technique it teaches; this module's checkpoint has you run this same five-step flow yourself, for real, on a scene deliberately built to be slow.
+
+<Callout variant="mistake" title="Common mistakes">
+
+The three most common mistakes when first picking up profiling tools:
+
+1. **Trusting an average FPS number without looking at its variance.** A scene averaging 59fps can still contain a single 300ms stall the user actually noticed — an average is a summary statistic that erases exactly the frame that annoyed someone; look at the frame-time sequence over time, not one rolled-up number.
+2. **Reading `renderer.info.render.calls` without accounting for its per-frame reset.** Sampling this value at the wrong moment (between two renders, or accumulating it across frames thinking it's a "total") produces a meaningless number — it must be re-read right after each `render()`, never cached or manually averaged.
+3. **Defaulting to "it's slow because it's 3D, so it must be the GPU."** Most slow WebGL scenes are slow for CPU reasons — thousands of draw calls, or JS recomputing something every frame it doesn't need to — jumping straight to fragment-shader optimization before ever opening the flame chart wastes time solving the wrong layer.
+
+</Callout>
