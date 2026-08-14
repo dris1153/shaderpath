@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import {
-  DEMO_REGISTRY,
   LESSON_REGISTRY,
   REFERENCES_REGISTRY,
   TOC_REGISTRY,
@@ -23,6 +22,7 @@ import {
 import { ExerciseSection } from "@/components/exercise/exercise-section";
 import { BookmarkToggle } from "@/components/notes/bookmark-toggle";
 import { LessonNotesLayer } from "@/components/notes/lesson-notes-layer";
+import { LessonDemoHost } from "@/components/lesson/lesson-demo-host";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { LessonHeader } from "@/components/lesson/lesson-header";
 import { LessonToc } from "@/components/lesson/lesson-toc";
@@ -59,9 +59,6 @@ export default async function LessonPage({
   const references = referencesLoader
     ? (await referencesLoader()).references
     : [];
-
-  const demoLoader = DEMO_REGISTRY[lesson.slug];
-  const LessonDemo = demoLoader ? (await demoLoader()).default : null;
 
   const progressRow = getProgressRow(lesson.slug);
   const progress = getProgressMap();
@@ -155,7 +152,7 @@ export default async function LessonPage({
           </Alert>
         )}
 
-        {LessonDemo && <LessonDemo />}
+        {lesson.hasDemo && <LessonDemoHost slug={lesson.slug} />}
 
         <ExerciseSection slug={lesson.slug} locale={locale} />
 

@@ -14,6 +14,15 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
   ]),
   {
+    // False positive: looking up a module-scope Map of lazy() wrappers is not
+    // "creating a component during render" — the wrappers are built once at
+    // module load. Scoped to the one demo-host file.
+    files: ["components/lesson/lesson-demo-host.tsx"],
+    rules: {
+      "react-hooks/static-components": "off",
+    },
+  },
+  {
     // Three.js/R3F idiom: uniforms are memoized mutable containers written to
     // from effects/useFrame. The compiler-era immutability rule can't model
     // this; scoped off for demo/viz code only.

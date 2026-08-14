@@ -13,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { PlaygroundClient } from "@/components/playground/playground-client";
+import { PlaygroundEmbed } from "@/components/playground/playground-embed";
 import { saveUserCode } from "@/lib/exercises";
 import { CodeEditor } from "./code-editor";
 import type { ExerciseVM } from "./types";
@@ -98,7 +98,7 @@ export function ExerciseCodePane({
       </div>
 
       {exercise.kind === "shader" ? (
-        <PlaygroundClient
+        <PlaygroundEmbed
           key={editorEpoch}
           compact
           initialSource={code}
