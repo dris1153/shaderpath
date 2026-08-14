@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useDisposable } from "@/lib/hooks/use-disposable";
 import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
+import { useQuality } from "@/components/providers/quality-provider";
 import {
   FULLSCREEN_VERT,
   assembleFragment,
@@ -30,6 +31,7 @@ export function ShaderPreview({
   onCompile: (errors: GlslError[], compileMs: number) => void;
 }) {
   const t = useTranslations("playground");
+  const { effectBudget } = useQuality();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef<GlState | null>(null);
@@ -122,7 +124,7 @@ export function ShaderPreview({
     if (!st || !canvas) return;
     const { gl } = st;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2) * effectBudget;
     const w = Math.round(canvas.clientWidth * dpr);
     const h = Math.round(canvas.clientHeight * dpr);
     if (canvas.width !== w || canvas.height !== h) {

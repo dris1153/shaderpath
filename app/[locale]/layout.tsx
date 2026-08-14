@@ -5,10 +5,12 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { QualityProvider } from "@/components/providers/quality-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
 import { CommandProvider } from "@/components/command/command-provider";
+import { getQualityTierSetting } from "@/lib/settings-read";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
@@ -32,6 +34,9 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
+// Reads the persisted quality tier on every request (spec §6.2.14).
+export const dynamic = "force-dynamic";
+
 export default async function LocaleLayout({
   children,
   params,
@@ -43,6 +48,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+  const initialTier = getQualityTierSetting();
 
   return (
     <html
@@ -59,12 +65,14 @@ export default async function LocaleLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <TooltipProvider>
-                <AppHeader />
-                {children}
-                <Toaster />
-                <CommandProvider />
-              </TooltipProvider>
+              <QualityProvider initialTier={initialTier}>
+                <TooltipProvider>
+                  <AppHeader />
+                  {children}
+                  <Toaster />
+                  <CommandProvider />
+                </TooltipProvider>
+              </QualityProvider>
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

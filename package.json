@@ -12,6 +12,9 @@
     "db:generate": "drizzle-kit generate",
     "gen:registry": "tsx scripts/gen-lesson-registry.ts",
     "lint:content": "tsx scripts/lint-content.ts",
+    "check:css": "tsx scripts/check-no-custom-css.ts",
+    "check:ts-strict": "tsx scripts/check-strict-ts.ts",
+    "audit:guards": "pnpm check:css && pnpm check:ts-strict && pnpm lint:content",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },
