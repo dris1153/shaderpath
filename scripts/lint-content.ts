@@ -55,6 +55,23 @@ function katexTextViolations(src: string): string[] {
     .map((inner) => `\\text{${inner}}`);
 }
 
+// A missing figure fails silently: the page still renders, just without the
+// diagram. Resolve every referenced asset against public/ at lint time.
+const PUBLIC_DIR = path.join(process.cwd(), "public");
+
+function assetMissing(src: string): boolean {
+  return (
+    !src.startsWith("/") ||
+    !fs.existsSync(path.join(PUBLIC_DIR, src.slice(1).split("?")[0] ?? ""))
+  );
+}
+
+function figureSources(src: string): string[] {
+  return [...src.matchAll(/<Figure\b[\s\S]*?\/>/g)]
+    .map((m) => /\bsrc=["{]?"?([^"'}\s]+)/.exec(m[0])?.[1])
+    .filter((s): s is string => s !== undefined);
+}
+
 async function lintLesson(trackDir: string, slug: string) {
   const at = `${trackDir}/${slug}`;
   const dir = path.join(LESSONS_DIR, trackDir, slug);
@@ -137,6 +154,17 @@ async function lintLesson(trackDir: string, slug: string) {
     }
   }
 
+  // --- figure assets --------------------------------------------------
+  for (const file of ["theory.vi.mdx", "theory.en.mdx"]) {
+    const filePath = path.join(dir, file);
+    if (!fs.existsSync(filePath)) continue;
+    for (const src of figureSources(fs.readFileSync(filePath, "utf8"))) {
+      if (assetMissing(src)) {
+        report(`${at}: ${file} has <Figure src="${src}"> but public${src} is missing`);
+      }
+    }
+  }
+
   // --- references (regular lessons only; optional for checkpoints) ----
   const refsPath = path.join(dir, "references.ts");
   if (!isCheckpoint) {
@@ -193,6 +221,11 @@ async function lintLesson(trackDir: string, slug: string) {
       const minChecklist = ex.kind === "build" ? 3 : 1;
       if (ex.checklist.length < minChecklist) {
         report(`${at}/${ex.id}: needs >=${minChecklist} checklist items`);
+      }
+      if (ex.referenceImage && assetMissing(ex.referenceImage)) {
+        report(
+          `${at}/${ex.id}: referenceImage "${ex.referenceImage}" has no file under public/`,
+        );
       }
       for (const loc of ["vi", "en"] as const) {
         if (!ex.prompt[loc]?.trim()) {

@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/lesson/callout";
+import { Figure } from "@/components/lesson/figure";
 import { PlaygroundEmbed } from "@/components/playground/playground-embed";
 import { Separator } from "@/components/ui/separator";
 
@@ -63,6 +64,7 @@ const components: MDXComponents = {
     />
   ),
   Callout,
+  Figure,
   // Embedded playground for hasPlayground lessons: <Playground source={"..."} />
   Playground: ({ source }: { source?: string }) => (
     <PlaygroundEmbed compact initialSource={source} />
