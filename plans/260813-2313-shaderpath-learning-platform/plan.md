@@ -33,7 +33,7 @@ Every lesson = Theory → Citations → Interactive demo → Exercises.
 | 7 | Real content: Track 0 + Track 1 fully bilingual (golden sample) | ✅ Complete (2026-08-14) | 45h | [phase-07](phase-07-content-track-0-and-1-bilingual.md) |
 | 8 | Notes, bookmarks, command palette, stats + heatmap, SRS | ✅ Complete (2026-08-14) | 14h | [phase-08](phase-08-notes-command-palette-stats-srs.md) |
 | 9 | Remaining content: Tracks 2 → 13 (133 units authored) | ✅ Complete (2026-08-14) | 220h | [phase-09](phase-09-content-tracks-2-to-13.md) |
-| 10 | Polish: a11y, performance audit, export/import, acceptance sweep | Not Started | 14h | [phase-10](phase-10-polish-a11y-performance-export.md) |
+| 10 | Polish: a11y, performance audit, export/import, acceptance sweep | ✅ Complete (2026-08-14) | 14h | [phase-10](phase-10-polish-a11y-performance-export.md) |
 
 ## Dependency Graph
 

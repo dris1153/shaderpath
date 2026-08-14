@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** P2
-- **Status:** Not Started
+- **Status:** ✅ Complete (2026-08-14) — see Notes for the §11 acceptance results
 - **Effort:** ~14h
 - **Description:** Final hardening pass — keyboard/ARIA accessibility across all routes, performance audit (Lighthouse ≥90 on non-canvas pages), adaptive quality tier for canvases, JSON export/import of the progress DB, and a full run of the §11 acceptance checklist.
 
@@ -144,3 +144,19 @@ Each polish item is an independent small commit; revert individually. Export/imp
 ## Next Steps
 
 Project acceptance. Post-launch backlog candidates (explicitly out of scope per §6.3): none of auth/multi-user/cloud sync. Legitimate follow-ups: WebGPU/TSL track expansion, additional locale (architecture already supports a third), content updates as libraries evolve.
+
+## Notes (post-implementation, 2026-08-14)
+
+**Delivered in 3 commits:** `7e8d98e` (export/import + quality tier + settings + guards + 4 acceptance e2e), `fad13b4` (a11y sweep + axe/keyboard e2e + README), `97f1645` (lesson-route JS diet + fonts).
+
+**§11 acceptance results:**
+- ✅ Fresh-DB boot/auto-migrate — `fresh-db-boot.spec` + every e2e run uses a virgin DB
+- ✅ Memory trend across lesson navigations — `memory-leak.spec` (12 lessons, CDP forced-GC, final < first × 2.5)
+- ✅ Viewport GPU gating — `viewport-gpu.spec` (3 concurrent tabs; app caps 1 canvas/page by design)
+- ✅ Shader error → correct line, keep-last-good, recovery — `shader-error-recovery.spec`
+- ✅ Keyboard navigation — `keyboard-nav.spec` + axe scan on 8 routes (serious/critical = 0)
+- ✅ No custom CSS (`check:css`), strict TS: no any/ts-ignore (`check:ts-strict`), full `lint:content` 162/162 0 errors
+- ✅ Export → wipe → import round-trip — unit-tested (row counts + spot values), replace & merge modes
+- ⚠️ Lighthouse (prod build, dev machine, simulated mobile): a11y 98–100 + best-practices 100 on all 6 non-canvas routes; perf home/notes 90–93, roadmap/track 87–92, stats 85–90, theory lesson 72→78–86 across runs (±4–6 run variance on this machine). Observed (unthrottled) LCP is ~160ms — the residual gap is the lantern simulation chaining text-LCP onto route JS measured against localhost. Structural fixes shipped: demo-registry split + `LessonDemoHost` React.lazy (−~520KB/route), `PlaygroundEmbed` dynamic (−~230KB), Vietnamese font subsets (correctness — diacritics no longer fall back) + `display: optional` + recovered font preloads (Next 16 Turbopack emits none). Further squeezing would target framework/base-ui chunks — backlog, not blocking.
+
+**Known follow-ups (non-blocking):** note popover has no keyboard entry point (mouse-selection only, pre-existing interaction model); `ui/dialog.tsx`/`ui/sheet.tsx` hardcode English "Close" sr-only text (§7 forbids editing ui/*); pre-existing hydration warning on the lesson mobile Sheet trigger; legacy `**bold**` in a few checkpoint exercise prompts renders literal asterisks; build-checkpoint GLSL solutions highlight as TS.
