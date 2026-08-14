@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { IconDeviceFloppy, IconFilePlus, IconTrash } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -17,28 +17,39 @@ import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { deleteSnippet, saveSnippet, type Snippet } from "@/lib/playground";
+import { PRESET_GROUPS, findPreset } from "@/content/playground-presets";
+import type { Locale } from "@/content/types";
 
+// Select values are namespaced because presets and snippets share one list:
+// "u:<id>" is a saved snippet, "p:<slug>" is a built-in preset.
 export function SnippetBar({
   snippets,
-  currentId,
+  selection,
   source,
   onSnippets,
-  onLoad,
+  onSelect,
   onNew,
 }: {
   snippets: Snippet[];
-  currentId: number | null;
+  selection: string;
   source: string;
   onSnippets: (s: Snippet[]) => void;
-  onLoad: (snippet: Snippet) => void;
+  onSelect: (value: string, loaded: { title: string; source: string }) => void;
   onNew: () => void;
 }) {
   const t = useTranslations("playground");
+  const locale = useLocale() as Locale;
+  const currentId = selection.startsWith("u:")
+    ? Number(selection.slice(2))
+    : null;
   const [pending, startTransition] = useTransition();
   const [saveOpen, setSaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -57,8 +68,12 @@ export function SnippetBar({
         });
         onSnippets(next);
         if (currentId === null) {
+          // Saving while a preset (or a blank buffer) is open forks it into a
+          // new snippet — select that new row so the next save updates it.
           const created = next.find((s) => s.title === finalTitle);
-          if (created) onLoad({ ...created, fragmentShader: source });
+          if (created) {
+            onSelect(`u:${created.id}`, { title: finalTitle, source });
+          }
         }
         setSaveOpen(false);
         toast.success(t("savedToast"));
@@ -71,21 +86,55 @@ export function SnippetBar({
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select
-        value={currentId !== null ? String(currentId) : ""}
+        value={selection}
         onValueChange={(v) => {
-          const snippet = snippets.find((s) => String(s.id) === v);
-          if (snippet) onLoad(snippet);
+          if (!v) return;
+          if (v.startsWith("p:")) {
+            const preset = findPreset(v.slice(2));
+            if (preset) {
+              onSelect(v, {
+                title: preset.title[locale] ?? preset.title.vi,
+                source: preset.source,
+              });
+            }
+            return;
+          }
+          const snippet = snippets.find((s) => `u:${s.id}` === v);
+          if (snippet) {
+            onSelect(v, {
+              title: snippet.title,
+              source: snippet.fragmentShader,
+            });
+          }
         }}
       >
-        <SelectTrigger size="sm" className="w-56" aria-label={t("snippets")}>
+        <SelectTrigger size="sm" className="w-64" aria-label={t("snippets")}>
           <SelectValue placeholder={t("snippetPlaceholder")} />
         </SelectTrigger>
         <SelectContent>
-          {snippets.map((s) => (
-            <SelectItem key={s.id} value={String(s.id)}>
-              {s.title}
-            </SelectItem>
+          {PRESET_GROUPS.map((group) => (
+            <SelectGroup key={group.id}>
+              <SelectLabel>{group.label[locale] ?? group.label.vi}</SelectLabel>
+              {group.presets.map((p) => (
+                <SelectItem key={p.slug} value={`p:${p.slug}`}>
+                  {p.title[locale] ?? p.title.vi}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           ))}
+          {snippets.length > 0 && (
+            <>
+              <SelectSeparator />
+              <SelectGroup>
+                <SelectLabel>{t("yourSnippets")}</SelectLabel>
+                {snippets.map((s) => (
+                  <SelectItem key={s.id} value={`u:${s.id}`}>
+                    {s.title}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </>
+          )}
         </SelectContent>
       </Select>
 

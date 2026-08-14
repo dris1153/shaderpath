@@ -31,7 +31,10 @@ export function PlaygroundClient({
 }) {
   const tA11y = useTranslations("a11y");
   const [snippets, setSnippets] = useState(initialSnippets);
-  const [snippetId, setSnippetId] = useState<number | null>(null);
+  // One selection string drives the dropdown: "" (unsaved), "u:<id>" or
+  // "p:<slug>". Keeping presets out of the snippet id is what stops "Save"
+  // from overwriting a user snippet after loading a preset.
+  const [selection, setSelection] = useState("");
   const [source, setSource] = useState(initialSource ?? DEFAULT_FRAGMENT);
   const [liveSource, setLiveSource] = useState(source);
   const [errors, setErrors] = useState<GlslError[]>([]);
@@ -54,15 +57,15 @@ export function PlaygroundClient({
       {!compact && (
         <SnippetBar
           snippets={snippets}
-          currentId={snippetId}
+          selection={selection}
           source={source}
           onSnippets={setSnippets}
-          onLoad={(s) => {
-            setSnippetId(s.id);
-            setSource(s.fragmentShader);
+          onSelect={(value, loaded) => {
+            setSelection(value);
+            setSource(loaded.source);
           }}
           onNew={() => {
-            setSnippetId(null);
+            setSelection("");
             setSource(DEFAULT_FRAGMENT);
           }}
         />
