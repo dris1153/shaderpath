@@ -31,7 +31,10 @@ Squaring roughness into $\alpha$ isn't decoration — it's Karis's (2013) remap 
 $G(\omega_i, \omega_o)$ answers an entirely different question from D: out of the microfacets that DO have a normal aligned with $h$, how many actually have an unobstructed view of both the incoming light and the camera — i.e. aren't hidden behind their neighboring microfacets? At grazing angles, the tiny grooves on a surface start blocking each other in two distinct ways: **shadowing** (a microfacet blocks incoming light before it reaches the one being shaded) and **masking** (a microfacet blocks the reflected ray before it reaches the camera). The most common way to compute $G$ is Smith's approximation combined with Schlick-GGX per direction, multiplied together (this separation is valid under the assumption the two effects are statistically independent):
 
 $$
-G(\omega_i,\omega_o) = G_1(\omega_o)\,G_1(\omega_i), \qquad G_1(x) = \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+\begin{aligned}
+G(\omega_i,\omega_o) &= G_1(\omega_o)\,G_1(\omega_i)\\[4pt]
+G_1(x) &= \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+\end{aligned}
 $$
 
 That $k$ value uses the exact remap Karis (2013) defines for direct analytic lights — IBL uses a different $k$, which you'll meet again in the Image-Based Lighting lesson. Drop $G$ entirely (using only $D \cdot F$) and a curved surface's silhouette edges light up abnormally bright: you're counting EVERY microfacet aligned with $h$ without subtracting the ones hidden behind their own neighbors — reflecting out more energy than the surface actually received, an energy-conservation violation that's most visible right at a sphere's edge.

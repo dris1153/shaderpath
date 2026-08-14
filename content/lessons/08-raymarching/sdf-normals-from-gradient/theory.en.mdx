@@ -5,8 +5,10 @@ A mesh keeps a normal stored at every vertex — interpolate across the triangle
 The answer sits in the gradient. For a true signed distance field (not a coarse approximation), $f$ satisfies the eikonal equation:
 
 $$
-\|\nabla f(p)\| = 1 \quad \text{everywhere (except a measure-zero ridge set where } f \text{ isn't differentiable)}
+\|\nabla f(p)\| = 1 \quad \text{almost everywhere}
 $$
+
+"Almost everywhere" is the precise term: the identity holds at every point except a measure-zero ridge set where $f$ isn't differentiable — the locus exactly equidistant from two surfaces, for instance.
 
 Intuition: $\nabla f(p)$ points in the direction $f$ grows fastest — and for a distance function, "grows fastest" literally means "moves straight away from the surface along the shortest path," which is exactly the normal direction. The gradient's length equals 1 precisely because moving one unit in that exact direction increases the distance by exactly one unit — no faster, no slower, which is the defining property of a proper (Euclidean, non-warped) SDF. The practical payoff: a SDF's gradient isn't just *parallel* to the normal, it **is** the normal — numerically estimate $\nabla f(p)$, normalize to be safe against discretization error, and you're done.
 

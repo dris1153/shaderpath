@@ -35,7 +35,10 @@ $$
 `metalness ∈ [0,1]` quyết định vật liệu có phải kim loại hay không: ở $0$ (dielectric — phi kim loại, gỗ/nhựa/da/vải), phản xạ specular chỉ chiếm khoảng 4% năng lượng ánh sáng và không màu (Fresnel $F_0 \approx 0.04$), phần còn lại tán xạ dưới bề mặt tạo ra màu diffuse. Ở $1$ (kim loại), toàn bộ ánh sáng phản xạ ngay trên bề mặt và **mang màu** của `color` — không còn thành phần diffuse nào cả:
 
 $$
-\text{diffuseColor} = \text{baseColor} \times (1 - \text{metalness}), \qquad F_0 = \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+\begin{aligned}
+\text{diffuseColor} &= \text{baseColor} \times (1 - \text{metalness})\\[4pt]
+F_0 &= \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+\end{aligned}
 $$
 
 `roughness ∈ [0,1]` quyết định đốm specular đó gọn hay loang: $0$ là gương phản chiếu sắc nét, $1$ là bề mặt tán xạ ánh sáng ra mọi hướng, gần như không còn highlight riêng biệt. Hai cặp giá trị cụ thể đáng nhớ: **phấn viết bảng** là `metalness = 0, roughness = 0.9` — dielectric thô, gần như thuần diffuse, không đốm sáng; **kim loại đánh bóng** là `metalness = 1, roughness = 0.2` — gần như toàn bộ là specular gọn, gắt, không còn màu "chìm" bên dưới bề mặt.

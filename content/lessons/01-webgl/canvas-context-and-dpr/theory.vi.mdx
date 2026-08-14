@@ -39,8 +39,10 @@ Nếu buffer chỉ khớp CSS size mà bỏ qua DPR, GPU render đủ điểm �
 Công thức chuẩn để tính buffer size từ CSS size và DPR:
 
 $$
-\text{buffer.width} = \operatorname{round}(\text{clientWidth} \times \text{dpr}), \qquad
-\text{buffer.height} = \operatorname{round}(\text{clientHeight} \times \text{dpr})
+\begin{aligned}
+\text{buffer.width} &= \operatorname{round}(\text{clientWidth} \times \text{dpr})\\[4pt]
+\text{buffer.height} &= \operatorname{round}(\text{clientHeight} \times \text{dpr})
+\end{aligned}
 $$
 
 Dùng `round`, không phải `floor` hay `ceil` tuỳ ý — làm tròn tới device pixel gần nhất khi `clientWidth * dpr` ra số lẻ, chuyện thường gặp vì layout responsive hiếm khi cho ra số CSS pixel chẵn tuyệt đối. Ví dụ cụ thể: canvas CSS $800 \times 450$, DPR $2$ cho buffer $1600 \times 900 = 1{,}440{,}000$ pixel. So với DPR $1$ ($800 \times 450 = 360{,}000$ pixel), DPR $2$ cần gấp $4$ lần số pixel — và với một full-screen fragment shader, đúng gấp $4$ lần số lần fragment shader chạy mỗi frame, vì mỗi buffer pixel là một invocation.

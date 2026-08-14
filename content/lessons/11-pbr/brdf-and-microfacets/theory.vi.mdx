@@ -31,7 +31,10 @@ Bình phương roughness thành $\alpha$ không phải trang trí — là remap 
 $G(\omega_i, \omega_o)$ trả lời câu khác hẳn D: trong các microfacet CÓ pháp tuyến đúng $h$, bao nhiêu phần thực sự nhìn thấy được cả ánh sáng lẫn camera — không bị microfacet lân cận che? Ở góc xiên, các rãnh nhỏ tự che nhau theo hai cách: **shadowing** (chặn ánh sáng tới trước khi chạm microfacet đang xét) và **masking** (chặn tia phản xạ trước khi tới camera). Cách phổ biến nhất là Smith kết hợp Schlick-GGX cho từng hướng rồi nhân lại:
 
 $$
-G(\omega_i,\omega_o) = G_1(\omega_o)\,G_1(\omega_i), \qquad G_1(x) = \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+\begin{aligned}
+G(\omega_i,\omega_o) &= G_1(\omega_o)\,G_1(\omega_i)\\[4pt]
+G_1(x) &= \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughness}+1)^2}{8}
+\end{aligned}
 $$
 
 $k$ dùng đúng remap cho ánh sáng trực tiếp từ Karis (2013) — IBL dùng $k$ khác, gặp lại ở bài Image-Based Lighting. Bỏ qua $G$ (chỉ dùng $D \cdot F$), rìa bề mặt cong ở góc xiên sáng bất thường: đang đếm TẤT CẢ microfacet chĩa đúng $h$ mà không trừ phần bị che lẫn nhau — phản xạ ra nhiều năng lượng hơn thực có, vi phạm bảo toàn năng lượng, rõ nhất ở rìa hình cầu.

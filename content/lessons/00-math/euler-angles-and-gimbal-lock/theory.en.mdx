@@ -5,9 +5,11 @@ Any rotation in 3D space has exactly 3 degrees of freedom — a $3\times 3$ matr
 Each single-axis rotation is a familiar matrix from the Matrices & Transforms lesson:
 
 $$
-R_x(\alpha)=\begin{pmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{pmatrix}\quad
-R_y(\beta)=\begin{pmatrix}\cos\beta&0&\sin\beta\\0&1&0\\-\sin\beta&0&\cos\beta\end{pmatrix}\quad
-R_z(\gamma)=\begin{pmatrix}\cos\gamma&-\sin\gamma&0\\\sin\gamma&\cos\gamma&0\\0&0&1\end{pmatrix}
+\begin{aligned}
+R_x(\alpha)&=\begin{pmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{pmatrix}\\[6pt]
+R_y(\beta)&=\begin{pmatrix}\cos\beta&0&\sin\beta\\0&1&0\\-\sin\beta&0&\cos\beta\end{pmatrix}\\[6pt]
+R_z(\gamma)&=\begin{pmatrix}\cos\gamma&-\sin\gamma&0\\\sin\gamma&\cos\gamma&0\\0&0&1\end{pmatrix}
+\end{aligned}
 $$
 
 An Euler rotation with order `"XYZ"` (Three.js's `Euler` default) is the product of these three matrices in one specific order. That "specific order" — not the three angles themselves — is where every headache in the rest of this lesson comes from.

@@ -5,8 +5,10 @@ Một mesh có normal lưu sẵn ở từng vertex — nội suy giữa ba đỉ
 Câu trả lời nằm ở gradient. Với một signed distance field đúng nghĩa (không phải xấp xỉ thô), $f$ thoả phương trình eikonal:
 
 $$
-\|\nabla f(p)\| = 1 \quad \text{everywhere (except a measure-zero ridge set where } f \text{ isn't differentiable)}
+\|\nabla f(p)\| = 1 \quad \text{almost everywhere}
 $$
+
+"Almost everywhere" ở đây là thuật ngữ chính xác: đẳng thức đúng ở mọi điểm trừ một tập ridge có độ đo bằng 0 — nơi $f$ không khả vi, chẳng hạn đúng giữa hai bề mặt cách đều.
 
 Trực giác: $\nabla f(p)$ chỉ theo hướng $f$ tăng nhanh nhất — với một hàm khoảng cách, "tăng nhanh nhất" nghĩa là "đi thẳng ra khỏi bề mặt theo đường ngắn nhất", tức hướng pháp tuyến. Độ dài gradient đúng bằng 1 vì di chuyển 1 đơn vị theo hướng đó làm khoảng cách tăng đúng 1 đơn vị — không nhanh hơn, không chậm hơn, đó chính là định nghĩa của một SDF chuẩn (Euclidean, không bị "co giãn" bởi phép biến đổi non-uniform). Hệ quả thực dụng: gradient của SDF không chỉ *song song* với normal, nó **là** normal — chỉ cần ước lượng $\nabla f(p)$ bằng số rồi normalize phòng sai số rời rạc hoá.
 

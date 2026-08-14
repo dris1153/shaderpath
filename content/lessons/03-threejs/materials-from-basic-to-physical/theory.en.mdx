@@ -35,7 +35,10 @@ The higher `shininess`, the smaller and sharper the specular spot — polished m
 `metalness ∈ [0,1]` decides whether a material behaves like a metal at all: at $0$ (dielectric — non-metal: wood, plastic, leather, fabric), specular reflectance accounts for only about 4% of the light and stays colorless (Fresnel $F_0 \approx 0.04$), while the rest scatters under the surface as diffuse color. At $1$ (metal), essentially all light reflects right at the surface and **takes on the color** of `color` — there's no diffuse term left at all:
 
 $$
-\text{diffuseColor} = \text{baseColor} \times (1 - \text{metalness}), \qquad F_0 = \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+\begin{aligned}
+\text{diffuseColor} &= \text{baseColor} \times (1 - \text{metalness})\\[4pt]
+F_0 &= \operatorname{mix}(0.04,\ \text{baseColor},\ \text{metalness})
+\end{aligned}
 $$
 
 `roughness ∈ [0,1]` decides whether that specular spot stays tight or spreads out: $0$ is a sharp mirror reflection, $1$ scatters light in every direction, leaving almost no distinct highlight at all. Two concrete pairs worth memorizing: **blackboard chalk** is `metalness = 0, roughness = 0.9` — a rough dielectric, nearly pure diffuse, no visible highlight; **polished metal** is `metalness = 1, roughness = 0.2` — almost entirely a tight, sharp specular response, with no color "sinking" under the surface.

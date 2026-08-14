@@ -50,7 +50,10 @@ $$
 Doubling one dimension doesn't double memory — it **quadruples** it, since texel count grows along both dimensions at once:
 
 $$
-1024 \times 1024 \approx 2\text{ MB} \quad (4\times \text{ vs. } 512) \qquad 2048 \times 2048 \approx 8\text{ MB} \quad (4\times \text{ vs. } 1024,\ 16\times \text{ vs. } 512)
+\begin{aligned}
+1024 \times 1024 &\approx 2\text{ MB} \quad (4\times \text{ vs. } 512)\\[4pt]
+2048 \times 2048 &\approx 8\text{ MB} \quad (4\times \text{ vs. } 1024,\ 16\times \text{ vs. } 512)
+\end{aligned}
 $$
 
 And for `PointLight`, multiply by another 6, since its shadow map is a six-face cube map — a $2048^2$ Point light shadow costs roughly $8\text{MB} \times 6 \approx 48\text{MB}$ for a single light, a very practical reason never to casually crank `mapSize` up on a Point light.

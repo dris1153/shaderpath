@@ -5,9 +5,11 @@ Một phép xoay 3D bất kỳ chỉ có đúng 3 bậc tự do — ma trận $3
 Mỗi phép xoay đơn trục là ma trận quen thuộc từ bài Ma trận & Transform:
 
 $$
-R_x(\alpha)=\begin{pmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{pmatrix}\quad
-R_y(\beta)=\begin{pmatrix}\cos\beta&0&\sin\beta\\0&1&0\\-\sin\beta&0&\cos\beta\end{pmatrix}\quad
-R_z(\gamma)=\begin{pmatrix}\cos\gamma&-\sin\gamma&0\\\sin\gamma&\cos\gamma&0\\0&0&1\end{pmatrix}
+\begin{aligned}
+R_x(\alpha)&=\begin{pmatrix}1&0&0\\0&\cos\alpha&-\sin\alpha\\0&\sin\alpha&\cos\alpha\end{pmatrix}\\[6pt]
+R_y(\beta)&=\begin{pmatrix}\cos\beta&0&\sin\beta\\0&1&0\\-\sin\beta&0&\cos\beta\end{pmatrix}\\[6pt]
+R_z(\gamma)&=\begin{pmatrix}\cos\gamma&-\sin\gamma&0\\\sin\gamma&\cos\gamma&0\\0&0&1\end{pmatrix}
+\end{aligned}
 $$
 
 Một Euler rotation với order `"XYZ"` (mặc định của Three.js `Euler`) là tích ba ma trận này theo một thứ tự cụ thể. Chính "thứ tự cụ thể" đó — không phải bản thân ba góc — là nguồn gốc mọi rắc rối trong phần còn lại của bài.
