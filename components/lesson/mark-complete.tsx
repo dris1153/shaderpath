@@ -7,12 +7,7 @@ import { IconCircleCheck } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { markComplete } from "@/lib/progress";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export function MarkComplete({
@@ -65,7 +60,7 @@ export function MarkComplete({
               aria-checked={selected === n}
               className={cn(
                 selected === n &&
-                  "bg-primary text-primary-foreground hover:bg-primary/90",
+                  "bg-white! text-primary-foreground! hover:bg-primary/90!",
               )}
               onClick={() => setSelected(selected === n ? null : n)}
             >
