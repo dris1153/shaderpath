@@ -39,6 +39,10 @@ const withMDX = createMDX({
             light: "github-light-high-contrast",
             dark: "github-dark-high-contrast",
           },
+          // Shiki drops the original language-* class; the code block reads it
+          // back off the <code> element to label itself. A boolean stays
+          // serializable, unlike a transformer function (D2).
+          addLanguageClass: true,
         },
       ],
     ],

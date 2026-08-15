@@ -101,7 +101,9 @@
     "translationFallback": "Bài này chưa có bản dịch cho ngôn ngữ hiện tại — đang hiển thị bản gốc.",
     "learnAnyway": "Bài này chưa mở khoá theo lộ trình — bạn vẫn có thể học trước nếu muốn.",
     "openNav": "Mục lục track",
-    "openToc": "Trong bài"
+    "openToc": "Trong bài",
+    "copyCode": "Sao chép",
+    "copiedCode": "Đã sao chép"
   },
   "exercise": {
     "title": "Bài tập",

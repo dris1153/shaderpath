@@ -101,7 +101,9 @@
     "translationFallback": "No translation for the current language yet — showing the original.",
     "learnAnyway": "This lesson isn't unlocked on your path yet — you can still learn ahead.",
     "openNav": "Track contents",
-    "openToc": "On this page"
+    "openToc": "On this page",
+    "copyCode": "Copy",
+    "copiedCode": "Copied"
   },
   "exercise": {
     "title": "Exercises",

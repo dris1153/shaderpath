@@ -146,27 +146,43 @@
    formula hidden, and nothing shows when it already fits.
    Keying the fade to --background is safe because no lesson puts display math
    inside a Callout; one that did would fade to the wrong colour. */
-.katex-display {
+.katex-display,
+.code-scroll {
   overflow-x: auto;
   overflow-y: hidden;
-  padding-block: 0.25rem;
   scrollbar-width: thin;
   background:
-    linear-gradient(to right, var(--background) 40%, transparent) left center /
-      2.5rem 100% no-repeat local,
-    linear-gradient(to left, var(--background) 40%, transparent) right center /
-      2.5rem 100% no-repeat local,
+    linear-gradient(to right, var(--scroll-fade-bg) 40%, transparent) left
+      center / 2.5rem 100% no-repeat local,
+    linear-gradient(to left, var(--scroll-fade-bg) 40%, transparent) right
+      center / 2.5rem 100% no-repeat local,
     linear-gradient(to right, var(--border), transparent) left center / 1rem
       100% no-repeat scroll,
     linear-gradient(to left, var(--border), transparent) right center / 1rem
       100% no-repeat scroll;
 }
 
+.katex-display {
+  --scroll-fade-bg: var(--background);
+  padding-block: 0.25rem;
+}
+
+.code-scroll {
+  --scroll-fade-bg: var(--muted);
+}
+
+/* The CodeBlock wrapper owns the frame and the background. Shiki writes its own
+   background inline, which beats any class, so clear it on both the pre and the
+   token spans. */
+.shiki,
+.shiki span {
+  background-color: transparent !important;
+}
+
 /* shiki dual-theme: swap to the dark variant when next-themes sets .dark */
 .dark .shiki,
 .dark .shiki span {
   color: var(--shiki-dark) !important;
-  background-color: var(--shiki-dark-bg) !important;
   font-style: var(--shiki-dark-font-style) !important;
   font-weight: var(--shiki-dark-font-weight) !important;
   text-decoration: var(--shiki-dark-text-decoration) !important;
