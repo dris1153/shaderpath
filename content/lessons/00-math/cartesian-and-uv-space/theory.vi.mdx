@@ -13,6 +13,12 @@ Toán học không quan tâm trục nào "hướng lên" — phần mềm đồ 
 
 Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị lộn mặt.
 
+<Figure
+  src="/figures/00-math/axis-conventions.svg"
+  alt="Hai sơ đồ so Y-up với Z-up kèm mặt đất dạng lưới, và hai bộ trục so hệ thuận tay phải với thuận tay trái, khác nhau duy nhất ở chiều trục z"
+  caption="Đây là hai câu hỏi tách rời nhau: trục nào hướng lên, và trục thứ ba đi về phía nào — một hệ Z-up vẫn có thể thuận tay phải, đúng như Blender."
+/>
+
 Ví dụ rõ nhất của đổi trục nằm ngay trên canvas 2D: Descartes có $y$ hướng lên, canvas 2D có gốc trên-trái với $y$ hướng xuống — vẽ một điểm Descartes lên canvas luôn cần đảo dấu $y$:
 
 ```js

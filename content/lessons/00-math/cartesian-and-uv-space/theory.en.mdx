@@ -13,6 +13,12 @@ Pure math doesn't care which axis is "up" — but graphics software does, becaus
 
 The second question is whether a coordinate system is **right-handed** or **left-handed**. The right-hand rule: fingers curl from $+x$ toward $+y$; the thumb points along $+z$ if the system is right-handed. Three.js is right-handed; DirectX and Unity are traditionally left-handed. Not trivia — the cross product, the tool you'll use a few lessons from now to build surface normals, flips sign when handedness switches, and a model imported without conversion ends up with normals pointing inward instead of outward.
 
+<Figure
+  src="/figures/00-math/axis-conventions.svg"
+  alt="Two diagrams comparing Y-up with Z-up over a grid ground plane, and two axis triads comparing right-handed with left-handed where only the z direction differs"
+  caption="These are two separate questions: which axis points up, and which way the third axis runs — a Z-up system can still be right-handed, as Blender's is."
+/>
+
 The most concrete axis flip sits right on a 2D canvas: standard Cartesian coordinates have $y$ pointing up, a 2D canvas has its origin top-left with $y$ pointing down. Plotting a Cartesian point onto a canvas always requires flipping $y$:
 
 ```js

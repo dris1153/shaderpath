@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 470" width="600" height="470" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --grid: #cbd5e1;
+      --up-stroke: #2563eb;
+      --up-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --grid: #4b5b70;
+        --up-stroke: #60a5fa;
+        --up-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .panel { font-size: 14px; font-weight: 600; }
+    .who { font-size: 12px; fill: var(--muted); }
+    .axis { font-size: 13px; font-weight: 600; }
+    .up { fill: var(--up-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .arrow { stroke: var(--line); stroke-width: 1.6; fill: none; }
+    .arrow-up { stroke: var(--up-stroke); stroke-width: 2.2; fill: none; }
+    .grid { stroke: var(--grid); stroke-width: 1; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+    .glyph { stroke: var(--line); stroke-width: 1.6; fill: none; }
+  </style>
+  <defs>
+    <marker id="h" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="hu" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--up-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- ===== Panel 1: which axis points up ===== -->
+  <text class="panel" x="16" y="20">Which axis points up?</text>
+
+  <!-- Y-up: ground is the xz plane, so the grid lies flat and +z comes toward us -->
+  <text class="who" x="60" y="42">Y-up — Three.js, glTF</text>
+  <g transform="translate(120,158)">
+    <path class="grid" d="M-70,26 L34,-16 L104,10 L0,52 z" />
+    <path class="grid" d="M-18,6 L86,-36 M-44,16 L60,-26 M-35,42 L69,0 M-9,32 L95,-10" />
+    <path class="arrow-up" d="M0,0 L0,-84" marker-end="url(#hu)" />
+    <text class="axis up" x="-4" y="-92" text-anchor="middle">y</text>
+    <path class="arrow" d="M0,0 L86,0" marker-end="url(#h)" />
+    <text class="axis" x="96" y="5">x</text>
+    <path class="arrow" d="M0,0 L-52,42" marker-end="url(#h)" />
+    <text class="axis" x="-66" y="52">z</text>
+    <text class="note" x="0" y="78" text-anchor="middle">ground = xz plane</text>
+  </g>
+
+  <!-- Z-up: ground is xy, and +y necessarily runs AWAY from the viewer -->
+  <text class="who" x="392" y="42">Z-up — Blender, CAD</text>
+  <g transform="translate(452,158)">
+    <path class="grid" d="M-70,26 L34,-16 L104,10 L0,52 z" />
+    <path class="grid" d="M-18,6 L86,-36 M-44,16 L60,-26 M-35,42 L69,0 M-9,32 L95,-10" />
+    <path class="arrow-up" d="M0,0 L0,-84" marker-end="url(#hu)" />
+    <text class="axis up" x="-4" y="-92" text-anchor="middle">z</text>
+    <path class="arrow" d="M0,0 L86,0" marker-end="url(#h)" />
+    <text class="axis" x="96" y="5">x</text>
+    <path class="arrow" d="M0,0 L52,-42" marker-end="url(#h)" />
+    <text class="axis" x="60" y="-48">y</text>
+    <text class="note" x="0" y="78" text-anchor="middle">ground = xy plane</text>
+  </g>
+
+  <!-- The exact operation Blender's glTF exporter performs -->
+  <path class="arrow" d="M232,138 C280,114 320,114 356,138" marker-end="url(#h)" />
+  <text class="note" x="294" y="108" text-anchor="middle">rotate 90&#176; about x</text>
+  <text class="note" x="294" y="152" text-anchor="middle">Blender's glTF export</text>
+
+  <line class="rule" x1="16" y1="252" x2="584" y2="252" />
+
+  <!-- ===== Panel 2: which way the third axis goes ===== -->
+  <text class="panel" x="16" y="282">Which way does z point? Same x, same y — only z differs</text>
+
+  <text class="who" x="60" y="306">Right-handed — Three.js, OpenGL</text>
+  <g transform="translate(150,392)">
+    <path class="arrow-up" d="M0,0 L0,-58" marker-end="url(#hu)" />
+    <text class="axis up" x="-4" y="-66" text-anchor="middle">y</text>
+    <path class="arrow" d="M0,0 L74,0" marker-end="url(#h)" />
+    <text class="axis" x="84" y="5">x</text>
+    <circle class="glyph" cx="0" cy="0" r="9" />
+    <circle cx="0" cy="0" r="2.6" fill="var(--line)" />
+    <text class="note" x="0" y="34" text-anchor="middle">z toward you</text>
+  </g>
+
+  <text class="who" x="392" y="306">Left-handed — DirectX, Unity</text>
+  <g transform="translate(482,392)">
+    <path class="arrow-up" d="M0,0 L0,-58" marker-end="url(#hu)" />
+    <text class="axis up" x="-4" y="-66" text-anchor="middle">y</text>
+    <path class="arrow" d="M0,0 L74,0" marker-end="url(#h)" />
+    <text class="axis" x="84" y="5">x</text>
+    <circle class="glyph" cx="0" cy="0" r="9" />
+    <path class="glyph" d="M-6.4,-6.4 L6.4,6.4 M6.4,-6.4 L-6.4,6.4" />
+    <text class="note" x="0" y="34" text-anchor="middle">z away from you</text>
+  </g>
+
+  <text class="note" x="300" y="452" text-anchor="middle">Swapping handedness flips the sign of every cross product — an import with the wrong one renders inside-out.</text>
+</svg>
