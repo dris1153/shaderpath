@@ -1,21 +1,19 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { Link } from "@/i18n/navigation";
 import { LESSONS } from "@/content/curriculum";
+
 import type { Locale } from "@/content/types";
-import { getLesson, isUnlocked, overallCompletion } from "@/lib/curriculum";
-import { getProgressMap, getTotalTimeSeconds } from "@/lib/progress-read";
-import { getDueReviews } from "@/lib/review-read";
-import { DueToday } from "@/components/dashboard/due-today";
-import type { LessonSlug } from "@/content/slugs";
-import { Button } from "@/components/ui/button";
+import { getLesson, getTrack, overallCompletion } from "@/lib/curriculum";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+  buildQueue,
+  getTrackMap,
+  getWeeklyPace,
+} from "@/lib/dashboard-read";
+import { getProgressMap } from "@/lib/progress-read";
+import {
+  ActionQueue,
+  type QueueItemVM,
+} from "@/components/dashboard/action-queue";
+import { TrackMap, type TrackStepVM } from "@/components/dashboard/track-map";
 
 // Reads live progress from SQLite on every request
 export const dynamic = "force-dynamic";
@@ -25,61 +23,86 @@ export default async function DashboardPage() {
   const tApp = await getTranslations("app");
   const locale = (await getLocale()) as Locale;
 
+  const now = new Date();
   const progress = getProgressMap();
   const stats = overallCompletion(progress);
-  const hours = Math.round(getTotalTimeSeconds() / 360) / 10;
 
-  const due: { slug: string; title: string }[] = [];
-  for (const r of getDueReviews(new Date())) {
-    const lesson = getLesson(r.lessonSlug as LessonSlug);
-    if (lesson) due.push({ slug: lesson.slug, title: lesson.title[locale] });
-  }
+  // The queue is the page: every row states why it is there and what to do.
+  const queue = buildQueue(now, progress);
+  const items: QueueItemVM[] = queue.flatMap((item) => {
+    const lesson = getLesson(item.lessonSlug);
+    return lesson ? [{ ...item, slug: lesson.slug, title: lesson.title[locale] }] : [];
+  });
 
-  // Continue where the learner left off: first in_progress, else first unlocked core not done
-  const continueLesson =
-    LESSONS.find((l) => progress[l.slug] === "in_progress") ??
-    LESSONS.find(
-      (l) =>
-        l.tier === "core" &&
-        progress[l.slug] !== "completed" &&
-        isUnlocked(l.slug, progress),
-    );
+  const focus = queue.find((i) => i.kind === "continue")?.lessonSlug;
+  const map = getTrackMap(progress, focus);
+  const track = map ? getTrack(map.trackId) : undefined;
+  const nextTrack = map?.nextTrackId ? getTrack(map.nextTrackId) : undefined;
+
+  const steps: TrackStepVM[] = (map?.steps ?? []).flatMap((step) => {
+    const lesson = getLesson(step.slug);
+    return lesson
+      ? [
+          {
+            ...step,
+            title: lesson.title[locale],
+            scrollPercent: step.current
+              ? queue.find((i) => i.kind === "continue")?.scrollPercent
+              : undefined,
+          },
+        ]
+      : [];
+  });
+
+  // What the in-progress lesson opens up, which the track map does not say.
+  const focusIndex = focus ? LESSONS.findIndex((l) => l.slug === focus) : -1;
+  const nextLesson = focusIndex >= 0 ? LESSONS[focusIndex + 1] : undefined;
 
   return (
-    <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-4 py-10">
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className="container mx-auto w-full flex-1 px-4 py-10"
+    >
       <h1 className="text-3xl font-semibold tracking-tight">{t("welcome")}</h1>
       <p className="text-muted-foreground mt-2">{tApp("tagline")}</p>
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>{t("progressTitle")}</CardTitle>
-          <CardDescription>
-            {stats.coreCompleted === 0 && !continueLesson
-              ? t("empty")
-              : t("stats", {
-                  completed: stats.coreCompleted,
-                  total: stats.coreTotal,
-                  hours,
-                })}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-4">
-          <Progress
-            value={stats.percent}
-            aria-label={t("progressTitle")}
-            className="w-64"
-          />
-          {continueLesson && (
-            <Button
-              nativeButton={false}
-              render={<Link href={`/lesson/${continueLesson.slug}`} />}
-            >
-              {t("continue")}: {continueLesson.title[locale]}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
 
-      <DueToday due={due} />
+      {map && track && (
+        <TrackMap
+          heading={t("trackHeading", {
+            position: map.position,
+            title: track.title[locale],
+          })}
+          meta={t("trackMeta", {
+            done: map.done,
+            total: map.total,
+            remaining: stats.coreTotal - stats.coreCompleted,
+            pace: getWeeklyPace(now),
+          })}
+          overall={{
+            label: t("overall", { percent: stats.percent }),
+            percent: stats.percent,
+          }}
+          steps={steps}
+          unlocksNext={
+            nextTrack
+              ? t("unlocksTrack", {
+                  track: nextTrack.title[locale],
+                  count: map.nextTrackLessons,
+                })
+              : undefined
+          }
+        />
+      )}
+
+      <ActionQueue
+        items={items}
+        unlocksLesson={
+          nextLesson
+            ? t("unlocksLesson", { title: nextLesson.title[locale] })
+            : undefined
+        }
+      />
     </main>
   );
 }
