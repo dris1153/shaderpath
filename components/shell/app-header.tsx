@@ -11,8 +11,8 @@ export async function AppHeader() {
   const tA11y = await getTranslations("a11y");
 
   return (
-    <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
+    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-40 border-b backdrop-blur">
+      <div className="mx-auto flex h-14 w-full container items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="font-semibold tracking-tight">
             {t("name")}
@@ -21,7 +21,10 @@ export async function AppHeader() {
             aria-label={tA11y("mainNav")}
             className="text-muted-foreground flex items-center gap-4 text-sm"
           >
-            <Link href="/roadmap" className="hover:text-foreground transition-colors">
+            <Link
+              href="/roadmap"
+              className="hover:text-foreground transition-colors"
+            >
               {tNav("roadmap")}
             </Link>
             <Link

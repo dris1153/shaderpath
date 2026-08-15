@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LessonLoading() {
   return (
-    <div className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]">
+    <div className="mx-auto grid w-full container flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]">
       <div className="hidden space-y-3 lg:block">
         <Skeleton className="h-5 w-3/4" />
         <Skeleton className="h-64 w-full" />

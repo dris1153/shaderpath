@@ -16,15 +16,6 @@ import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
 
-// "vietnamese" subset is required — the default locale's diacritics otherwise
-// fall back to the system font and the late swap re-records LCP (§9 phase 10).
-// "vietnamese" subset is required — the default locale's diacritics otherwise
-// fall back to the system font. Variable fonts: one file per family.
-// Next 16.3 has no fallback-metric overrides for these families and logs
-// "Failed to find font override values" per compile. It is cosmetic — Next
-// skips the adjusted fallback either way and measured CLS stays 0 (fonts are
-// preloaded and served locally). `adjustFontFallback: false` does NOT silence
-// it: the warning comes from the next-swc Rust binary, not the JS loader.
 const googleSans = Google_Sans({
   variable: "--font-google-sans",
   subsets: ["latin", "latin-ext", "vietnamese"],

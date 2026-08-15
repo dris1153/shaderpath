@@ -143,7 +143,10 @@ export function ExerciseCard({
                   the solution only reveals it once the learner has given up.
                   Other kinds keep it inside the solution block below. */}
               {exercise.referenceImage && exercise.kind === "build" && (
-                <ReferenceImage src={exercise.referenceImage} label={t("referenceImage")} />
+                <ReferenceImage
+                  src={exercise.referenceImage}
+                  label={t("referenceImage")}
+                />
               )}
 
               {exercise.starterCode !== undefined &&
@@ -293,7 +296,7 @@ function ReferenceImage({ src, label }: { src: string; label: string }) {
   return (
     <figure className="mt-4">
       {/* eslint-disable-next-line @next/next/no-img-element -- local asset, nothing for the optimiser to do */}
-      <img src={src} alt={label} className="max-w-full rounded-lg border" />
+      <img src={src} alt={label} className="max-w-full rounded-lg border p-2" />
       <figcaption className="text-muted-foreground mt-1.5 text-xs">
         {label}
       </figcaption>

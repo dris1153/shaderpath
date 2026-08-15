@@ -28,7 +28,7 @@ export function CodeBlock({
   };
 
   return (
-    <div className="group bg-muted relative mt-4 rounded-lg border">
+    <div className="group bg-muted relative mt-4 rounded-lg border overflow-hidden">
       {/* Opaque so a long first line scrolls under it cleanly. Hidden from
           assistive tech: the language is decoration, the code is the content. */}
       <div className="absolute top-1.5 right-1.5 flex items-center gap-1.5">

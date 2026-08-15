@@ -78,7 +78,7 @@ export default async function LessonPage({
     <main
       id="main-content"
       tabIndex={-1}
-      className="mx-auto grid w-full max-w-7xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]"
+      className="mx-auto grid w-full container flex-1 gap-8 px-4 py-8 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_220px]"
     >
       <aside aria-label={t("openNav")} className="hidden lg:block">
         <div className="sticky top-20">{sidebar}</div>

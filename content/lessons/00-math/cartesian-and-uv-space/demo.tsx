@@ -69,8 +69,24 @@ export default function CartesianUvDemo() {
       title={L.title}
       ratio={1}
       controls={[
-        { kind: "number", key: "u", label: L.u, min: 0, max: 1, step: 0.01, defaultValue: 0.3 },
-        { kind: "number", key: "v", label: L.v, min: 0, max: 1, step: 0.01, defaultValue: 0.6 },
+        {
+          kind: "number",
+          key: "u",
+          label: L.u,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          defaultValue: 0.3,
+        },
+        {
+          kind: "number",
+          key: "v",
+          label: L.v,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          defaultValue: 0.6,
+        },
         { kind: "boolean", key: "flip", label: L.flip, defaultValue: false },
       ]}
     >
