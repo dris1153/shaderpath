@@ -15,6 +15,7 @@ function FrameloopGate() {
 // only while visible (§8.3), DPR clamped per the detected/overridden quality tier.
 export function DemoCanvas({
   children,
+  onCreated,
   ...props
 }: Omit<CanvasProps, "frameloop" | "dpr">) {
   const { dpr } = useQuality();
@@ -24,6 +25,16 @@ export function DemoCanvas({
       dpr={dpr}
       gl={{ antialias: true, powerPreference: "high-performance" }}
       {...props}
+      onCreated={(state) => {
+        // `manual: true` tells R3F to stop managing the camera entirely, which
+        // includes never calling updateProjectionMatrix. The left/right/top/
+        // bottom a demo passes then land on the object but never reach the
+        // projection matrix, and the canvas renders empty. Bake them once.
+        if ((state.camera as { manual?: boolean }).manual) {
+          state.camera.updateProjectionMatrix();
+        }
+        onCreated?.(state);
+      }}
     >
       <FrameloopGate />
       {children}
