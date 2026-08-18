@@ -13,6 +13,12 @@ import { MeshBasicNodeMaterial, WebGPURenderer } from "three/webgpu";
 
 Hai điều đáng chú ý ngay từ dòng import: TSL và WebGPU sống ở **subpath export riêng** (`three/tsl`, `three/webgpu`), không nằm trong `three` gốc — gõ `import { uniform } from "three"` cho `undefined` (hoặc lỗi TypeScript), vì `three/package.json` khai `exports` tách ba entry point này. Một `NodeMaterial` (ví dụ `MeshBasicNodeMaterial`) thay thuộc tính string-based quen thuộc bằng thuộc tính node: `material.colorNode` thay `color`/`map`, `material.positionNode` thay việc tự viết `#include <begin_vertex>` như bài `onBeforeCompile`. Gán một node vào đó là xong — không cần biết nó dịch ra GLSL hay WGSL.
 
+<Figure
+  src="/figures/06-custom-shaders/tsl-node-graph-two-backends.svg"
+  alt="Một node graph TSL đi vào WebGPURenderer.init(), rồi rẽ thành WGSLNodeBuilder sinh WGSL cho backend WebGPU và GLSLNodeBuilder sinh GLSL ES 3.00 cho backend WebGL2, với WebGLRenderer cổ điển vẽ nằm ngoài chuỗi"
+  caption="Nhánh rẽ chỉ xảy ra sau init(), nên node graph bạn viết vẫn là bản duy nhất phải bảo trì, còn renderer cổ điển đứng ngoài chuỗi này thì chẳng có gì để đọc."
+/>
+
 ## Một hiệu ứng, hai ngôn ngữ: GLSL và TSL cạnh nhau
 
 Demo của bài này vẽ một dải màu chuyển động theo công thức:

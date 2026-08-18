@@ -14,6 +14,12 @@ The direct consequence: a 3D scene in R3F is a pure function of React state — 
 - A node that already exists but has a changed prop → the property gets mutated directly on the existing object, nothing gets recreated.
 - A node that's gone from the new tree → cleanup runs, the object gets removed from the real scene graph.
 
+<Figure
+  src="/figures/04-r3f/reconciler-diff-loop.svg"
+  alt="The reconciler loop: React state changes, a new JSX tree is diffed against the previous fiber tree, and each node is created, mutated or disposed on the real THREE objects"
+  caption="Each state change touches only the difference, which is why a surviving node keeps the very same instance and the very same GPU buffer."
+/>
+
 ```tsx
 function MeshList({ count }: { count: number }) {
   return (

@@ -21,6 +21,12 @@ material.onBeforeCompile = (shader) => {
 
 `#include <begin_vertex>` là chunk khai báo `vec3 transformed = vec3( position );` — biến `transformed` mà mọi chunk sau đó (morph target, skinning, displacement map, phép chiếu) đều đọc và ghi tiếp, nên chèn code NGAY SAU dòng include này là đúng chỗ để can thiệp vị trí đỉnh trước khi nó bị chiếu lên clip space. Tương tự, `#include <color_fragment>` (chunk nhân `diffuseColor *= vColor`) là điểm chèn chuẩn để sửa màu diffuse sau khi texture/vertex color đã áp xong nhưng trước khi ánh sáng được tính. Tên chunk không phải quy ước tự đặt — chúng là tên file thật trong mã nguồn Three (`begin_vertex.glsl.js`, `color_fragment.glsl.js`), và bài tiếp theo của track này liệt kê đầy đủ bản đồ chunk để tra cứu thay vì đoán mò.
 
+<Figure
+  src="/figures/06-custom-shaders/shader-assembly-injection-point.svg"
+  alt="Chuỗi lắp ráp sáu bước từ ShaderLib.meshphysical xuống compileShader, với onBeforeCompile ở bước 3 và resolveIncludes ở bước 4, cạnh hai panel cho thấy cùng một dòng lúc còn là marker #include và sau khi đã bung thành nội dung chunk"
+  caption="Đoạn replace của bạn chỉ nhìn thấy bước 3, nên marker chứ không phải GLSL mà nó bung ra mới là chuỗi duy nhất đáng đem đi tìm."
+/>
+
 Phép xoắn quanh trục $y$ ở trên chính là ma trận xoay 2D áp lên mặt phẳng $xz$, góc tỉ lệ theo độ cao đỉnh:
 
 $$

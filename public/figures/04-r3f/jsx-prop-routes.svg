@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 466" width="620" height="466" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .route { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .code { font-size: 12px; }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="26" y="26">&lt;mesh&gt; is THREE.Mesh — the tag name is the class name, lowercased</text>
+  <text class="note" x="26" y="46">Every prop then takes exactly one of these four routes onto that object.</text>
+
+  <text class="route" x="26" y="76">args — constructor arguments</text>
+  <rect class="box" x="26" y="84" width="250" height="34" rx="6" />
+  <text class="code" x="151" y="105" text-anchor="middle">&lt;boxGeometry args={[1, 2, 3]} /&gt;</text>
+  <path class="arrow" d="M280,101 L302,101" marker-end="url(#head)" />
+  <rect class="box-accent" x="306" y="84" width="288" height="34" rx="6" />
+  <text class="code" x="450" y="105" text-anchor="middle">new THREE.BoxGeometry(1, 2, 3)</text>
+  <text class="note" x="26" y="136">Runs once, at construction — a changed value here destroys the instance and builds a new one.</text>
+
+  <text class="route" x="26" y="170">property prop — assigned after construction</text>
+  <rect class="box" x="26" y="178" width="250" height="34" rx="6" />
+  <text class="code" x="151" y="199" text-anchor="middle">&lt;mesh position={[1, 0, 0]} /&gt;</text>
+  <path class="arrow" d="M280,195 L302,195" marker-end="url(#head)" />
+  <rect class="box-accent" x="306" y="178" width="288" height="34" rx="6" />
+  <text class="code" x="450" y="199" text-anchor="middle">mesh.position.set(1, 0, 0)</text>
+  <text class="note" x="26" y="230">A target with .set() keeps its own instance; scale={2} becomes setScalar(2).</text>
+
+  <text class="route" x="26" y="264">pierced prop — a dashed property path</text>
+  <rect class="box" x="26" y="272" width="250" height="34" rx="6" />
+  <text class="code" x="151" y="293" text-anchor="middle">&lt;mesh material-color="pink" /&gt;</text>
+  <path class="arrow" d="M280,289 L302,289" marker-end="url(#head)" />
+  <rect class="box-accent" x="306" y="272" width="288" height="34" rx="6" />
+  <text class="code" x="450" y="293" text-anchor="middle">mesh.material.color.set("pink")</text>
+  <text class="note" x="26" y="324">The dash splits into successive property lookups, to any depth.</text>
+
+  <text class="route" x="26" y="358">attach — where a child lands on its parent</text>
+  <rect class="box" x="26" y="366" width="250" height="34" rx="6" />
+  <text class="code" x="151" y="387" text-anchor="middle">&lt;boxGeometry /&gt; inside &lt;mesh&gt;</text>
+  <path class="arrow" d="M280,383 L302,383" marker-end="url(#head)" />
+  <rect class="box-accent" x="306" y="366" width="288" height="34" rx="6" />
+  <text class="code" x="450" y="387" text-anchor="middle">mesh.geometry = boxGeometry</text>
+  <text class="note" x="26" y="418">Implicit for geometry and material; spell it out elsewhere, e.g. attach="attributes-position".</text>
+
+  <path class="rule" d="M26,434 L594,434" />
+  <text class="note" x="26" y="454">args, attach, dispose, object and onUpdate are reserved — they never reach the object as properties.</text>
+</svg>

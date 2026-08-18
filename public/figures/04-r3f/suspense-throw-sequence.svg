@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 412" width="640" height="412" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warn-fill: #422006;
+        --warn-stroke: #f59e0b;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .edge { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .title-warn { fill: var(--warn-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .retry { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-accent" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <rect class="box" x="120" y="16" width="400" height="42" rx="8" />
+  <text class="title" x="320" y="35" text-anchor="middle">render &lt;HeavyExhibit /&gt;</text>
+  <text class="note" x="320" y="51" text-anchor="middle">useLoader(loader, url)</text>
+  <path class="arrow" d="M320,58 L320,72" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="120" y="76" width="400" height="62" rx="8" />
+  <text class="title title-accent" x="320" y="98" text-anchor="middle">cache lookup on the key [loader, url]</text>
+  <text class="note" x="320" y="116" text-anchor="middle">hit -&gt; returns the value, renders synchronously</text>
+  <text class="note" x="320" y="132" text-anchor="middle">useLoader.preload(loader, url) fills this same key early</text>
+  <path class="arrow" d="M320,138 L320,160" marker-end="url(#head)" />
+  <text class="edge" x="330" y="155">miss</text>
+
+  <rect class="box" x="120" y="164" width="400" height="54" rx="8" />
+  <text class="title" x="320" y="186" text-anchor="middle">loader.load(url, onLoad, onProgress, onError)</text>
+  <text class="note" x="320" y="204" text-anchor="middle">useLoader throws the still-pending Promise</text>
+  <path class="arrow" d="M320,218 L320,238" marker-end="url(#head)" />
+
+  <rect class="box" x="120" y="242" width="400" height="54" rx="8" />
+  <text class="title" x="320" y="264" text-anchor="middle">the nearest &lt;Suspense&gt; catches the throw</text>
+  <text class="note" x="320" y="282" text-anchor="middle">fallback must be a mesh, a &lt;group&gt;, or drei &lt;Html&gt;</text>
+
+  <path class="arrow" d="M320,296 L320,310 M170,310 L475,310" />
+  <path class="arrow" d="M170,308 L170,318" marker-end="url(#head)" />
+  <path class="arrow" d="M475,308 L475,318" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="30" y="322" width="280" height="68" rx="8" />
+  <text class="title title-accent" x="170" y="344" text-anchor="middle">onLoad</text>
+  <text class="note" x="170" y="362" text-anchor="middle">the cache stores the resolved value</text>
+  <text class="note" x="170" y="380" text-anchor="middle">React retries the subtree — now a hit</text>
+
+  <rect class="box-warn" x="330" y="322" width="290" height="68" rx="8" />
+  <text class="title title-warn" x="475" y="344" text-anchor="middle">onError</text>
+  <text class="note" x="475" y="362" text-anchor="middle">the next render throws a real Error</text>
+  <text class="note" x="475" y="380" text-anchor="middle">Suspense ignores it — Error Boundary catches</text>
+
+  <path class="retry" d="M30,356 L16,356 L16,107 L112,107" marker-end="url(#head-accent)" />
+</svg>

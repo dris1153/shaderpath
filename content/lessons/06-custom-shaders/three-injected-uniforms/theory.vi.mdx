@@ -7,6 +7,12 @@ ShaderMaterial không chỉ cấp sẵn khai báo — nó còn tự lo việc C�
 
 Bất đối xứng không ngẫu nhiên: `modelMatrix` khác nhau từng object nên không có gì để cache; camera dùng chung cho hàng loạt object nên đáng kiểm tra trước khi ghi lại. `modelViewMatrix`/`normalMatrix` "kẹt" ở nhóm mỗi-object vì phụ thuộc camera LẪN object cùng lúc (`object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld)`, quanh L2128) — không object nào share được modelViewMatrix của object khác.
 
+<Figure
+  src="/figures/06-custom-shaders/builtin-uniform-update-rates.svg"
+  alt="Hai khối chia các uniform built-in theo tần suất cập nhật: projectionMatrix, viewMatrix, cameraPosition và isOrthographic thuộc nhóm mỗi lần đổi camera, còn modelMatrix, modelViewMatrix và normalMatrix thuộc nhóm mỗi object mỗi frame, kèm một vạch so với N vạch trên trục thời gian của một frame"
+  caption="Thêm một mesh chỉ tốn thêm ba lần ghi uniform mỗi frame chứ không phải sáu: nửa thuộc về camera chỉ trả giá một lần dù scene lớn tới đâu."
+/>
+
 ## normalMatrix: vì sao không thể chỉ lấy 3×3 của modelView
 
 Ngay sau phép nhân modelViewMatrix, Three gọi `object.normalMatrix.getNormalMatrix(object.modelViewMatrix)` — không lấy thẳng 3×3 góc trên-trái của modelViewMatrix. Lý do là hình học, không phải Three làm phức tạp hoá vô cớ.

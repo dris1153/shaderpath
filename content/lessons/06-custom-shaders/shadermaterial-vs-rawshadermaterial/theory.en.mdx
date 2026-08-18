@@ -66,6 +66,12 @@ void main() {
 }
 ```
 
+<Figure
+  src="/figures/06-custom-shaders/shader-prelude-anatomy.svg"
+  alt="Two stacked columns comparing what Three prepends: ShaderMaterial gets a #version line, precision, six built-in uniforms and the position/normal/uv attributes above your source, while RawShaderMaterial gets only the SHADER_TYPE/SHADER_NAME defines and an empty block"
+  caption="Both paths end at the same compiler: the only thing Raw removes is the header, which is why an unchanged body suddenly stops compiling."
+/>
+
 ## glslVersion: Implicit GLSL ES 1.00 vs Explicit GLSL ES 3.00
 
 `RawShaderMaterial` exposes a `glslVersion` property (default `null`). On Raw, this is the switch that decides whether a `#version` line shows up at all: leave it `null` and Three inserts no `#version` — WebGL2 silently treats a shader with no `#version` as GLSL ES 1.00 (`attribute`/`varying`/`gl_FragColor` syntax, no `in`/`out`); set `material.glslVersion = THREE.GLSL3` and Three inserts `#version 300 es\n` up top, forcing you into real ES 3.00 syntax — `in`/`out` instead of `attribute`/`varying`, your own `out vec4` output variable instead of `gl_FragColor`. Non-raw `ShaderMaterial` behaves quite differently: Three always compiles it under `#version 300 es` regardless of `glslVersion`, then quietly adds macros — `#define attribute in` / `#define varying out` — so the familiar ES 1.00 syntax keeps working. That's exactly why inspecting a compiled shader in DevTools always shows `in`/`out`, even when you typed `attribute`/`varying`.

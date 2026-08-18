@@ -6,6 +6,12 @@ ScrollTrigger là plugin đăng ký thêm cho GSAP (`gsap.registerPlugin(ScrollT
 
 Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt động", định nghĩa bằng `start` và `end`, mỗi giá trị là một chuỗi hai nửa: `"<mép của trigger> <mép của scroller>"`. Ví dụ `start: "top 80%"` nghĩa là khi mép TRÊN của trigger chạm tới điểm nằm 80% chiều cao scroller tính từ đỉnh. Mỗi nửa chấp nhận từ khoá (`top`/`center`/`bottom`) hoặc con số/phần trăm; `end: "bottom top"` (giá trị phổ biến cho trigger không pin) nghĩa là trigger kết thúc khi mép DƯỚI chạm mép TRÊN của scroller — tức đã cuộn hoàn toàn ra khỏi viewport. `getBoundingClientRect()` là cơ chế nền: ScrollTrigger đo vị trí trigger so với scroller lúc tạo/refresh, quy đổi thành hai mốc pixel cố định rồi so sánh với scroll position hiện tại mỗi frame.
 
+<Figure
+  src="/figures/05-gsap/scrolltrigger-start-end-anatomy.svg"
+  alt="Sơ đồ hình học ScrollTrigger: khung scroller, phần tử trigger, hai mốc start và end, cùng dải hoạt động với bốn động từ toggleActions"
+  caption="Mỗi giá trị start/end ghép một mép của trigger với một mép của scroller — nhớ được cặp mép đó là đọc ngay ra marker đang lệch ở đâu."
+/>
+
 ### Scrub: animation bị khoá vào vị trí cuộn, không phải thời gian
 
 `scrub: true` biến một tween chạy theo thời gian thành một tween chạy theo tiến trình cuộn: `duration` không còn là số giây thật mà chỉ còn ý nghĩa tỉ lệ — animation ở đúng 50% khi scroll position ở đúng giữa đoạn `start`-`end`, và dừng lại ngay khi cuộn dừng. `scrub` cũng nhận một số (giây) thay vì `true`: `scrub: 0.5` vẫn bám scroll, nhưng GSAP chèn thêm một lớp làm mượt — animation đuổi theo tiến trình thực với độ trễ tối đa xấp xỉ nửa giây, hữu ích để tránh giật khi trackpad sinh hàng trăm sự kiện scroll nhỏ liên tiếp, đánh đổi bằng một độ trễ cảm nhận được nếu cuộn giật cục.

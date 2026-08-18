@@ -12,6 +12,12 @@ Nhưng "tự khởi tạo từ JSX" hẹp hơn nhiều người nghĩ. Ba trư�
 2. **Render target** (`THREE.WebGLRenderTarget`) dựng tay cho pass hậu kỳ hay camera phụ — luôn cần `renderTarget.dispose()` thủ công.
 3. **Event listener và RAF handle** đăng ký tay (`addEventListener`, `requestAnimationFrame` gọi trực tiếp ngoài `useFrame`) — không phải object Three.js nên "dispose" không áp dụng, nhưng quên gỡ gây leak closure cùng bản chất.
 
+<Figure
+  src="/figures/04-r3f/disposal-ownership.svg"
+  alt="Bảng phân định dispose lúc unmount: cột R3F tự dispose gồm các tag JSX do reconciler dựng, cột bạn phải tự dispose gồm primitive, new THREE.X trong useMemo, render target và listener"
+  caption="Ranh giới chỉ là ai đã gọi new — R3F dọn đúng object chính nó dựng, mọi thứ còn lại giữ nguyên VRAM cho tới khi bạn tự gọi dispose."
+/>
+
 ## Vòng lặp leak: mount/unmount tích tụ, và cách quan sát
 
 Leak dạng này gần như vô hình khi thử một lần — chỉ lộ qua **chu kỳ lặp**. Nếu một component leak $k$ geometry mỗi lần mount và không giảm khi unmount, sau $n$ chu kỳ, số geometry sống trên GPU tăng tuyến tính:

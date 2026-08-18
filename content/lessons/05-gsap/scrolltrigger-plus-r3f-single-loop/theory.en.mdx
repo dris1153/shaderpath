@@ -28,6 +28,12 @@ One correct render eats roughly 3ms of that 16.67ms, leaving plenty of room for 
 
 The single-render-loop rule fits in one sentence: **ScrollTrigger and tweens are only allowed to write into a plain JavaScript object — they must never call a render function.** `useFrame` is the only place that reads that object and applies its values to the scene; the actual `renderer.render()` call stays fully owned by R3F internally, and your code never touches it.
 
+<Figure
+  src="/figures/05-gsap/single-render-loop-ownership.svg"
+  alt="Two diagrams compared: the anti-pattern where two loops call the renderer, and the correct pattern where ScrollTrigger writes a plain object that useFrame reads"
+  caption="The only structural difference is how many arrows reach the renderer — a second one buys you nothing and costs a full extra draw every frame."
+/>
+
 ```js
 // Correct — the write side: ScrollTrigger only mutates a plain object,
 // it never touches the renderer.

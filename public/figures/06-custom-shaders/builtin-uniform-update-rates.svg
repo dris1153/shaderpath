@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 364" width="600" height="364" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --cam-fill: #dbeafe;
+      --cam-stroke: #2563eb;
+      --cam-ink: #1e3a8a;
+      --obj-fill: #fef3c7;
+      --obj-stroke: #d97706;
+      --obj-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --cam-fill: #1e3a5f;
+        --cam-stroke: #60a5fa;
+        --cam-ink: #bfdbfe;
+        --obj-fill: #422006;
+        --obj-stroke: #fbbf24;
+        --obj-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .code { font-size: 12px; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .box-cam { fill: var(--cam-fill); stroke: var(--cam-stroke); stroke-width: 1.5; }
+    .box-obj { fill: var(--obj-fill); stroke: var(--obj-stroke); stroke-width: 1.5; }
+    .ink-cam { fill: var(--cam-ink); }
+    .ink-obj { fill: var(--obj-ink); }
+    .tick-cam { fill: var(--cam-fill); stroke: var(--cam-stroke); stroke-width: 1.5; }
+    .tick-obj { fill: var(--obj-fill); stroke: var(--obj-stroke); stroke-width: 1.5; }
+    .rail { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+
+  <rect class="box-cam" x="24" y="16" width="252" height="162" rx="8" />
+  <text class="title ink-cam" x="40" y="40">Once per camera switch</text>
+  <text class="note" x="40" y="60">only when refreshProgram or the</text>
+  <text class="note" x="40" y="76">active camera actually changed</text>
+  <text class="code ink-cam" x="40" y="104">projectionMatrix</text>
+  <text class="code ink-cam" x="40" y="126">viewMatrix</text>
+  <text class="code ink-cam" x="40" y="148">cameraPosition</text>
+  <text class="code ink-cam" x="40" y="170">isOrthographic</text>
+
+  <rect class="box-obj" x="324" y="16" width="252" height="162" rx="8" />
+  <text class="title ink-obj" x="340" y="40">Every object, every frame</text>
+  <text class="note" x="340" y="60">written unconditionally — there is</text>
+  <text class="note" x="340" y="76">no &quot;did it change&quot; check at all</text>
+  <text class="code ink-obj" x="340" y="104">modelMatrix</text>
+  <text class="code ink-obj" x="340" y="126">modelViewMatrix</text>
+  <text class="code ink-obj" x="340" y="148">normalMatrix</text>
+
+  <!-- one frame, one camera, N meshes -->
+  <text class="title" x="24" y="220">Inside one frame: one camera, N meshes</text>
+
+  <path class="rail" d="M28,254 L300,254" />
+  <rect class="tick-cam" x="28" y="246" width="14" height="16" rx="3" />
+  <text class="note" x="312" y="259">camera block runs 1x</text>
+
+  <path class="rail" d="M28,292 L300,292" />
+  <rect class="tick-obj" x="28" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="44" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="60" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="76" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="92" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="108" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="124" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="140" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="156" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="172" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="188" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="204" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="220" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="236" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="252" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="268" y="284" width="8" height="16" rx="2" />
+  <rect class="tick-obj" x="284" y="284" width="8" height="16" rx="2" />
+  <text class="note" x="312" y="297">object block runs N times</text>
+
+  <text class="foot" x="300" y="336" text-anchor="middle">modelViewMatrix and normalMatrix depend on the camera AND the object at once —</text>
+  <text class="foot" x="300" y="354" text-anchor="middle">no two meshes can ever share them, so there is nothing to cache.</text>
+</svg>

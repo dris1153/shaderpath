@@ -28,6 +28,12 @@ Một lần render đúng chiếm khoảng 3ms trong 16.67ms đó, còn dư nhi�
 
 Nguyên tắc single-render-loop gói gọn trong một câu: **ScrollTrigger và tween chỉ được phép ghi vào một plain JavaScript object — không bao giờ được gọi bất kỳ hàm render nào.** `useFrame` của R3F là nơi duy nhất đọc object đó và áp giá trị lên scene; lệnh `renderer.render()` thật sự vẫn do R3F tự quản lý bên trong, code của bạn không bao giờ chạm vào nó.
 
+<Figure
+  src="/figures/05-gsap/single-render-loop-ownership.svg"
+  alt="So sánh hai sơ đồ: anti-pattern hai vòng lặp cùng gọi renderer, và mẫu đúng nơi ScrollTrigger ghi vào plain object cho useFrame đọc"
+  caption="Khác biệt duy nhất giữa hai sơ đồ là số mũi tên đi tới renderer — thêm một mũi tên không mua được gì mà tốn nguyên một lần vẽ mỗi frame."
+/>
+
 ```js
 // Đúng — phần ghi: ScrollTrigger chỉ mutate một object thường, không đụng renderer
 const progress = { value: 0 };

@@ -47,6 +47,12 @@ tl.to(".box-1", { x: 100, duration: 1 })
   .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
 ```
 
+<Figure
+  src="/figures/05-gsap/timeline-position-parameter.svg"
+  alt="A timeline time axis: five tweens placed by their position parameter, and a staggered tween spread across several offsets"
+  caption="On a time axis it becomes obvious that a position parameter is always measured against the marker just before it, and that a staggered tween occupies a longer slot than its own duration."
+/>
+
 Compare that to manually stacking `delay` on separate tweens:
 
 ```js

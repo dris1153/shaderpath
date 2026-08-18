@@ -4,6 +4,12 @@
 
 The direct consequence: any THREE class, including ones R3F has "never seen," is automatically usable in JSX the moment you spell its lowercase name correctly, no waiting on an R3F update or a separate type declaration. That's also why this lesson ends with `extend()`: the mechanism for registering a class that ISN'T part of the default `THREE` namespace (a class you wrote yourself, or a helper from another library) into that exact same catalog.
 
+<Figure
+  src="/figures/04-r3f/jsx-prop-routes.svg"
+  alt="The four routes a JSX prop takes onto the real Three.js object: args into the constructor, property props assigned afterwards, pierced props walking a dashed path, and attach choosing the slot on the parent"
+  caption="Only args runs through the constructor — the one reason changing a prop can destroy and rebuild the whole object."
+/>
+
 ## args: Constructor Arguments, and Why Changing Them Is Expensive
 
 Not every property of a THREE object can be assigned after construction — `BoxGeometry` builds its actual geometry data inside the constructor from `width/height/depth`; there's no setter to resize a geometry that's already been built. For cases like this, JSX uses the special `args` prop, which takes an ARRAY matching the real constructor's parameter order:

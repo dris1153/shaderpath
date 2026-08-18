@@ -10,6 +10,12 @@ Straight from the `@react-three/fiber` source: `useLoader(LoaderClass, url)` loo
 
 When `onLoad` fires (the asset finished loading), the Promise resolves, and the cache stores the RESOLVED VALUE (no longer a Promise) under that same `[loader, url]` key. React re-renders the suspended subtree — this time `useLoader` looks up the cache, finds the value already there, and returns it IMMEDIATELY, no throw at all — the component renders like any ordinary synchronous hook. drei's `useGLTF` is `useLoader` pre-wired for `GLTFLoader` (with Draco/meshopt configuration baked in) — same mechanism, just a specific loader.
 
+<Figure
+  src="/figures/04-r3f/suspense-throw-sequence.svg"
+  alt="The Suspense sequence for asset loading: a cache lookup keyed by loader and url, a miss throws the pending Promise, the nearest Suspense shows the fallback, onLoad writes the cache and retries, onError travels up to an Error Boundary"
+  caption="Suspense understands exactly one signal, a throw — so the failure branch never stops there and always needs an Error Boundary outside it."
+/>
+
 ## `<Suspense fallback>` INSIDE Canvas: the Placeholder Has to Be a Mesh
 
 The only difference from "ordinary" React Suspense: a `<Suspense>` placed inside `<Canvas>` behaves identically — it's just React, indifferent to whether you're in the DOM tree or R3F's scene-graph tree. But `fallback` MUST be a valid object in that tree: a mesh, a `<group>`, or drei's `Html` component (which wraps real DOM in a portal, so it still counts as a valid R3F element). Writing `fallback={<div>Loading...</div>}` — a bare DOM `<div>` — errors out immediately at runtime, because R3F has no idea which Three.js class a `div` tag maps to.

@@ -21,6 +21,12 @@ material.onBeforeCompile = (shader) => {
 
 `#include <begin_vertex>` is the chunk that declares `vec3 transformed = vec3( position );` — the variable every later chunk (morph targets, skinning, displacement map, projection) reads and writes further, so injecting code RIGHT AFTER this include is the correct spot to touch a vertex's position before it gets projected into clip space. Similarly, `#include <color_fragment>` (the chunk that does `diffuseColor *= vColor`) is the standard place to modify the diffuse color, after any texture/vertex color has already applied but before lighting is computed. Chunk names aren't a convention you invent — they're real file names in Three's source (`begin_vertex.glsl.js`, `color_fragment.glsl.js`), and this track's next lesson lists the full chunk map so you can look one up instead of guessing.
 
+<Figure
+  src="/figures/06-custom-shaders/shader-assembly-injection-point.svg"
+  alt="A six-step assembly chain from ShaderLib.meshphysical down to compileShader, with onBeforeCompile at step 3 and resolveIncludes at step 4, beside two panels showing the same line first as an intact #include marker and then as the expanded chunk text"
+  caption="Your replacement only ever sees step 3, which is why the marker, never the GLSL it expands into, is the only string worth searching for."
+/>
+
 The twist around the $y$ axis above is exactly a 2D rotation matrix applied to the $xz$ plane, with the angle proportional to vertex height:
 
 $$

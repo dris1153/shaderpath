@@ -20,6 +20,12 @@ Tham số thứ hai của `BufferAttribute` — `itemSize` — nói cho Three bi
 
 `itemSize: 1` nghĩa là mỗi vertex có đúng một số (một `float` trong shader) — dùng cho seed ngẫu nhiên, trọng số, hay bất kỳ đại lượng vô hướng nào. `itemSize: 3` nghĩa là mỗi vertex có ba số liên tiếp gộp thành một `vec3` — dùng khi cần một hướng hoặc offset 3D riêng cho từng vertex, ví dụ một vector dịch chuyển ngẫu nhiên. Không có lựa chọn "đúng" tuyệt đối, chỉ có lựa chọn khớp hình dạng dữ liệu: ép một hướng 3D vào ba attribute `float` riêng (`aOffsetX`, `aOffsetY`, `aOffsetZ`) vẫn chạy được, nhưng tốn ba lần `setAttribute` và ba lần khai báo shader thay vì một, không có lý do thực dụng nào để chọn cách đó.
 
+<Figure
+  src="/figures/06-custom-shaders/per-vertex-vs-per-instance-attributes.svg"
+  alt="Buffer BufferAttribute chứa các ô v0 đến v3 đặt cạnh InstancedBufferAttribute chứa các ô i0 đến i2, phía trên ba hàng instance nơi các ô vertex được đọc lại ở mọi instance còn ô instance chỉ nhích một bước mỗi hàng"
+  caption="Chính việc cấp mảng theo position.count mới làm dữ liệu chạy theo từng đỉnh: cùng lời gọi setAttribute nhưng với buffer instanced sẽ phát một giá trị chung cho mọi đỉnh của một bản sao."
+/>
+
 ## Khai báo attribute trong shader: quy ước đặt tên aXxx
 
 Attribute JS tên gì, shader phải khai báo attribute GLSL đúng tên đó, đúng kiểu tương ứng với `itemSize`:

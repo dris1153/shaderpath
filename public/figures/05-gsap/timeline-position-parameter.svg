@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .sub { font-size: 13px; font-weight: 600; }
+    .row { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .tag { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .bar { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .bar-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .axis { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .guide { stroke: var(--line); stroke-width: 1.5; fill: none; stroke-dasharray: 3 4; }
+    .brace { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+
+  <text class="title" x="20" y="22">Timeline position parameter: where each tween starts</text>
+
+  <!-- guides: previous end at t=1, and the "settle" label at t=2.2 -->
+  <path class="guide" d="M362,44 L362,240" />
+  <path class="guide" d="M482,44 L482,240" />
+  <text class="tag" x="482" y="40" text-anchor="middle">settle</text>
+
+  <!-- row 1: no position -->
+  <rect class="bar" x="262" y="48" width="100" height="16" rx="4" />
+  <text class="row" x="248" y="60" text-anchor="end">box-1 — no position</text>
+  <text class="note" x="248" y="76" text-anchor="end">starts at 0</text>
+
+  <!-- row 2: "<" -->
+  <rect class="bar-accent" x="262" y="84" width="100" height="16" rx="4" />
+  <text class="row" x="248" y="96" text-anchor="end">box-2 — "&lt;"</text>
+  <text class="note" x="248" y="112" text-anchor="end">with the previous start</text>
+
+  <!-- row 3: default ">" -->
+  <rect class="bar" x="362" y="120" width="100" height="16" rx="4" />
+  <text class="row" x="248" y="132" text-anchor="end">box-3 — "&gt;" (default)</text>
+  <text class="note" x="248" y="148" text-anchor="end">after the previous end</text>
+
+  <!-- row 4: overlap -->
+  <rect class="bar-accent" x="432" y="156" width="50" height="16" rx="4" />
+  <text class="row" x="248" y="168" text-anchor="end">box-4 — "-=0.3"</text>
+  <text class="note" x="248" y="184" text-anchor="end">0.3 s before that end</text>
+
+  <!-- row 5: label offset -->
+  <rect class="bar-accent" x="502" y="192" width="40" height="16" rx="4" />
+  <text class="row" x="248" y="204" text-anchor="end">box-5 — "settle+=0.2"</text>
+  <text class="note" x="248" y="220" text-anchor="end">0.2 s past the label</text>
+
+  <!-- time axis -->
+  <path class="axis" d="M262,240 L572,240" />
+  <path class="axis" d="M262,240 L262,246 M362,240 L362,246 M462,240 L462,246 M562,240 L562,246" />
+  <text class="note" x="262" y="260" text-anchor="middle">0 s</text>
+  <text class="note" x="362" y="260" text-anchor="middle">1 s</text>
+  <text class="note" x="462" y="260" text-anchor="middle">2 s</text>
+  <text class="note" x="562" y="260" text-anchor="middle">3 s</text>
+
+  <!-- stagger: one slot, stretched -->
+  <text class="sub" x="20" y="296">A staggered tween is still one slot — stagger stretches it</text>
+
+  <rect class="bar-accent" x="262" y="310" width="50" height="10" rx="3" />
+  <rect class="bar-accent" x="282" y="324" width="50" height="10" rx="3" />
+  <rect class="bar-accent" x="302" y="338" width="50" height="10" rx="3" />
+  <rect class="bar-accent" x="322" y="352" width="50" height="10" rx="3" />
+
+  <text class="row" x="248" y="326" text-anchor="end">stagger: { each: 0.2 }</text>
+  <text class="note" x="248" y="342" text-anchor="end">4 targets · duration 0.5 s</text>
+
+  <path class="brace" d="M262,364 L262,370 L372,370 L372,364" />
+  <text class="row" x="382" y="368">duration + (n - 1) × each</text>
+  <text class="note" x="382" y="384">= 0.5 + 3 × 0.2 = 1.1 s, not 0.5 s</text>
+</svg>

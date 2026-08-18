@@ -6,6 +6,12 @@ ScrollTrigger is a plugin you register on top of GSAP (`gsap.registerPlugin(Scro
 
 A `ScrollTrigger` needs to know which scroll range counts as "active," defined by `start` and `end`, each a two-part string: `"<trigger edge> <scroller edge>"`. For example `start: "top 80%"` means: when the TOP edge of the trigger element reaches the point 80% down the scroller's height measured from the top — on an 800px-tall scroller, that is exactly the moment the trigger's top edge crosses 640px from the viewport's top. Each half accepts a keyword (`top`/`center`/`bottom`) or a number/percentage; `end: "bottom top"` (a common default for non-pinned triggers) means the trigger ends when its BOTTOM edge reaches the scroller's TOP edge — i.e. the trigger has fully scrolled out of the viewport. `getBoundingClientRect()` is the underlying mechanism for all of this: ScrollTrigger measures the trigger's real position relative to the scroller at creation/refresh time, converts it into two fixed pixel markers, then compares those against the current scroll position every frame.
 
+<Figure
+  src="/figures/05-gsap/scrolltrigger-start-end-anatomy.svg"
+  alt="ScrollTrigger geometry: the scroller viewport, the trigger element, the start and end anchors, and the active range with the four toggleActions verbs"
+  caption="Every start/end value pairs one edge of the trigger with one edge of the scroller — hold that pairing in mind and a misplaced marker becomes readable at a glance."
+/>
+
 ### Scrub: the animation locks to scroll position, not to time
 
 `scrub: true` turns a normal time-based tween into one driven by scroll progress instead: `duration` stops meaning real seconds and becomes purely proportional — the animation sits at exactly 50% whenever the scroll position sits exactly halfway between `start` and `end`, no matter how fast or slow the user scrolls, and the animation freezes the instant scrolling stops. `scrub` also accepts a number (seconds) instead of `true`: `scrub: 0.5` still tracks scroll, but GSAP inserts a smoothing layer — the animation chases the real scroll progress with up to roughly half a second of lag, useful for absorbing the burst of tiny scroll events a trackpad fires, at the cost of a perceptible delay if the user scrolls in sharp jerks.

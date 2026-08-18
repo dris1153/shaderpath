@@ -20,6 +20,12 @@ geometry.setAttribute("aRandom", new THREE.BufferAttribute(random, 1));
 
 `itemSize: 1` means each vertex owns exactly one number (a `float` in the shader) — right for a random seed, a weight, or any scalar quantity. `itemSize: 3` means each vertex owns three consecutive numbers packed into a `vec3` — right when you need a direction or a 3D offset per vertex, like a random displacement vector. There's no universally "correct" choice here, only one that matches the shape of your data: forcing a 3D direction into three separate `float` attributes (`aOffsetX`, `aOffsetY`, `aOffsetZ`) still works, but costs three `setAttribute` calls and three shader declarations instead of one, with no practical upside.
 
+<Figure
+  src="/figures/06-custom-shaders/per-vertex-vs-per-instance-attributes.svg"
+  alt="A BufferAttribute buffer holding cells v0 to v3 next to an InstancedBufferAttribute holding cells i0 to i2, above three instance rows where the vertex cells are re-read every instance while the instance cell advances once per row"
+  caption="Sizing the array against position.count is what makes the data per-vertex: the same setAttribute call with an instanced buffer would hand every vertex of a copy one shared value."
+/>
+
 ## Declaring the Attribute in the Shader: the aXxx Convention
 
 Whatever name a JS attribute has, the shader must declare a GLSL attribute with that exact name and a type matching its `itemSize`:

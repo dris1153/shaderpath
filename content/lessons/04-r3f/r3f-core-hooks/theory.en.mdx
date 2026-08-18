@@ -8,6 +8,12 @@ useFrame((state, delta) => {
 });
 ```
 
+<Figure
+  src="/figures/04-r3f/useframe-frame-order.svg"
+  alt="One R3F frame: a single requestAnimationFrame loop, every useFrame callback run in priority order, then an automatic gl.render unless some callback asked for a positive priority"
+  caption="A single positive priority anywhere in the tree switches off the automatic render for the whole canvas — that callback now has to draw it."
+/>
+
 ### Delta: Motion Independent of Framerate
 
 The second parameter, `delta`, is the number of seconds elapsed since the previous frame. On a 60Hz display, delta is roughly $1/60 \approx 0.01667s$ (16.67ms); on a 144Hz display it shrinks to $1/144 \approx 0.00694s$ (6.94ms) — over 2.4x smaller. Multiplying a speed by delta instead of adding a fixed constant every frame is mandatory: `angle += SPEED * delta` produces the exact same real angular speed (radians per second) on both displays, because the smaller delta exactly offsets the higher number of callback invocations per second. Drop delta (`angle += SPEED`) and the object spins 2.4x faster on a 144Hz screen than on a 60Hz one — the same dt-correct callback pattern from Track 0 (the interpolation & easing lesson), now running inside `useFrame` instead of a hand-written `requestAnimationFrame`.

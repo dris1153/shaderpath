@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 406" width="620" height="406" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .loop { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-accent" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <rect class="box" x="160" y="16" width="306" height="42" rx="8" />
+  <text class="title" x="313" y="35" text-anchor="middle">React state changes</text>
+  <text class="note" x="313" y="51" text-anchor="middle">setCount(5) -&gt; setCount(8)</text>
+  <path class="arrow" d="M313,58 L313,74" marker-end="url(#head)" />
+
+  <rect class="box" x="140" y="78" width="346" height="48" rx="8" />
+  <text class="title" x="313" y="100" text-anchor="middle">Component re-renders, new JSX tree</text>
+  <text class="note" x="313" y="118" text-anchor="middle">the tree is a description, not the objects themselves</text>
+  <path class="arrow" d="M313,126 L313,142" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="26" y="146" width="574" height="48" rx="8" />
+  <text class="title title-accent" x="313" y="168" text-anchor="middle">react-reconciler diffs it against the previous fiber tree</text>
+  <text class="note" x="313" y="186" text-anchor="middle">nodes are matched by position in the tree, then by key</text>
+
+  <path class="arrow" d="M313,194 L313,208 M118,208 L508,208" />
+  <path class="arrow" d="M118,206 L118,216" marker-end="url(#head)" />
+  <path class="arrow" d="M313,206 L313,216" marker-end="url(#head)" />
+  <path class="arrow" d="M508,206 L508,216" marker-end="url(#head)" />
+
+  <rect class="box" x="26" y="220" width="184" height="66" rx="8" />
+  <text class="title" x="118" y="242" text-anchor="middle">New node</text>
+  <text class="note" x="118" y="260" text-anchor="middle">new THREE.Mesh(...args)</text>
+  <text class="note" x="118" y="278" text-anchor="middle">parent.add(object)</text>
+
+  <rect class="box" x="221" y="220" width="184" height="66" rx="8" />
+  <text class="title" x="313" y="242" text-anchor="middle">Same node, new props</text>
+  <text class="note" x="313" y="260" text-anchor="middle">applyProps mutates it</text>
+  <text class="note" x="313" y="278" text-anchor="middle">mesh.position.set(1, 0, 0)</text>
+
+  <rect class="box" x="416" y="220" width="184" height="66" rx="8" />
+  <text class="title" x="508" y="242" text-anchor="middle">Node gone</text>
+  <text class="note" x="508" y="260" text-anchor="middle">parent.remove(object)</text>
+  <text class="note" x="508" y="278" text-anchor="middle">object.dispose()</text>
+
+  <path class="arrow" d="M118,286 L118,300 M313,286 L313,300 M508,286 L508,300 M118,300 L508,300" />
+  <path class="arrow" d="M313,298 L313,310" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="26" y="314" width="574" height="48" rx="8" />
+  <text class="title title-accent" x="313" y="336" text-anchor="middle">THREE.Scene — the same instances, mutated in place</text>
+  <text class="note" x="313" y="354" text-anchor="middle">surviving nodes keep their identity and their GPU buffers across renders</text>
+
+  <path class="loop" d="M26,344 L12,344 L12,37 L154,37" marker-end="url(#head-accent)" />
+
+  <text class="note" x="313" y="390" text-anchor="middle">Every later state change runs the same three decisions — the scene is never rebuilt.</text>
+</svg>

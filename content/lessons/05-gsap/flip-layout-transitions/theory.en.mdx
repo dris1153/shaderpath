@@ -4,6 +4,12 @@ Move an element in the DOM — reparent it into a different container, bump its 
 
 FLIP solves both problems by reversing the order of operations: measure, change, THEN compute the animation — the acronym stands for **First, Last, Invert, Play**.
 
+<Figure
+  src="/figures/05-gsap/flip-four-steps.svg"
+  alt="The four FLIP steps drawn as four states — First, Last, Invert, Play — with brackets showing which steps Flip.getState and Flip.from own"
+  caption="Invert is the one step you can never see in a running demo, and it is also the step the whole illusion rests on."
+/>
+
 ### First and Last: Measuring Before and After the DOM Changes
 
 **First** is `getBoundingClientRect()` on the element taken RIGHT BEFORE you change anything — its current position and size. **Last** is that exact same measurement, called RIGHT AFTER the change (a class swap, a reparent, a list re-render) — the DOM is already in its final state, the browser has already laid it out, but nothing has painted to the screen yet. This ordering isn't a minor detail: measure Last before the DOM has actually changed and both readings come back identical — there's nothing to invert, and the animation simply vanishes. That's the single most common mistake when picking up this technique.

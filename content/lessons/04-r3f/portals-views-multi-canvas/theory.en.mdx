@@ -26,6 +26,12 @@ function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
 
 `rect` here is in real canvas pixels (different from CSS pixels whenever `devicePixelRatio` isn't 1), origin bottom-left — WebGL's convention, the opposite of the DOM's. The usual way to get `rect` is calling `element.getBoundingClientRect()` on a real HTML `<div>` placed exactly where you want the viewport to appear, then converting DOM coordinates (origin top-left) into scissor coordinates (origin bottom-left) yourself. That's exactly the mechanism drei's `View` automates for you.
 
+<Figure
+  src="/figures/04-r3f/one-canvas-scissor-views.svg"
+  alt="One canvas holding two Views and a portal HUD, beside the formula turning a DOM rect into a scissor rect and the per-frame setViewport, setScissor and render sequence"
+  caption="A viewport is only a pixel rectangle on the same context — so adding one costs another draw pass, never another WebGL context."
+/>
+
 ## drei's `View`: Turning a DOM Tag Into a Viewport
 
 ### How View Works Underneath, and Why It Needs a Tunnel

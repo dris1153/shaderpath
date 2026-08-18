@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 310" width="640" height="310" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .step { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .api { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .frame { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .card { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .ghost { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 4 4; }
+    .arrow { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; }
+    .brace { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="20" y="22">FLIP: four steps, and which three GSAP runs for you</text>
+
+  <!-- 1. FIRST -->
+  <text class="step" x="86" y="50" text-anchor="middle">1. FIRST</text>
+  <rect class="frame" x="18" y="58" width="136" height="104" rx="8" />
+  <rect class="card" x="34" y="74" width="26" height="26" rx="4" />
+  <text class="note" x="86" y="182" text-anchor="middle">measure the element</text>
+  <text class="note" x="86" y="198" text-anchor="middle">before the change</text>
+
+  <!-- 2. LAST -->
+  <text class="step" x="242" y="50" text-anchor="middle">2. LAST</text>
+  <rect class="frame" x="174" y="58" width="136" height="104" rx="8" />
+  <rect class="card" x="242" y="100" width="50" height="50" rx="5" />
+  <text class="note" x="242" y="182" text-anchor="middle">measure it again</text>
+  <text class="note" x="242" y="198" text-anchor="middle">after the change</text>
+
+  <!-- 3. INVERT -->
+  <text class="step" x="398" y="50" text-anchor="middle">3. INVERT</text>
+  <rect class="frame" x="330" y="58" width="136" height="104" rx="8" />
+  <rect class="ghost" x="398" y="100" width="50" height="50" rx="5" />
+  <path class="arrow" d="M416,118 L380,98" marker-end="url(#head)" />
+  <rect class="card" x="346" y="74" width="26" height="26" rx="4" />
+  <text class="note" x="398" y="182" text-anchor="middle">transform it back</text>
+  <text class="note" x="398" y="198" text-anchor="middle">onto First, instantly</text>
+
+  <!-- 4. PLAY -->
+  <text class="step" x="554" y="50" text-anchor="middle">4. PLAY</text>
+  <rect class="frame" x="486" y="58" width="136" height="104" rx="8" />
+  <rect class="ghost" x="554" y="100" width="50" height="50" rx="5" />
+  <rect class="card" x="510" y="82" width="38" height="38" rx="5" />
+  <path class="arrow" d="M550,102 L582,130" marker-end="url(#head)" />
+  <text class="note" x="554" y="182" text-anchor="middle">animate that transform</text>
+  <text class="note" x="554" y="198" text-anchor="middle">back to identity</text>
+
+  <!-- who calls what -->
+  <path class="brace" d="M18,216 L18,222 L154,222 L154,216" />
+  <text class="api" x="86" y="240" text-anchor="middle">Flip.getState()</text>
+
+  <path class="brace" d="M174,216 L174,222 L622,222 L622,216" />
+  <text class="api" x="398" y="240" text-anchor="middle">Flip.from(state, vars) does these three for you</text>
+
+  <text class="note" x="20" y="274">Between the two calls you may mutate the DOM however you like — Flip re-measures.</text>
+  <text class="note" x="20" y="292">Only transform runs during Play, so no frame of the animation costs a layout pass.</text>
+</svg>

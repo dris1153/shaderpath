@@ -10,6 +10,12 @@ React Suspense không "biết" gì về network hay asset 3D. Hợp đồng củ
 
 Khi `onLoad` được gọi (asset tải xong), Promise resolve, cache lưu lại GIÁ TRỊ đã resolve (không còn là Promise nữa) khoá bởi đúng `[loader, url]` đó. React render lại subtree bị suspend — lần này `useLoader` tra cache, thấy giá trị đã sẵn sàng, trả về NGAY, không throw gì cả — component render bình thường như một hook đồng bộ. `useGLTF` của drei là `useLoader` được cấu hình sẵn cho `GLTFLoader` (kèm thiết lập Draco/meshopt) — cùng cơ chế, chỉ khác loader cụ thể.
 
+<Figure
+  src="/figures/04-r3f/suspense-throw-sequence.svg"
+  alt="Trình tự Suspense khi tải asset: tra cache theo khoá loader và url, cache miss thì throw Promise đang pending, Suspense gần nhất hiện fallback, onLoad ghi cache rồi render lại, onError bay lên Error Boundary"
+  caption="Suspense chỉ hiểu đúng một tín hiệu là throw — nên nhánh lỗi không bao giờ dừng ở đó, nó luôn cần một Error Boundary bọc bên ngoài."
+/>
+
 ## `<Suspense fallback>` bên TRONG Canvas: placeholder phải là mesh
 
 Điểm khác biệt duy nhất so với Suspense "thường" của React: `<Suspense>` đặt bên trong `<Canvas>` vẫn hoạt động y hệt — nó chỉ là React, không quan tâm bạn đang ở DOM hay ở cây scene-graph của R3F. Nhưng `fallback` PHẢI là một object hợp lệ trong cây đó: một mesh, một `<group>`, hoặc component `Html` của drei (nó tự bọc DOM thật vào một portal, nên vẫn "hợp lệ" như một element R3F). Viết `fallback={<div>Đang tải...</div>}` — một `<div>` DOM trần — sẽ lỗi runtime ngay lập tức, vì R3F không biết ánh xạ thẻ `div` sang class Three.js nào.

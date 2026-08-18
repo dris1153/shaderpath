@@ -2,6 +2,12 @@
 
 Mỗi khi CSS đổi trên một phần tử, trình duyệt không "vẽ lại ngay" mà chạy qua tối đa bốn giai đoạn tuần tự: **style** (tính lại giá trị CSS đã áp dụng, "Recalculate Style"), **layout** (tính lại kích thước và vị trí của mọi phần tử bị ảnh hưởng — còn gọi reflow), **paint** (rasterize từng layer thành bitmap pixel: màu nền, bóng đổ, viền, chữ), và **composite** (ghép các layer bitmap đã raster lại thành khung hình cuối, GPU đảm nhiệm bước này). Không phải thuộc tính CSS nào cũng chạy đủ bốn bước: dữ liệu công khai kiểu CSS Triggers phân loại từng thuộc tính vào một trong ba nhóm — kích hoạt cả layout+paint+composite (`width`, `height`, `top`, `left`, `margin`, `padding`, `font-size`...), chỉ paint+composite (`color`, `background`, `box-shadow`, `border-radius`), hoặc composite thuần (`transform`, `opacity`). Càng ít giai đoạn phải chạy lại, animation càng rẻ — đó là toàn bộ logic đằng sau lời khuyên "chỉ animate transform/opacity" mà bạn từng nghe.
 
+<Figure
+  src="/figures/05-gsap/css-render-stages-cost.svg"
+  alt="Bốn giai đoạn dựng hình xếp ngang, bên dưới là ba nhóm thuộc tính vẽ thành ba thanh bắt đầu đúng ở giai đoạn chúng kích hoạt"
+  caption="Độ dài mỗi thanh chính là cái giá phải trả mỗi frame — chọn thuộc tính để animate là chọn thanh nào, không phải chọn cách viết CSS."
+/>
+
 ## Vì sao transform và opacity là cặp đôi vàng
 
 Compositor thread chạy độc lập với main thread — nó không cần hỏi lại JavaScript, style hay layout engine để vẽ khung hình tiếp theo, miễn là phần tử đã được promote thành một layer riêng (một bitmap raster sẵn nằm trên GPU). Animate `transform` chỉ là bảo GPU "dịch/xoay/scale cái bitmap này" — một phép nhân ma trận rẻ tiền chạy hoàn toàn trên GPU; animate `opacity` chỉ là đổi hệ số alpha khi blend layer đó vào khung hình. Cả hai đều không đụng layout (không phần tử nào đổi kích thước/vị trí trong flow) và không đụng paint (bitmap đã raster từ trước). Đó là ý nghĩa thật của "cặp đôi vàng": hai thuộc tính duy nhất animate được mà bỏ qua *cả hai* giai đoạn tốn kém nhất.

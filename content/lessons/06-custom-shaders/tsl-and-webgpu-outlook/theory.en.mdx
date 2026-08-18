@@ -13,6 +13,12 @@ import { MeshBasicNodeMaterial, WebGPURenderer } from "three/webgpu";
 
 Two things stand out from that import line alone: TSL and WebGPU live in **their own subpath exports** (`three/tsl`, `three/webgpu`), not the plain `three` entry point — typing `import { uniform } from "three"` gets you `undefined` (or a TypeScript "no exported member" error), because `three/package.json` declares these as three separate `exports` entries. A `NodeMaterial` (say, `MeshBasicNodeMaterial`) replaces the familiar string-based properties with node properties: `material.colorNode` stands in for juggling `color`/`map`, `material.positionNode` stands in for hand-writing a `#include <begin_vertex>` injection the way the `onBeforeCompile` lesson does. Assign a node to it and you're done — no need to know whether that node ends up as GLSL or WGSL.
 
+<Figure
+  src="/figures/06-custom-shaders/tsl-node-graph-two-backends.svg"
+  alt="One TSL node graph feeding WebGPURenderer.init(), which forks into WGSLNodeBuilder generating WGSL for the WebGPU backend and GLSLNodeBuilder generating GLSL ES 3.00 for the WebGL2 backend, with the classic WebGLRenderer drawn outside the chain"
+  caption="The fork happens after init(), so the graph you wrote stays the only version you maintain, and the classic renderer sitting outside this chain has nothing to read."
+/>
+
 ## One Effect, Two Languages: GLSL and TSL Side by Side
 
 This lesson's demo paints a moving color band using:

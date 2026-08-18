@@ -4,6 +4,12 @@
 
 Hệ quả: mọi class THREE, kể cả class R3F "chưa từng biết tới", tự động dùng được trong JSX ngay khi viết đúng tên viết thường — không cần chờ R3F cập nhật. Đây là lý do phần cuối bài giới thiệu `extend()`: cách đăng ký thêm một class KHÔNG nằm trong namespace `THREE` mặc định vào đúng catalog đó.
 
+<Figure
+  src="/figures/04-r3f/jsx-prop-routes.svg"
+  alt="Bốn đường một prop JSX đi vào object Three.js thật: args vào constructor, property prop gán sau khi tạo, pierced prop đi sâu theo đường dẫn có dấu gạch ngang, attach quyết định chỗ gắn trên parent"
+  caption="Chỉ args chạy qua constructor — đó là lý do duy nhất khiến đổi một prop có thể huỷ và dựng lại cả object."
+/>
+
 ## args: constructor argument, và vì sao đổi args tốn kém
 
 Không phải mọi property của một object THREE đều gán được sau khi tạo — `BoxGeometry` build sẵn hình học ngay trong constructor dựa trên `width/height/depth`, không có setter nào đổi kích thước một geometry đã dựng xong. Với những trường hợp này, JSX dùng prop đặc biệt `args`, nhận một MẢNG đúng thứ tự tham số constructor thật:

@@ -47,6 +47,12 @@ tl.to(".box-1", { x: 100, duration: 1 })
   .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
 ```
 
+<Figure
+  src="/figures/05-gsap/timeline-position-parameter.svg"
+  alt="Trục thời gian của một timeline: năm tween được đặt bằng position parameter, và một tween có stagger trải dài qua nhiều mốc"
+  caption="Đặt lên trục thời gian mới thấy position parameter luôn đo tương đối so với mốc ngay trước nó, còn một tween có stagger chiếm chỗ dài hơn duration của chính nó."
+/>
+
 So với cách cộng dồn `delay` thủ công cho từng tween rời rạc:
 
 ```js

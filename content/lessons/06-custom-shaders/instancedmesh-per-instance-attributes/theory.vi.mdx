@@ -26,6 +26,12 @@ mesh.instanceMatrix.needsUpdate = true; // MỘT lần, sau vòng lặp
 
 `instanceMatrix`/`instanceColor` chỉ là hai trường hợp built-in của một cơ chế tổng quát hơn: bất kỳ `InstancedBufferAttribute` nào gắn vào geometry đều tự động lặp lại theo TỪNG INSTANCE thay vì từng vertex. Muốn mỗi hộp có một pha dao động riêng (`aPhase`), tạo một `Float32Array` dài `count`, bọc trong `new THREE.InstancedBufferAttribute(array, 1)`, gắn bằng `geometry.setAttribute('aPhase', ...)`, rồi khai báo đúng tên đó trong vertex shader: `attribute float aPhase;`. Cách khai báo này chạy y hệt trong một `ShaderMaterial` viết tay LẪN trong một material có sẵn bị hack qua `onBeforeCompile` — chính là tổng hợp của module này: gắn `aPhase` vào geometry, rồi `.replace()` marker `#include <begin_vertex>` (bài trước) để đọc `aPhase` ngay trong chunk đó. Một lựa chọn khác không tốn buffer: `gl_InstanceID`, biến built-in của WebGL2 cho draw call instanced, cho chỉ số instance miễn phí — đủ dùng khi giá trị per-instance suy ra được thuần bằng công thức từ chỉ số (hash, `sin(float(gl_InstanceID))`), nhưng vô dụng khi giá trị cần là dữ liệu bạn TỰ đặt (trạng thái, health, màu do designer chọn tay) không thể tính lại từ mỗi index.
 
+<Figure
+  src="/figures/06-custom-shaders/per-vertex-vs-per-instance-attributes.svg"
+  alt="Buffer BufferAttribute chứa các ô v0 đến v3 đặt cạnh InstancedBufferAttribute chứa các ô i0 đến i2, phía trên ba hàng instance nơi các ô vertex được đọc lại ở mọi instance còn ô instance chỉ nhích một bước mỗi hàng"
+  caption="Một draw call, hai tốc độ: aPhase chỉ nhích một bước mỗi bản sao trong khi cả buffer vertex được phát lại, nên mảng của nó dài instanceCount chứ không phải position.count."
+/>
+
 ## Frustum culling: một bounding sphere cho cả field
 
 `computeBoundingSphere()` (`src/objects/InstancedMesh.js`) tính bounding sphere của InstancedMesh bằng cách hợp (`union`) bounding sphere GỐC của geometry, biến đổi qua TỪNG ma trận đã `setMatrixAt` — hoàn toàn trên CPU, dựa trên vị trí bạn ĐẶT, không biết gì về displacement bạn thêm sau đó trong vertex shader (như `aPhase` bob ở trên). Đúng caveat mà bài "Đọc source Three.js" đã nêu cho `frustumCulled` nói chung: nếu biên độ displacement đủ lớn, một số bản sao có thể bị cull nhầm dù vẫn "nhìn thấy được" nhờ hiệu ứng GPU. Cách xử lý: tự nới `boundingSphere.radius` thêm đúng biên độ tối đa sau khi gọi `computeBoundingSphere()`, hoặc tắt hẳn `frustumCulled` nếu field luôn nằm trong khung hình.

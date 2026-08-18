@@ -10,6 +10,12 @@ Open `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.glsl.js` d
 
 `resolveIncludes()` only runs INSIDE `new WebGLProgram(...)`, after `material.onBeforeCompile(parameters, renderer)` has already finished — in `WebGLRenderer.js`, the call to `material.onBeforeCompile(parameters, this)` sits before the line that actually constructs the `WebGLProgram`. The consequence: inside `onBeforeCompile`, `shader.vertexShader`/`shader.fragmentShader` STILL contain the raw `#include <chunk>` lines — nothing has been swapped for real GLSL yet. This is the most common trap when you start hacking shaders: eyeball the "assembled" GLSL (say, reading `begin_vertex.glsl.js` on GitHub and seeing `vec3 transformed = vec3( position );`) and then `.replace()` that exact string inside `onBeforeCompile` — no error is thrown, but nothing happens either, because that string doesn't exist in `shader.vertexShader` at that point. The correct `.replace()` target is the marker itself, `#include <begin_vertex>` — keep the marker intact so the original include still runs, then append your code right after it.
 
+<Figure
+  src="/figures/06-custom-shaders/shader-assembly-injection-point.svg"
+  alt="A six-step assembly chain from ShaderLib.meshphysical down to compileShader, with onBeforeCompile at step 3 and resolveIncludes at step 4, beside two panels showing the same line first as an intact #include marker and then as the expanded chunk text"
+  caption="resolveIncludes runs exactly one step after your callback, so the assembled GLSL you read on GitHub does not exist yet at the moment you edit the string."
+/>
+
 ## Finding Your Anchor: Dump the Real Shader, Look Up the Chunk on GitHub
 
 The most reliable lookup technique isn't guessing — it's printing exactly what Three sees: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. What prints is the raw `ShaderLib.meshphysical.vertex` string after Three has already added the feature `#define`s in play (`USE_MAP`, `USE_INSTANCING`, ...) but BEFORE `resolveIncludes` runs — exactly what you need to pick the right marker. Once you've spotted the marker, look up the real chunk content on GitHub at the exact tag matching the installed version (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<name>.glsl.js`), never the `dev`/`master` branch — variable names or the chunk itself may have changed between versions.

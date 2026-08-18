@@ -4,6 +4,12 @@
 
 FLIP giải quyết cả hai vấn đề bằng cách lật ngược thứ tự: đo, thay đổi, rồi mới tính animation — viết tắt của bốn bước **First, Last, Invert, Play**.
 
+<Figure
+  src="/figures/05-gsap/flip-four-steps.svg"
+  alt="Bốn bước FLIP vẽ thành bốn trạng thái First, Last, Invert, Play, kèm hai dấu ngoặc cho biết Flip.getState và Flip.from lo bước nào"
+  caption="Invert là bước duy nhất không bao giờ nhìn thấy được khi demo chạy, và cũng chính là bước gánh toàn bộ ảo giác."
+/>
+
 ### First và Last: đo trước, đo sau khi DOM đã đổi
 
 **First** là `getBoundingClientRect()` của phần tử NGAY TRƯỚC khi bạn thay đổi bất cứ thứ gì — vị trí, kích thước hiện tại. **Last** là đúng phép đo đó nhưng gọi NGAY SAU khi bạn đã thực hiện thay đổi (đổi class, reparent, list re-render) — DOM đã ở trạng thái cuối, trình duyệt đã layout xong, nhưng chưa vẽ ra màn hình frame nào. Thứ tự này không phải chi tiết vặt: nếu đo Last trước khi DOM thực sự đổi, hai phép đo giống hệt nhau, không có gì để invert, animation biến mất — đây là lỗi phổ biến nhất khi mới dùng kỹ thuật này.

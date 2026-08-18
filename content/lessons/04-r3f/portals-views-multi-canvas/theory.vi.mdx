@@ -26,6 +26,12 @@ function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
 
 `rect` ở đây tính bằng pixel thật của canvas (khác CSS pixel nếu `devicePixelRatio` khác 1), gốc dưới-trái — quy ước của WebGL, ngược với DOM. Cách thông dụng nhất để lấy `rect` là gọi `element.getBoundingClientRect()` trên một `<div>` HTML thật đặt đúng nơi bạn muốn khung nhìn xuất hiện, rồi tự quy đổi toạ độ DOM (gốc trên-trái) sang toạ độ scissor (gốc dưới-trái). Đây chính xác là cơ chế mà `View` của drei tự động hoá cho bạn.
 
+<Figure
+  src="/figures/04-r3f/one-canvas-scissor-views.svg"
+  alt="Một canvas duy nhất chứa hai View và một HUD dựng bằng portal, kèm công thức đổi DOM rect thành scissor rect và trình tự setViewport, setScissor, render mỗi frame"
+  caption="Một khung nhìn chỉ là một hình chữ nhật pixel trên cùng context — thêm khung nhìn tốn thêm một lượt draw, không tốn thêm một context WebGL."
+/>
+
 ## `View` của drei: biến một thẻ DOM thành một khung nhìn
 
 ### Cách View hoạt động bên dưới, và vì sao cần tunnel

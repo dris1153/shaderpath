@@ -2,6 +2,12 @@
 
 Every time CSS changes on an element, the browser doesn't just "redraw" — it runs through up to four sequential stages: **style** (recompute applied CSS values, "Recalculate Style"), **layout** (recompute size and position for every affected element — also called reflow), **paint** (rasterize each layer into a pixel bitmap: background color, shadows, borders, text), and **composite** (merge the already-rasterized layer bitmaps into the final frame, a job the GPU handles). Not every CSS property runs all four steps: CSS-Triggers-style data buckets properties into one of three groups — triggers layout+paint+composite (`width`, `height`, `top`, `left`, `margin`, `padding`, `font-size`...), paint+composite only (`color`, `background`, `box-shadow`, `border-radius`), or composite-only (`transform`, `opacity`). The fewer stages have to re-run, the cheaper the animation — that's the entire logic behind the "only animate transform/opacity" advice you've heard before.
 
+<Figure
+  src="/figures/05-gsap/css-render-stages-cost.svg"
+  alt="The four rendering stages in a row, with three property groups drawn as bars that each start at the stage they trigger"
+  caption="Each bar's length is literally the per-frame cost — picking a property to animate is picking a lane, not picking a CSS style."
+/>
+
 ## Why Transform and Opacity Are the Golden Pair
 
 The compositor thread runs independently of the main thread — it doesn't need to ask JavaScript, style, or the layout engine anything to paint the next frame, as long as the element has already been promoted to its own layer (a pre-rasterized bitmap sitting on the GPU). Animating `transform` just tells the GPU "translate/rotate/scale this bitmap" — a cheap matrix multiplication that runs entirely on the GPU; animating `opacity` just changes the alpha factor used when blending that layer into the frame. Neither touches layout (no element changes size/position in flow) nor paint (the bitmap is already rasterized). That's the real meaning of "golden pair": the only two properties you can animate while skipping *both* of the expensive stages.

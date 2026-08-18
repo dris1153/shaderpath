@@ -7,6 +7,12 @@ ShaderMaterial doesn't just hand you declarations — it also drives the per-fra
 
 This asymmetry isn't accidental: `modelMatrix` differs per object, so there's nothing to cache; the camera is shared across a whole batch of objects, worth checking before rewriting. `modelViewMatrix`/`normalMatrix` are stuck in the per-object bucket because both depend on the camera AND the object at once (`object.modelViewMatrix.multiplyMatrices(camera.matrixWorldInverse, object.matrixWorld)`, around L2128) — no object can share another object's modelViewMatrix.
 
+<Figure
+  src="/figures/06-custom-shaders/builtin-uniform-update-rates.svg"
+  alt="Two boxes sorting the built-in uniforms by update rate: projectionMatrix, viewMatrix, cameraPosition and isOrthographic under once per camera switch, and modelMatrix, modelViewMatrix and normalMatrix under every object every frame, with one tick versus N ticks on a single-frame timeline"
+  caption="Adding one mesh costs three more uniform writes per frame, not six: the camera half is paid once no matter how big the scene gets."
+/>
+
 ## normalMatrix: Why You Can't Just Take modelView's 3×3
 
 Right after the modelViewMatrix multiplication, Three calls `object.normalMatrix.getNormalMatrix(object.modelViewMatrix)` — not a straight copy of modelViewMatrix's upper-left 3×3. There's a tight geometric reason, not Three overcomplicating things.

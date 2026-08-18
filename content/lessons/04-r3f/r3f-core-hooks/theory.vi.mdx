@@ -8,6 +8,12 @@ useFrame((state, delta) => {
 });
 ```
 
+<Figure
+  src="/figures/04-r3f/useframe-frame-order.svg"
+  alt="Một frame của R3F: một vòng lặp requestAnimationFrame duy nhất, mọi callback useFrame chạy theo thứ tự priority, rồi gl.render tự động nếu không có priority dương nào"
+  caption="Một priority dương duy nhất ở bất kỳ đâu trong cây cũng tắt lệnh render tự động cho cả canvas — callback đó phải tự vẽ lấy."
+/>
+
 ### Delta: chuyển động không phụ thuộc framerate
 
 Tham số thứ hai, `delta`, là số giây trôi qua kể từ frame trước. Ở màn hình 60Hz, delta xấp xỉ $1/60 \approx 0.01667s$ (16.67ms); ở màn hình 144Hz, delta co lại còn $1/144 \approx 0.00694s$ (6.94ms) — ít hơn 2.4 lần. Nhân tốc độ với delta thay vì cộng một hằng số cố định mỗi frame là bắt buộc: `angle += SPEED * delta` cho ra đúng cùng một tốc độ góc thực (rad/giây) trên cả hai màn hình, vì delta nhỏ hơn bù lại đúng bằng số lần callback được gọi nhiều hơn mỗi giây. Bỏ delta (`angle += SPEED`) làm vật quay nhanh gấp 2.4 lần trên màn 144Hz so với 60Hz — đúng mẫu callback dt-correct đã gặp ở Track 0 (bài interpolation & easing), giờ chạy bên trong `useFrame` thay vì `requestAnimationFrame` viết tay.

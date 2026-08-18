@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 310" width="620" height="310" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warn-fill: #422006;
+        --warn-stroke: #f59e0b;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .title-warn { fill: var(--warn-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
+  </style>
+
+  <text class="title" x="313" y="24" text-anchor="middle">On unmount, who calls .dispose()?</text>
+
+  <rect class="box-accent" x="26" y="40" width="282" height="150" rx="8" />
+  <text class="title title-accent" x="167" y="64" text-anchor="middle">R3F disposes it</text>
+  <text class="note" x="42" y="90">&lt;boxGeometry args={[1, 1, 1]} /&gt;</text>
+  <text class="note" x="42" y="112">&lt;meshStandardMaterial /&gt;</text>
+  <text class="note" x="42" y="134">any tag the reconciler built with new</text>
+  <text class="note" x="42" y="156">only if it has a .dispose() method</text>
+  <text class="note" x="42" y="178">opt out per tag with dispose={null}</text>
+
+  <rect class="box-warn" x="318" y="40" width="282" height="150" rx="8" />
+  <text class="title title-warn" x="459" y="64" text-anchor="middle">You dispose it — R3F never does</text>
+  <text class="note" x="334" y="90">&lt;primitive object={…} /&gt;, by design</text>
+  <text class="note" x="334" y="112">new THREE.X() in useMemo / useEffect</text>
+  <text class="note" x="334" y="134">geometry={…} and material={…} props</text>
+  <text class="note" x="334" y="156">THREE.WebGLRenderTarget</text>
+  <text class="note" x="334" y="178">listeners and hand-rolled RAF loops</text>
+
+  <rect class="box" x="26" y="206" width="574" height="60" rx="8" />
+  <text class="title" x="313" y="230" text-anchor="middle">R3F disposes a node only when all three hold</text>
+  <text class="note" x="313" y="252" text-anchor="middle">props.dispose !== null  ·  type !== "primitive"  ·  object.type !== "Scene"</text>
+
+  <text class="note" x="313" y="292" text-anchor="middle">Everything on the right keeps its GPU buffer alive — the JS garbage collector cannot free VRAM.</text>
+</svg>

@@ -66,6 +66,12 @@ void main() {
 }
 ```
 
+<Figure
+  src="/figures/06-custom-shaders/shader-prelude-anatomy.svg"
+  alt="Hai cột xếp chồng so sánh phần Three chèn thêm: ShaderMaterial nhận dòng #version, precision, sáu uniform built-in và ba attribute position/normal/uv phía trên source của bạn, còn RawShaderMaterial chỉ nhận define SHADER_TYPE/SHADER_NAME và một khối rỗng"
+  caption="Cả hai đều đi tới cùng một trình biên dịch: Raw chỉ bỏ đi phần header, nên cùng một thân shader đang chạy được bỗng thành lỗi biên dịch."
+/>
+
 ## glslVersion: mặc định GLSL ES 1.00, tường minh GLSL ES 3.00
 
 `RawShaderMaterial` có property `glslVersion` (mặc định `null`). Với Raw, đây là công tắc quyết định dòng `#version` có xuất hiện hay không: để `null`, Three không chèn `#version` gì cả — WebGL2 ngầm hiểu shader không có `#version` là GLSL ES 1.00 (cú pháp `attribute`/`varying`/`gl_FragColor`, không có `in`/`out`); đặt `material.glslVersion = THREE.GLSL3`, Three chèn đúng `#version 300 es\n` lên đầu, và bạn buộc phải viết cú pháp ES 3.00 thật: `in`/`out` thay vì `attribute`/`varying`, tự khai báo biến `out vec4` cho màu xuất thay vì `gl_FragColor`. Với `ShaderMaterial` không-raw thì khác hẳn: Three luôn ép biên dịch dưới `#version 300 es` bất kể `glslVersion`, rồi tự thêm macro `#define attribute in` / `#define varying out` để cú pháp ES 1.00 quen thuộc vẫn chạy — chi tiết này giải thích vì sao inspect shader đã biên dịch trong DevTools luôn thấy `in`/`out` dù bạn gõ `attribute`/`varying`.
