@@ -22,6 +22,11 @@ export default defineConfig({
   // Serial: parallel workers on one dev server made timing-sensitive tests
   // (frame counters, debounced saves) flaky as the app grew.
   workers: 1,
+  // 60s rather than the 30s default. The slow specs are bound by the dev
+  // server compiling a route on first request, and reads now cross a socket to
+  // Postgres instead of hitting a file in-process. Warm pages answer in tens of
+  // milliseconds, so this is headroom for first-compile, not cover for a slow app.
+  timeout: 60_000,
   use: {
     baseURL: "http://localhost:3100",
   },

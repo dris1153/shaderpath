@@ -150,6 +150,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^6.0.5
         version: 6.0.5(vite@8.2.1(@types/node@20.19.43)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.50.0)(tsx@4.23.12))
+      dotenv:
+        specifier: ^17.4.2
+        version: 17.4.2
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

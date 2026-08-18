@@ -1,4 +1,9 @@
+import { config as loadEnv } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+
+// drizzle-kit reads .env but not .env.local, which is where Next keeps local
+// secrets and where the README tells you to write them.
+loadEnv({ path: [".env.local", ".env"], quiet: true });
 
 export default defineConfig({
   dialect: "postgresql",

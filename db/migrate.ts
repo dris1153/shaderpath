@@ -1,4 +1,5 @@
 import path from "node:path";
+import { config as loadEnv } from "dotenv";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -8,6 +9,10 @@ import postgres from "postgres";
 // transaction pooler is not safe — so migrations go over the direct connection
 // as an explicit deploy step.
 export async function runMigrations() {
+  // tsx does not read .env files, so a CLI run would otherwise miss the
+  // connection string the README tells you to put in .env.local.
+  loadEnv({ path: [".env.local", ".env"], quiet: true });
+
   const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
   if (!url) throw new Error("DIRECT_URL or DATABASE_URL must be set to migrate");
 

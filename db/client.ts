@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
+import { poolOptionsFor } from "@/lib/db-pool-options";
 import * as schema from "./schema";
 
 // Server-only (spec §8.7): must never be imported from client components.
@@ -14,17 +15,7 @@ function createDb() {
     );
   }
 
-  // Serverless functions are short-lived and numerous, so each one holds a
-  // single connection and hands it back quickly; a per-instance pool would
-  // multiply into Postgres' connection limit. Supabase's transaction pooler
-  // does the real pooling, and prepared statements must be off to work
-  // through it.
-  const isPooled = url.includes(":6543");
-  const sql = postgres(url, {
-    max: isPooled ? 1 : 10,
-    prepare: !isPooled,
-    idle_timeout: 20,
-  });
+  const sql = postgres(url, { ...poolOptionsFor(url), idle_timeout: 20 });
   return drizzle(sql, { schema });
 }
 
