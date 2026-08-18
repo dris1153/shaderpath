@@ -26,8 +26,7 @@ export async function listSnippets(): Promise<Snippet[]> {
   return db
     .select()
     .from(playgroundSnippets)
-    .orderBy(desc(playgroundSnippets.createdAt))
-    .all();
+    .orderBy(desc(playgroundSnippets.createdAt));
 }
 
 export async function saveSnippet(input: {
@@ -44,27 +43,25 @@ export async function saveSnippet(input: {
 
   if (input.id !== undefined) {
     if (!Number.isInteger(input.id)) throw new Error("Bad snippet id");
-    db.update(playgroundSnippets)
+    await db.update(playgroundSnippets)
       .set({ title, fragmentShader: input.fragmentShader })
-      .where(eq(playgroundSnippets.id, input.id))
-      .run();
+      .where(eq(playgroundSnippets.id, input.id));
   } else {
-    const count = db.select().from(playgroundSnippets).all().length;
+    const count = (await db.select().from(playgroundSnippets)).length;
     if (count >= MAX_SNIPPETS) throw new Error("Snippet limit reached");
-    db.insert(playgroundSnippets)
+    await db.insert(playgroundSnippets)
       .values({
         title,
         fragmentShader: input.fragmentShader,
         forkedFromLesson: forked,
         createdAt: new Date(),
-      })
-      .run();
+      });
   }
   return listSnippets();
 }
 
 export async function deleteSnippet(id: number): Promise<Snippet[]> {
   if (!Number.isInteger(id)) throw new Error("Bad snippet id");
-  db.delete(playgroundSnippets).where(eq(playgroundSnippets.id, id)).run();
+  await db.delete(playgroundSnippets).where(eq(playgroundSnippets.id, id));
   return listSnippets();
 }

@@ -12,7 +12,7 @@ export default async function RoadmapPage() {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("roadmap");
 
-  const progress = getProgressMap();
+  const progress = await getProgressMap();
   const stats = overallCompletion(progress);
 
   return (

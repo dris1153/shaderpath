@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `uq_exercise_attempts_lesson_exercise` ON `exercise_attempts` (`lesson_slug`,`exercise_id`);

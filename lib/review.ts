@@ -17,11 +17,11 @@ export async function gradeReview(slug: string, quality: ReviewQuality) {
   if (!VALID_SLUGS.has(slug)) throw new Error(`Unknown lesson slug: ${slug}`);
   if (!QUALITIES.includes(quality)) throw new Error(`Bad quality: ${quality}`);
 
-  const row = db
+  const row = await db
     .select()
     .from(reviewQueue)
     .where(eq(reviewQueue.lessonSlug, slug))
-    .get();
+    .then((r) => r[0]);
   if (!row) throw new Error(`No review row for ${slug}`);
 
   const next = sm2Update(
@@ -33,13 +33,12 @@ export async function gradeReview(slug: string, quality: ReviewQuality) {
     quality,
   );
 
-  db.update(reviewQueue)
+  await db.update(reviewQueue)
     .set({
       intervalDays: next.intervalDays,
       easeFactor: next.easeFactor,
       reviewCount: next.reviewCount,
       dueAt: nextDueDate(next.intervalDays, new Date()),
     })
-    .where(eq(reviewQueue.id, row.id))
-    .run();
+    .where(eq(reviewQueue.id, row.id));
 }

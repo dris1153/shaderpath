@@ -16,8 +16,8 @@ export interface StatsData {
   exercisesCompleted: number;
 }
 
-export function getStats(now: Date): StatsData {
-  const sessions = db.select().from(studySessions).all();
+export async function getStats(now: Date): Promise<StatsData> {
+  const sessions = await db.select().from(studySessions);
 
   const minutesByDay: Record<string, number> = {};
   const minutesByTrack: Partial<Record<TrackId, number>> = {};
@@ -38,16 +38,8 @@ export function getStats(now: Date): StatsData {
     }
   }
 
-  const lessonsCompleted = db
-    .select()
-    .from(lessonProgress)
-    .all()
-    .filter((r) => r.status === "completed").length;
-  const exercisesCompleted = db
-    .select()
-    .from(exerciseAttempts)
-    .all()
-    .filter((r) => r.status === "completed").length;
+  const lessonsCompleted = (await db.select().from(lessonProgress)).filter((r) => r.status === "completed").length;
+  const exercisesCompleted = (await db.select().from(exerciseAttempts)).filter((r) => r.status === "completed").length;
 
   return {
     minutesByDay,

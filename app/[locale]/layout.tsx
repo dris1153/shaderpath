@@ -51,7 +51,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
-  const initialTier = getQualityTierSetting();
+  const initialTier = await getQualityTierSetting();
 
   return (
     <html

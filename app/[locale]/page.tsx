@@ -24,18 +24,18 @@ export default async function DashboardPage() {
   const locale = (await getLocale()) as Locale;
 
   const now = new Date();
-  const progress = getProgressMap();
+  const progress = await getProgressMap();
   const stats = overallCompletion(progress);
 
   // The queue is the page: every row states why it is there and what to do.
-  const queue = buildQueue(now, progress);
+  const queue = await buildQueue(now, progress);
   const items: QueueItemVM[] = queue.flatMap((item) => {
     const lesson = getLesson(item.lessonSlug);
     return lesson ? [{ ...item, slug: lesson.slug, title: lesson.title[locale] }] : [];
   });
 
   const focus = queue.find((i) => i.kind === "continue")?.lessonSlug;
-  const map = getTrackMap(progress, focus);
+  const map = await getTrackMap(progress, focus);
   const track = map ? getTrack(map.trackId) : undefined;
   const nextTrack = map?.nextTrackId ? getTrack(map.nextTrackId) : undefined;
 
@@ -77,7 +77,7 @@ export default async function DashboardPage() {
             done: map.done,
             total: map.total,
             remaining: stats.coreTotal - stats.coreCompleted,
-            pace: getWeeklyPace(now),
+            pace: await getWeeklyPace(now),
           })}
           overall={{
             label: t("overall", { percent: stats.percent }),

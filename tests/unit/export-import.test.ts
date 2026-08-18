@@ -1,24 +1,20 @@
-import os from "node:os";
-import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
-process.env.SHADERPATH_DB = path.join(
-  os.tmpdir(),
-  `shaderpath-ei-test-${process.pid}-${Date.now()}.db`,
-);
 
-const { runMigrations } = await import("@/db/migrate");
-const { db } = await import("@/db/client");
-const { lessonProgress, notes, settings } = await import("@/db/schema");
-const { serialize, apply } = await import("@/lib/export-import");
+import { db } from "@/db/client";
+import { lessonProgress, notes, settings } from "@/db/schema";
+import { serialize, apply } from "@/lib/export-import";
+
+import { truncateAll } from "../setup/reset-tables";
+
+beforeAll(truncateAll);
 const { validate, SCHEMA_VERSION, SchemaVersionError, ValidationError } = await import(
   "@/lib/export-import-schema"
 );
 
-runMigrations();
 
-function seed() {
-  db.insert(lessonProgress)
+async function seed() {
+  await db.insert(lessonProgress)
     .values({
       lessonSlug: "vector-basics",
       status: "completed",
@@ -27,63 +23,60 @@ function seed() {
       timeSpentSeconds: 120,
       scrollPercent: 1,
       confidence: 4,
-    })
-    .run();
-  db.insert(notes)
+    });
+  await db.insert(notes)
     .values({
       lessonSlug: "vector-basics",
       anchorId: "intro",
       selectedText: "hi",
       body: "note body",
       createdAt: new Date(),
-    })
-    .run();
-  db.insert(settings).values({ key: "quality_tier", value: "high" }).run();
+    });
+  await db.insert(settings).values({ key: "quality_tier", value: "high" });
 }
 
 // Simulates the real GET → JSON.stringify → download → parse round trip:
-// dates become ISO strings, matching what validate()/apply() must accept.
+// dates become ISO strings, matching what validate()/await apply() must accept.
 function roundTripThroughJson(value: unknown): unknown {
   return JSON.parse(JSON.stringify(value));
 }
 
 describe("export-import round trip", () => {
-  it("serializes, wipes, and restores identical data via apply(replace)", () => {
-    seed();
-    const exported = serialize();
+  it("serializes, wipes, and restores identical data via await apply(replace)", async () => {
+    await seed();
+    const exported = await serialize();
     const payload = validate(roundTripThroughJson(exported));
 
-    db.delete(lessonProgress).run();
-    db.delete(notes).run();
-    db.delete(settings).run();
-    expect(db.select().from(lessonProgress).all()).toHaveLength(0);
+    await db.delete(lessonProgress);
+    await db.delete(notes);
+    await db.delete(settings);
+    expect(await db.select().from(lessonProgress)).toHaveLength(0);
 
-    const counts = apply(payload, "replace");
+    const counts = await apply(payload, "replace");
     expect(counts.lessonProgress).toBe(1);
     expect(counts.notes).toBe(1);
     expect(counts.settings).toBe(1);
 
-    const restored = db.select().from(lessonProgress).all();
+    const restored = await db.select().from(lessonProgress);
     expect(restored).toHaveLength(1);
     expect(restored[0]?.lessonSlug).toBe("vector-basics");
     expect(restored[0]?.scrollPercent).toBe(1);
     expect(restored[0]?.confidence).toBe(4);
     expect(restored[0]?.startedAt).toBeInstanceOf(Date);
 
-    const restoredNotes = db.select().from(notes).all();
+    const restoredNotes = await db.select().from(notes);
     expect(restoredNotes[0]?.body).toBe("note body");
 
-    const restoredSettings = db.select().from(settings).all();
+    const restoredSettings = await db.select().from(settings);
     expect(restoredSettings.find((s) => s.key === "quality_tier")?.value).toBe("high");
   });
 
-  it("merge upserts by natural key instead of wiping other rows", () => {
-    db.delete(lessonProgress).run();
-    db.insert(lessonProgress)
-      .values({ lessonSlug: "keep-me", status: "in_progress", timeSpentSeconds: 5 })
-      .run();
+  it("merge upserts by natural key instead of wiping other rows", async () => {
+    await db.delete(lessonProgress);
+    await db.insert(lessonProgress)
+      .values({ lessonSlug: "keep-me", status: "in_progress", timeSpentSeconds: 5 });
 
-    const exported = serialize();
+    const exported = await serialize();
     const json = roundTripThroughJson(exported) as {
       schemaVersion: number;
       exportedAt: string;
@@ -102,32 +95,30 @@ describe("export-import round trip", () => {
       },
     ];
     const payload = validate(json);
-    apply(payload, "merge");
+    await apply(payload, "merge");
 
-    const slugs = db
-      .select()
-      .from(lessonProgress)
-      .all()
-      .map((r) => r.lessonSlug);
+    const slugs = (await db.select().from(lessonProgress)).map(
+      (r) => r.lessonSlug,
+    );
     expect(slugs).toContain("keep-me");
     expect(slugs).toContain("merged-in");
   });
 
-  it("rejects wrong schemaVersion", () => {
+  it("rejects wrong schemaVersion", async () => {
     const bad = { schemaVersion: SCHEMA_VERSION + 1, exportedAt: new Date().toISOString(), tables: {} };
     expect(() => validate(bad)).toThrow(SchemaVersionError);
   });
 
-  it("rejects unknown table keys", () => {
-    const json = roundTripThroughJson(serialize()) as {
+  it("rejects unknown table keys", async () => {
+    const json = roundTripThroughJson(await serialize()) as {
       tables: Record<string, unknown>;
     };
     json.tables.notATable = [];
     expect(() => validate(json)).toThrow(ValidationError);
   });
 
-  it("rejects oversized strings", () => {
-    const json = roundTripThroughJson(serialize()) as {
+  it("rejects oversized strings", async () => {
+    const json = roundTripThroughJson(await serialize()) as {
       tables: Record<string, unknown>;
     };
     json.tables.notes = [
@@ -143,8 +134,8 @@ describe("export-import round trip", () => {
     expect(() => validate(json)).toThrow(ValidationError);
   });
 
-  it("rejects wrong enum values", () => {
-    const json = roundTripThroughJson(serialize()) as {
+  it("rejects wrong enum values", async () => {
+    const json = roundTripThroughJson(await serialize()) as {
       tables: Record<string, unknown>;
     };
     json.tables.lessonProgress = [

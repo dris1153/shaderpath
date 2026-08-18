@@ -3,8 +3,6 @@ import createMDX from "@next/mdx";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
-  // Native module — must stay out of bundles (spec §8.7, decision D8)
-  serverExternalPackages: ["better-sqlite3"],
   // Raw shader imports (decision D1)
   turbopack: {
     rules: {

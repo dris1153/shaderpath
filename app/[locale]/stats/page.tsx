@@ -18,7 +18,7 @@ export default async function StatsPage() {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("stats");
   const now = new Date();
-  const stats = getStats(now);
+  const stats = await getStats(now);
 
   const hours = Math.floor(stats.totalMinutes / 60);
   const minutes = stats.totalMinutes % 60;

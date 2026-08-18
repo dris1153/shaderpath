@@ -29,7 +29,7 @@ export async function createNote(input: {
   const body = input.body.trim();
   if (!body || body.length > MAX_BODY) throw new Error("Bad note body");
 
-  const row = db
+  const row = await db
     .insert(notes)
     .values({
       lessonSlug: input.lessonSlug,
@@ -39,7 +39,8 @@ export async function createNote(input: {
       createdAt: new Date(),
     })
     .returning({ id: notes.id })
-    .get();
+    .then((r) => r[0]);
+  if (!row) throw new Error("insert returned no row");
   return row.id;
 }
 
@@ -48,12 +49,12 @@ export async function updateNote(id: number, body: string) {
   if (!Number.isInteger(id) || !trimmed || trimmed.length > MAX_BODY) {
     throw new Error("Bad note update");
   }
-  db.update(notes).set({ body: trimmed }).where(eq(notes.id, id)).run();
+  await db.update(notes).set({ body: trimmed }).where(eq(notes.id, id));
 }
 
 export async function deleteNote(id: number) {
   if (!Number.isInteger(id)) throw new Error("Bad note id");
-  db.delete(notes).where(eq(notes.id, id)).run();
+  await db.delete(notes).where(eq(notes.id, id));
 }
 
 /** Toggle; returns the new state. anchorId=null means the whole lesson. */
@@ -69,23 +70,22 @@ export async function toggleBookmark(input: {
     ? and(eq(bookmarks.lessonSlug, input.lessonSlug), eq(bookmarks.anchorId, anchorId))
     : and(eq(bookmarks.lessonSlug, input.lessonSlug), isNull(bookmarks.anchorId));
 
-  const existing = db.select().from(bookmarks).where(where).get();
+  const existing = await db.select().from(bookmarks).where(where).then((r) => r[0]);
   if (existing) {
-    db.delete(bookmarks).where(eq(bookmarks.id, existing.id)).run();
+    await db.delete(bookmarks).where(eq(bookmarks.id, existing.id));
     return false;
   }
-  db.insert(bookmarks)
+  await db.insert(bookmarks)
     .values({
       lessonSlug: input.lessonSlug,
       anchorId,
       label: trimTo(input.label, MAX_META),
       createdAt: new Date(),
-    })
-    .run();
+    });
   return true;
 }
 
 export async function deleteBookmark(id: number) {
   if (!Number.isInteger(id)) throw new Error("Bad bookmark id");
-  db.delete(bookmarks).where(eq(bookmarks.id, id)).run();
+  await db.delete(bookmarks).where(eq(bookmarks.id, id));
 }

@@ -22,7 +22,7 @@ export async function ExerciseSection({
   if (exercises.length === 0) return null;
 
   const attempts = new Map(
-    getAttemptsForLesson(slug).map((a) => [a.exerciseId, a]),
+    (await getAttemptsForLesson(slug)).map((a) => [a.exerciseId, a] as const),
   );
 
   const items = await Promise.all(

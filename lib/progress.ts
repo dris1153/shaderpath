@@ -28,7 +28,7 @@ export async function saveReadingProgress(input: {
     clamp(input.deltaSeconds, 0, MAX_DELTA_SECONDS),
   );
 
-  db.insert(lessonProgress)
+  await db.insert(lessonProgress)
     .values({
       lessonSlug: input.slug,
       status: "in_progress",
@@ -43,10 +43,11 @@ export async function saveReadingProgress(input: {
         timeSpentSeconds: sql`${lessonProgress.timeSpentSeconds} + ${deltaSeconds}`,
         // completed stays completed; anything else becomes in_progress
         status: sql`CASE WHEN ${lessonProgress.status} = 'completed' THEN 'completed' ELSE 'in_progress' END`,
-        startedAt: sql`COALESCE(${lessonProgress.startedAt}, ${Math.floor(Date.now() / 1000)})`,
+        // now() rather than a bound Date: inside a raw fragment the value skips the
+        // column codec, so a JS Date arrives as its toString().
+        startedAt: sql`COALESCE(${lessonProgress.startedAt}, now())`,
       },
-    })
-    .run();
+    });
 }
 
 export async function markComplete(slug: string, confidence?: number) {
@@ -54,7 +55,7 @@ export async function markComplete(slug: string, confidence?: number) {
   const conf =
     confidence === undefined ? null : Math.round(clamp(confidence, 1, 5));
 
-  db.insert(lessonProgress)
+  await db.insert(lessonProgress)
     .values({
       lessonSlug: slug,
       status: "completed",
@@ -68,14 +69,15 @@ export async function markComplete(slug: string, confidence?: number) {
         status: "completed",
         completedAt: new Date(),
         confidence: conf,
-        startedAt: sql`COALESCE(${lessonProgress.startedAt}, ${Math.floor(Date.now() / 1000)})`,
+        // now() rather than a bound Date: inside a raw fragment the value skips the
+        // column codec, so a JS Date arrives as its toString().
+        startedAt: sql`COALESCE(${lessonProgress.startedAt}, now())`,
       },
-    })
-    .run();
+    });
 
   // SRS (spec §6.2.11): completion enters the review queue due tomorrow.
   // An existing schedule is never reset by re-completing.
-  db.insert(reviewQueue)
+  await db.insert(reviewQueue)
     .values({
       lessonSlug: slug,
       intervalDays: 1,
@@ -83,27 +85,26 @@ export async function markComplete(slug: string, confidence?: number) {
       dueAt: nextDueDate(1, new Date()),
       reviewCount: 0,
     })
-    .onConflictDoNothing({ target: reviewQueue.lessonSlug })
-    .run();
+    .onConflictDoNothing({ target: reviewQueue.lessonSlug });
 }
 
 export async function openStudySession(slug: string): Promise<number> {
   assertSlug(slug);
-  const row = db
+  const row = await db
     .insert(studySessions)
     .values({ lessonSlug: slug, startedAt: new Date() })
     .returning({ id: studySessions.id })
-    .get();
+    .then((r) => r[0]);
+  if (!row) throw new Error("insert returned no row");
   return row.id;
 }
 
 export async function closeStudySession(id: number, durationSeconds: number) {
   if (!Number.isInteger(id) || id <= 0) return;
-  db.update(studySessions)
+  await db.update(studySessions)
     .set({
       endedAt: new Date(),
       durationSeconds: Math.round(clamp(durationSeconds, 0, 60 * 60 * 12)),
     })
-    .where(eq(studySessions.id, id))
-    .run();
+    .where(eq(studySessions.id, id));
 }

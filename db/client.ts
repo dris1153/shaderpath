@@ -1,28 +1,43 @@
-import fs from "node:fs";
-import path from "node:path";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
 // Server-only (spec §8.7): must never be imported from client components.
-// serverExternalPackages in next.config.ts keeps better-sqlite3 out of bundles.
 
-// SHADERPATH_DB override exists for tests (scratch DB) — defaults to spec §2 path
-const DB_PATH =
-  process.env.SHADERPATH_DB ?? path.join(process.cwd(), "data", "progress.db");
-const DB_DIR = path.dirname(DB_PATH);
+type Db = ReturnType<typeof createDb>;
 
 function createDb() {
-  fs.mkdirSync(DB_DIR, { recursive: true });
-  const sqlite = new Database(DB_PATH);
-  sqlite.pragma("journal_mode = WAL");
-  sqlite.pragma("foreign_keys = ON");
-  return drizzle(sqlite, { schema });
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error(
+      "DATABASE_URL is not set. Point it at Supabase's transaction pooler (port 6543) in production, or the local test database.",
+    );
+  }
+
+  // Serverless functions are short-lived and numerous, so each one holds a
+  // single connection and hands it back quickly; a per-instance pool would
+  // multiply into Postgres' connection limit. Supabase's transaction pooler
+  // does the real pooling, and prepared statements must be off to work
+  // through it.
+  const isPooled = url.includes(":6543");
+  const sql = postgres(url, {
+    max: isPooled ? 1 : 10,
+    prepare: !isPooled,
+    idle_timeout: 20,
+  });
+  return drizzle(sql, { schema });
 }
 
-// Singleton across dev HMR reloads — a new Database() per reload leaks handles.
-const globalForDb = globalThis as unknown as {
-  __shaderpathDb?: ReturnType<typeof createDb>;
-};
+// Singleton across dev HMR reloads — a new client per reload leaks sockets.
+const globalForDb = globalThis as unknown as { __shaderpathDb?: Db };
 
-export const db = (globalForDb.__shaderpathDb ??= createDb());
+function getDb(): Db {
+  return (globalForDb.__shaderpathDb ??= createDb());
+}
+
+// Lazy: connecting (or failing on a missing URL) at module scope breaks
+// `next build`, which evaluates these modules while collecting page config
+// long before any request needs a connection.
+export const db = new Proxy({} as Db, {
+  get: (_target, prop, receiver) => Reflect.get(getDb(), prop, receiver),
+});

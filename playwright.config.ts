@@ -1,22 +1,21 @@
-import fs from "node:fs";
-import path from "node:path";
+import { execSync } from "node:child_process";
 import { defineConfig } from "@playwright/test";
 
-// Fresh DB per run so tests are deterministic (mark-complete etc. are stateful).
-// Old e2e DBs are best-effort cleaned; locked files (orphan servers) are skipped.
-const dataDir = path.join(__dirname, "data");
-if (fs.existsSync(dataDir)) {
-  for (const f of fs.readdirSync(dataDir)) {
-    if (f.startsWith("e2e-")) {
-      try {
-        fs.unlinkSync(path.join(dataDir, f));
-      } catch {
-        // locked by a running server — ignore
-      }
-    }
-  }
-}
-const E2E_DB = `data/e2e-${Date.now()}.db`;
+// The database is Postgres in Docker (scripts/test-db.ts): globalSetup drops
+// the schema and re-migrates, so every run starts empty the way the old
+// per-run SQLite file did. A separate database from the unit suite keeps the
+// two from clearing each other's rows if they ever overlap.
+const E2E_DATABASE_URL =
+  process.env.E2E_DATABASE_URL ??
+  "postgres://postgres:dev@localhost:55432/shaderpath_e2e";
+
+// At config-load time, which is before the webServer spawns. globalSetup runs
+// *after* the server is already up, so a reset there would leave the first
+// requests hitting an unmigrated schema.
+execSync("pnpm exec tsx scripts/reset-e2e-db.ts", {
+  stdio: "inherit",
+  env: { ...process.env, E2E_DATABASE_URL },
+});
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -33,6 +32,6 @@ export default defineConfig({
     url: "http://localhost:3100/vi",
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { SHADERPATH_DB: E2E_DB },
+    env: { DATABASE_URL: E2E_DATABASE_URL },
   },
 });

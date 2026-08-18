@@ -29,13 +29,13 @@ async function assertExercise(
 // One row per (lessonSlug, exerciseId) — enforced by uq_exercise_attempts_lesson_exercise.
 // insertValues must be plain values (no SQL fragments — the VALUES clause has
 // no row context); updateSet may reference existing columns.
-function upsert(
+async function upsert(
   slug: string,
   exerciseId: string,
   insertValues: Record<string, unknown>,
   updateSet?: Record<string, unknown>,
 ) {
-  db.insert(exerciseAttempts)
+  await db.insert(exerciseAttempts)
     .values({
       lessonSlug: slug,
       exerciseId,
@@ -45,8 +45,7 @@ function upsert(
     .onConflictDoUpdate({
       target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
       set: { ...(updateSet ?? insertValues), updatedAt: new Date() },
-    })
-    .run();
+    });
 }
 
 // SQL fragment: engaging with an exercise moves not_started → attempted,
@@ -60,7 +59,7 @@ export async function setExerciseStatus(
 ) {
   await assertExercise(slug, exerciseId);
   if (!STATUSES.includes(status)) throw new Error(`Bad status: ${status}`);
-  upsert(slug, exerciseId, { status });
+  await upsert(slug, exerciseId, { status });
 }
 
 /** Monotonic reveal; returns the persisted count (capped at hints.length). */
@@ -70,7 +69,7 @@ export async function revealHint(
 ): Promise<number> {
   const exercise = await assertExercise(slug, exerciseId);
   const max = exercise.hints.length;
-  db.insert(exerciseAttempts)
+  await db.insert(exerciseAttempts)
     .values({
       lessonSlug: slug,
       exerciseId,
@@ -81,25 +80,26 @@ export async function revealHint(
     .onConflictDoUpdate({
       target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
       set: {
-        hintsRevealed: sql`MIN(${exerciseAttempts.hintsRevealed} + 1, ${max})`,
+        // LEAST, not MIN: two-argument MIN is a SQLite scalar; in Postgres
+        // MIN is an aggregate and rejects a second argument.
+        hintsRevealed: sql`LEAST(${exerciseAttempts.hintsRevealed} + 1, ${max})`,
         status: BUMP_TO_ATTEMPTED,
         updatedAt: new Date(),
       },
-    })
-    .run();
-  const row = db
+    });
+  const row = await db
     .select({ hintsRevealed: exerciseAttempts.hintsRevealed })
     .from(exerciseAttempts)
     .where(
       sql`${exerciseAttempts.lessonSlug} = ${slug} AND ${exerciseAttempts.exerciseId} = ${exerciseId}`,
     )
-    .get();
+    .then((r) => r[0]);
   return row?.hintsRevealed ?? Math.min(1, max);
 }
 
 export async function revealSolution(slug: string, exerciseId: string) {
   await assertExercise(slug, exerciseId);
-  upsert(
+  await upsert(
     slug,
     exerciseId,
     { solutionRevealed: true, status: "attempted" },
@@ -116,7 +116,7 @@ export async function saveUserCode(
   if (new TextEncoder().encode(code).length > MAX_CODE_BYTES) {
     throw new Error("Code too large");
   }
-  upsert(
+  await upsert(
     slug,
     exerciseId,
     { userCode: code, status: "attempted" },
@@ -138,7 +138,7 @@ export async function saveChecklist(
   ) {
     throw new Error("Bad checklist state");
   }
-  upsert(
+  await upsert(
     slug,
     exerciseId,
     { checklistState: state as boolean[], status: "attempted" },

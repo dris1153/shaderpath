@@ -6,20 +6,20 @@ import type { LessonSlug } from "@/content/slugs";
 export type NoteRow = typeof notes.$inferSelect;
 export type BookmarkRow = typeof bookmarks.$inferSelect;
 
-export function getAllNotes(): NoteRow[] {
-  return db.select().from(notes).orderBy(desc(notes.createdAt)).all();
+export async function getAllNotes(): Promise<NoteRow[]> {
+  return db.select().from(notes).orderBy(desc(notes.createdAt));
 }
 
-export function getAllBookmarks(): BookmarkRow[] {
-  return db.select().from(bookmarks).orderBy(desc(bookmarks.createdAt)).all();
+export async function getAllBookmarks(): Promise<BookmarkRow[]> {
+  return db.select().from(bookmarks).orderBy(desc(bookmarks.createdAt));
 }
 
-export function isLessonBookmarked(slug: LessonSlug): boolean {
+export async function isLessonBookmarked(slug: LessonSlug): Promise<boolean> {
   return (
     db
       .select({ id: bookmarks.id })
       .from(bookmarks)
       .where(and(eq(bookmarks.lessonSlug, slug), isNull(bookmarks.anchorId)))
-      .get() !== undefined
+      .then((r) => r[0]) !== undefined
   );
 }

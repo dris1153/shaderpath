@@ -34,7 +34,7 @@ export default async function TrackPage({
 
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("roadmap");
-  const progress = getProgressMap();
+  const progress = await getProgressMap();
   const stats = trackCompletion(track.id, progress);
   const modules = getModulesOfTrack(track.id);
 

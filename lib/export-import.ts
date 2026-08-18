@@ -1,6 +1,6 @@
 // Server-only orchestration for progress export/import (spec §6.2.13).
 // Route handlers are the only callers — never import this from a client
-// component (pulls in @/db/client → better-sqlite3, a native module).
+// component (pulls in @/db/client → the postgres driver).
 
 import { db } from "@/db/client";
 import {
@@ -41,27 +41,27 @@ export interface ExportPayload {
 }
 
 /** Reads every progress table for export — no filtering, single-user app. */
-export function serialize(): ExportPayload {
+export async function serialize(): Promise<ExportPayload> {
   return {
     schemaVersion: SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     tables: {
-      lessonProgress: db.select().from(lessonProgress).all(),
-      exerciseAttempts: db.select().from(exerciseAttempts).all(),
-      notes: db.select().from(notes).all(),
-      bookmarks: db.select().from(bookmarks).all(),
-      studySessions: db.select().from(studySessions).all(),
-      reviewQueue: db.select().from(reviewQueue).all(),
-      playgroundSnippets: db.select().from(playgroundSnippets).all(),
-      settings: db.select().from(settings).all(),
+      lessonProgress: await db.select().from(lessonProgress),
+      exerciseAttempts: await db.select().from(exerciseAttempts),
+      notes: await db.select().from(notes),
+      bookmarks: await db.select().from(bookmarks),
+      studySessions: await db.select().from(studySessions),
+      reviewQueue: await db.select().from(reviewQueue),
+      playgroundSnippets: await db.select().from(playgroundSnippets),
+      settings: await db.select().from(settings),
     },
   };
 }
 
 /** Applies a validated import in one transaction; returns per-table row counts. */
-export function apply(
+export async function apply(
   payload: ImportPayload,
   mode: "replace" | "merge",
-): Record<string, number> {
-  return db.transaction((tx) => applyPayload(tx, payload.tables, mode));
+): Promise<Record<string, number>> {
+  return db.transaction(async (tx) => applyPayload(tx, payload.tables, mode));
 }

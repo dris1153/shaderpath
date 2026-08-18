@@ -2,7 +2,7 @@ import type { LessonSlug } from "@/content/slugs";
 
 // Shape of the dashboard queue, with no database import: the client component
 // that renders the queue needs these, and pulling them from the read layer would
-// drag better-sqlite3 into the browser bundle (§8.7).
+// drag the postgres driver into the browser bundle (§8.7).
 
 // Ordered by urgency, and a lesson only ever takes its highest slot. Leech sits
 // above overdue on purpose: both are reviews that are due, but "you have

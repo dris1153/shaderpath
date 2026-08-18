@@ -60,8 +60,8 @@ export default async function LessonPage({
     ? (await referencesLoader()).references
     : [];
 
-  const progressRow = getProgressRow(lesson.slug);
-  const progress = getProgressMap();
+  const progressRow = await getProgressRow(lesson.slug);
+  const progress = await getProgressMap();
   const unlocked = isUnlocked(lesson.slug, progress);
 
   const sidebar = (
@@ -121,7 +121,7 @@ export default async function LessonPage({
           <div className="absolute top-0 right-0">
             <BookmarkToggle
               slug={lesson.slug}
-              initialBookmarked={isLessonBookmarked(lesson.slug)}
+              initialBookmarked={await isLessonBookmarked(lesson.slug)}
             />
           </div>
           <LessonHeader lesson={lesson} locale={locale} />

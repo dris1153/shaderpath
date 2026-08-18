@@ -7,7 +7,7 @@ import { LESSONS, TRACKS } from "@/content/curriculum";
 import { isUnlocked, type ProgressMap } from "@/lib/curriculum";
 import { getAllProgressRows, type ProgressRow } from "@/lib/progress-read";
 
-// Sync server-side reads (better-sqlite3) — RSC only, never client (spec §8.7).
+// Server-side reads — RSC only, never client (spec §8.7).
 //
 // The dashboard answers "what do I do now?", so every row here has to justify a
 // click. Three signals the database already records had no reader at all before
@@ -29,7 +29,7 @@ function daysBetween(from: Date, to: Date): number {
   return Math.floor((to.getTime() - from.getTime()) / DAY_MS);
 }
 
-export function getShakyLessons(): ProgressRow[] {
+export async function getShakyLessons(): Promise<ProgressRow[]> {
   return db
     .select()
     .from(lessonProgress)
@@ -38,12 +38,11 @@ export function getShakyLessons(): ProgressRow[] {
         eq(lessonProgress.status, "completed"),
         lte(lessonProgress.confidence, SHAKY_CONFIDENCE),
       ),
-    )
-    .all();
+    );
 }
 
 /** Only due leeches: one that is not due yet is not today's problem. */
-export function getLeeches(now: Date) {
+export async function getLeeches(now: Date) {
   return db
     .select()
     .from(reviewQueue)
@@ -53,17 +52,14 @@ export function getLeeches(now: Date) {
         gte(reviewQueue.reviewCount, LEECH_REVIEWS),
         lte(reviewQueue.dueAt, now),
       ),
-    )
-    .all();
+    );
 }
 
 /** Lessons where an exercise needed hints or the solution to get through. */
-export function getLeanedOnLessons(): {
-  lessonSlug: string;
-  hinted: number;
-  solutions: number;
-}[] {
-  const rows = db
+export async function getLeanedOnLessons(): Promise<
+  { lessonSlug: string; hinted: number; solutions: number }[]
+> {
+  const rows = await db
     .select()
     .from(exerciseAttempts)
     .where(
@@ -71,8 +67,7 @@ export function getLeanedOnLessons(): {
         eq(exerciseAttempts.solutionRevealed, true),
         gte(exerciseAttempts.hintsRevealed, 1),
       ),
-    )
-    .all();
+    );
 
   const byLesson = new Map<string, { hinted: number; solutions: number }>();
   for (const row of rows) {
@@ -85,9 +80,9 @@ export function getLeanedOnLessons(): {
 }
 
 /** Core lessons finished per week over the last 4 weeks — a pace, not a deadline. */
-export function getWeeklyPace(now: Date): number {
+export async function getWeeklyPace(now: Date): Promise<number> {
   const since = new Date(now.getTime() - 28 * DAY_MS);
-  const done = db
+  const done = await db
     .select()
     .from(lessonProgress)
     .where(
@@ -95,8 +90,7 @@ export function getWeeklyPace(now: Date): number {
         eq(lessonProgress.status, "completed"),
         gte(lessonProgress.completedAt, since),
       ),
-    )
-    .all();
+    );
   return Math.round((done.length / 4) * 10) / 10;
 }
 
@@ -104,7 +98,7 @@ export function getWeeklyPace(now: Date): number {
  * The whole queue, most urgent first and one row per lesson: a lesson that is
  * both overdue and a leech is one job, not two.
  */
-export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
+export async function buildQueue(now: Date, progress: ProgressMap): Promise<QueueItem[]> {
   const byLesson = new Map<LessonSlug, QueueItem>();
   const claim = (item: QueueItem) => {
     const seen = byLesson.get(item.lessonSlug);
@@ -114,7 +108,7 @@ export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
     byLesson.set(item.lessonSlug, item);
   };
 
-  for (const row of getLeeches(now)) {
+  for (const row of await getLeeches(now)) {
     claim({
       kind: "leech",
       lessonSlug: row.lessonSlug as LessonSlug,
@@ -123,7 +117,7 @@ export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
     });
   }
 
-  for (const row of db.select().from(reviewQueue).where(lte(reviewQueue.dueAt, now)).all()) {
+  for (const row of await db.select().from(reviewQueue).where(lte(reviewQueue.dueAt, now))) {
     const late = daysBetween(row.dueAt, now);
     claim({
       kind: late >= 1 ? "overdue" : "due",
@@ -134,7 +128,7 @@ export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
     });
   }
 
-  for (const row of getShakyLessons()) {
+  for (const row of await getShakyLessons()) {
     claim({
       kind: "shaky",
       lessonSlug: row.lessonSlug as LessonSlug,
@@ -142,7 +136,7 @@ export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
     });
   }
 
-  for (const row of getLeanedOnLessons()) {
+  for (const row of await getLeanedOnLessons()) {
     claim({
       kind: "hinted",
       lessonSlug: row.lessonSlug as LessonSlug,
@@ -151,7 +145,7 @@ export function buildQueue(now: Date, progress: ProgressMap): QueueItem[] {
     });
   }
 
-  const inProgress = getAllProgressRows().find((r) => r.status === "in_progress");
+  const inProgress = (await getAllProgressRows()).find((r) => r.status === "in_progress");
   const nextUp =
     inProgress?.lessonSlug ??
     LESSONS.find(
@@ -195,17 +189,17 @@ export interface TrackMap {
 }
 
 /** The track the learner is standing in, plus what finishing it unlocks. */
-export function getTrackMap(
+export async function getTrackMap(
   progress: ProgressMap,
   focusSlug: LessonSlug | undefined,
-): TrackMap | null {
+): Promise<TrackMap | null> {
   const focus = focusSlug
     ? LESSONS.find((l) => l.slug === focusSlug)
     : LESSONS.find((l) => progress[l.slug] !== "completed");
   if (!focus) return null;
 
   const confidence = new Map<string, number>();
-  for (const row of getAllProgressRows()) {
+  for (const row of await getAllProgressRows()) {
     if (row.confidence !== null) confidence.set(row.lessonSlug, row.confidence);
   }
 

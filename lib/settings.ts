@@ -12,8 +12,7 @@ const VALID_TIERS = new Set<string>(["low", "medium", "high"]);
 
 export async function setQualityTier(tier: string) {
   if (!VALID_TIERS.has(tier)) throw new Error(`Invalid quality tier: ${tier}`);
-  db.insert(settings)
+  await db.insert(settings)
     .values({ key: QUALITY_TIER_KEY, value: tier })
-    .onConflictDoUpdate({ target: settings.key, set: { value: tier } })
-    .run();
+    .onConflictDoUpdate({ target: settings.key, set: { value: tier } });
 }

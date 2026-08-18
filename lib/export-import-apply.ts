@@ -2,7 +2,7 @@
 // columns explicitly (never spreads the raw payload) so writes stay
 // parameterized even though the source data is untrusted.
 
-import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "@/db/schema";
 import {
   bookmarks,
@@ -16,7 +16,9 @@ import {
 } from "@/db/schema";
 import type { ImportTables } from "./export-import-types";
 
-export type Tx = BetterSQLite3Database<typeof schema>;
+export type Tx = Parameters<
+  Parameters<PostgresJsDatabase<typeof schema>["transaction"]>[0]
+>[0];
 
 const toDate = (v: string) => new Date(v);
 const toDateOrNull = (v: string | null) => (v === null ? null : new Date(v));
@@ -32,13 +34,13 @@ const ALL_TABLES = [
   settings,
 ] as const;
 
-function deleteAllRows(tx: Tx) {
-  for (const table of ALL_TABLES) tx.delete(table).run();
+async function deleteAllRows(tx: Tx) {
+  for (const table of ALL_TABLES) await tx.delete(table);
 }
 
 // Upsert-by-natural-key doubles as a plain insert after deleteAllRows() in
 // replace mode (nothing left to conflict with), so one function covers both.
-function upsertLessonProgress(tx: Tx, rows: ImportTables["lessonProgress"]) {
+async function upsertLessonProgress(tx: Tx, rows: ImportTables["lessonProgress"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -50,14 +52,13 @@ function upsertLessonProgress(tx: Tx, rows: ImportTables["lessonProgress"]) {
       scrollPercent: r.scrollPercent,
       confidence: r.confidence,
     };
-    tx.insert(lessonProgress)
+    await tx.insert(lessonProgress)
       .values(values)
-      .onConflictDoUpdate({ target: lessonProgress.lessonSlug, set: values })
-      .run();
+      .onConflictDoUpdate({ target: lessonProgress.lessonSlug, set: values });
   }
 }
 
-function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttempts"]) {
+async function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttempts"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -70,17 +71,16 @@ function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttempts"]) 
       checklistState: r.checklistState,
       updatedAt: toDate(r.updatedAt),
     };
-    tx.insert(exerciseAttempts)
+    await tx.insert(exerciseAttempts)
       .values(values)
       .onConflictDoUpdate({
         target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
         set: values,
-      })
-      .run();
+      });
   }
 }
 
-function upsertNotes(tx: Tx, rows: ImportTables["notes"]) {
+async function upsertNotes(tx: Tx, rows: ImportTables["notes"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -90,11 +90,11 @@ function upsertNotes(tx: Tx, rows: ImportTables["notes"]) {
       body: r.body,
       createdAt: toDate(r.createdAt),
     };
-    tx.insert(notes).values(values).onConflictDoUpdate({ target: notes.id, set: values }).run();
+    await tx.insert(notes).values(values).onConflictDoUpdate({ target: notes.id, set: values });
   }
 }
 
-function upsertBookmarks(tx: Tx, rows: ImportTables["bookmarks"]) {
+async function upsertBookmarks(tx: Tx, rows: ImportTables["bookmarks"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -103,14 +103,13 @@ function upsertBookmarks(tx: Tx, rows: ImportTables["bookmarks"]) {
       label: r.label,
       createdAt: toDate(r.createdAt),
     };
-    tx.insert(bookmarks)
+    await tx.insert(bookmarks)
       .values(values)
-      .onConflictDoUpdate({ target: bookmarks.id, set: values })
-      .run();
+      .onConflictDoUpdate({ target: bookmarks.id, set: values });
   }
 }
 
-function upsertStudySessions(tx: Tx, rows: ImportTables["studySessions"]) {
+async function upsertStudySessions(tx: Tx, rows: ImportTables["studySessions"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -119,14 +118,13 @@ function upsertStudySessions(tx: Tx, rows: ImportTables["studySessions"]) {
       endedAt: toDateOrNull(r.endedAt),
       durationSeconds: r.durationSeconds,
     };
-    tx.insert(studySessions)
+    await tx.insert(studySessions)
       .values(values)
-      .onConflictDoUpdate({ target: studySessions.id, set: values })
-      .run();
+      .onConflictDoUpdate({ target: studySessions.id, set: values });
   }
 }
 
-function upsertReviewQueue(tx: Tx, rows: ImportTables["reviewQueue"]) {
+async function upsertReviewQueue(tx: Tx, rows: ImportTables["reviewQueue"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -136,14 +134,13 @@ function upsertReviewQueue(tx: Tx, rows: ImportTables["reviewQueue"]) {
       dueAt: toDate(r.dueAt),
       reviewCount: r.reviewCount,
     };
-    tx.insert(reviewQueue)
+    await tx.insert(reviewQueue)
       .values(values)
-      .onConflictDoUpdate({ target: reviewQueue.lessonSlug, set: values })
-      .run();
+      .onConflictDoUpdate({ target: reviewQueue.lessonSlug, set: values });
   }
 }
 
-function upsertSnippets(tx: Tx, rows: ImportTables["playgroundSnippets"]) {
+async function upsertSnippets(tx: Tx, rows: ImportTables["playgroundSnippets"]) {
   for (const r of rows) {
     const values = {
       id: r.id,
@@ -154,37 +151,35 @@ function upsertSnippets(tx: Tx, rows: ImportTables["playgroundSnippets"]) {
       forkedFromLesson: r.forkedFromLesson,
       createdAt: toDate(r.createdAt),
     };
-    tx.insert(playgroundSnippets)
+    await tx.insert(playgroundSnippets)
       .values(values)
-      .onConflictDoUpdate({ target: playgroundSnippets.id, set: values })
-      .run();
+      .onConflictDoUpdate({ target: playgroundSnippets.id, set: values });
   }
 }
 
-function upsertSettings(tx: Tx, rows: ImportTables["settings"]) {
+async function upsertSettings(tx: Tx, rows: ImportTables["settings"]) {
   for (const r of rows) {
-    tx.insert(settings)
+    await tx.insert(settings)
       .values({ key: r.key, value: r.value })
-      .onConflictDoUpdate({ target: settings.key, set: { value: r.value } })
-      .run();
+      .onConflictDoUpdate({ target: settings.key, set: { value: r.value } });
   }
 }
 
-export function applyPayload(
+export async function applyPayload(
   tx: Tx,
   tables: ImportTables,
   mode: "replace" | "merge",
-): Record<string, number> {
-  if (mode === "replace") deleteAllRows(tx);
+): Promise<Record<string, number>> {
+  if (mode === "replace") await deleteAllRows(tx);
 
-  upsertLessonProgress(tx, tables.lessonProgress);
-  upsertExerciseAttempts(tx, tables.exerciseAttempts);
-  upsertNotes(tx, tables.notes);
-  upsertBookmarks(tx, tables.bookmarks);
-  upsertStudySessions(tx, tables.studySessions);
-  upsertReviewQueue(tx, tables.reviewQueue);
-  upsertSnippets(tx, tables.playgroundSnippets);
-  upsertSettings(tx, tables.settings);
+  await upsertLessonProgress(tx, tables.lessonProgress);
+  await upsertExerciseAttempts(tx, tables.exerciseAttempts);
+  await upsertNotes(tx, tables.notes);
+  await upsertBookmarks(tx, tables.bookmarks);
+  await upsertStudySessions(tx, tables.studySessions);
+  await upsertReviewQueue(tx, tables.reviewQueue);
+  await upsertSnippets(tx, tables.playgroundSnippets);
+  await upsertSettings(tx, tables.settings);
 
   return {
     lessonProgress: tables.lessonProgress.length,

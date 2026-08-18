@@ -20,8 +20,8 @@ export default async function NotesPage() {
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("notes");
 
-  const notes = getAllNotes();
-  const bookmarks = getAllBookmarks();
+  const notes = await getAllNotes();
+  const bookmarks = await getAllBookmarks();
 
   // Group by lesson, keep curriculum order irrelevant — recency dominates
   const slugs = [...new Set([
