@@ -211,6 +211,7 @@ export default function MaterialStudyGrid() {
 //    F0 lerped toward albedo) but that blend has no physical referent,
 //    which is why production textures paint metalness as a near-binary
 //    mask instead of a smooth gradient.`,
+    referenceImage: "/figures/11-pbr/checkpoint-material-study.png",
     hints: [
       {
         vi: "Dùng nested loop (hoặc nested .map) qua row/col từ 0 đến GRID_SIZE-1 rồi suy ra vị trí bằng gridOffset(index) — mỗi quả cầu chỉ khác nhau ở position và ở cặp metalness/roughness lấy từ levelAt(row)/levelAt(col).",

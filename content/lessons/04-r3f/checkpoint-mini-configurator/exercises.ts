@@ -307,6 +307,7 @@ export default function ChairConfigurator() {
     </div>
   );
 }`,
+    referenceImage: "/figures/04-r3f/checkpoint-mini-configurator.png",
     hints: [
       {
         vi: "Geometry hoist bằng `useMemo(() => new THREE.BoxGeometry(...), [])` chỉ chạy một lần — gắn nó vào nhiều `<mesh geometry={...}>` khác nhau bằng prop `geometry`, đừng viết `<boxGeometry />` làm con của từng mesh.",

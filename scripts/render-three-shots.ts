@@ -3,6 +3,7 @@ import http from "node:http";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { chromium } from "@playwright/test";
+import * as esbuild from "esbuild";
 import ts from "typescript";
 import type { Exercise } from "../content/types";
 
@@ -12,10 +13,15 @@ import type { Exercise } from "../content/types";
 // drift from the answer the lesson teaches. Run by hand after editing a
 // solution; not part of the build. Usage: pnpm gen:shots:three
 //
-// No bundler. These solutions import "three" and "three/addons/*", which an
-// import map resolves in the browser directly against the installed package,
-// so the only transform needed is stripping TypeScript — and tsc is already a
-// dependency. That is why this does not use Vite.
+// A vanilla solution needs no bundler: an import map resolves "three" and
+// "three/addons/*" in the browser against the installed package, so stripping
+// TypeScript is the only transform, and tsc is already a dependency.
+//
+// An R3F solution does need one, because React ships CommonJS and no browser
+// can import that. Those go through esbuild, which also supplies the JSX
+// transform. Only the two checkpoints that export a component containing
+// their own <Canvas> qualify; the rest are fragments with no scene of their
+// own, and inventing one would make the harness the author of the picture.
 
 declare global {
   interface Window {
@@ -34,6 +40,8 @@ interface ThreeShot {
   height: number;
   /** Frames to let run before the screenshot. Stated in the caption. */
   frames: number;
+  /** R3F solutions are bundled and mounted; vanilla ones run as plain modules. */
+  react?: boolean;
   /**
    * Bare-relative imports the solution makes that do not resolve inside its own
    * lesson folder, mapped to the file that really holds them.
@@ -76,6 +84,37 @@ const THREE_SHOTS: ThreeShot[] = [
     height: 400,
     frames: 30,
   },
+  // The only checkpoint outside track 03 that is a self-contained vanilla app;
+  // every other remaining one is a React component, and most are fragments with
+  // no Canvas of their own.
+  {
+    track: "12-performance",
+    slug: "checkpoint-asset-diet",
+    width: 640,
+    height: 400,
+    frames: 30,
+  },
+
+  // The two R3F checkpoints whose solution exports a component that mounts its
+  // own <Canvas>, so the harness only has to render what the lesson wrote.
+  // checkpoint-scene-rebuild-r3f looks like a third but is not: its Canvas
+  // exists only inside a comment, so its default export is a bare scene graph.
+  {
+    track: "04-r3f",
+    slug: "checkpoint-mini-configurator",
+    width: 640,
+    height: 400,
+    frames: 40,
+    react: true,
+  },
+  {
+    track: "11-pbr",
+    slug: "checkpoint-material-study",
+    width: 640,
+    height: 400,
+    frames: 150,
+    react: true,
+  },
 ];
 
 async function solutionOf(track: string, slug: string): Promise<string> {
@@ -99,16 +138,64 @@ function toJs(source: string): string {
   }).outputText;
 }
 
+const SCRATCH = path.join(process.cwd(), ".tmp-three-shots");
+
+/**
+ * Bundles an R3F solution together with a mount that renders the component the
+ * lesson itself exports — the harness supplies the ReactDOM root and nothing
+ * else about the picture.
+ */
+async function bundleReact(shot: ThreeShot, solution: string): Promise<string> {
+  fs.mkdirSync(SCRATCH, { recursive: true });
+  const solutionFile = path.join(SCRATCH, "solution.tsx");
+  const entryFile = path.join(SCRATCH, "entry.tsx");
+  fs.writeFileSync(solutionFile, solution);
+  fs.writeFileSync(
+    entryFile,
+    `import { createElement } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./solution";
+createRoot(document.getElementById("root")!).render(createElement(App));
+`,
+  );
+  try {
+    const result = await esbuild.build({
+      entryPoints: [entryFile],
+      bundle: true,
+      write: false,
+      format: "esm",
+      platform: "browser",
+      target: "es2022",
+      jsx: "automatic",
+      // R3F reads NODE_ENV; without this the bundle references a bare `process`.
+      define: { "process.env.NODE_ENV": '"production"' },
+      logLevel: "silent",
+    });
+    const out = result.outputFiles[0]?.text;
+    if (!out) throw new Error(`${shot.track}/${shot.slug}: esbuild produced no output`);
+    return out;
+  } finally {
+    fs.rmSync(SCRATCH, { recursive: true, force: true });
+  }
+}
+
 function pageHtml(shot: ThreeShot): string {
   // The solutions call setSize(canvas.clientWidth, clientHeight, false), so the
   // CSS box is what decides resolution — the width/height attributes only
-  // matter until the first setSize.
-  return `<!doctype html><meta charset="utf-8">
-<style>html,body{margin:0;background:#000}canvas{display:block;width:${shot.width}px;height:${shot.height}px}</style>
-<script type="importmap">
+  // matter until the first setSize. R3F sizes its canvas from the parent box
+  // instead, so the react branch gives #root the same fixed size.
+  const stage = shot.react
+    ? `<div id="root"></div>`
+    : `<canvas></canvas>`;
+  const importMap = shot.react
+    ? ""
+    : `<script type="importmap">
 {"imports":{"three":"/three/build/three.module.js","three/addons/":"/three/examples/jsm/"}}
 </script>
-<canvas></canvas>
+`;
+  return `<!doctype html><meta charset="utf-8">
+<style>html,body{margin:0;background:#000}#root,canvas{display:block;width:${shot.width}px;height:${shot.height}px}</style>
+${importMap}${stage}
 <script>
 // Count frames so the screenshot lands on a stated frame rather than a stated
 // wall-clock delay, which would vary with machine speed.
@@ -155,7 +242,8 @@ async function main() {
   const browser = await chromium.launch();
 
   for (const shot of THREE_SHOTS) {
-    const entryJs = toJs(await solutionOf(shot.track, shot.slug));
+    const solution = await solutionOf(shot.track, shot.slug);
+    const entryJs = shot.react ? await bundleReact(shot, solution) : toJs(solution);
     const server = await serve(shot, entryJs);
     const { port } = server.address() as { port: number };
     // One page per shot, for the same reason the shader harness uses one: a
@@ -185,7 +273,17 @@ async function main() {
       }
 
       const canvas = page.locator("canvas");
-      const png = await canvas.screenshot();
+      let png: Buffer;
+      try {
+        png = await canvas.screenshot({ timeout: 15_000 });
+      } catch {
+        // A React solution that throws during mount still lets the frame
+        // counter run, so the missing canvas is the first visible symptom —
+        // report what the page actually said instead of a bare timeout.
+        throw new Error(
+          `${shot.track}/${shot.slug}: no canvas after ${shot.frames} frames:\n${pageErrors.join("\n") || "no page error captured"}`,
+        );
+      }
       const spread = await page.evaluate(async (b64) => {
         const img = new Image();
         img.src = `data:image/png;base64,${b64}`;
@@ -215,8 +313,9 @@ async function main() {
       // Same guard as the shader harness: a flat frame means the solution drew
       // nothing, which a screenshot alone cannot tell from a dark scene.
       if (spread < 8) {
+        const why = pageErrors.length > 0 ? [":", ...pageErrors].join("\n") : "";
         throw new Error(
-          `${shot.track}/${shot.slug}: frame is flat (colour spread ${spread}) - the solution rendered nothing`,
+          `${shot.track}/${shot.slug}: frame is flat (colour spread ${spread}) - the solution rendered nothing${why}`,
         );
       }
       if (pageErrors.length > 0) {

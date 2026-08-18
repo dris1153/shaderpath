@@ -309,6 +309,7 @@ function logSceneStats(label: string) {
 // | filler geometry       | 128x128 -> 16x12 segments                      | -                          | -                          |
 // | hero                  | added a 3-level THREE.LOD                      | -                          | -                          |
 // VRAM (renderer.info.memory) and draw calls (renderer.info.render.calls): from logSceneStats`,
+    referenceImage: "/figures/12-performance/checkpoint-asset-diet.png",
     hints: [
       {
         vi: "Bắt đầu từ texel density: hỏi asset đó thực sự chiếm bao nhiêu pixel trên màn hình ở khoảng cách bình thường, rồi mới chọn kích thước texture — đây luôn là khoản tiết kiệm lớn nhất trong bài này.",
