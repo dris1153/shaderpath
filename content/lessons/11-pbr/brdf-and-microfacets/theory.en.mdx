@@ -16,6 +16,12 @@ $$
 
 where $h = \text{normalize}(\omega_i + \omega_o)$ is the **half-vector** — the direction exactly between the incoming and outgoing directions, i.e. the direction a microfacet WOULD have to point to bounce $\omega_i$ straight into $\omega_o$. The three letters D, G, F are three independent questions this formula answers separately, then multiplies together — each one maps to either the next lesson or a section below.
 
+<Figure
+  src="/figures/11-pbr/microfacet-d-g-f.svg"
+  alt="A zoomed microfacet profile with the light, view and half vectors and the facets aligned with h picked out, above a second profile where one ray is blocked before it reaches a facet and another is blocked on its way back out"
+  caption="The demo paints D, G and F onto a sphere as colour; this is where the three terms actually sit on the surface."
+/>
+
 ## D — GGX/Trowbridge-Reitz: How Many Microfacets Point Exactly Along h
 
 $D(h)$ answers: out of millions of microfacets, what fraction have their normal aligned exactly with $h$ — i.e. are actually capable of bouncing $\omega_i$ into $\omega_o$? It's a probability distribution over $(n\cdot h)$, and the form used almost everywhere today is **GGX** (also called Trowbridge-Reitz), written exactly as in Walter et al. (2007):
@@ -37,7 +43,7 @@ G_1(x) &= \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughnes
 \end{aligned}
 $$
 
-That $k$ value uses the exact remap Karis (2013) defines for direct analytic lights — IBL uses a different $k$, which you'll meet again in the Image-Based Lighting lesson. Drop $G$ entirely (using only $D \cdot F$) and a curved surface's silhouette edges light up abnormally bright: you're counting EVERY microfacet aligned with $h$ without subtracting the ones hidden behind their own neighbors — reflecting out more energy than the surface actually received, an energy-conservation violation that's most visible right at a sphere's edge.
+That $k$ value uses the exact remap Karis (2013) defines for direct analytic lights — IBL uses a different $k$; the Image-Based Lighting lesson does not take that route, reaching for the split-sum approximation and a precomputed DFG table instead. Drop $G$ entirely (using only $D \cdot F$) and a curved surface's silhouette edges light up abnormally bright: you're counting EVERY microfacet aligned with $h$ without subtracting the ones hidden behind their own neighbors — reflecting out more energy than the surface actually received, an energy-conservation violation that's most visible right at a sphere's edge.
 
 ## F — Fresnel (Schlick): Reflection Always Gets Harder at Grazing Angles
 

@@ -34,6 +34,12 @@ Cùng năng lượng trải trên diện tích lớn hơn, mật độ năng lư
 
 $\int_\Omega \ldots d\omega_i$ nghĩa là: về nguyên lý, ánh sáng tới đồng thời từ MỌI hướng trong bán cầu phía trên $x$ — bầu trời, ánh sáng dội từ mọi bề mặt khác nhìn thấy được, một đèn area có diện tích thật chứ không phải điểm toán học. `PointLight` quen dùng trong Three.js là một mẹo giản lược, co cả tích phân này về đúng một hướng nên tính ngay được, không cần tích phân số — ánh sáng thật không bao giờ hoạt động theo kiểu đó.
 
+<Figure
+  src="/figures/11-pbr/hemisphere-integral-anatomy.svg"
+  alt="Điểm x trên bề mặt với pháp tuyến n, hướng ωo đi về phía camera, một bán cầu nét đứt phía trên bị nhiều hướng tới đâm vào, một hướng được tô đậm kèm mảnh góc khối dωi và góc theta, bên cạnh là hai hộp nói về đệ quy của Li và về point light"
+  caption="Thứ quả cầu tô bóng trong demo không cho thấy: hình học mà tích phân chạy trên đó, và vì sao Li biến phương trình thành đệ quy."
+/>
+
 ## Vì sao real-time không giải được chính xác: Li là Lo của người khác
 
 Đây là điểm khiến phương trình khó, không chỉ là tích phân dài: $L_i(x, \omega_i)$ — ánh sáng tới $x$ từ $\omega_i$ — chính là $L_o$ của bất cứ bề mặt (hoặc nguồn sáng) nào nằm theo hướng đó. Tính $L_o$ tại một điểm cần biết $L_o$ tại mọi điểm nó nhìn thấy, mà những điểm đó lại cần $L_o$ tại điểm CHÚNG nhìn thấy — đệ quy vô hạn, chính là định nghĩa "global illumination": không có công thức đóng cho cảnh phức tạp thật. Mọi renderer chỉ đang chọn điểm dừng trong chuỗi đệ quy đó rồi xấp xỉ phần còn lại.

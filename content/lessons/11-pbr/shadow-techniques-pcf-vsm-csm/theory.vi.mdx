@@ -16,7 +16,7 @@ Bốn giá trị `renderer.shadowMap.type`: `BasicShadowMap` (so sánh 1 mẫu, 
 
 ## VSM: lưu mean & variance thay vì lưu depth thô, chặn trên bằng Chebyshev
 
-Variance Shadow Maps (Donnelly & Lauritzen, I3D 2006) đổi hẳn cách biểu diễn: thay vì lưu một depth thô rồi so sánh nhị phân, VSM lưu hai thống kê của phân bố depth trong mỗi texel — trung bình $\mu$ và bình phương trung bình (từ đó suy ra phương sai $\sigma^2$) — vào kênh R/G của một render target `HalfFloatType`. Đọc `WebGLShadowMap.js`: sau pass depth thô, VSM chạy thêm hai pass blur tách trục (dọc rồi ngang, `VSM_SAMPLES` mặc định 8 mẫu, bán kính theo `shadow.radius`) để tính $\mu,\sigma$ mượt trên một vùng lân cận — đúng phép toán trung bình cộng dồn qua hai lượt. Khi shading, bất đẳng thức Chebyshev cho một chặn trên xác suất fragment được chiếu sáng:
+Variance Shadow Maps (Donnelly & Lauritzen, I3D 2006) đổi hẳn cách biểu diễn: thay vì lưu một depth thô rồi so sánh nhị phân, VSM lưu hai thống kê của phân bố depth trong mỗi texel — trung bình $\mu$ và độ lệch chuẩn $\sigma$ (pass shading bình phương nó lên để lấy phương sai $\sigma^2$) — vào kênh R/G của một render target `HalfFloatType`. Đọc `WebGLShadowMap.js`: sau pass depth thô, VSM chạy thêm hai pass blur tách trục (dọc rồi ngang, `VSM_SAMPLES` mặc định 8 mẫu, bán kính theo `shadow.radius`) để tính $\mu,\sigma$ mượt trên một vùng lân cận — đúng phép toán trung bình cộng dồn qua hai lượt. Khi shading, bất đẳng thức Chebyshev cho một chặn trên xác suất fragment được chiếu sáng:
 
 $$
 p_{max} = \frac{\sigma^2}{\sigma^2 + d^2}, \qquad d = z_{fragment} - \mu
@@ -27,6 +27,12 @@ three.js còn remap kết quả này qua $\text{clamp}\left(\frac{p_{max} - 0.3}
 ## CSM: chia frustum thành nhiều lát, mỗi lát một shadow map riêng
 
 Vấn đề nền của mọi kỹ thuật trên: MỘT shadow map không thể vừa chi tiết gần camera vừa phủ hết cảnh ngoài trời rộng, vì độ phân giải texel cố định trên toàn frustum ánh sáng. Cascaded Shadow Maps chia frustum của CAMERA (không phải light) thành N lát theo chiều sâu — lát gần camera nhỏ, nhận shadow map riêng phủ đúng vùng đó (texel dày, chi tiết cao); lát xa lớn hơn, nhận shadow map riêng phủ vùng lớn (texel thưa hơn, chấp nhận được vì xa mắt khó thấy răng cưa). Y hệt đòn bẩy ở phần "aliasing" trên, chỉ khác là áp dụng RIÊNG cho từng lát. Ba chế độ chia lát có thật trong module `CSM` của three.js (`three/addons/csm/CSM.js`, có sẵn trong `node_modules/three`, không cần cài thêm gói): `uniform`, `logarithmic` (lát gần rất mỏng, lát xa rất dày), và `practical` (mặc định, pha trộn cả hai) — cùng `cascades` mặc định 3, `shadowMapSize` mặc định 2048. Bài này dừng ở mức khái niệm và chỉ đường đến module thật; demo dưới không dựng CSM đầy đủ (cần nhiều light/camera phối hợp) — ngoài phạm vi một demo một-đèn.
+
+<Figure
+  src="/figures/11-pbr/shadow-filtering-and-cascades.svg"
+  alt="Ba khung hình: lưới texel shadow map với năm mẫu Vogel-disk nằm trong bán kính nét đứt, một texel VSM chia thành mean và độ lệch chuẩn kèm chặn trên Chebyshev, và một frustum camera bị cắt thành ba cascade theo chiều sâu"
+  caption="Phần mà sơ đồ hai lượt ở Track 3 dừng lại: mẫu lấy tap của PCF, VSM lưu gì thay cho depth, và cascade cắt ở đâu."
+/>
 
 ## Bảng tinh chỉnh thực dụng
 

@@ -30,6 +30,12 @@ RenderDoc captures native API calls (real OpenGL/Vulkan/D3D, not WebGL wrapped i
 
 The platform you're learning on is a live example. `lib/hooks/use-visible-frameloop.ts` stamps a `data-frames` attribute onto the container every time its `requestAnimationFrame` loop ticks — not for decoration, but so `tests/e2e/demo-viewport-pause.spec.ts` has a real number to `poll()` instead of a fixed `waitForTimeout` (a hardcoded sleep in a test is the same guessing-without-measuring habit this lesson warns against). `components/viz/demo-canvas.tsx` uses that same hook to only call `invalidate()` while the container sits inside the viewport — a canvas scrolled off-screen stops ticking immediately, verifiable through that very counter. And `scripts/gen-lesson-registry.ts` generates `DEMO_REGISTRY` so each demo loads through `next/dynamic` exactly when its lesson page needs it — never pulling `three` into the bundle of a page with no canvas at all. All three are "measure/control first, optimize second" applied at the infrastructure layer.
 
+<Figure
+  src="/figures/12-performance/frame-timeline-and-where-tools-measure.svg"
+  alt="A single frame drawn as two lanes — the CPU main thread running JS then renderer.render(), and the GPU queue still working past the point the rAF delta stopped — above a five-row table naming which lane each profiling tool reads"
+  caption="The tool ladder laid over the frame it measures: every counter JavaScript can read describes the top lane, which is why a GPU-bound scene only shows up once the DPR test removes pixels."
+/>
+
 ## Diagnostic Flow: Where to Start
 
 A practical order: (1) check `renderer.info` and the frame-time meter first — cheapest, always on, confirms whether it's actually slow and whether the slowness is steady or bursty. (2) If steady, open DevTools Performance, record a few seconds, read the flame chart to classify CPU-bound vs GPU-bound. (3) Suspect GPU-bound? Confirm with the DPR 0.5 test. (4) Suspect CPU-bound? Capture a frame with Spector.js, compare `info.render.calls` against expectations, look for redundant state changes. (5) Only reach for RenderDoc once none of the previous steps explain what you're seeing.

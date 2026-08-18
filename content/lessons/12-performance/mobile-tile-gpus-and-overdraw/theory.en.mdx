@@ -18,6 +18,12 @@ For **opaque** geometry, both major tile-GPU families drop occluded fragments be
 
 For **transparency**, none of this applies. Blending is order-dependent: the final color depends on which layer drew first and which came after, so the GPU can't "skip" a layer occluded by the one in front, because the layer behind still contributes to the final blend. Every stacked transparent layer is FORCED to run its fragment shader, sorted back-to-front. Stacking 5 semi-transparent full-screen planes means the GPU shades the same pixel 5 times — no way around it, on desktop or the most expensive tile GPU money can buy. This sorting claim doesn't need to be taken on faith: Three.js — a dependency of this very platform — sorts the opaque list with `painterSortStable` (grouping by `material.id` first, `z` only as a tiebreaker) and the transparent list with `reversePainterSortStable` (`b.z - a.z`, farthest first), directly readable in `node_modules/three/src/renderers/webgl/WebGLRenderLists.js`.
 
+<Figure
+  src="/figures/12-performance/tile-gpu-binning-and-overdraw.svg"
+  alt="Immediate-mode rendering writing every fragment back out to VRAM on the left, against a tile GPU's binning pass, on-chip tile shading and single resolve on the right, above a panel on what transparency escapes"
+  caption="The architecture behind the frame-time number in the demo: where pixels sit while they are being drawn, and why only opaque geometry gets the discount."
+/>
+
 ## Measuring Overdraw: Additive-Blend Visualization
 
 No WebGL API hands back an "overdraw factor" directly — but there's a classic technique to SEE it: redraw the whole scene with every material swapped for a fixed low-alpha white color, using **additive** blending instead of normal blending. Additive accumulates color: a pixel drawn once comes out faint gray, drawn 5 times comes out nearly white — the resulting brightness IS the overdraw heatmap, readable by eye with no external tooling. This is literally how Unity's Scene view Overdraw shading mode works; the demo below rebuilds the exact technique by hand.

@@ -6,6 +6,12 @@ Mỗi lần `renderer.render()` chạy, MỖI mesh riêng biệt cần ít nhấ
 
 `gl.info.render.calls` (bài "Công cụ Profiling" trước đó đã giới thiệu) là sự thật duy nhất đáng tin, tự reset mỗi frame. Con số này CÓ THỂ vượt quá số mesh trong scene: mỗi light đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn CỦA NÓ — 50 mesh với 2 shadow-casting light cho ra 150 call (50 pass chính + 50×2 pass shadow), không phải 50. Một material cần nhiều pass GL (một số thiết lập depth-prepass hoặc transparency) cũng nhân thêm. Đọc con số này đúng ngay sau `render()`, đừng kỳ vọng nó khớp 1:1 với `scene.children.length` khi có shadow map trong cảnh.
 
+<Figure
+  src="/figures/12-performance/draw-call-cpu-tax.svg"
+  alt="Bốn bước CPU đứng sau một gl.drawElements xếp dọc bên trái, bên phải là chi phí của một nghìn lời gọi so với một lời gọi instanced duy nhất"
+  caption="Thứ renderer.info.render.calls không bao giờ in ra: phần việc CPU cố định nằm sau mỗi lời gọi, và vì sao dùng chung material không làm con số đó nhúc nhích."
+/>
+
 ## Bậc thang bậc 1: material dùng chung
 
 Callback bài "Memoizing Geometry & Materials" ở Track 4: dùng lại MỘT instance material cho nhiều mesh giảm số lần `gl.useProgram` phải đổi program (driver phải re-validate state mỗi lần đổi) — nhưng KHÔNG giảm số draw call. Vẫn N mesh, N lần gọi vẽ, vì mỗi mesh vẫn là một node transform riêng. Việc này gần như miễn phí và luôn nên làm, nhưng tự nó không giải quyết thuế draw call — nó dọn đường cho hai bậc kế tiếp, hai bậc THỰC SỰ đưa N lệnh vẽ về một.

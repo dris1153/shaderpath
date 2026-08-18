@@ -30,6 +30,12 @@ RenderDoc bắt native API call (OpenGL/Vulkan/D3D thật, không phải WebGL �
 
 Nền tảng bạn đang học là ví dụ sống. `lib/hooks/use-visible-frameloop.ts` gắn `data-frames` lên container mỗi lần `requestAnimationFrame` tick — để `tests/e2e/demo-viewport-pause.spec.ts` có con số THẬT để `poll()` thay vì `waitForTimeout` cố định (sleep cố định trong test là đoán mò y hệt tối ưu chưa đo). `components/viz/demo-canvas.tsx` dùng chính hook đó để chỉ gọi `invalidate()` khi container còn trong viewport — canvas cuộn khỏi màn hình dừng tick ngay, đo được bằng đúng `data-frames` đó. Và `scripts/gen-lesson-registry.ts` sinh `DEMO_REGISTRY` để mỗi demo nạp qua `next/dynamic` đúng lúc trang cần — không kéo `three` vào bundle của trang chưa có canvas. Cả ba đều là "đo/kiểm soát trước, tối ưu sau" áp dụng ở tầng hạ tầng.
 
+<Figure
+  src="/figures/12-performance/frame-timeline-and-where-tools-measure.svg"
+  alt="Một khung hình vẽ thành hai làn — làn CPU chạy JS rồi renderer.render(), làn GPU vẫn còn chạy sau thời điểm rAF delta đã dừng — bên dưới là bảng năm dòng chỉ rõ mỗi công cụ profiling đọc làn nào"
+  caption="Bậc thang công cụ đặt chồng lên đúng khung hình nó đo: mọi con số JavaScript đọc được đều mô tả làn trên, nên cảnh GPU-bound chỉ lộ ra khi phép test DPR cắt bớt pixel."
+/>
+
 ## Sơ đồ chẩn đoán: bắt đầu từ đâu
 
 Thứ tự thực dụng: (1) nhìn `renderer.info` và frame-time meter trước — rẻ nhất, luôn bật, xác nhận có thật sự chậm và chậm ổn định hay chậm từng cơn. (2) Nếu chậm ổn định, mở DevTools Performance ghi vài giây, đọc flame chart để phân loại CPU-bound hay GPU-bound. (3) Nghi GPU-bound thì xác nhận bằng phép thử DPR 0.5. (4) Nghi CPU-bound thì bắt một frame bằng Spector.js, so `info.render.calls` với con số kỳ vọng, tìm state change thừa. (5) Chỉ với tới RenderDoc khi bốn bước trên đều không giải thích được.

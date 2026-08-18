@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 514" width="660" height="514" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --solid-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --solid-fill: #334155;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .mono { font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--ink); }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .band { fill: var(--solid-fill); stroke: var(--line); stroke-width: 1.2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .lead { stroke: var(--line); stroke-width: 1; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">Split-sum IBL: one atlas, two lookups, one shared LUT</text>
+
+  <rect class="box" x="176" y="44" width="308" height="44" rx="8" />
+  <text class="label" x="330" y="64" text-anchor="middle">HDRI file · RoomEnvironment</text>
+  <text class="note" x="330" y="81" text-anchor="middle">raw radiance, nothing precomputed yet</text>
+  <path class="arrow" d="M330,88 L330,102" marker-end="url(#head)" />
+
+  <rect class="box" x="176" y="104" width="308" height="42" rx="8" />
+  <text class="label" x="330" y="124" text-anchor="middle">PMREMGenerator</text>
+  <text class="note" x="330" y="140" text-anchor="middle">one GGX VNDF blur per level, 256 samples a texel</text>
+  <path class="arrow" d="M330,146 L330,160" marker-end="url(#head)" />
+
+  <!-- the single packed atlas -->
+  <rect class="box-accent" x="176" y="162" width="308" height="134" rx="8" />
+  <text class="label ink-you" x="330" y="184" text-anchor="middle">one CubeUV atlas — there is no second texture</text>
+  <rect class="band" x="190" y="194" width="280" height="26" rx="2" />
+  <rect class="band" x="190" y="224" width="280" height="18" rx="2" />
+  <rect class="band" x="190" y="246" width="280" height="12" rx="2" />
+  <rect class="band" x="190" y="262" width="280" height="9" rx="2" />
+  <rect class="band" x="190" y="275" width="280" height="9" rx="2" />
+
+  <path class="lead" d="M470,207 L500,207" />
+  <text class="note" x="506" y="203">mip 0 — roughness 0,</text>
+  <text class="note" x="506" y="219">a sharp mirror</text>
+  <path class="lead" d="M470,279 L500,279" />
+  <text class="note" x="506" y="275">last levels — roughness</text>
+  <text class="note" x="506" y="291">1, all at 16² each</text>
+
+  <path class="arrow" d="M256,296 L256,316" marker-end="url(#head)" />
+  <path class="arrow" d="M404,296 L404,316" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="318" width="300" height="92" rx="8" />
+  <text class="label" x="38" y="340">specular — getIBLRadiance()</text>
+  <text class="mono" x="38" y="362">textureCubeUV( envMap, R, roughness )</text>
+  <text class="note" x="38" y="382">roughnessToMip() picks the level and blends the</text>
+  <text class="note" x="38" y="400">two nearest, so roughness reads continuously</text>
+
+  <rect class="box" x="336" y="318" width="300" height="92" rx="8" />
+  <text class="label" x="350" y="340">diffuse — getIBLIrradiance()</text>
+  <text class="mono" x="350" y="362">textureCubeUV( envMap, N, 1.0 )</text>
+  <text class="note" x="350" y="382">the very same atlas at its blurriest level, used</text>
+  <text class="note" x="350" y="400">in place of a real cosine convolution</text>
+
+  <path class="arrow" d="M174,410 L174,424" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="24" y="426" width="612" height="76" rx="8" />
+  <text class="label ink-you" x="40" y="448">× the BRDF LUT — the split sum's second factor</text>
+  <text class="mono" x="40" y="470">fab = texture2D( dfgLUT, vec2( roughness, dotNV ) ).rg  →  F0 · fab.x + F90 · fab.y</text>
+  <text class="note" x="40" y="491">16×16 RG16F, baked into the bundle: it depends on roughness and n·v, never on the environment.</text>
+</svg>

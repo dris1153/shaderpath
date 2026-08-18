@@ -10,6 +10,12 @@ Three không cache chương trình theo material — nó cache theo một cache 
 
 Mỗi tính năng độc lập nhân số biến thể lên, không cộng: bật/tắt `map` (2 trạng thái) × bật/tắt fog (2) × loại shadow map — none/PCF/VSM (3) × bật/tắt skinning (2) đã là $2\times2\times3\times2=24$ chương trình khác nhau trong trường hợp xấu nhất, chỉ với bốn tính năng. Một scene thực tế hiếm khi chạm hết 24 tổ hợp cùng lúc, nhưng mỗi tính năng mới bật thêm (anisotropy, clearcoat, iridescence — đều là cờ riêng trong cùng cache key) nhân đôi hoặc nhân ba con số đó. Nguy hiểm nhất là nhiều biến thể vật liệu xuất hiện dần theo tương tác: mỗi combo tính năng mới lọt vào khung nhìn sẽ compile lần đầu ngay lúc đó — đúng lúc người dùng đang thao tác, không phải lúc màn hình loading còn hiện.
 
+<Figure
+  src="/figures/12-performance/program-cache-key-variants.svg"
+  alt="Một material object đi vào khoá cache program được ghép từ các define, số lượng đèn, kiểu shadow, tone mapping và các cờ boolean, sinh ra ba program compile riêng biệt trong cùng một Map"
+  caption="Vì sao renderer.info.programs cứ tăng trong khi bạn vẫn chỉ có một material: khoá được ghép từ ngữ cảnh mà mesh được vẽ ra, không phải từ riêng material."
+/>
+
 ## Pre-warm bằng renderer.compile(): kiểm soát THỜI ĐIỂM, không xoá chi phí
 
 `renderer.compile(scene, camera)` (đọc thẳng `WebGLRenderer.js`) `traverse` toàn bộ `scene`, gọi `prepareMaterial()` cho mọi material tìm thấy — bên trong, `prepareMaterial` gọi thẳng `getProgram()`, ép Three biên dịch và link ngay tại chỗ, đồng bộ, trong đúng lệnh gọi này. Điều đó nghĩa là `compile()` không làm chi phí compile biến mất — nó chỉ chuyển chi phí sang một thời điểm do bạn chọn, thường là ngay sau khi asset tải xong nhưng trước khi hiện scene, đứng sau một loading screen. Gọi `compile()` giữa lúc người dùng đang tương tác vẫn gây đúng cái giật hình đang cố tránh — chỉ là compile nhiều biến thể cùng lúc thay vì một, đôi khi còn tệ hơn.

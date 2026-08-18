@@ -18,6 +18,12 @@ Với hình học **opaque**, cả hai họ GPU tile lớn đều loại fragmen
 
 Với **transparency**, toàn bộ cơ chế trên vô hiệu. Blending phụ thuộc thứ tự vẽ: màu cuối phụ thuộc lớp nào trước, lớp nào sau, nên GPU không thể "bỏ qua" lớp bị che vì lớp phía sau vẫn góp phần vào kết quả blend. Mọi lớp transparent chồng lên đều BẮT BUỘC chạy fragment shader, sắp theo thứ tự xa-trước-gần-sau. Chồng 5 mặt phẳng full-screen bán trong suốt nghĩa là GPU tô cùng pixel 5 lần — không có cách nào lách, dù desktop hay tile GPU đắt nhất. Claim "sort" này không cần tin suông: Three.js — dependency của chính platform này — sắp render list opaque bằng `painterSortStable` (ưu tiên `material.id` trước, `z` chỉ là tiêu chí phụ) và transparent bằng `reversePainterSortStable` (`b.z - a.z`, xa trước gần sau); đọc trực tiếp `node_modules/three/src/renderers/webgl/WebGLRenderLists.js` để tự kiểm tra.
 
+<Figure
+  src="/figures/12-performance/tile-gpu-binning-and-overdraw.svg"
+  alt="Bên trái là immediate-mode ghi từng fragment trở lại VRAM, bên phải là pass binning, tô từng tile trên bộ nhớ on-chip rồi resolve một lần của GPU tile-based, phía dưới là panel về thứ transparency thoát khỏi"
+  caption="Kiến trúc nằm sau con số frame time trong demo: pixel nằm ở đâu trong lúc đang được vẽ, và vì sao chỉ hình khối opaque được hưởng phần giảm giá đó."
+/>
+
 ## Đo overdraw: additive-blend visualization
 
 Không API WebGL nào trả thẳng "overdraw factor" — nhưng có kỹ thuật kinh điển để NHÌN THẤY nó: vẽ lại toàn cảnh với mọi vật liệu thay bằng màu trắng, alpha thấp cố định, blending **additive** thay vì blend thường. Additive cộng dồn màu: một pixel vẽ đè 1 lần ra xám nhạt, đè 5 lần ra gần trắng — độ sáng cuối chính là bản đồ nhiệt overdraw, đọc bằng mắt không cần công cụ ngoài. Đây đúng là cách chế độ Overdraw trong Scene view của Unity hoạt động; demo bên dưới dựng lại kỹ thuật này bằng tay.

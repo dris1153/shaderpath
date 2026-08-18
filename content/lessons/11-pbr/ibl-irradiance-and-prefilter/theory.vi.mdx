@@ -50,6 +50,12 @@ scene.environment = envRT.texture;
 
 Một chi tiết nên kiểm tra tận nguồn thay vì tin truyền miệng: Three **không** lưu hai texture riêng (irradiance cubemap + prefiltered specular cubemap) mà dựng đúng MỘT atlas nhiều mip theo scheme "CubeUV" (`cube_uv_reflection_fragment.glsl.js`) — mỗi mip tile cả sáu mặt cube vào một texture 2D phẳng, sample qua hàm tự viết `textureCubeUV()` thay vì `textureCube` thường, vì mipmap cubemap chuẩn không biểu diễn được "mỗi mip cần một convolution kernel khác nhau". Diffuse irradiance tái dùng đúng atlas đó ở mip mờ nhất: `getIBLIrradiance()` trong `envmap_physical_pars_fragment.glsl.js` gọi `textureCubeUV(envMap, N, 1.0)` — roughness=1.0, đỉnh mip chain — thay vì chạy một convolve cosine riêng. Lối tắt này (GGX blur ở roughness=1 không tương đương toán học với cosine convolve thật) đủ gần về thị giác để bỏ hẳn việc lưu một texture thứ hai.
 
+<Figure
+  src="/figures/11-pbr/ibl-split-sum.svg"
+  alt="Luồng đi từ HDRI qua PMREMGenerator vào một atlas CubeUV duy nhất vẽ dưới dạng các dải xếp chồng nhỏ dần, rồi tách thành một lần đọc specular ở mip theo roughness và một lần đọc diffuse ở mức mờ nhất, với BRDF LUT dùng chung nhân vào nhánh specular"
+  caption="Hai nửa của split-sum, và điều dãy quả cầu trong demo giấu đi: cả hai lần đọc đều lấy từ cùng một atlas."
+/>
+
 ## scene.environment, envMapIntensity và nơi Three giấu BRDF LUT
 
 Gán kết quả PMREM vào `scene.environment` (thay vì `.envMap` của từng material) khiến MỌI `MeshStandardMaterial`/`MeshPhysicalMaterial` trong scene tự động nhận IBL — không cần wiring thủ công cho từng vật liệu, đây chính là lý do IBL thay thế hẳn cách cũ "thêm point light cho đủ sáng". `material.envMapIntensity` (mặc định 1) chỉ là hệ số nhân riêng cho phần đóng góp từ IBL — không đụng tới light trực tiếp, nên đây mới là núm chỉnh đúng cho "studio sáng bao nhiêu" mà không làm cháy sáng key light.

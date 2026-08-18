@@ -50,6 +50,12 @@ scene.environment = envRT.texture;
 
 One detail worth verifying against the source rather than trusting folklore: Three does **not** store two separate textures (an irradiance cubemap plus a prefiltered specular cubemap). It builds exactly one texture — a multi-mip atlas packed with a scheme it calls "CubeUV" (`cube_uv_reflection_fragment.glsl.js`): each cube face is tiled at progressively lower resolution per mip level, and all six faces of every mip are packed into one flat 2D texture, sampled through a hand-written `textureCubeUV()` helper instead of a plain `textureCube` — because a real mipmapped cubemap can't express "this mip needs a completely different convolution kernel than automatic trilinear filtering would produce." The diffuse irradiance lookup then reuses that exact same atlas at its blurriest mip: `getIBLIrradiance()` in `envmap_physical_pars_fragment.glsl.js` calls `textureCubeUV(envMap, N, 1.0)` — passing roughness=1.0, the very top of the mip chain — as its irradiance approximation, instead of running a separate cosine convolution pass. It's a shortcut (a GGX blur at roughness=1 isn't mathematically identical to a true cosine convolution) but visually close enough to skip building and storing a second texture entirely.
 
+<Figure
+  src="/figures/11-pbr/ibl-split-sum.svg"
+  alt="A flow from an HDRI through PMREMGenerator into a single CubeUV atlas drawn as stacked bands of decreasing height, then splitting into a specular lookup at the roughness mip and a diffuse lookup at the blurriest level, with the shared BRDF LUT multiplying the specular branch"
+  caption="The two halves of the split sum, and the thing the row of spheres hides: both lookups read the same atlas."
+/>
+
 ## scene.environment, envMapIntensity and where Three hides the BRDF LUT
 
 Assigning the PMREM output to `scene.environment` (instead of each material's own `.envMap`) makes EVERY `MeshStandardMaterial`/`MeshPhysicalMaterial` in the scene pick it up automatically — no per-material wiring required, which is exactly why IBL displaced "just add more point lights" as the default lighting approach. `material.envMapIntensity` (default 1) is purely a multiplier on the IBL contribution — it never touches direct lights, which is why it's the right knob for "how bright is my studio" without also blowing out a key light.

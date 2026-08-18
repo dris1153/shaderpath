@@ -65,6 +65,12 @@ Kim loại có IOR **phức** — phần ảo mô tả hấp thụ cực mạnh,
 
 Cắm thẳng ba số vào **đúng công thức Schlick** trên (mỗi kênh riêng) — tại $\theta=0°$, $F=F_0$, nên quả cầu vàng nhìn thẳng diện chính là $(1.00, 0.85, 0.57)$. Ở góc xiên, $F$ vẫn tiến về $(1,1,1)$ — vệt sáng trắng quen thuộc ở rìa kim loại đánh bóng. Gán $F_0$ kiểu này là chủ đề chính của bài tiếp theo: metalness/roughness.
 
+<Figure
+  src="/figures/11-pbr/f0-dielectric-vs-metal.svg"
+  alt="Hai mặt cắt của bề mặt được chiếu sáng: với phi kim, phần phản xạ rời đi theo F0 khoảng 0.04 còn phần còn lại khúc xạ vào trong, tán xạ rồi thoát ra thành diffuse; với kim loại F0 chính là bộ ba albedo và phần khúc xạ bị hấp thụ, phía dưới là dải ghi công thức mix"
+  caption="F0 đến từ đâu và chuyện gì xảy ra bên dưới bề mặt — nửa câu chuyện mà không quả cầu render nào cho thấy được."
+/>
+
 ## Mọi bề mặt đều có Fresnel — kể cả nhựa đường, giấy, và "fake Fresnel"
 
 Fresnel không phải đặc quyền vật liệu "bóng": nhựa đường ($F_0$ thấp, gần như xám phẳng nhìn thẳng) vẫn loé sáng thành vệt khi lái xe hướng mặt trời thấp — Fresnel ở góc quan sát rất xiên trên bề mặt gồ ghề. Giấy, kim loại chải xước, da người cũng sáng nhẹ hơn ở rìa. Vì vậy "mọi bề mặt hơi bóng ở góc xiên" gần như quy luật phổ quát trong PBR. Trong shading cách điệu (Track 6's `onBeforeCompile` đã chạm tới Schlick thật) tồn tại người anh em rẻ hơn: **fake Fresnel**/rim light, dùng đúng hình dạng `pow(1.0 - dot(N,V), k)` nhưng $k$ và màu tự chọn, không bắt nguồn từ $F_0$/IOR thật — chỉ tạo viền phát sáng theo silhouette.

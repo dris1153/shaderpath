@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 462" width="660" height="462" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --cost-fill: #fef3c7;
+      --cost-stroke: #d97706;
+      --cost-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --cost-fill: #422006;
+        --cost-stroke: #fbbf24;
+        --cost-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .col { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .head { font-size: 13px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-cost { fill: var(--cost-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-cost { fill: var(--cost-fill); stroke: var(--cost-stroke); stroke-width: 2; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">Where the pixels actually live while a frame is drawn</text>
+
+  <text class="col" x="24" y="50">IMMEDIATE MODE — DESKTOP</text>
+  <rect class="box" x="24" y="58" width="286" height="44" rx="8" />
+  <text class="head" x="36" y="80">draw → raster → fragment shader</text>
+  <text class="note" x="36" y="96">in submission order, one draw at a time</text>
+  <path class="arrow" d="M167,102 L167,116" marker-end="url(#head)" />
+
+  <rect class="box-cost" x="24" y="118" width="286" height="60" rx="8" />
+  <text class="head ink-cost" x="36" y="140">read-modify-write the framebuffer</text>
+  <text class="note" x="36" y="157">it sits in VRAM, off-chip</text>
+  <text class="note" x="36" y="172">one external round trip per fragment, per layer</text>
+
+  <rect class="box" x="24" y="194" width="286" height="60" rx="8" />
+  <text class="head" x="36" y="216">nothing is held back</text>
+  <text class="note" x="36" y="233">the GPU cannot know what will cover what,</text>
+  <text class="note" x="36" y="248">so it paints every layer it is handed</text>
+
+  <text class="col ink-accent" x="350" y="50">TILE-BASED DEFERRED — MOBILE</text>
+  <rect class="box" x="350" y="58" width="286" height="60" rx="8" />
+  <text class="head" x="362" y="80">1 · binning pass</text>
+  <text class="note" x="362" y="97">nothing is shaded: it only records which</text>
+  <text class="note" x="362" y="112">triangle lands in which tile</text>
+  <path class="arrow" d="M493,118 L493,132" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="350" y="134" width="286" height="76" rx="8" />
+  <text class="head ink-accent" x="362" y="156">2 · one tile at a time, fully on-chip</text>
+  <text class="note" x="362" y="173">16×16 px on Mali; colour and depth stay in SRAM</text>
+  <text class="note" x="362" y="188">opaque fragments hidden behind others are cut</text>
+  <text class="note" x="362" y="203">before the shader — HSR, or early-ZS plus FPK</text>
+  <path class="arrow" d="M493,210 L493,224" marker-end="url(#head)" />
+
+  <rect class="box" x="350" y="226" width="286" height="46" rx="8" />
+  <text class="head" x="362" y="248">3 · resolve</text>
+  <text class="note" x="362" y="264">the finished tile is written out exactly once</text>
+
+  <rect class="box-cost" x="24" y="292" width="612" height="106" rx="8" />
+  <text class="col ink-cost" x="38" y="314">WHAT TRANSPARENCY ESCAPES</text>
+  <text class="note" x="38" y="336">Blending is order-dependent, so nothing behind a transparent layer may be dropped: 5 stacked layers means the same</text>
+  <text class="note" x="38" y="352">pixel runs its fragment shader 5 times — on-chip or not, on the cheapest phone or the most expensive desktop card.</text>
+  <text class="note" x="38" y="372">discard / alphaTest is not early-Z either: the GPU only learns the fragment is dead after the shader has already run.</text>
+  <text class="note" x="38" y="388">And reading a render target still being drawn into forces an early tile flush — free on desktop, a real stall on a phone.</text>
+
+  <text class="foot" x="24" y="426">Three.js sorts the opaque list with painterSortStable — material.id first, z only as a tiebreaker — so front-to-back</text>
+  <text class="foot" x="24" y="444">is not guaranteed. Set renderOrder yourself on large near-camera objects to give early-Z something to reject.</text>
+</svg>

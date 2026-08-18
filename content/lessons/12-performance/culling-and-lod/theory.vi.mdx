@@ -15,6 +15,12 @@ Bounding sphere tính đúng MỘT LẦN từ vị trí gốc của geometry tr�
 
 Một lần test — biến đổi tâm sphere bằng ma trận, so với 6 mặt phẳng — chỉ vài chục phép toán dấu phẩy động; với 10.000 object mỗi frame, tổng chi phí ước lượng vẫn dưới một phần nghìn giây trên CPU hiện đại, gần như miễn phí so với công GPU nó tiết kiệm được. Nhưng phép test này KHÔNG phân cấp: `Group` không tự được test frustum — renderer chỉ kiểm tra `object.visible === false` rồi bỏ qua toàn bộ subtree nếu cờ đó được đặt; ngược lại nó luôn đi xuống từng con và test riêng từng mesh lá, bất kể cha có nằm ngoài khung hình hay không. Nói cách khác, "group hierarchies giúp culling" không tự động đúng — chỉ đúng khi BẠN chủ động đặt `group.visible = false` cho một khu vực đã biết chắc ngoài tầm nhìn, biến một phép kiểm tra thành hàng trăm phép bị bỏ qua cùng lúc. Đây là kỹ thuật "zone culling" quay lại ở mục occlusion bên dưới.
 
+<Figure
+  src="/figures/12-performance/frustum-cull-decision-per-object.svg"
+  alt="Năm phép kiểm tra WebGLRenderer.projectObject chạy cho từng object, một panel mô tả phép test bounding sphere, một panel liệt kê chỗ culling hết tác dụng, và hình một mặt phẳng frustum loại bỏ một hình cầu nhưng giữ lại hình cầu chỉ vừa chạm vào nó"
+  caption="Demo cho thấy trạm nào sống sót; hình này là phép test đã quyết định điều đó — một hình cầu đã cache, sáu mặt phẳng, và hai trường hợp phép test lặng lẽ bó tay."
+/>
+
 ## Occlusion culling: phần Three.js không tự lo
 
 Frustum culling loại object NGOÀI khung nhìn; nó không biết object BỊ CHE bởi object khác dù cả hai đều trong khung nhìn — một bức tường trước cả căn phòng vẫn khiến Three.js vẽ đầy đủ căn phòng phía sau, tốn fillrate vô ích. Three.js không có occlusion culling tự động — quyết định có chủ đích, không phải thiếu sót: occlusion đúng nghĩa (biết TỪNG pixel thật sự bị che) cần depth đã render, một bài toán con-gà-quả-trứng với chính việc render.

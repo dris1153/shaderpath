@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 460" width="660" height="460" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --solid-fill: #e2e8f0;
+      --warm-stroke: #d97706;
+      --warm-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --solid-fill: #334155;
+        --warm-stroke: #f59e0b;
+        --warm-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .ink-warm { fill: var(--warm-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .solid { fill: var(--solid-fill); stroke: var(--line); stroke-width: 1.5; }
+    .divide { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; fill: none; }
+    .ray { stroke: var(--line); stroke-width: 1.6; fill: none; }
+    .ray-spec { stroke: var(--accent-stroke); stroke-width: 2.2; fill: none; }
+    .ray-diff { stroke: var(--warm-stroke); stroke-width: 1.6; fill: none; }
+    .scatter { stroke: var(--warm-stroke); stroke-width: 1.6; fill: none; stroke-linejoin: round; }
+    .stop { stroke: var(--warm-stroke); stroke-width: 2; fill: none; stroke-linecap: round; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <marker id="head-warm" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--warm-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">What F0 is, and what metalness does to it</text>
+  <path class="divide" d="M330,44 L330,366" />
+
+  <!-- ============ dielectric ============ -->
+  <text class="label" x="24" y="56">Dielectric — metalness = 0</text>
+
+  <rect class="solid" x="44" y="208" width="256" height="76" rx="2" />
+  <path class="ray" d="M86,116 L150,208" marker-end="url(#head)" />
+  <path class="ray-spec" d="M150,208 L206,128" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="212" y="126">F reflects</text>
+  <text class="label" x="90" y="192">F0 ≈ 0.04</text>
+
+  <path class="scatter" d="M150,208 L162,238 L180,230 L188,252 L204,238 L212,208" />
+  <path class="ray-diff" d="M212,208 L190,176" marker-end="url(#head-warm)" />
+  <path class="ray-diff" d="M212,208 L212,170" marker-end="url(#head-warm)" />
+  <path class="ray-diff" d="M212,208 L234,180" marker-end="url(#head-warm)" />
+  <text class="label ink-warm" x="244" y="198">diffuse</text>
+
+  <text class="note" x="24" y="302">F0 = ((n1 − n2) / (n1 + n2))² — IOR 1.5 gives exactly 0.04.</text>
+  <text class="note" x="24" y="320">Skin, wood, plastic and water sit in the 0.02–0.05 band.</text>
+  <text class="note" x="24" y="342">(1 − F) refracts in, scatters under the surface, and leaves</text>
+  <text class="note" x="24" y="360">tinted by albedo — that is the diffuse term.</text>
+
+  <!-- ============ metal ============ -->
+  <text class="label" x="352" y="56">Metal — metalness = 1</text>
+
+  <rect class="solid" x="360" y="208" width="256" height="76" rx="2" />
+  <path class="ray" d="M402,116 L466,208" marker-end="url(#head)" />
+  <path class="ray-spec" d="M466,208 L522,128" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="528" y="126">F reflects</text>
+  <text class="label" x="398" y="192">F0 = albedo</text>
+
+  <path class="scatter" d="M466,208 L478,232" />
+  <path class="stop" d="M471,230 L485,242 M485,230 L471,242" />
+  <text class="label ink-warm" x="494" y="240">absorbed</text>
+
+  <text class="note" x="352" y="302">F0 is three numbers, not one. Gold is (1.00, 0.85, 0.57)</text>
+  <text class="note" x="352" y="320">and head-on that triplet IS the colour you see.</text>
+  <text class="note" x="352" y="342">Free electrons swallow whatever does not reflect within</text>
+  <text class="note" x="352" y="360">nanometres, so a metal has no diffuse term at all.</text>
+
+  <!-- ============ the switch ============ -->
+  <rect class="box" x="24" y="378" width="612" height="70" rx="8" />
+  <text class="label" x="40" y="402">metalness does not blend two looks — it reroutes one albedo value</text>
+  <text class="note" x="40" y="422">F0 = mix(vec3(0.04), albedo, metalness)   ·   kd = (1 − F)(1 − metalness)</text>
+  <text class="note" x="40" y="440">so 0.5 across a whole surface describes a material that does not exist; it only means something at a mask edge.</text>
+</svg>

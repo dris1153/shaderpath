@@ -10,6 +10,12 @@ Three doesn't cache a program per material — it caches per a cache key assembl
 
 Every independent feature multiplies the variant count — it doesn't add to it: toggling `map` (2 states) × toggling fog (2) × shadow type — none/PCF/VSM (3) × toggling skinning (2) is already $2\times2\times3\times2=24$ distinct programs in the worst case, from just four features. A real scene rarely hits all 24 combinations at once, but every additional feature turned on (anisotropy, clearcoat, iridescence — each its own flag in that same cache key) doubles or triples that number. The riskiest pattern is material variants that surface gradually through interaction: each new feature combination that enters the viewport compiles for the first time right then — exactly while the user is interacting, not while a loading screen is still up.
 
+<Figure
+  src="/figures/12-performance/program-cache-key-variants.svg"
+  alt="One material object feeding a program cache key assembled from defines, light counts, shadow type, tone mapping and boolean flags, producing three separately compiled programs inside one Map"
+  caption="Why renderer.info.programs keeps climbing while your material count stays at one: the key is built from the context the mesh is drawn in, not from the material alone."
+/>
+
 ## Pre-Warming with renderer.compile(): Controlling WHEN, Not Erasing the Cost
 
 `renderer.compile(scene, camera)` (verified directly in `WebGLRenderer.js`) traverses the entire `scene`, calling `prepareMaterial()` on every material it finds — internally, `prepareMaterial` calls `getProgram()` directly, forcing Three to compile and link right there, synchronously, inside this one call. That means `compile()` doesn't make the compile cost disappear — it just MOVES that cost to a moment you choose, typically right after assets finish loading but before the scene is shown, behind a loading screen. Calling `compile()` in the middle of user interaction still causes exactly the hitch you were trying to avoid — just several variants compiling at once instead of one, sometimes worse.

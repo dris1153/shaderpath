@@ -16,6 +16,12 @@ $$
 
 với $h = \text{normalize}(\omega_i + \omega_o)$ là **half-vector** — hướng nằm giữa hướng tới và hướng nhìn, chính là hướng một microfacet PHẢI chĩa vào để phản xạ $\omega_i$ thẳng ra $\omega_o$. D, G, F là ba câu hỏi độc lập nhân lại với nhau — mỗi câu ứng với bài kế hoặc phần dưới đây.
 
+<Figure
+  src="/figures/11-pbr/microfacet-d-g-f.svg"
+  alt="Mặt cắt microfacet phóng to với vector ánh sáng, hướng nhìn và half-vector h, các facet trùng hướng h được tô đậm; phía dưới là mặt cắt thứ hai nơi một tia bị chặn trước khi tới facet và một tia bị chặn trên đường đi ra"
+  caption="Demo tô D, G, F thành màu trên quả cầu; còn đây là chỗ ba số hạng đó thực sự nằm trên bề mặt."
+/>
+
 ## D — GGX/Trowbridge-Reitz: bao nhiêu microfacet chĩa đúng hướng h
 
 $D(h)$ trả lời: trong hàng triệu microfacet, bao nhiêu phần trăm có pháp tuyến trùng $h$ — có khả năng phản xạ $\omega_i$ ra đúng $\omega_o$? Đây là hàm phân bố theo $(n\cdot h)$, dạng phổ biến nhất hiện nay là **GGX** (Trowbridge-Reitz), viết theo Walter et al. (2007):
@@ -37,7 +43,7 @@ G_1(x) &= \frac{n\cdot x}{(n\cdot x)(1-k) + k}, \qquad k = \frac{(\text{roughnes
 \end{aligned}
 $$
 
-$k$ dùng đúng remap cho ánh sáng trực tiếp từ Karis (2013) — IBL dùng $k$ khác, gặp lại ở bài Image-Based Lighting. Bỏ qua $G$ (chỉ dùng $D \cdot F$), rìa bề mặt cong ở góc xiên sáng bất thường: đang đếm TẤT CẢ microfacet chĩa đúng $h$ mà không trừ phần bị che lẫn nhau — phản xạ ra nhiều năng lượng hơn thực có, vi phạm bảo toàn năng lượng, rõ nhất ở rìa hình cầu.
+$k$ dùng đúng remap cho ánh sáng trực tiếp từ Karis (2013) — IBL dùng $k$ khác; bài Image-Based Lighting không đi đường đó mà dùng split-sum với một bảng DFG dựng sẵn. Bỏ qua $G$ (chỉ dùng $D \cdot F$), rìa bề mặt cong ở góc xiên sáng bất thường: đang đếm TẤT CẢ microfacet chĩa đúng $h$ mà không trừ phần bị che lẫn nhau — phản xạ ra nhiều năng lượng hơn thực có, vi phạm bảo toàn năng lượng, rõ nhất ở rìa hình cầu.
 
 ## F — Fresnel (Schlick): phản chiếu luôn gắt hơn ở góc xiên
 

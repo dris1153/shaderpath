@@ -6,6 +6,12 @@ Every time `renderer.render()` runs, EACH distinct mesh needs at least one `gl.d
 
 `gl.info.render.calls` (introduced in the previous "Profiling Tools" lesson) is the only ground truth, resetting every frame. It CAN exceed your scene's mesh count: every shadow-casting light re-renders shadow-casting objects from ITS OWN view — 50 meshes with 2 shadow-casting lights produce 150 calls (50 main-pass + 50×2 shadow-pass), not 50. A material needing multiple GL passes (certain depth-prepass or transparency setups) multiplies it further. Read this number right after `render()`, and don't expect it to match `scene.children.length` 1:1 the moment shadow maps enter the scene.
 
+<Figure
+  src="/figures/12-performance/draw-call-cpu-tax.svg"
+  alt="The four CPU steps behind one gl.drawElements stacked on the left, with the cost of a thousand of them against a single instanced call on the right"
+  caption="What renderer.info.render.calls never prints: the fixed CPU work sitting behind each of those calls, and why a shared material leaves the number exactly where it was."
+/>
+
 ## Fix Ladder, Rung 1: Shared Materials
 
 Callback to the Track 4 "Memoizing Geometry & Materials" lesson: reusing ONE material instance across many meshes cuts how often `gl.useProgram` has to switch programs (the driver re-validates state on every switch) — but does NOT cut draw-call count. Still N meshes, still N draw calls, since each mesh remains its own transform node. This is nearly free and always worth doing, but it doesn't solve the draw-call tax by itself — it sets up the next two rungs, which actually do collapse N calls into one.

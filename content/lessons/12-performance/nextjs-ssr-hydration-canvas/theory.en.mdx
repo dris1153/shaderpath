@@ -8,6 +8,12 @@ The good news: React Three Fiber's `<Canvas>` (verified directly against `@react
 
 So when do you actually need `next/dynamic(() => import('./Scene'), { ssr: false })`? When a library touches `window`/`document` right at module scope (not inside an effect) and you can't fix it, or when you deliberately want to skip the SSR pass entirely for a heavy component tree to save server CPU. Next.js's current docs (`node_modules/next/dist/docs/01-app/02-guides/lazy-loading.md`) confirm this plainly: by default, a Client Component is still **prerendered (SSR'd)** even when lazy-loaded through `next/dynamic`/`React.lazy` — `ssr: false` is the explicit opt-out. More important for the Next 16 App Router specifically: **`ssr: false` cannot be used directly inside a Server Component** — the docs say outright, "`ssr: false` is not supported in Server Components. You will see an error"; it's only valid called from inside a `"use client"` file. Putting the boundary in the right place means wrapping exactly the **canvas island** (the 3D component) with `next/dynamic`, not the whole page — text, headings, and SEO content stay in a Server Component so they get indexed and appear in the very first HTML.
 
+<Figure
+  src="/figures/12-performance/ssr-to-canvas-timeline.svg"
+  alt="Four stacked stages running from the server render through the first paint and hydration to the client effect that creates the WebGLRenderer, beside panels on what ssr: false changes and on reserving the slot's height"
+  caption="The order the demo can only imply: the GL context appears in the last step, and everything before it runs somewhere with no canvas at all."
+/>
+
 ## The Placeholder Strategy: Reserve Space Before It Shows Up
 
 Whether the canvas mounts immediately or later, the space it will occupy has to be reserved **before** it appears — otherwise, content below jumps down the moment it mounts, a layout shift happening right in front of the user. This platform's `components/viz/demo.tsx` is a live example: every demo is wrapped in `<AspectRatio ratio={ratio}>` (locking a fixed aspect ratio regardless of whether the inner content has loaded yet) nesting a `<Suspense fallback={<Skeleton className="size-full" />}>` — the block's size is fixed by CSS straight from the server HTML, `Skeleton` fills the gap while the real `<Canvas>` hasn't mounted yet, and once it does, the block's height **doesn't change**, so nothing below it gets pushed.

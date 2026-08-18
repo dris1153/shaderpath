@@ -11,6 +11,12 @@ The most common misunderstanding: `metalness` does **not** blend a non-metal loo
 
 No blending of two rendered "looks" — just one input whose role gets swapped entirely. Filament's PBR guide (google.github.io/filament/Filament.md.html) states plainly: *"Metallic is almost a binary value... Intermediate values are meant for transitions between surface types (metal to rust for instance)."* No real material is "half-metal" at the microscopic level. An in-between value is only meaningful in two cases: (1) **mask boundaries** — the edge between clean metal and rusted/painted regions, where mipmap filtering naturally produces intermediate values even from a binary mask; (2) **deliberate transitions** — an intentionally painted rust/grime gradient. Outside those, $0.5$ across a whole surface is a physically nonexistent combination.
 
+<Figure
+  src="/figures/11-pbr/f0-dielectric-vs-metal.svg"
+  alt="Two cross-sections of a lit surface: on a dielectric F0 is about 0.04 and the rest refracts in and leaves as diffuse; on a metal F0 is the albedo triplet and the refracted part is absorbed, with a band below stating the mix and kd formulas"
+  caption="metalness swaps the role of one albedo value; the two cross-sections show exactly what changes."
+/>
+
 ## The Standard Map Set: Each Map, One Job, and What Breaks When It's Wrong
 
 This workflow usually ships with five maps:
@@ -32,6 +38,12 @@ Before metalness/roughness, the industry had a parallel standard: **specular/glo
 This follows Track 0's decode–compute–encode rule exactly: `MeshStandardMaterial`'s JSDoc says `map` "represents color data" and needs `SRGBColorSpace`, while `normalMap`/`roughnessMap`/`metalnessMap`/`aoMap` "represent non-color data" and must stay `NoColorSpace` (the `Texture` default). The wrong-colorspace bug isn't theoretical: forgetting `texture.colorSpace = SRGBColorSpace` means the GPU never decodes gamma at sample time — an sRGB-encoded pixel (`0.5`, only ≈21% of true light energy per Track 0's own formula) flows into lighting as if already linear, then still gets sRGB-encoded once more at output — the result looks **washed out, over-bright** (not darker), since encoding stacks on a value that was already too high. Turning on `SRGBColorSpace` and calling `texture.needsUpdate = true` makes the GPU re-upload with the correct format — skip that `needsUpdate` and nothing visibly changes.
 
 The `checkpoint-material-study` lesson right after asks you to build a grid of spheres sweeping metalness × roughness to cross-check all this visually; the IBL lessons later in this track return to this exact albedo/metalness/roughness trio to decide how environment light blends.
+
+<Figure
+  src="/figures/11-pbr/orm-channel-routing.svg"
+  alt="An albedo texture and a normal texture on the left beside one ORM image split into R, G and B strips, with arrows carrying each channel to material.aoMap, material.roughnessMap and material.metalnessMap and the shader line each one runs"
+  caption="One image feeding three slots, and which of the five maps is colour data and which is not."
+/>
 
 <Callout variant="mistake" title="Common mistakes">
 

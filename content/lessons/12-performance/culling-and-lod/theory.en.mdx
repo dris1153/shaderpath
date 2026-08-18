@@ -15,6 +15,12 @@ The bounding sphere is computed exactly ONCE from the geometry's original CPU-si
 
 A single test — transforming a sphere's center by a matrix, comparing it against 6 planes — costs only a few dozen floating-point operations; for 10,000 objects per frame, the estimated total stays well under a millisecond on a modern CPU, close to free next to the GPU work it saves. But this test is NOT hierarchical: a `Group` is never itself frustum-tested — the renderer only checks `object.visible === false` and skips the whole subtree if that's set; otherwise it always descends into every child and tests each leaf mesh individually, regardless of whether their parent sits off-screen. In other words, "group hierarchies help culling" isn't automatically true — only when YOU deliberately set `group.visible = false` for a whole area known to be out of view, turning one check into hundreds of skipped checks at once. This is the "zone culling" technique that returns in the occlusion section below.
 
+<Figure
+  src="/figures/12-performance/frustum-cull-decision-per-object.svg"
+  alt="The five checks WebGLRenderer.projectObject runs per object, a panel describing the bounding-sphere test, a panel listing where culling stops helping, and a sketch of one frustum plane rejecting one sphere while keeping another that only just touches it"
+  caption="The demo shows which stations survive; this is the test that decided it — one cached sphere, six planes, and the two cases where that test quietly gives up."
+/>
+
 ## Occlusion Culling: the Part Three.js Doesn't Handle For You
 
 Frustum culling drops objects OUTSIDE the view; it knows nothing about objects HIDDEN behind others even when both sit inside the view — a wall in front of an entire room still makes Three.js draw the whole room behind it, wasting fillrate. Three.js has no automatic occlusion culling — a deliberate decision, not an oversight: real occlusion (knowing exactly which pixels are hidden) needs already-rendered depth information, a chicken-and-egg problem with rendering itself.
