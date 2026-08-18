@@ -138,6 +138,7 @@ void main() {
 
   fragColor = vec4(color, 1.0);
 }`,
+    referenceImage: "/figures/07-procedural/checkpoint-procedural-clouds.png",
     hints: [
       {
         vi: "smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw) là toàn bộ logic \"định hình\": raw dưới COVERAGE ra 0 (trời trong), raw trên COVERAGE+SOFTNESS ra 1 (mây đặc), dải giữa chuyển tiếp mượt — không cần if nào cả.",

@@ -204,6 +204,7 @@ void main() {
 
   fragColor = vec4(col, 1.0);
 }`,
+    referenceImage: "/figures/08-raymarching/checkpoint-sdf-sculpture.png",
     hints: [
       {
         vi: "Dựng từ dưới lên và thử từng mối nối một: hàn `base` với `body` trước, xem hình đã liền chưa (tạm thời `return opSmoothUnion(base, body, 0.28);`), rồi mới thêm `head`, rồi `collar` — dễ tìm lỗi hơn hẳn so với ghép cả bốn khối cùng lúc rồi đoán mối nào sai.",

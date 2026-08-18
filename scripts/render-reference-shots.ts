@@ -39,6 +39,25 @@ const SHADER_SHOTS: ShaderShot[] = [
   // The 6x6 grid divides uv on both axes, so a non-square canvas stretches every
   // cell and sdCircle renders as an ellipse. This poster is only honest at 1:1.
   { track: "02-glsl", slug: "checkpoint-pattern-tile-poster", width: 512, height: 512, time: 0 },
+
+  // Square for the same reason as the poster: these two divide uv by the full
+  // resolution on both axes, so any other ratio stretches the noise domain.
+  // t=3 measured as the fullest sky this solution ever produces (3.4% cloud
+  // cover); past t=15 its clouds fade to nothing, so a later frame would show
+  // an empty gradient.
+  { track: "07-procedural", slug: "checkpoint-procedural-clouds", width: 512, height: 512, time: 3 },
+  { track: "07-procedural", slug: "checkpoint-animated-terrain-material", width: 512, height: 512, time: 6 },
+
+  // These three divide by uResolution.y, which is aspect-correct: a wide canvas
+  // widens the field of view instead of distorting it.
+  // Sculpture rotates at 0.3 rad/s — t=2 lands on a three-quarter view rather
+  // than a flat silhouette.
+  { track: "08-raymarching", slug: "checkpoint-sdf-sculpture", width: 640, height: 480, time: 2 },
+  // The camera flies along the grid; t=6 is far enough in that the repetition
+  // reads as infinite rather than as a single tile.
+  { track: "08-raymarching", slug: "checkpoint-infinite-grid-world", width: 640, height: 360, time: 6 },
+  // A vista wants the widest frame; t=8 puts the camera over the terrain.
+  { track: "08-raymarching", slug: "checkpoint-raymarched-vista", width: 640, height: 360, time: 8 },
 ];
 
 async function solutionOf(track: string, slug: string): Promise<string> {

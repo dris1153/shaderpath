@@ -246,6 +246,7 @@ void main() {
 
   fragColor = vec4(col, 1.0);
 }`,
+    referenceImage: "/figures/08-raymarching/checkpoint-infinite-grid-world.png",
     hints: [
       {
         vi: "Round-based repetition: `id = round(p.xz / CELL)`, rồi `q.xz = p.xz - CELL*id` — ghi `id` vào `gCellId` TRƯỚC khi trừ, vì đó chính là chỉ số ô nguyên dùng để hash chiều cao. `p.y` không đụng tới.",

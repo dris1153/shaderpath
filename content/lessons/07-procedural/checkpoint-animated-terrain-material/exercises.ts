@@ -280,6 +280,7 @@ void main() {
   color *= cloudShadow;
   fragColor = vec4(color, 1.0);
 }`,
+    referenceImage: "/figures/07-procedural/checkpoint-animated-terrain-material.png",
     hints: [
       {
         vi: "Domain warp đúng thứ tự: TÍNH \`q\` từ \`p\` gốc trước (\`q = vec2(fbm(p), fbm(p + offset))\`), rồi mới cộng \`WARP_STRENGTH * q\` vào \`p\` để ra \`warped\` — mọi lời gọi fbm/voronoi SAU đó phải dùng \`warped\`, không phải \`p\` gốc, nếu không warp không có tác dụng gì.",

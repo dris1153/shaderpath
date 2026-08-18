@@ -289,6 +289,7 @@ void main() {
 
   fragColor = vec4(color, 1.0);
 }`,
+    referenceImage: "/figures/08-raymarching/checkpoint-raymarched-vista.png",
     hints: [
       {
         vi: "TODO 1 chỉ là một điều kiện boolean trước khối march, không đổi gì bên trong: \`canHitTerrain = !(ro.y > MAX_HEIGHT && rd.y >= 0.0)\` — camera đã ở trên độ cao tối đa VÀ tia không hướng xuống thì chắc chắn trượt.",
