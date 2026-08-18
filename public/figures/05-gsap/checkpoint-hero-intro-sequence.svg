@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 380" width="640" height="380" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warn-stroke: #b45309;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fcd34d;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .row { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .tag { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .bar { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .bar-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 1.5; }
+    .axis { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .guide { stroke: var(--accent-stroke); stroke-width: 1.2; fill: none; stroke-dasharray: 3 4; }
+    .span { stroke: var(--warn-stroke); stroke-width: 1.5; fill: none; }
+  </style>
+
+  <text class="title" x="20" y="24">The timeline the brief asks for</text>
+  <text class="note" x="20" y="44">four tweens, three labels, one relative offset &#8212; 1.5 s end to end</text>
+
+  <!-- label guides: every tween is placed against one of these, never a delay -->
+  <path class="guide" d="M110,58 L110,296" />
+  <path class="guide" d="M194,58 L194,296" />
+  <path class="guide" d="M390,58 L390,296" />
+
+  <text class="tag" x="114" y="72">shapes</text>
+  <text class="note" x="114" y="88">t = 0</text>
+  <text class="tag" x="198" y="72">headline</text>
+  <text class="note" x="198" y="88">&#8220;shapes+=0.3&#8221;</text>
+  <text class="tag" x="394" y="72">cta</text>
+  <text class="note" x="394" y="88">&#8220;&gt;&#8221;</text>
+
+  <!-- three shapes, staggered 0.12 apart, 0.6 each -->
+  <text class="row" x="20" y="123">3 shapes</text>
+  <rect class="bar-accent" x="110" y="100" width="168" height="10" rx="2" />
+  <rect class="bar-accent" x="143.6" y="114" width="168" height="10" rx="2" />
+  <rect class="bar-accent" x="177.2" y="128" width="168" height="10" rx="2" />
+  <text class="note" x="420" y="124">power3.out &#183; stagger 0.12</text>
+
+  <text class="row" x="20" y="168">headline</text>
+  <rect class="bar-accent" x="194" y="154" width="196" height="20" rx="3" />
+  <text class="note" x="398" y="168">back.out(1.7)</text>
+
+  <!-- the offset the lesson is really about: measured from the headline's START -->
+  <path class="span" d="M194,192 L250,192 M194,188 L194,196 M250,188 L250,196" />
+  <text class="warn" x="204" y="186">&#8220;&lt;0.2&#8221;</text>
+
+  <text class="row" x="20" y="214">sub-line</text>
+  <rect class="bar" x="250" y="200" width="140" height="20" rx="3" />
+  <text class="note" x="398" y="214">power2.out</text>
+
+  <text class="row" x="20" y="260">CTA</text>
+  <rect class="bar-accent" x="390" y="246" width="140" height="20" rx="3" />
+  <text class="note" x="538" y="260">back.out(2.8)</text>
+
+  <path class="axis" d="M110,296 L558,296" />
+  <path class="axis" d="M110,292 L110,300 M250,292 L250,300 M390,292 L390,300 M530,292 L530,300" />
+  <text class="note" x="104" y="314">0 s</text>
+  <text class="note" x="242" y="314">0.5</text>
+  <text class="note" x="382" y="314">1.0</text>
+  <text class="note" x="518" y="314">1.5 s</text>
+
+  <text class="note" x="20" y="344">&#8220;&lt;0.2&#8221; starts the sub-line 0.2 s after the headline tween STARTS, not after it ends &#8212; the two overlap by half a second.</text>
+  <text class="note" x="20" y="362">&#8220;&gt;&#8221; appends the CTA after the previous tween ends, so changing any duration never needs the delays recomputed.</text>
+</svg>
