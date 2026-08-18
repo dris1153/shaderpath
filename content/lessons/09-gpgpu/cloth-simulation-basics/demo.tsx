@@ -176,6 +176,7 @@ function ClothScene() {
   const { gl } = useThree();
   const paramsRef = useRef({ wind: 1.2, iterations: 4 });
   const simRef = useRef<ClothSim | null>(null);
+  const materialRef = useRef<THREE.ShaderMaterial>(null);
 
   const pinPattern = stringOf(values, "pinPattern", "top") as PinPattern;
   const resetToggle = booleanOf(values, "reset", false);
@@ -221,7 +222,12 @@ function ClothScene() {
     sim.integrateUniforms.uTime.value = state.clock.elapsedTime;
     sim.integrateUniforms.uWindStrength.value = paramsRef.current.wind;
 
-    renderUniforms.texturePosition.value = sim.step(paramsRef.current.iterations);
+    // Write to the material's OWN uniform object: R3F copies the `uniforms`
+    // prop into the material rather than holding the reference, so mutating
+    // the object passed as a prop never reaches the shader.
+    const positionUniform = materialRef.current?.uniforms.texturePosition;
+    if (!positionUniform) return;
+    positionUniform.value = sim.step(paramsRef.current.iterations);
 
     state.gl.setRenderTarget(null);
     state.gl.render(state.scene, state.camera);
@@ -233,6 +239,7 @@ function ClothScene() {
     // the cloth actually hangs — leave culling on and it vanishes mid-fall.
     <mesh geometry={geometry} frustumCulled={false}>
       <shaderMaterial
+        ref={materialRef}
         vertexShader={renderVertex}
         fragmentShader={renderFragment}
         uniforms={renderUniforms}
