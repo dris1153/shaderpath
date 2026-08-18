@@ -167,6 +167,7 @@ function dispose() {
   });
   renderer.dispose();
 }`,
+    referenceImage: "/figures/03-threejs/checkpoint-gltf-viewer.png",
     hints: [
       {
         vi: "Box3.setFromObject phải chạy SAU khi model đã add vào scene và bên trong callback onLoad — gọi trước khi glTF parse xong sẽ ra bounding box rỗng (kích thước 0).",

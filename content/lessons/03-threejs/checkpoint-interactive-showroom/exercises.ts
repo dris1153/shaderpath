@@ -242,6 +242,7 @@ function dispose() {
   controls.dispose();
   renderer.dispose();
 }`,
+    referenceImage: "/figures/03-threejs/checkpoint-interactive-showroom.png",
     hints: [
       {
         vi: "Giữ hai mảng riêng: \"items\" (chỉ mesh sản phẩm) để raycast, và \"products\" (cả pedestal lẫn item) để dispose -- gộp chung dễ khiến raycaster nhầm trúng pedestal.",

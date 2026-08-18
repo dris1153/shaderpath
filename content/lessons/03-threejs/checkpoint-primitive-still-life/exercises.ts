@@ -147,6 +147,7 @@ function dispose() {
   renderer.dispose();
 }
 window.addEventListener("beforeunload", dispose, { once: true });`,
+    referenceImage: "/figures/03-threejs/checkpoint-primitive-still-life.png",
     hints: [
       {
         vi: "Đặt object theo bố cục thật: dùng position.set khác nhau cho từng mesh, và cho 1-2 object scale không đồng nhất — đừng để tất cả nằm ở gốc toạ độ như lúc mới tạo.",
