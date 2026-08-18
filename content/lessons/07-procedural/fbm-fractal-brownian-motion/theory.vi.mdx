@@ -42,6 +42,12 @@ $$
 
 Chia kết quả thô cho đúng tổng này giữ FBM luôn ổn định bất kể chọn bao nhiêu octave hay gain — thiếu bước này, đổi số octave khi chỉnh demo sẽ vô tình làm ảnh sáng/tối hẳn lên chỉ vì tổng biên độ đổi, không phải vì hình dạng noise đổi. Demo `fbm.frag` tính đúng tổng này (`maxAmplitude`) trong cùng vòng lặp rồi chia ở bước cuối.
 
+<Figure
+  src="/figures/07-procedural/fbm-octave-stack.svg"
+  alt="Bốn hàng sóng xếp chồng: tần số nhân đôi và biên độ giảm một nửa qua mỗi hàng, bên dưới là đường tổng đã chuẩn hoá kèm hệ số chia (1 − g mũ N)/(1 − g)"
+  caption="Demo chỉ cho bạn thấy đường tổng; bốn tầng tạo ra nó và hệ số chia thì nằm ngoài màn hình."
+/>
+
 ## Uốn kết quả: ridged, turbulence, billow
 
 FBM tiêu chuẩn cộng thẳng giá trị noise có dấu — kết quả đối xứng, đều đặn kiểu gò đồi mềm. Đổi cách xử lý MỖI lớp trước khi cộng cho ra ba biến thể hình dạng khác hẳn, cùng một vòng lặp:

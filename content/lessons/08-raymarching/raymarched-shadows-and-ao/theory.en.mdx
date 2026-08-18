@@ -57,6 +57,12 @@ float calcAO(vec3 p, vec3 n) {
 
 If the space around $p$ is completely empty, `map(p + n*h)` should return $\approx h$ (move $h$ units away from the surface along its outward direction, and the nearest surface is still exactly $h$ away) — the difference `h - d` is 0, contributing nothing to `occ`. If other geometry sits nearby (a concave corner, an adjacent object), `d` comes back smaller than the expected `h` — a positive difference accumulates into `occ`, weighted by a geometrically decaying `sca` ($0.95^i$) so farther samples contribute less, approximating a crude hemispherical integral with just 5 points instead of hundreds of real Monte Carlo rays.
 
+<Figure
+  src="/figures/08-raymarching/soft-shadow-ratio-and-ao-taps.svg"
+  alt="Left: three shadow rays leaving the ground toward a sun — one blocked by a box, one grazing its corner with the closest gap d marked at distance t, one entirely clear. Right: five ambient-occlusion taps along the normal, the upper three cut short by a nearby wall"
+  caption="Both effects are only extra map() calls along a direction the primary ray never travelled. The shadow keeps the smallest k·d/t it ever saw; AO keeps the shortfall between the distance a tap should have read and the distance it actually read."
+/>
+
 ## No Shadow Map Needed: No Resolution or Bias Problems
 
 Both techniques above need **no auxiliary geometry** beyond the scene's own SDF — no second render pass from the light's point of view, no depth texture, no choosing a texture size large enough to avoid aliasing. This directly contrasts with shadow mapping in Track 3: that technique renders the entire scene from the light's viewpoint into a fixed-resolution depth texture, then compares the current fragment's depth against a value sampled from that texture — the texture's finite resolution directly causes shadow acne (striped rounding artifacts from quantized depth) and peter-panning (shadows detaching from their casters), forcing manual per-scene `bias` tuning. Raymarched shadows and AO have no resolution-discretization step at all — "accuracy" depends only on the same familiar knobs from the main march loop: step count, the hit-threshold $\varepsilon$.

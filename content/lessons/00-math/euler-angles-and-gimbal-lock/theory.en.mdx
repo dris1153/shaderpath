@@ -65,6 +65,12 @@ $$
 
 $\alpha$ and $\gamma$ no longer appear individually, only their difference $\alpha-\gamma$ decides the matrix. Roll and yaw — two axes meant to be independent — collapse into **one** shared variable once pitch hits $90°$; the original three degrees of freedom are down to two. Physically: once the middle ring (pitch) has turned a full $90°$, the inner ring's rotation axis (roll, already tilted by pitch) becomes parallel to the outer ring's axis (yaw, fixed to the world) — turning either ring produces the exact same motion.
 
+<Figure
+  src="/figures/00-math/gimbal-lock-axis-collapse.svg"
+  alt="Two states of a three-ring gimbal: with the middle ring at 0 degrees the three rotation axes point three different ways; at 90 degrees the inner ring lies in the outer ring's plane and their two axes coincide"
+  caption="Only the inner ring moves: turning the middle ring 90 degrees drags the roll axis onto the yaw axis, leaving those two dials driving one and the same turn."
+/>
+
 ### A Numeric Check: Two Different Angle Pairs, One Matrix
 
 The pairs $(\alpha,\gamma)=(60°,25°)$ and $(\alpha,\gamma)=(10°,-25°)$ both have $\alpha-\gamma=35°$. With $\sin 35°\approx 0.574$, $\cos 35°\approx 0.819$, both produce the exact same matrix:

@@ -20,11 +20,17 @@ where $d$ is damping slightly under 1 (say $0.99$) that bleeds a little energy e
 
 ## State on the GPU: Two Ping-Ponged Position Textures
 
-Because Verlet needs both $\vec{x}_t$ and $\vec{x}_{t-1}$, the simulation's state can't be a single position texture like the earlier particle lessons — it needs exactly two: `texturePosition` (current) and `texturePositionPrev` (last frame's). With `GPUComputationRenderer`, these are two mutually dependent "variables": `texturePosition` depends on itself AND on `texturePositionPrev`; `texturePositionPrev` simply copies `texturePosition`'s current value each frame so it always lags exactly one step behind. One easy detail to miss: `GPUComputationRenderer` auto-declares and auto-fills the uniform for a dependency whose name DIFFERS from the variable's own name, but a SELF-referencing dependency is not — you must declare `uniform sampler2D texturePosition;` yourself and assign `material.uniforms.texturePosition` before calling `init()`, or `compute()` crashes on the missing uniform.
+Because Verlet needs both $\vec{x}_t$ and $\vec{x}_{t-1}$, the simulation's state can't be a single position texture like the earlier particle lessons — it needs exactly two: `texturePosition` (current) and `texturePositionPrev` (last frame's). With `GPUComputationRenderer`, these are two mutually dependent "variables": `texturePosition` depends on itself AND on `texturePositionPrev`; `texturePositionPrev` simply copies `texturePosition`'s current value each frame so it always lags exactly one step behind. One easy detail to miss: `init()` auto-declares and auto-fills the uniform for EVERY dependency, the self-referencing one included — so never write `uniform sampler2D texturePosition;` in the shader yourself. A second declaration is a duplicate-definition error: the shader fails to compile and the canvas stays blank.
 
 ## Distance Constraints and the GPU's Jacobi Catch
 
 A distance constraint is a simple correction: pull two points toward/away from each other by half the difference from their rest length. On the CPU, Gauss-Seidel processes constraints SEQUENTIALLY, each one seeing the just-corrected result of the previous constraint within the same pass — it converges fast. On the GPU this can't be reproduced: each texel runs in its own parallel invocation, with no way to "see" a neighbor texel's just-computed result within the SAME draw call — every invocation reads from the SAME input texture, unchanged for the whole pass. The forced solution is Jacobi: every point computes its correction from ALL neighbors using this pass's input texture, averages them, writes to an output texture — then the whole pass repeats several times. Because each pass only propagates a correction exactly one texel, Jacobi needs noticeably MORE iterations than Gauss-Seidel to reach the same stiffness — not a minor detail, but the fundamental architectural constraint of every GPU cloth solver.
+
+<Figure
+  src="/figures/09-gpgpu/cloth-frame-integrate-then-relax.svg"
+  alt="The four steps of one cloth frame stacked vertically: gpu.compute() runs the two position variables, the relax loop repeats N times through doRenderTarget, the relaxed result is written back into texturePosition, then the render pass samples that texture; a panel on the right explains that Verlet keeps no velocity texture"
+  caption="The demo's constraint-iteration slider is the N in step 2 — every iteration is a full-grid pass, and step 3 exists only so Verlet's implicit velocity measures the relaxed shape rather than the raw one."
+/>
 
 ### Structural, Shear, Bend: Three Constraint Types
 
@@ -44,7 +50,7 @@ The next lesson (a fluid simulation intro) reuses this exact ping-pong + multi-p
 
 Three mistakes that show up constantly when building GPU cloth:
 
-1. **Forgetting to declare/assign the self-dependency's uniform.** `GPUComputationRenderer` automatically handles a differently-named dependency, but a variable depending on itself is not — skipping the manual `material.uniforms.texturePosition` assignment makes `compute()` throw on an undefined uniform on the first frame.
+1. **Redeclaring a dependency's uniform.** `init()` already prepends `uniform sampler2D <name>;` for every dependency, the self-dependency included. Writing that line in the shader too is a duplicate-definition error — the demo goes blank rather than reporting anything obvious.
 2. **Feeding the wrong texture back as "current" after relaxation.** If next frame's "current" texture is still the un-relaxed candidate, Verlet's implicit velocity next frame gets computed against the wrong reference — the cloth appears to gain a mysterious extra force from nowhere.
 3. **Wind not projected onto the normal.** Adding a constant wind vector straight into acceleration without multiplying by $(\hat n \cdot \vec w)$ makes the whole sheet drift in one direction like a rigid slab — the giveaway is cloth that "flies" instead of "ripples".
 

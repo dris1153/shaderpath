@@ -59,6 +59,12 @@ $$
 
 ($F_2$ skews coordinates in, $G_2$ unskews back out — generalizing to $F_n = \frac{\sqrt{n+1}-1}{n}$ and $G_n = \frac{1 - 1/\sqrt{n+1}}{n}$ for any dimension). The second big difference from Perlin: Simplex doesn't interpolate by a cell's geometric weight (`u = fade(f)`) — each simplex vertex contributes through a **radial falloff kernel**, decaying with the squared distance from the sample point to that very vertex, cut hard to zero past a fixed radius. There's no longer a "bilinear blend between neighboring corners" — just a weighted sum of whichever vertices are close enough, symmetric in every direction instead of biased along the two axes the way a square grid is.
 
+<Figure
+  src="/figures/07-procedural/square-vs-simplex-lattice.svg"
+  alt="On the left a square grid with one cell highlighted and its four corners marked; on the right an equilateral triangular grid with one triangle highlighted, its three vertices marked and a dashed circle for the kernel radius; below, a table of 4/8/16 corners against 3/4/5 vertices by dimension"
+  caption="The two output images look nearly alike; what each sample has to touch does not."
+/>
+
 ## An Expired Patent, and OpenSimplex
 
 Perlin held a US patent (6,867,776) covering the use of Simplex noise for 3D-and-higher texture synthesis — that patent expired on January 8, 2022, so 3D/4D Simplex has been free of legal restriction ever since (2D Simplex was never covered by it). During the years the patent was active (2001–2022), the community produced OpenSimplex (Kurt Spencer, 2014) as a patent-free alternative — built on a geometrically different stretched hypercubic honeycomb lattice, trading a larger kernel (smoother, but slower) for freedom from the axis-aligned directional streaking that's classic Perlin's most easily spotted visual artifact at high zoom.

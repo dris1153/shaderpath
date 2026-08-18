@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 430" width="620" height="430" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --css-fill: #f1f5f9;
+      --css-stroke: #94a3b8;
+      --buf-fill: #dbeafe;
+      --buf-stroke: #2563eb;
+      --buf-ink: #1e3a8a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --css-fill: #1e293b;
+        --css-stroke: #64748b;
+        --buf-fill: #1e3a5f;
+        --buf-stroke: #60a5fa;
+        --buf-ink: #bfdbfe;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .head { font-size: 13px; font-weight: 600; }
+    .dim { font-size: 18px; font-weight: 600; }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .sup { font-size: 9px; }
+    .ink-buf { fill: var(--buf-ink); }
+    .box-css { fill: var(--css-fill); stroke: var(--css-stroke); stroke-width: 1.5; }
+    .box-buf { fill: var(--buf-fill); stroke: var(--buf-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .split { stroke: var(--buf-stroke); stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="40" y="22">One canvas, two independent sizes</text>
+  <text class="note" x="40" y="40">Laid out at 800 x 450 CSS px on a devicePixelRatio 2 display; both boxes cover the same screen area.</text>
+
+  <!-- ============ CSS size ============ -->
+  <text class="head" x="145" y="70" text-anchor="middle">CSS size — the box the page lays out</text>
+  <rect class="box-css" x="40" y="80" width="210" height="118" rx="4" />
+  <text class="dim" x="145" y="134" text-anchor="middle">800 x 450</text>
+  <text class="note" x="145" y="156" text-anchor="middle">CSS px</text>
+
+  <text class="lbl" x="40" y="222">canvas.style.width / height</text>
+  <text class="note" x="40" y="240">or any CSS rule — layout decides it</text>
+  <text class="note" x="40" y="256">read it back with canvas.clientWidth</text>
+  <text class="note" x="40" y="272">changing it never touches the buffer</text>
+
+  <!-- ============ the conversion ============ -->
+  <text class="note" x="310" y="126" text-anchor="middle">round(css x dpr)</text>
+  <path class="arrow" d="M258,139 L362,139" marker-end="url(#head)" />
+  <text class="note" x="310" y="160" text-anchor="middle">dpr = 2</text>
+
+  <!-- ============ drawing buffer ============ -->
+  <text class="head ink-buf" x="475" y="70" text-anchor="middle">Drawing buffer — the texels the GPU fills</text>
+  <rect class="box-buf" x="370" y="80" width="210" height="118" rx="4" />
+  <text class="dim ink-buf" x="475" y="134" text-anchor="middle">1600 x 900</text>
+  <text class="note" x="475" y="156" text-anchor="middle">device px</text>
+
+  <text class="lbl ink-buf" x="370" y="222">canvas.width / canvas.height</text>
+  <text class="note" x="370" y="240">attributes, not CSS — writing either</text>
+  <text class="note" x="370" y="256">reallocates and clears the buffer</text>
+  <text class="note" x="370" y="272">then: gl.viewport(0, 0, 1600, 900)</text>
+
+  <!-- ============ one CSS pixel, zoomed ============ -->
+  <rect class="box-css" x="48" y="304" width="44" height="44" />
+  <path class="arrow" d="M102,326 L146,326" marker-end="url(#head)" />
+  <rect class="box-buf" x="156" y="304" width="44" height="44" />
+  <path class="split" d="M178,304 L178,348 M156,326 L200,326" />
+  <text class="note" x="70" y="368" text-anchor="middle">1 CSS pixel</text>
+  <text class="note" x="178" y="368" text-anchor="middle">2 x 2 device pixels</text>
+
+  <text class="lbl" x="262" y="316">Area scales with dpr<tspan class="sup" dy="-4">2</tspan><tspan dy="4">, not dpr</tspan></text>
+  <text class="note" x="262" y="336">360,000 CSS px of box becomes</text>
+  <text class="note" x="262" y="352">1,440,000 buffer pixels: 4x the</text>
+  <text class="note" x="262" y="368">fragment-shader work per frame.</text>
+
+  <text class="note" x="40" y="402">Leave canvas.width at its 300 x 150 default and the browser stretches that small buffer</text>
+  <text class="note" x="40" y="418">across the CSS box — the classic blurry, squashed canvas.</text>
+</svg>

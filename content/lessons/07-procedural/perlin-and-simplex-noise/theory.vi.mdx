@@ -59,6 +59,12 @@ $$
 
 ($F_2$ xiên toạ độ vào, $G_2$ unskew ngược lại — tổng quát hoá thành $F_n = \frac{\sqrt{n+1}-1}{n}$ và $G_n = \frac{1 - 1/\sqrt{n+1}}{n}$). Khác biệt lớn thứ hai: Simplex không nội suy theo trọng số hình học của ô (`u = fade(f)`) — mỗi đỉnh đóng góp qua một **kernel suy giảm dạng bán kính** (radial falloff), giảm theo bình phương khoảng cách đến chính đỉnh đó, cắt về 0 hẳn ngoài một bán kính cố định. Không còn "nội suy song tuyến giữa các góc lân cận" — chỉ còn tổng có trọng số của các đỉnh đủ gần, đối xứng mọi hướng thay vì thiên theo hai trục như lưới vuông.
 
+<Figure
+  src="/figures/07-procedural/square-vs-simplex-lattice.svg"
+  alt="Bên trái là lưới vuông với một ô được tô sáng và bốn góc được đánh dấu; bên phải là lưới tam giác đều với một tam giác được tô sáng, ba đỉnh và một đường tròn đứt nét chỉ bán kính kernel; bên dưới là bảng số góc 4/8/16 so với 3/4/5 theo chiều"
+  caption="Hai ảnh đầu ra trông gần như nhau, nhưng thứ mỗi lần lấy mẫu phải chạm tới thì không."
+/>
+
 ## Bằng sáng chế hết hạn và OpenSimplex
 
 Perlin từng cấp bằng sáng chế Mỹ (US 6.867.776) cho việc dùng Simplex noise trong tổng hợp texture 3D trở lên — hết hạn ngày 8/1/2022, nên từ đó Simplex 3D/4D dùng tự do không còn rào cản pháp lý (Simplex 2D chưa từng bị patent). Trong giai đoạn còn patent (2001–2022), cộng đồng tạo ra OpenSimplex (Kurt Spencer, 2014) — thuật toán thay thế không dính patent, dùng lưới tổ ong kéo giãn khác về mặt hình học, đổi lại kernel lớn hơn (mượt hơn nhưng chậm hơn) và tránh được vệt sọc theo trục, artefact thị giác dễ nhận ra nhất của Perlin cổ điển ở độ phóng cao.

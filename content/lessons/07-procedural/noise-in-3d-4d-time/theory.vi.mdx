@@ -36,6 +36,12 @@ với $T$ là chu kỳ loop mong muốn (giây), $R$ là bán kính đường tr
 
 Value/gradient noise nội suy giữa các góc của một ô lưới — số góc tăng theo luỹ thừa 2 với số chiều: $2^2=4$ góc cho `noise2`, $2^3=8$ cho `noise3`, $2^4=16$ cho `noise4`. Mỗi góc cần đúng một lần hash — `noise4` do đó tốn gấp đôi số hash so với `noise3`, gấp bốn lần `noise2`, cho MỖI lần gọi. Bài Perlin & Simplex noise đã chỉ ra vì sao Simplex chọn lưới tam giác/tứ diện thay vì lưới vuông/khối chính là để né chi phí luỹ thừa này: chỉ cần $n+1$ đỉnh (3/4/5 ở 2D/3D/4D) thay vì $2^n$ góc — ở 4D là 5 so với 16, chênh hơn ba lần. Cost ladder thực dụng cho bài này: chỉ cần scroll thì `noise2` gần như miễn phí; slice đắt gấp đôi scroll nhưng đổi lại chuyển động thật hữu cơ; loop 4D đắt nhất nhưng là cách DUY NHẤT trong ba cách khép vòng chính xác — chọn dựa trên nhu cầu lặp của sản phẩm cuối, không phải cứ chiều cao hơn là tốt hơn.
 
+<Figure
+  src="/figures/07-procedural/time-axis-sampling.svg"
+  alt="Ba bảng: scroll với cửa sổ lấy mẫu trượt trên một trường 2D cố định, slice với chồng lát cắt 2D dọc trục thứ ba, và loop với một điểm chạy trên đường tròn trong mặt phẳng hai chiều phụ; bên dưới là số góc 4, 8, 16 so với 3, 4, 5 của Simplex"
+  caption="Ba chế độ khác nhau ở chỗ mẫu đi đâu trong không gian noise, chứ không ở chỗ ảnh trông thế nào."
+/>
+
 ## Kết hợp scroll với slice, và giữ độ chính xác khi t lớn
 
 Hai chế độ không loại trừ nhau: khói bị gió thổi theo một hướng NHƯNG vẫn cuộn xoáy tại chỗ cần cả hai cùng lúc — cộng một hướng trôi vào hai chiều đầu của `noise3`, để chiều thứ ba vẫn làm trục tiến hoá riêng:

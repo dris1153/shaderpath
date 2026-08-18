@@ -6,6 +6,12 @@ Giả sử bạn có một texture trạng thái `state`, và muốn viết mộ
 
 Giải pháp: dùng **hai** render target, gọi là A và B. Frame này đọc từ A, ghi vào B; frame sau đảo vai trò — đọc từ B, ghi vào A. Không texture nào từng vừa đọc vừa ghi trong cùng một draw call; A và B thay phiên nhau làm "bản nháp" cho nhau.
 
+<Figure
+  src="/figures/09-gpgpu/pingpong-read-write-swap.svg"
+  alt="Lưới ba khung hình liên tiếp trong đó target A và target B đổi vai đọc/ghi sau mỗi frame, cạnh hai hộp giải thích feedback loop và việc hoán đổi chỉ dời tham chiếu"
+  caption="Đúng thứ demo không cho thấy: vị trí particle đang nằm trong target nào, và hai vai trò đọc/ghi đảo lại sau mỗi frame."
+/>
+
 ### Dựng WebGLRenderTarget thủ công trong Three.js
 
 ```js

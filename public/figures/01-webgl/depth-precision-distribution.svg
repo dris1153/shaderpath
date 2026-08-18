@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 508" width="620" height="508" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --warn-fill: #422006;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .tick { font-size: 11px; fill: var(--muted); }
+    .pct { font-size: 12px; font-weight: 600; }
+    .sup { font-size: 9px; }
+    .ink-acc { fill: var(--accent-ink); }
+    .ink-warn { fill: var(--warn-ink); }
+    .axis { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .curve { stroke: var(--accent-stroke); stroke-width: 2.5; fill: none; }
+    .guide { stroke: var(--accent-stroke); stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+    .seg { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .seg-acc { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 1.5; }
+    .seg-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 1.5; }
+    .lead { stroke: var(--warn-stroke); stroke-width: 1.2; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="40" y="22">Depth precision is not spread evenly from near to far</text>
+  <text class="note" x="40" y="40">Perspective depth with near n = 0.1 and far f = 1000, the pair used in the prose above.</text>
+
+  <!-- ============ the curve ============ -->
+  <path class="axis" d="M90,290 L372,290" marker-end="url(#head)" />
+  <path class="axis" d="M90,290 L90,42" marker-end="url(#head)" />
+  <path class="axis" d="M103,290 L103,295 M142,290 L142,295 M220,290 L220,295 M350,290 L350,295 M85,170 L90,170 M85,50 L90,50" />
+  <text class="tick" x="103" y="308" text-anchor="middle">n = 0.1</text>
+  <text class="tick" x="142" y="308" text-anchor="middle">0.4</text>
+  <text class="tick" x="220" y="308" text-anchor="middle">1.0</text>
+  <text class="tick" x="350" y="308" text-anchor="middle">2.0</text>
+  <text class="tick" x="82" y="294" text-anchor="end">0</text>
+  <text class="tick" x="82" y="174" text-anchor="end">0.5</text>
+  <text class="tick" x="82" y="54" text-anchor="end">1.0</text>
+  <text class="note" x="230" y="328" text-anchor="middle">distance d from the camera</text>
+  <text class="note" x="52" y="172" text-anchor="middle" transform="rotate(-90 52 172)">stored depth</text>
+
+  <polyline class="curve" points="103.0,290.0 104.3,268.2 105.6,250.0 106.9,234.6 108.2,221.4 109.5,210.0 110.8,200.0 113.4,183.3 116.0,170.0 118.6,159.1 122.5,146.0 129.0,130.0 135.5,118.6 142.0,110.0 155.0,98.0 168.0,90.0 181.0,84.3 194.0,80.0 220.0,74.0 246.0,70.0 272.0,67.1 298.0,65.0 324.0,63.3 350.0,62.0" />
+
+  <path class="guide" d="M116,290 L116,170 M90,170 L116,170" />
+  <circle cx="116" cy="170" r="4" fill="var(--accent-stroke)" />
+  <text class="lbl ink-acc" x="128" y="164">half the range is gone by d = 0.2</text>
+  <text class="note" x="128" y="182">everything past 0.2 shares the rest</text>
+
+  <!-- ============ the reference panel ============ -->
+  <text class="lbl" x="392" y="76">depth(d) = f/(f - n) x (1 - n/d)</text>
+  <text class="note" x="392" y="98">Hyperbolic in d — the slope goes</text>
+  <text class="note" x="392" y="114">as 1/d<tspan class="sup" dy="-4">2</tspan><tspan dy="4">: steep at near, flat past 1.</tspan></text>
+
+  <text class="lbl" x="392" y="150">half-range point: d = 2nf/(n + f)</text>
+  <text class="note" x="392" y="172">About 2n whenever f is much larger</text>
+  <text class="note" x="392" y="188">than n — 0.1998 for this pair.</text>
+
+  <text class="note" x="392" y="224">Drop near to 0.001 and that point</text>
+  <text class="note" x="392" y="240">slides to 0.002: the same half of</text>
+  <text class="note" x="392" y="256">the range now buys 2 mm of scene</text>
+  <text class="note" x="392" y="272">instead of 10 cm.</text>
+
+  <!-- ============ the band ============ -->
+  <text class="lbl" x="40" y="366">The stored [0, 1] range, split by the world distance each part pays for</text>
+
+  <rect class="seg-acc" x="40" y="378" width="280" height="34" />
+  <rect class="seg" x="320" y="378" width="140" height="34" />
+  <rect class="seg" x="460" y="378" width="84" height="34" />
+  <rect class="seg" x="544" y="378" width="50" height="34" />
+  <rect class="seg-warn" x="594" y="378" width="6" height="34" />
+
+  <text class="pct ink-acc" x="180" y="400" text-anchor="middle">50%</text>
+  <text class="pct" x="390" y="400" text-anchor="middle">25%</text>
+  <text class="pct" x="502" y="400" text-anchor="middle">15%</text>
+  <text class="pct" x="569" y="400" text-anchor="middle">9%</text>
+
+  <text class="note" x="180" y="428" text-anchor="middle">d 0.1 -&gt; 0.2</text>
+  <text class="note" x="390" y="428" text-anchor="middle">0.2 -&gt; 0.4</text>
+  <text class="note" x="502" y="428" text-anchor="middle">0.4 -&gt; 1</text>
+  <text class="note" x="569" y="428" text-anchor="middle">1 -&gt; 10</text>
+
+  <path class="lead" d="M597,412 L597,448 L508,448" />
+  <text class="note ink-warn" x="502" y="452" text-anchor="end">1%: everything from d = 10 out to far</text>
+
+  <text class="note" x="40" y="482">The buffer cuts [0, 1] into 2^N even steps — N is usually 24, but read it rather than assume it.</text>
+  <text class="note" x="40" y="498">The steps are even. The distances they pay for are not, and that mismatch is what z-fighting exploits.</text>
+</svg>

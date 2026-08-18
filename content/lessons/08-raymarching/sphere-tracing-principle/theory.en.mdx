@@ -49,6 +49,12 @@ A low `maxSteps` punches holes in exactly the most predictable place: silhouette
 
 Raising `maxSteps` gives those rays more room to converge, filling in the holes — at a cost: every step is one more call to $f(p)$, and in a complex scene, $f$ can cost dozens of operations per call.
 
+<Figure
+  src="/figures/08-raymarching/sphere-tracing-safe-step.svg"
+  alt="Two panels: a ray reaching a surface in six steps, each step ending exactly on a dashed circle of radius f(p) that touches the nearest surface, and below it a grazing ray whose steps collapse into a dense cluster short of the surface"
+  caption="That circle is the entire guarantee: the step ends on it, never past it. Where the nearest surface sits beside the ray instead of ahead of it, the same rule turns into a crawl, and the budget runs out before the ray arrives."
+/>
+
 ## epsilon: Too Big Is Lumpy, Too Small Is Banding
 
 `epsilon` defines "how close counts as close enough." Because a proper SDF grows by exactly 1 unit for every 1 unit of real-world distance traveled (the Lipschitz-1 property mentioned in the `shaping-functions-and-2d-sdf` lesson), `epsilon` isn't some abstract number — it's literally **the surface-position error, measured in real world units**. A large `epsilon` means the recorded "hit" point can sit that many units away from the true surface; on a curved surface, that error shows up as small, uneven fake facets — the surface reads as lumpy and rough instead of smooth.

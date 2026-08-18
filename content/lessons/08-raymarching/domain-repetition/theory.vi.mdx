@@ -24,6 +24,12 @@ Track 6 dạy `InstancedMesh` — cách rasterize hàng nghìn bản sao một m
 
 Công thức fold ở trên ngầm giả định object nằm gọn trong nửa ô ($\|q\|$ nhỏ hơn $0.5c$ theo mọi hướng) — tức bản sao "chính chủ" của ô hiện tại luôn là bản sao gần nhất với mọi điểm truy vấn trong ô đó. Giả định này vỡ khi object không đối xứng quanh tâm ô, hoặc đơn giản hơn: khi ô quá chật so với kích thước object. Gần biên ô, một bản sao ở ô lân cận có thể thực sự gần điểm truy vấn hơn bản sao đã fold — nhưng SDF chỉ đánh giá đúng một bản sao (của ô hiện tại), nên giá trị trả về là một khoảng cách LỚN HƠN khoảng cách thật tới bề mặt gần nhất. Đây là vi phạm trực tiếp điều kiện Lipschitz-1 mà sphere tracing dựa vào (bài Nguyên lý sphere tracing): bước march tính từ một $d(p)$ bị thổi phồng có thể nhảy quá xa, xuyên qua bề mặt thật ở đúng vùng hai ô chạm nhau, hiện ra thành vệt răng cưa hoặc lỗ hổng ngay tại đường lưới.
 
+<Figure
+  src="/figures/08-raymarching/domain-fold-one-cell.svg"
+  alt="Trên: năm ô của một thế giới lặp, mỗi ô có một mũi tên gập về cùng một ô chuẩn chứa đúng một bản sao. Dưới: hai ô có vật thể lệch tâm, khoảng cách mà map() trả về dài hơn hẳn khoảng cách tới bản sao ở ô bên cạnh"
+  caption="Các bản sao không được lưu ở đâu cả — toạ độ mới là thứ bị gập, nên một lần gọi trả lời cho tất cả. Cái giá là mỗi truy vấn chỉ đo được đúng một bản sao, và đó chính là lý do vật thể lệch tâm khiến khoảng cách trả về dài quá mức an toàn."
+/>
+
 ## Sửa hiện đại: round-based repetition và giới hạn hữu hạn
 
 Inigo Quilez, trong bài viết "Repetition" trên iquilezles.org, trình bày lại công thức trên bằng `round` thay vì `mod`:

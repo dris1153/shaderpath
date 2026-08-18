@@ -48,6 +48,12 @@ GPGPU (General-Purpose computing on GPU) flips the whole architecture above: ins
 
 The general principle behind this trick: **a texture is equivalent to a 2D array, and a fragment shader is equivalent to a parallel `map`** over that array. This idea predates compute shaders entirely — GPGPU emerged in the mid-2000s, when programmers "tricked" a graphics pipeline built only to draw triangles into a parallel computing machine, by rendering into a texture instead of onto the screen. WebGL2 has no real compute shader (that's WebGPU's privilege), so this texture-as-array trick remains the primary route to GPGPU in the browser — and it's the foundation every remaining lesson in this track builds on.
 
+<Figure
+  src="/figures/09-gpgpu/per-frame-cost-cpu-vs-gpu.svg"
+  alt="Two parallel columns: the left runs from a Float32Array through a JS loop and bufferSubData into a VBO, the right runs from a state texture through a compute pass to a vertex shader sampling it, with a note comparing 1.2 MB per frame against PCIe bandwidth"
+  caption="Both columns run every frame, but only the left one spends the main thread's 16.6 ms budget — and the costliest part of that spend is not the volume of data moved."
+/>
+
 ## Real-World Thresholds: When Moving to the GPU Pays Off
 
 There's no hard line, but a few rough estimates help orient you. Below roughly 10,000 particles, a CPU loop usually isn't worth worrying about — JS plus upload cost sits deep inside the frame budget, and you keep full freedom to write arbitrary JS logic per particle. Above roughly 50,000, the combined weight of the JS loop, GC, and upload is usually large enough to justify building a GPU pipeline. The 10k–50k range is a gray zone, depending on how complex each particle's update is, the target device (a mid-range phone is nothing like a desktop), and whether particles need to interact with CPU-side gameplay logic at all.

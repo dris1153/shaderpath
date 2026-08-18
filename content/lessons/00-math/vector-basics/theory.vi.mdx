@@ -58,6 +58,12 @@ $$
 
 Kết quả $\hat v$ giữ nguyên thông tin hướng, bỏ hết thông tin độ lớn — hữu ích bất cứ khi nào code chỉ cần biết "đi hướng nào", còn "đi bao xa/bao nhanh" do chỗ khác quyết định. Ví dụ kinh điển: input di chuyển 2D lấy trực tiếp từ phím WASD dạng $(\pm1, \pm1)$. Đi chéo (nhấn W+D) cho vector $(1, 1)$, có độ dài $\sqrt{2} \approx 1.41$ — nếu nhân thẳng vector này với tốc độ mà quên normalize, nhân vật đi chéo nhanh hơn đi thẳng khoảng 41%, một lỗi di chuyển kinh điển trong game 2D góc nhìn từ trên xuống. Normalize input trước khi nhân tốc độ ($\hat v \times \text{speed} \times \Delta t$) loại bỏ hẳn lỗi này.
 
+<Figure
+  src="/figures/00-math/vector-add-subtract-normalize.svg"
+  alt="Ba panel cạnh nhau: cộng vector kiểu tip-to-tail kèm hình bình hành nét đứt, vector hiệu chạy từ mũi b đến mũi a, và vector v = (3, 4) cùng vector đơn vị của nó nằm trên đường tròn bán kính 1"
+  caption="Tổng là đường chéo của hình bình hành, hiệu là mũi tên nối hai đầu — vẫn đúng hai vector đó, chỉ khác ở mũi tên nào được vẽ ra."
+/>
+
 ## Vector đóng ba vai: vị trí, hướng, vận tốc
 
 Cùng một kiểu dữ liệu `(x, y, z)`, nhưng ý nghĩa phụ thuộc vào ngữ cảnh sử dụng: **vị trí** (position) là toạ độ một điểm trong không gian — có ý nghĩa tuyệt đối, gắn chặt với gốc toạ độ. **Hướng** (direction) mô tả "quay về đâu" mà không quan tâm đang ở đâu — thường được normalize về độ dài 1, và vô nghĩa khi cộng thêm vị trí của object vào nó (pháp tuyến bề mặt là ví dụ điển hình: dịch chuyển object không được làm pháp tuyến dịch theo). **Vận tốc** (velocity) mã hoá cả hướng chuyển động lẫn tốc độ ngay trong độ lớn của chính nó — vector vận tốc dài gấp đôi nghĩa là chuyển động nhanh gấp đôi theo đúng hướng đó. Nhầm vai trò — ví dụ normalize một vector vị trí, hay cộng một vector hướng vào một vector khác như thể nó là vị trí — là nguồn lỗi âm thầm khó debug, vì bản thân compiler không hề biết `vec3` này "nên" đóng vai trò gì.

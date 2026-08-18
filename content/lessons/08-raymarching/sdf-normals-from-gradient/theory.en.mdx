@@ -53,6 +53,12 @@ vec3 normalTetrahedron(vec3 p, float eps) {
 
 The four sample directions are $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ — the four vertices of a tetrahedron inscribed in a cube of side $2\varepsilon$. Each term multiplies the sample direction $k_i$ (also its weight) by $f$ evaluated there, and the four are summed; that weighted sum exactly cancels the constant $f(p)$ term (its coefficient sums to zero because the four $k_i$ vectors themselves sum to zero), leaving a linear estimate of the gradient — the same order of accuracy (error $O(\varepsilon^2)$) as the six-sample central difference, not a cruder approximation. The saving: $6 \to 4$ `map()` calls is exactly a $\frac{6-4}{6} \approx 33\%$ cut in normal cost — meaningful once `map()` is a real SDF tree (many primitives, many boolean ops), not just a bare `length(p) - r`. This is the default technique in nearly every production raymarching shader, on Shadertoy and in shipped games alike (source: Quilez's original writeup, linked in References).
 
+<Figure
+  src="/figures/08-raymarching/central-diff-vs-tetrahedron-taps.svg"
+  alt="The same cube of side 2ε around the hit point, drawn twice: on the left six taps at the face centres along ±x, ±y, ±z; on the right four taps at alternating cube corners joined into a tetrahedron"
+  caption="Both patterns estimate the same gradient to the same order of accuracy; the tetrahedron simply reads four points instead of six. That saving is only worth having because the normal is computed once per pixel, never inside the march loop."
+/>
+
 ## Choosing Epsilon: Rounding Sharp Edges vs. Breaking Up in Float Noise
 
 There's no single "correct" $\varepsilon$ — it's the radius of the sampling neighborhood around $p$, and both extremes fail in different ways:

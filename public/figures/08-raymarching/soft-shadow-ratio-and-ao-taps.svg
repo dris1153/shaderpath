@@ -1,0 +1,133 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 562" width="640" height="562" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .head { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .solid { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .ground { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .ray { stroke: var(--accent-stroke); stroke-width: 1.8; fill: none; }
+    .ray-block { stroke: var(--warn-stroke); stroke-width: 1.8; fill: none; }
+    .gap { fill: none; stroke: var(--warn-stroke); stroke-width: 1.2; stroke-dasharray: 3 3; }
+    .measure { stroke: var(--warn-stroke); stroke-width: 1.6; fill: none; }
+    .tick { stroke: var(--accent-stroke); stroke-width: 1.4; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .dot { fill: var(--accent-stroke); }
+    .dot-warn { fill: var(--warn-stroke); }
+    .sun { fill: none; stroke: var(--warn-stroke); stroke-width: 1.6; }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="rh" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">Two marches a rasteriser has no way to make: one toward the light, five along the normal</text>
+  <text class="note" x="24" y="42">No second render pass, no depth texture, no bias to tune — both are only more calls to the same map().</text>
+
+  <!-- ==================== soft shadow ==================== -->
+  <text class="head" x="24" y="76">Soft shadow: march from the hit point toward the light</text>
+
+  <circle class="sun" cx="80" cy="128" r="11" />
+  <path class="sun" d="M80,108 L80,114 M80,142 L80,148 M60,128 L66,128 M94,128 L100,128 M66,114 L70,118 M90,138 L94,142" />
+  <text class="note" x="80" y="164" text-anchor="middle">light</text>
+
+  <path class="ground" d="M40,310 L392,310" />
+  <rect class="solid" x="120" y="215" width="65" height="45" rx="5" />
+
+  <!-- blocked -->
+  <path class="ray-block" d="M230,306 L188,250" />
+  <circle class="dot-warn" cx="230" cy="310" r="3.5" />
+  <path class="ray-block" d="M181,244 L191,254 M191,244 L181,254" />
+
+  <!-- penumbra -->
+  <path class="ray" d="M270,302 L156,150" marker-end="url(#rh)" />
+  <circle class="dot" cx="270" cy="310" r="3.5" />
+  <path class="tick" d="M270,310 L270,300" />
+  <circle class="dot" cx="193.8" cy="208.4" r="3" />
+  <circle class="gap" cx="193.8" cy="208.4" r="11" />
+  <path class="measure" d="M193.8,208.4 L185,215" />
+
+  <!-- clear -->
+  <path class="ray" d="M330,302 L246,190" marker-end="url(#rh)" />
+  <circle class="dot" cx="330" cy="310" r="3.5" />
+
+  <text class="label" x="278" y="292">p + n·ε</text>
+  <text class="warn" x="212" y="196">d</text>
+  <path class="leader" d="M208,199 L192,207" />
+  <text class="label" x="256" y="268">t</text>
+  <path class="leader" d="M252,264 L236,250" />
+
+  <text class="warn" x="230" y="330" text-anchor="middle">0</text>
+  <text class="label" x="272" y="330" text-anchor="middle">min k·d / t</text>
+  <text class="label" x="332" y="330" text-anchor="middle">1</text>
+  <text class="note" x="40" y="330">shadow value</text>
+
+  <text class="note" x="414" y="120">The ray has to start at p + n·ε: from p</text>
+  <text class="note" x="414" y="136">itself the very first step reads f ≈ 0.</text>
+  <text class="note" x="414" y="164">Hit anything on the way and the</text>
+  <text class="note" x="414" y="180">answer is 0, with no gradient at all.</text>
+  <text class="note" x="414" y="208">Otherwise it is the SMALLEST k·d/t</text>
+  <text class="note" x="414" y="224">found anywhere along the ray — one</text>
+  <text class="note" x="414" y="240">brief near miss darkens the point.</text>
+  <text class="note" x="414" y="268">The dashed circle is that closest gap:</text>
+  <text class="note" x="414" y="284">a narrower gap, a deeper penumbra.</text>
+
+  <path class="rule" d="M24,368 L616,368" />
+
+  <!-- ==================== ambient occlusion ==================== -->
+  <text class="head" x="24" y="396">Ambient occlusion: five taps straight along n</text>
+
+  <path class="ground" d="M60,530 L200,530" />
+  <rect class="solid" x="200" y="420" width="52" height="110" rx="4" />
+
+  <circle class="dot" cx="170" cy="530" r="3.5" />
+  <path class="tick" d="M170,530 L170,446" />
+  <circle class="dot" cx="170" cy="524" r="3.5" />
+  <circle class="dot" cx="170" cy="506" r="3.5" />
+  <circle class="dot-warn" cx="170" cy="488" r="3.5" />
+  <circle class="dot-warn" cx="170" cy="470" r="3.5" />
+  <circle class="dot-warn" cx="170" cy="452" r="3.5" />
+  <path class="measure" d="M170,488 L200,488 M170,470 L200,470 M170,452 L200,452" />
+
+  <text class="label" x="162" y="518" text-anchor="end">d = h</text>
+  <text class="warn" x="196" y="440" text-anchor="end">d &lt; h</text>
+  <text class="note" x="170" y="548" text-anchor="middle">p</text>
+  <text class="note" x="162" y="452" text-anchor="end">n</text>
+
+  <text class="note" x="290" y="424">h = 0.01 + 0.12·i/4, for i = 0…4</text>
+  <text class="note" x="290" y="442">occ += (h − d) · 0.95ⁱ</text>
+  <text class="note" x="290" y="460">ao = clamp(1 − 2.5·occ, 0, 1)</text>
+  <text class="note" x="290" y="492">The two lowest taps still see open ground below them:</text>
+  <text class="note" x="290" y="508">they read back exactly h and add nothing. The upper three</text>
+  <text class="note" x="290" y="524">run into the wall first, and that shortfall, decayed by 0.95ⁱ,</text>
+  <text class="note" x="290" y="540">is the whole contact shadow.</text>
+</svg>

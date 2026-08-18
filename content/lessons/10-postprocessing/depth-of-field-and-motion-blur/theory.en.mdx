@@ -38,6 +38,12 @@ The correct approach: for each pixel, compute a **screen-space velocity vector**
 
 A full velocity buffer needs every vertex's previous clip-space position (usually written to its own target) — extra attributes, extra target, correct for self-animating geometry. A much cheaper subset exists: if every mesh sits still and only the camera moves, every point's velocity can be **reconstructed from the depth buffer plus the delta between two camera matrices** — no dedicated buffer at all. From a pixel's depth, rebuild its world position using the *current* camera's inverse view-projection matrix; reproject that point through the *previous* frame's view-projection matrix (kept one frame behind); the difference between the two clip-space coordinates is the velocity. The demo below implements exactly this as a hand-written `ShaderPass`.
 
+<Figure
+  src="/figures/10-postprocessing/depth-read-two-ways.svg"
+  alt="One depth buffer feeding two panels: on the left, three objects along a distance axis with circles of confusion that grow with the gap to the focus plane; on the right, a world point P reprojected through this frame's and last frame's cameras onto the image plane, the gap between the two marked as velocity with sixteen sample ticks along it"
+  caption="Same buffer, two questions: DOF asks how far this pixel sits from the focus plane, motion blur asks where the same world point was one frame ago."
+/>
+
 ## The Cost Ladder: None → Camera-Only → Full Velocity Buffer
 
 Three tiers: no motion blur (zero cost, fast camera motion reads as visible judder at low frame rates); camera-only (one full-screen pass plus one extra depth pre-pass, no new buffer — cheap, correct for the camera, but self-animating objects stay perfectly rigid); full velocity buffer (an extra target writing every vertex's velocity every frame — correct for both, most expensive). A cutscene with fast character action needs the full buffer; a static exploration scene with only camera pan/orbit is already convincing with camera-only.

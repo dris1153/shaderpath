@@ -37,6 +37,12 @@ A normal draw call always rasterizes: turning points/triangles into pixels and r
 
 Ping-pong FBOs ping-pong at the texture level (two `WebGLRenderTarget`s); transform feedback ping-pongs at the buffer/VAO level. Each set (A, B) is one `WebGLVertexArrayObject` pointing at that set's own position and velocity buffers. Each frame: bind the "front" set's VAO to both render (draw particles on screen using last frame's data) and serve as the update draw call's input; the other set's buffers receive output through `bindBufferBase`; then flip the front/back roles for next frame. Since input and output are two physically distinct buffer objects (not two regions of the same buffer), no manual synchronization is needed at all — the driver guarantees ordering on its own.
 
+<Figure
+  src="/figures/09-gpgpu/transform-feedback-capture-path.svg"
+  alt="The path from buffer set A's VAO through the vertex shader to the transform feedback binding points and into buffer set B, with the rasterizer and fragment box drawn dashed because RASTERIZER_DISCARD skips it"
+  caption="Not one texture appears anywhere on this path: the vertex shader's outputs drop straight into buffers, and the rasterize stage is switched off entirely."
+/>
+
 ## Why Three.js Doesn't Expose Transform Feedback
 
 `THREE.Material`/`WebGLRenderer` are designed around one pipeline: material → shader → rasterize → fragment → framebuffer; every abstraction around render targets, `ShaderMaterial`, post-processing all assumes a fragment step at the end that produces a pixel. Transform feedback breaks exactly that assumption — it's a draw call that does NOT rasterize, writing straight into a buffer instead of a framebuffer. Three.js has no concept of a "target that isn't a texture" anywhere in its material system, so `GPUComputationRenderer` (and every other GPGPU-adjacent API Three ships) is forced down the fragment-texture road even though it's a bit slower, instead of exposing raw transform feedback. This isn't an oversight — it's a direct consequence of abstracting around "a material produces a pixel," which is exactly why this lesson's demo has to drop down to raw WebGL2 instead of going through Three.

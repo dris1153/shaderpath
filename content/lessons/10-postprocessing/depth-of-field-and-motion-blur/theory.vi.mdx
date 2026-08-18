@@ -38,6 +38,12 @@ Cách đúng: với mỗi pixel, tính **vector vận tốc màn hình** — v�
 
 Velocity buffer đầy đủ cần lưu vị trí clip-space frame trước của *từng vertex* (thường qua một target riêng) — tốn thêm attribute, thêm target, đúng cho vật tự chuyển động (skinning, vertex animation). Có tập con rẻ hơn hẳn: nếu hình học đứng yên tuyệt đối và chỉ camera di chuyển, vận tốc mọi điểm có thể **suy từ depth buffer sẵn có cộng chênh lệch ma trận camera** — không cần buffer riêng nào. Từ depth tại pixel, dựng lại world position bằng ma trận nghịch đảo view-projection của camera *hiện tại*; chiếu lại đúng điểm đó qua ma trận view-projection của camera *frame trước* (lưu trễ một khung hình); hiệu hai toạ độ clip-space chính là vận tốc. Demo bên dưới cài đúng biến thể này thành một `ShaderPass` tự viết.
 
+<Figure
+  src="/figures/10-postprocessing/depth-read-two-ways.svg"
+  alt="Một depth buffer nuôi hai panel: bên trái là ba vật thể trên trục khoảng cách với circle of confusion lớn dần theo độ lệch so với mặt phẳng lấy nét; bên phải là điểm thế giới P được chiếu lại qua camera của frame này và frame trước lên mặt phẳng ảnh, khoảng cách giữa hai điểm được đánh dấu là velocity kèm mười sáu vạch mẫu dọc theo nó"
+  caption="Cùng một buffer, hai câu hỏi khác nhau: DOF hỏi pixel này lệch bao xa khỏi mặt phẳng lấy nét, còn motion blur hỏi cùng điểm thế giới đó một frame trước nằm ở đâu."
+/>
+
 ## Thang chi phí: none → camera-only → velocity buffer đầy đủ
 
 Ba mức, ba chi phí khác hẳn: không motion blur (0 chi phí, camera di chuyển nhanh nhìn giật/strobing rõ ở khung hình thấp); camera-only (một pass full-screen + một depth pre-pass phụ, không buffer mới — rẻ, đúng với camera nhưng vật tự chuyển động vẫn cứng như không có gì); velocity buffer đầy đủ (thêm target ghi vận tốc mọi vertex mỗi frame — đúng cả camera lẫn vật thể, tốn nhất). Cutscene có hành động nhanh cần velocity buffer đầy đủ; cảnh khám phá tĩnh chỉ camera pan/orbit thì camera-only đã đủ thuyết phục mắt.

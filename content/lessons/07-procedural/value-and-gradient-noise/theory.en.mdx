@@ -73,6 +73,12 @@ float n = mix(mix(v00, v10, u.x), mix(v01, v11, u.x), u.y);
 
 These four `dot` lines keep value noise's exact bilinear structure, just swapping the "corner value" ($a, b, c, d$) for "the gradient's projection onto the direction toward $p$." The direct consequence: right at a grid point, the offset vector to itself is $(0, 0)$, so $\mathrm{dot}(g, \vec 0) = 0$ for any gradient — gradient noise is **always exactly zero at every grid point**, no matter what direction the hash produces. Value noise has no such property: at a grid point, its value is literally the raw hash, some arbitrary number in $[0,1)$, which reads as a fixed "bright spot" at every lattice node if you look closely.
 
+<Figure
+  src="/figures/07-procedural/lattice-cell-anatomy.svg"
+  alt="Two lattice cells side by side: on the left the four corners hold the numbers a, b, c and d; on the right they hold unit vectors with dashed offset vectors pointing at the sample point p, and below both sits the shared nested mix formula"
+  caption="One and the same bilinear blend on both sides — only the meaning of the four corner numbers changes."
+/>
+
 ## Comparing the Two, and Why Engines Reach for Gradient Noise
 
 Visually, value noise (with a good fade) reads as a "blocky/cloudy" texture — clumping around each node's hash value, with a fairly even amplitude but shapes biased toward round blobs centered on grid points, since the only information each corner carries is "high or low." Gradient noise is noticeably smoother, and its feature size is more even across the whole field, since each corner also carries directional information — the resulting field varies not just in amplitude but in slope direction continuously in every direction, less biased toward the horizontal/vertical axes than value noise.

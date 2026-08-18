@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 446" width="620" height="446" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --val-fill: #dbeafe;
+      --val-stroke: #2563eb;
+      --val-ink: #1e3a8a;
+      --grad-fill: #fef3c7;
+      --grad-stroke: #d97706;
+      --grad-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --val-fill: #1e3a5f;
+        --val-stroke: #60a5fa;
+        --val-ink: #bfdbfe;
+        --grad-fill: #422006;
+        --grad-stroke: #fbbf24;
+        --grad-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .sub { font-size: 13px; font-weight: 600; }
+    .code { font-size: 11px; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .cell-val { fill: var(--val-fill); stroke: var(--val-stroke); stroke-width: 2; }
+    .cell-grad { fill: var(--grad-fill); stroke: var(--grad-stroke); stroke-width: 2; }
+    .dot-val { fill: var(--val-stroke); }
+    .dot-grad { fill: var(--grad-stroke); }
+    .ink-val { fill: var(--val-ink); }
+    .ink-grad { fill: var(--grad-ink); }
+    .offset { stroke: var(--line); stroke-width: 1.25; fill: none; stroke-dasharray: 3 3; }
+    .vec { stroke: var(--grad-stroke); stroke-width: 2; fill: none; }
+  </style>
+  <defs>
+    <marker id="vhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--grad-stroke)" />
+    </marker>
+    <marker id="ohead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="22">One lattice cell: 4 hash calls, whatever the pixel count inside</text>
+
+  <!-- panel A: value noise -->
+  <text class="sub ink-val" x="24" y="50">Value noise: the corner stores a number</text>
+  <rect class="cell-val" x="66" y="78" width="176" height="176" rx="4" />
+  <circle class="dot-val" cx="66" cy="254" r="5" />
+  <circle class="dot-val" cx="242" cy="254" r="5" />
+  <circle class="dot-val" cx="66" cy="78" r="5" />
+  <circle class="dot-val" cx="242" cy="78" r="5" />
+  <text class="sub ink-val" x="54" y="274" text-anchor="middle">a</text>
+  <text class="sub ink-val" x="254" y="274" text-anchor="middle">b</text>
+  <text class="sub ink-val" x="54" y="72" text-anchor="middle">c</text>
+  <text class="sub ink-val" x="254" y="72" text-anchor="middle">d</text>
+  <text class="note" x="24" y="292">a = hash21(i), b = hash21(i + (1,0)),</text>
+  <text class="note" x="24" y="308">c = hash21(i + (0,1)), d = hash21(i + (1,1))</text>
+
+  <!-- sample point and the floor/fract split -->
+  <path class="offset" d="M66,254 L150,170" marker-end="url(#ohead)" />
+  <circle cx="154" cy="166" r="4" fill="var(--ink)" />
+  <text class="code" x="162" y="162">p</text>
+  <text class="note" x="104" y="242">f = fract(p)</text>
+  <text class="note" x="24" y="330">i = floor(p) is that bottom-left corner</text>
+
+  <!-- panel B: gradient noise -->
+  <text class="sub ink-grad" x="330" y="50">Gradient noise: the corner stores a direction</text>
+  <rect class="cell-grad" x="372" y="78" width="176" height="176" rx="4" />
+  <circle class="dot-grad" cx="372" cy="254" r="5" />
+  <circle class="dot-grad" cx="548" cy="254" r="5" />
+  <circle class="dot-grad" cx="372" cy="78" r="5" />
+  <circle class="dot-grad" cx="548" cy="78" r="5" />
+  <path class="vec" d="M372,254 L400,234" marker-end="url(#vhead)" />
+  <path class="vec" d="M548,254 L519,237" marker-end="url(#vhead)" />
+  <path class="vec" d="M372,78 L384,110" marker-end="url(#vhead)" />
+  <path class="vec" d="M548,78 L516,90" marker-end="url(#vhead)" />
+  <path class="offset" d="M372,254 L460,166" marker-end="url(#ohead)" />
+  <path class="offset" d="M548,254 L460,166" marker-end="url(#ohead)" />
+  <path class="offset" d="M372,78 L460,166" marker-end="url(#ohead)" />
+  <path class="offset" d="M548,78 L460,166" marker-end="url(#ohead)" />
+  <circle cx="460" cy="166" r="4" fill="var(--ink)" />
+  <text class="code" x="468" y="160">p</text>
+  <text class="note" x="330" y="274">g = (cos&#160;&#952;, sin&#160;&#952;) with &#952; = 2&#960; &#183; hash21(corner)</text>
+  <text class="note" x="330" y="292">each corner contributes dot(g, f &#8722; its own offset):</text>
+  <text class="code" x="330" y="310">dot(g&#8321;&#8321;, f &#8722; (1,1))  &#8800;  dot(g&#8321;&#8321;, f)</text>
+  <text class="note" x="330" y="330">at a corner the offset is (0,0), so the value there is 0</text>
+
+  <!-- shared blend -->
+  <rect class="box" x="24" y="346" width="572" height="46" rx="8" />
+  <text class="code" x="38" y="366">n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f</text>
+  <text class="note" x="38" y="384">Both sides run this identical bilinear blend &#8212; only what the four corner numbers mean changes.</text>
+
+  <text class="foot" x="310" y="412" text-anchor="middle">Linear u leaves the slope jumping at every cell edge &#8212; those are the diamond creases.</text>
+  <text class="foot" x="310" y="430" text-anchor="middle">Quintic 6t&#8309; &#8722; 15t&#8308; + 10t&#179; zeroes f&#8242; and f&#8243; at t = 0 and t = 1, so neighbouring cells agree in slope and curvature.</text>
+</svg>

@@ -37,6 +37,12 @@ Một draw call bình thường luôn rasterize: biến điểm/tam giác thành
 
 Ping-pong FBO ping-pong ở cấp texture (hai `WebGLRenderTarget`); transform feedback ping-pong ở cấp buffer/VAO. Mỗi bộ (A, B) là một `WebGLVertexArrayObject` trỏ tới đúng hai buffer position/velocity của bộ đó. Một frame: bind VAO của bộ đang là "front" để vừa render (vẽ particle lên màn hình, dùng dữ liệu của frame trước) vừa dùng làm input cho draw call update; buffer đích của bộ còn lại nhận output qua `bindBufferBase`; xong thì đảo vai trò front/back cho frame sau. Vì input và output là hai object buffer vật lý khác nhau (không phải hai vùng của cùng một buffer), không cần đồng bộ hoá thủ công gì thêm — driver tự đảm bảo thứ tự.
 
+<Figure
+  src="/figures/09-gpgpu/transform-feedback-capture-path.svg"
+  alt="Đường đi từ VAO của buffer set A qua vertex shader tới các điểm bind transform feedback rồi vào buffer set B, với hộp rasterizer và fragment vẽ nét đứt vì bị RASTERIZER_DISCARD bỏ qua"
+  caption="Không một texture nào xuất hiện trên đường đi này: output của vertex shader rơi thẳng vào buffer, còn tầng rasterize thì bị tắt hẳn."
+/>
+
 ## Vì sao Three.js không lộ transform feedback ra API
 
 `THREE.Material`/`WebGLRenderer` được thiết kế quanh một pipeline: material → shader → rasterize → fragment → framebuffer; toàn bộ trừu tượng render target, `ShaderMaterial`, post-processing đều giả định có một bước fragment ở cuối tạo ra pixel. Transform feedback phá vỡ đúng giả định đó — nó là một draw call KHÔNG rasterize, ghi thẳng vào buffer thay vì framebuffer. Three.js không có khái niệm "buffer đích không phải texture" trong material system, nên `GPUComputationRenderer` (và mọi API GPGPU khác của Three) buộc phải đi đường fragment-texture dù chậm hơn một chút, thay vì lộ ra transform feedback thô. Đây không phải thiếu sót — là hệ quả trực tiếp của việc trừu tượng hoá quanh "material tạo ra pixel" — nên demo bài này buộc phải dùng WebGL2 thuần, không qua Three.

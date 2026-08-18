@@ -58,6 +58,12 @@ $$
 
 The result $\hat v$ keeps all the direction information and discards all the magnitude information — useful whenever code only needs to know "which way," while "how far/how fast" gets decided somewhere else. A classic example: 2D movement input read straight off WASD as $(\pm1, \pm1)$. Pressing diagonally (W+D) gives the vector $(1, 1)$, with length $\sqrt{2} \approx 1.41$ — multiply that raw vector by a speed constant without normalizing first, and the character moves about 41% faster diagonally than moving straight, a classic movement bug in top-down 2D games. Normalizing the input before multiplying by speed ($\hat v \times \text{speed} \times \Delta t$) removes the bug entirely.
 
+<Figure
+  src="/figures/00-math/vector-add-subtract-normalize.svg"
+  alt="Three panels side by side: tip-to-tail addition with the parallelogram dashed in, the difference vector running from b's tip to a's tip, and v = (3, 4) with its unit vector sitting on the radius-1 circle"
+  caption="The sum is the parallelogram's diagonal, the difference is the arrow joining the two tips — the same two vectors either way, only a different arrow drawn."
+/>
+
 ## Three Roles of a Vector: Position, Direction, Velocity
 
 The same `(x, y, z)` data type carries different meaning depending on context: a **position** is a point's coordinates in space — it has absolute meaning, tied to the origin. A **direction** describes "which way," independent of where anything is — it's usually normalized to length 1, and it's meaningless to add an object's position onto it (a surface normal is the textbook example: translating an object must never translate its normals along with it). A **velocity** encodes both the direction of motion and the speed, right inside its own magnitude — a velocity vector twice as long means moving twice as fast in that same direction. Mixing up roles — normalizing a position vector, say, or adding a direction vector into another as if it were a position — is a source of silent, hard-to-debug bugs, because the compiler has no idea what a given `vec3` is "supposed" to represent.

@@ -41,6 +41,12 @@ That `vec4(v3, 1.0)` pattern is one you'll type dozens of times in later lessons
 
 Swizzling means addressing vector components by NAME instead of index, and GLSL ships three fully equivalent naming sets for the exact same memory slots: `.xyzw` (positional), `.rgba` (color), `.stpq` (texture coordinates). The three sets are purely cosmetic aliases for the same 4 slots — you can NEVER mix names from two different sets in one swizzle expression (`.xg` is invalid, since `x` belongs to the xyzw set and `g` to the rgba set).
 
+<Figure
+  src="/figures/02-glsl/vector-component-aliases-and-swizzles.svg"
+  alt="The four slots of a vec4 with the three equivalent name rows xyzw, rgba and stpq aligned in columns, plus two read examples v.bgr and v.xyx producing vec3 values, and two rules for the write side"
+  caption="Three name sets, one set of four slots. The result size equals the number of letters you write, and only the write side forbids repeating a name."
+/>
+
 ### Reading and Permuting: `.xy`, `.bgr`, and Three Equivalent Name Sets
 
 On the read side, you can pick any subset, in any order, and REPEAT names freely: `.xy` pulls 2 of several components (yields a `vec2`), `.bgr` reverses the 3 color channels (still a `vec3`, just permuted), `.xyx` repeats the first component into the third slot too (still a `vec3` — reads have no uniqueness constraint). The result's size is always exactly the number of letters you wrote, regardless of whether the source vector is bigger or smaller — as long as the source actually HAS that component.

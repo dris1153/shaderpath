@@ -16,6 +16,12 @@ stores exactly those two vectors, one per **column**: the first column $(a, c)$ 
 
 Take $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$: column 1 is $(2,0)$, meaning $\hat i$ gets stretched to twice its length along $x$; column 2 is $(0,1)$, meaning $\hat j$ doesn't move at all. No multiplication required — the two columns alone say "double horizontal stretch." This direct-reading skill matters more than memorizing the multiplication formula, because it's what you actually reach for when a `mat3`/`mat4` printed to the console looks wrong and you need to know why an object is warped.
 
+<Figure
+  src="/figures/00-math/matrix-columns-basis-images.svg"
+  alt="A 2x2 matrix with each column tinted, beside a unit square turning into a parallelogram; below it a 4x4 matrix for a 90-degree turn about z, its three tinted columns matched to an axis triad where x-hat lands on +y"
+  caption="The first three columns of a 4x4 read exactly like the two columns of a 2x2 — more axes, same rule; the fourth column is what the next lesson adds."
+/>
+
 ## Matrix Times Vector: A Linear Combination of Columns
 
 The familiar matrix-vector multiplication formula — $M\vec v = (ax+by,\ cx+dy)$ — is, underneath, exactly:

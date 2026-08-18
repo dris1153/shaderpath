@@ -46,6 +46,12 @@ $$
 
 Far from the crossover ($|d_A - d_B| \gg k$), $h$ saturates to 0 or 1, the $k\,h\,(1-h)$ term vanishes, and the formula reduces exactly to plain `min` — e.g. $d_A=0.3, d_B=-0.1, k=0.2$ gives $h = \mathrm{clamp}(0.5 - 1, 0, 1) = 0$, and the result $-0.1$ matches $\min(0.3,-0.1)$ exactly. Near the crossover it's quite different: $d_A=0.1, d_B=0.15, k=0.2$ gives $h=0.625$, `mix` $=0.11875$, then subtracting $k h(1-h)=0.047$ lands around $0.072$ — **below** even $\min(0.1, 0.15)=0.1$. That subtracted term is exactly the "dip" that carves the rounded fillet joining the two shapes instead of a sharp corner.
 
+<Figure
+  src="/figures/08-raymarching/boolean-ops-and-smooth-min.svg"
+  alt="Three small graphs of two 1D distance fields for min, max and max(dA, −dB), with the negative part of each result shaded, and below them a zoom on the crossover where plain min has a corner and smooth min dips k/4 lower across a band exactly as wide as k"
+  caption="Every op reads the same two numbers and only changes the comparison. Smooth min is the one that adds something: a dip of exactly k/4 at the seam, spread over a band as wide as k, and nothing at all outside it."
+/>
+
 ### The Exponential Variant, and Choosing k
 
 Besides the polynomial form there's an exponential variant, smoother but costing an `exp`/`log`:

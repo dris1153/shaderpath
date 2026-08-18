@@ -47,6 +47,12 @@ $$
 
 Use `round`, not an arbitrary `floor` or `ceil` — rounding to the nearest device pixel matters whenever `clientWidth * dpr` lands on a fraction, which is common since responsive layouts rarely produce perfectly even CSS pixel counts. A concrete example: a canvas with CSS size $800 \times 450$ at DPR $2$ produces a buffer of $1600 \times 900 = 1{,}440{,}000$ pixels. Compared to DPR $1$ ($800 \times 450 = 360{,}000$ pixels), DPR $2$ needs $4\times$ as many pixels — and for a full-screen fragment shader, that's exactly $4\times$ as many fragment shader invocations per frame, since each buffer pixel is one invocation.
 
+<Figure
+  src="/figures/01-webgl/canvas-css-size-vs-drawing-buffer.svg"
+  alt="Two rectangles of the same displayed size: one labelled 800 x 450 CSS px set through canvas.style.width, one labelled 1600 x 900 device px set through canvas.width and canvas.height, with a zoom detail turning one CSS pixel into 2 x 2 device pixels"
+  caption="CSS size decides how much room the canvas takes on the page, the drawing buffer decides how many texels the GPU fills. The two numbers are independent, and only assigning canvas.width reallocates the buffer."
+/>
+
 ### Why You Have to Clamp DPR
 
 Some devices report `devicePixelRatio` as high as $3$ or $4$ (flagship phones); using that number directly for a full-screen canvas means rendering $9$–$16\times$ as many pixels as DPR $1$, while the human eye struggles to notice extra sharpness past roughly DPR $2$ at normal viewing distance. Clamping DPR, e.g. `Math.min(window.devicePixelRatio || 1, 2)`, keeps the image sharp enough without burning GPU budget for nothing — especially important for a full-screen canvas animating continuously, unlike a small static one.

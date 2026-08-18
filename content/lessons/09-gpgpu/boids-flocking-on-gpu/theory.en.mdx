@@ -30,6 +30,12 @@ But at $N = 65536$ (a $256\times256$ grid, the scale the very next lesson, `inst
 
 The three rules use three nested radii: separation the smallest (roughly $0.4\times$ the perception radius), alignment in the middle ($0.7\times$), cohesion using the full perception radius. This ordering isn't arbitrary — separation must win at close range, or cohesion (pulling toward the center) and alignment (pulling toward the shared heading) overpower it, and boids overlap instead of avoiding each other — looking more like a clumped mass than a flock. Weight balancing (not just zone radii) matters just as much: a separation weight set too low relative to alignment/cohesion produces exactly this collapse even when the radii are ordered correctly.
 
+<Figure
+  src="/figures/09-gpgpu/boid-neighbour-zones.svg"
+  alt="Three concentric circles around one boid — separation at 0.4 R, alignment at 0.7 R, cohesion at the full R — with the three matching steering vectors and neighbours scattered through each zone"
+  caption="The demo's three sliders weight exactly these three vectors; but it is the nesting order of the radii that keeps the flock from collapsing into a clump."
+/>
+
 ## Speed Clamping and Edge Behavior
 
 Raw velocity after summing all three forces can drift toward infinity (alignment keeps chasing a rising average) or toward zero (a boid stuck between canceling forces) — either breaks the illusion of flight. Speed clamping forces the velocity's magnitude into a $[v_{min}, v_{max}]$ range after every force sum, keeping motion looking natural.

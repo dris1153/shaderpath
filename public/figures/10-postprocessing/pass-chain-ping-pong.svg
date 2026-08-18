@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 396" width="640" height="396" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .stage { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-you { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .arrow-you { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">One frame of composer.render()</text>
+
+  <rect class="box" x="120" y="44" width="140" height="48" rx="8" />
+  <text class="stage" x="130" y="66">1. RenderPass</text>
+  <text class="note" x="130" y="83">draws the scene</text>
+
+  <path class="arrow" d="M260,68 L286,68" marker-end="url(#head)" />
+
+  <rect class="box" x="290" y="44" width="140" height="48" rx="8" />
+  <text class="stage" x="300" y="66">2. ShaderPass</text>
+  <text class="note" x="300" y="83">tDiffuse in, tint out</text>
+
+  <path class="arrow" d="M430,68 L456,68" marker-end="url(#head)" />
+
+  <rect class="box" x="460" y="44" width="140" height="48" rx="8" />
+  <text class="stage" x="470" y="66">3. OutputPass</text>
+  <text class="note" x="470" y="83">tone map + sRGB</text>
+
+  <text class="label" x="24" y="146">renderTarget2</text>
+  <rect class="box-you" x="120" y="112" width="140" height="64" rx="8" />
+  <text class="label ink-you" x="130" y="134">readBuffer</text>
+  <text class="note ink-you" x="130" y="151">scene written here</text>
+  <text class="note" x="130" y="167">needsSwap = false</text>
+
+  <rect class="box" x="290" y="112" width="140" height="64" rx="8" />
+  <text class="label" x="300" y="134">readBuffer</text>
+  <text class="note" x="300" y="151">read as tDiffuse</text>
+
+  <rect class="box" x="460" y="112" width="140" height="64" rx="8" />
+  <text class="label" x="470" y="134">writeBuffer</text>
+  <text class="note" x="470" y="151">unused this pass</text>
+
+  <text class="label" x="24" y="220">renderTarget1</text>
+  <rect class="box" x="120" y="192" width="140" height="64" rx="8" />
+  <text class="label" x="130" y="214">writeBuffer</text>
+  <text class="note" x="130" y="231">untouched</text>
+
+  <rect class="box-you" x="290" y="192" width="140" height="64" rx="8" />
+  <text class="label ink-you" x="300" y="214">writeBuffer</text>
+  <text class="note ink-you" x="300" y="231">tint written here</text>
+
+  <rect class="box" x="460" y="192" width="140" height="64" rx="8" />
+  <text class="label" x="470" y="214">readBuffer</text>
+  <text class="note" x="470" y="231">read, then to canvas</text>
+
+  <path class="arrow-you" d="M440,150 L440,208" marker-end="url(#head-you)" />
+  <path class="arrow-you" d="M450,218 L450,160" marker-end="url(#head-you)" />
+  <text class="note" x="445" y="282" text-anchor="middle">swapBuffers() — the two names trade places, no pixels move</text>
+
+  <text class="note" x="24" y="316">RenderPass is the exception: it renders into readBuffer and leaves needsSwap = false,</text>
+  <text class="note" x="24" y="334">so the next pass reads the fresh scene with no swap spent in between.</text>
+  <text class="note" x="24" y="360">The composer sets renderToScreen = true on the last enabled pass, so OutputPass</text>
+  <text class="note" x="24" y="378">draws to the canvas instead of a target.</text>
+</svg>

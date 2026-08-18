@@ -6,6 +6,12 @@ Say you have a state texture `state`, and you want a fragment shader that "reads
 
 The fix: use **two** render targets, call them A and B. This frame reads from A, writes to B; next frame flips the roles — reads from B, writes to A. No texture is ever simultaneously read and written within a single draw call; A and B just take turns being each other's "scratch pad."
 
+<Figure
+  src="/figures/09-gpgpu/pingpong-read-write-swap.svg"
+  alt="A grid of three consecutive frames in which target A and target B trade the read and write roles each frame, beside two panels explaining the feedback loop and the reference-only swap"
+  caption="Exactly what the demo cannot show: which target the positions currently live in, and how the two roles trade places every frame."
+/>
+
 ### Building a WebGLRenderTarget by Hand in Three.js
 
 ```js

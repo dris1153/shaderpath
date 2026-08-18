@@ -53,6 +53,12 @@ vec3 normalTetrahedron(vec3 p, float eps) {
 
 Bốn hướng lấy mẫu $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ là bốn đỉnh của một tứ diện nội tiếp khối lập phương cạnh $2\varepsilon$. Mỗi số hạng nhân trọng số $k_i$ (chính hướng lấy mẫu) với $f$ tại điểm đó rồi cộng dồn; tổng có trọng số này triệt tiêu đúng thành phần $f(p)$ không đổi (bốn vector $k_i$ tự cộng lại bằng 0), chỉ còn lại xấp xỉ tuyến tính của gradient — cùng bậc chính xác $O(\varepsilon^2)$ như central difference sáu mẫu, không phải thô hơn. Tiết kiệm: $6 \to 4$ lần gọi `map()` là giảm đúng $\frac{6-4}{6} \approx 33\%$ chi phí tính normal — đáng kể khi `map()` là cả một cây SDF phức tạp, không chỉ một `length(p) - r`. Đây là kỹ thuật mặc định trong hầu hết shader raymarch sản xuất thật, từ Shadertoy tới game thương mại (nguồn: bài viết gốc của Quilez, phần Tham khảo).
 
+<Figure
+  src="/figures/08-raymarching/central-diff-vs-tetrahedron-taps.svg"
+  alt="Cùng một khối lập phương cạnh 2ε quanh điểm chạm, vẽ hai lần: bên trái sáu mẫu ở tâm các mặt theo ±x, ±y, ±z; bên phải bốn mẫu ở các đỉnh xen kẽ nối thành một tứ diện"
+  caption="Hai cách lấy mẫu ước lượng cùng một gradient với cùng bậc chính xác; tetrahedron chỉ đọc bốn điểm thay vì sáu. Khoản tiết kiệm đó chỉ đáng giá vì normal được tính đúng một lần mỗi pixel, không bao giờ nằm trong vòng lặp march."
+/>
+
 ## Chọn epsilon: bo tròn cạnh sắc hay vỡ hạt vì nhiễu số thực
 
 $\varepsilon$ không có một giá trị "đúng" duy nhất — nó là bán kính vùng lấy mẫu quanh $p$, và hai thái cực đều hỏng theo hai cách khác nhau:

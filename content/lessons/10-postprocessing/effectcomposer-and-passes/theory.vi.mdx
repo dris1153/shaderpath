@@ -40,6 +40,12 @@ for (let i = 0; i < this.passes.length; i++) {
 
 Ba cờ này (định nghĩa trong lớp `Pass` cơ sở) là toàn bộ hợp đồng composer cần ở mỗi pass. `enabled = false` khiến composer bỏ qua pass đó hoàn toàn trong vòng lặp — không tốn một lệnh render nào, và composer tự tính lại xem pass NÀO hiện là pass cuối cùng còn bật (`isLastEnabledPass`) để gán `renderToScreen` đúng chỗ, không cần bạn tự sắp lại thứ tự. `needsSwap` mặc định `true` cho pass thường, nhưng `false` cho RenderPass (đã giải thích ở trên) và cho `UnrealBloomPass` (bài sau) vì nó tự ghi kết quả cộng dồn thẳng vào readBuffer. `renderToScreen` do chính composer set `true`/`false` trước mỗi lệnh `pass.render()` — pass chỉ cần đọc cờ này để quyết định `setRenderTarget(null)` (canvas) hay một buffer nội bộ.
 
+<Figure
+  src="/figures/10-postprocessing/pass-chain-ping-pong.svg"
+  alt="Ba ô pass nằm trên lưới hai hàng renderTarget1 và renderTarget2, cho thấy target nào đang là readBuffer và target nào là writeBuffer ở mỗi bước, với lần swapBuffers() duy nhất đánh dấu giữa ShaderPass và OutputPass"
+  caption="readBuffer và writeBuffer là hai VAI TRÒ hoán đổi cho nhau, không phải hai texture cố định — RenderPass mồi sẵn readBuffer mà không swap, nên cả chuỗi chỉ cần đúng một lần swap."
+/>
+
 ## Chiếm quyền vòng lặp render trong R3F
 
 R3F mặc định tự gọi `gl.render(scene, camera)` mỗi frame được yêu cầu. Để composer thay thế lệnh đó, demo build composer một lần trong `useEffect` (lấy `gl`, `scene`, `camera` qua `useThree`), rồi đăng ký một callback với **priority khác 0**:

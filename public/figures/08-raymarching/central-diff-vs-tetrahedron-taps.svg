@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 430" width="640" height="430" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .head { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .head-w { font-size: 13px; font-weight: 600; fill: var(--warn-ink); }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .cube { fill: none; stroke: var(--line); stroke-width: 1; stroke-dasharray: 4 4; opacity: 0.8; }
+    .spoke { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; }
+    .tet { stroke: var(--warn-stroke); stroke-width: 2; fill: none; }
+    .tap { fill: var(--accent-stroke); }
+    .tap-w { fill: var(--warn-stroke); }
+    .p { fill: none; stroke: var(--ink); stroke-width: 2; }
+    .dim { stroke: var(--ink); stroke-width: 1; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="d1" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M8,0 L0,4 L8,8 z" fill="var(--ink)" />
+    </marker>
+    <marker id="d2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--ink)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">The normal is the gradient, and the gradient is a sampling pattern around the hit point</text>
+  <text class="note" x="24" y="42">Both patterns live on the same cube of side 2ε centred on p. Neither one ever appears on screen — but the</text>
+  <text class="note" x="24" y="58">number of dots in it is the per-pixel cost of every shaded fragment.</text>
+
+  <!-- ============ left: central differences ============ -->
+  <text class="head" x="168" y="96" text-anchor="middle">central differences — 6 taps</text>
+  <path class="cube" d="M161.6,175.8 L94.7,157.9 M161.6,175.8 L161.6,277.1 M161.6,175.8 L241.3,160.8 M241.3,160.8 L174.4,142.9 M241.3,160.8 L241.3,262.1 M161.6,277.1 L94.7,259.2 M161.6,277.1 L241.3,262.1 M241.3,262.1 L174.4,244.2 M94.7,157.9 L94.7,259.2 M94.7,157.9 L174.4,142.9 M174.4,142.9 L174.4,244.2 M94.7,259.2 L174.4,244.2" />
+
+  <path class="spoke" d="M134.6,201 L201.4,219 M168,159.3 L168,260.7 M128.2,217.5 L207.8,202.5" />
+  <circle class="tap" cx="201.4" cy="219" r="4" />
+  <circle class="tap" cx="134.6" cy="201" r="4" />
+  <circle class="tap" cx="168" cy="159.3" r="4" />
+  <circle class="tap" cx="168" cy="260.7" r="4" />
+  <circle class="tap" cx="128.2" cy="217.5" r="4" />
+  <circle class="tap" cx="207.8" cy="202.5" r="4" />
+  <circle class="p" cx="168" cy="210" r="4.5" />
+
+  <text class="label" x="176" y="154">p + εŷ</text>
+  <text class="label" x="176" y="274">p − εŷ</text>
+  <text class="note" x="60" y="206" text-anchor="end">p</text>
+  <path class="leader" d="M64,203 L162,209" />
+
+  <!-- ============ right: tetrahedron ============ -->
+  <text class="head-w" x="472" y="96" text-anchor="middle">tetrahedron — 4 taps</text>
+  <path class="cube" d="M465.6,175.8 L398.7,157.9 M465.6,175.8 L465.6,277.1 M465.6,175.8 L545.3,160.8 M545.3,160.8 L478.4,142.9 M545.3,160.8 L545.3,262.1 M465.6,277.1 L398.7,259.2 M465.6,277.1 L545.3,262.1 M545.3,262.1 L478.4,244.2 M398.7,157.9 L398.7,259.2 M398.7,157.9 L478.4,142.9 M478.4,142.9 L478.4,244.2 M398.7,259.2 L478.4,244.2" />
+  <path class="tet" d="M545.3,262.1 L398.7,259.2 M545.3,262.1 L478.4,142.9 M545.3,262.1 L465.6,175.8 M398.7,259.2 L478.4,142.9 M398.7,259.2 L465.6,175.8 M478.4,142.9 L465.6,175.8" />
+  <circle class="tap-w" cx="545.3" cy="262.1" r="4" />
+  <circle class="tap-w" cx="398.7" cy="259.2" r="4" />
+  <circle class="tap-w" cx="478.4" cy="142.9" r="4" />
+  <circle class="tap-w" cx="465.6" cy="175.8" r="4" />
+  <circle class="p" cx="472" cy="210" r="4.5" />
+
+  <!-- shared caption row -->
+  <text class="note" x="168" y="308" text-anchor="middle">±ε along each axis, differenced pairwise</text>
+  <text class="note" x="168" y="324" text-anchor="middle">the shared 2ε factor cancels in normalize()</text>
+  <text class="note" x="168" y="340" text-anchor="middle">6 map() calls</text>
+  <text class="note" x="464" y="308" text-anchor="middle">(1,−1,−1), (−1,−1,1), (−1,1,−1), (1,1,1), all ×ε</text>
+  <text class="note" x="472" y="324" text-anchor="middle">each direction doubles as its own weight</text>
+  <text class="note" x="472" y="340" text-anchor="middle">4 map() calls, same O(ε²) accuracy</text>
+
+  <path class="rule" d="M24,364 L616,364" />
+  <text class="note" x="24" y="390">One third fewer calls, for the same normal. That saving is only worth having because the normal is evaluated</text>
+  <text class="note" x="24" y="408">exactly once per pixel, at the hit point — put it inside the march loop and it is multiplied by the step count.</text>
+</svg>

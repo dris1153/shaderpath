@@ -31,6 +31,12 @@ gl.uniform1i(uTextureLoc, 0);            // 3. báo sampler dùng khe số 0
 
 Sampler uniform (`uniform sampler2D uTexture` trong GLSL) không giữ chính texture object — nó chỉ giữ một **số nguyên chỉ số unit**. `uniform1i(loc, 0)` nghĩa là "đọc từ unit 0", khớp với `activeTexture(gl.TEXTURE0)` ở bước 1. Với một texture duy nhất, mặc định unit 0 luôn được chọn nên dễ "chạy đúng nhờ may mắn" mà bỏ qua bước 3 — nhưng ngay khi bài Framebuffer tiếp theo cần 2 texture cùng lúc (scene texture + hiệu ứng), quên bước này khiến sampler đọc nhầm unit.
 
+<Figure
+  src="/figures/01-webgl/texture-unit-sampler-binding.svg"
+  alt="Sơ đồ đi dây ba cột: texture object gắn vào texture unit qua bindTexture, unit nối tới sampler2D trong fragment shader, kèm danh sách ba lệnh activeTexture, bindTexture, uniform1i và bảng tra các mode wrap/filter"
+  caption="Sampler chỉ giữ chỉ số unit, nên ba lệnh phải khớp nhau: activeTexture chọn khe, bindTexture gắn texture vào khe đó, uniform1i báo số khe cho sampler."
+/>
+
 ## Sample bằng texture(): UV quay lại từ Track 0
 
 Trong fragment shader, hàm `texture(sampler, uv)` đọc màu tại toạ độ UV — chính là công thức chuẩn hoá $u, v \in [0, 1]$ đã học ở Track 0, khép kín vòng lặp giữa lý thuyết toạ độ và ứng dụng thật:

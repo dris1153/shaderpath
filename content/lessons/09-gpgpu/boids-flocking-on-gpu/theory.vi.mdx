@@ -30,6 +30,12 @@ Nhưng ở $N = 65536$ (lưới $256\times256$, quy mô bài `instancing-a-milli
 
 Ba quy tắc dùng ba bán kính lồng nhau: separation nhỏ nhất (khoảng $0.4$ lần bán kính cảm nhận), alignment trung bình ($0.7$ lần), cohesion dùng trọn bán kính cảm nhận. Thứ tự này không tuỳ ý: separation phải thắng ở cự ly gần, nếu không cohesion (kéo vào tâm) và alignment (kéo theo hướng chung) sẽ áp đảo, khiến các boid chồng lấn lên nhau thay vì né tránh — nhìn giống một khối hạt dính chặt hơn là một đàn chim. Cân bằng trọng số ba lực (không chỉ bán kính vùng) quan trọng không kém: trọng số separation quá thấp so với alignment/cohesion tạo đúng lỗi collapse này dù bán kính đã đúng thứ tự.
 
+<Figure
+  src="/figures/09-gpgpu/boid-neighbour-zones.svg"
+  alt="Ba vòng tròn đồng tâm quanh một boid — separation ở 0,4 R, alignment ở 0,7 R, cohesion ở trọn R — với ba vector lái tương ứng và các hàng xóm rải trong từng vùng"
+  caption="Ba thanh trượt trong demo chỉnh trọng số của đúng ba vector này; nhưng chính thứ tự lồng nhau của ba bán kính mới là thứ giữ cho đàn không co cụm lại."
+/>
+
 ## Speed clamping và edge behavior
 
 Vận tốc thô sau khi cộng ba lực có thể tăng dần vô hạn (alignment liên tục kéo về trung bình đang tăng) hoặc giảm về gần 0 (boid mắc kẹt giữa các lực triệt tiêu nhau) — cả hai đều phá vỡ cảm giác "đang bay". Speed clamping ép độ lớn vận tốc vào một khoảng $[v_{min}, v_{max}]$ sau mỗi lần cộng lực, giữ chuyển động tự nhiên.

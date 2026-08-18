@@ -32,6 +32,12 @@ Ba tham số này là "núm vặn" chuẩn hoá của mọi dao động hình si
 
 Ba tham số độc lập tuyến tính với nhau: đổi $A$ không ảnh hưởng $\omega$ hay $\phi$, và ngược lại — đây là lý do một slider riêng cho mỗi tham số luôn đủ để khám phá toàn bộ không gian dao động hình sin.
 
+<Figure
+  src="/figures/00-math/unit-circle-to-sine-wave.svg"
+  alt="Vòng tròn bán kính A với một điểm ở góc θ = ωt + φ, nối bằng đường nét đứt sang đồ thị sóng sin; trên đồ thị đánh dấu biên độ A, chu kỳ T = 2π/ω và độ lệch pha φ"
+  caption="A là bán kính vòng tròn, ω quyết định một vòng hết bao lâu, φ chỉ dời điểm xuất phát — ba núm vặn tác động vào ba chỗ khác nhau của cùng một chuyển động."
+/>
+
 ## atan2 thay vì atan: xác định đúng góc khi ngắm mục tiêu
 
 Bài toán ngược lại với "cho góc, tìm điểm" là "cho một hướng $(\Delta x, \Delta y)$, tìm góc" — ví dụ tính góc xoay để một khẩu pháo quay mặt về phía chuột. Trực giác đầu tiên là dùng $\theta = \arctan(\Delta y / \Delta x)$, nhưng hàm `atan` một tham số có một lỗ hổng toán học: tỉ số $\Delta y / \Delta x$ giống hệt nhau cho hai hướng đối nghịch nhau — $(\Delta x, \Delta y) = (3, 2)$ và $(-3, -2)$ cho cùng tỉ số $2/3$, nên `atan` trả về cùng một góc cho cả hai, dù chúng chỉ về hai phía hoàn toàn ngược nhau. `atan` chỉ trả giá trị trong khoảng $(-90°, 90°)$ — nó không có cách nào phân biệt bốn góc phần tư.

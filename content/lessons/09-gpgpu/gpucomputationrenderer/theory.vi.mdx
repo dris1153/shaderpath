@@ -43,6 +43,12 @@ particleMaterial.uniforms.texturePosition.value =
   gpuCompute.getCurrentRenderTarget(positionVariable).texture;
 ```
 
+<Figure
+  src="/figures/09-gpgpu/compute-variable-dependency-graph.svg"
+  alt="Hai biến compute textureVelocity và texturePosition, mỗi biến sở hữu một cặp render target, mũi tên phụ thuộc chạy hai chiều giữa chúng, phía dưới là hộp nhấn mạnh chỉ số ping-pong dùng chung cho cả renderer"
+  caption="setVariableDependencies vừa sinh ra dòng uniform sampler2D, vừa quyết định texture của frame nào được nạp — luôn là frame trước, kể cả với biến được tính sau trong cùng một compute()."
+/>
+
 ## `resolution`: define được tiêm sẵn, không phải uniform
 
 Constructor gọi `addResolutionDefine` cho mọi biến, đặt `material.defines.resolution` thành chuỗi `"vec2(128.0, 128.0)"` — Three biên dịch `defines` thành dòng `#define resolution vec2(128.0, 128.0)` đặt trước cả shader. Vì là `#define` (thay thế văn bản thuần), không phải `uniform`, bạn dùng `resolution` trong shader mà không khai báo gì cả — nhưng cũng vì thế, tự khai báo thêm `uniform vec2 resolution;` sẽ vỡ: trình biên dịch thay `resolution` bằng `vec2(128.0, 128.0)` ở MỌI chỗ xuất hiện, kể cả trong chính dòng khai báo, biến nó thành `uniform vec2 vec2(128.0, 128.0);` — lỗi cú pháp. Công thức đọc texel của chính mình luôn là `gl_FragCoord.xy / resolution.xy`: khác bài UV space ở Track 0 phải tự cộng $+0.5$ vì chỉ số pixel không phải tâm pixel, `gl_FragCoord` đã được rasterizer tính sẵn ở TÂM pixel — không cần cộng gì thêm.

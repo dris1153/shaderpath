@@ -43,6 +43,12 @@ particleMaterial.uniforms.texturePosition.value =
   gpuCompute.getCurrentRenderTarget(positionVariable).texture;
 ```
 
+<Figure
+  src="/figures/09-gpgpu/compute-variable-dependency-graph.svg"
+  alt="Two compute variables, textureVelocity and texturePosition, each owning a render target pair, with dependency arrows running both ways between them and a panel below highlighting the ping-pong index shared by the whole renderer"
+  caption="setVariableDependencies both writes the uniform sampler2D line and decides which frame's texture gets bound — always the previous frame, even for a variable computed later in the same compute()."
+/>
+
 ## `resolution`: a Pre-Injected Define, Not a Uniform
 
 The constructor calls `addResolutionDefine` for every variable, setting `material.defines.resolution` to the string `"vec2(128.0, 128.0)"` — Three compiles `defines` into a `#define resolution vec2(128.0, 128.0)` line placed before the shader body. Because it's a `#define` (plain text substitution), not a `uniform`, you use `resolution` in your shader without declaring anything — but that's exactly why adding your own `uniform vec2 resolution;` breaks: the preprocessor replaces `resolution` with `vec2(128.0, 128.0)` at EVERY occurrence, including inside that very declaration, turning it into `uniform vec2 vec2(128.0, 128.0);` — a syntax error. Reading your own texel is always `gl_FragCoord.xy / resolution.xy`: unlike the Track 0 UV lesson, which had to add $+0.5$ by hand because a pixel index isn't its center, `gl_FragCoord` is already computed by the rasterizer AT the pixel center — no offset needed.

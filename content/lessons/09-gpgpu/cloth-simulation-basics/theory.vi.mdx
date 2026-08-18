@@ -20,11 +20,17 @@ với $d$ là damping hơi nhỏ hơn 1 (ví dụ $0.99$) để rò rỉ năng l
 
 ## Trạng thái trên GPU: hai texture vị trí ping-pong
 
-Vì Verlet cần cả $\vec{x}_t$ lẫn $\vec{x}_{t-1}$, trạng thái mô phỏng không thể chỉ là MỘT texture vị trí như các bài particle trước — cần đúng hai: `texturePosition` (vị trí hiện tại) và `texturePositionPrev` (vị trí frame trước). Với `GPUComputationRenderer`, đây là hai "variable" phụ thuộc lẫn nhau: `texturePosition` phụ thuộc chính nó VÀ `texturePositionPrev`; `texturePositionPrev` chỉ chép giá trị hiện tại của `texturePosition` mỗi frame để luôn trễ đúng một bước. Chi tiết dễ bỏ sót: `GPUComputationRenderer` tự khai báo và tự gán uniform cho dependency tên KHÁC tên biến, nhưng dependency TỰ THAM CHIẾU thì không — phải tự khai báo `uniform sampler2D texturePosition;` và tự gán `material.uniforms.texturePosition` trước khi gọi `init()`, nếu không `compute()` crash ngay ở uniform còn thiếu.
+Vì Verlet cần cả $\vec{x}_t$ lẫn $\vec{x}_{t-1}$, trạng thái mô phỏng không thể chỉ là MỘT texture vị trí như các bài particle trước — cần đúng hai: `texturePosition` (vị trí hiện tại) và `texturePositionPrev` (vị trí frame trước). Với `GPUComputationRenderer`, đây là hai "variable" phụ thuộc lẫn nhau: `texturePosition` phụ thuộc chính nó VÀ `texturePositionPrev`; `texturePositionPrev` chỉ chép giá trị hiện tại của `texturePosition` mỗi frame để luôn trễ đúng một bước. Chi tiết dễ bỏ sót: `init()` tự khai báo và tự gán uniform cho MỌI dependency, kể cả dependency tự tham chiếu — nên tuyệt đối không tự viết `uniform sampler2D texturePosition;` trong shader. Khai báo lần hai là lỗi trùng định nghĩa, shader không compile được và canvas trắng trơn.
 
 ## Constraint distance và cái bẫy Jacobi trên GPU
 
 Một constraint khoảng cách là phép chỉnh đơn giản: kéo hai điểm lại gần/xa nhau đúng bằng nửa chênh lệch so với chiều dài nghỉ. Trên CPU, giải Gauss-Seidel xử lý từng constraint TUẦN TỰ, mỗi constraint thấy ngay kết quả vừa chỉnh của constraint trước trong cùng vòng lặp — hội tụ nhanh. Trên GPU điều này không thể tái tạo: mỗi texel chạy trong một invocation song song, không có cách nào "thấy" kết quả vừa tính của texel bên cạnh trong CÙNG draw call — tất cả đọc từ CÙNG một texture đầu vào, không đổi suốt cả pass. Giải pháp bắt buộc là Jacobi: mỗi điểm tính độ chỉnh từ TẤT CẢ hàng xóm dựa trên texture đầu vào của pass này, lấy trung bình, ghi ra texture đầu ra — rồi lặp lại pass đó nhiều lần. Vì mỗi pass chỉ lan truyền chỉnh sửa đúng một texel, Jacobi cần NHIỀU vòng lặp hơn Gauss-Seidel để đạt cùng độ cứng — không phải chi tiết vặt, mà là ràng buộc kiến trúc nền tảng của mọi cloth solver trên GPU.
+
+<Figure
+  src="/figures/09-gpgpu/cloth-frame-integrate-then-relax.svg"
+  alt="Bốn bước của một frame vải xếp dọc: gpu.compute() chạy hai biến vị trí, vòng relax lặp N lần bằng doRenderTarget, ghi kết quả relax trở lại texturePosition, rồi pass render lấy mẫu texture đó; bên phải là panel giải thích Verlet không giữ texture vận tốc"
+  caption="Thanh trượt số vòng constraint trong demo chính là N ở bước 2 — mỗi vòng là một pass phủ kín lưới, và bước 3 tồn tại chỉ để vận tốc ngầm của Verlet đo đúng hình dạng đã được relax."
+/>
 
 ### Structural, shear, bend: ba loại constraint
 
@@ -44,7 +50,7 @@ Bài tiếp theo (giới thiệu mô phỏng chất lỏng) dùng lại khung pi
 
 Ba lỗi hay gặp nhất khi cài GPU cloth:
 
-1. **Quên khai báo/gán uniform cho self-dependency.** `GPUComputationRenderer` tự lo dependency tên khác, nhưng biến phụ thuộc chính nó thì không — thiếu bước gán `material.uniforms.texturePosition` thủ công làm `compute()` throw lỗi undefined ngay dòng đầu.
+1. **Tự khai báo lại uniform của dependency.** `init()` prepend sẵn `uniform sampler2D <tên>;` cho mọi dependency, kể cả self-dependency. Viết thêm dòng đó trong shader là lỗi trùng định nghĩa — demo im lặng ra canvas trắng chứ không báo gì rõ ràng.
 2. **Đưa kết quả Jacobi relax pass cuối cùng nhầm chỗ.** Nếu texture "hiện tại" dùng cho frame sau vẫn là candidate CHƯA relax, vận tốc ngầm của Verlet ở frame kế bị tính sai — vải trông như có thêm một lực bí ẩn không nguồn gốc.
 3. **Gió không chiếu theo pháp tuyến.** Cộng thẳng vector gió hằng vào gia tốc mà không nhân $(\hat n \cdot \vec w)$ khiến cả tấm vải trôi dạt một hướng như khối cứng — dấu hiệu nhận biết là vải "bay" thay vì "gợn".
 

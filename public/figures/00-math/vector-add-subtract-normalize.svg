@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 246" width="640" height="246" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --grid: #cbd5e1;
+      --a-stroke: #dc2626;
+      --b-stroke: #2563eb;
+      --r-stroke: #15803d;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --grid: #3f4c5f;
+        --a-stroke: #f87171;
+        --b-stroke: #60a5fa;
+        --r-stroke: #4ade80;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .stage { font-size: 14px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .tag { font-size: 13px; font-weight: 600; }
+    .tag-a { fill: var(--a-stroke); }
+    .tag-b { fill: var(--b-stroke); }
+    .tag-r { fill: var(--r-stroke); }
+    .axis { stroke: var(--grid); stroke-width: 1; fill: none; }
+    .vec-a { stroke: var(--a-stroke); stroke-width: 2; fill: none; }
+    .vec-b { stroke: var(--b-stroke); stroke-width: 2; fill: none; }
+    .vec-r { stroke: var(--r-stroke); stroke-width: 2.4; fill: none; }
+    .ghost { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+    .circle { stroke: var(--line); stroke-width: 1.4; fill: none; }
+  </style>
+  <defs>
+    <marker id="ha" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--a-stroke)" />
+    </marker>
+    <marker id="hb" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--b-stroke)" />
+    </marker>
+    <marker id="hr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--r-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- ===== Addition: a = (3,1), b = (-2,4), sum = (1,5); 1 unit = 24px ===== -->
+  <text class="stage" x="16" y="18">Addition</text>
+  <text class="note" x="16" y="36">b starts where a ends</text>
+  <path class="axis" d="M16,196 L172,196 M76,212 L76,72" />
+  <path class="ghost" d="M76,196 L28,100 L100,76" />
+  <path class="vec-a" d="M76,196 L148,172" marker-end="url(#ha)" />
+  <path class="vec-b" d="M148,172 L100,76" marker-end="url(#hb)" />
+  <path class="vec-r" d="M76,196 L100,76" marker-end="url(#hr)" />
+  <text class="tag tag-a" x="112" y="192">a</text>
+  <text class="tag tag-b" x="140" y="130">b</text>
+  <text class="tag tag-r" x="100" y="64" text-anchor="middle">a + b</text>
+
+  <!-- ===== Subtraction: the arrow from b's tip to a's tip ===== -->
+  <text class="stage" x="228" y="18">Subtraction</text>
+  <text class="note" x="228" y="36">the arrow from b to a</text>
+  <path class="axis" d="M228,196 L384,196 M288,212 L288,84" />
+  <path class="vec-a" d="M288,196 L360,172" marker-end="url(#ha)" />
+  <path class="vec-b" d="M288,196 L240,100" marker-end="url(#hb)" />
+  <path class="vec-r" d="M240,100 L360,172" marker-end="url(#hr)" />
+  <text class="tag tag-a" x="324" y="192">a</text>
+  <text class="tag tag-b" x="246" y="142">b</text>
+  <text class="tag tag-r" x="304" y="124">a &#8722; b</text>
+
+  <!-- ===== Normalize: v = (3,4), length 5, unit vector on the radius-1 circle ===== -->
+  <text class="stage" x="440" y="18">Normalize</text>
+  <text class="note" x="440" y="36">direction kept, length forced to 1</text>
+  <path class="axis" d="M440,196 L600,196 M500,212 L500,84" />
+  <circle class="circle" cx="500" cy="196" r="24" />
+  <path class="vec-a" d="M500,196 L572,100" marker-end="url(#ha)" />
+  <path class="vec-r" d="M500,196 L514,177" marker-end="url(#hr)" />
+  <text class="tag tag-a" x="524" y="138" text-anchor="end">v</text>
+  <text class="tag tag-r" x="530" y="176">v&#770;</text>
+  <text class="note" x="440" y="224">v = (3, 4), &#8214;v&#8214; = 5, so v&#770; = (0.6, 0.8)</text>
+
+  <text class="note" x="16" y="240">Add to step forward, subtract to aim from one point at another, normalize before multiplying by a speed.</text>
+</svg>

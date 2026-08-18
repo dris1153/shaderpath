@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 516" width="640" height="516" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --accent-fill: #bfdbfe;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --accent-fill: #1e3a5f;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .op { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .axis { stroke: var(--line); stroke-width: 1; fill: none; }
+    .field { stroke: var(--line); stroke-width: 1.2; fill: none; stroke-dasharray: 4 3; }
+    .res { stroke: var(--accent-stroke); stroke-width: 2.5; fill: none; }
+    .res-fill { fill: var(--accent-fill); stroke: none; opacity: 0.9; }
+    .plain { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .smooth { stroke: var(--warn-stroke); stroke-width: 2.5; fill: none; }
+    .band { fill: var(--accent-fill); opacity: 0.45; }
+    .gap { stroke: var(--warn-stroke); stroke-width: 1.5; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .dot { fill: var(--accent-stroke); }
+    .dot-warn { fill: var(--warn-stroke); }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="tip" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--warn-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- ================= top: the three hard ops on one slice ================= -->
+  <text class="title" x="24" y="24">A boolean op is one comparison between two distance fields</text>
+  <text class="note" x="24" y="42">One slice through both shapes. Dashed = each shape on its own (dA, dB); blue = the combined field.</text>
+  <text class="note" x="24" y="58">Shading marks where the result came out negative — that, and only that, is solid.</text>
+
+  <!-- union -->
+  <text class="op" x="40" y="84">union  min(dA, dB)</text>
+  <path class="axis" d="M40,130 L200,130" />
+  <polyline class="field" points="41.7,93.2 116.5,162.0 191.3,93.2" />
+  <polyline class="field" points="87.0,93.2 151.3,152.4 200.0,107.6" />
+  <path class="res-fill" d="M81.7,130 L116.5,162 L139.1,141.2 L151.3,152.4 L175.6,130 Z" />
+  <polyline class="res" points="41.7,93.2 116.5,162.0 139.1,141.2 151.3,152.4 200.0,107.6" />
+
+  <!-- intersect -->
+  <text class="op" x="240" y="84">intersect  max(dA, dB)</text>
+  <path class="axis" d="M240,130 L400,130" />
+  <polyline class="field" points="241.7,93.2 316.5,162.0 391.3,93.2" />
+  <polyline class="field" points="287.0,93.2 351.3,152.4 400.0,107.6" />
+  <path class="res-fill" d="M326.9,130 L339.1,141.2 L351.3,130 Z" />
+  <polyline class="res" points="287.0,93.2 316.5,120.4 339.1,141.2 351.3,130.0 391.3,93.2" />
+
+  <!-- subtract -->
+  <text class="op" x="440" y="84">subtract  max(dA, −dB)</text>
+  <path class="axis" d="M440,130 L600,130" />
+  <polyline class="field" points="441.7,93.2 516.5,162.0 591.3,93.2" />
+  <polyline class="field" points="487.0,93.2 551.3,152.4 600.0,107.6" />
+  <path class="res-fill" d="M481.7,130 L511.3,144.4 L516.5,139.6 L527.0,130 Z" />
+  <polyline class="res" points="442.2,93.2 511.3,144.4 516.5,139.6 551.3,107.6 563.5,118.8 591.3,93.2" />
+
+  <text class="note" x="120" y="188" text-anchor="middle">both lobes survive</text>
+  <text class="note" x="320" y="188" text-anchor="middle">only where both are negative</text>
+  <text class="note" x="520" y="188" text-anchor="middle">−dB turns B inside out first</text>
+
+  <path class="rule" d="M24,210 L616,210" />
+
+  <!-- ================= bottom: smooth min ================= -->
+  <text class="title" x="24" y="240">Smooth min replaces the crease with a dip of depth k/4</text>
+  <text class="note" x="24" y="258">The union above, zoomed in. k is a blend radius in world units, so it also fixes how wide a band</text>
+  <text class="note" x="24" y="274">the blend touches: outside it h saturates to 0 or 1 and smin returns plain min, unchanged.</text>
+
+  <rect class="band" x="280" y="296" width="95" height="159" />
+  <path class="axis" d="M90,370 L546,370" />
+  <text class="note" x="84" y="374" text-anchor="end">0</text>
+
+  <polyline class="field" points="90.0,404.0 204.0,455.0 546.0,302.0" />
+  <polyline class="field" points="90.0,293.5 394.0,429.5 546.0,361.5" />
+  <text class="note" x="96" y="396">dA</text>
+  <text class="note" x="96" y="288">dB</text>
+
+  <polyline class="plain" points="261.0,429.5 327.5,399.8 397.8,427.8" />
+  <polyline class="smooth" points="90.0,404.0 99.5,408.2 109.0,412.5 118.5,416.8 128.0,421.0 137.5,425.2 147.0,429.5 156.5,433.8 166.0,438.0 175.5,442.2 185.0,446.5 194.5,450.8 204.0,455.0 213.5,450.8 223.0,446.5 232.5,442.2 242.0,438.0 251.5,433.8 261.0,429.5 270.5,425.2 280.0,421.0 289.5,417.2 299.0,414.2 308.5,412.1 318.0,410.8 327.5,410.4 337.0,410.8 346.5,412.1 356.0,414.2 365.5,417.2 375.0,421.0 384.5,425.2 394.0,429.5 403.5,425.2 413.0,421.0 422.5,416.8 432.0,412.5 441.5,408.2 451.0,404.0 460.5,399.8 470.0,395.5 479.5,391.2 489.0,387.0 498.5,382.8 508.0,378.5 517.5,374.2 527.0,370.0 536.5,365.8 546.0,361.5" />
+
+  <circle class="dot" cx="327.5" cy="399.8" r="3.5" />
+  <circle class="dot-warn" cx="327.5" cy="410.4" r="3.5" />
+  <path class="gap" d="M327.5,399.8 L327.5,408.4" marker-end="url(#tip)" />
+
+  <path class="leader" d="M280,308 L280,418 M375,308 L375,418" />
+  <text class="label" x="327.5" y="292" text-anchor="middle">band of width k, centred where dA = dB</text>
+
+  <path class="leader" d="M262,398 L322,399.8" />
+  <text class="note" x="258" y="388" text-anchor="end">plain min: a corner,</text>
+  <text class="note" x="258" y="404" text-anchor="end">so the normal jumps</text>
+
+  <path class="leader" d="M400,444 L344,414" />
+  <text class="warn" x="404" y="448">smin: k/4 deeper here,</text>
+  <text class="warn" x="404" y="464">smooth through the seam</text>
+
+  <text class="note" x="24" y="486">That dip is the material the weld adds — the whole difference between a visible crease and a fillet.</text>
+  <text class="note" x="24" y="504">The same h also has to drive the material mix, or a hard colour seam cuts across the smooth surface.</text>
+</svg>

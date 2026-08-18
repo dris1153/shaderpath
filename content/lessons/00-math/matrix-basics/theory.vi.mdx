@@ -16,6 +16,12 @@ lưu chính xác hai vector đó, mỗi vector một **cột**: cột thứ nh�
 
 Ví dụ, ma trận $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$ đọc ngay ra: cột 1 là $(2,0)$ nghĩa là $\hat i$ bị kéo dài gấp đôi theo trục $x$; cột 2 là $(0,1)$ nghĩa là $\hat j$ đứng yên. Không cần nhân bất kỳ con số nào, chỉ nhìn hai cột đã biết đây là phép kéo giãn ngang gấp đôi. Kỹ năng đọc trực tiếp này quan trọng hơn việc thuộc công thức nhân ma trận, vì nó là thứ dùng hằng ngày khi debug một `mat3`/`mat4` in ra console mà không hiểu vì sao object bị méo.
 
+<Figure
+  src="/figures/00-math/matrix-columns-basis-images.svg"
+  alt="Ma trận 2×2 với hai cột được tô màu riêng, bên cạnh là hình vuông đơn vị biến thành hình bình hành; phía dưới là ma trận 4×4 xoay 90° quanh trục z, ba cột màu và bộ trục cho thấy x̂ rơi đúng vào +y"
+  caption="Ba cột đầu của ma trận 4×4 đọc y hệt hai cột của ma trận 2×2 — thêm trục chứ không đổi luật; cột thứ tư là phần bài sau mới dùng tới."
+/>
+
 ## Nhân ma trận với vector: tổ hợp tuyến tính của các cột
 
 Công thức nhân ma trận với vector quen thuộc — $M\vec v = (ax+by,\ cx+dy)$ — nhìn đúng bản chất là:

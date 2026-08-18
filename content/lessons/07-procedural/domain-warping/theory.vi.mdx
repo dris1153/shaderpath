@@ -63,6 +63,12 @@ Lý do kỹ thuật này quan trọng: $f$ cuối cùng chỉ là một con số
 
 Hai lời gọi `fbm()` dựng $q_x$ và $q_y$ dùng offset khác nhau — $(0,0)$ và $(5.2, 1.3)$ — một cách cố ý, không phải hai số ngẫu nhiên vô nghĩa. Dùng cùng một offset (hoặc không offset gì) khiến $q_x$ và $q_y$ là cùng một trường FBM y hệt nhau tại mọi điểm, nghĩa là $q$ luôn nằm dọc đường chéo $q_x = q_y$ — warp chỉ kéo theo đúng một hướng cố định thay vì xoáy tự do theo mọi hướng. Offset đủ lớn — vài đơn vị, lớn hơn hẳn chu kỳ noise — đảm bảo hai kênh lấy mẫu ở hai vùng không liên quan của cùng một trường FBM, cho ra hai giá trị gần như độc lập. Đây là cách rẻ nhất để giả lập hai trường noise độc lập từ một hàm `fbm()` duy nhất, không cần viết thêm hàm hash thứ hai.
 
+<Figure
+  src="/figures/07-procedural/domain-warp-nesting.svg"
+  alt="Ba tầng xếp dọc: tầng một dựng q từ hai lần gọi fbm, tầng hai dựng r từ p cộng s nhân q, tầng cuối cho f; các mũi tên đứt nét đưa q và r trở lại làm toạ độ của tầng sau, kèm bảng chi phí 5, 15 và 25 lần gọi noise"
+  caption="q và r không đi vào kết quả — chúng đi vào toạ độ lấy mẫu của tầng kế tiếp, nên chi phí nhân lên chứ không cộng thêm."
+/>
+
 ## Chi phí: mỗi lớp nhân thêm số lần gọi fbm
 
 Domain warping không miễn phí. Một FBM 5 octave đã tốn 5 lần gọi `noise()`; một lớp warp cần 2 lần gọi `fbm()` để dựng $q$ cộng 1 lần cho kết quả cuối — tổng $3 \times 5 = 15$ lần `noise()` mỗi pixel. Hai lớp, dùng cả $r$, nhân thêm: 2 lần cho $q$, 2 lần cho $r$, 1 lần cho kết quả cuối — tổng $5 \times 5 = 25$ lần, gần gấp đôi một lớp. Trên màn hình 1920×1080 ở DPR 2 (ước lượng ~8.3 triệu fragment mỗi khung hình), chênh lệch 15 so với 25 lần `noise()` mỗi pixel cộng dồn thành hàng chục triệu phép tính thêm mỗi khung. Nên nghĩ về số lớp warp như một ngân sách octave cần cân đối: nhiều lớp hơn luôn đẹp hơn, nhưng chi phí tăng gần tuyến tính theo số lớp, và trên mobile GPU nó lộ ra rất nhanh dưới dạng frame time tăng vọt.

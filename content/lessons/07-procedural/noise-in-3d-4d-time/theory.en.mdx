@@ -36,6 +36,12 @@ where $T$ is the desired loop period (seconds), $R$ the circle's radius in noise
 
 Value/gradient noise interpolates between a grid cell's corners — the corner count grows as a power of 2 with dimension: $2^2=4$ for `noise2`, $2^3=8$ for `noise3`, $2^4=16$ for `noise4`. Every corner needs exactly one hash call — `noise4` therefore costs twice as many hash calls as `noise3`, four times as many as `noise2`, on EVERY invocation. The Perlin & Simplex Noise lesson already showed why Simplex swaps the square/cube grid for a triangular/tetrahedral one specifically to dodge this exponential growth: only $n+1$ vertices (3/4/5 in 2D/3D/4D) instead of $2^n$ corners — at 4D that's 5 versus 16, better than a 3x gap. The practical cost ladder here: if scroll is all that's needed, `noise2` is nearly free; slice costs twice as much but buys genuinely organic motion; the 4D loop is the priciest but the ONLY one of the three that closes a loop exactly — pick based on whether the final product needs to loop, not on the assumption a higher dimension is automatically better.
 
+<Figure
+  src="/figures/07-procedural/time-axis-sampling.svg"
+  alt="Three panels: scroll, with a sampling window sliding across a fixed 2D field; slice, as a stack of 2D slabs along a third axis; and loop, as a point travelling around a circle in the two extra dimensions, with corner counts 4, 8, 16 against Simplex's 3, 4, 5 below"
+  caption="The three modes differ in where the sample travels through noise space, not in how the picture looks."
+/>
+
 ## Combining Scroll and Slice, and Staying Precise When t Is Large
 
 The two modes aren't mutually exclusive: smoke pushed by wind WHILE still curling in place needs both at once — add a drift direction into `noise3`'s first two dimensions, letting the third keep doing its own job as the evolution axis:

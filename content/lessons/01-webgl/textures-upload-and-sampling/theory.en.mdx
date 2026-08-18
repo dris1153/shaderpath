@@ -31,6 +31,12 @@ gl.uniform1i(uTextureLoc, 0);            // 3. tell the sampler to use slot 0
 
 A sampler uniform (`uniform sampler2D uTexture` in GLSL) doesn't hold the texture object itself — it only holds an **integer unit index**. `uniform1i(loc, 0)` means "read from unit 0," matching `activeTexture(gl.TEXTURE0)` in step 1. With a single texture, unit 0 is the default, so it's easy to "work by accident" while skipping step 3 — but the moment the next lesson's Framebuffer demo needs two textures at once (a scene texture plus an effect), forgetting this step means a sampler silently reads the wrong unit.
 
+<Figure
+  src="/figures/01-webgl/texture-unit-sampler-binding.svg"
+  alt="Three-column wiring diagram: a texture object attaches to a texture unit through bindTexture, the unit feeds a sampler2D in the fragment shader, alongside the three calls activeTexture, bindTexture and uniform1i plus a reference table of wrap and filter modes"
+  caption="A sampler only stores a unit index, so the three calls have to agree: activeTexture picks the slot, bindTexture fills it, uniform1i hands the slot number to the sampler."
+/>
+
 ## Sampling with texture(): UV Comes Back From Track 0
 
 Inside a fragment shader, `texture(sampler, uv)` reads the color at a UV coordinate — exactly the normalized $u, v \in [0, 1]$ formula from Track 0, closing the loop between coordinate theory and a real application:

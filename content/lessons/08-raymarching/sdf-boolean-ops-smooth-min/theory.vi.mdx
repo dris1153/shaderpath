@@ -46,6 +46,12 @@ $$
 
 Xa vùng giao ($|d_A - d_B| \gg k$), $h$ bão hoà về 0 hoặc 1, số hạng $k\,h\,(1-h)$ triệt tiêu, công thức rút gọn đúng về `min` thường — ví dụ $d_A=0.3, d_B=-0.1, k=0.2$: $h = \mathrm{clamp}(0.5 - 1, 0, 1) = 0$, kết quả $= -0.1$, khớp $\min(0.3,-0.1)$. Gần vùng giao thì khác hẳn: $d_A=0.1, d_B=0.15, k=0.2$ cho $h=0.625$, `mix` $=0.11875$, trừ tiếp $k h(1-h)=0.047$ ra $\approx 0.072$ — **thấp hơn** cả $\min(0.1, 0.15)=0.1$. Số hạng trừ đó chính là "hố lõm" tạo nét bo tròn nối liền hai hình, thay vì một góc nhọn.
 
+<Figure
+  src="/figures/08-raymarching/boolean-ops-and-smooth-min.svg"
+  alt="Ba đồ thị nhỏ của hai trường khoảng cách 1D cho min, max và max(dA, −dB), phần âm của mỗi kết quả được tô; bên dưới là ảnh phóng to vùng giao nhau, nơi min thường tạo một góc gãy còn smooth min lún xuống thêm k/4 trên một dải rộng đúng bằng k"
+  caption="Mọi phép toán đều đọc cùng hai con số, chỉ khác nhau ở phép so sánh. Riêng smooth min mới thêm vật chất: một chỗ lún đúng k/4 ngay mối nối, trải trên dải rộng bằng k, và bằng 0 ở mọi nơi khác."
+/>
+
 ### Biến thể exponential và chọn k
 
 Ngoài polynomial còn biến thể exponential, mượt hơn nhưng tốn `exp`/`log`:

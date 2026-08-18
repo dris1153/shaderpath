@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 522" width="640" height="522" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --accent-fill: #dbeafe;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --accent-fill: #1e3a5f;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .id { font-size: 11px; font-weight: 600; fill: var(--muted); }
+    .ground { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .divider { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 4 4; }
+    .obj { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .obj-home { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .fold { stroke: var(--accent-stroke); stroke-width: 1.2; fill: none; opacity: 0.85; }
+    .cell { fill: none; stroke: var(--accent-stroke); stroke-width: 2; }
+    .measure { stroke: var(--warn-stroke); stroke-width: 1.8; fill: none; }
+    .measure-ok { stroke: var(--accent-stroke); stroke-width: 1.8; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .dot { fill: var(--warn-stroke); }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="fh" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <marker id="mw1" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M8,0 L0,4 L8,8 z" fill="var(--warn-stroke)" />
+    </marker>
+    <marker id="mw2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--warn-stroke)" />
+    </marker>
+    <marker id="mb1" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M8,0 L0,4 L8,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <marker id="mb2" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">Nothing is duplicated — the query coordinate is folded before map() sees it</text>
+  <text class="note" x="24" y="42">Every cell hands its points to the same canonical cell, so one SDF call answers for all the copies at once. No</text>
+  <text class="note" x="24" y="58">buffer, no instance count, no upper bound on how many copies exist.</text>
+
+  <!-- ================= the repeated world ================= -->
+  <path class="ground" d="M50,132 L590,132" />
+  <path class="divider" d="M50,100 L50,146 M158,100 L158,146 M266,100 L266,146 M374,100 L374,146 M482,100 L482,146 M590,100 L590,146" />
+  <rect class="obj" x="90" y="98" width="28" height="34" rx="4" />
+  <rect class="obj" x="198" y="98" width="28" height="34" rx="4" />
+  <rect class="obj" x="306" y="98" width="28" height="34" rx="4" />
+  <rect class="obj" x="414" y="98" width="28" height="34" rx="4" />
+  <rect class="obj" x="522" y="98" width="28" height="34" rx="4" />
+  <text class="id" x="104" y="162" text-anchor="middle">−2</text>
+  <text class="id" x="212" y="162" text-anchor="middle">−1</text>
+  <text class="id" x="320" y="162" text-anchor="middle">0</text>
+  <text class="id" x="428" y="162" text-anchor="middle">1</text>
+  <text class="id" x="536" y="162" text-anchor="middle">2</text>
+  <text class="note" x="24" y="90">what you see</text>
+  <text class="note" x="24" y="162">cellId</text>
+
+  <!-- fold arrows -->
+  <path class="fold" d="M104,170 C104,204 320,196 320,214" marker-end="url(#fh)" />
+  <path class="fold" d="M212,170 C212,204 320,196 320,214" marker-end="url(#fh)" />
+  <path class="fold" d="M320,170 L320,214" marker-end="url(#fh)" />
+  <path class="fold" d="M428,170 C428,204 320,196 320,214" marker-end="url(#fh)" />
+  <path class="fold" d="M536,170 C536,204 320,196 320,214" marker-end="url(#fh)" />
+
+  <!-- the canonical cell -->
+  <rect class="cell" x="266" y="220" width="108" height="52" rx="4" />
+  <rect class="obj-home" x="306" y="238" width="28" height="34" rx="4" />
+  <text class="note" x="266" y="290" text-anchor="middle">−c/2</text>
+  <text class="note" x="374" y="290" text-anchor="middle">+c/2</text>
+  <text class="note" x="24" y="250">what map() sees</text>
+
+  <text class="label" x="394" y="234">q = mod(p + 0.5c, c) − 0.5c</text>
+  <text class="note" x="394" y="252">same fold as p − c·round(p / c)</text>
+  <text class="note" x="394" y="270">cellId = round(p / c) holds still</text>
+  <text class="note" x="394" y="286">across a cell — hash that, not q</text>
+
+  <path class="rule" d="M24,314 L616,314" />
+
+  <!-- ================= the catch ================= -->
+  <text class="title" x="24" y="342">One copy per query is also the trap: an off-centre object breaks the safe step</text>
+  <text class="note" x="24" y="360">The fold is only honest while the object sits centred inside half a cell. Push it off-centre and the copy next</text>
+  <text class="note" x="24" y="376">door can be nearer than the one map() was handed — and the returned distance is then too large to be safe.</text>
+
+  <text class="warn" x="280" y="396" text-anchor="middle">the surface truly nearest</text>
+  <text class="label" x="462" y="396" text-anchor="middle">the distance map() returns</text>
+  <path class="leader" d="M285,401 L278,428" />
+  <path class="leader" d="M400,402 L352,430" />
+
+  <path class="ground" d="M140,458 L440,458" />
+  <path class="divider" d="M140,402 L140,466 M290,402 L290,466 M440,402 L440,466" />
+  <rect class="obj" x="215" y="418" width="52.5" height="40" rx="4" />
+  <rect class="obj-home" x="375.5" y="418" width="52.5" height="40" rx="4" />
+
+  <path class="measure" d="M267.5,432 L267.5,444 M267.5,438 L302,438" />
+  <path class="measure-ok" d="M375.5,432 L375.5,444 M302,438 L375.5,438" />
+  <path class="measure" d="M302,432 L302,444" />
+  <circle class="dot" cx="302" cy="438" r="4" />
+
+  <text class="id" x="215" y="480" text-anchor="middle">cell −1</text>
+  <text class="id" x="365" y="480" text-anchor="middle">cell 0, the one p folds into</text>
+
+  <text class="note" x="24" y="506">A step that long lands inside the neighbour — the holes it punches line up exactly on the grid.</text>
+</svg>

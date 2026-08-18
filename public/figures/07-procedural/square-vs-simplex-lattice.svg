@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 438" width="620" height="438" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --sq-fill: #dbeafe;
+      --sq-stroke: #2563eb;
+      --sq-ink: #1e3a8a;
+      --sx-fill: #fef3c7;
+      --sx-stroke: #d97706;
+      --sx-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --sq-fill: #1e3a5f;
+        --sq-stroke: #60a5fa;
+        --sq-ink: #bfdbfe;
+        --sx-fill: #422006;
+        --sx-stroke: #fbbf24;
+        --sx-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .sub { font-size: 13px; font-weight: 600; }
+    .cell { font-size: 12px; }
+    .head { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .grid { stroke: var(--line); stroke-width: 1.25; fill: none; }
+    .hi-sq { fill: var(--sq-fill); stroke: var(--sq-stroke); stroke-width: 2; }
+    .hi-sx { fill: var(--sx-fill); stroke: var(--sx-stroke); stroke-width: 2; }
+    .dot-sq { fill: var(--sq-stroke); }
+    .dot-sx { fill: var(--sx-stroke); }
+    .ink-sq { fill: var(--sq-ink); }
+    .ink-sx { fill: var(--sx-ink); }
+    .kernel { stroke: var(--sx-stroke); stroke-width: 1.25; fill: none; stroke-dasharray: 4 4; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+
+  <text class="title" x="24" y="22">The lattice a single noise sample has to visit</text>
+
+  <!-- square lattice -->
+  <text class="sub ink-sq" x="24" y="50">Perlin &#8212; square lattice</text>
+  <path class="grid" d="M48,74 L219,74 M48,131 L219,131 M48,188 L219,188 M48,245 L219,245 M48,74 L48,245 M105,74 L105,245 M162,74 L162,245 M219,74 L219,245" />
+  <rect class="hi-sq" x="105" y="131" width="57" height="57" />
+  <circle class="dot-sq" cx="105" cy="131" r="4.5" />
+  <circle class="dot-sq" cx="162" cy="131" r="4.5" />
+  <circle class="dot-sq" cx="105" cy="188" r="4.5" />
+  <circle class="dot-sq" cx="162" cy="188" r="4.5" />
+  <circle cx="136" cy="162" r="3.5" fill="var(--ink)" />
+  <text class="cell ink-sq" x="180" y="166">4 corners</text>
+
+  <!-- simplex lattice -->
+  <text class="sub ink-sx" x="330" y="50">Simplex &#8212; skewed triangular lattice</text>
+  <g transform="translate(0,10)">
+    <path class="grid" d="M344,74 L572,74 M372.5,123.4 L543.5,123.4 M344,172.8 L572,172.8 M372.5,222.2 L543.5,222.2 M344,74 L372.5,123.4 M401,74 L372.5,123.4 M401,74 L429.5,123.4 M458,74 L429.5,123.4 M458,74 L486.5,123.4 M515,74 L486.5,123.4 M515,74 L543.5,123.4 M572,74 L543.5,123.4 M372.5,123.4 L344,172.8 M372.5,123.4 L401,172.8 M429.5,123.4 L401,172.8 M429.5,123.4 L458,172.8 M486.5,123.4 L458,172.8 M486.5,123.4 L515,172.8 M543.5,123.4 L515,172.8 M543.5,123.4 L572,172.8 M344,172.8 L372.5,222.2 M401,172.8 L372.5,222.2 M401,172.8 L429.5,222.2 M458,172.8 L429.5,222.2 M458,172.8 L486.5,222.2 M515,172.8 L486.5,222.2 M515,172.8 L543.5,222.2 M572,172.8 L543.5,222.2" />
+    <path class="hi-sx" d="M401,172.8 L458,172.8 L429.5,123.4 Z" />
+    <circle class="kernel" cx="429.5" cy="123.4" r="40" />
+    <circle class="dot-sx" cx="401" cy="172.8" r="4.5" />
+    <circle class="dot-sx" cx="458" cy="172.8" r="4.5" />
+    <circle class="dot-sx" cx="429.5" cy="123.4" r="4.5" />
+    <circle cx="431" cy="155" r="3.5" fill="var(--ink)" />
+    <text class="cell ink-sx" x="478" y="166">3 vertices</text>
+  </g>
+
+  <text class="note" x="24" y="272">All 4 corners get hashed and dotted with</text>
+  <text class="note" x="24" y="288">their own offset, then blended by u = fade(f).</text>
+  <text class="note" x="330" y="272">Skew p by F&#8322; = (&#8730;3&#8722;1)/2 &#8776; 0.366 so the</text>
+  <text class="note" x="330" y="288">triangles index like a square grid; each of</text>
+  <text class="note" x="330" y="304">the 3 vertices adds a radial (0.5&#8722;d&#178;)&#8308; falloff.</text>
+
+  <!-- corner-count ladder -->
+  <line class="rule" x1="24" y1="322" x2="596" y2="322" />
+  <text class="head" x="38" y="340">dimension</text>
+  <text class="head ink-sq" x="230" y="340" text-anchor="end">Perlin: 2&#8319; corners</text>
+  <text class="head ink-sx" x="430" y="340" text-anchor="end">Simplex: n+1 vertices</text>
+  <text class="cell" x="38" y="362">2D</text>
+  <text class="cell ink-sq" x="230" y="362" text-anchor="end">4</text>
+  <text class="cell ink-sx" x="430" y="362" text-anchor="end">3</text>
+  <text class="cell" x="38" y="380">3D</text>
+  <text class="cell ink-sq" x="230" y="380" text-anchor="end">8</text>
+  <text class="cell ink-sx" x="430" y="380" text-anchor="end">4</text>
+  <text class="cell" x="38" y="398">4D</text>
+  <text class="cell ink-sq" x="230" y="398" text-anchor="end">16</text>
+  <text class="cell ink-sx" x="430" y="398" text-anchor="end">5</text>
+  <text class="note" x="452" y="362">one hash + one gradient</text>
+  <text class="note" x="452" y="380">per corner, so this ratio</text>
+  <text class="note" x="452" y="398">is the per-sample cost</text>
+
+  <text class="foot" x="310" y="426" text-anchor="middle">In 2D the two look alike; the gap only opens up in 3D and 4D, which is why animated noise reaches for Simplex.</text>
+</svg>

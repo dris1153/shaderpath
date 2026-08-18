@@ -4,6 +4,12 @@
 
 Ortho thắng thế trong ba trường hợp cụ thể: UI 3D overlay (một icon 3D phải giữ nguyên kích thước dù camera chính lùi ra xa), isometric/chiến thuật (game chiến thuật dùng góc nhìn ortho hoặc gần-ortho để người chơi so sánh kích thước đơn vị chính xác bất kể vị trí trên bản đồ), và blueprint/CAD 2.5D (không méo hình khi đo đạc trên màn hình). fov/aspect/near/far của Perspective bạn đã gặp ở Track 0; left/right/top/bottom của Orthographic đóng vai trò tương tự — chúng định nghĩa trực tiếp một hộp (box) frustum thay vì một hình chóp cụt, và kích thước hộp đó — chứ không phải khoảng cách camera — quyết định vật to hay nhỏ trên màn hình.
 
+<Figure
+  src="/figures/03-threejs/perspective-frustum-vs-ortho-box.svg"
+  alt="So sánh hai khối nhìn: hình chóp cụt của PerspectiveCamera với fov, near và far được đánh dấu, và hộp chữ nhật của OrthographicCamera với near, far, top, bottom, mỗi bên kèm một dải mô phỏng ảnh trên màn hình"
+  caption="Cùng một vật ở hai khoảng cách: chóp cụt làm nó nhỏ dần theo khoảng cách, còn hộp thì không — với ortho, kích thước hộp chứ không phải khoảng cách camera mới quyết định vật to hay nhỏ."
+/>
+
 ## OrbitControls: target, damping và vòng lặp update()
 
 `OrbitControls` (trong `three/addons/controls/OrbitControls.js`) là cách phổ biến nhất để cho người dùng xoay quanh một điểm. Nó không thay thế camera — nó lắng nghe sự kiện con trỏ/wheel trên `domElement` bạn truyền vào, rồi ghi thẳng lên `camera.position` và `camera.quaternion` mỗi khi bạn gọi `controls.update()`. Nội bộ, controls lưu vị trí camera dưới dạng toạ độ cầu (bán kính, góc phương vị, góc cực) quanh `controls.target` — một `Vector3` mặc định `(0,0,0)`, điểm camera luôn nhìn vào.

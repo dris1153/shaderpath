@@ -22,6 +22,12 @@ Cái bẫy phổ biến nhất: threshold đặt quá thấp khiến bloom khôn
 
 Năm mip blur được cộng lại có trọng số qua `bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2]` — mip sắc nét nhất (mip 0) đóng góp nhiều nhất mặc định. `radius` không đổi kích thước kernel (kernel đã cố định lúc khởi tạo) — nó chạy hàm `lerpBloomFactor` để nội suy giữa `bloomFactors[i]` gốc và `1.2 - bloomFactors[i]`, tức đẩy trọng số nghiêng dần từ "ưu tiên mip sắc nét" (radius = 0) sang "ưu tiên mip mờ rộng" (radius = 1). `strength` chỉ đơn giản nhân toàn bộ tổng đó với hệ số `3.0 * bloomStrength` (con số `3.0` là hằng số giữ tương thích ngược, ghi rõ trong comment mã nguồn) rồi cộng dồn (additive blend) thẳng vào ảnh gốc — đây cũng là lý do `needsSwap = false`: pass tự ghi kết quả ngược lại `readBuffer`, không đợi composer swap.
 
+<Figure
+  src="/figures/10-postprocessing/unrealbloom-pipeline.svg"
+  alt="Dòng chảy bốn giai đoạn bên trong UnrealBloomPass: readBuffer vào luminance high-pass, ra target sáng ở nửa độ phân giải, rồi năm ô mip từ res/2 xuống res/32 kèm kernel size và trọng số composite, cuối cùng là bước composite có trọng số và phép cộng ngược vào readBuffer"
+  caption="Chỉ giai đoạn đầu tiên đọc threshold; mọi bước sau đó là chuỗi blur cố định — nên strength và radius không bao giờ cứu được một ngưỡng đặt quá thấp."
+/>
+
 ## HDR: buffer nửa-float chưa chắc đã đủ
 
 Bài trước đã xác nhận: `EffectComposer` ở bản three.js đang cài (0.185.1) đã mặc định cấp `HalfFloatType` cho hai render target nội bộ — không còn cần tự bọc `new WebGLRenderTarget(w, h, { type: HalfFloatType })` như nhiều hướng dẫn cũ vẫn khuyên. Nhưng có buffer chứa được số lớn hơn 1.0 không có nghĩa là buffer đó THỰC SỰ chứa số lớn hơn 1.0 — còn phụ thuộc thứ gì ghi vào nó.

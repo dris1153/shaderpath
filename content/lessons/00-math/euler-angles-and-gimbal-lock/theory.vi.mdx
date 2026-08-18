@@ -65,6 +65,12 @@ $$
 
 $\alpha$ và $\gamma$ không còn xuất hiện riêng lẻ, chỉ hiệu số $\alpha-\gamma$ quyết định ma trận. Roll và yaw — hai trục lẽ ra độc lập — sụp thành **một** biến chung khi pitch chạm $90°$; ba bậc tự do ban đầu còn hai. Vật lý: vòng giữa (pitch) xoay đủ $90°$ khiến trục quay của vòng trong (roll, đã bị pitch làm nghiêng) song song với trục quay của vòng ngoài (yaw, cố định thế giới) — xoay vòng nào cũng cho cùng một chuyển động.
 
+<Figure
+  src="/figures/00-math/gimbal-lock-axis-collapse.svg"
+  alt="Hai trạng thái của bộ gimbal ba vòng: vòng giữa ở 0° thì ba trục xoay chỉ ba hướng khác nhau; vòng giữa ở 90° thì vòng trong nằm cùng mặt phẳng với vòng ngoài và hai trục trùng lên nhau"
+  caption="Chỉ vòng trong đổi chỗ: vòng giữa quay 90° kéo trục roll về trùng trục yaw, nên hai núm vặn đó chỉ còn điều khiển đúng một hướng xoay."
+/>
+
 ### Ví dụ số: hai bộ góc khác nhau, cùng một ma trận
 
 Hai cặp $(\alpha,\gamma)=(60°,25°)$ và $(\alpha,\gamma)=(10°,-25°)$ đều có $\alpha-\gamma=35°$. Với $\sin 35°\approx 0.574$, $\cos 35°\approx 0.819$, cả hai cho đúng cùng một ma trận:

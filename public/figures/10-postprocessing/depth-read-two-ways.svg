@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 434" width="660" height="434" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .rule { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .tick { stroke: var(--line); stroke-width: 1.2; fill: none; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .arrow-you { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1.2; fill: none; stroke-dasharray: 4 4; }
+    .guide { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+    .coc { fill: none; stroke: var(--accent-stroke); stroke-width: 2; }
+    .coc-sharp { fill: var(--box-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .dot { fill: var(--ink); }
+    .dot-you { fill: var(--accent-stroke); }
+    .hollow { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .divider { stroke: var(--line); stroke-width: 1; stroke-dasharray: 3 5; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <rect class="box" x="200" y="20" width="260" height="50" rx="8" />
+  <text class="label" x="330" y="42" text-anchor="middle">the depth buffer</text>
+  <text class="note" x="330" y="60" text-anchor="middle">one depth per pixel, nothing else</text>
+
+  <path class="arrow" d="M270,70 L184,98" marker-end="url(#head)" />
+  <path class="arrow" d="M390,70 L476,98" marker-end="url(#head)" />
+
+  <path class="divider" d="M338,104 L338,388" />
+
+  <text class="title" x="24" y="120">DOF reads it as a radius</text>
+  <text class="note" x="24" y="140">every pixel picks its own blur radius</text>
+
+  <circle class="coc" cx="100" cy="204" r="12" />
+  <circle class="coc-sharp" cx="185" cy="204" r="3" />
+  <circle class="coc" cx="290" cy="204" r="15" />
+
+  <path class="leader" d="M100,292 L100,219" />
+  <path class="leader" d="M185,292 L185,210" />
+  <path class="leader" d="M290,292 L290,222" />
+
+  <path class="guide" d="M185,168 L185,196" />
+  <path class="guide" d="M185,214 L185,316" />
+  <text class="label ink-you" x="185" y="160" text-anchor="middle">focus</text>
+
+  <path class="rule" d="M50,300 L318,300" marker-end="url(#head)" />
+  <path class="dot" d="M30,288 L52,300 L30,312 Z" />
+  <rect class="hollow" x="93" y="292" width="14" height="16" rx="2" />
+  <rect class="hollow" x="178" y="292" width="14" height="16" rx="2" />
+  <rect class="hollow" x="283" y="292" width="14" height="16" rx="2" />
+  <text class="note" x="318" y="322" text-anchor="end">distance from the camera</text>
+
+  <text class="note" x="24" y="352">radius grows with the gap to the focus plane, either side of it:</text>
+  <text class="note" x="24" y="370">blur = clamp((focus − depth) · aperture, ±maxblur)</text>
+
+  <text class="title" x="360" y="120">Motion blur reads it as a position</text>
+  <text class="note" x="360" y="140">depth plus this frame&#39;s inverse view-projection</text>
+  <text class="note" x="360" y="156">rebuild the world point P behind the pixel</text>
+
+  <circle class="dot-you" cx="505" cy="192" r="5" />
+  <text class="label ink-you" x="517" y="188">P</text>
+
+  <path class="leader" d="M505,192 L432,294" />
+  <path class="leader" d="M505,192 L578,294" />
+
+  <path class="rule" d="M376,300 L636,300" />
+  <text class="note" x="376" y="292">image plane</text>
+  <circle class="dot" cx="430" cy="300" r="4" />
+  <circle class="hollow" cx="580" cy="300" r="4" />
+  <text class="note" x="430" y="320" text-anchor="middle">this frame</text>
+  <text class="note" x="580" y="320" text-anchor="middle">last frame&#39;s camera</text>
+
+  <path class="arrow-you" d="M430,276 L576,276" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="503" y="268" text-anchor="middle">velocity</text>
+
+  <path class="tick" d="M430,352 L580,352" />
+  <path class="tick" d="M430,346 L430,358" />
+  <path class="tick" d="M440,346 L440,358" />
+  <path class="tick" d="M450,346 L450,358" />
+  <path class="tick" d="M460,346 L460,358" />
+  <path class="tick" d="M470,346 L470,358" />
+  <path class="tick" d="M480,346 L480,358" />
+  <path class="tick" d="M490,346 L490,358" />
+  <path class="tick" d="M500,346 L500,358" />
+  <path class="tick" d="M510,346 L510,358" />
+  <path class="tick" d="M520,346 L520,358" />
+  <path class="tick" d="M530,346 L530,358" />
+  <path class="tick" d="M540,346 L540,358" />
+  <path class="tick" d="M550,346 L550,358" />
+  <path class="tick" d="M560,346 L560,358" />
+  <path class="tick" d="M570,346 L570,358" />
+  <path class="tick" d="M580,346 L580,358" />
+  <text class="note" x="505" y="374" text-anchor="middle">16 colour samples gathered along it</text>
+
+  <text class="note" x="24" y="408">Both effects cost one full-screen pass and one depth read — no extra per-object data.</text>
+  <text class="note" x="24" y="426">That is also the limit: camera-only velocity assumes the geometry itself never moved.</text>
+</svg>

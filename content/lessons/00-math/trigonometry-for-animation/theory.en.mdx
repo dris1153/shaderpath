@@ -32,6 +32,12 @@ These three parameters are the standardized "knobs" of any sine-based oscillatio
 
 The three parameters are linearly independent of one another: changing $A$ never touches $\omega$ or $\phi$, and vice versa — which is exactly why one slider per parameter is always enough to explore the full space of sine-based oscillation.
 
+<Figure
+  src="/figures/00-math/unit-circle-to-sine-wave.svg"
+  alt="A circle of radius A with a point at angle theta = omega t + phi, linked by a dashed line across to a sine plot marked with the amplitude A, the period T = 2 pi over omega, and the phase shift phi"
+  caption="A is the circle's radius, omega sets how long one lap takes, phi only moves the starting point — three knobs acting on three different parts of one motion."
+/>
+
 ## atan2 Instead of atan: Getting the Angle Right When Aiming at a Target
 
 The inverse of "given an angle, find the point" is "given a direction $(\Delta x, \Delta y)$, find the angle" — for instance, the rotation a turret needs to face the mouse. The first instinct is $\theta = \arctan(\Delta y / \Delta x)$, but the single-argument `atan` function has a real mathematical gap: the ratio $\Delta y / \Delta x$ is identical for two exactly opposite directions — $(\Delta x, \Delta y) = (3, 2)$ and $(-3, -2)$ produce the same ratio $2/3$, so `atan` returns the same angle for both, even though they point in completely opposite directions. `atan` only ever returns a value inside $(-90°, 90°)$ — it has no way to tell the four quadrants apart.

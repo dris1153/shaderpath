@@ -10,6 +10,12 @@ Chuỗi chuẩn, mỗi bước có lý do vật lý hoặc kỹ thuật riêng: 
 
 AO đứng ngay sau cảnh vì occlusion là một phần của PHÉP TÍNH ÁNH SÁNG — nó phải nhân vào giá trị chói còn ở dạng linear HDR, y hệt cách bóng đổ thật ăn bớt ánh sáng trước khi ánh sáng đó tới mắt. Nhân AO vào ảnh đã tone-map hoặc đã grade là nhân lên một ảnh đã "diễn giải nghệ thuật" — bóng tiếp xúc lúc đó không còn đúng vật lý, chỉ còn là lớp làm tối tuỳ tiện. Bloom đứng trước tone mapping vì lý do đã nói ở trên. Tone mapping đứng ngay sau bloom vì nó là bước DUY NHẤT nén dải HDR không giới hạn về $[0,1]$ — `OutputPass` của Three.js (gộp tone mapping lẫn chuyển không gian màu sRGB) theo đúng tài liệu chính thức "nên được đặt ở cuối mỗi chuỗi pass". Grade/LUT chạy sau tone mapping vì một LUT 3D được build cho ảnh display-referred — tra theo toạ độ RGB, kỳ vọng dữ liệu đã nằm gọn trong $[0,1]$; HDR chưa nén sẽ tra sai ô lưới. Cuối cùng, grain/vignette/chromatic aberration chạy SAU CÙNG vì đây là hiệu ứng mô phỏng ống kính và film — ánh sáng đi qua thấu kính (méo màu ở rìa — chromatic aberration), qua khẩu độ (tối góc — vignette), rồi mới chạm lớp film có hạt (grain) — đúng những thứ CUỐI CÙNG ánh sáng "đi qua" trước khi thành ảnh, nên về hậu kỳ chúng cũng là bước cuối.
 
+<Figure
+  src="/figures/10-postprocessing/canonical-pass-order.svg"
+  alt="Sáu giai đoạn xếp dọc từ render cảnh xuống grain, vignette và aberration, mỗi giai đoạn kèm một dòng lý do, với tone mapping được làm nổi bật như ranh giới giữa dải nét đứt linear HDR bao ba bước đầu và dải display-referred bao hai bước cuối"
+  caption="Tone mapping là ranh giới đáng thuộc lòng nhất trong chuỗi: mọi thứ phía trên nó vẫn đang tính toán trên ánh sáng thật, mọi thứ phía dưới đã tính trên một bức ảnh."
+/>
+
 ## Chi phí fillrate: mỗi pass là một lượt đọc và ghi toàn màn hình
 
 Mỗi fullscreen pass là một hình chữ nhật phủ kín màn hình được rasterize — GPU chạy fragment shader cho từng texel, đọc ít nhất một texture nguồn và ghi ít nhất một render target đích. Với buffer HDR nửa-float (`HalfFloatType`, 8 byte/texel RGBA), một pass đơn giản (1 lần đọc, 1 lần ghi) di chuyển xấp xỉ:
@@ -26,7 +32,7 @@ $$
 
 Đây là ước lượng thô (bỏ qua texture cache của GPU hiện đại) nhưng đủ để thấy quy mô: ở 1080p, 60fps, một chuỗi 5 pass tốn khoảng $166\text{MB} \times 60 \approx 10\text{GB/s}$ băng thông riêng cho hậu kỳ — đặt cạnh băng thông bộ nhớ thật của GPU (hàng trăm GB/s trên desktop, thường dưới 30GB/s trên di động) để biết còn "ngân sách" cho phần còn lại của frame.
 
-Đếm pass thấy được trong `composer.passes` KHÔNG phải chi phí thật. `UnrealBloomPass` (xác nhận trong mã nguồn) chạy nội bộ khoảng một chục draw call: 1 lần trích sáng, 5 mip level × 2 hướng blur, cộng một lần composite — nhưng bốn trong năm mip chạy ở một-phần-tư, một-phần-mười-sáu độ phân giải trở xuống (mỗi mip giảm nửa độ phân giải mip trước), nên tổng texel thực chạm tới chỉ tương đương khoảng **2 pass đầy đủ độ phân giải**, dù số draw call gấp sáu lần. Đếm "bloom = 1 pass" đánh giá thấp; đếm "bloom = 12 pass full-res" đánh giá quá cao. Kế toán trung thực nghĩa là tính theo texel × độ phân giải thật của từng draw call, không phải số dòng gọi `addPass`.
+Đếm pass thấy được trong `composer.passes` KHÔNG phải chi phí thật. `UnrealBloomPass` (xác nhận trong mã nguồn) chạy nội bộ 13 draw call: 1 lần trích sáng, 5 mip level × 2 hướng blur, 1 lần composite, cộng 1 lần blend cộng dồn trở lại input — nhưng bốn trong năm mip chạy ở một-phần-tư, một-phần-mười-sáu độ phân giải trở xuống (mỗi mip giảm nửa độ phân giải mip trước), nên tổng texel thực chạm tới chỉ tương đương khoảng **2 pass đầy đủ độ phân giải**, dù số draw call gấp sáu lần. Đếm "bloom = 1 pass" đánh giá thấp; đếm "bloom = 13 pass full-res" đánh giá quá cao. Kế toán trung thực nghĩa là tính theo texel × độ phân giải thật của từng draw call, không phải số dòng gọi `addPass`.
 
 ## DPR: số nhân ẩn của fillrate
 

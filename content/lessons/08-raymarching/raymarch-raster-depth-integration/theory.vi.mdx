@@ -67,6 +67,12 @@ gl_FragDepthEXT = ndcDepth * 0.5 + 0.5;
 
 (Three.js luôn `#define gl_FragDepthEXT gl_FragDepth` bất kể `glslVersion` — viết `gl_FragDepthEXT` là quy ước an toàn, tương thích ngược.) Ghi giá trị này khiến GPU depth test tiêu chuẩn (LESS, đã bật sẵn) tự động quyết định đúng: pixel SDF gần hơn mesh → depth test thắng → SDF vẽ đè; xa hơn → depth test thua → bị loại (`discard` đã lo phần "miss hẳn"). Cái giá thật: ghi `gl_FragDepth` tắt early-Z — GPU không còn loại fragment TRƯỚC khi chạy fragment shader dựa trên depth đã biết từ rasterizer, vì depth thật chỉ có SAU khi shader chạy xong; chi phí này là ước lượng theo tài liệu GPU vendor, không đo trực tiếp được qua API web, nhưng luôn đáng nhớ: `gl_FragDepth` không miễn phí.
 
+<Figure
+  src="/figures/08-raymarching/raymarch-depth-exchange.svg"
+  alt="Một mesh và một bề mặt SDF cắt vào nhau trước camera: dọc tia phía trên, march bị cắt tại độ sâu của mesh rồi discard; dọc tia phía dưới, march chạm trước và ghi gl_FragDepth. Bên dưới là ba bước: pass chỉ vẽ mesh, raymarch giới hạn bởi tMax, rồi depth test phần cứng"
+  caption="Mỗi khung hình, depth đi theo cả hai chiều: đi vào vòng march như một cận trên của t, rồi đi ra ngoài dưới dạng gl_FragDepth. Thiếu một nửa là hỏng — bỏ cận trên thì SDF đè lên mesh, bỏ lệnh ghi thì mesh đè lên SDF."
+/>
+
 ## Kiến trúc demo: một scene, hai lần render, depth test thật
 
 Demo bài này dùng đúng một `THREE.Scene` (mesh + object SDF), gọi `gl.render()` HAI lần mỗi frame qua `useFrame` priority > 0 (kỹ thuật "portal vào pipeline R3F" đã gặp ở bài `createPortal`/`View` Track 4) — lần một ẩn SDF, render mesh vào `meshTarget` để lấy depth texture; lần hai hiện lại SDF, render cả hai vào màn hình thật, nơi depth test phần cứng của chính canvas quyết định occlusion cuối cùng. Toggle "naive overlay" tắt hẳn `material.depthTest` — tái hiện đúng lỗi mở bài: SDF luôn vẽ đè bất kể khoảng cách thật. Toggle `gl_FragDepth` chuyển giữa ghi depth đúng (từ điểm chạm) và giữ nguyên depth của chính hình cầu bao (`gl_FragCoord.z`, sai có chủ đích) — quan sát trực tiếp chiều "mesh ẩn sau SDF" gãy ở đâu khi tắt.

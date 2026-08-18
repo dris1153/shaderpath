@@ -42,6 +42,12 @@ $$
 
 Dividing the raw result by exactly this sum keeps FBM in a stable range regardless of how many octaves or what gain you pick — skip this step, and changing octave count while tuning a demo will accidentally brighten or darken the whole image just because the total amplitude changed, not because the noise shape did, which is misleading when visually comparing octave counts. This lesson's `fbm.frag` demo computes exactly this running total (`maxAmplitude`) inside the same loop, then divides at the end.
 
+<Figure
+  src="/figures/07-procedural/fbm-octave-stack.svg"
+  alt="Four stacked wave rows whose frequency doubles and amplitude halves each step, with the normalised sum plotted below alongside the divisor (1 − g to the N)/(1 − g)"
+  caption="The demo only ever shows you the sum; the four layers underneath it and the divisor stay off-screen."
+/>
+
 ## Shaping the Result: Ridged, Turbulence, Billow
 
 Standard FBM sums signed noise values directly — the result is symmetric, an even rolling-hills look. Changing how EACH layer is processed before summing produces three visibly different shape variants, all from the same loop:

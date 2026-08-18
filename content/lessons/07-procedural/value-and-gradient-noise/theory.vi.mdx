@@ -73,6 +73,12 @@ float n = mix(mix(v00, v10, u.x), mix(v01, v11, u.x), u.y);
 
 Bốn dòng `dot` này giữ nguyên cấu trúc song tuyến của value noise, chỉ đổi "giá trị góc" ($a, b, c, d$) thành "hình chiếu của gradient lên hướng tới $p$". Hệ quả trực tiếp: đúng tại một điểm lưới, vector lệch tới chính nó bằng $(0, 0)$, nên $\mathrm{dot}(g, \vec 0) = 0$ với bất kỳ gradient nào — gradient noise **luôn bằng 0 tại mọi điểm lưới**, bất kể hash cho ra hướng gì. Value noise không có tính chất đó: tại điểm lưới, giá trị của nó chính là hash thô, một số bất kỳ trong $[0,1)$, tạo cảm giác "đốm sáng cố định" tại mỗi nút lưới nếu nhìn kỹ.
 
+<Figure
+  src="/figures/07-procedural/lattice-cell-anatomy.svg"
+  alt="Hai ô lưới cạnh nhau: bên trái bốn góc giữ bốn số a, b, c, d; bên phải bốn góc giữ bốn vector đơn vị cùng các vector lệch đứt nét trỏ về điểm lấy mẫu p, phía dưới là công thức mix lồng nhau dùng chung cho cả hai"
+  caption="Cùng một phép trộn song tuyến, chỉ khác ở chỗ bốn con số ở góc mang ý nghĩa gì."
+/>
+
 ## So sánh và vì sao engine chọn gradient noise
 
 Nhìn bằng mắt, value noise (fade tốt) cho kết cấu "khối/mây" — vón cục quanh giá trị hash tại từng nút, thiên về các đốm tròn quanh điểm lưới vì thông tin duy nhất mỗi góc mang là "cao hay thấp". Gradient noise mượt hơn hẳn, feature size đều hơn trên toàn trường, vì mỗi góc còn mang thêm hướng — trường kết quả đổi cả hướng dốc liên tục theo mọi phía, ít thiên vị trục ngang/dọc hơn.

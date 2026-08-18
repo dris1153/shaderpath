@@ -67,6 +67,12 @@ gl_FragDepthEXT = ndcDepth * 0.5 + 0.5;
 
 (Three.js always `#define`s `gl_FragDepthEXT` to `gl_FragDepth` regardless of `glslVersion` — writing `gl_FragDepthEXT` is the safe, backward-compatible spelling.) Writing this value lets the GPU's standard depth test (LESS, already enabled) decide correctly on its own: an SDF pixel nearer than the mesh → depth test wins → the SDF draws over it; farther → depth test loses → rejected (the `discard` already handles the "missed entirely" case). The real cost: writing `gl_FragDepth` disables early-Z — the GPU can no longer reject a fragment BEFORE running the fragment shader based on depth known from rasterization, since the true depth only exists AFTER the shader finishes; that cost is an estimate per GPU vendor documentation, not something directly measurable through a web API, but always worth remembering: `gl_FragDepth` is not free.
 
+<Figure
+  src="/figures/08-raymarching/raymarch-depth-exchange.svg"
+  alt="A mesh and an SDF surface interpenetrating in front of a camera: along the upper ray the march is cut off at the mesh depth and discards, along the lower ray it hits first and writes gl_FragDepth. Below, the three stages: the mesh-only pass, the raymarch bounded by tMax, then the hardware depth test"
+  caption="Depth travels both ways once per frame: into the march as an upper bound on t, and back out as gl_FragDepth. Neither half is enough on its own — drop the bound and the SDF paints over the mesh, drop the write and the mesh paints over the SDF."
+/>
+
 ## The Demo's Architecture: One Scene, Two Renders, a Real Depth Test
 
 This lesson's demo uses exactly one `THREE.Scene` (mesh + SDF object), calling `gl.render()` TWICE per frame through a `useFrame` with priority > 0 (the "portal into the R3F pipeline" technique from the `createPortal`/`View` Track 4 lesson) — the first pass hides the SDF and renders the mesh into `meshTarget` to get a depth texture; the second shows the SDF again and renders both to the real screen, where the canvas's own hardware depth test decides final occlusion. The "naive overlay" toggle disables `material.depthTest` outright — reproducing the opening bug exactly: the SDF always draws over regardless of true distance. The `gl_FragDepth` toggle switches between writing the correct depth (from the hit point) and keeping the bounding sphere's own depth (`gl_FragCoord.z`, wrong on purpose) — watch directly where the "mesh hidden by SDF" direction breaks when it's off.

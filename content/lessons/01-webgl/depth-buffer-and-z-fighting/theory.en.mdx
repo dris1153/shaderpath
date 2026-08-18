@@ -45,6 +45,12 @@ The point where $\text{depth}(d) = 0.5$ — half the $[0, 1]$ range already spen
 
 Setting $n = 0.001$ "just to be safe" (so nothing gets near-clipped) makes this considerably worse: $d \approx 0.002$ — half the depth range vanishes inside the first 0.001 units, leaving the other half to carry the entire rest of the scene. Objects at ordinary distances (5–50 units, where most real scenes actually live) now share a vanishingly thin slice of that crowded half — two surfaces a few centimeters apart get quantized to the same depth value with ease.
 
+<Figure
+  src="/figures/01-webgl/depth-precision-distribution.svg"
+  alt="Hyperbolic depth(d) curve for near 0.1 and far 1000, marking the half-range point at d = 0.2, beside a band splitting [0, 1] into 50/25/15/9/1 percent for the distance spans 0.1-0.2, 0.2-0.4, 0.4-1, 1-10 and 10-1000"
+  caption="The quantized steps are evenly spaced; the distances they have to pay for are not — half the range is spent before d even reaches 0.2."
+/>
+
 ## Z-Fighting: When Depth Quantization Collides
 
 The depth buffer doesn't store infinite-precision real numbers — it quantizes $[0,1]$ into $2^{N}$ discrete levels ($N$ = bit depth, typically 24, over 16 million levels). When two nearly-coplanar surfaces (two stacked decals, two CAD faces flush against each other, a quad "glued" onto a floor) land on the same quantized level — or on adjacent levels close enough that ordinary floating-point noise (a slightly different interpolation, a tiny camera shift) can flip the result — the depth test stops picking a consistent winner. The result is **z-fighting**: bands of pixels flickering between the two surfaces, especially obvious the moment the camera or the geometry moves.

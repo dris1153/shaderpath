@@ -40,6 +40,12 @@ This is the exact ping-pong FBO technique from Track 9 (`pingpong-fbo-state-text
 
 These three flags (defined on the base `Pass` class) are the entire contract the composer needs from every pass. `enabled = false` makes the composer skip that pass entirely in the loop — no render call spent — and the composer recomputes which pass is now the last one still enabled (`isLastEnabledPass`) to assign `renderToScreen` correctly, no manual reordering needed. `needsSwap` defaults to `true` for an ordinary pass, but is `false` for RenderPass (explained above) and for `UnrealBloomPass` (next lesson), since it writes its additive result straight into readBuffer itself. `renderToScreen` is set `true`/`false` by the composer right before each `pass.render()` call — the pass only needs to read that flag to decide between `setRenderTarget(null)` (the canvas) or an internal buffer.
 
+<Figure
+  src="/figures/10-postprocessing/pass-chain-ping-pong.svg"
+  alt="Three pass boxes above a two-row grid of renderTarget1 and renderTarget2, showing which target is readBuffer and which is writeBuffer at each step, with the single swapBuffers() marked between ShaderPass and OutputPass"
+  caption="readBuffer and writeBuffer are two roles that trade places, not two fixed textures — RenderPass primes readBuffer without swapping, so the whole chain needs exactly one swap."
+/>
+
 ## Taking Over the Render Loop in R3F
 
 By default R3F calls `gl.render(scene, camera)` on its own every requested frame. To let the composer replace that call, the demo builds the composer once inside a `useEffect` (grabbing `gl`, `scene`, `camera` via `useThree`), then registers a callback with a **non-zero priority**:

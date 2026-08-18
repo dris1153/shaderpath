@@ -4,6 +4,12 @@ Back in Track 0, projection was the third stage of the Model → View → Projec
 
 Orthographic wins in three concrete cases: 3D UI overlays (a 3D icon must keep its exact size even as the main camera pulls back), isometric/strategy games (strategy titles use an orthographic or near-orthographic view so players can compare unit sizes accurately no matter where they sit on the map), and CAD/2.5D blueprints (no distortion when measuring on screen). fov/aspect/near/far on Perspective should look familiar from Track 0; left/right/top/bottom on Orthographic play the same role — they define a box frustum directly instead of a truncated pyramid, and it's that box's dimensions, not the camera's distance, that decide how big an object looks on screen.
 
+<Figure
+  src="/figures/03-threejs/perspective-frustum-vs-ortho-box.svg"
+  alt="The two view volumes side by side: the PerspectiveCamera frustum with fov, near and far marked, and the OrthographicCamera box with near, far, top and bottom, each with a strip showing what lands on screen"
+  caption="The same box at two distances: the frustum shrinks it with distance, the box does not — with an orthographic camera it is the box size, not the camera distance, that sets on-screen scale."
+/>
+
 ## OrbitControls: Target, Damping and the update() Loop
 
 `OrbitControls` (from `three/addons/controls/OrbitControls.js`) is the standard way to let a user orbit around a point. It doesn't replace the camera — it listens for pointer/wheel events on the `domElement` you pass in, then writes directly to `camera.position` and `camera.quaternion` every time you call `controls.update()`. Internally it stores the camera's position as spherical coordinates (radius, azimuthal angle, polar angle) around `controls.target`, a `Vector3` defaulting to `(0,0,0)` that the camera always looks at.

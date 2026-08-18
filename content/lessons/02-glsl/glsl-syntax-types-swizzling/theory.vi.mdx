@@ -41,6 +41,12 @@ vec2 truncated = composed.xy;        // đọc bớt 2 trong 4 thành phần (sw
 
 Swizzling là cách gọi thành phần vector bằng TÊN thay vì chỉ số — và GLSL cung cấp ba bộ tên hoàn toàn tương đương nhau về mặt vị trí bộ nhớ: `.xyzw` (toạ độ), `.rgba` (màu), `.stpq` (toạ độ texture). Ba bộ tên chỉ là "vỏ" khác nhau cho cùng 4 slot — KHÔNG được trộn tên từ hai bộ khác nhau trong cùng một biểu thức swizzle (`.xg` sai, vì `x` thuộc bộ `xyzw` còn `g` thuộc bộ `rgba`).
 
+<Figure
+  src="/figures/02-glsl/vector-component-aliases-and-swizzles.svg"
+  alt="Bốn slot của một vec4 với ba hàng tên tương đương xyzw, rgba, stpq xếp thẳng cột, kèm hai ví dụ đọc v.bgr và v.xyx cho ra vec3, và hai dòng quy tắc cho chiều ghi"
+  caption="Ba bộ tên chỉ là ba cách gọi cùng bốn slot. Kích thước kết quả bằng đúng số ký tự bạn viết, và chỉ chiều ghi mới cấm lặp tên."
+/>
+
 ### Đọc và hoán vị: `.xy`, `.bgr`, và ba bộ tên tương đương
 
 Ở chiều đọc, bạn có thể chọn bất kỳ tập con nào, theo bất kỳ thứ tự nào, và LẶP LẠI tên tuỳ ý: `.xy` lấy 2 trong nhiều thành phần (kết quả `vec2`), `.bgr` đảo ngược thứ tự 3 kênh màu (vẫn `vec3`, chỉ hoán vị), `.xyx` lặp thành phần đầu vào cả vị trí thứ ba (vẫn `vec3` — đọc không có ràng buộc phải duy nhất). Kích thước kết quả luôn bằng đúng số ký tự bạn viết, bất kể vector nguồn to hay nhỏ hơn — miễn nguồn thật sự CÓ thành phần đó.

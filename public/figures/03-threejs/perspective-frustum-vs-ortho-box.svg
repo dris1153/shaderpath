@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 476" width="620" height="476" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --obj-fill: #fef3c7;
+      --obj-stroke: #d97706;
+      --screen-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --obj-fill: #422006;
+        --obj-stroke: #fbbf24;
+        --screen-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .head { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .mark { font-size: 11px; font-weight: 600; fill: var(--accent-ink); }
+    .vol { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .cut { stroke: var(--accent-stroke); stroke-width: 1.2; stroke-dasharray: 4 4; fill: none; }
+    .obj { fill: var(--obj-fill); stroke: var(--obj-stroke); stroke-width: 1.5; }
+    .screen { fill: var(--screen-fill); stroke: var(--line); stroke-width: 1.5; }
+    .ray { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .arc { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; }
+    .cam { fill: var(--accent-stroke); }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="40" y="22">The shape of what the camera can see</text>
+  <text class="note" x="40" y="40">Side view, camera looking right; the vertical axis is the camera's up. One box, drawn at two distances.</text>
+
+  <text class="head" x="180" y="72" text-anchor="middle">PerspectiveCamera — a frustum</text>
+  <text class="note" x="180" y="90" text-anchor="middle">(fov, aspect, near, far)</text>
+
+  <text class="head" x="447" y="72" text-anchor="middle">OrthographicCamera — a box</text>
+  <text class="note" x="447" y="90" text-anchor="middle">(left, right, top, bottom, near, far)</text>
+
+  <!-- ============ perspective ============ -->
+  <path class="cut" d="M70,192 L135,171 M70,192 L135,213" />
+  <path class="vol" d="M135,171 L290,122 L290,262 L135,213 Z" />
+  <circle class="cam" cx="70" cy="192" r="4" />
+  <path class="arc" d="M102.4,181.6 A34,34 0 0,1 102.4,202.4" />
+  <text class="mark" x="108" y="196">fov</text>
+  <text class="mark" x="135" y="163" text-anchor="middle">near</text>
+  <text class="mark" x="290" y="114" text-anchor="middle">far</text>
+
+  <rect class="obj" x="157" y="179" width="26" height="26" />
+  <rect class="obj" x="257" y="179" width="26" height="26" />
+
+  <!-- ============ orthographic ============ -->
+  <path class="ray" d="M330,155 L352,155" marker-end="url(#head)" />
+  <path class="ray" d="M330,192 L352,192" marker-end="url(#head)" />
+  <path class="ray" d="M330,229 L352,229" marker-end="url(#head)" />
+  <rect class="vol" x="350" y="130" width="195" height="124" />
+  <text class="mark" x="350" y="122" text-anchor="middle">near</text>
+  <text class="mark" x="545" y="122" text-anchor="middle">far</text>
+  <text class="mark" x="553" y="136">top</text>
+  <text class="mark" x="553" y="252">bottom</text>
+
+  <rect class="obj" x="387" y="179" width="26" height="26" />
+  <rect class="obj" x="477" y="179" width="26" height="26" />
+
+  <!-- ============ what lands on screen ============ -->
+  <text class="note" x="70" y="294">what the screen shows</text>
+  <rect class="screen" x="70" y="300" width="220" height="64" />
+  <rect class="obj" x="120" y="319" width="26" height="26" />
+  <rect class="obj" x="215" y="325" width="13" height="13" />
+  <text class="lbl" x="180" y="386" text-anchor="middle">twice as far, half as big</text>
+
+  <rect class="screen" x="350" y="300" width="195" height="64" />
+  <rect class="obj" x="400" y="326" width="13" height="13" />
+  <rect class="obj" x="490" y="326" width="13" height="13" />
+  <text class="lbl" x="447" y="386" text-anchor="middle">same size at any distance</text>
+
+  <text class="note" x="70" y="416">fov is the vertical angle, in degrees</text>
+  <text class="note" x="70" y="434">aspect is width / height</text>
+
+  <text class="note" x="350" y="416">no aspect property exists here</text>
+  <text class="note" x="350" y="434">recompute left / right yourself on resize</text>
+
+  <text class="note" x="40" y="464">Both cache the result in camera.projectionMatrix — change a value and call updateProjectionMatrix().</text>
+</svg>

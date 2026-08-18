@@ -22,6 +22,12 @@ Với kernel cố định, xoay cùng hướng ở mọi pixel, AO sẽ có dả
 
 `kernelRadius` ($8$ mặc định) là bán kính bán cầu theo **view-space unit** — cùng đơn vị thế giới cảnh, không phải pixel — càng lớn, AO càng loang rộng từ mỗi góc lõm.
 
+<Figure
+  src="/figures/10-postprocessing/ssao-hemisphere-kernel.svg"
+  alt="Điểm p đang được tô bóng trên một bề mặt cùng pháp tuyến view-space, một bán cầu nét đứt bán kính kernelRadius bao quanh chứa mười một chấm mẫu, ba trong số đó rơi vào một bề mặt gần hơn và bị đánh dấu là bị che, cạnh một panel mô tả phép so sánh độ sâu cho từng mẫu"
+  caption="Một mẫu chỉ bị tính là bị che khi độ sâu đã lưu tại pixel của nó nằm phía trước nó quá minDistance và dưới maxDistance — toàn bộ phép thử chỉ là một lần so sánh với buffer, không bao giờ với hình học thật."
+/>
+
 ## `SSAOPass` so với `GTAOPass`: cái nào thật sự có trong three 0.185
 
 Cả hai tồn tại trong `three/examples/jsm/postprocessing/` ở bản 0.185.1. Docstring của `GTAOPass` tự ghi rõ quan hệ: "provides better quality than SSAOPass but is also more expensive" — GTAO (Ground Truth Ambient Occlusion) dùng horizon-based integration chặt hơn kernel rời rạc, cộng một pass denoise riêng (Poisson), đổi chất lượng mượt hơn lấy chi phí. Bài này dạy `SSAOPass` vì thuật toán khớp thẳng mô hình "hemisphere kernel + so sánh depth" vừa giải thích — nhìn code hiểu ngay, không cần lý thuyết horizon-based thêm. Dự án thật ưu tiên chất lượng nên cân nhắc `GTAOPass`; máy yếu hoặc muốn debug từng bước nên bắt đầu từ `SSAOPass`.

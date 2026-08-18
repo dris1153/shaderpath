@@ -22,6 +22,12 @@ With a fixed kernel oriented the same way at every pixel, AO would show obvious 
 
 `kernelRadius` (default $8$) is the hemisphere's radius in **view-space units** — the scene's own world units, not pixels — larger values spread AO farther from every concave corner.
 
+<Figure
+  src="/figures/10-postprocessing/ssao-hemisphere-kernel.svg"
+  alt="A shaded point p on a surface with its view-space normal, a dashed hemisphere of kernelRadius around it holding eleven sample dots, three of which fall inside a nearer surface and are marked as occluded, beside a panel stating the per-sample depth comparison"
+  caption="A sample counts as occluded only when the depth already stored at its pixel sits in front of it by more than minDistance and less than maxDistance — the whole test is one comparison against a buffer, never against real geometry."
+/>
+
 ## `SSAOPass` vs `GTAOPass`: Which One Actually Ships in Three 0.185
 
 Both exist under `three/examples/jsm/postprocessing/` in 0.185.1. `GTAOPass`'s own docstring states the relationship plainly: "provides better quality than SSAOPass but is also more expensive" — GTAO (Ground Truth Ambient Occlusion) uses a tighter horizon-based integration than a discrete kernel, plus its own Poisson denoise pass, trading cost for smoother results. This lesson teaches `SSAOPass` because its algorithm maps directly onto the "hemisphere kernel plus depth comparison" model just explained — reading the code confirms the idea immediately, no extra horizon-based theory required. Production work chasing quality should look at `GTAOPass`; weaker hardware or step-by-step debugging is better served by `SSAOPass`.

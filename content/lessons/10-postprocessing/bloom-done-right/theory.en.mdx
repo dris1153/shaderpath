@@ -22,6 +22,12 @@ That "bright areas only" image gets Gaussian-blurred across 5 successive mips (`
 
 The five blurred mips are summed with weights from `bloomFactors = [1.0, 0.8, 0.6, 0.4, 0.2]` — the sharpest mip (mip 0) contributes the most by default. `radius` doesn't change kernel size at all (kernels are fixed at construction time) — it runs a `lerpBloomFactor` function that interpolates between the original `bloomFactors[i]` and `1.2 - bloomFactors[i]`, gradually shifting the weighting from "favor the sharp mip" (radius = 0) toward "favor the wide blurry mips" (radius = 1). `strength` simply multiplies that whole sum by a `3.0 * bloomStrength` factor (the `3.0` constant is a backward-compatibility holdover, noted directly in the source comment) and additively blends it straight into the original image — which is also why `needsSwap = false`: the pass writes its result back into `readBuffer` itself, without waiting for the composer to swap.
 
+<Figure
+  src="/figures/10-postprocessing/unrealbloom-pipeline.svg"
+  alt="Four-stage flow inside UnrealBloomPass: readBuffer into a luminance high-pass, into a half-resolution bright target, then five mip boxes from res/2 down to res/32 with their kernel sizes and composite weights, then the weighted composite and an additive blend back into readBuffer"
+  caption="Only the first stage ever consults threshold; everything downstream is a fixed blur chain, which is why strength and radius can never undo a cutoff that was set too low."
+/>
+
 ## HDR: a Half-Float Buffer Isn't Automatically Enough
 
 The previous lesson already confirmed: `EffectComposer` in the installed three.js version (0.185.1) already defaults its two internal render targets to `HalfFloatType` — no more need to manually wrap `new WebGLRenderTarget(w, h, { type: HalfFloatType })` the way many older tutorials still recommend. But a buffer being CAPABLE of holding values above 1.0 doesn't mean it ACTUALLY holds values above 1.0 — that still depends on what writes into it.

@@ -63,6 +63,12 @@ Why this matters: $f$ in the end is just one scalar number — coloring by it al
 
 The two `fbm()` calls building $q_x$ and $q_y$ use different offsets — $(0,0)$ and $(5.2, 1.3)$ — deliberately, not as two meaningless random numbers. Using the same offset (or none at all) would make $q_x$ and $q_y$ the exact same FBM field at every point, meaning $q$ would always sit along the diagonal $q_x = q_y$ — the warp would only pull in one fixed direction instead of swirling freely. An offset large enough — a few units, well beyond a noise cycle — guarantees the two channels sample unrelated regions of the same field, producing near-independent values. This is the cheapest way to fake two independent noise fields out of a single `fbm()`, with no need for a second hash function.
 
+<Figure
+  src="/figures/07-procedural/domain-warp-nesting.svg"
+  alt="Three stacked tiers: the first builds q from two fbm calls, the second builds r from p plus s times q, the last produces f; dashed arrows carry q and r back into the next tier's coordinate, beside a cost table of 5, 15 and 25 noise calls"
+  caption="q and r never enter the result — they enter the next tier's sampling coordinate, which is why the cost multiplies instead of adding."
+/>
+
 ## Cost: Every Layer Multiplies the fbm Call Count
 
 Domain warping isn't free. A 5-octave FBM already costs 5 `noise()` calls; one warp layer needs 2 `fbm()` calls to build $q$ plus 1 more for the final result — $3 \times 5 = 15$ `noise()` calls per pixel total. Two layers, adding $r$, multiply that further: 2 for $q$, 2 for $r$, 1 for the final result — $5 \times 5 = 25$ calls, nearly double a single layer. On a 1920×1080 screen at DPR 2 (an estimated ~8.3 million fragments per frame), the gap between 15 and 25 `noise()` calls per pixel adds up to tens of millions of extra operations per frame. Treat warp-layer count as an octave budget to balance: more layers always look better, but cost grows roughly linearly with layer count, and on mobile GPUs that shows up fast as ballooning frame time.

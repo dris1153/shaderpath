@@ -24,6 +24,12 @@ Track 6 taught `InstancedMesh` — rasterizing thousands of mesh copies with a s
 
 The fold formula above silently assumes the object fits entirely within half a cell ($\|q\|$ under $0.5c$ in every direction) — that is, the "home" copy of the current cell is always the nearest copy to any query point inside that cell. That assumption breaks when the object isn't symmetric around the cell's center, or more simply: when the cell is too tight relative to the object's size. Near a cell border, a copy in a NEIGHBORING cell can genuinely be closer to the query point than the folded copy — but the SDF only ever evaluates exactly one copy (the current cell's), so the returned distance OVERESTIMATES the true distance to the nearest surface. That's a direct violation of the Lipschitz-1 condition sphere tracing depends on (see the Sphere Tracing Principle lesson): a march step computed from an inflated $d(p)$ can jump too far, stepping straight through the real surface right where two cells meet, showing up as jagged edges or holes exactly along the grid lines.
 
+<Figure
+  src="/figures/08-raymarching/domain-fold-one-cell.svg"
+  alt="Top: five cells of a repeated world, each with an arrow folding it into a single canonical cell holding exactly one copy. Bottom: two cells whose object sits off-centre, with the distance map() returns drawn far longer than the distance to the copy next door"
+  caption="The copies are never stored anywhere — the coordinate is what gets folded, so one evaluation answers for all of them. The price is that a query only ever measures one copy, which is precisely why an off-centre object makes the returned distance too long to be safe."
+/>
+
 ## The Modern Fix: Round-Based Repetition and Finite Bounds
 
 Inigo Quilez, in his "Repetition" article on iquilezles.org, rewrites the formula above using `round` instead of `mod`:
