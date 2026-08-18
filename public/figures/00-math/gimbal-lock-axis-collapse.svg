@@ -69,11 +69,11 @@
 
   <!-- legend -->
   <path class="ring-yaw" d="M16,268 L34,268" />
-  <text class="note" x="40" y="272">outer ring: yaw</text>
-  <path class="ring-pitch" d="M152,268 L170,268" />
-  <text class="note" x="176" y="272">middle ring: pitch</text>
-  <path class="ring-roll" d="M300,268 L318,268" />
-  <text class="note" x="324" y="272">inner ring: roll</text>
+  <text class="note" x="40" y="272">outer ring: yaw (Z)</text>
+  <path class="ring-pitch" d="M172,268 L190,268" />
+  <text class="note" x="196" y="272">middle ring: pitch (Y)</text>
+  <path class="ring-roll" d="M348,268 L366,268" />
+  <text class="note" x="372" y="272">inner ring: roll (X)</text>
 
   <text class="note" x="16" y="296">Yaw and roll still have their own dial, but both now turn the object about the same line: three inputs, two outcomes.</text>
 </svg>

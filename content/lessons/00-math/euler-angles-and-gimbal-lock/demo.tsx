@@ -10,16 +10,16 @@ import { numberOf } from "@/components/viz/control-schema";
 const LABELS = {
   vi: {
     title: "Gimbal 3 vòng: khoá khi pitch chạm 90°",
-    yaw: "Yaw (Y)",
-    pitch: "Pitch (X)",
-    roll: "Roll (Z)",
+    yaw: "Yaw (Z)",
+    pitch: "Pitch (Y)",
+    roll: "Roll (X)",
     locked: "Khoá! (gimbal lock)",
   },
   en: {
     title: "3-Ring Gimbal: Locks When Pitch Hits 90°",
-    yaw: "Yaw (Y)",
-    pitch: "Pitch (X)",
-    roll: "Roll (Z)",
+    yaw: "Yaw (Z)",
+    pitch: "Pitch (Y)",
+    roll: "Roll (X)",
     locked: "Locked! (gimbal lock)",
   },
 } as const;
@@ -41,15 +41,16 @@ function GimbalRing({ axis, color, radius }: { axis: "x" | "y" | "z"; color: str
   );
 }
 
-// Arrow along local +X, standing in for the payload rigidly attached to the
+// Arrow along local +Y, standing in for the payload rigidly attached to the
 // innermost ring — the thing whose motion "locks" when yaw and roll spin the
-// same visual axis.
+// same visual axis. It lies along the pitch axis, so pitch alone never swings
+// it; yaw and roll both do, which is what makes the collapse readable.
 function PayloadArrow({ length, color }: { length: number; color: string }) {
-  const tip: [number, number, number] = [length, 0, 0];
+  const tip: [number, number, number] = [0, length, 0];
   return (
     <>
       <Line points={[[0, 0, 0], tip]} color={color} lineWidth={2} />
-      <mesh position={tip} rotation-z={-Math.PI / 2}>
+      <mesh position={tip}>
         <coneGeometry args={[0.1, 0.28, 12]} />
         <meshBasicMaterial color={color} />
       </mesh>
@@ -59,9 +60,10 @@ function PayloadArrow({ length, color }: { length: number; color: string }) {
 
 // Nested groups intrinsically compose rotations exactly like a physical
 // gimbal: outer ring (yaw) carries the middle ring (pitch), which carries
-// the inner ring (roll) and payload. At pitch = ±90° the roll axis (local Z
-// of the innermost group) becomes parallel to the yaw axis (world Y) — the
-// theory's R(alpha, 90°, gamma) degenerate case, made visible.
+// the inner ring (roll) and payload. At pitch = ±90° the roll axis (local X
+// of the innermost group) becomes parallel to the yaw axis (world Z) — the
+// theory's R(alpha, 90°, gamma) degenerate case, made visible. The axis per
+// ring follows the theory's composition R = Rz(yaw) Ry(pitch) Rx(roll).
 function GimbalRings() {
   const { values } = useDemoContext();
   const yaw = (numberOf(values, "yaw", 0) * Math.PI) / 180;
@@ -69,12 +71,12 @@ function GimbalRings() {
   const roll = (numberOf(values, "roll", 0) * Math.PI) / 180;
 
   return (
-    <group rotation-y={yaw}>
-      <GimbalRing axis="y" color="#22c55e" radius={2.2} />
-      <group rotation-x={pitch}>
-        <GimbalRing axis="x" color="#ef4444" radius={1.7} />
-        <group rotation-z={roll}>
-          <GimbalRing axis="z" color="#3b82f6" radius={1.2} />
+    <group rotation-z={yaw}>
+      <GimbalRing axis="z" color="#22c55e" radius={2.2} />
+      <group rotation-y={pitch}>
+        <GimbalRing axis="y" color="#ef4444" radius={1.7} />
+        <group rotation-x={roll}>
+          <GimbalRing axis="x" color="#3b82f6" radius={1.2} />
           <PayloadArrow length={1.5} color="#f59e0b" />
         </group>
       </group>
