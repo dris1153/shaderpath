@@ -86,9 +86,7 @@ interface ClothSim {
 }
 
 // GPUComputationRenderer + its two ping-ponged position variables stay
-// local to this function — see cloth-integrate.frag / cloth-prev.frag for
-// exactly how "texturePosition" (self-dependency) and "texturePositionPrev"
-// (auto-wired dependency) differ.
+// local to this function — see cloth-integrate.frag / cloth-prev.frag.
 function createClothSim(gl: THREE.WebGLRenderer, pinPattern: PinPattern): ClothSim {
   const gpu = new GPUComputationRenderer(GRID, GRID, gl);
   gpu.setDataType(THREE.HalfFloatType);
@@ -105,11 +103,9 @@ function createClothSim(gl: THREE.WebGLRenderer, pinPattern: PinPattern): ClothS
     uTime: { value: 0 },
     uWindStrength: { value: 1.2 },
   };
-  // Self-dependency: GPUComputationRenderer only auto-wires a variable's
-  // OTHER dependencies — this key must exist before compute() assigns
-  // .value to it every frame (see cloth-integrate.frag's header comment).
+  // init() adds the sampler uniform for every dependency itself, the
+  // self-reference included, so only this shader's own uniforms go here.
   Object.assign(positionVar.material.uniforms, {
-    texturePosition: { value: null },
     uInitial: { value: initialTexture },
     uTexel: { value: texel },
     uDt: { value: 1 / 60 },
@@ -232,7 +228,10 @@ function ClothScene() {
   }, 1);
 
   return (
-    <mesh geometry={geometry}>
+    // The vertex shader reads every position out of the texture, so the
+    // geometry's CPU-side bounding sphere describes the rest pose, not where
+    // the cloth actually hangs — leave culling on and it vanishes mid-fall.
+    <mesh geometry={geometry} frustumCulled={false}>
       <shaderMaterial
         vertexShader={renderVertex}
         fragmentShader={renderFragment}

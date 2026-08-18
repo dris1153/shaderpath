@@ -23,6 +23,8 @@ const R = 140; // clock face radius
 function draw() {
   const { width: W, height: H } = canvas;
   ctx.clearRect(0, 0, W, H);
+  // Canvas defaults to a black stroke, which is invisible on a dark page.
+  ctx.strokeStyle = "#7dd3fc";
   const cx = W / 2, cy = H / 2;
   const now = new Date();
 
@@ -42,6 +44,8 @@ draw();`,
 function draw() {
   const { width: W, height: H } = canvas;
   ctx.clearRect(0, 0, W, H);
+  // Canvas defaults to a black stroke, which is invisible on a dark page.
+  ctx.strokeStyle = "#7dd3fc";
   const cx = W / 2, cy = H / 2;
   const now = new Date();
 

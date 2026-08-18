@@ -1,13 +1,8 @@
 // GPUComputationRenderer variable "texturePosition" — depends on itself
 // (pos at t) and on "texturePositionPrev" (pos at t-1, a second variable,
-// see cloth-prev.frag). Self-dependencies are the one case the renderer
-// does NOT auto-wire: it only auto-declares + auto-fills the uniform for a
-// variable's OTHER dependencies (name != own name). "texturePosition" below
-// must be declared and populated manually (see demo.tsx); the compiled
-// shader also gets "uniform sampler2D texturePositionPrev;" prepended for
-// us automatically, since that name differs from this variable's own name —
-// do not redeclare it here, that would be a duplicate-definition error.
-uniform sampler2D texturePosition;
+// see cloth-prev.frag). init() prepends "uniform sampler2D <name>;" for
+// every dependency, the self-reference included, so neither sampler may be
+// declared here: a second declaration is a duplicate-definition error.
 
 uniform sampler2D uInitial; // xyz = rest position (flat grid), w = pin flag
 uniform vec2 uTexel;
