@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useLessonState } from "@/lib/hooks/use-lesson-state";
 import {
   closeStudySession,
   openStudySession,
@@ -10,16 +11,33 @@ import {
 
 // Invisible island: scroll % + visible-time tracking with 5s debounced writes,
 // pagehide beacon flush, and scroll restore on revisit (spec §6.1.3).
-export function ProgressTracker({
-  slug,
-  initialScrollPercent,
-}: {
-  slug: string;
-  initialScrollPercent: number;
-}) {
+export function ProgressTracker({ slug }: { slug: string }) {
   const { mutate: saveMutate } = useMutation({
     mutationFn: saveReadingProgress,
   });
+  const { data } = useLessonState(slug);
+  // Shared with the restore effect below, which now runs separately.
+  const userScrolledRef = useRef(false);
+  const restoredRef = useRef(false);
+
+  const savedPercent = data?.row?.scrollPercent ?? 0;
+
+  // The stored position arrives after hydration, so restoring cannot live in
+  // the session effect below — re-running that when the value lands would open
+  // a second study session.
+  useEffect(() => {
+    if (restoredRef.current || savedPercent <= 0.02) return;
+    if (userScrolledRef.current || window.scrollY >= 50) return;
+    restoredRef.current = true;
+    // Two rAFs so layout has settled before measuring scrollHeight.
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        if (userScrolledRef.current) return;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo({ top: savedPercent * Math.max(0, max) });
+      }),
+    );
+  }, [savedPercent]);
 
   useEffect(() => {
     const s = {
@@ -37,19 +55,6 @@ export function ProgressTracker({
       .then((id) => (s.sessionId = id))
       .catch(() => {});
 
-    // Restore after layout settles (2 rAFs); skip if the user already scrolled
-    // or position was preserved (e.g. locale switch with scroll:false).
-    if (initialScrollPercent > 0.02 && window.scrollY < 50) {
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          if (s.userScrolled) return;
-          const max =
-            document.documentElement.scrollHeight - window.innerHeight;
-          window.scrollTo({ top: initialScrollPercent * Math.max(0, max) });
-        }),
-      );
-    }
-
     let raf = 0;
     const measure = () => {
       raf = 0;
@@ -59,6 +64,7 @@ export function ProgressTracker({
     };
     const onScroll = () => {
       s.userScrolled = true;
+      userScrolledRef.current = true;
       if (!raf) raf = requestAnimationFrame(measure);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -129,7 +135,7 @@ export function ProgressTracker({
       }
     };
     // saveMutate identity is stable in TanStack Query v5
-  }, [slug, initialScrollPercent, saveMutate]);
+  }, [slug, saveMutate]);
 
   return null;
 }

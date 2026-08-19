@@ -1,14 +1,14 @@
 import { EXERCISES_REGISTRY } from "@/content/lesson-registry.generated";
 import type { LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
-import { getAttemptsForLesson } from "@/lib/exercises-read";
 import { highlightCode } from "@/lib/highlight";
 import { ExerciseList } from "./exercise-list";
 import { PromptBody } from "./prompt-body";
-import type { AttemptVM, ExerciseVM } from "./types";
+import type { ExerciseVM } from "./types";
 
-// RSC: loads the lesson's exercises + attempt rows, resolves the locale and
-// pre-renders prompts/solutions server-side; the client list owns interaction.
+// RSC: loads the lesson's exercises, resolves the locale and pre-renders
+// prompts/solutions server-side — all of it from content files, so it survives
+// a database outage. Attempt rows are the client list's job now.
 export async function ExerciseSection({
   slug,
   locale,
@@ -21,25 +21,8 @@ export async function ExerciseSection({
   const { exercises } = await loader();
   if (exercises.length === 0) return null;
 
-  const attempts = new Map(
-    (await getAttemptsForLesson(slug)).map((a) => [a.exerciseId, a] as const),
-  );
-
   const items = await Promise.all(
     exercises.map(async (ex) => {
-      const row = attempts.get(ex.id);
-      const initial: AttemptVM | null = row
-        ? {
-            status: row.status,
-            hintsRevealed: row.hintsRevealed,
-            solutionRevealed: row.solutionRevealed,
-            userCode: row.userCode,
-            checklistState: Array.isArray(row.checklistState)
-              ? row.checklistState
-              : null,
-          }
-        : null;
-
       const vm: ExerciseVM = {
         id: ex.id,
         kind: ex.kind,
@@ -51,7 +34,6 @@ export async function ExerciseSection({
 
       return {
         exercise: vm,
-        initial,
         prompt: <PromptBody text={ex.prompt[locale]} />,
         solutionNote: ex.solutionNote ? (
           <PromptBody text={ex.solutionNote[locale]} />

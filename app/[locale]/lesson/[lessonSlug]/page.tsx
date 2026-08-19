@@ -9,8 +9,7 @@ import {
 import type { LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
 import { getLesson, isUnlocked } from "@/lib/curriculum";
-import { getProgressMap, getProgressRow } from "@/lib/progress-read";
-import { isLessonBookmarked } from "@/lib/notes-read";
+import { getProgressMap } from "@/lib/progress-read";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -60,7 +59,6 @@ export default async function LessonPage({
     ? (await referencesLoader()).references
     : [];
 
-  const progressRow = await getProgressRow(lesson.slug);
   const progress = await getProgressMap();
   const unlocked = isUnlocked(lesson.slug, progress);
 
@@ -119,10 +117,7 @@ export default async function LessonPage({
 
         <div className="relative">
           <div className="absolute top-0 right-0">
-            <BookmarkToggle
-              slug={lesson.slug}
-              initialBookmarked={await isLessonBookmarked(lesson.slug)}
-            />
+            <BookmarkToggle slug={lesson.slug} />
           </div>
           <LessonHeader lesson={lesson} locale={locale} />
         </div>
@@ -158,11 +153,7 @@ export default async function LessonPage({
 
         <References references={references} locale={locale} />
 
-        <MarkComplete
-          slug={lesson.slug}
-          completed={progressRow?.status === "completed"}
-          confidence={progressRow?.confidence ?? null}
-        />
+        <MarkComplete slug={lesson.slug} />
 
         <LessonFooterNav slug={lesson.slug} locale={locale} />
       </article>
@@ -173,10 +164,7 @@ export default async function LessonPage({
         </div>
       </aside>
 
-      <ProgressTracker
-        slug={lesson.slug}
-        initialScrollPercent={progressRow?.scrollPercent ?? 0}
-      />
+      <ProgressTracker slug={lesson.slug} />
     </main>
   );
 }

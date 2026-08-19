@@ -1,28 +1,48 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { markComplete } from "@/lib/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  useInvalidateLessonState,
+  useLessonState,
+} from "@/lib/hooks/use-lesson-state";
 import { cn } from "@/lib/utils";
 
-export function MarkComplete({
-  slug,
-  completed,
-  confidence,
-}: {
-  slug: string;
-  completed: boolean;
-  confidence: number | null;
-}) {
+export function MarkComplete({ slug }: { slug: string }) {
   const t = useTranslations("lesson");
-  const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [selected, setSelected] = useState<number | null>(confidence);
+  const { data } = useLessonState(slug);
+  const invalidate = useInvalidateLessonState(slug);
+  // undefined means the reader has not touched the dial, so the stored value
+  // still applies; null is a deliberate "no confidence given".
+  const [picked, setPicked] = useState<number | null | undefined>(undefined);
+
+  // Both branches below assert something ("you finished this" / "you have not"),
+  // so until the answer arrives neither may render. Same outer Card, so the
+  // page does not jump when it resolves.
+  if (!data) {
+    return (
+      <Card className="mt-10" aria-busy>
+        <CardHeader>
+          <Skeleton className="h-5 w-48" />
+        </CardHeader>
+        <CardContent className="flex flex-wrap items-center gap-4">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-9 w-32" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const completed = data.row?.status === "completed";
+  const confidence = data.row?.confidence ?? null;
+  const selected = picked === undefined ? confidence : picked;
 
   if (completed) {
     return (
@@ -62,7 +82,7 @@ export function MarkComplete({
                 selected === n &&
                   "bg-white! text-primary-foreground! hover:bg-primary/90!",
               )}
-              onClick={() => setSelected(selected === n ? null : n)}
+              onClick={() => setPicked(selected === n ? null : n)}
             >
               {n}
             </Button>
@@ -74,7 +94,9 @@ export function MarkComplete({
             startTransition(async () => {
               await markComplete(slug, selected ?? undefined);
               toast.success(t("markedToast"));
-              router.refresh();
+              // router.refresh() used to repaint this from the server read the
+              // page no longer performs; the query is the source of truth now.
+              await invalidate();
             })
           }
         >
