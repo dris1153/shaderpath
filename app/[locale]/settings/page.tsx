@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   Card,
   CardContent,
@@ -11,7 +11,15 @@ import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { QualitySelect } from "@/components/settings/quality-select";
 import { DataPanel } from "@/components/settings/data-panel";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  // Without this next-intl reads headers() and the page silently stays dynamic,
+  // however static its content is.
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("settings");
 
   return (
