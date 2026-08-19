@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { weeksGrid } from "@/lib/date-buckets";
 import { cn } from "@/lib/utils";
 
@@ -11,14 +13,14 @@ function intensity(minutes: number): string {
 }
 
 // GitHub-style contribution grid — plain divs, no chart lib needed.
-export async function Heatmap({
+export function Heatmap({
   minutesByDay,
   now,
 }: {
   minutesByDay: Record<string, number>;
   now: Date;
 }) {
-  const t = await getTranslations("stats");
+  const t = useTranslations("stats");
   const grid = weeksGrid(now, 26);
 
   return (

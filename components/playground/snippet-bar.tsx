@@ -24,7 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { deleteSnippet, saveSnippet, type Snippet } from "@/lib/playground";
+import type { SnippetSummary } from "@/lib/api-payloads";
+import { deleteSnippet, saveSnippet } from "@/lib/playground";
 import {
   PRESET_GROUPS,
   findPreset,
@@ -42,10 +43,10 @@ export function SnippetBar({
   onSelect,
   onNew,
 }: {
-  snippets: Snippet[];
+  snippets: SnippetSummary[];
   selection: string;
   source: string;
-  onSnippets: (s: Snippet[]) => void;
+  onSnippets: (s: SnippetSummary[]) => void;
   onSelect: (value: string, loaded: { title: string; source: string }) => void;
   onNew: () => void;
 }) {

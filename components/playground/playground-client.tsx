@@ -9,7 +9,9 @@ import {
 } from "@/components/ui/resizable";
 import { DEFAULT_FRAGMENT } from "@/lib/glsl/assemble";
 import type { GlslError } from "@/lib/glsl/parse-error";
-import type { Snippet } from "@/lib/playground";
+import type { SnippetSummary } from "@/lib/api-payloads";
+import { useSnippets } from "@/lib/hooks/use-snippets";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorList } from "./error-list";
 import { GlslEditor, type EditorHandle } from "./glsl-editor";
 import { ShaderPreview } from "./shader-preview";
@@ -18,19 +20,21 @@ import { SnippetBar } from "./snippet-bar";
 // Playground state lives in this one component — editor, preview, snippets
 // are direct children (spec §1's "ephemeral UI state", no store needed yet).
 export function PlaygroundClient({
-  initialSnippets = [],
   initialSource,
   compact = false,
   onSourceChange,
 }: {
-  initialSnippets?: Snippet[];
   initialSource?: string;
   compact?: boolean;
   /** Fires on editor edits — used by shader exercises to autosave userCode */
   onSourceChange?: (source: string) => void;
 }) {
   const tA11y = useTranslations("a11y");
-  const [snippets, setSnippets] = useState(initialSnippets);
+  const { data } = useSnippets(!compact);
+  // Save and delete are server actions that hand back the whole fresh list, so
+  // once one has run it, not the query, is the truth.
+  const [saved, setSaved] = useState<SnippetSummary[] | null>(null);
+  const snippets = saved ?? data?.snippets;
   // One selection string drives the dropdown: "" (unsaved), "u:<id>" or
   // "p:<slug>". Keeping presets out of the snippet id is what stops "Save"
   // from overwriting a user snippet after loading a preset.
@@ -54,12 +58,13 @@ export function PlaygroundClient({
 
   return (
     <div className="flex flex-1 flex-col gap-3">
-      {!compact && (
+      {!compact && !snippets && <Skeleton className="h-9 w-full" />}
+      {!compact && snippets && (
         <SnippetBar
           snippets={snippets}
           selection={selection}
           source={source}
-          onSnippets={setSnippets}
+          onSnippets={setSaved}
           onSelect={(value, loaded) => {
             setSelection(value);
             setSource(loaded.source);

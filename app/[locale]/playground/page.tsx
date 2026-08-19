@@ -1,13 +1,14 @@
-import { getTranslations } from "next-intl/server";
-import { listSnippets } from "@/lib/playground";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { PlaygroundClient } from "@/components/playground/playground-client";
 
-// Snippets come from SQLite on every request
-export const dynamic = "force-dynamic";
-
-export default async function PlaygroundPage() {
+export default async function PlaygroundPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations("playground");
-  const snippets = await listSnippets();
 
   return (
     <main
@@ -17,7 +18,7 @@ export default async function PlaygroundPage() {
     >
       <h1 className="text-3xl font-semibold tracking-tight">{t("title")}</h1>
       <p className="text-muted-foreground mt-2 mb-6">{t("subtitle")}</p>
-      <PlaygroundClient initialSnippets={snippets} />
+      <PlaygroundClient />
     </main>
   );
 }
