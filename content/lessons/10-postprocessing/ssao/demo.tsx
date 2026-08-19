@@ -7,6 +7,7 @@ import { OrbitControls } from "@react-three/drei";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
@@ -61,6 +62,12 @@ function PostFx() {
     const composer = new EffectComposer(gl);
     composer.addPass(renderPass);
     composer.addPass(ssaoPass);
+    // SSAOPass must not be last. Its Default output draws ONLY the occlusion
+    // term and multiplies it (CustomBlending) onto its target, assuming the lit
+    // image is already there. As the final pass it targets the screen instead,
+    // which never received one, and the whole canvas comes out black.
+    const outputPass = new OutputPass();
+    composer.addPass(outputPass);
     composer.setSize(size.width, size.height);
     composer.setPixelRatio(pr);
 
@@ -70,6 +77,7 @@ function PostFx() {
       composer.dispose();
       renderPass.dispose();
       ssaoPass.dispose();
+      outputPass.dispose();
       stateRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- size read once at construction, resized separately below

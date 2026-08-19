@@ -21,7 +21,11 @@ float hash(vec2 p) {
   return fract((p3.x + p3.y) * p3.z);
 }
 
-float luminance(vec3 c) {
+// NOT named `luminance`: three injects its own `luminance()` into every
+// ShaderMaterial's fragment prefix, and redefining it is a compile error that
+// takes the whole pass down. Kept local rather than calling three's so this
+// shader still works when pasted into a RawShaderMaterial or another engine.
+float luma(vec3 c) {
   return dot(c, vec3(0.2126, 0.7152, 0.0722));
 }
 
@@ -48,7 +52,7 @@ void main() {
   // Strength fades toward the highlights: grain lives in the shadows.
   float grainTime = uAnimateGrain > 0.5 ? uTime * 91.13 : 0.0;
   float n = hash(vUv * uResolution + grainTime) * 2.0 - 1.0;
-  float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luminance(color));
+  float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luma(color));
   color += n * uGrainAmount * grainFalloff;
 
   // Vignette: smoothstep (not a hard cutoff or linear ramp) so the falloff

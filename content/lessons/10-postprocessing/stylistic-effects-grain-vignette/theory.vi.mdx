@@ -19,9 +19,11 @@ float hash(vec2 p) {
 Grain thật trên phim không đều khắp khung hình — rõ nhất ở vùng thiếu sáng (mật độ hạt bạc-halide thấp hơn ở vùng phơi sáng thấp khiến độ nhiễu tương đối cao hơn). Bài này mô phỏng bằng cách nhân cường độ grain với hệ số giảm dần theo luminance:
 
 ```glsl
-float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luminance(color));
+float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luma(color));
 color += n * uGrainAmount * grainFalloff;
 ```
+
+Hàm tính độ sáng ở trên tên là `luma`, không phải `luminance` — three tiêm sẵn một `luminance()` vào prefix fragment của **mọi** `ShaderMaterial`, nên định nghĩa trùng tên là lỗi biên dịch và pass sẽ không chạy được gì cả.
 
 Grain cũng cố tình viết **đơn sắc** (monochrome) — cùng một giá trị nhiễu `n` cộng vào cả ba kênh R, G, B, thay vì hash ba lần độc lập. Không phải cắt góc cho rẻ: hạt bạc trên phim là biến động MẬT ĐỘ vật lý, tương quan cao giữa các lớp màu cùng một hạt, không phải nhiễu cảm biến độc lập từng kênh — grain đơn sắc trông "giống phim", grain per-channel độc lập trông giống nhiễu cảm biến kỹ thuật số (chroma noise), một cảm giác khác hẳn.
 

@@ -19,9 +19,11 @@ The difference from using a hash to draw a static pattern: the input must includ
 Real film grain isn't uniform across the frame — it's most visible in underexposed regions (lower silver-halide crystal density at low exposure makes the relative noise higher). This lesson replicates that by multiplying grain strength by a falloff that fades with luminance:
 
 ```glsl
-float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luminance(color));
+float grainFalloff = 1.0 - smoothstep(0.0, 0.6, luma(color));
 color += n * uGrainAmount * grainFalloff;
 ```
+
+That helper is called `luma`, not `luminance` — three injects its own `luminance()` into the fragment prefix of **every** `ShaderMaterial`, so redefining the name is a compile error that silently takes the whole pass down.
 
 Grain is also deliberately written **monochrome** — the same noise value `n` added to all three of R, G, B, rather than hashing three independent channels. This isn't cutting corners: silver-halide grain is a physical DENSITY fluctuation, highly correlated across a single grain's color layers, not independent per-channel sensor noise — monochrome grain reads as "film," while independently-hashed per-channel grain reads as digital sensor noise (chroma noise), an entirely different feeling.
 
