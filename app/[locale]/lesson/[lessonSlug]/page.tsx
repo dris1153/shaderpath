@@ -30,9 +30,6 @@ import { MarkComplete } from "@/components/lesson/mark-complete";
 import { ProgressTracker } from "@/components/lesson/progress-tracker";
 import { References } from "@/components/lesson/references";
 
-// Reads live progress from SQLite on every request
-export const dynamic = "force-dynamic";
-
 export default async function LessonPage({
   params,
 }: {
