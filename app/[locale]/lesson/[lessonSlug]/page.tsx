@@ -8,8 +8,7 @@ import {
 } from "@/content/lesson-registry.generated";
 import type { LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
-import { getLesson, isUnlocked } from "@/lib/curriculum";
-import { getProgressMap } from "@/lib/progress-read";
+import { getLesson } from "@/lib/curriculum";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +22,7 @@ import { BookmarkToggle } from "@/components/notes/bookmark-toggle";
 import { LessonNotesLayer } from "@/components/notes/lesson-notes-layer";
 import { LessonDemoHost } from "@/components/lesson/lesson-demo-host";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
+import { LearnAnywayNotice } from "@/components/lesson/learn-anyway-notice";
 import { LessonHeader } from "@/components/lesson/lesson-header";
 import { LessonToc } from "@/components/lesson/lesson-toc";
 import { LessonFooterNav } from "@/components/lesson/lesson-footer-nav";
@@ -59,16 +59,12 @@ export default async function LessonPage({
     ? (await referencesLoader()).references
     : [];
 
-  const progress = await getProgressMap();
-  const unlocked = isUnlocked(lesson.slug, progress);
-
   const sidebar = (
     <LessonSidebar
       trackId={lesson.trackId}
       currentSlug={lesson.slug}
       currentModuleId={lesson.moduleId}
       locale={locale}
-      progress={progress}
     />
   );
 
@@ -122,11 +118,7 @@ export default async function LessonPage({
           <LessonHeader lesson={lesson} locale={locale} />
         </div>
 
-        {!unlocked && (
-          <Alert className="mt-6">
-            <AlertDescription>{t("learnAnyway")}</AlertDescription>
-          </Alert>
-        )}
+        <LearnAnywayNotice slug={lesson.slug} />
 
         {usedLocale && usedLocale !== locale && (
           <Alert className="mt-6">

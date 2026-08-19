@@ -1,4 +1,6 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import {
   IconCircleCheck,
   IconHammer,
@@ -21,6 +23,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useLessonState } from "@/lib/hooks/use-lesson-state";
 import { cn } from "@/lib/utils";
 
 function LessonLink({
@@ -32,10 +35,14 @@ function LessonLink({
   lesson: LessonMeta;
   locale: Locale;
   active: boolean;
-  progress: ProgressMap;
+  /** undefined until the read resolves — never treat that as "not done". */
+  progress: ProgressMap | undefined;
 }) {
-  const completed = progress[lesson.slug] === "completed";
-  const locked = !isUnlocked(lesson.slug, progress);
+  const completed = progress ? progress[lesson.slug] === "completed" : false;
+  // Rendering a lesson as locked before the answer arrives would tell the
+  // reader they may not go there, which is the worst thing this list can get
+  // wrong. Unknown shows no lock.
+  const locked = progress ? !isUnlocked(lesson.slug, progress) : false;
 
   return (
     <Link
@@ -65,20 +72,21 @@ function LessonLink({
   );
 }
 
-export async function LessonSidebar({
+export function LessonSidebar({
   trackId,
   currentSlug,
   currentModuleId,
   locale,
-  progress,
 }: {
   trackId: TrackId;
   currentSlug: string;
   currentModuleId: string;
   locale: Locale;
-  progress: ProgressMap;
 }) {
-  const t = await getTranslations("lesson");
+  const t = useTranslations("lesson");
+  // Structure comes from content and renders immediately; only the status
+  // decorations wait, and every icon slot is size-4 so nothing shifts.
+  const { data } = useLessonState(currentSlug);
   const track = getTrack(trackId);
   if (!track) return null;
   const modules = getModulesOfTrack(trackId);
@@ -107,7 +115,7 @@ export async function LessonSidebar({
                         lesson={lesson}
                         locale={locale}
                         active={lesson.slug === currentSlug}
-                        progress={progress}
+                        progress={data?.progress}
                       />
                     ))}
                   </div>
