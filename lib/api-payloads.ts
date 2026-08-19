@@ -1,3 +1,7 @@
+import type { LessonSlug } from "@/content/slugs";
+import type { overallCompletion } from "@/lib/curriculum";
+import type { QueueItem } from "@/lib/dashboard-queue";
+import type { TrackMap } from "@/lib/dashboard-read";
 import type { BookmarkRow, NoteRow } from "@/lib/notes-read";
 import type { Snippet } from "@/lib/playground";
 import type { StatsData } from "@/lib/stats";
@@ -28,4 +32,15 @@ export type SnippetSummary = Pick<
 export interface StatsPayload {
   stats: StatsData;
   now: string;
+}
+
+// Nothing here carries a date: buildQueue turns due dates into whole-day counts
+// and getWeeklyPace into a single number before either leaves the server.
+export interface DashboardPayload {
+  stats: ReturnType<typeof overallCompletion>;
+  queue: QueueItem[];
+  /** Absent when nothing is in progress. */
+  focus?: LessonSlug;
+  map: TrackMap | null;
+  pace: number;
 }

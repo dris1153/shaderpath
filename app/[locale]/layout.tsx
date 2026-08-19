@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   description: "A 3D & shader learning roadmap for frontend developers",
 };
 
-// One entry per locale so the shell can prerender. Routes that read user data
-// keep their own force-dynamic and stay dynamic underneath this.
+// One entry per locale so the shell can prerender, which every route beneath
+// it now does — user data arrives from /api/* after hydration instead.
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
