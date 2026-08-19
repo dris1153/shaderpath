@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Google_Sans, Google_Sans_Code } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -33,12 +34,11 @@ export const metadata: Metadata = {
   description: "A 3D & shader learning roadmap for frontend developers",
 };
 
+// One entry per locale so the shell can prerender. Routes that read user data
+// keep their own force-dynamic and stay dynamic underneath this.
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
-
-// Reads the persisted quality tier on every request (spec §6.2.14).
-export const dynamic = "force-dynamic";
 
 export default async function LocaleLayout({
   children,
@@ -51,6 +51,9 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+  // Without this, next-intl's server APIs read headers() and opt the whole
+  // subtree back into dynamic rendering, generateStaticParams or not.
+  setRequestLocale(locale);
   const initialTier = await getQualityTierSetting();
 
   return (

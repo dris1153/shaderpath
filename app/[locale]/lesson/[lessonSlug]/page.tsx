@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import {
   LESSON_REGISTRY,
   REFERENCES_REGISTRY,
   TOC_REGISTRY,
 } from "@/content/lesson-registry.generated";
-import type { LessonSlug } from "@/content/slugs";
+import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
 import { getLesson } from "@/lib/curriculum";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -30,15 +30,22 @@ import { MarkComplete } from "@/components/lesson/mark-complete";
 import { ProgressTracker } from "@/components/lesson/progress-tracker";
 import { References } from "@/components/lesson/references";
 
+// 162 lessons per locale. The page reads no user data, so every one of them is
+// the same for every reader and can be built once instead of per request.
+export function generateStaticParams() {
+  return LESSON_SLUGS.map((lessonSlug) => ({ lessonSlug }));
+}
+
 export default async function LessonPage({
   params,
 }: {
-  params: Promise<{ lessonSlug: string }>;
+  params: Promise<{ locale: string; lessonSlug: string }>;
 }) {
-  const { lessonSlug } = await params;
+  const { locale: localeParam, lessonSlug } = await params;
   const lesson = getLesson(lessonSlug as LessonSlug);
   if (!lesson) notFound();
 
+  setRequestLocale(localeParam);
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("lesson");
 
