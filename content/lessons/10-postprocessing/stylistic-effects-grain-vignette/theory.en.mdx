@@ -53,6 +53,13 @@ All three effects are purely local transforms on the same `tDiffuse` — there's
 
 ## Dosage: Concrete Numbers, and When the Effect Fights the Content
 
+<Figure
+  src="/figures/10-postprocessing/stylistic-dosage-curves.svg"
+  alt="Three panels: a grain strength curve falling to zero at luminance 0.6, two vignette curves for the tasteful and overdone presets, and the three RGB sample points of chromatic aberration separating as they move toward the frame edge"
+  caption="Every curve is a formula from this lesson's own shader, and both sets of numbers are the demo's tasteful and overdone presets. Read across: grain only lives in the shadows, where each vignette starts to darken, and why dispersion nearly vanishes at the centre of the frame."
+/>
+
+
 There's no universally correct formula — the ranges below are aesthetic estimates drawn from observing real cinematic work, not physical constants: grain $0.03$–$0.08$ (the noise-strength scale added to color in $[0,1]$), vignette darkness $0.3$–$0.5$, chromatic aberration $0.5$–$2\text{px}$. Clearly exceeding these marks is when the effect starts OVERWHELMING the content instead of accenting it.
 
 All three also have contexts where they don't belong. Grain on a text-heavy interface (a dashboard, a data table) reduces edge contrast around glyphs, making small text look soft/mushy — text needs absolute crispness, not "film feel." Chromatic aberration on a commercial product shot is nearly always a mistake: customers zoom in to see the product's TRUE color, and even a 1px color shift reads as a defective image, not "cinematic style." The next lesson (Color Grading, LUTs & Tone Mapping) moves into an entirely different post layer — a GLOBAL color transform instead of the local, per-pixel one these three effects apply — and "Pass Order & Fillrate Cost" comes back to exactly the question just raised above: how many passes is worth combining, and when does combining stop paying off.

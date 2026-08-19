@@ -53,6 +53,13 @@ Cả ba hiệu ứng đều là phép biến đổi cục bộ trên cùng một
 
 ## Liều lượng: con số cụ thể, và khi nào hiệu ứng phá hỏng nội dung
 
+<Figure
+  src="/figures/10-postprocessing/stylistic-dosage-curves.svg"
+  alt="Ba panel: đường cong cường độ grain giảm dần theo độ sáng và tắt hẳn tại luminance 0.6, hai đường vignette cho preset tasteful và overdone, và ba điểm lấy mẫu RGB của chromatic aberration tách xa dần khi ra rìa ảnh"
+  caption="Cả ba đường cong đều là công thức trong shader của bài, còn hai bộ số là preset tasteful và overdone của demo. Đọc theo chiều ngang: grain chỉ sống ở vùng tối, vignette bắt đầu tối từ đâu, và vì sao tán sắc gần như biến mất ở tâm ảnh."
+/>
+
+
 Không có công thức đúng tuyệt đối — các khoảng dưới đây là ước lượng thẩm mỹ, đúc kết từ quan sát sản phẩm cinematic thực tế, không phải hằng số vật lý: grain $0.03$–$0.08$ (thang cường độ noise cộng vào màu $[0,1]$), độ tối vignette $0.3$–$0.5$, chromatic aberration $0.5$–$2\text{px}$. Vượt rõ các mốc này là lúc hiệu ứng bắt đầu LẤN nội dung thay vì tô điểm cho nó.
 
 Cả ba cũng có ngữ cảnh không nên dùng. Grain trên giao diện nhiều chữ (dashboard, bảng biểu) làm giảm tương phản cạnh chữ, chữ nhỏ trông mờ/rỗ — chữ cần độ nét tuyệt đối, không cần "cảm giác phim". Chromatic aberration trên ảnh sản phẩm thương mại gần như luôn là lỗi: khách hàng phóng to ảnh để xem MÀU THẬT sản phẩm, chỉ 1px lệch màu cũng đọc như ảnh lỗi, không phải "phong cách điện ảnh". Bài tiếp theo (Color Grading, LUT & Tone Mapping) đi vào một lớp hậu kỳ khác hẳn — biến đổi màu TOÀN CỤC thay vì cục bộ theo pixel như ba hiệu ứng bài này — còn bài "Thứ tự Pass & Chi phí Fillrate" quay lại đúng câu hỏi vừa đặt ra: gộp bao nhiêu pass là đủ, khi nào việc gộp không còn đáng.
