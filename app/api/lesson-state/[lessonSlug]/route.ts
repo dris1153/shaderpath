@@ -22,12 +22,13 @@ export async function GET(
   const slug = lessonSlug as LessonSlug;
 
   try {
-    const [row, bookmarked, attemptRows, progress] = await Promise.all([
-      getProgressRow(slug),
-      isLessonBookmarked(slug),
-      getAttemptsForLesson(slug),
-      getProgressMap(),
-    ]);
+    // Sequential, not Promise.all: the pool holds a single connection against
+    // Supabase's transaction pooler, and concurrent queries on it wedge that
+    // connection permanently — the whole instance stops answering afterwards.
+    const row = await getProgressRow(slug);
+    const bookmarked = await isLessonBookmarked(slug);
+    const attemptRows = await getAttemptsForLesson(slug);
+    const progress = await getProgressMap();
 
     const attempts: LessonState["attempts"] = {};
     for (const a of attemptRows) {
