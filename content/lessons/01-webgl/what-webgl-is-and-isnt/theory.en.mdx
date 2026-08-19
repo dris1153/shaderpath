@@ -1,6 +1,6 @@
 ## What WebGL Is: a Low-Level Rasterization API
 
-WebGL isn't a "3D graphics library" in the sense Three.js or Unity are — it's a JavaScript binding for OpenGL ES, exposed through the canvas element. The precise definition matters: WebGL is a **low-level rasterization API** — it takes in a list of vertex coordinates and hands back colored pixels on screen, nothing more. There's no concept of a "scene," an "object," or a "camera" at the API level — all WebGL tracks is which shader is currently active, which buffer is bound, which texture sits on which texture unit, and exactly how the next draw call will use that state. Internalizing this at the very start of the track explains almost every "weird" behavior you'll run into later — why buffers need re-binding before every use, why call order matters, why errors rarely come with a helpful message.
+WebGL isn't a "3D graphics library" in the sense Three.js or Unity are — it's a JavaScript binding for OpenGL ES, exposed through the canvas element. The precise definition matters: WebGL is a **low-level rasterization API** — it takes in a list of vertex coordinates and hands back colored pixels on screen, nothing more. There's no concept of a "scene," an "object," or a "camera" at the API level — all WebGL tracks is which shader is currently active, which buffer is bound, which texture sits on which texture unit (the GPU's texture slots — the Texture lesson covers them), and exactly how the next draw call will use that state. Internalizing this at the very start of the track explains almost every "weird" behavior you'll run into later — why buffers need re-binding before every use, why call order matters, why errors rarely come with a helpful message.
 
 WebGL2, the version this track uses throughout, maps almost 1-to-1 onto the **OpenGL ES 3.0** specification — not a coincidence, but a deliberate design choice: WebGL2 takes the ES 3.0 instruction set and semantics wholesale, then wraps them in JavaScript with an added safety layer (parameter validation, out-of-bounds memory protection), since code running in a browser sandbox can't be trusted the way native code is. WebGL1 corresponds to the older OpenGL ES 2.0 — missing transform feedback, missing multiple render targets, missing integer textures; features this track relies on in the later framebuffer and GPGPU lessons all require WebGL2/ES 3.0.
 
@@ -11,15 +11,16 @@ A `gl.drawArrays()` call in JavaScript doesn't "touch" the GPU directly — it t
 ```
 JavaScript (gl.drawArrays)
   → the browser's WebGL implementation (validates parameters, packages the command)
-    → the operating system's graphics driver (OpenGL/ANGLE)
-      → the GPU (executes the command, writes into the framebuffer)
+    → ANGLE (also inside the browser — translates GL ES to D3D/Vulkan/Metal)
+      → the OS's GPU driver (D3D/Vulkan/Metal)
+        → the GPU (executes the command, writes into the framebuffer — the pixel memory shown on screen)
 ```
 
-Each layer adds a little overhead, but also a layer of safety: the browser never lets JavaScript call straight into a GPU driver — far too dangerous for an arbitrary web page. That's why WebGL runs a few percent slower than native OpenGL, and also why a shader compile error or a badly parameterized call gets stopped at the browser layer instead of crashing the driver.
+Each layer adds a little overhead, but also a layer of safety: the browser never lets JavaScript call straight into a GPU driver — far too dangerous for an arbitrary web page. That's why WebGL carries a per-call overhead over native GL — negligible when GPU-bound, significant with very many draw calls — and also why a shader compile error or a badly parameterized call gets stopped at the browser layer instead of crashing the driver.
 
 ### ANGLE on Windows: Translating GL to D3D/Vulkan
 
-The most notable detail of the driver layer: on Windows, the native OpenGL driver on many GPUs (integrated Intel chips especially) is unstable or missing features, so Chrome and Firefox don't call OpenGL directly — they go through **ANGLE** (Almost Native Graphics Layer Engine), a library that translates OpenGL ES calls into Direct3D 11 (the default) or, more recently, Vulkan. In other words: the `gl.compileShader()` call you make actually compiles GLSL, ANGLE translates it into HLSL, and only then does Windows' Direct3D driver actually run it on the GPU. This isn't a trivial detail — it's exactly why a shader that behaves correctly on macOS (native OpenGL) can behave slightly differently on Windows (through ANGLE/D3D): two completely different driver stacks sit behind the same JavaScript API.
+The most notable detail of the driver layer: on Windows, the native OpenGL driver on many GPUs (integrated Intel chips especially) is unstable or missing features, so Chrome and Firefox don't call OpenGL directly — they go through **ANGLE** (Almost Native Graphics Layer Engine), a library that translates OpenGL ES calls into Direct3D 11 (the default) or, more recently, Vulkan. In other words: the `gl.compileShader()` call you make actually compiles GLSL, ANGLE translates it into HLSL, and only then does Windows' Direct3D driver actually run it on the GPU. This isn't a trivial detail — it's exactly why a shader that behaves correctly on macOS (ANGLE → Metal) can behave slightly differently on Windows (ANGLE → D3D11): two completely different backends sit behind the same JavaScript API.
 
 ## What WebGL Does NOT Provide
 
@@ -58,6 +59,6 @@ The three most common mistakes when first approaching WebGL:
 
 1. **Assuming WebGL is a full "3D engine."** Call `getContext("webgl2")`, then go looking for `scene.add()` or `light.intensity` and find nothing — because they don't exist at this layer. WebGL only has buffers, shaders, textures, and draw calls; scene graphs and lighting are JavaScript someone (possibly you) writes on top.
 2. **Never checking whether `getContext("webgl2")` returned `null`.** A small but real slice of older devices or WebGL2-disabled browsers still exists out there (an estimate of a few percent, per caniuse data); code that calls GL methods straight on that `null` value throws a vague runtime error instead of failing with a clear fallback message.
-3. **Forgetting the `precision` qualifier in a fragment shader, then blaming the driver when it compiles on a coworker's Mac but fails on Windows.** WebGL1 has no default precision for fragment shaders (`precision mediump float;` is mandatory), and some ANGLE-backed drivers enforce that more strictly than others — missing that one line fails to compile on some machines and not others; it isn't random.
+3. **Forgetting the `precision` qualifier in a fragment shader.** WebGL1 has no default precision for fragment shaders (`precision mediump float;` is mandatory), missing that line is a mandatory compile error that behaves identically on every machine — every browser validates GLSL ES through the same translator. What genuinely differs between machines is the width of `mediump`: 16-bit on many mobile GPUs, 32-bit on desktop — a shader that looks fine on a desktop can fall apart on a phone.
 
 </Callout>

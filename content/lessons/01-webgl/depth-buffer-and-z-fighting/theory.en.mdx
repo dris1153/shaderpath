@@ -6,7 +6,7 @@ First, three triangles A, B, and C can form an occlusion cycle — A partly hide
 
 The fix hardware settled on isn't a smarter sort — it's dropping object-level sorting entirely and pushing the occlusion decision down to the **pixel**: each pixel decides for itself which fragment is nearest the camera, independent of draw order.
 
-## The Depth Buffer: One Float Per Pixel
+## The Depth Buffer: One Depth Value Per Pixel
 
 The depth buffer (or z-buffer) is a second buffer running parallel to the color buffer, same dimensions — one value per pixel, recording the (normalized) distance of the nearest fragment written there so far. WebGL2 allocates a depth buffer by default when a context is created (`depth: true`); the spec only guarantees "at least 16 bits," but real desktop/mobile drivers today almost always give 24 — read the actual number with `gl.getParameter(gl.DEPTH_BITS)` instead of guessing.
 
@@ -19,7 +19,7 @@ gl.enable(gl.DEPTH_TEST);
 gl.depthFunc(gl.LESS); // default: a new fragment only wins if its depth is SMALLER
 ```
 
-`depthFunc` decides whether a new fragment "beats" whatever's already stored. `LESS` (the default) means the new fragment has to be genuinely closer — an exact tie **loses**, so whatever was drawn first keeps priority when two fragments land on the same depth. `LEQUAL` lets ties win instead, useful when a second pass redraws the exact same geometry at the exact same depth (an outline pass, say). `ALWAYS` neutralizes the depth test without a separate `gl.disable` call.
+`depthFunc` decides whether a new fragment "beats" whatever's already stored. `LESS` (the default) means the new fragment has to be genuinely closer — an exact tie **loses**, so whatever was drawn first keeps priority when two fragments land on the same depth. `LEQUAL` lets ties win instead, useful when a second pass redraws the exact same geometry at the exact same depth (an outline pass, say). `ALWAYS` lets every fragment pass the test — but still **writes** depth, unlike `gl.disable(DEPTH_TEST)` (which skips both test and write).
 
 ### Clearing Depth Every Frame
 
@@ -41,7 +41,7 @@ This function is **hyperbolic** in $d$, not linear: its derivative with respect 
 
 ### The Near Plane Dominates the Precision Distribution
 
-The point where $\text{depth}(d) = 0.5$ — half the $[0, 1]$ range already spent — sits at $d = \dfrac{2nf}{n+f}$, which is approximately $2n$ once $f \gg n$. With $n = 0.1$, $f = 1000$: $d \approx 0.1998$ — meaning **half** the depth buffer's resolution is used up within the first 0.1-to-0.2-unit stretch past the near plane, leaving the other half to share out across the entire remaining distance from 0.2 to 1000.
+The point where $\text{depth}(d) = 0.5$ — half the $[0, 1]$ range already spent — sits at $d = \dfrac{2nf}{n+f}$, which is approximately $2n$ once $f \gg n$. With $n = 0.1$, $f = 1000$: $d \approx 0.2$ — meaning **half** the depth buffer's resolution is used up within the first 0.1-to-0.2-unit stretch past the near plane, leaving the other half to share out across the entire remaining distance from 0.2 to 1000.
 
 Setting $n = 0.001$ "just to be safe" (so nothing gets near-clipped) makes this considerably worse: $d \approx 0.002$ — half the depth range vanishes inside the first 0.001 units, leaving the other half to carry the entire rest of the scene. Objects at ordinary distances (5–50 units, where most real scenes actually live) now share a vanishingly thin slice of that crowded half — two surfaces a few centimeters apart get quantized to the same depth value with ease.
 

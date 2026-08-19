@@ -5,17 +5,17 @@ export const exercises: Exercise[] = [
     id: "webgl2-features-and-support-decision",
     kind: "concept",
     prompt: {
-      vi: `Track này đã dùng ít nhất ba khả năng chỉ có ở WebGL2 (không có, hoặc chỉ có qua extension, ở WebGL1). Kể tên đúng ba khả năng đó, và với mỗi khả năng, nói rõ ở WebGL1 nó tồn tại dưới dạng extension nào — hoặc hoàn toàn không tồn tại.
+      vi: `Track này đã dùng hoặc giới thiệu (trong bài này) ít nhất ba khả năng chỉ có ở WebGL2 (không có, hoặc chỉ có qua extension, ở WebGL1). Kể tên đúng ba khả năng đó, và với mỗi khả năng, nói rõ ở WebGL1 nó tồn tại dưới dạng extension nào — hoặc hoàn toàn không tồn tại.
 
 Sau đó, giả sử bạn đang xây một trang portfolio 3D công khai, mục tiêu tiếp cận được nhiều thiết bị nhất có thể: bạn chọn baseline WebGL2, hay đầu tư thẳng vào WebGPU với fallback? Giải thích quyết định bằng đúng sự khác biệt về mức độ phổ cập đã nêu trong bài, không phải vì "WebGPU mới hơn".`,
-      en: `This track used at least three capabilities that only exist in WebGL2 (missing, or extension-only, in WebGL1). Name three of them, and for each, state exactly what extension it corresponds to in WebGL1 — or that it has no WebGL1 equivalent at all.
+      en: `This track has used or (in this lesson) introduced at least three capabilities that only exist in WebGL2 (missing, or extension-only, in WebGL1). Name three of them, and for each, state exactly what extension it corresponds to in WebGL1 — or that it has no WebGL1 equivalent at all.
 
 Then, suppose you're building a public 3D portfolio site aiming to reach as many devices as possible: do you pick WebGL2 as your baseline, or invest directly in WebGPU with a fallback? Justify the decision using the actual support-level gap described in the lesson, not just "WebGPU is newer".`,
     },
     hints: [
       {
-        vi: "Ba ứng viên nằm ngay trong track này: VAO, instancing, MRT, transform feedback, 3D texture — chọn đúng ba, đối chiếu lại tên extension WebGL1 tương ứng (hoặc 'không có' nếu WebGL2 mới thêm hẳn).",
-        en: "Three candidates sit right in this track: VAOs, instancing, MRT, transform feedback, 3D textures — pick three, match each to its WebGL1 extension name (or 'none' if WebGL2 added it outright).",
+        vi: "Track đã thật sự dùng: VAO (mọi bài vẽ), GLSL ES 3.00 (#version 300 es), định dạng sized như RGBA8; bài này giới thiệu thêm instancing, MRT, transform feedback — chọn ba và đối chiếu tên extension WebGL1 tương ứng (hoặc 'không có').",
+        en: "Actually used by the track: VAOs (every drawing lesson), GLSL ES 3.00 (#version 300 es), sized formats like RGBA8; this lesson introduces instancing, MRT and transform feedback — pick three and match each to its WebGL1 extension name (or 'none').",
       },
       {
         vi: "'Tiếp cận nhiều thiết bị nhất' là từ khoá quyết định câu trả lời — so nó với mức độ phổ cập của WebGL2 so với WebGPU đã nói ở phần 'Chọn công nghệ nào vào năm 2026'.",

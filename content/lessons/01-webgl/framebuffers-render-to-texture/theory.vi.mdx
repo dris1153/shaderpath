@@ -7,7 +7,7 @@ Mọi lệnh vẽ (`gl.drawArrays`, `gl.drawElements`) ghi kết quả vào mộ
 <Figure
   src="/figures/01-webgl/fbo-attachments.svg"
   alt="Framebuffer object với COLOR_ATTACHMENT0 gắn một texture rỗng và depth attachment là renderbuffer; pass 1 vẽ vào FBO, pass 2 sample texture đó ra framebuffer mặc định"
-  caption="Bản thân FBO không chứa pixel nào — ảnh rơi vào texture được attach, và chính điều đó cho phép pass 2 đọc lại đúng thứ pass 1 vừa vẽ."
+  caption="Bản thân FBO không chứa pixel nào — ảnh rơi vào texture được attach, và chính điều đó cho phép pass 2 đọc lại đúng thứ pass 1 vừa vẽ. Ô depth trong sơ đồ dùng renderbuffer (vùng nhớ vẽ-được nhưng không sample-được) — scene 3D cần thêm nó, còn bài này vẽ 2D nên chỉ cần color."
 />
 
 Gắn một texture đã tạo sẵn (rỗng, không có dữ liệu ban đầu) vào FBO biến texture đó thành đích vẽ:
@@ -41,7 +41,7 @@ if (status !== gl.FRAMEBUFFER_COMPLETE) {
 }
 ```
 
-Hai mã lỗi hay gặp nhất: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (attachment tồn tại nhưng sai định dạng — ví dụ gắn texture nén vào color attachment) và `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (chưa attach gì cả). WebGL không tự throw khi bạn vẽ vào một framebuffer incomplete — draw call lặng lẽ không làm gì cả, nên bug loại này thường lộ ra dưới dạng "màn hình đen, không lỗi console" nếu bỏ qua bước check.
+Hai mã lỗi hay gặp nhất: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (attachment tồn tại nhưng sai định dạng — ví dụ gắn texture nén vào color attachment) và `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (chưa attach gì cả). WebGL không tự throw khi bạn vẽ vào một framebuffer incomplete — draw call lặng lẽ không làm gì cả, nên bug loại này thường lộ ra dưới dạng "màn hình đen, không exception — lỗi chỉ hiện qua `gl.getError()` hoặc một warning dễ bỏ sót trong console" nếu bỏ qua bước check.
 
 ## Pipeline 2 pass: scene → texture → hiệu ứng màn hình
 
@@ -66,7 +66,7 @@ Pass 1 không quan tâm hiệu ứng gì sẽ áp dụng lên nó sau — nó ch
 
 ## Viewport phải khớp kích thước attachment
 
-`gl.viewport` xác định vùng nào của đích vẽ hiện tại nhận kết quả rasterize; nó không tự động đồng bộ với kích thước framebuffer đang bind. Bind một FBO có texture 256×256 nhưng quên đổi viewport (còn giữ nguyên kích thước canvas, ví dụ 1200×800) khiến rasterizer chiếu toạ độ clip space lên một vùng 1200×800 tưởng tượng rồi cắt (clip) phần vượt ra ngoài 256×256 thật — hình bị crop sai lệch, không phải scale đúng tỉ lệ. Ngược lại, quên đổi viewport về kích thước canvas khi chuyển sang pass 2 khiến ảnh cuối chỉ phủ một góc màn hình. Kích thước FBO cũng hoàn toàn độc lập với kích thước canvas hiển thị — một FBO 256×256 là hợp lệ dù canvas đang hiển thị ở 1200×800 pixel thật, đây chính là cách shadow map hay render target chất lượng thấp hơn màn hình chính hoạt động để tiết kiệm hiệu năng.
+`gl.viewport` xác định vùng nào của đích vẽ hiện tại nhận kết quả rasterize; nó không tự động đồng bộ với kích thước framebuffer đang bind. Bind một FBO có texture 256×256 nhưng quên đổi viewport (còn giữ nguyên kích thước canvas, ví dụ 1200×800) khiến rasterizer chiếu toạ độ NDC lên một vùng 1200×800 tưởng tượng rồi cắt (clip) phần vượt ra ngoài 256×256 thật — hình bị crop sai lệch, không phải scale đúng tỉ lệ. Ngược lại, quên đổi viewport về kích thước canvas khi chuyển sang pass 2 khiến ảnh cuối chỉ phủ một góc màn hình. Kích thước FBO cũng hoàn toàn độc lập với kích thước canvas hiển thị — một FBO 256×256 là hợp lệ dù canvas đang hiển thị ở 1200×800 pixel thật, đây chính là cách shadow map hay render target chất lượng thấp hơn màn hình chính hoạt động để tiết kiệm hiệu năng.
 
 ## Nền tảng cho post-processing, shadow map và GPGPU ping-pong
 

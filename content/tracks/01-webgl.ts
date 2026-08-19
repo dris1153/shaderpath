@@ -500,8 +500,8 @@ export const lessons: LessonMeta[] = [
       en: "WebGL1 vs WebGL2 vs WebGPU",
     },
     summary: {
-      vi: "WebGL2 thêm transform feedback, MRT và integer texture so với WebGL1; WebGPU thay đổi mô hình sang command buffer + compute shader tường minh — bối cảnh để biết học gì tiếp sau track này.",
-      en: "WebGL2 adds transform feedback, MRT and integer textures over WebGL1; WebGPU shifts the model entirely to explicit command buffers and compute shaders — the context for what comes after this track.",
+      vi: "WebGL2 thêm transform feedback, MRT và hỗ trợ số nguyên thật sự so với WebGL1; WebGPU thay đổi mô hình sang command buffer + compute shader tường minh — bối cảnh để biết học gì tiếp sau track này.",
+      en: "WebGL2 adds transform feedback, MRT and genuine integer support over WebGL1; WebGPU shifts the model entirely to explicit command buffers and compute shaders — the context for what comes after this track.",
     },
     difficulty: 2,
     estimatedMinutes: 25,
@@ -511,12 +511,12 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["blending-and-alpha"],
     objectives: {
       vi: [
-        "Liệt kê 3 khác biệt kỹ thuật chính giữa WebGL1 và WebGL2 đã dùng trong track này",
+        "Liệt kê 3 khác biệt kỹ thuật chính giữa WebGL1 và WebGL2 đã dùng hoặc được giới thiệu trong track này",
         "Giải thích khác biệt mô hình lập trình giữa WebGL (state machine) và WebGPU (command buffer tường minh)",
         "Đánh giá tình trạng hỗ trợ trình duyệt của WebGPU tại thời điểm học để quyết định có đầu tư ngay không",
       ],
       en: [
-        "List 3 key technical differences between WebGL1 and WebGL2 already used in this track",
+        "List 3 key technical differences between WebGL1 and WebGL2 used or introduced in this track",
         "Explain the programming-model gap between WebGL's state machine and WebGPU's explicit command buffers",
         "Assess WebGPU's current browser support to decide whether to invest in it now",
       ],

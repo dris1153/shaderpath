@@ -8,14 +8,14 @@ export const exercises: Exercise[] = [
       vi: `Bằng lời (không cần vẽ hình), liệt kê đúng thứ tự bốn lớp mà một lệnh \`gl.drawArrays()\` phải đi qua trước khi GPU thực sự ghi pixel ra màn hình, và nêu tên cụ thể của lớp dịch chạy trên Windows.
 
 Sau đó liệt kê ít nhất 5 thứ WebGL *không* cung cấp sẵn ở tầng API — với mỗi thứ, nêu tên một kỹ thuật hoặc thư viện thường dùng để tự bù đắp.`,
-      en: `In words (no diagram needed), list the four layers a \`gl.drawArrays()\` call passes through, in order, before the GPU actually writes pixels to the screen — and name the specific translation layer that runs on Windows.
+      en: `In words (no diagram needed), list the layers a \`gl.drawArrays()\` call passes through, in order, before the GPU actually writes pixels to the screen — and name the specific translation layer that runs on Windows.
 
 Then list at least 5 things WebGL does *not* provide at the API level — for each one, name a technique or library commonly used to fill the gap.`,
     },
     hints: [
       {
-        vi: "Thứ tự đúng: JavaScript → WebGL implementation của trình duyệt → driver hệ điều hành → GPU; tên lớp dịch trên Windows nằm trong phần 'ANGLE' của bài học.",
-        en: "The correct order: JavaScript → the browser's WebGL implementation → the OS driver → the GPU; the Windows translation layer's name is covered in the 'ANGLE' section of the lesson.",
+        vi: "Bắt đầu từ lệnh JS của bạn và tự hỏi: cái gì đứng giữa nó và phần cứng? Có nhiều hơn một tầng phần mềm ở giữa — và một trong số đó nằm ngay trong trình duyệt.",
+        en: "Start from your JS call and ask: what sits between it and the hardware? There is more than one software layer in between — and one of them lives inside the browser itself.",
       },
       {
         vi: "Với 5 thứ WebGL không có, xem lại phần liệt kê trong bài — mỗi mục đều đi kèm một ví dụ kỹ thuật/thư viện bù đắp cụ thể (ví dụ: ánh sáng → tự viết Lambertian hoặc dùng Three.js Material).",
@@ -37,10 +37,10 @@ Then list at least 5 things WebGL does *not* provide at the API level — for ea
       },
     ],
     solutionNote: {
-      vi: `Bốn lớp, đúng thứ tự: JavaScript (\`gl.drawArrays\`) → WebGL implementation của trình duyệt (validate tham số) → driver đồ hoạ hệ điều hành (trên Windows: ANGLE dịch GL sang Direct3D 11 / Vulkan) → GPU thực thi lệnh và ghi framebuffer.
+      vi: `Bốn lớp, đúng thứ tự: JavaScript (\`gl.drawArrays\`) → WebGL implementation của trình duyệt (validate tham số) → ANGLE trong trình duyệt (dịch GL ES sang Direct3D 11 / Vulkan / Metal) → driver GPU của hệ điều hành → GPU thực thi lệnh và ghi framebuffer.
 
 Năm+ thứ WebGL không cung cấp sẵn, và cách bù đắp thường dùng: 1) scene graph — tự viết cây transform, hoặc dùng \`THREE.Object3D\`; 2) ánh sáng — tự viết Lambertian/Phong trong fragment shader; 3) loader model (glTF) — tự parse binary, hoặc dùng \`GLTFLoader\` của Three.js; 4) vật lý — dùng physics engine riêng (Rapier, Cannon-es); 5) text rendering — tự dựng texture atlas, hoặc dùng SDF font; 6) picking/raycasting — tự tính giao tia-hình học, hoặc \`THREE.Raycaster\`.`,
-      en: `Four layers, in order: JavaScript (\`gl.drawArrays\`) → the browser's WebGL implementation (parameter validation) → the OS graphics driver (on Windows: ANGLE translating GL to Direct3D 11 / Vulkan) → the GPU executing the commands and writing the framebuffer.
+      en: `Four layers, in order: JavaScript (\`gl.drawArrays\`) → the browser's WebGL implementation (parameter validation) → ANGLE inside the browser (translating GL ES to Direct3D 11 / Vulkan / Metal) → the OS's GPU driver → the GPU executing the commands and writing the framebuffer.
 
 Five-plus things WebGL doesn't provide out of the box, and the usual way to fill each gap: 1) scene graph — write your own transform tree, or use \`THREE.Object3D\`; 2) lighting — write your own Lambertian/Phong in the fragment shader; 3) model loading (glTF) — parse the binary yourself, or use Three.js's \`GLTFLoader\`; 4) physics — use a dedicated physics engine (Rapier, Cannon-es); 5) text rendering — build your own texture atlas, or use an SDF font; 6) picking/raycasting — compute ray-geometry intersection yourself, or use \`THREE.Raycaster\`.`,
     },

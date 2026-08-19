@@ -1,6 +1,6 @@
 ## Blending là gì: trộn fragment mới với framebuffer đã có
 
-Không có blending, mỗi fragment vượt qua depth test **ghi đè** hoàn toàn màu cũ trong framebuffer — thắng thì lấy hết. Blending chèn thêm một bước trước khi ghi: fragment mới (**src**, source) được **trộn** với màu đã có sẵn trong framebuffer tại đúng pixel đó (**dst**, destination) theo một công thức cấu hình được, thay vì thay thế thẳng. Đây là cơ chế duy nhất trong pipeline cố định cho phép một fragment "trong suốt một phần" — fragment shader không hề biết gì về trong suốt, nó chỉ xuất ra một màu RGBA; trong suốt là kết quả GPU trộn màu đó với những gì đã vẽ trước.
+Không có blending, mỗi fragment vượt qua depth test **ghi đè** hoàn toàn màu cũ trong framebuffer — thắng thì lấy hết. Blending chèn thêm một bước trước khi ghi: fragment mới (**src**, source) được **trộn** với màu đã có sẵn trong framebuffer tại đúng pixel đó (**dst**, destination) theo một công thức cấu hình được, thay vì thay thế thẳng. Đây là cơ chế tiêu chuẩn trong pipeline cố định cho phép một fragment "trong suốt một phần" — fragment shader không hề biết gì về trong suốt, nó chỉ xuất ra một màu RGBA; trong suốt là kết quả GPU trộn màu đó với những gì đã vẽ trước.
 
 ## Phương trình blend: src×srcFactor + dst×dstFactor
 
@@ -47,7 +47,7 @@ $$
 \text{color}_{out} = \text{color}_{src} + \text{color}_{dst}
 $$
 
-Không trọng số — mỗi lần vẽ chỉ **cộng dồn** năng lượng màu vào những gì đã có, không "nhường chỗ". Chất hình ảnh: lửa, tia sáng, hạt phát sáng, vệt laser — các lớp chồng nhau không làm tối nhau mà cộng dồn, dễ "cháy" về trắng khi đủ lớp (mỗi kênh bị clamp về $1.0$). Cùng ví dụ trên: đỏ $(1,0,0)$ cộng xanh dương $(0,0,1)$ ra đúng $(1,0,1)$ — magenta trọn vẹn, không pha loãng. Additive còn có tính chất hiếm: vì phép cộng giao hoán ($a+b=b+a$), thứ tự vẽ **không** ảnh hưởng kết quả — ngoại lệ hiếm giữa các chế độ blend, tương phản hẳn với phần thứ tự vẽ ngay sau đây.
+Không trọng số — mỗi lần vẽ chỉ **cộng dồn** năng lượng màu vào những gì đã có, không "nhường chỗ". Chất hình ảnh: lửa, tia sáng, hạt phát sáng, vệt laser — các lớp chồng nhau không làm tối nhau mà cộng dồn, dễ "cháy" về trắng khi đủ lớp (mỗi kênh bị clamp về $1.0$). Cùng ví dụ trên: đỏ $(1,0,0)$ cộng xanh dương $(0,0,1)$ ra đúng $(1,0,1)$ — magenta trọn vẹn, không pha loãng. Additive còn có tính chất hiếm: vì phép cộng giao hoán ($a+b=b+a$), thứ tự vẽ **không** ảnh hưởng kết quả — multiply cũng chia sẻ tính chất này (phép nhân giao hoán); trong ba chế độ của bài, chỉ alpha blending phụ thuộc thứ tự, tương phản hẳn với phần thứ tự vẽ ngay sau đây.
 
 ### Multiply qua factor: DST_COLOR / ZERO
 
@@ -61,11 +61,11 @@ $$
 \text{color}_{out} = \text{color}_{src}\cdot\text{color}_{dst} + \text{color}_{dst}\cdot 0 = \text{color}_{src}\cdot\text{color}_{dst}
 $$
 
-Chất hình ảnh: kính lọc màu, bóng đổ nhân (multiply shadow), vignette tối góc — chỉ có thể làm **tối** đi, không bao giờ sáng hơn màu nền, vì nhân hai số trong $[0,1]$ luôn ra kết quả nhỏ hơn hoặc bằng số lớn hơn trong hai.
+Chất hình ảnh: kính lọc màu, bóng đổ nhân (multiply shadow), vignette tối góc — chỉ có thể làm **tối** đi, không bao giờ sáng hơn màu nền, vì nhân hai số trong $[0,1]$ luôn ra kết quả nhỏ hơn hoặc bằng **cả hai** số.
 
 ## Thứ tự vẽ quyết định kết quả
 
-Alpha blending và multiply không giao hoán: $\text{blend}(a, b) \neq \text{blend}(b, a)$ nói chung, vì công thức phụ thuộc bất đối xứng vào src và dst. Vẽ trong suốt **xa trước, gần sau** (back-to-front) cho đúng ngữ nghĩa "lớp gần nằm chồng lên lớp xa, để lộ một phần lớp xa qua độ mờ của nó" — chính là toán tử "over" kinh điển trong compositing. Đảo ngược thứ tự với cùng hệ số cho ra màu sai hoàn toàn: lớp gần (đáng lẽ chiếm ưu thế) bị pha loãng bởi lớp vẽ sau nó. Vì vậy engine thời gian thực phải sort lại object trong suốt theo khoảng cách camera **mỗi frame** — chi phí mà object đặc không phải trả, vì thứ tự vẽ của chúng không ảnh hưởng màu cuối (chỉ depth test mới quan trọng).
+Alpha blending không giao hoán: $\text{blend}(a, b) \neq \text{blend}(b, a)$ nói chung, vì công thức phụ thuộc bất đối xứng vào src và dst (multiply thì giao hoán như additive — phép nhân đổi chỗ được). Vẽ trong suốt **xa trước, gần sau** (back-to-front) cho đúng ngữ nghĩa "lớp gần nằm chồng lên lớp xa, để lộ một phần lớp xa qua độ mờ của nó" — chính là toán tử "over" kinh điển trong ghép lớp (compositing). Đảo ngược thứ tự với cùng hệ số cho ra màu sai hoàn toàn: lớp gần (đáng lẽ chiếm ưu thế) bị pha loãng bởi lớp vẽ sau nó. Vì vậy engine thời gian thực phải sort lại object trong suốt theo khoảng cách camera **mỗi frame** — chi phí mà object đặc không phải trả, vì thứ tự vẽ của chúng không ảnh hưởng màu cuối (chỉ depth test mới quan trọng).
 
 ## Depth write và trong suốt: vì sao phải tắt
 

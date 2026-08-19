@@ -19,8 +19,8 @@ export const references: Citation[] = [
     authors: ["MDN Contributors"],
     url: "https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices",
     note: {
-      vi: "Bao gồm mục riêng về UNPACK_FLIP_Y_WEBGL và mipmap — nguồn thực dụng, không chỉ lý thuyết, cho đúng những cạm bẫy bài này nêu ra.",
-      en: "Includes dedicated sections on UNPACK_FLIP_Y_WEBGL and mipmaps — a practical source, not just theory, for exactly the pitfalls this lesson covers.",
+      vi: "Đề cập chi phí y-flip khi upload và có mục riêng về mipmap — nguồn thực dụng, không chỉ lý thuyết, cho đúng những cạm bẫy bài này nêu ra.",
+      en: "Mentions the y-flip upload cost and has a dedicated mipmap section — a practical, not just theoretical, source for exactly the traps this lesson raises.",
     },
   },
   {

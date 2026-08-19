@@ -1,6 +1,6 @@
 ## What a Texture Is: an Image Living on the GPU, Sampled in the Fragment Shader
 
-A texture is an array of image data stored in GPU memory, readable at any coordinate while the fragment shader is running — unlike a vertex buffer, which is only ever read sequentially by vertex index. A 1920×1080 canvas rendered at DPR 1 produces roughly 2 million fragments per frame; at DPR 2 that's ~8.3 million. Every one of those fragments needs to answer "what color sits at this point on the surface," and a texture is exactly that lookup table — the lookup coordinate is UV, the $[0,1]^2$ coordinate system from Track 0's Cartesian Coordinates & UV Space lesson. Without textures, every color would have to come from pure math inside the shader; textures are how real image data — photographs, baked noise, color lookup tables — enters the render pipeline.
+A texture is an array of image data stored in GPU memory, readable at any coordinate while the fragment shader is running — unlike a vertex buffer, which is only ever read sequentially by vertex index. A 1920×1080 canvas rendered at DPR 1 produces roughly 2 million fragments per frame; at DPR 2 that's ~8.3 million. Every one of those fragments needs to answer "what color sits at this point on the surface," and a texture is exactly that lookup table — the lookup coordinate is UV, the $[0,1]^2$ coordinate system from Track 0's Cartesian Coordinates & UV Space lesson. Without textures, every color would have to come from pure math inside the shader; textures are how real image data — photographs, baked (precomputed-and-saved) noise, color lookup tables — enters the render pipeline.
 
 ## Getting Pixels onto the GPU: createTexture, bind, texImage2D
 
@@ -17,7 +17,7 @@ gl.texImage2D(
 );
 ```
 
-`createTexture` only allocates an empty "name" (id), no data yet. `bindTexture` attaches that texture to the context's `TEXTURE_2D` target — every subsequent texture call (texImage2D, texParameteri...) operates on whatever is currently bound, the same state-machine model this track already reused from the buffer/VAO lesson. `texImage2D` copies real pixel data into GPU memory at mip level 0 (the base image, full resolution); the `pixelData` argument can be a raw `Uint8Array` (self-generated, as in this lesson's demo) or directly an `ImageBitmap`/`HTMLImageElement`/`HTMLCanvasElement` — WebGL reads pixels straight from those objects without you decoding the image by hand.
+`createTexture` only allocates an empty "name" (id), no data yet. `bindTexture` attaches that texture to the context's `TEXTURE_2D` target — every subsequent texture call (texImage2D, texParameteri...) operates on whatever is currently bound, the same state-machine model this track already reused from the buffer/VAO lesson. `texImage2D` copies real pixel data into GPU memory at mip level 0 (the base image, full resolution — mipmaps are explained below); the `pixelData` argument can be a raw `Uint8Array` (self-generated, as in this lesson's demo) or directly an `ImageBitmap`/`HTMLImageElement`/`HTMLCanvasElement` — WebGL reads pixels straight from those objects without you decoding the image by hand.
 
 ## Texture Units and Sampler Uniforms: the Classic Mix-up
 
@@ -29,7 +29,7 @@ gl.bindTexture(gl.TEXTURE_2D, texture);  // 2. attach the texture to that slot
 gl.uniform1i(uTextureLoc, 0);            // 3. tell the sampler to use slot 0
 ```
 
-A sampler uniform (`uniform sampler2D uTexture` in GLSL) doesn't hold the texture object itself — it only holds an **integer unit index**. `uniform1i(loc, 0)` means "read from unit 0," matching `activeTexture(gl.TEXTURE0)` in step 1. With a single texture, unit 0 is the default, so it's easy to "work by accident" while skipping step 3 — but the moment the next lesson's Framebuffer demo needs two textures at once (a scene texture plus an effect), forgetting this step means a sampler silently reads the wrong unit.
+A sampler uniform (`uniform sampler2D uTexture` in GLSL) doesn't hold the texture object itself — it only holds an **integer unit index**. `uniform1i(loc, 0)` means "read from unit 0," matching `activeTexture(gl.TEXTURE0)` in step 1. With a single texture, unit 0 is the default, so it's easy to "work by accident" while skipping step 3 — but the moment a shader needs two or more samplers (a scene plus a mask, in later tracks), forgetting this step means a sampler silently reads the wrong unit.
 
 <Figure
   src="/figures/01-webgl/texture-unit-sampler-binding.svg"
@@ -88,14 +88,14 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
 ## UNPACK_FLIP_Y_WEBGL: an Image's V-axis Doesn't Match a GL Texture's
 
-Bitmap images (2D canvas, `<img>`, PNG/JPEG) always store their first pixel row at the top — row 0 is the top. Classic WebGL/OpenGL textures instead define $v = 0$ as the **bottom** (the math convention: origin bottom-left, same as NDC). Uploading an image straight into a texture with no adjustment renders it flipped vertically — exactly the callback bug Track 0 warned about in advance. The simplest fix:
+Bitmap images (2D canvas, `<img>`, PNG/JPEG) always store their first pixel row at the top — row 0 is the top. Classic WebGL/OpenGL textures instead define $v = 0$ as the **bottom** (the math convention: origin bottom-left, same as NDC). Uploading an image straight into a texture with no adjustment renders it flipped vertically — exactly the upside-down-texture bug Track 0's UV lesson foreshadowed. The simplest fix:
 
 ```js
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 // call this BEFORE texImage2D — the driver flips rows during upload
 ```
 
-For a texture generated entirely by code (like this lesson's demo, built directly from a `Uint8Array`), you control the row order yourself, so this flag can be skipped — but any time you upload from an `<img>`/canvas/`ImageBitmap`, setting `UNPACK_FLIP_Y_WEBGL` is the first thing to remember.
+For a texture generated entirely by code (like this lesson's demo, built directly from a `Uint8Array`), you control the row order yourself, so this flag can be skipped — but any time you upload from an `<img>`/canvas, setting `UNPACK_FLIP_Y_WEBGL` is the first thing to remember. `ImageBitmap` is the exception — it **ignores** this flag; fix the orientation at creation time with `createImageBitmap(img, { imageOrientation: "flipY" })`.
 
 ## Where These Three Decisions Lead: Render Targets and Compressed Textures
 

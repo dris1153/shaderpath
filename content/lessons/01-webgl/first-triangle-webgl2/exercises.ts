@@ -14,12 +14,12 @@ Briefly explain the mechanism behind each answer.`,
     },
     hints: [
       {
-        vi: "compileShader/linkProgram/useProgram trong WebGL không bao giờ throw exception JS cho lỗi GLSL — chúng chỉ đặt cờ trạng thái nội bộ (COMPILE_STATUS, LINK_STATUS) mà bạn phải tự đọc.",
-        en: "compileShader/linkProgram/useProgram in WebGL never throw a JS exception for GLSL errors — they only set internal status flags (COMPILE_STATUS, LINK_STATUS) that you have to read yourself.",
+        vi: "Tra MDN compileShader: lỗi GLSL được báo qua cơ chế nào — exception hay một thứ bạn phải tự hỏi?",
+        en: "Check MDN for compileShader: how are GLSL errors reported — an exception, or something you must ask for yourself?",
       },
       {
-        vi: "Theo spec, linkProgram tự fail (LINK_STATUS = false) nếu bất kỳ shader nào đính kèm chưa compile thành công — lỗi không biến mất, chỉ dịch chuyển sang bước sau.",
-        en: "Per spec, linkProgram fails on its own (LINK_STATUS = false) if any attached shader hasn't compiled successfully — the error doesn't vanish, it just shifts to the next step.",
+        vi: "Spec của linkProgram liệt kê các điều kiện khiến LINK_STATUS = false — điều kiện đầu tiên liên quan gì tới các shader đính kèm?",
+        en: "The linkProgram spec lists the conditions that force LINK_STATUS = false — what does the first one say about the attached shaders?",
       },
     ],
     checklist: [

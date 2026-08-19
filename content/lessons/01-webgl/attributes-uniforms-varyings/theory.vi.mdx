@@ -14,7 +14,7 @@ Một shader program không tự sinh ra dữ liệu — mọi con số nó dùn
 
 ### Uniform: một giá trị cho cả draw call
 
-`uniform` khai được ở cả hai giai đoạn, đúng nghĩa đen tên gọi: **đồng nhất** cho mọi lần shader chạy suốt một lệnh `drawArrays`/`drawElements`, dù 3 đỉnh hay 3 triệu fragment. JavaScript set nó một lần trước draw call bằng họ hàm `gl.uniform*`; GPU giữ giá trị trong một vùng nhớ constant broadcast tới mọi core cùng lúc, không fetch lại theo từng invocation như attribute — nên đọc uniform gần như miễn phí dù đọc bao nhiêu lần.
+`uniform` khai được ở cả hai giai đoạn, đúng nghĩa đen tên gọi: **đồng nhất** cho mọi lần shader chạy suốt một lệnh `drawArrays`/`drawElements`, dù 3 đỉnh hay 3 triệu fragment. JavaScript set nó một lần trước draw call bằng họ hàm `gl.uniform*`; GPU giữ giá trị trong một vùng nhớ constant phát (broadcast) tới mọi core cùng lúc, không fetch lại theo từng invocation như attribute — nên đọc uniform gần như miễn phí dù đọc bao nhiêu lần.
 
 ### Varying (out/in): cầu nối vertex → fragment, được nội suy
 
@@ -24,7 +24,7 @@ $$
 v_{frag} = w_0 v_0 + w_1 v_1 + w_2 v_2, \qquad w_0 + w_1 + w_2 = 1
 $$
 
-fragment càng gần đỉnh nào, trọng số $w$ đỉnh đó càng lớn. GPU không "tính lại" gì cho mỗi fragment — nó nội suy cơ học giữa 3 số đã có, nên một varying không nên chứa logic rẽ nhánh: nội suy kết quả một `if` giữa hai đỉnh cho ra giá trị vô nghĩa ở giữa.
+fragment càng gần đỉnh nào, trọng số $w$ đỉnh đó càng lớn (chính là $\lambda$ của bài trước, đổi ký hiệu). GPU không "tính lại" gì cho mỗi fragment — nó nội suy cơ học giữa 3 số đã có, nên một varying không nên chứa logic rẽ nhánh: nội suy kết quả một `if` giữa hai đỉnh cho ra giá trị vô nghĩa ở giữa.
 
 ## Bảng phạm vi & tần suất — cùng một giá trị, ba cách mô hình hoá
 
@@ -42,13 +42,13 @@ Hai case sau dùng chung cơ chế `out`/`in` — không mâu thuẫn: "attribut
 
 Set một uniform luôn hai bước. Bước 1: sau khi link, gọi `gl.getUniformLocation(program, "uSolidColor")` lấy một handle mờ — GLSL compiler được quyền loại bỏ uniform không dùng tới, nên hàm này có thể trả `null` hợp lệ; code phải chịu được trường hợp đó. Bước 2: gọi đúng hàm trong họ `gl.uniform*` khớp kiểu GLSL — số cuối tên hàm là số component, chữ cái là kiểu: `uniform1f` cho `float`, `uniform3f`/`uniform3fv` cho `vec3`, `uniform1i` cho `int`/`bool`/`sampler2D`, `uniformMatrix4fv` cho `mat4`.
 
-Điều dễ quên nhất: `gl.uniform*` áp giá trị lên **chương trình đang active**, không phải một cái tên trừu tượng — bắt buộc `gl.useProgram(program)` trước, nếu không giá trị rơi vào chương trình sai, không cảnh báo nào bắt lỗi này.
+Điều dễ quên nhất: `gl.uniform*` áp giá trị lên **chương trình đang active**, không phải một cái tên trừu tượng — bắt buộc `gl.useProgram(program)` trước — location là object gắn với đúng chương trình của nó, nên gọi `uniform*` khi chương trình khác đang active làm lệnh bị **bỏ qua** với lỗi `INVALID_OPERATION` (đọc được qua `gl.getError()`/console), uniform lặng lẽ giữ giá trị cũ.
 
 ## Vì sao uniform không thuộc về buffer, và attribute không đổi được giữa draw call
 
-Buffer tồn tại để cấp giá trị MỚI cho MỖI lần vertex fetch bước tới, đọc tuần tự theo offset khai trong VAO. Một uniform là cùng một giá trị cho toàn draw call; nhét vào buffer nghĩa là chép lặp con số đó N lần (N = số đỉnh) — tốn bộ nhớ vô ích, vẫn không đổi được gì per-vertex vì giá trị y hệt mọi đỉnh. Uniform ngược lại nằm trong vùng nhớ constant nhỏ, tối ưu để broadcast một giá trị tới hàng nghìn core cùng lúc.
+Buffer tồn tại để cấp giá trị MỚI cho MỖI lần vertex fetch (bước GPU nạp dữ liệu đỉnh) bước tới, đọc tuần tự theo offset khai trong VAO. Một uniform là cùng một giá trị cho toàn draw call; nhét vào buffer nghĩa là chép lặp con số đó N lần (N = số đỉnh) — tốn bộ nhớ vô ích, vẫn không đổi được gì per-vertex vì giá trị y hệt mọi đỉnh. Uniform ngược lại nằm trong vùng nhớ constant nhỏ, tối ưu để broadcast một giá trị tới hàng nghìn core cùng lúc.
 
-Chiều ngược lại: attribute không đổi được **giữa chừng** một draw call vì giá trị đã bị "chốt" bởi vertex fetch stage ngay khi draw call bắt đầu, dựa trên buffer/offset đã bind vào VAO lúc đó. Muốn một vertex có giá trị khác, cách duy nhất là sửa buffer (`bufferSubData`/`bufferData`) TRƯỚC lần `drawArrays` kế tiếp — granularity nhỏ nhất của attribute là "giữa hai draw call". Uniform set lại được tuỳ ý giữa các draw call (`uAngle` ở bài sau đổi mỗi frame), nhưng bên trong MỘT draw call cả hai đều đóng băng — khác nhau ở chỗ attribute đóng băng THEO TỪNG ĐỈNH, uniform đóng băng ở đúng MỘT giá trị chung.
+Chiều ngược lại: attribute không đổi được **giữa chừng** một draw call vì giá trị đã bị "chốt" bởi vertex fetch stage ngay khi draw call bắt đầu, dựa trên buffer/offset đã bind vào VAO lúc đó. Muốn một vertex có giá trị khác, cách duy nhất là sửa buffer (`bufferSubData`/`bufferData`) TRƯỚC lần `drawArrays` kế tiếp — granularity (độ mịn thay đổi) nhỏ nhất của attribute là "giữa hai draw call". Uniform set lại được tuỳ ý giữa các draw call (`uAngle` ở bài sau đổi mỗi frame), nhưng bên trong MỘT draw call cả hai đều đóng băng — khác nhau ở chỗ attribute đóng băng THEO TỪNG ĐỈNH, uniform đóng băng ở đúng MỘT giá trị chung.
 
 ## Checklist tinh thần: dữ liệu này đi con đường nào?
 
@@ -66,4 +66,4 @@ Ba lỗi hay gặp nhất với attribute/uniform/varying:
 
 ## Kết nối về sau
 
-Bài Tam giác đầu tiên ngay sau đây ghép cả ba con đường vào một chương trình chạy thật: `uAngle` là uniform, `aPosition`/`aColor` là attribute, `vColor` là varying. Track 2 (GLSL) dùng varying liên tục để dựng distance field và gradient; Track 6 (Custom Shader trong Three.js) thêm một biến thể của attribute — per-instance attribute qua `InstancedMesh`, đổi tần suất từ "mỗi đỉnh" thành "mỗi instance"; bài Texture cuối track này giới thiệu `uniform sampler2D` — một uniform trỏ tới dữ liệu ảnh thay vì một con số.
+Bài Tam giác đầu tiên ngay sau đây ghép cả ba con đường vào một chương trình chạy thật: `uAngle` là uniform, `aPosition`/`aColor` là attribute, `vColor` là varying. Track 2 (GLSL) dùng varying liên tục để dựng distance field và gradient; Track 6 (Custom Shader trong Three.js) thêm một biến thể của attribute — per-instance attribute qua `InstancedMesh`, đổi tần suất từ "mỗi đỉnh" thành "mỗi instance"; bài Texture ở phần sau của track này giới thiệu `uniform sampler2D` — một uniform trỏ tới dữ liệu ảnh thay vì một con số.

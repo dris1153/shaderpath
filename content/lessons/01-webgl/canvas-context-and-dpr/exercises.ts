@@ -14,12 +14,12 @@ Then answer: how many pixels does the dpr $2$ buffer have compared to a dpr $1$ 
     },
     hints: [
       {
-        vi: "Thay số trực tiếp: width = round(800 × 2) = 1600, height = round(450 × 2) = 900.",
-        en: "Substitute directly: width = round(800 × 2) = 1600, height = round(450 × 2) = 900.",
+        vi: "Nhân từng chiều CSS với dpr rồi round — làm riêng width và height, đừng cộng gộp.",
+        en: "Multiply each CSS dimension by dpr and round — width and height separately, never combined.",
       },
       {
-        vi: "Tổng pixel = width × height. So sánh 1600×900 với 800×450 — cả hai chiều đều nhân dpr riêng biệt, nên tổng diện tích nhân dpr².",
-        en: "Total pixels = width × height. Compare 1600×900 with 800×450 — both dimensions are independently multiplied by dpr, so the total area is multiplied by dpr².",
+        vi: "Diện tích là tích của hai chiều — xét xem mỗi chiều bị nhân dpr mấy lần, rồi suy ra tổng.",
+        en: "Area is the product of the two dimensions — count how many times dpr multiplies each one, then reason about the total.",
       },
     ],
     checklist: [

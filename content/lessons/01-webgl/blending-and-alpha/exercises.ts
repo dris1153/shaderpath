@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Cho src $= (1, 0, 0)$ với alpha $0.4$, vẽ chồng lên dst đặc $= (0, 0, 1)$. Không chạy code, tính màu kết quả với \`gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)\`, rồi tính lại với \`gl.blendFunc(gl.ONE, gl.ONE)\` (cùng hai màu, alpha bị bỏ qua bởi factor \`ONE\`).
 
-Sau đó trả lời: vì sao chồng ba lớp đỏ thuần $(1,0,0)$ bằng additive rốt cuộc cháy trắng/clip, còn chồng ba lớp đỏ đó bằng alpha blending thì không bao giờ vượt ra ngoài các màu nguồn?`,
+Sau đó trả lời: vì sao chồng ba lớp đỏ thuần $(1,0,0)$ bằng additive rốt cuộc bị clip về đỏ bão hoà (kẹp mỗi kênh về $1.0$), còn chồng ba lớp đỏ đó bằng alpha blending thì không bao giờ vượt ra ngoài các màu nguồn?`,
       en: `Given src $= (1, 0, 0)$ at alpha $0.4$, drawn over an opaque dst $= (0, 0, 1)$. Without running code, compute the result with \`gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)\`, then again with \`gl.blendFunc(gl.ONE, gl.ONE)\` (same two colors, alpha ignored by the \`ONE\` factor).
 
-Then answer: why does stacking three pure-red $(1,0,0)$ layers with additive blending eventually blow out to white/clip, while stacking the same three red layers with alpha blending never leaves the range spanned by the source colors?`,
+Then answer: why does stacking three pure-red $(1,0,0)$ layers with additive blending eventually clip to saturated red (each channel clamped to $1.0$), while stacking the same three red layers with alpha blending never leaves the range spanned by the source colors?`,
     },
     hints: [
       {
@@ -41,12 +41,12 @@ Then answer: why does stacking three pure-red $(1,0,0)$ layers with additive ble
 
 \`blendFunc(ONE, ONE)\`, cùng màu src/dst (alpha bị bỏ qua bởi factor ONE): $\\text{out} = src \\times 1 + dst \\times 1 = (1,0,0) + (0,0,1) = (1, 0, 1)$.
 
-Alpha blending là một TRUNG BÌNH CÓ TRỌNG SỐ (tổ hợp lồi — hai hệ số cộng lại đúng bằng 1), nên kết quả không bao giờ vượt ra ngoài khoảng giữa src và dst. Additive không có ràng buộc đó: mỗi lượt vẽ chỉ cộng thêm năng lượng, nên ba lớp đỏ chồng nhau cộng dồn về $(3,0,0)$, bị kẹp từng kênh về $(1,0,0)$ — kết hợp với hoạt động ở các kênh khác, các lớp additive chồng lên nhau có xu hướng ngả dần về màu trắng.`,
+Alpha blending là một TRUNG BÌNH CÓ TRỌNG SỐ (tổ hợp lồi — hai hệ số cộng lại đúng bằng 1), nên kết quả không bao giờ vượt ra ngoài khoảng giữa src và dst. Additive không có ràng buộc đó: mỗi lượt vẽ chỉ cộng thêm năng lượng, nên ba lớp đỏ chồng nhau cộng dồn về $(3,0,0)$, bị kẹp từng kênh về $(1,0,0)$ — kênh nào không có năng lượng đầu vào (G, B ở đây) thì vẫn bằng 0 — additive chỉ "cháy trắng" khi cả ba kênh cùng nhận năng lượng.`,
       en: `\`blendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA)\`, src=(1,0,0,0.4), dst=(0,0,1): $\\text{out} = src \\times 0.4 + dst \\times (1-0.4) = (0.4,0,0) + (0,0,0.6) = (0.4, 0, 0.6)$.
 
 \`blendFunc(ONE, ONE)\`, same src/dst colors (alpha ignored by the ONE factor): $\\text{out} = src \\times 1 + dst \\times 1 = (1,0,0) + (0,0,1) = (1, 0, 1)$.
 
-Alpha blending is a WEIGHTED AVERAGE (a convex combination — the two factors sum to exactly 1), so the result can never leave the range spanned by src and dst. Additive has no such constraint: every draw just adds more energy, so three overlapping red layers sum toward $(3,0,0)$, clamped per-channel to $(1,0,0)$ — combined with any other channel activity, additive layers trend toward white as they stack.`,
+Alpha blending is a WEIGHTED AVERAGE (a convex combination — the two factors sum to exactly 1), so the result can never leave the range spanned by src and dst. Additive has no such constraint: every draw just adds more energy, so three overlapping red layers sum toward $(3,0,0)$, clamped per-channel to $(1,0,0)$ — channels with no incoming energy (G and B here) stay at 0 — additive only "burns to white" when all three channels receive energy.`,
     },
   },
   {

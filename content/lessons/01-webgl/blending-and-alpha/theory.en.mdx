@@ -1,6 +1,6 @@
 ## What Blending Is: Mixing a New Fragment with What's Already There
 
-Without blending, every fragment that survives the depth test **overwrites** the framebuffer's existing color completely — winner takes all. Blending inserts one extra step before that write: the new fragment (**src**, source) gets **mixed** with the color already sitting in the framebuffer at that pixel (**dst**, destination) using a configurable formula, instead of replacing it outright. This is the only mechanism in the fixed-function pipeline that lets a fragment be "partially transparent" — the fragment shader itself knows nothing about transparency, it just outputs one RGBA color; transparency is purely the result of the GPU mixing that color with whatever was drawn before it.
+Without blending, every fragment that survives the depth test **overwrites** the framebuffer's existing color completely — winner takes all. Blending inserts one extra step before that write: the new fragment (**src**, source) gets **mixed** with the color already sitting in the framebuffer at that pixel (**dst**, destination) using a configurable formula, instead of replacing it outright. This is the standard mechanism in the fixed-function pipeline for making a fragment "partially transparent" — the fragment shader itself knows nothing about transparency, it just outputs one RGBA color; transparency is purely the result of the GPU mixing that color with whatever was drawn before it.
 
 ## The Blend Equation: src×srcFactor + dst×dstFactor
 
@@ -47,7 +47,7 @@ $$
 \text{color}_{out} = \text{color}_{src} + \text{color}_{dst}
 $$
 
-No weighting at all — every draw simply **adds** color energy onto whatever's already there, nothing "yields ground." Visual character: fire, sparks, glowing particles, laser trails — overlapping layers don't dim each other, they pile up and readily blow out to white once enough layers stack (each channel clamps at $1.0$). Same example: red $(1,0,0)$ plus blue $(0,0,1)$ gives exactly $(1,0,1)$ — full, undiluted magenta. Additive also has a rare property: because addition commutes ($a+b=b+a$), draw order **doesn't** affect the result — a rare exception among blend modes, contrasting sharply with the draw-order section right after this one.
+No weighting at all — every draw simply **adds** color energy onto whatever's already there, nothing "yields ground." Visual character: fire, sparks, glowing particles, laser trails — overlapping layers don't dim each other, they pile up and readily blow out to white once enough layers stack (each channel clamps at $1.0$). Same example: red $(1,0,0)$ plus blue $(0,0,1)$ gives exactly $(1,0,1)$ — full, undiluted magenta. Additive also has a rare property: because addition commutes ($a+b=b+a$), draw order **doesn't** affect the result — multiply shares this property too (multiplication commutes); of this lesson's three modes, only alpha blending is order-dependent.
 
 ### Multiply Through Factors: DST_COLOR / ZERO
 
@@ -61,11 +61,11 @@ $$
 \text{color}_{out} = \text{color}_{src}\cdot\text{color}_{dst} + \text{color}_{dst}\cdot 0 = \text{color}_{src}\cdot\text{color}_{dst}
 $$
 
-Visual character: color filters, multiplicative shadows, corner vignettes — it can only ever **darken**, never brighten past the background, since multiplying two numbers in $[0,1]$ always yields something no larger than the bigger of the two.
+Visual character: color filters, multiplicative shadows, corner vignettes — it can only ever **darken**, never brighten past the background, since multiplying two numbers in $[0,1]$ always yields something no larger than **either** factor.
 
 ## Draw Order Decides the Outcome
 
-Alpha blending and multiply don't commute: $\text{blend}(a, b) \neq \text{blend}(b, a)$ in general, since the formula treats src and dst asymmetrically. Drawing transparent objects **far first, near last** (back-to-front) gives the intended meaning — "the nearer layer sits over the farther one, letting some of the farther layer show through by its own opacity" — exactly the classic "over" operator from compositing theory. Reversing the order with identical factors produces flatly wrong colors: the nearer layer (which should dominate) gets diluted by whatever's drawn on top of it afterward. This is why real-time engines re-sort their list of transparent objects by camera distance **every frame** — a cost opaque objects never pay, since their draw order has no effect on the final color (only the depth test matters for them).
+Alpha blending doesn't commute: $\text{blend}(a, b) \neq \text{blend}(b, a)$ in general, since the formula treats src and dst asymmetrically (multiply commutes just like additive — multiplication swaps freely). Drawing transparent objects **far first, near last** (back-to-front) gives the intended meaning — "the nearer layer sits over the farther one, letting some of the farther layer show through by its own opacity" — exactly the classic "over" operator from compositing theory. Reversing the order with identical factors produces flatly wrong colors: the nearer layer (which should dominate) gets diluted by whatever's drawn on top of it afterward. This is why real-time engines re-sort their list of transparent objects by camera distance **every frame** — a cost opaque objects never pay, since their draw order has no effect on the final color (only the depth test matters for them).
 
 ## Depth Write and Transparency: Why It Has to Be Off
 

@@ -26,12 +26,12 @@ Explain precisely why the \`uTexture\` sampler in the shader doesn't automatical
     },
     hints: [
       {
-        vi: "Sampler uniform lưu một số nguyên chỉ số unit, không lưu texture object — số đó phải được set tường minh bằng gl.uniform1i.",
-        en: "A sampler uniform stores an integer unit index, not the texture object — that number has to be set explicitly with gl.uniform1i.",
+        vi: "Sampler uniform lưu kiểu dữ liệu gì — texture object hay một con số? Con số đó mặc định là bao nhiêu nếu không ai set?",
+        en: "What does a sampler uniform actually store — the texture object, or a number? And what is that number by default if nobody sets it?",
       },
       {
-        vi: "TEXTURE1 tương ứng với chỉ số 1 (TEXTURE0 = 0, TEXTURE1 = 1, ...). Uniform còn lại ở giá trị mặc định 0 nếu không set.",
-        en: "TEXTURE1 corresponds to index 1 (TEXTURE0 = 0, TEXTURE1 = 1, ...). The uniform stays at its default value 0 if never set.",
+        vi: "Mỗi hằng TEXTUREn tương ứng một chỉ số unit — texture trong đề đang nằm ở unit nào, còn sampler đang trỏ về đâu?",
+        en: "Each TEXTUREn constant maps to a unit index — which unit holds the texture in the snippet, and where does the sampler point?",
       },
     ],
     checklist: [
@@ -59,8 +59,8 @@ gl.uniform1i(uTextureLoc, 1);`,
     id: "configure-texture-params",
     kind: "code",
     prompt: {
-      vi: `Viết hàm \`configureTexture\` nhận \`gl\`, một texture đã bind, và hai tham số \`filter: "nearest" | "linear" | "mipmap"\`, \`wrap: "repeat" | "clamp" | "mirror"\`. Hàm phải gọi đúng \`texParameteri\` cho MIN/MAG filter và WRAP_S/WRAP_T, và gọi \`generateMipmap\` nếu và chỉ nếu \`filter === "mipmap"\`.`,
-      en: `Write a \`configureTexture\` function taking \`gl\`, an already-bound texture, and two parameters \`filter: "nearest" | "linear" | "mipmap"\`, \`wrap: "repeat" | "clamp" | "mirror"\`. It must call the correct \`texParameteri\` for MIN/MAG filter and WRAP_S/WRAP_T, and call \`generateMipmap\` if and only if \`filter === "mipmap"\`.`,
+      vi: `Viết hàm \`configureTexture\` nhận \`gl\` và hai tham số (giả định texture đích đã được bind trước khi gọi) \`filter: "nearest" | "linear" | "mipmap"\`, \`wrap: "repeat" | "clamp" | "mirror"\`. Hàm phải gọi đúng \`texParameteri\` cho MIN/MAG filter và WRAP_S/WRAP_T, và gọi \`generateMipmap\` nếu và chỉ nếu \`filter === "mipmap"\`.`,
+      en: `Write a \`configureTexture\` function taking \`gl\` and two parameters (the target texture is assumed bound before the call) \`filter: "nearest" | "linear" | "mipmap"\`, \`wrap: "repeat" | "clamp" | "mirror"\`. It must call the correct \`texParameteri\` for MIN/MAG filter and WRAP_S/WRAP_T, and call \`generateMipmap\` if and only if \`filter === "mipmap"\`.`,
     },
     starterCode: `type Filter = "nearest" | "linear" | "mipmap";
 type Wrap = "repeat" | "clamp" | "mirror";

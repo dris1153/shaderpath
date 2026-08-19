@@ -35,9 +35,9 @@ export const references: Citation[] = [
   {
     id: "khronos-webgl2-spec-context",
     type: "spec",
-    title: "WebGL 2.0 Specification — §5.2 Context Creation Parameters",
+    title: "WebGL 1.0 Specification — §5.2 WebGLContextAttributes",
     authors: ["Khronos Group"],
-    url: "https://registry.khronos.org/webgl/specs/latest/2.0/#5.2",
+    url: "https://registry.khronos.org/webgl/specs/latest/1.0/#5.2",
     note: {
       vi: "Nguồn chuẩn định nghĩa chính xác hành vi của từng WebGLContextAttributes ở tầng đặc tả — nơi tra cứu khi hành vi trình duyệt cụ thể có vẻ khác mô tả trong bài.",
       en: "The authoritative spec defining the exact behavior of each WebGLContextAttribute — the reference to check when a specific browser's behavior seems to diverge from this lesson's description.",

@@ -7,7 +7,7 @@ Every draw call (`gl.drawArrays`, `gl.drawElements`) writes its result into whic
 <Figure
   src="/figures/01-webgl/fbo-attachments.svg"
   alt="A framebuffer object whose COLOR_ATTACHMENT0 is backed by an empty texture and whose depth attachment is a renderbuffer, with pass 1 drawing into the FBO and pass 2 sampling that texture onto the default framebuffer"
-  caption="The FBO holds no pixels of its own — the image lands in the attached texture, and that is precisely what lets pass 2 read back whatever pass 1 drew."
+  caption="The FBO holds no pixels of its own — the image lands in the attached texture, and that is precisely what lets pass 2 read back whatever pass 1 drew. The depth slot in the diagram uses a renderbuffer (render-into-able but not sample-able memory) — 3D scenes need one; this lesson draws 2D, so color alone suffices."
 />
 
 Attaching a pre-created (empty, dataless) texture to an FBO turns that texture into a draw target:
@@ -41,7 +41,7 @@ if (status !== gl.FRAMEBUFFER_COMPLETE) {
 }
 ```
 
-The two most common status codes: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (an attachment exists but has the wrong format — say, attaching a compressed texture as a color attachment) and `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (nothing was attached at all). WebGL doesn't throw when you draw into an incomplete framebuffer — the draw call quietly does nothing — so this class of bug usually shows up as "blank screen, no console error" if the check is skipped.
+The two most common status codes: `FRAMEBUFFER_INCOMPLETE_ATTACHMENT` (an attachment exists but has the wrong format — say, attaching a compressed texture as a color attachment) and `FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT` (nothing was attached at all). WebGL doesn't throw when you draw into an incomplete framebuffer — the draw call quietly does nothing — so this class of bug usually shows up as "blank screen, no exception — the error only shows through `gl.getError()` or an easily missed console warning" if the check is skipped.
 
 ## The 2-Pass Pipeline: Scene → Texture → Screen Effect
 

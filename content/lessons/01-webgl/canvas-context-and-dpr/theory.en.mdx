@@ -2,10 +2,10 @@
 
 `canvas.getContext("webgl2", options)` doesn't just "turn on WebGL" — the options object you pass decides how the browser allocates and composes the default framebuffer, with a direct effect on performance and image correctness, not just minor detail:
 
-- **`antialias`** (defaults to `true`): enables multisampling (MSAA) on the default framebuffer — the browser allocates extra sample buffers and resolves (averages) them every frame. On tile-based mobile GPUs, the extra bandwidth this write costs can multiply a few times over depending on the sample count; turn it off entirely (`antialias: false`) when you AA some other way, or accept jagged edges to buy speed — common when drawing a full-screen fragment shader, which Track 2 does throughout.
+- **`antialias`** (defaults to `true`): enables multisampling (MSAA) on the default framebuffer — the browser allocates extra sample buffers and resolves (averages) them every frame. On tile-based mobile GPUs (the mobile GPU architecture that draws in small tiles), the extra bandwidth this write costs can multiply a few times over depending on the sample count; turn it off entirely (`antialias: false`) when you AA some other way, or accept jagged edges to buy speed — common when drawing a full-screen fragment shader, which Track 2 does throughout.
 - **`alpha`** (defaults to `true`): keeps an alpha channel on the default framebuffer so the browser can **compose** the canvas over the rest of the page, like a transparent PNG layer. That costs an extra blend step every frame; setting `alpha: false` tells the browser to treat the canvas as opaque and skip that blend — usually faster, and it avoids the canvas "seeing through" to the page background when you forget to set alpha to 1 on clear.
 - **`powerPreference`**: a hint about which GPU should run this context on dual-GPU machines (power-saving integrated vs. high-performance discrete). `"high-performance"` favors speed at the cost of heat and battery; `"low-power"` favors the integrated GPU; the default `"default"` leaves the choice to the browser — which is always free to ignore the hint anyway.
-- **`preserveDrawingBuffer`** (defaults to `false`): when `false`, the browser is allowed to **swap** buffers after each frame instead of copying content elsewhere — considerably cheaper. Setting it to `true` keeps the buffer intact after drawing, needed for `canvas.toDataURL()` to capture the exact last frame or for a "trail" effect that relies on not clearing the previous frame; the tradeoff is an extra full-buffer copy every single frame.
+- **`preserveDrawingBuffer`** (defaults to `false`): when `false`, the browser is allowed to **swap** buffers after each frame instead of copying content elsewhere — considerably cheaper. Setting it to `true` keeps the buffer intact after drawing, needed for `canvas.toDataURL()` to capture the exact last frame or for a "trail" effect that relies on not clearing the previous frame; the tradeoff is that the browser usually has to copy the whole buffer instead of swapping it — an extra cost every single frame.
 
 ```js
 const gl = canvas.getContext("webgl2", {
@@ -24,7 +24,7 @@ Most demos in this track use exactly this set of values: `alpha: false` because 
 An `<canvas>` element has **two** entirely independent sizes, and confusing them is the single most common source of visual bugs when learning WebGL:
 
 - **CSS size** — `canvas.clientWidth`/`clientHeight` (or `canvas.style.width`/`height`): the space the canvas **occupies** on the page, in CSS pixels, decided by layout.
-- **Drawing buffer size** — `canvas.width`/`canvas.height`: the number of **actual texels** in the framebuffer the GPU renders into, in device pixels.
+- **Drawing buffer size** — `canvas.width`/`canvas.height`: the number of **actual pixels** in the framebuffer the GPU renders into.
 
 If you only change the CSS size (say, `canvas.style.width = "100%"`) without touching `canvas.width`/`height`, the browser does not re-render at the new resolution — it **stretches** the old buffer to fill the CSS box, exactly like zooming into a small image. The default is `canvas.width = 300`, `canvas.height = 150` if you set nothing at all, which is also why a canvas so often "mysteriously" looks blurry and distorted the moment it's dropped into a responsive layout without setting a matching buffer size.
 
@@ -50,7 +50,7 @@ Use `round`, not an arbitrary `floor` or `ceil` — rounding to the nearest devi
 <Figure
   src="/figures/01-webgl/canvas-css-size-vs-drawing-buffer.svg"
   alt="Two rectangles of the same displayed size: one labelled 800 x 450 CSS px set through canvas.style.width, one labelled 1600 x 900 device px set through canvas.width and canvas.height, with a zoom detail turning one CSS pixel into 2 x 2 device pixels"
-  caption="CSS size decides how much room the canvas takes on the page, the drawing buffer decides how many texels the GPU fills. The two numbers are independent, and only assigning canvas.width reallocates the buffer."
+  caption="CSS size decides how much room the canvas takes on the page, the drawing buffer decides how many pixels the GPU fills. The two numbers are independent, and only assigning canvas.width reallocates the buffer."
 />
 
 ### Why You Have to Clamp DPR
@@ -59,7 +59,7 @@ Some devices report `devicePixelRatio` as high as $3$ or $4$ (flagship phones); 
 
 ## gl.viewport Has to Match the Buffer Size
 
-Changing `canvas.width`/`height` alone isn't enough — WebGL has no automatic awareness that the buffer just changed size. `gl.viewport(x, y, width, height)` declares the region of the buffer the GPU maps clip space $[-1, 1]$ into; forgetting to call `gl.viewport` again after a resize leaves the GPU drawing into the old viewport even though the buffer got bigger or smaller — the image shrinks into a corner or only covers part of the buffer, with the rest left as uncleared garbage.
+Changing `canvas.width`/`height` alone isn't enough — WebGL has no automatic awareness that the buffer just changed size. `gl.viewport(x, y, width, height)` declares the region of the buffer the GPU maps NDC $[-1, 1]$ into; forgetting to call `gl.viewport` again after a resize leaves the GPU drawing into the old viewport even though the buffer got bigger or smaller — the image shrinks into a corner or only covers part of the buffer, with the rest left as uncleared garbage.
 
 ```js
 function resizeCanvasToDisplaySize(canvas, gl, dprCap = 2) {

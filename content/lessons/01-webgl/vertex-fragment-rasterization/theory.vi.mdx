@@ -14,7 +14,7 @@ Ba vertex của một tam giác chạy qua đúng ba lần gọi hàm `main()` n
 
 ## Rasterization: biến tam giác thành fragment
 
-Sau khi cả ba vertex có `gl_Position`, một giai đoạn **cố định, không lập trình được** — rasterizer — nhận vào tam giác đã dựng từ ba điểm đó và quyết định pixel nào bị nó "phủ". Với mỗi pixel tiềm năng, rasterizer kiểm tra tâm pixel (hoặc theo fill rule cho các pixel nằm đúng trên biên cạnh) có nằm trong tam giác không; nếu có, nó sinh ra một **fragment** — một ứng viên pixel mang theo toạ độ và một bộ **toạ độ trọng tâm (barycentric coordinates)** $(\lambda_0, \lambda_1, \lambda_2)$ với $\lambda_0 + \lambda_1 + \lambda_2 = 1$, biểu diễn fragment đó "gần" vertex nào nhất trong ba vertex. Với bất kỳ biến `out`/`in` nào bạn khai báo giữa hai shader (gọi là **varying**), giá trị tại fragment được nội suy tuyến tính bằng đúng ba trọng số đó:
+Sau khi cả ba vertex có `gl_Position`, một giai đoạn **cố định, không lập trình được** — rasterizer — nhận vào tam giác đã dựng từ ba điểm đó và quyết định pixel nào bị nó "phủ". Với mỗi pixel tiềm năng, rasterizer kiểm tra tâm pixel (hoặc theo fill rule — quy tắc tô để hai tam giác kề nhau không tô trùng pixel biên) có nằm trong tam giác không; nếu có, nó sinh ra một **fragment** — một ứng viên pixel mang theo toạ độ và một bộ **toạ độ trọng tâm (barycentric coordinates)** $(\lambda_0, \lambda_1, \lambda_2)$ với $\lambda_0 + \lambda_1 + \lambda_2 = 1$, biểu diễn mức độ gần của fragment với **cả ba** vertex — càng gần đỉnh nào, trọng số của đỉnh đó càng lớn. Với bất kỳ biến `out`/`in` nào bạn khai báo giữa hai shader (gọi là **varying**), giá trị tại fragment được nội suy tuyến tính bằng đúng ba trọng số đó:
 
 $$
 V_{\text{fragment}} = \lambda_0 V_0 + \lambda_1 V_1 + \lambda_2 V_2
@@ -24,7 +24,7 @@ Với một tam giác phẳng ở clip space $w=1$ như demo dưới đây, đâ
 
 ## Fragment shader: một việc duy nhất — nhưng chạy nhiều hơn rất nhiều lần
 
-Fragment shader cũng chỉ có một việc bắt buộc: ghi một màu ra biến `out vec4` — nhưng nó chạy **một lần cho mỗi fragment** rasterizer vừa sinh ra, không phải một lần cho mỗi pixel màn hình (một pixel có thể nhận nhiều fragment nếu bật multisampling, dù trường hợp phổ biến nhất là 1 fragment ứng với 1 pixel được phủ). Về hình thức, fragment shader tối giản trông giống hệt vertex shader:
+Fragment shader cũng chỉ có một việc bắt buộc: ghi một màu ra biến `out vec4` — nhưng nó chạy **một lần cho mỗi fragment** rasterizer vừa sinh ra, không phải một lần cho mỗi pixel màn hình (một pixel có thể nhận nhiều fragment khi nhiều tam giác cùng phủ nó — overdraw, mỗi primitive sinh fragment riêng; multisampling chỉ đổi độ phủ theo sample, không đổi số lần gọi shader). Về hình thức, fragment shader tối giản trông giống hệt vertex shader:
 
 ```glsl
 #version 300 es
@@ -35,11 +35,11 @@ void main() {
 }
 ```
 
-nhưng số lần gọi giữa hai giai đoạn lệch nhau theo cấp số nhân.
+nhưng số lần gọi giữa hai giai đoạn lệch nhau nhiều bậc độ lớn.
 
 ### Con số cụ thể: 3 đỉnh so với hàng nghìn fragment (ước lượng)
 
-Một tam giác có đúng 3 vertex — vertex shader chạy đúng 3 lần, không hơn không kém, bất kể tam giác to hay nhỏ trên màn hình. Fragment shader thì ngược lại: số lần chạy tỉ lệ với **diện tích màn hình mà tam giác phủ**. Ước lượng cụ thể: một canvas 1920×1080 ở DPR 1 có $1920 \times 1080 = 2{,}073{,}600$ pixel; một tam giác phủ khoảng 10% diện tích đó (một hình tương đối lớn, không phải toàn màn hình) tương ứng khoảng $207{,}360$ fragment — tức fragment shader chạy nhiều hơn vertex shader khoảng **69.000 lần**. Đây là con số ước lượng (phụ thuộc kích thước tam giác thật trên màn hình), nhưng bậc độ lớn — hàng chục nghìn tới hàng triệu lần — luôn đúng cho bất kỳ hình khối phủ đầy màn hình nào. Demo bên dưới cho bạn kéo một đỉnh để tự thấy con số fragment ước lượng đổi theo diện tích tam giác trong thời gian thực.
+Một tam giác có đúng 3 vertex — vertex shader chạy đúng 3 lần, không hơn không kém, bất kể tam giác to hay nhỏ trên màn hình. Fragment shader thì ngược lại: số lần chạy tỉ lệ với **diện tích màn hình mà tam giác phủ**. Ước lượng cụ thể: một canvas 1920×1080 ở DPR 1 có $1920 \times 1080 = 2{,}073{,}600$ pixel; một tam giác phủ khoảng 10% diện tích đó (một hình tương đối lớn, không phải toàn màn hình) tương ứng khoảng $207{,}360$ fragment — tức fragment shader chạy nhiều hơn vertex shader khoảng **69.000 lần**. Đây là con số ước lượng (phụ thuộc kích thước tam giác thật trên màn hình), nhưng bậc độ lớn — hàng chục nghìn tới hàng triệu lần — luôn đúng cho bất kỳ hình khối phủ đầy màn hình nào. Demo bên dưới cho bạn chỉnh toạ độ một đỉnh bằng slider để tự thấy con số fragment ước lượng đổi theo diện tích tam giác trong thời gian thực.
 
 ## in/out phải khớp: hợp đồng giữa hai shader
 
@@ -57,8 +57,8 @@ Trực giác "chạy mỗi pixel thì đắt" đúng về hướng nhưng cần 
 
 Ba lỗi hay gặp nhất với vertex/fragment shader và rasterization:
 
-1. **Quên `gl_Position` hoặc gán sai clip space.** Shader compile và link không báo lỗi gì, nhưng tam giác không hiện — vì `gl_Position` mặc định là `vec4(0,0,0,0)`, một điểm suy biến rasterizer không thể tạo fragment từ đó.
-2. **Đặt tên hoặc kiểu varying lệch giữa hai shader.** `out vec3 vColor` ở vertex nhưng `in vec4 vColor` ở fragment (sai kiểu) hay `vColour` (sai chính tả) khiến link thất bại hoặc — tệ hơn — driver âm thầm coi biến là chưa dùng, cho ra màu mặc định thay vì báo lỗi rõ ràng.
+1. **Quên `gl_Position` hoặc gán sai clip space.** Shader compile và link không báo lỗi gì, nhưng tam giác không hiện — vì `gl_Position` không được ghi có giá trị *undefined* theo spec (phần lớn driver hành xử như `vec4(0,0,0,0)`), một điểm suy biến rasterizer không thể tạo fragment từ đó.
+2. **Đặt tên hoặc kiểu varying lệch giữa hai shader.** `out vec3 vColor` ở vertex nhưng `in vec4 vColor` ở fragment (sai kiểu) hay `vColour` (sai chính tả) có hành vi xác định rõ: fragment `in` có **dùng** mà không khớp tên+kiểu là lỗi link chắc chắn; fragment `in` khai mà **không dùng** thì bị lặng lẽ loại bỏ — không có "màu mặc định" nào cả.
 3. **Tưởng nội suy varying là tuyến tính đơn giản trong mọi trường hợp.** Với tam giác 2D phẳng đúng như demo bài này, nội suy tuyến tính theo trọng tâm là chính xác; nhưng ngay khi có phép chiếu phối cảnh thật (world space 3D qua ma trận projection), nội suy phải perspective-correct — thiếu bước chia $w$ đó khiến texture hay màu bị méo dọc theo cạnh xa của tam giác, một lỗi kinh điển khi tự viết software rasterizer mà không biết Track 0 (Model → View → Projection) đã cảnh báo trước.
 
 </Callout>

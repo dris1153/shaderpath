@@ -185,8 +185,8 @@ draw(0);`,
     referenceImage: "/figures/01-webgl/checkpoint-animated-quad.svg",
     hints: [
       {
-        vi: "Chỉ số (index) được PHÉP lặp — 0 và 2 xuất hiện trong cả hai tam giác — nhưng DỮ LIỆU đỉnh (toạ độ + màu) trong buffer chỉ tồn tại đúng một lần cho mỗi trong 4 góc.",
-        en: "Indices ARE allowed to repeat — 0 and 2 show up in both triangles — but the actual vertex DATA (position + color) in the buffer exists exactly once per corner, 4 times total.",
+        vi: "Chỉ số (index) được PHÉP lặp — đúng hai chỉ số xuất hiện ở cả hai tam giác: hai góc nằm trên đường chéo chung — nhưng DỮ LIỆU đỉnh (toạ độ + màu) trong buffer chỉ tồn tại đúng một lần cho mỗi trong 4 góc.",
+        en: "Indices ARE allowed to repeat — exactly two indices appear in both triangles: the two corners on the shared diagonal — but the actual vertex DATA (position + color) in the buffer exists exactly once per corner, 4 times total.",
       },
       {
         vi: "uTime chỉ cần đúng một gl.uniform1f mỗi frame; toàn bộ toán xoay (cos, sin, mat2) nằm trong vertex shader — JS không tính góc, JS chỉ gửi thời gian thô.",

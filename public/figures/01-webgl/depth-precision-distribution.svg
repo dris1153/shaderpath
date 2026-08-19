@@ -83,11 +83,11 @@
 
   <text class="lbl" x="392" y="150">half-range point: d = 2nf/(n + f)</text>
   <text class="note" x="392" y="172">About 2n whenever f is much larger</text>
-  <text class="note" x="392" y="188">than n — 0.1998 for this pair.</text>
+  <text class="note" x="392" y="188">than n — about 0.2 for this pair.</text>
 
   <text class="note" x="392" y="224">Drop near to 0.001 and that point</text>
   <text class="note" x="392" y="240">slides to 0.002: the same half of</text>
-  <text class="note" x="392" y="256">the range now buys 2 mm of scene</text>
+  <text class="note" x="392" y="256">the range now buys 1 mm of scene</text>
   <text class="note" x="392" y="272">instead of 10 cm.</text>
 
   <!-- ============ the band ============ -->
@@ -112,6 +112,6 @@
   <path class="lead" d="M597,412 L597,448 L508,448" />
   <text class="note ink-warn" x="502" y="452" text-anchor="end">1%: everything from d = 10 out to far</text>
 
-  <text class="note" x="40" y="482">The buffer cuts [0, 1] into 2^N even steps — N is usually 24, but read it rather than assume it.</text>
+  <text class="note" x="40" y="482">The buffer cuts [0, 1] into 2^N even levels — N is usually 24, but read it rather than assume it.</text>
   <text class="note" x="40" y="498">The steps are even. The distances they pay for are not, and that mismatch is what z-fighting exploits.</text>
 </svg>

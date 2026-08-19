@@ -14,7 +14,7 @@ A triangle's three vertices run through exactly three calls to this `main()` —
 
 ## Rasterization: Turning a Triangle into Fragments
 
-Once all three vertices have a `gl_Position`, a **fixed-function, non-programmable** stage — the rasterizer — takes the triangle built from those three points and decides which pixels it covers. For every candidate pixel, the rasterizer tests whether the pixel's center (or, for pixels sitting exactly on an edge, whatever the fill rule dictates) falls inside the triangle; if it does, it emits a **fragment** — a pixel candidate carrying a position and a set of **barycentric coordinates** $(\lambda_0, \lambda_1, \lambda_2)$ with $\lambda_0 + \lambda_1 + \lambda_2 = 1$, expressing which of the three vertices that fragment sits "closest" to. For any `out`/`in` variable pair declared between the two shaders (a **varying**), the value at a fragment is linearly interpolated using exactly those three weights:
+Once all three vertices have a `gl_Position`, a **fixed-function, non-programmable** stage — the rasterizer — takes the triangle built from those three points and decides which pixels it covers. For every candidate pixel, the rasterizer tests whether the pixel's center (or, for pixels sitting exactly on an edge, whatever the fill rule — the tie-breaking rule that keeps adjacent triangles from double-filling boundary pixels — dictates) falls inside the triangle; if it does, it emits a **fragment** — a pixel candidate carrying a position and a set of **barycentric coordinates** $(\lambda_0, \lambda_1, \lambda_2)$ with $\lambda_0 + \lambda_1 + \lambda_2 = 1$, expressing how close the fragment sits to **all three** vertices — the nearer a vertex, the larger its weight. For any `out`/`in` variable pair declared between the two shaders (a **varying**), the value at a fragment is linearly interpolated using exactly those three weights:
 
 $$
 V_{\text{fragment}} = \lambda_0 V_0 + \lambda_1 V_1 + \lambda_2 V_2
@@ -24,7 +24,7 @@ For a flat 2D triangle at clip-space $w=1$, like the demo below, that's plain li
 
 ## The Fragment Shader's One Job: But Called Far More Often
 
-A fragment shader also has exactly one mandatory job: write a color to an `out vec4` variable — but it runs **once per fragment** the rasterizer just emitted, not once per screen pixel (a single pixel can receive multiple fragments if multisampling is enabled, though the common case is one fragment per covered pixel). In shape, a minimal fragment shader looks nearly identical to a minimal vertex shader:
+A fragment shader also has exactly one mandatory job: write a color to an `out vec4` variable — but it runs **once per fragment** the rasterizer just emitted, not once per screen pixel (a single pixel can receive multiple fragments when several triangles cover it — overdraw, each primitive emitting its own; multisampling only changes per-sample coverage, not the invocation count). In shape, a minimal fragment shader looks nearly identical to a minimal vertex shader:
 
 ```glsl
 #version 300 es
@@ -35,15 +35,15 @@ void main() {
 }
 ```
 
-but the call count between the two stages diverges exponentially.
+but the call count between the two stages diverges by orders of magnitude.
 
 ### A Concrete Number: 3 Vertices vs Thousands of Fragments (Estimate)
 
-A triangle has exactly 3 vertices — the vertex shader runs exactly 3 times, no more, no less, regardless of how large or small the triangle appears on screen. The fragment shader runs the opposite way: its call count scales with **the screen area the triangle covers**. A concrete estimate: a 1920×1080 canvas at DPR 1 has $1920 \times 1080 = 2{,}073{,}600$ pixels; a triangle covering roughly 10% of that area (fairly large, not full-screen) works out to about $207{,}360$ fragments — meaning the fragment shader runs roughly **69,000 times more often** than the vertex shader. That's an estimate (it depends on the triangle's actual on-screen size), but the order of magnitude — tens of thousands to millions — holds for any reasonably screen-filling shape. The demo below lets you drag a vertex and watch the estimated fragment count change live as the triangle's area changes.
+A triangle has exactly 3 vertices — the vertex shader runs exactly 3 times, no more, no less, regardless of how large or small the triangle appears on screen. The fragment shader runs the opposite way: its call count scales with **the screen area the triangle covers**. A concrete estimate: a 1920×1080 canvas at DPR 1 has $1920 \times 1080 = 2{,}073{,}600$ pixels; a triangle covering roughly 10% of that area (fairly large, not full-screen) works out to about $207{,}360$ fragments — meaning the fragment shader runs roughly **69,000 times more often** than the vertex shader. That's an estimate (it depends on the triangle's actual on-screen size), but the order of magnitude — tens of thousands to millions — holds for any reasonably screen-filling shape. The demo below lets you adjust one vertex with sliders and watch the estimated fragment count change live as the triangle's area changes.
 
 ## in/out Must Match: The Contract Between Two Shaders
 
-An `out` variable declared in a vertex shader and an `in` variable of the same name and type in the fragment shader together form a **varying** — the single data channel connecting the two stages. `out vec3 vColor;` in the vertex shader has to match `vColor`'s name and `vec3` type exactly with `in vec3 vColor;` in the fragment shader; this isn't a naming convention, it's how the driver links both shaders into one program — a name or type mismatch on either side either fails `gl.linkProgram` with a clear error, or on some drivers, gets the variable silently treated as unused and dropped from the linked result. The vertex shader **writes** to the varying once per invocation (once per vertex); the fragment shader only **reads** — the value it receives isn't the raw value from any one specific vertex, it's the barycentric interpolation of the three `out` values from the triangle currently being rasterized.
+An `out` variable declared in a vertex shader and an `in` variable of the same name and type in the fragment shader together form a **varying** — the single data channel connecting the two stages. `out vec3 vColor;` in the vertex shader has to match `vColor`'s name and `vec3` type exactly with `in vec3 vColor;` in the fragment shader; this isn't a naming convention, it's how the driver links both shaders into one program — a name or type mismatch on either side either has fully deterministic behavior: a fragment `in` that is **used** without a matching name+type vertex `out` is a guaranteed link error; a declared-but-**unused** fragment `in` is silently dropped — there is no "default color" case. The vertex shader **writes** to the varying once per invocation (once per vertex); the fragment shader only **reads** — the value it receives isn't the raw value from any one specific vertex, it's the barycentric interpolation of the three `out` values from the triangle currently being rasterized.
 
 ## Interpolated Varyings: A Color Gradient Makes It Tangible
 
@@ -57,7 +57,7 @@ The intuition "running per-pixel is expensive" points in the right direction but
 
 The three most common vertex/fragment shader and rasterization mistakes:
 
-1. **Forgetting `gl_Position` or writing the wrong clip-space value.** The shader compiles and links with zero errors, but the triangle never appears — because `gl_Position` defaults to `vec4(0,0,0,0)`, a degenerate point the rasterizer can't build a fragment from.
+1. **Forgetting `gl_Position` or writing the wrong clip-space value.** The shader compiles and links with zero errors, but the triangle never appears — because an unwritten `gl_Position` is *undefined* per the spec (most drivers behave as `vec4(0,0,0,0)`), a degenerate point the rasterizer can't build a fragment from.
 2. **Mismatching a varying's name or type between the two shaders.** `out vec3 vColor` in the vertex shader but `in vec4 vColor` in the fragment shader (wrong type) or `vColour` (a typo) either fails linking outright or — worse — gets silently treated as unused by the driver, producing a default color instead of a clear error.
 3. **Assuming varying interpolation is always simple linear interpolation.** For a flat 2D triangle exactly like this lesson's demo, plain barycentric linear interpolation is correct; but the moment a real perspective projection enters (3D world space through a projection matrix), interpolation has to be perspective-correct — skipping that division by $w$ warps textures or colors along a triangle's far edge, a classic bug when hand-writing a software rasterizer without knowing Track 0's Model → View → Projection lesson already warned about it.
 

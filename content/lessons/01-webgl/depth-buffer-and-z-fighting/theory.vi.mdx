@@ -6,7 +6,7 @@ Thứ nhất: ba tam giác A, B, C có thể tạo vòng che khuất — A che m
 
 Giải pháp phần cứng chọn không phải sort tốt hơn — mà bỏ hẳn sort ở cấp object, đưa bài toán che khuất xuống cấp **pixel**: mỗi pixel tự quyết định fragment nào gần camera nhất, độc lập thứ tự vẽ.
 
-## Depth buffer: một số thực trên mỗi pixel
+## Depth buffer: một giá trị độ sâu trên mỗi pixel
 
 Depth buffer (z-buffer) là buffer thứ hai song song với color buffer, cùng kích thước — mỗi pixel lưu đúng một giá trị độ sâu, ghi lại khoảng cách (đã chuẩn hoá) của fragment gần camera nhất từng vẽ tại đó. WebGL2 cấp depth buffer mặc định khi tạo context (`depth: true`); spec chỉ đảm bảo "ít nhất 16 bit", nhưng driver thực tế hầu hết cấp 24 bit — đọc con số thật bằng `gl.getParameter(gl.DEPTH_BITS)` thay vì đoán.
 
@@ -19,7 +19,7 @@ gl.enable(gl.DEPTH_TEST);
 gl.depthFunc(gl.LESS); // mặc định: fragment mới chỉ thắng nếu depth NHỎ HƠN
 ```
 
-`depthFunc` quyết định fragment mới có "thắng" fragment đã lưu hay không. `LESS` (mặc định) nghĩa là fragment mới phải gần camera hơn thực sự — bằng nhau tuyệt đối thì **thua**, nên vật vẽ trước giữ ưu thế khi hai fragment trùng depth. `LEQUAL` cho phép bằng nhau vẫn thắng, hữu ích khi vẽ nhiều pass cùng hình học ở đúng cùng depth (ví dụ outline pass). `ALWAYS` tắt hiệu lực depth test mà không cần `gl.disable`.
+`depthFunc` quyết định fragment mới có "thắng" fragment đã lưu hay không. `LESS` (mặc định) nghĩa là fragment mới phải gần camera hơn thực sự — bằng nhau tuyệt đối thì **thua**, nên vật vẽ trước giữ ưu thế khi hai fragment trùng depth. `LEQUAL` cho phép bằng nhau vẫn thắng, hữu ích khi vẽ nhiều pass cùng hình học ở đúng cùng depth (ví dụ outline pass). `ALWAYS` cho mọi fragment vượt qua test — nhưng vẫn **ghi** depth, khác với `gl.disable(DEPTH_TEST)` (tắt cả test lẫn ghi).
 
 ### Xoá depth buffer mỗi frame
 
@@ -41,9 +41,9 @@ Hàm này **hyperbolic** theo $d$: đạo hàm tỉ lệ với $1/d^2$, nghĩa l
 
 ### Near plane áp đảo phân bố precision
 
-Điểm mà $\text{depth}(d) = 0.5$ — nửa dải $[0, 1]$ đã dùng hết — nằm ở $d = \dfrac{2nf}{n+f} \approx 2n$ khi $f \gg n$. Với $n = 0.1$, $f = 1000$: $d \approx 0.1998$ — **nửa** độ phân giải depth buffer tiêu hết chỉ trong khoảng $0.1$ đến $0.2$ đơn vị đầu, nửa còn lại chia sẻ cho toàn bộ quãng $0.2$ đến $1000$.
+Điểm mà $\text{depth}(d) = 0.5$ — nửa dải $[0, 1]$ đã dùng hết — nằm ở $d = \dfrac{2nf}{n+f} \approx 2n$ khi $f \gg n$. Với $n = 0.1$, $f = 1000$: $d \approx 0.2$ — **nửa** độ phân giải depth buffer tiêu hết chỉ trong khoảng $0.1$ đến $0.2$ đơn vị đầu, nửa còn lại chia sẻ cho toàn bộ quãng $0.2$ đến $1000$.
 
-Đặt $n = 0.001$ "cho chắc ăn" làm mọi thứ tệ hơn nhiều: $d \approx 0.002$ — nửa dải giá trị biến mất trong $0.001$ đơn vị đầu, để nửa còn lại gánh toàn bộ scene. Vật ở khoảng cách bình thường (5–50 đơn vị, nơi hầu hết scene thực tế nằm) giờ chỉ chia nhau phần cực nhỏ trong nửa "chật chội" đó — hai bề mặt cách nhau vài centimet dễ bị lượng tử hoá về cùng một depth.
+Đặt $n = 0.001$ "cho chắc ăn" làm mọi thứ tệ hơn nhiều: $d \approx 0.002$ — nửa dải giá trị biến mất trong $0.001$ đơn vị đầu, để nửa còn lại gánh toàn bộ scene. Vật ở khoảng cách bình thường (5–50 đơn vị, nơi hầu hết scene thực tế nằm) giờ chỉ chia nhau phần cực nhỏ trong nửa "chật chội" đó — hai bề mặt cách nhau vài centimet dễ bị lượng tử hoá (quantize — gom về mức rời rạc gần nhất) về cùng một depth.
 
 <Figure
   src="/figures/01-webgl/depth-precision-distribution.svg"

@@ -14,12 +14,12 @@ Explain precisely what happens to the geometry drawn in this pass: does it get s
     },
     hints: [
       {
-        vi: "Viewport ánh xạ clip space $[-1,1]^2$ sang một vùng pixel cụ thể — nó không tự biết kích thước thật của attachment đang bind.",
-        en: "The viewport maps clip space $[-1,1]^2$ onto a specific pixel region — it has no automatic awareness of the bound attachment's real size.",
+        vi: "Viewport ánh xạ NDC $[-1,1]^2$ sang một vùng pixel cụ thể — nó không tự biết kích thước thật của attachment đang bind.",
+        en: "The viewport maps NDC $[-1,1]^2$ onto a specific pixel region — it has no automatic awareness of the bound attachment's real size.",
       },
       {
-        vi: "Phần toạ độ vượt ra ngoài kích thước thật của texture (256×256) không tồn tại trong bộ nhớ — nghĩ về việc rasterize một vùng lớn hơn rồi phần thừa bị cắt bỏ ở đâu.",
-        en: "Coordinates outside the texture's real size (256×256) don't exist in memory — think about rasterizing a larger area and where the excess gets discarded.",
+        vi: "Phần toạ độ vượt ra ngoài kích thước thật của texture (256×256) không tồn tại trong bộ nhớ — rasterizer có biết kích thước attachment khi ánh xạ NDC sang pixel không? Phần cứng có thể làm gì với fragment nằm ngoài attachment?",
+        en: "Coordinates outside the texture's real size (256×256) don't exist in memory — does the rasterizer know the attachment's size when mapping NDC to pixels? What can the hardware do with fragments addressed outside the attachment?",
       },
     ],
     checklist: [

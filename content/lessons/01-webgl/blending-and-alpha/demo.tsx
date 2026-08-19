@@ -88,7 +88,10 @@ function BlendShapes({ L }: { L: Labels }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const gl = canvas.getContext("webgl2", { antialias: false });
+    // alpha: false — an opaque canvas. The demo's blend passes leave framebuffer
+    // alpha < 1, and the browser would composite that as premultiplied (this
+    // lesson's own mistake #3), washing the shapes out over the page.
+    const gl = canvas.getContext("webgl2", { antialias: false, alpha: false });
     if (!gl) throw new Error("WebGL2 not supported");
 
     const vs = compile(gl, gl.VERTEX_SHADER, vertexSource);

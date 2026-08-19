@@ -18,8 +18,8 @@ Then explain: if you moved (a)'s alpha into a \`uniform\` instead of an \`attrib
         en: "The core question for (a) and (b): does the value differ BETWEEN VERTICES (attribute), or between FRAGMENTS inside one triangle via interpolation (varying)?",
       },
       {
-        vi: "(c) không đổi ở bất kỳ đỉnh hay fragment nào trong draw call này — đó là dấu hiệu nhận biết uniform.",
-        en: "(c) never changes across any vertex or fragment in this draw call — that's the tell for a uniform.",
+        vi: "(c) không đổi ở bất kỳ đỉnh hay fragment nào trong draw call này.",
+        en: "(c) never changes across any vertex or fragment in this draw call.",
       },
     ],
     checklist: [
@@ -47,7 +47,7 @@ Moving (a) into a uniform: the whole triangle is left with a single number, with
   },
   {
     id: "wire-attribute-through-varying",
-    kind: "shader",
+    kind: "code",
     prompt: {
       vi: `Hoàn thiện cặp vertex/fragment shader bên dưới (GLSL ES 3.00) sao cho: mỗi đỉnh có một alpha riêng đọc từ attribute \`aAlpha\` (float), giá trị đó đi tới fragment shader qua đúng một varying, và fragment shader nhân alpha đã nội suy đó với một uniform toàn cục \`uGlobalOpacity\` (float) trước khi xuất màu.`,
       en: `Complete the vertex/fragment shader pair below (GLSL ES 3.00) so that: each vertex has its own alpha read from an \`aAlpha\` (float) attribute, that value reaches the fragment shader through exactly one varying, and the fragment shader multiplies the interpolated alpha by a global \`uGlobalOpacity\` (float) uniform before outputting the color.`,

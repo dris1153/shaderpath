@@ -24,7 +24,7 @@ $$
 v_{frag} = w_0 v_0 + w_1 v_1 + w_2 v_2, \qquad w_0 + w_1 + w_2 = 1
 $$
 
-the closer a fragment sits to a vertex, the larger that vertex's weight $w$. The GPU doesn't "recompute" anything per fragment — it mechanically blends 3 existing numbers, which is why a varying should never carry complex branching: interpolating the result of an `if` taken at one vertex but not the other produces a meaningless value in between.
+the closer a fragment sits to a vertex, the larger that vertex's weight $w$ (these are exactly the previous lesson's $\lambda$, renamed). The GPU doesn't "recompute" anything per fragment — it mechanically blends 3 existing numbers, which is why a varying should never carry complex branching: interpolating the result of an `if` taken at one vertex but not the other produces a meaningless value in between.
 
 ## Scope & Frequency Table — the Same Value, Modeled Three Ways
 
@@ -42,11 +42,11 @@ The last two cases share the exact same `out`/`in` mechanism — no contradictio
 
 Setting a uniform is always a two-step move. Step 1: after linking, call `gl.getUniformLocation(program, "uSolidColor")` for an opaque handle — the GLSL compiler is free to strip out any uniform it never uses, so this call can validly return `null`, not an error; code has to tolerate that. Step 2: call the exact function in the `gl.uniform*` family matching the GLSL type — the trailing digit is the component count, the letter is the type: `uniform1f` for `float`, `uniform3f`/`uniform3fv` for `vec3`, `uniform1i` for `int`/`bool`/`sampler2D`, `uniformMatrix4fv` for `mat4`.
 
-The single easiest thing to forget: `gl.uniform*` applies its value to whichever program is **currently active**, not to an abstract name — `gl.useProgram(program)` must run first, or the value lands on the wrong program, with no clear warning catching the mistake.
+The single easiest thing to forget: `gl.uniform*` applies its value to whichever program is **currently active**, not to an abstract name — `gl.useProgram(program)` must run first — a location is an object tied to its own program, so calling `uniform*` while a different program is active makes the call get **dropped** with `INVALID_OPERATION` (visible via `gl.getError()`/console), and the uniform silently keeps its previous value.
 
 ## Why Uniforms Don't Belong in Buffers, and Attributes Can't Change Mid-Draw
 
-A buffer exists to hand the vertex fetch stage a NEW value on EVERY step, read sequentially at the offset declared in a VAO. A uniform is the same value for the whole draw call; stuffing it into a buffer means duplicating that number N times (N = vertex count) — wasted memory, since the value is identical at every vertex anyway. A uniform instead lives in a small constant memory region optimized to broadcast one value to thousands of cores at once.
+A buffer exists to hand the vertex fetch stage (the GPU step that loads vertex data) a NEW value on EVERY step, read sequentially at the offset declared in a VAO. A uniform is the same value for the whole draw call; stuffing it into a buffer means duplicating that number N times (N = vertex count) — wasted memory, since the value is identical at every vertex anyway. A uniform instead lives in a small constant memory region optimized to broadcast one value to thousands of cores at once.
 
 The reverse: an attribute can't change **mid-draw-call**, since its value is already latched by the vertex fetch stage the moment the draw call begins, based on whatever buffer and offset were bound into the VAO at that instant. The only way to give one vertex a different value is editing the buffer's contents (`bufferSubData`/`bufferData`) BEFORE the next `drawArrays` call — the smallest granularity for changing an attribute is "between two draw calls." A uniform can be re-set as many times as you like between draw calls (`uAngle` in the next lesson changes every frame), but INSIDE one draw call both are frozen — the difference is an attribute freezes PER VERTEX, while a uniform freezes at one shared value.
 

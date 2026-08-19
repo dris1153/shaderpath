@@ -90,7 +90,7 @@ const tintFragSrc = [
   "void main() {",
   "  vec3 color = texture(uScene, vUv).rgb * uTint;",
   "  float d = distance(vUv, vec2(0.5));",
-  "  float vignette = smoothstep(0.75, 0.25, d);",
+  "  float vignette = 1.0 - smoothstep(0.25, 0.75, d);",
   "  outColor = vec4(color * vignette, 1.0);",
   "}",
 ].join("\\n");
@@ -194,8 +194,8 @@ function render(timeMs: number) {
 
   // TODO 2: PASS 1 — bind fbo, set the viewport to FBO_SIZE x FBO_SIZE,
   // enable depth test (LESS), disable blend, clear color + depth, then use
-  // sceneProgram + sceneVao to draw the front quad (uAngle = angle, index
-  // offset 0) followed by the back quad (uAngle = 0, index offset 12).
+  // sceneProgram + sceneVao to draw the front quad (uAngle = angle, byte
+  // offset 0) followed by the back quad (uAngle = 0, byte offset 12 = index 6 × 2 bytes for UNSIGNED_SHORT).
 
   // TODO 3: PASS 2 — bind the default framebuffer (null), resize the canvas
   // to its display size (devicePixelRatio-aware) and set the viewport,
@@ -288,7 +288,7 @@ const tintFragSrc = [
   "void main() {",
   "  vec3 color = texture(uScene, vUv).rgb * uTint;",
   "  float d = distance(vUv, vec2(0.5));",
-  "  float vignette = smoothstep(0.75, 0.25, d);",
+  "  float vignette = 1.0 - smoothstep(0.25, 0.75, d);",
   "  outColor = vec4(color * vignette, 1.0);",
   "}",
 ].join("\\n");
@@ -470,8 +470,8 @@ requestAnimationFrame(render);`,
     referenceImage: "/figures/01-webgl/checkpoint-render-to-texture-tint.svg",
     hints: [
       {
-        vi: "Tạo FBO đúng thứ tự: framebufferTexture2D cho COLOR_ATTACHMENT0, framebufferRenderbuffer cho DEPTH_ATTACHMENT, rồi mới gọi checkFramebufferStatus — kiểm tra trước khi attach xong luôn báo lỗi giả.",
-        en: "Create the FBO in order: framebufferTexture2D for COLOR_ATTACHMENT0, framebufferRenderbuffer for DEPTH_ATTACHMENT, THEN call checkFramebufferStatus — checking before both attachments are in place always reports a false error.",
+        vi: "Tạo FBO đúng thứ tự: framebufferTexture2D cho COLOR_ATTACHMENT0, framebufferRenderbuffer cho DEPTH_ATTACHMENT, rồi mới gọi checkFramebufferStatus một lần ở cuối — status giữa chừng mô tả FBO đang dựng dở, không phải FBO bạn sẽ render. Công thức renderbuffer (API chưa gặp trong track): createRenderbuffer → bindRenderbuffer(RENDERBUFFER, rb) → renderbufferStorage(RENDERBUFFER, DEPTH_COMPONENT16, w, h) → framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT, RENDERBUFFER, rb).",
+        en: "Create the FBO in order: framebufferTexture2D for COLOR_ATTACHMENT0, framebufferRenderbuffer for DEPTH_ATTACHMENT, THEN call checkFramebufferStatus once at the end — a mid-setup status describes the half-built FBO, not the one you will render with. Renderbuffer recipe (an API this track has not shown): createRenderbuffer → bindRenderbuffer(RENDERBUFFER, rb) → renderbufferStorage(RENDERBUFFER, DEPTH_COMPONENT16, w, h) → framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT, RENDERBUFFER, rb).",
       },
       {
         vi: "Vẽ quad trước (uAngle = angle) rồi quad sau (uAngle = 0) đúng thứ tự trong scaffold — nếu depth test đúng, quad vẽ sau vẫn không đè lên quad vẽ trước dù nó 'muộn hơn'.",

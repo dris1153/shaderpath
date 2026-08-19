@@ -1,6 +1,6 @@
 ## Texture là gì: ảnh sống trên GPU, sample được trong fragment shader
 
-Texture là một mảng dữ liệu ảnh được lưu trong bộ nhớ GPU, đọc được tại bất kỳ toạ độ nào ngay trong lúc fragment shader đang chạy — khác hẳn buffer của vertex shader, vốn chỉ đọc tuần tự từng phần tử theo index đỉnh. Một canvas 1920×1080 render ở DPR 1 sinh ra xấp xỉ 2 triệu fragment mỗi frame; ở DPR 2 là ~8.3 triệu. Mỗi fragment cần biết "màu tại điểm này trên bề mặt là gì", và texture chính là bảng tra cứu cho câu hỏi đó — toạ độ tra cứu là UV, hệ toạ độ $[0,1]^2$ đã học ở bài Toạ độ Descartes & UV space của Track 0. Không có texture, mọi màu sắc chỉ có thể tính bằng công thức toán thuần trong shader; texture là cách đưa dữ liệu ảnh thật — ảnh chụp, noise đã bake sẵn, lookup table màu — vào pipeline render.
+Texture là một mảng dữ liệu ảnh được lưu trong bộ nhớ GPU, đọc được tại bất kỳ toạ độ nào ngay trong lúc fragment shader đang chạy — khác hẳn buffer của vertex shader, vốn chỉ đọc tuần tự từng phần tử theo index đỉnh. Một canvas 1920×1080 render ở DPR 1 sinh ra xấp xỉ 2 triệu fragment mỗi frame; ở DPR 2 là ~8.3 triệu. Mỗi fragment cần biết "màu tại điểm này trên bề mặt là gì", và texture chính là bảng tra cứu cho câu hỏi đó — toạ độ tra cứu là UV, hệ toạ độ $[0,1]^2$ đã học ở bài Toạ độ Descartes & UV space của Track 0. Không có texture, mọi màu sắc chỉ có thể tính bằng công thức toán thuần trong shader; texture là cách đưa dữ liệu ảnh thật — ảnh chụp, noise đã bake (tính trước rồi lưu thành ảnh) sẵn, lookup table màu — vào pipeline render.
 
 ## Đưa pixel lên GPU: createTexture, bind, texImage2D
 
@@ -17,7 +17,7 @@ gl.texImage2D(
 );
 ```
 
-`createTexture` chỉ cấp một "tên" (id) rỗng, chưa có dữ liệu. `bindTexture` gắn texture đó vào target `TEXTURE_2D` của context — mọi lệnh texture tiếp theo (texImage2D, texParameteri...) tác động lên texture đang bind, đúng mô hình state machine mà cả track này dùng lại từ bài buffer/VAO. `texImage2D` copy dữ liệu pixel thật vào bộ nhớ GPU ở level mipmap 0 (ảnh gốc, độ phân giải đầy đủ); tham số `pixelData` có thể là `Uint8Array` raw (tự sinh, như ví dụ ở bài này) hoặc trực tiếp một `ImageBitmap`/`HTMLImageElement`/`HTMLCanvasElement` — WebGL tự đọc pixel từ các đối tượng đó mà không cần bạn giải mã ảnh bằng tay.
+`createTexture` chỉ cấp một "tên" (id) rỗng, chưa có dữ liệu. `bindTexture` gắn texture đó vào target `TEXTURE_2D` của context — mọi lệnh texture tiếp theo (texImage2D, texParameteri...) tác động lên texture đang bind, đúng mô hình state machine mà cả track này dùng lại từ bài buffer/VAO. `texImage2D` copy dữ liệu pixel thật vào bộ nhớ GPU ở level mipmap 0 (ảnh gốc, độ phân giải đầy đủ — mipmap được giải thích ở phần dưới); tham số `pixelData` có thể là `Uint8Array` raw (tự sinh, như ví dụ ở bài này) hoặc trực tiếp một `ImageBitmap`/`HTMLImageElement`/`HTMLCanvasElement` — WebGL tự đọc pixel từ các đối tượng đó mà không cần bạn giải mã ảnh bằng tay.
 
 ## Texture unit và sampler uniform: chỗ hay nhầm nhất
 
@@ -29,7 +29,7 @@ gl.bindTexture(gl.TEXTURE_2D, texture);  // 2. gắn texture vào khe đó
 gl.uniform1i(uTextureLoc, 0);            // 3. báo sampler dùng khe số 0
 ```
 
-Sampler uniform (`uniform sampler2D uTexture` trong GLSL) không giữ chính texture object — nó chỉ giữ một **số nguyên chỉ số unit**. `uniform1i(loc, 0)` nghĩa là "đọc từ unit 0", khớp với `activeTexture(gl.TEXTURE0)` ở bước 1. Với một texture duy nhất, mặc định unit 0 luôn được chọn nên dễ "chạy đúng nhờ may mắn" mà bỏ qua bước 3 — nhưng ngay khi bài Framebuffer tiếp theo cần 2 texture cùng lúc (scene texture + hiệu ứng), quên bước này khiến sampler đọc nhầm unit.
+Sampler uniform (`uniform sampler2D uTexture` trong GLSL) không giữ chính texture object — nó chỉ giữ một **số nguyên chỉ số unit**. `uniform1i(loc, 0)` nghĩa là "đọc từ unit 0", khớp với `activeTexture(gl.TEXTURE0)` ở bước 1. Với một texture duy nhất, mặc định unit 0 luôn được chọn nên dễ "chạy đúng nhờ may mắn" mà bỏ qua bước 3 — nhưng ngay khi một shader cần từ 2 sampler trở lên (ví dụ scene + mask ở các track sau), quên bước này khiến sampler đọc nhầm unit.
 
 <Figure
   src="/figures/01-webgl/texture-unit-sampler-binding.svg"
@@ -88,14 +88,14 @@ gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
 
 ## UNPACK_FLIP_Y_WEBGL: trục v của ảnh và trục v của texture GL không khớp
 
-Ảnh bitmap (canvas 2D, `<img>`, PNG/JPEG) luôn lưu hàng pixel đầu tiên ở trên cùng — hàng 0 là top. Texture WebGL/OpenGL cổ điển lại định nghĩa $v = 0$ là **dưới cùng** (quy ước toán học, gốc dưới-trái, đúng như NDC). Upload thẳng một ảnh vào texture mà không xử lý gì khiến hình hiện lộn ngược theo trục dọc — đây chính là lỗi callback từ Track 0 đã cảnh báo trước. Cách sửa đơn giản nhất:
+Ảnh bitmap (canvas 2D, `<img>`, PNG/JPEG) luôn lưu hàng pixel đầu tiên ở trên cùng — hàng 0 là top. Texture WebGL/OpenGL cổ điển lại định nghĩa $v = 0$ là **dưới cùng** (quy ước toán học, gốc dưới-trái, đúng như NDC). Upload thẳng một ảnh vào texture mà không xử lý gì khiến hình hiện lộn ngược theo trục dọc — đây chính là lỗi texture lộn ngược mà bài UV ở Track 0 đã cảnh báo trước. Cách sửa đơn giản nhất:
 
 ```js
 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 // gọi TRƯỚC texImage2D — driver tự lật hàng pixel lúc upload
 ```
 
-Với texture tự sinh bằng code (như demo của bài này, dựng trực tiếp từ mảng `Uint8Array`), bạn tự quyết định thứ tự hàng nên có thể bỏ qua cờ này — nhưng bất kỳ lúc nào upload từ `<img>`/canvas/`ImageBitmap`, đặt `UNPACK_FLIP_Y_WEBGL` là bước đầu tiên cần nhớ.
+Với texture tự sinh bằng code (như demo của bài này, dựng trực tiếp từ mảng `Uint8Array`), bạn tự quyết định thứ tự hàng nên có thể bỏ qua cờ này — nhưng bất kỳ lúc nào upload từ `<img>`/canvas, đặt `UNPACK_FLIP_Y_WEBGL` là bước đầu tiên cần nhớ. Riêng `ImageBitmap` **bỏ qua** cờ này — hướng ảnh phải chốt từ lúc tạo: `createImageBitmap(img, { imageOrientation: "flipY" })`.
 
 ## Ba quyết định này dẫn tới đâu: render target và texture nén
 

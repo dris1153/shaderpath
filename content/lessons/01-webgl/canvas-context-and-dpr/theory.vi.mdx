@@ -2,10 +2,10 @@
 
 `canvas.getContext("webgl2", options)` không chỉ "bật WebGL" — object option truyền vào quyết định cách trình duyệt cấp phát và compose framebuffer mặc định, ảnh hưởng trực tiếp đến hiệu năng và đúng-sai hình ảnh chứ không phải chi tiết vặt:
 
-- **`antialias`** (mặc định `true`): bật multisample (MSAA) cho framebuffer mặc định — trình duyệt cấp thêm sample buffer rồi resolve (lấy trung bình) chúng lại mỗi frame. Trên GPU tile-based ở thiết bị di động, băng thông ghi thêm các sample này có thể tăng vài lần tuỳ mức MSAA; tắt hẳn (`antialias: false`) khi bạn tự AA bằng cách khác, hoặc chấp nhận răng cưa để đổi lấy tốc độ — phổ biến khi vẽ full-screen fragment shader như Track 2 sẽ làm.
+- **`antialias`** (mặc định `true`): bật multisample (MSAA) cho framebuffer mặc định — trình duyệt cấp thêm sample buffer rồi resolve (lấy trung bình) chúng lại mỗi frame. Trên GPU tile-based (kiến trúc GPU di động vẽ theo từng ô nhỏ) ở thiết bị di động, băng thông ghi thêm các sample này có thể tăng vài lần tuỳ mức MSAA; tắt hẳn (`antialias: false`) khi bạn tự AA bằng cách khác, hoặc chấp nhận răng cưa để đổi lấy tốc độ — phổ biến khi vẽ full-screen fragment shader như Track 2 sẽ làm.
 - **`alpha`** (mặc định `true`): giữ kênh alpha cho framebuffer mặc định để trình duyệt **compose** canvas lên trên phần còn lại của trang, giống một lớp PNG trong suốt. Việc này tốn thêm một bước blend mỗi frame; đặt `alpha: false` báo trình duyệt coi canvas là nền đục, bỏ bước blend đó — thường nhanh hơn, và tránh hiện tượng canvas "nhìn xuyên" ra nền trang khi bạn quên set alpha = 1 lúc clear.
 - **`powerPreference`**: gợi ý GPU nào chạy context này trên máy có 2 GPU (tích hợp tiết kiệm pin vs rời hiệu năng cao). `"high-performance"` ưu tiên tốc độ, đổi lại máy nóng và tốn pin hơn; `"low-power"` ưu tiên GPU tích hợp; mặc định `"default"` để trình duyệt tự quyết — và trình duyệt luôn có quyền bỏ qua gợi ý này.
-- **`preserveDrawingBuffer`** (mặc định `false`): khi `false`, trình duyệt được phép **swap** buffer sau mỗi frame thay vì copy nội dung sang chỗ khác — rẻ hơn hẳn. Đặt `true` giữ nguyên buffer sau khi vẽ xong, cần cho `canvas.toDataURL()` chụp đúng frame cuối hoặc hiệu ứng "trail" dựa vào việc không clear frame trước; đổi lại tốn thêm một lần copy toàn bộ buffer mỗi frame.
+- **`preserveDrawingBuffer`** (mặc định `false`): khi `false`, trình duyệt được phép **swap** buffer sau mỗi frame thay vì copy nội dung sang chỗ khác — rẻ hơn hẳn. Đặt `true` giữ nguyên buffer sau khi vẽ xong, cần cho `canvas.toDataURL()` chụp đúng frame cuối hoặc hiệu ứng "trail" dựa vào việc không clear frame trước; đổi lại thường buộc trình duyệt copy toàn bộ buffer thay vì swap — tốn thêm mỗi frame.
 
 ```js
 const gl = canvas.getContext("webgl2", {
@@ -24,7 +24,7 @@ Hầu hết demo trong track này dùng đúng bộ giá trị trên: `alpha: fa
 Một thẻ `<canvas>` có **hai** kích thước hoàn toàn độc lập, và nhầm lẫn giữa chúng là nguồn lỗi hình ảnh phổ biến nhất khi mới học WebGL:
 
 - **CSS size** — `canvas.clientWidth`/`clientHeight` (hoặc `canvas.style.width`/`height`): kích thước canvas **chiếm chỗ** trên trang, tính bằng CSS pixel, do layout quyết định.
-- **Drawing buffer size** — `canvas.width`/`canvas.height`: số **texel thật** trong framebuffer mà GPU render vào, tính bằng device pixel.
+- **Drawing buffer size** — `canvas.width`/`canvas.height`: số **pixel thật** trong framebuffer mà GPU render vào.
 
 Nếu chỉ đổi CSS size (ví dụ `canvas.style.width = "100%"`) mà không đụng đến `canvas.width`/`height`, trình duyệt không tự render lại ở độ phân giải mới — nó **kéo giãn** buffer cũ để lấp đầy CSS box, y hệt phóng to một tấm ảnh nhỏ. Mặc định `canvas.width = 300`, `canvas.height = 150` nếu không set gì, nên đây cũng là lý do canvas hay "tự nhiên bị mờ và méo" khi mới thêm vào layout responsive mà quên set buffer tương ứng.
 
@@ -50,7 +50,7 @@ Dùng `round`, không phải `floor` hay `ceil` tuỳ ý — làm tròn tới de
 <Figure
   src="/figures/01-webgl/canvas-css-size-vs-drawing-buffer.svg"
   alt="Hai hình chữ nhật cùng kích thước hiển thị: một ghi 800 x 450 CSS px do canvas.style.width quyết định, một ghi 1600 x 900 device px do canvas.width và canvas.height quyết định, kèm chi tiết phóng to một CSS pixel thành 2 x 2 device pixel"
-  caption="CSS size quyết định canvas chiếm bao nhiêu chỗ trên trang, drawing buffer quyết định GPU tô bao nhiêu texel. Hai con số độc lập nhau, và chỉ gán canvas.width mới cấp phát lại buffer."
+  caption="CSS size quyết định canvas chiếm bao nhiêu chỗ trên trang, drawing buffer quyết định GPU tô bao nhiêu pixel. Hai con số độc lập nhau, và chỉ gán canvas.width mới cấp phát lại buffer."
 />
 
 ### Vì sao phải clamp DPR
@@ -59,7 +59,7 @@ Một số thiết bị báo `devicePixelRatio` tới $3$ hoặc $4$ (điện th
 
 ## gl.viewport phải theo đúng kích thước buffer
 
-Đổi `canvas.width`/`height` thôi chưa đủ — WebGL không tự biết buffer vừa đổi size. `gl.viewport(x, y, width, height)` khai báo vùng của buffer mà GPU ánh xạ clip space $[-1, 1]$ vào; quên gọi lại `gl.viewport` sau khi resize khiến GPU tiếp tục vẽ theo viewport cũ dù buffer đã lớn hơn hoặc nhỏ hơn — hình bị co vào một góc hoặc chỉ phủ một phần buffer, phần còn lại là nội dung rác chưa clear.
+Đổi `canvas.width`/`height` thôi chưa đủ — WebGL không tự biết buffer vừa đổi size. `gl.viewport(x, y, width, height)` khai báo vùng của buffer mà GPU ánh xạ NDC $[-1, 1]$ vào; quên gọi lại `gl.viewport` sau khi resize khiến GPU tiếp tục vẽ theo viewport cũ dù buffer đã lớn hơn hoặc nhỏ hơn — hình bị co vào một góc hoặc chỉ phủ một phần buffer, phần còn lại là nội dung rác chưa clear.
 
 ```js
 function resizeCanvasToDisplaySize(canvas, gl, dprCap = 2) {

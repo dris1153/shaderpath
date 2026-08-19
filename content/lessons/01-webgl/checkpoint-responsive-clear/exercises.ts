@@ -93,8 +93,8 @@ requestAnimationFrame(draw);`,
     referenceImage: "/figures/01-webgl/checkpoint-responsive-clear.svg",
     hints: [
       {
-        vi: "resizeCanvasToDisplaySize là hàm y hệt bài trước — chỉ so sánh canvas.width/height với round(clientSize × dpr) trước khi gán, và luôn gọi gl.viewport ngay sau khi gán.",
-        en: "resizeCanvasToDisplaySize is the exact same function from the previous lesson — compare canvas.width/height against round(clientSize × dpr) before assigning, and always call gl.viewport right after assigning.",
+        vi: "resizeCanvasToDisplaySize cùng logic với bài trước — ở đây canvas/gl lấy từ scope bao ngoài nên bỏ hai tham số đầu; chỉ so sánh canvas.width/height với round(clientSize × dpr) trước khi gán, và luôn gọi gl.viewport ngay sau khi gán.",
+        en: "resizeCanvasToDisplaySize is the same logic as the previous lesson — here canvas/gl come from the enclosing scope, so drop the first two parameters; compare canvas.width/height against round(clientSize × dpr) before assigning, and always call gl.viewport right after assigning.",
       },
       {
         vi: "Dùng delta time (t hiện tại trừ t frame trước) để tăng hue theo tốc độ cố định (độ/giây), không dùng hue += hằng số mỗi frame — tốc độ đó phụ thuộc refresh rate màn hình.",
@@ -119,8 +119,8 @@ requestAnimationFrame(draw);`,
         en: "The clear color cycles smoothly and continuously through hues, with no jumps or sudden repeats",
       },
       {
-        vi: "Buffer chỉ được gán lại khi kích thước CSS thực sự đổi, không reallocate mỗi frame",
-        en: "The buffer is only reassigned when the CSS size actually changed, not reallocated every frame",
+        vi: "Buffer chỉ được gán lại khi kích thước CSS hoặc DPR thực sự đổi, không reallocate mỗi frame",
+        en: "The buffer is only reassigned when the CSS size or DPR actually changed, not reallocated every frame",
       },
       {
         vi: "Toàn bộ animation chạy bằng requestAnimationFrame, không setInterval",

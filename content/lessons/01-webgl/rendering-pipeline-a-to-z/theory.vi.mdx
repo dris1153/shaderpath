@@ -6,40 +6,41 @@ Rendering pipeline của WebGL không phải một hộp đen "đưa vertex vào
 
 <Figure
   src="/figures/01-webgl/rendering-pipeline.svg"
-  alt="Sơ đồ tám trạm của pipeline WebGL, từ vertex specification xuống framebuffer, đánh dấu hai trạm lập trình được"
-  caption="Chỉ hai trạm được tô đậm là code bạn viết; sáu trạm còn lại là phần cứng chạy cố định — nhớ được ranh giới này là biết ngay lỗi nằm ở đâu."
+  alt="Sơ đồ pipeline WebGL: tám trạm đánh số từ vertex specification tới per-fragment operations, đổ vào framebuffer; hai trạm lập trình được được đánh dấu"
+  caption="Chỉ hai trạm được tô đậm là code bạn viết; các trạm còn lại là phần cứng chạy cố định — nhớ được ranh giới này là biết ngay lỗi nằm ở đâu."
 />
 
 Toàn bộ chuỗi, theo đúng thứ tự thực thi:
 
 ```
-1. Vertex specification   (bạn cung cấp dữ liệu — CỐ ĐỊNH)
-2. Vertex shader           (LẬP TRÌNH ĐƯỢC)
-3. Primitive assembly      (CỐ ĐỊNH)
-4. Clipping                (CỐ ĐỊNH)
-5. Rasterization            (CỐ ĐỊNH)
-6. Fragment shader          (LẬP TRÌNH ĐƯỢC)
-7. Per-fragment tests        (depth/stencil/blend — CỐ ĐỊNH, nhưng CẤU HÌNH ĐƯỢC)
-8. Framebuffer               (kết quả cuối cùng, CỐ ĐỊNH)
+1. Vertex specification        (bạn cung cấp dữ liệu — CỐ ĐỊNH)
+2. Vertex shader                (LẬP TRÌNH ĐƯỢC)
+3. Primitive assembly           (CỐ ĐỊNH)
+4. Clipping + perspective divide (CỐ ĐỊNH)
+5. Viewport transform           (CỐ ĐỊNH)
+6. Rasterization                 (CỐ ĐỊNH)
+7. Fragment shader               (LẬP TRÌNH ĐƯỢC)
+8. Per-fragment operations       (stencil/depth/blend — CỐ ĐỊNH, nhưng CẤU HÌNH ĐƯỢC)
+   → Framebuffer                 (đích cuối cùng nhận kết quả)
 ```
 
 ### Vertex specification → vertex shader
 
-Trạm 1 không chạy code gì cả — nó chỉ là việc bạn đã làm ở bài buffer/VAO: dữ liệu thô (toạ độ, màu, UV) nằm trong VBO, được VAO mô tả cách đọc. Trạm 2, vertex shader, là trạm lập trình được đầu tiên: nó chạy **một lần cho mỗi vertex**, nhận vào các attribute của vertex đó, và **bắt buộc** phải gán giá trị cho biến đặc biệt `gl_Position` — toạ độ 4 chiều (x, y, z, w) trong **clip space**. Đây là hợp đồng duy nhất giữa bạn và GPU ở trạm này: vertex shader không "vẽ" gì cả, nó chỉ trả lời đúng một câu hỏi — "đỉnh này nằm ở đâu trong clip space?".
+Trạm 1 không chạy code gì cả — nó chỉ là dữ liệu thô (toạ độ, màu, UV) bạn nạp lên GPU — nằm trong VBO, được VAO mô tả cách đọc (hai khái niệm này bài Buffers, VBO & VAO ngay sau sẽ làm kỹ; tạm hiểu: một vùng byte + bản mô tả cách đọc nó). Trạm 2, vertex shader, là trạm lập trình được đầu tiên: nó chạy **một lần cho mỗi vertex**, nhận vào các attribute của vertex đó, và **bắt buộc** phải gán giá trị cho biến đặc biệt `gl_Position` — toạ độ 4 chiều (x, y, z, w) trong **clip space**. Đây là hợp đồng duy nhất giữa bạn và GPU ở trạm này: vertex shader không "vẽ" gì cả, nó chỉ trả lời đúng một câu hỏi — "đỉnh này nằm ở đâu trong clip space?".
 
 ### Primitive assembly → clipping → rasterization
 
-Ba trạm tiếp theo hoàn toàn cố định, không có một dòng GLSL nào chạy ở đây. **Primitive assembly** gom các vertex đã qua vertex shader lại thành hình học — ba vertex liên tiếp (theo `gl.TRIANGLES`) hợp thành một tam giác. **Clipping** cắt bỏ phần hình học nằm ngoài viewing volume (frustum) — một tam giác có một đỉnh ngoài màn hình vẫn có thể render đúng phần còn lại nằm trong, vì GPU tự tính giao điểm và sinh vertex mới ngay tại biên clip. **Rasterization** là trạm quyết định: nó quét tam giác (đã ở NDC, sau phép chia cho w) và xác định pixel nào trên màn hình thực sự nằm bên trong tam giác đó — mỗi pixel như vậy sinh ra đúng một **fragment**, ứng viên cho một pixel màu cuối cùng.
+Ba trạm tiếp theo hoàn toàn cố định, không có một dòng GLSL nào chạy ở đây. **Primitive assembly** gom các vertex đã qua vertex shader lại thành hình học — ba vertex liên tiếp (theo `gl.TRIANGLES`) hợp thành một tam giác. **Clipping** cắt bỏ phần hình học nằm ngoài viewing volume (frustum) — một tam giác có một đỉnh ngoài màn hình vẫn có thể render đúng phần còn lại nằm trong, vì GPU tự tính giao điểm và sinh vertex mới ngay tại biên clip. **Rasterization** là trạm quyết định: nó quét tam giác (sau perspective divide và viewport transform, tức đã ở toạ độ pixel, sau phép chia cho w) và xác định pixel nào trên màn hình thực sự nằm bên trong tam giác đó — mỗi pixel như vậy sinh ra đúng một **fragment**, ứng viên cho một pixel màu cuối cùng.
 
 ### Fragment shader → per-fragment tests → framebuffer
 
-Fragment shader là trạm lập trình được thứ hai, chạy **độc lập cho từng fragment** — ở DPR 2 trên màn 1920×1080 (drawing buffer thực ~3840×2160), một draw call phủ kín màn hình gọi nó khoảng 8.3 triệu lần mỗi frame, nên một phép tính thừa (như `pow()` không cần thiết) đo được bằng mili-giây, trong khi cùng phép đó ở vertex shader (vài trăm lần cho một mesh nhỏ) gần như miễn phí. Sau khi trả về màu, fragment còn phải vượt **per-fragment tests** — depth test (gần camera hơn fragment đã vẽ tại cùng pixel không), stencil test, rồi blend nếu bật — trước khi ghi vào **framebuffer**, bộ nhớ pixel cuối cùng hiện lên màn hình.
+Fragment shader là trạm lập trình được thứ hai, chạy **độc lập cho từng fragment** — ở DPR 2 (devicePixelRatio — bài sau nói kỹ) trên màn 1920×1080 (drawing buffer thực ~3840×2160), một draw call phủ kín màn hình gọi nó khoảng 8.3 triệu lần mỗi frame, nên một phép tính thừa (như `pow()` không cần thiết) đo được bằng mili-giây, trong khi cùng phép đó ở vertex shader (vài trăm lần cho một mesh nhỏ) gần như miễn phí. Sau khi trả về màu, fragment còn phải vượt **per-fragment operations** — stencil test, rồi depth test (gần camera hơn fragment đã vẽ tại cùng pixel không), rồi blend nếu bật — trước khi ghi vào **framebuffer**, bộ nhớ pixel cuối cùng hiện lên màn hình.
 
 ## Một đỉnh thật đi qua pipeline: toạ độ cụ thể ở từng trạm
 
 Theo dõi đỉnh đầu tiên của một tam giác đơn giản, nơi `gl_Position = vec4(aPosition, 0.0, 1.0)` không biến đổi gì thêm:
 
-- **Vertex specification**: attribute `aPosition = (0.0, 0.5)` đọc thẳng từ VBO.
+- **Vertex specification**: attribute `aPosition = (0.0, 0.5)` đọc thẳng từ VBO (vùng dữ liệu đỉnh trên GPU — bài sau).
 - **Vertex shader output (clip space)**: `gl_Position = (0.0, 0.5, 0.0, 1.0)`.
 - **Sau clipping + perspective divide (NDC)**: chia cho $w=1$ nên không đổi: $(0.0, 0.5, 0.0)$ — nằm gọn trong $[-1,1]^3$, không bị cắt.
 - **Viewport transform**: canvas $800\times450$, công thức $x_{px} = (x_{ndc} \cdot 0.5 + 0.5) \cdot 800$ cho pixel $(400, 337.5)$ — toạ độ kiểu OpenGL, gốc dưới-trái, khác canvas 2D (gốc trên-trái).
@@ -53,14 +54,14 @@ Một câu hỏi tự nhiên: mỗi vertex có thể mang màu, UV riêng — v�
 
 ## Không thấy gì trên màn hình: nghi ngờ trạm nào trước
 
-Khi canvas chỉ hiện màu `clearColor` mà không có hình gì, đi ngược từ cuối chuỗi lên hiệu quả hơn đi xuôi:
+Khi canvas chỉ hiện màu `clearColor` mà không có hình gì, kiểm tra thứ gần code JavaScript của bạn nhất trước — rẻ nhất để loại trừ — rồi tiến dần về phía GPU:
 
 1. **Draw call có đúng count không?** `gl.drawArrays(gl.TRIANGLES, 0, 3)` gọi với `count=0` không vẽ gì — kiểm tra tham số trước tiên vì đây là nghi vấn rẻ nhất để loại trừ.
-2. **Có bị clip hết không?** Nếu `gl_Position` có toạ độ $x$, $y$ hoặc $z$ vượt quá $|w|$ ở mọi đỉnh, cả tam giác nằm ngoài frustum, bị clipping loại sạch trước khi tới rasterization.
+2. **Có bị clip hết không?** Nếu cả ba đỉnh cùng nằm ngoài **một** mặt phẳng clip (ví dụ cả ba đều có $x > w$), tam giác bị clipping loại sạch trước khi tới rasterization. Chú ý: ba đỉnh cùng ngoài frustum nhưng ở các phía khác nhau thì tam giác vẫn có thể phủ màn hình — fullscreen triangle hoạt động đúng nhờ vậy.
 3. **Fragment shader có ghi alpha = 0 không?** Với blending bật, fragment vẫn "vẽ" về mặt kỹ thuật nhưng trong suốt hoàn toàn — dễ nhầm với "không vẽ được gì".
 4. **Winding order và cull face?** Một tam giác đúng toạ độ nhưng sai thứ tự đỉnh có thể bị `gl.CULL_FACE` loại bỏ trước rasterization nếu tính năng này đang bật.
 
-Bốn nghi vấn này đi từ trạm cuối (draw call, gần code JavaScript của bạn nhất) ngược về trạm đầu (clip space, gần GPU nhất) — đúng thứ tự nên kiểm tra khi debug, vì trạm càng gần code của bạn càng dễ kiểm tra bằng `console.log`.
+Bốn nghi vấn này xếp theo độ dễ kiểm tra: thứ càng gần code JavaScript của bạn càng rẻ để xác nhận bằng `console.log`, thứ càng nằm sâu trong pipeline càng cần công cụ chuyên (Spector.js) — nên loại trừ từ ngoài vào trong.
 
 ## Nền tảng này dẫn tới đâu
 
