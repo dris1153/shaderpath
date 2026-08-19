@@ -50,7 +50,7 @@ export const references: Citation[] = [
     type: "article",
     title: "CSSPlugin | GSAP Docs — force3D config",
     authors: ["GSAP (Webflow)"],
-    url: "https://gsap.com/docs/v3/GSAP/CSSPlugin/",
+    url: "https://gsap.com/docs/v3/GSAP/CorePlugins/CSS",
     note: {
       vi: "Tài liệu chính thức của CSSPlugin, mục force3D — giải thích rõ hành vi mặc định 'auto' và khi nào GSAP tự thêm translateZ(0) để ép layer promotion.",
       en: "CSSPlugin's official docs, the force3D section — spells out the default 'auto' behavior and exactly when GSAP adds translateZ(0) on its own to force layer promotion.",

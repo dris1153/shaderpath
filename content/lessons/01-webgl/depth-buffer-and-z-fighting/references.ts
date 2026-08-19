@@ -17,7 +17,7 @@ export const references: Citation[] = [
     type: "article",
     title: "Learning to Love Your Z-buffer",
     authors: ["Steve Baker"],
-    url: "https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html",
+    url: "https://web.archive.org/web/2024/https://www.sjbaker.org/steve/omniv/love_your_z_buffer.html",
     note: {
       vi: "Bài viết kinh điển giải thích z_buffer_value = (1<<N)*(a + b/z) và mô tả trực tiếp hiện tượng z-fighting ('flimmering') mà bài này tái tạo trong demo.",
       en: "The classic writeup deriving z_buffer_value = (1<<N)*(a + b/z) and directly describing the z-fighting ('flimmering') artifact this lesson's demo reproduces.",

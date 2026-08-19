@@ -28,7 +28,7 @@ export const references: Citation[] = [
     type: "spec",
     title: "Three.js Docs — Buffer Attribute Usage Constants",
     authors: ["Three.js contributors"],
-    url: "https://threejs.org/docs/api/en/constants/BufferAttributeUsage.html",
+    url: "https://threejs.org/docs/#api/en/constants/BufferAttributeUsage",
     note: {
       vi: "Danh sách đầy đủ `StaticDrawUsage`/`DynamicDrawUsage`/`StreamDrawUsage` — tra khi cần quyết định usage hint đúng cho một attribute cập nhật thường xuyên (điều demo này KHÔNG cần, vì regenerate chỉ chạy theo click).",
       en: "The full list of StaticDrawUsage/DynamicDrawUsage/StreamDrawUsage — check here when deciding the right usage hint for a frequently-updated attribute (which this demo deliberately does NOT need, since regenerate only runs on click).",

@@ -15,9 +15,9 @@ export const references: Citation[] = [
   {
     id: "mdn-webgl2-vertexattribpointer",
     type: "article",
-    title: "WebGL2RenderingContext: vertexAttribPointer() method",
+    title: "WebGLRenderingContext: vertexAttribPointer() method",
     authors: ["MDN Contributors"],
-    url: "https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribPointer",
+    url: "https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/vertexAttribPointer",
     note: {
       vi: "Định nghĩa chính xác từng tham số của vertexAttribPointer (size, type, normalized, stride, offset) — đọc để kiểm chứng lại ví dụ stride 20 byte của bài này.",
       en: "The exact definition of every vertexAttribPointer parameter (size, type, normalized, stride, offset) — read it to cross-check this lesson's 20-byte-stride example.",
