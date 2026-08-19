@@ -211,7 +211,11 @@ export function ExerciseCard({
                 </div>
               )}
 
-              <div className="mt-6">
+              <div
+                className={cn("mt-6", {
+                  " border-t pt-4": solutionShown && hasSolution,
+                })}
+              >
                 {solutionShown ? (
                   hasSolution && (
                     <div>
@@ -257,7 +261,14 @@ export function ExerciseCard({
                 ) : null}
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-2 border-t pt-4">
+              <div
+                className={cn("mt-6 flex flex-wrap gap-2 ", {
+                  "border-t pt-4":
+                    status === "not_started" ||
+                    status !== "completed" ||
+                    (status !== "completed" && status !== "skipped"),
+                })}
+              >
                 {status === "not_started" && (
                   <Button size="sm" onClick={() => updateStatus("attempted")}>
                     {t("markAttempted")}

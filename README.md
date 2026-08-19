@@ -45,8 +45,8 @@ pnpm start
 ## Deploy (Vercel + Supabase)
 
 1. Create a Supabase project. Copy both connection strings from
-   *Project Settings → Database → Connection string*.
-2. In Vercel *Settings → Environment Variables*, set `DATABASE_URL` to the
+   _Project Settings → Database → Connection string_.
+2. In Vercel _Settings → Environment Variables_, set `DATABASE_URL` to the
    transaction pooler URL (6543). `DIRECT_URL` is only needed there if you
    intend to migrate from CI.
 3. Apply the schema once from your machine:
@@ -58,7 +58,7 @@ pnpm start
 
 Two options:
 
-1. **In-app (recommended):** Settings (gear icon) → Data → *Export* downloads `shaderpath-progress-<date>.json` (version-tagged). *Import* validates the file, previews row counts, auto-downloads a backup of the current state, then applies as replace or merge — all in one transaction.
+1. **In-app (recommended):** Settings (gear icon) → Data → _Export_ downloads `shaderpath-progress-<date>.json` (version-tagged). _Import_ validates the file, previews row counts, auto-downloads a backup of the current state, then applies as replace or merge — all in one transaction.
 2. **Database-side:** Supabase's own backups, or `pg_dump` against `DIRECT_URL`.
 
 Imports with a mismatched `schemaVersion` are rejected outright — re-export from the same app version instead of hand-editing the JSON.
@@ -82,3 +82,5 @@ pnpm audit:guards     # no-custom-css + strict-TS guards + full content lint
 ## Quality tiers
 
 Demos auto-detect a quality tier (GPU string + device memory + a short frame probe) on first visit and cap canvas DPR/effects accordingly. Override it any time in Settings — the manual choice is persisted and always wins.
+
+** REMAINING PHASE 4 - 7 in audit CONTENT **
