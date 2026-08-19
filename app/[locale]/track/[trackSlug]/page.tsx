@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TRACKS } from "@/content/curriculum";
 import type { Locale, TrackId } from "@/content/types";
-import { getModulesOfTrack, getTrack, trackCompletion } from "@/lib/curriculum";
-import { getProgressMap } from "@/lib/progress-read";
+import { getModulesOfTrack, getTrack } from "@/lib/curriculum";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,29 +12,28 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Progress } from "@/components/ui/progress";
 import { ModuleAccordion } from "@/components/roadmap/module-accordion";
+import { TrackProgress } from "@/components/roadmap/track-progress";
 
-// Reads live progress from SQLite on every request
-export const dynamic = "force-dynamic";
-
+// One page per track per locale. The page is curriculum content; the reader's
+// progress arrives afterwards through /api/progress-map, so nothing here reads
+// the database at render time.
 export function generateStaticParams() {
-  return TRACKS.map((t) => ({ trackSlug: t.id }));
+  return TRACKS.map((track) => ({ trackSlug: track.id }));
 }
 
 export default async function TrackPage({
   params,
 }: {
-  params: Promise<{ trackSlug: string }>;
+  params: Promise<{ locale: string; trackSlug: string }>;
 }) {
-  const { trackSlug } = await params;
+  const { locale: localeParam, trackSlug } = await params;
   const track = getTrack(trackSlug as TrackId);
   if (!track) notFound();
 
+  setRequestLocale(localeParam);
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("roadmap");
-  const progress = await getProgressMap();
-  const stats = trackCompletion(track.id, progress);
   const modules = getModulesOfTrack(track.id);
 
   return (
@@ -55,24 +53,9 @@ export default async function TrackPage({
         {track.title[locale]}
       </h1>
       <p className="text-muted-foreground mt-2">{track.summary[locale]}</p>
-      <div className="mt-4 flex items-center gap-3">
-        <Progress
-          value={stats.percent}
-          aria-label={`${track.title[locale]}: ${t("coreProgress", {
-            completed: stats.coreCompleted,
-            total: stats.coreTotal,
-          })}`}
-          className="w-48"
-        />
-        <span className="text-muted-foreground text-xs tabular-nums">
-          {t("coreProgress", {
-            completed: stats.coreCompleted,
-            total: stats.coreTotal,
-          })}
-        </span>
-      </div>
+      <TrackProgress trackId={track.id} title={track.title[locale]} />
       <div className="mt-8">
-        <ModuleAccordion modules={modules} locale={locale} progress={progress} />
+        <ModuleAccordion modules={modules} locale={locale} />
       </div>
     </main>
   );

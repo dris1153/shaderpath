@@ -1,23 +1,28 @@
+"use client";
+
 import { IconLock } from "@tabler/icons-react";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { LessonMeta, Locale } from "@/content/types";
-import type { ProgressMap } from "@/lib/curriculum";
 import { isUnlocked } from "@/lib/curriculum";
+import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import { Badge } from "@/components/ui/badge";
 
-export async function LessonRow({
+export function LessonRow({
   lesson,
   locale,
-  progress,
 }: {
   lesson: LessonMeta;
   locale: Locale;
-  progress: ProgressMap;
 }) {
-  const t = await getTranslations("roadmap");
-  const unlocked = isUnlocked(lesson.slug, progress);
-  const completed = progress[lesson.slug] === "completed";
+  const t = useTranslations("roadmap");
+  const { data } = useProgressMap();
+  const progress = data?.progress;
+  // Unknown must never render as locked — that tells the reader they may not go
+  // somewhere, which is the worst thing this row can get wrong. Same rule the
+  // lesson sidebar follows.
+  const unlocked = progress ? isUnlocked(lesson.slug, progress) : true;
+  const completed = progress ? progress[lesson.slug] === "completed" : false;
 
   return (
     <Link

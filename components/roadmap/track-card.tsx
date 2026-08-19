@@ -1,8 +1,10 @@
-import { getTranslations } from "next-intl/server";
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { Locale, TrackDef } from "@/content/types";
-import type { ProgressMap } from "@/lib/curriculum";
 import { getModulesOfTrack, trackCompletion } from "@/lib/curriculum";
+import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import {
   Card,
   CardContent,
@@ -12,19 +14,19 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ModuleAccordion } from "./module-accordion";
 
-export async function TrackCard({
+export function TrackCard({
   track,
   locale,
-  progress,
 }: {
   track: TrackDef;
   locale: Locale;
-  progress: ProgressMap;
 }) {
-  const t = await getTranslations("roadmap");
-  const stats = trackCompletion(track.id, progress);
+  const t = useTranslations("roadmap");
+  const { data } = useProgressMap();
+  const stats = data ? trackCompletion(track.id, data.progress) : null;
   const modules = getModulesOfTrack(track.id);
 
   return (
@@ -39,24 +41,33 @@ export async function TrackCard({
               {track.title[locale]}
             </Link>
           </CardTitle>
-          <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-            {t("coreProgress", {
-              completed: stats.coreCompleted,
-              total: stats.coreTotal,
-            })}
-          </span>
+          {stats ? (
+            <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
+              {t("coreProgress", {
+                completed: stats.coreCompleted,
+                total: stats.coreTotal,
+              })}
+            </span>
+          ) : (
+            <Skeleton className="h-4 w-16 shrink-0" />
+          )}
         </div>
         <CardDescription>{track.summary[locale]}</CardDescription>
-        <Progress
-          value={stats.percent}
-          aria-label={`${track.title[locale]}: ${t("coreProgress", {
-            completed: stats.coreCompleted,
-            total: stats.coreTotal,
-          })}`}
-        />
+        {stats ? (
+          <Progress
+            value={stats.percent}
+            aria-label={`${track.title[locale]}: ${t("coreProgress", {
+              completed: stats.coreCompleted,
+              total: stats.coreTotal,
+            })}`}
+          />
+        ) : (
+          // Same height as Progress so the card does not jump when it resolves.
+          <Skeleton className="h-2 w-full" />
+        )}
       </CardHeader>
       <CardContent>
-        <ModuleAccordion modules={modules} locale={locale} progress={progress} />
+        <ModuleAccordion modules={modules} locale={locale} />
       </CardContent>
     </Card>
   );
