@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server";
-import { LESSONS } from "@/content/curriculum";
+import { LESSONS, TRACKS } from "@/content/curriculum";
 
 import type { Locale } from "@/content/types";
 import { getLesson, getTrack, overallCompletion } from "@/lib/curriculum";
@@ -14,9 +14,28 @@ import {
   type QueueItemVM,
 } from "@/components/dashboard/action-queue";
 import { TrackMap, type TrackStepVM } from "@/components/dashboard/track-map";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Link } from "@/i18n/navigation";
 
-// Reads live progress from SQLite on every request
+// Reads live progress from the database on every request
 export const dynamic = "force-dynamic";
+
+// Everything below the header needs the database, and four calls reach for it
+// independently — getProgressMap, buildQueue's own reviewQueue select,
+// getTrackMap and getWeeklyPace. Gathering them in one place gives a failure a
+// single branch instead of scattering guards across all four.
+async function loadProgressView(now: Date) {
+  const progress = await getProgressMap();
+  const queue = await buildQueue(now, progress);
+  const focus = queue.find((i) => i.kind === "continue")?.lessonSlug;
+  return {
+    stats: overallCompletion(progress),
+    queue,
+    focus,
+    map: await getTrackMap(progress, focus),
+    pace: await getWeeklyPace(now),
+  };
+}
 
 export default async function DashboardPage() {
   const t = await getTranslations("dashboard");
@@ -24,18 +43,67 @@ export default async function DashboardPage() {
   const locale = (await getLocale()) as Locale;
 
   const now = new Date();
-  const progress = await getProgressMap();
-  const stats = overallCompletion(progress);
+  let view: Awaited<ReturnType<typeof loadProgressView>> | null = null;
+  try {
+    view = await loadProgressView(now);
+  } catch (err) {
+    // Deliberately not an empty state: overallCompletion is pure over progress,
+    // so an empty map renders a confident 0% and "nothing due" — indistinguishable
+    // from wiped progress. Better to say the numbers cannot be read.
+    console.warn("dashboard progress unavailable:", err);
+  }
+
+  const header = (
+    <>
+      <h1 className="text-3xl font-semibold tracking-tight">{t("welcome")}</h1>
+      <p className="text-muted-foreground mt-2">{tApp("tagline")}</p>
+    </>
+  );
+
+  // The curriculum comes from content files, so navigation survives an outage
+  // even when every progress-derived number is unavailable.
+  if (!view) {
+    return (
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="container mx-auto w-full flex-1 px-4 py-10"
+      >
+        {header}
+
+        <Alert className="mt-6">
+          <AlertTitle>{t("offlineTitle")}</AlertTitle>
+          <AlertDescription>{t("offlineBody")}</AlertDescription>
+        </Alert>
+
+        <h2 className="mt-8 text-lg font-semibold">{t("offlineTracks")}</h2>
+        <ul className="mt-3 space-y-3">
+          {TRACKS.map((track) => (
+            <li key={track.id}>
+              <Link
+                href={`/track/${track.id}`}
+                className="font-medium hover:underline"
+              >
+                {track.title[locale]}
+              </Link>
+              <p className="text-muted-foreground text-sm">
+                {track.summary[locale]}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </main>
+    );
+  }
+
+  const { stats, queue, focus, map, pace } = view;
 
   // The queue is the page: every row states why it is there and what to do.
-  const queue = await buildQueue(now, progress);
   const items: QueueItemVM[] = queue.flatMap((item) => {
     const lesson = getLesson(item.lessonSlug);
     return lesson ? [{ ...item, slug: lesson.slug, title: lesson.title[locale] }] : [];
   });
 
-  const focus = queue.find((i) => i.kind === "continue")?.lessonSlug;
-  const map = await getTrackMap(progress, focus);
   const track = map ? getTrack(map.trackId) : undefined;
   const nextTrack = map?.nextTrackId ? getTrack(map.nextTrackId) : undefined;
 
@@ -64,8 +132,7 @@ export default async function DashboardPage() {
       tabIndex={-1}
       className="container mx-auto w-full flex-1 px-4 py-10"
     >
-      <h1 className="text-3xl font-semibold tracking-tight">{t("welcome")}</h1>
-      <p className="text-muted-foreground mt-2">{tApp("tagline")}</p>
+      {header}
 
       {map && track && (
         <TrackMap
@@ -77,7 +144,7 @@ export default async function DashboardPage() {
             done: map.done,
             total: map.total,
             remaining: stats.coreTotal - stats.coreCompleted,
-            pace: await getWeeklyPace(now),
+            pace,
           })}
           overall={{
             label: t("overall", { percent: stats.percent }),

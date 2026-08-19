@@ -100,7 +100,10 @@
     "unlocksLesson": "Xong bài đang dở sẽ mở {title}",
     "stepLocked": "chưa mở",
     "stepConfidence": "tự tin {n}/5",
-    "stepReading": "đang đọc — {percent}%"
+    "stepReading": "đang đọc — {percent}%",
+    "offlineTitle": "Chưa đọc được tiến độ",
+    "offlineBody": "Không kết nối được cơ sở dữ liệu, nên hàng đợi ôn tập và phần trăm hoàn thành tạm thời không hiển thị — dữ liệu chưa mất, chỉ là chưa đọc được. Tải lại trang sau ít phút. Trong lúc đó bạn vẫn mở được mọi bài học bên dưới.",
+    "offlineTracks": "Tất cả các track"
   },
   "roadmap": {
     "title": "Lộ trình",

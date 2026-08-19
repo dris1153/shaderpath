@@ -100,7 +100,10 @@
     "unlocksLesson": "Finishing this lesson unlocks {title}",
     "stepLocked": "locked",
     "stepConfidence": "confidence {n}/5",
-    "stepReading": "reading — {percent}%"
+    "stepReading": "reading — {percent}%",
+    "offlineTitle": "Progress unavailable",
+    "offlineBody": "The database could not be reached, so the review queue and completion figures are hidden — nothing is lost, it just cannot be read right now. Reload in a minute. Every lesson below is still reachable in the meantime.",
+    "offlineTracks": "All tracks"
   },
   "roadmap": {
     "title": "Roadmap",
