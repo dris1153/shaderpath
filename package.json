@@ -21,7 +21,8 @@
     "audit:guards": "pnpm check:css && pnpm check:ts-strict && pnpm lint:content",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "db:migrate": "tsx db/migrate.ts"
+    "db:migrate": "tsx db/migrate.ts",
+    "audit:triage": "tsx scripts/audit-content-triage.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
