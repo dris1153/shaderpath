@@ -20,6 +20,23 @@ import { Link } from "@/i18n/navigation";
 // Reads live progress from the database on every request
 export const dynamic = "force-dynamic";
 
+// A slow dashboard must not become a 504. The page already degrades when these
+// reads throw; this makes it degrade when they merely hang, which is what a
+// cold connection to a distant pooler actually does. Vercel kills the function
+// at 10s, so failing at 3s leaves room to render the fallback.
+//
+// It does not cancel the query — the transaction pooler ignores a client-side
+// statement_timeout, measured — but each Vercel invocation ends with its own
+// connection, so nothing is left holding it.
+function withDeadline<T>(work: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`dashboard read exceeded ${ms}ms`)), ms),
+    ),
+  ]);
+}
+
 // Everything below the header needs the database, and four calls reach for it
 // independently — getProgressMap, buildQueue's own reviewQueue select,
 // getTrackMap and getWeeklyPace. Gathering them in one place gives a failure a
@@ -45,7 +62,7 @@ export default async function DashboardPage() {
   const now = new Date();
   let view: Awaited<ReturnType<typeof loadProgressView>> | null = null;
   try {
-    view = await loadProgressView(now);
+    view = await withDeadline(loadProgressView(now), 3000);
   } catch (err) {
     // Deliberately not an empty state: overallCompletion is pure over progress,
     // so an empty map renders a confident 0% and "nothing due" — indistinguishable
