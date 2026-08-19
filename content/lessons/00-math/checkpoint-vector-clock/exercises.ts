@@ -35,7 +35,11 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();`,
-    solutionCode: `function hand(cx: number, cy: number, angle: number, len: number) {
+    solutionCode: `const canvas = document.querySelector("canvas")!;
+const ctx = canvas.getContext("2d")!;
+const R = 140; // clock face radius
+
+function hand(cx: number, cy: number, angle: number, len: number) {
   // Angle 0 points to 12 o'clock, rotating clockwise:
   // x = sin, y = -cos (canvas y axis points down)
   return [cx + Math.sin(angle) * len, cy - Math.cos(angle) * len] as const;
@@ -73,7 +77,8 @@ function draw() {
   ctx.lineWidth = 1;
 
   requestAnimationFrame(draw);
-}`,
+}
+draw();`,
     referenceImage: "/figures/00-math/checkpoint-vector-clock.svg",
     hints: [
       {

@@ -76,8 +76,8 @@
   </g>
 
   <!-- The exact operation Blender's glTF exporter performs -->
-  <path class="arrow" d="M232,138 C280,114 320,114 356,138" marker-end="url(#h)" />
-  <text class="note" x="294" y="108" text-anchor="middle">rotate 90&#176; about x</text>
+  <path class="arrow" d="M356,138 C320,114 280,114 232,138" marker-end="url(#h)" />
+  <text class="note" x="294" y="108" text-anchor="middle">rotate &#8722;90&#176; about x</text>
   <text class="note" x="294" y="152" text-anchor="middle">Blender's glTF export</text>
 
   <line class="rule" x1="16" y1="252" x2="584" y2="252" />

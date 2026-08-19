@@ -9,7 +9,7 @@ Cartesian coordinates — named after René Descartes, who folded algebra into g
 Pure math doesn't care which axis is "up" — but graphics software does, because users have an intuitive sense of up. Two conventions dominate:
 
 - **Y-up**: the $y$-axis points skyward, the ground is the $xz$ plane. Three.js defaults to this — its default camera looks down $-z$, and "up" is $+y$. glTF, the standard web 3D model format, mandates Y-up as well.
-- **Z-up**: the $z$-axis points skyward, the ground is the $xy$ plane. Blender uses Z-up internally (which is why its glTF exporter silently rotates everything 90° around $x$ to convert to Y-up on export), and CAD tools and some engineering-oriented software favor Z-up because it matches a top-down 2D blueprint.
+- **Z-up**: the $z$-axis points skyward, the ground is the $xy$ plane. Blender uses Z-up internally (which is why its glTF exporter silently rotates everything $-90°$ around $x$ to convert to Y-up on export — a $+90°$ rotation would send $+z$ to $-y$, i.e. upside down), and CAD tools and some engineering-oriented software favor Z-up because it matches a top-down 2D blueprint.
 
 The second question is whether a coordinate system is **right-handed** or **left-handed**. The right-hand rule: fingers curl from $+x$ toward $+y$; the thumb points along $+z$ if the system is right-handed. Three.js is right-handed; DirectX and Unity are traditionally left-handed. Not trivia — the cross product, the tool you'll use a few lessons from now to build surface normals, flips sign when handedness switches, and a model imported without conversion ends up with normals pointing inward instead of outward.
 
@@ -93,7 +93,7 @@ function mouseToNDC(event, canvas) {
 
 ## Where This Foundation Leads: Textures and Shaders
 
-Everything above sounds purely theoretical, but it's literally the first two lines of nearly every fragment shader you'll write: normalize `gl_FragCoord` (pixel coordinates) into UV, then remap UV into $[-1,1]$ to draw shapes symmetric around the center. Track 1 reuses this exact formula to upload and sample textures; Track 2 (GLSL) opens by normalizing screen coordinates this same way to draw shapes with distance fields. Get comfortable with these two formulas now, and you won't have to re-derive them for the rest of the tracks.
+Everything above sounds purely theoretical, but it's literally the first two lines of nearly every fragment shader you'll write: normalize `gl_FragCoord` (the pixel coordinate inside a fragment shader) into UV, then remap UV into $[-1,1]$ to draw shapes symmetric around the center. Track 1 reuses this exact formula to upload and sample textures; Track 2 (GLSL) opens by normalizing screen coordinates this same way to draw shapes with distance fields. One caveat so you never flip twice: `gl_FragCoord` has a **bottom-left** origin (unlike canvas/CSS, which is top-left) and already sits at pixel centers, so inside a shader you only need `uv = gl_FragCoord.xy / uResolution` then `2.0 * uv - 1.0` — no $+0.5$, no $v$ flip. The two formulas above are for top-left pixel coordinates (canvas, images, mouse). Get comfortable with both now, and you won't have to re-derive them for the rest of the tracks.
 
 <Callout variant="mistake" title="Common mistakes">
 

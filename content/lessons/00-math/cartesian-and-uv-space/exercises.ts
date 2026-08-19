@@ -18,8 +18,8 @@ Then answer: if you drop the half-pixel term $0.5$, how large is the error in $u
         en: "Substitute directly: u = (256 + 0.5) / 512. Don't round early — keep the decimals.",
       },
       {
-        vi: "Sai số tuyệt đối khi bỏ 0.5 là 0.5/W. Hãy so sánh đại lượng này với kích thước của MỘT texel trong không gian UV (1/W).",
-        en: "The absolute error from dropping 0.5 is 0.5/W. Compare that with the size of ONE texel in UV space (1/W).",
+        vi: "Sai số khi bỏ 0.5 có đơn vị gì nếu đo bằng texel (một texel rộng 1/W trong không gian UV)?",
+        en: "What is the error from dropping 0.5, measured in texels (one texel spans 1/W in UV space)?",
       },
     ],
     checklist: [
@@ -82,8 +82,8 @@ function normalizeMouse(
         en: "clientX/clientY are viewport coordinates — subtract rect.left/rect.top first, then divide by rect.width/height (NOT canvas.width).",
       },
       {
-        vi: "Trục y của chuột hướng xuống, trục v của WebGL hướng lên: v = 1 - y/height. Còn [0,1] → [-1,1] chỉ là *2 - 1.",
-        en: "Mouse y points down, WebGL v points up: v = 1 - y/height. And [0,1] → [-1,1] is just *2 - 1.",
+        vi: "Trục nào của chuột ngược chiều với WebGL? Phép tuyến tính nào đưa [0,1] về [-1,1]?",
+        en: "Which mouse axis runs opposite to WebGL's? Which linear map takes [0,1] to [-1,1]?",
       },
     ],
     checklist: [

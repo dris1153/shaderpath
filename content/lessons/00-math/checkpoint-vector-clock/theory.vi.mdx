@@ -1,10 +1,10 @@
 ## Mục tiêu
 
-Đây là bài mini-build đầu tiên của Track 0: không có lý thuyết mới, chỉ có một sản phẩm chạy được để chứng minh bạn thật sự nắm toạ độ, vector, cộng/trừ/scale và normalize — không chỉ đọc hiểu công thức mà còn dùng được chúng để dựng ra thứ gì đó nhìn thấy, chạy thật.
+Đây là bài mini-build đầu tiên của Track 0: công thức lượng giác cần thiết được cho sẵn ngay trong đề, còn lại chỉ có một sản phẩm chạy được để chứng minh bạn thật sự nắm toạ độ, vector đơn vị và scale — không chỉ đọc hiểu công thức mà còn dùng được chúng để dựng ra thứ gì đó nhìn thấy, chạy thật.
 
 ## Yêu cầu
 
-Dựng một chiếc đồng hồ kim analog chạy đúng giờ hệ thống trên canvas 2D, không dùng thư viện ngoài. Mặt đồng hồ tròn với 12 vạch giờ đặt bằng $(\cos\theta, \sin\theta)$; ba kim giờ/phút/giây lấy góc từ `new Date()` và animate mượt bằng `requestAnimationFrame`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới — đọc kỹ yêu cầu ở đó trước khi bắt đầu.
+Dựng một chiếc đồng hồ kim analog chạy đúng giờ hệ thống trên canvas 2D, không dùng thư viện ngoài. 12 vạch giờ xếp thành vòng tròn, đặt bằng $(\cos\theta, \sin\theta)$ (riêng kim đồng hồ cần trục điều chỉnh cho canvas — $x=\sin\theta$, $y=-\cos\theta$ — xem hint); ba kim giờ/phút/giây lấy góc từ `new Date()` và animate mượt bằng `requestAnimationFrame`. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới — đọc kỹ yêu cầu ở đó trước khi bắt đầu.
 
 ## Gợi ý cấu trúc
 

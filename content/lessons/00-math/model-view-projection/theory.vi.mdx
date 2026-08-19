@@ -27,7 +27,7 @@ Thứ tự nhân không phải quy ước tuỳ chọn: đổi thành $MVP$ hay 
 
 ## Ma trận view là nghịch đảo transform của camera
 
-Camera trong scene cũng có transform như bất kỳ object nào — vị trí và hướng nhìn tạo thành ma trận "camera-to-world," gọi là $C$. Điểm dễ nhầm nhất bài này: ma trận view không phải $C$, mà là $C^{-1}$. Lý do thuần hình học: $C$ trả lời "điểm nào trong không gian camera tương ứng điểm nào trong world," còn thứ ta cần lại ngược lại — "world trông ra sao từ camera." Nghịch đảo chính là phép đổi chiều đó.
+Camera trong scene cũng có transform như bất kỳ object nào — vị trí và hướng nhìn tạo thành ma trận "camera-to-world," gọi là $C$. Điểm dễ nhầm nhất bài này: ma trận view không phải $C$, mà là $C^{-1}$ — trong Three.js chính là `camera.matrixWorldInverse`. Lý do thuần hình học: $C$ trả lời "điểm nào trong không gian camera tương ứng điểm nào trong world," còn thứ ta cần lại ngược lại — "world trông ra sao từ camera." Nghịch đảo chính là phép đổi chiều đó.
 
 Đây là gốc trực giác kinh điển "camera đi trái, thế giới trôi phải": nếu $C$ dịch camera $+3$ đơn vị theo $x$, thì $C^{-1}$ dịch mọi điểm world $-3$ theo $x$ — camera tự thấy mình đứng yên tại gốc, còn cả thế giới trôi ngược đúng chiều nó vừa di chuyển. Phần quay cũng vậy: nghịch đảo của một ma trận quay trực chuẩn (orthonormal — các cột đều dài 1 và đôi một vuông góc) $R$ là $R^\top$ (chuyển vị) — quay world ngược hệt chiều camera vừa xoay.
 

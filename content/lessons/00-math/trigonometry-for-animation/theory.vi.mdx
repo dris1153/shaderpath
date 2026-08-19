@@ -30,11 +30,11 @@ Ba tham số này là "núm vặn" chuẩn hoá của mọi dao động hình si
 - **Tần số góc $\omega$** (rad/s): nhân với $t$ bên trong hàm sin, quyết định "dao động nhanh hay chậm". Chu kỳ — thời gian để lặp lại đúng một vòng — tính bằng $T = \frac{2\pi}{\omega}$; tần số theo Hz (chu kỳ mỗi giây) là $f = \frac{\omega}{2\pi}$. Ví dụ $\omega = \pi$ rad/s cho $T = 2$ giây mỗi chu kỳ — dễ kiểm chứng bằng mắt với một đồng hồ bấm giờ.
 - **Pha $\phi$** (rad): cộng thêm bên trong hàm sin, dịch chuyển đồ thị theo trục thời gian mà không đổi hình dạng hay tốc độ. $\phi > 0$ làm sóng "xuất phát sớm hơn" — tại $t=0$, giá trị đã là $A\sin\phi$ thay vì $0$. Pha là công cụ đúng để hai vật thể dao động cùng biên độ, cùng tần số nhưng lệch nhịp nhau — ví dụ nhiều lá cờ tung bay không đồng bộ, hay các hạt bồng bềnh (bobbing) không "nhảy" cùng lúc.
 
-Ba tham số độc lập tuyến tính với nhau: đổi $A$ không ảnh hưởng $\omega$ hay $\phi$, và ngược lại — đây là lý do một slider riêng cho mỗi tham số luôn đủ để khám phá toàn bộ không gian dao động hình sin.
+Ba tham số độc lập với nhau: đổi $A$ không ảnh hưởng $\omega$ hay $\phi$, và ngược lại — đây là lý do một slider riêng cho mỗi tham số luôn đủ để khám phá toàn bộ không gian dao động hình sin.
 
 <Figure
   src="/figures/00-math/unit-circle-to-sine-wave.svg"
-  alt="Vòng tròn bán kính A với một điểm ở góc θ = ωt + φ, nối bằng đường nét đứt sang đồ thị sóng sin; trên đồ thị đánh dấu biên độ A, chu kỳ T = 2π/ω và độ lệch pha φ"
+  alt="Vòng tròn bán kính A với một điểm ở góc θ = ωt + φ, nối bằng đường nét đứt sang đồ thị sóng sin; trên đồ thị đánh dấu biên độ A, chu kỳ T = 2π/ω và độ dời φ/ω trên trục thời gian"
   caption="A là bán kính vòng tròn, ω quyết định một vòng hết bao lâu, φ chỉ dời điểm xuất phát — ba núm vặn tác động vào ba chỗ khác nhau của cùng một chuyển động."
 />
 
@@ -42,7 +42,7 @@ Ba tham số độc lập tuyến tính với nhau: đổi $A$ không ảnh hư�
 
 Bài toán ngược lại với "cho góc, tìm điểm" là "cho một hướng $(\Delta x, \Delta y)$, tìm góc" — ví dụ tính góc xoay để một khẩu pháo quay mặt về phía chuột. Trực giác đầu tiên là dùng $\theta = \arctan(\Delta y / \Delta x)$, nhưng hàm `atan` một tham số có một lỗ hổng toán học: tỉ số $\Delta y / \Delta x$ giống hệt nhau cho hai hướng đối nghịch nhau — $(\Delta x, \Delta y) = (3, 2)$ và $(-3, -2)$ cho cùng tỉ số $2/3$, nên `atan` trả về cùng một góc cho cả hai, dù chúng chỉ về hai phía hoàn toàn ngược nhau. `atan` chỉ trả giá trị trong khoảng $(-90°, 90°)$ — nó không có cách nào phân biệt bốn góc phần tư.
 
-`atan2(Δy, Δx)` giải quyết đúng vấn đề này bằng cách nhận **hai** tham số riêng biệt thay vì một tỉ số — biết dấu của cả $\Delta x$ lẫn $\Delta y$ nghĩa là biết chính xác góc phần tư nào, nên trả về góc đúng trong toàn bộ khoảng $(-180°, 180°]$:
+`atan2(Δy, Δx)` giải quyết đúng vấn đề này bằng cách nhận **hai** tham số riêng biệt thay vì một tỉ số — biết dấu của cả $\Delta x$ lẫn $\Delta y$ nghĩa là biết chính xác góc phần tư nào, nên trả về góc đúng trong toàn bộ khoảng $[-180°, 180°]$ (JS trả đúng $-180°$ cho input $(-0, x<0)$):
 
 ```ts
 function angleToTarget(from: { x: number; y: number }, to: { x: number; y: number }) {
@@ -68,7 +68,7 @@ function organicOffset(t: number) {
 }
 ```
 
-Mỗi số hạng là một sóng "hài" (harmonic) với tần số không phải bội số nguyên gọn của số hạng trước (2.7 và 5.1, không phải 2 và 4), khiến tổng không lặp lại rõ ràng trong một khoảng thời gian ngắn — mắt người khó đoán trước chu kỳ tiếp theo, nên cảm giác "hữu cơ" hơn hẳn một sóng sin đơn. Biên độ giảm dần (1.0 → 0.5 → 0.25) mô phỏng nguyên lý vật lý thật: dao động tần số cao thường mang năng lượng (biên độ) nhỏ hơn dao động tần số thấp. Kỹ thuật này chính là bước đệm thô sơ trước khi vào FBM (fractal Brownian motion) ở Track 7 — cùng ý tưởng "chồng nhiều tần số", chỉ thay sin bằng noise.
+Mỗi số hạng là một thành phần sóng (partial) với tần số **cố ý không phải** bội số nguyên của số hạng trước (2.7 và 5.1, không phải 2 và 4 — bội nguyên mới gọi là "hài"/harmonic, và chính chúng tạo chu kỳ lặp rõ), khiến tổng không lặp lại rõ ràng trong một khoảng thời gian ngắn — mắt người khó đoán trước chu kỳ tiếp theo, nên cảm giác "hữu cơ" hơn hẳn một sóng sin đơn. Biên độ giảm dần (1.0 → 0.5 → 0.25) mô phỏng nguyên lý vật lý thật: dao động tần số cao thường có biên độ nhỏ hơn dao động tần số thấp. Kỹ thuật này chính là bước đệm thô sơ trước khi vào FBM (fractal Brownian motion) ở Track 7 — cùng ý tưởng "chồng nhiều tần số", chỉ thay sin bằng noise.
 
 ## Điều khiển quỹ đạo tròn trực tiếp từ thời gian
 
@@ -84,7 +84,7 @@ function orbitPosition(center: { x: number; y: number }, radius: number, omega: 
 }
 ```
 
-`elapsedSeconds` lấy từ một đồng hồ đơn điệu (`performance.now()`, hoặc `state.clock.elapsedTime` trong React Three Fiber) — không phải một biến cộng dồn thủ công. Khác biệt này quan trọng hơn vẻ ngoài: nếu tính bằng `angle += omega * dt` mỗi frame, sai số làm tròn dấu phẩy động cộng dồn qua hàng chục nghìn frame, và tốc độ quay phụ thuộc trực tiếp vào việc frame có bị bỏ lỡ hay tạm dừng (tab ẩn) hay không — tạm dừng tab rồi quay lại làm góc "đứng yên" tại giá trị cũ, trong khi thời gian thực đã trôi tiếp. Tính thẳng từ `elapsedSeconds` tự động đồng bộ lại đúng vị trí ngay khi resume, không cần logic bù trừ nào thêm.
+`elapsedSeconds` lấy từ một đồng hồ đơn điệu (monotonic clock — chỉ tiến, không bao giờ lùi; `performance.now()`, hoặc `state.clock.elapsedTime` trong React Three Fiber) — không phải một biến cộng dồn thủ công. Khác biệt này quan trọng hơn vẻ ngoài: nếu tính bằng `angle += omega * dt` mỗi frame, sai số làm tròn dấu phẩy động cộng dồn qua hàng chục nghìn frame, và tốc độ quay phụ thuộc trực tiếp vào việc frame có bị bỏ lỡ hay tạm dừng (tab ẩn) hay không — tạm dừng tab rồi quay lại làm góc "đứng yên" tại giá trị cũ, trong khi thời gian thực đã trôi tiếp. Tính thẳng từ `elapsedSeconds` tự động đồng bộ lại đúng vị trí ngay khi resume, không cần logic bù trừ nào thêm.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

@@ -6,7 +6,7 @@ $$
 \text{lerp}(a, b, t) = a + (b - a)\,t
 $$
 
-Start at $a$, add $t$'s worth of the distance to $b$. At $t=0$ the result is $a$; at $t=1$ it's $b$; at $t=0.5$ it's the midpoint. Values outside $[0,1]$ are still mathematically valid — called **extrapolation** — occasionally useful (overshoot animation) but usually a bug if unintended. `lerp(10, 50, 0.25)` gives $10 + 40 \times 0.25 = 20$.
+Start at $a$, add $t$'s worth of the distance to $b$. At $t=0$ the result is $a$; at $t=1$ it's $b$; at $t=0.5$ it's the midpoint. Values outside $[0,1]$ are still mathematically valid — called **extrapolation** — occasionally useful (overshoot — an animation shooting past the target and settling back) but usually a bug if unintended. `lerp(10, 50, 0.25)` gives $10 + 40 \times 0.25 = 20$.
 
 ```ts
 function lerp(a: number, b: number, t: number): number {
@@ -14,7 +14,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 ```
 
-This works on anything with addition and scalar multiplication — numbers, vectors, even RGB colors (though only linear-space color gives a physically correct result — the sRGB lesson's topic) — which is why it's the "engine" behind most tweens and camera transitions.
+This works on anything with addition and scalar multiplication — numbers, vectors, even RGB colors (though only linear-space color gives a physically correct result — the sRGB lesson's topic) — which is why it's the "engine" behind most tweens (interpolated animations between two states) and camera transitions. In GLSL, lerp goes by `mix(a, b, t)`; in three.js it is `THREE.MathUtils.lerp` — the two names you will actually meet in Tracks 2–3.
 
 ## Inverse Lerp and Remap: Lerp's Two Siblings
 
@@ -101,7 +101,7 @@ function dampTowards(value: number, target: number, lambda: number, dt: number):
 }
 ```
 
-This converges at the same **real** speed regardless of framerate — doubling $\Delta t$ compensates by applying a larger decay factor in one step, instead of repeating the same small factor more times. This is "frame-rate independent damping" — `value += (target-value)*k` every frame is the textbook broken version; `SmoothDamp`-style functions in modern engines are the dt-correct one.
+This converges at the same **real** speed regardless of framerate — doubling $\Delta t$ compensates by applying a larger decay factor in one step, instead of repeating the same small factor more times. This is "frame-rate independent damping" — `value += (target-value)*k` every frame is the textbook broken version; `SmoothDamp`-style functions in modern engines share the dt-correct spirit (though they are critically-damped springs, not this exact formula).
 
 ## Slerp: Interpolating an Angle, Not a Straight Line
 
@@ -111,7 +111,7 @@ Applying `lerp` directly to a quaternion (interpolating each component $x,y,z,w$
 
 The three most common lerp and easing mistakes:
 
-1. **Forgetting to `clamp` after `remap`/`invLerp` when the input can go out of range.** A health bar or alpha fade receives a negative or >1 value from unintended extrapolation — UI renders past its frame, or a negative alpha gets misread by the driver. Always `clamp(t, 0, 1)` before using $t$ as an alpha.
+1. **Forgetting to `clamp` after `remap`/`invLerp` when the input can go out of range.** A health bar or alpha fade receives a negative or >1 value from unintended extrapolation — the GPU silently clamps out-of-range alpha (on standard framebuffers) — the bar draws past its frame and the bug hides instead of erroring. Always `clamp(t, 0, 1)` before using $t$ as an alpha.
 2. **Mixing up GLSL's `smoothstep` argument order.** `smoothstep(edge0, edge1, x)` — the first two are bounds, the third is the value; writing `smoothstep(x, edge0, edge1)` (a habit from `clamp`) compiles fine but produces a completely wrong gradient.
 3. **Using `value += (target - value) * k` every frame without multiplying by `dt`.** The same `k` runs at a different effective speed depending on the player's frame rate. Use the $1 - e^{-\lambda \Delta t}$ form to separate desired convergence speed from actual frame rate.
 

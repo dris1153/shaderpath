@@ -1,6 +1,6 @@
 ## Hệ toạ độ Descartes: từ đường số đến không gian 3D
 
-Toạ độ Descartes (theo tên René Descartes, người đưa đại số vào hình học từ thế kỷ 17) biến một điểm hình học thành một cặp, hoặc bộ ba, con số. Trong mặt phẳng 2D, bạn chọn gốc $O$ và hai trục vuông góc $x, y$; điểm $P(x, y)$ nghĩa là đi $x$ đơn vị dọc trục hoành, rồi $y$ đơn vị dọc trục tung. Quy ước vuông góc, chia đều đơn vị không phải chân lý bắt buộc — bạn có thể nghiêng trục hay đảo chiều dương — nhưng mọi công cụ đồ hoạ đều ngầm giả định nó, nên phá vỡ nó vô tình là lỗi phổ biến nhất khi mới học.
+Toạ độ Descartes (theo tên René Descartes, người đưa đại số vào hình học từ thế kỷ 17) biến một điểm hình học thành một cặp, hoặc bộ ba, con số. Trong mặt phẳng 2D, bạn chọn gốc $O$ và hai trục vuông góc $x, y$; điểm $P(x, y)$ nghĩa là đi $x$ đơn vị dọc trục hoành, rồi $y$ đơn vị dọc trục tung. Quy ước vuông góc, chia đều đơn vị không phải chân lý bắt buộc — bạn có thể nghiêng hai trục chỉ còn $30°$ thay vì vuông góc, hay đảo chiều dương — nhưng mọi công cụ đồ hoạ đều ngầm giả định nó, nên phá vỡ nó vô tình là lỗi phổ biến nhất khi mới học.
 
 Không gian 3D thêm trục $z$ vuông góc với hai trục còn lại; điểm $P(x, y, z)$ là giao ba mặt phẳng vuông góc dựng từ ba toạ độ đó. Ba trục thôi chưa đủ mô tả trọn vẹn một hệ toạ độ — còn cần biết trục nào "hướng lên" và chúng xoay theo chiều nào, chủ đề phần tiếp theo.
 
@@ -9,7 +9,7 @@ Không gian 3D thêm trục $z$ vuông góc với hai trục còn lại; điểm
 Toán học không quan tâm trục nào "hướng lên" — phần mềm đồ hoạ thì có, vì người dùng luôn có cảm nhận trực quan về "lên". Hai quy ước phổ biến nhất:
 
 - **Y-up**: trục $y$ chỉ lên trời, mặt đất là mặt phẳng $xz$. Three.js dùng mặc định — camera nhìn dọc trục $-z$, "lên" là $+y$. glTF, định dạng model 3D chuẩn cho web, cũng bắt buộc Y-up.
-- **Z-up**: trục $z$ chỉ lên trời, mặt đất là mặt phẳng $xy$. Blender dùng Z-up nội bộ (bộ export glTF của Blender tự xoay 90° quanh trục $x$ để đổi sang Y-up khi xuất file) — CAD và một số phần mềm kỹ thuật cũng quen Z-up vì khớp với bản vẽ 2D nhìn từ trên xuống.
+- **Z-up**: trục $z$ chỉ lên trời, mặt đất là mặt phẳng $xy$. Blender dùng Z-up nội bộ (bộ export glTF của Blender tự xoay $-90°$ quanh trục $x$ để đổi sang Y-up khi xuất file — $+90°$ sẽ đưa $+z$ xuống $-y$, tức lộn ngược) — CAD và một số phần mềm kỹ thuật cũng quen Z-up vì khớp với bản vẽ 2D nhìn từ trên xuống.
 
 Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị lộn mặt.
 
@@ -38,11 +38,11 @@ UV space là hệ toạ độ 2D tham chiếu vị trí trên một bề mặt �
 
 <Figure
   src="/figures/00-math/uv-origin-conventions.svg"
-  alt="Hai hình vuông đơn vị đặt cạnh nhau: texture space của GL gốc dưới-trái và image space gốc trên-trái, cùng một texel được ghi toạ độ ở cả hai"
+  alt="Hai hình vuông đơn vị đặt cạnh nhau: texture space của GL gốc dưới-trái và image space gốc trên-trái, cùng một texel (một ô pixel của texture) được ghi toạ độ ở cả hai"
   caption="Toạ độ u của một texel giống hệt nhau ở cả hai quy ước, chỉ v khác — nên texture lật sai luôn lộn theo chiều dọc chứ không bao giờ lộn ngang."
 />
 
-Lý do chọn $[0,1]$ rất thực dụng: shader sample texture bằng UV không cần biết texture có bao nhiêu pixel — đổi độ phân giải hay mip level không phải sửa dòng shader nào, vì toạ độ sample vẫn nằm trong $[0,1]$. Đây là lý do UV, không phải toạ độ pixel, là ngôn ngữ mọi vertex dùng để nói với GPU "lấy màu ở đâu trên texture".
+Lý do chọn $[0,1]$ rất thực dụng: shader (chương trình nhỏ chạy trên GPU) sample — đọc màu — texture bằng UV không cần biết texture có bao nhiêu pixel — đổi độ phân giải hay mip level (bản texture thu nhỏ dần GPU tự chọn theo khoảng cách) không phải sửa dòng shader nào, vì toạ độ sample vẫn nằm trong $[0,1]$. Đây là lý do UV, không phải toạ độ pixel, là ngôn ngữ mọi vertex dùng để nói với GPU "lấy màu ở đâu trên texture".
 
 ## Ánh xạ pixel ↔ UV: công thức và pixel center
 
@@ -73,13 +73,13 @@ Một pixel không phải một điểm toán học — nó là ô vuông có di
 
 ## Chuẩn hoá màn hình: [0,1] và xem trước [-1,1] (NDC)
 
-UV $[0,1]$ tiện cho sample texture, nhưng $[-1, 1]$ tiện hơn cho hướng và vector, vì có tâm tại 0, đối xứng — dấu một con số thể hiện trực tiếp "trái/phải" hay "trước/sau" mà không cần trừ 0.5 mỗi lần dùng. Đây là không gian mà WebGL gọi **NDC** (Normalized Device Coordinates) — bài Model → View → Projection ở module sau sẽ nói kỹ, nhưng công thức chuyển từ UV sang NDC chỉ là scale-and-shift:
+UV $[0,1]$ tiện cho sample texture, nhưng $[-1, 1]$ tiện hơn cho hướng và vector (mũi tên có hướng và độ dài — bài ngay sau đào sâu), vì có tâm tại 0, đối xứng — dấu một con số thể hiện trực tiếp "trái/phải" hay "trước/sau" mà không cần trừ 0.5 mỗi lần dùng. Đây là không gian mà WebGL gọi **NDC** (Normalized Device Coordinates) — bài Model → View → Projection ở phần sau của track này sẽ nói kỹ, nhưng công thức chuyển từ UV sang NDC chỉ là scale-and-shift:
 
 $$
 x_{ndc} = 2u - 1, \qquad y_{ndc} = 1 - 2v
 $$
 
-Trục $y$ dùng $1 - 2v$ thay vì $2v - 1$ vì $v$ tăng xuống dưới (quy ước canvas/ảnh) trong khi $y_{ndc}$ tăng lên trên (quy ước NDC) — phép lật trục dọc bắt buộc mỗi khi dữ liệu đi từ "không gian ảnh" sang "không gian toán/NDC". Ứng dụng phổ biến nhất: chuyển toạ độ chuột (pixel, gốc trên-trái) sang NDC cho raycasting:
+Trục $y$ dùng $1 - 2v$ thay vì $2v - 1$ vì $v$ tăng xuống dưới (quy ước canvas/ảnh) trong khi $y_{ndc}$ tăng lên trên (quy ước NDC) — phép lật trục dọc bắt buộc mỗi khi dữ liệu đi từ "không gian ảnh" sang "không gian toán/NDC". Ứng dụng phổ biến nhất: chuyển toạ độ chuột (pixel, gốc trên-trái) sang NDC cho raycasting (bắn tia từ vị trí chuột vào cảnh 3D để chọn object — gặp ở Track 3):
 
 ```js
 // browser: gắn vào canvas.addEventListener("pointermove", (e) => mouseToNDC(e, canvas))
@@ -93,7 +93,7 @@ function mouseToNDC(event, canvas) {
 
 ## Nền tảng này dẫn tới đâu: texture và shader
 
-Mọi thứ ở trên nghe thuần lý thuyết, nhưng là hai dòng đầu tiên bạn viết trong gần như mọi fragment shader: chuẩn hoá `gl_FragCoord` (toạ độ pixel) về UV, rồi map UV về $[-1,1]$ để vẽ hình đối xứng qua tâm. Track 1 dùng lại đúng công thức này để upload và sample texture; Track 2 (GLSL) mở đầu bằng đúng phép chuẩn hoá này để vẽ hình bằng distance field. Nắm chắc hai công thức này ngay bây giờ, khỏi phải dừng lại suy nghĩ về chúng suốt các track còn lại.
+Mọi thứ ở trên nghe thuần lý thuyết, nhưng là hai dòng đầu tiên bạn viết trong gần như mọi fragment shader: chuẩn hoá `gl_FragCoord` (toạ độ pixel trong fragment shader) về UV, rồi map UV về $[-1,1]$ để vẽ hình đối xứng qua tâm. Track 1 dùng lại đúng công thức này để upload và sample texture; Track 2 (GLSL) mở đầu bằng đúng phép chuẩn hoá này để vẽ hình bằng distance field. Một lưu ý để khỏi lật nhầm hai lần: `gl_FragCoord` có gốc ở **dưới-trái** (khác canvas/CSS là trên-trái) và toạ độ của nó đã nằm sẵn ở tâm pixel, nên trong shader chỉ cần `uv = gl_FragCoord.xy / uResolution` rồi `2.0 * uv - 1.0` — không cộng $0.5$, không lật $v$. Hai công thức phía trên là cho toạ độ pixel gốc trên-trái (canvas, ảnh, chuột). Nắm chắc cả hai ngay bây giờ, khỏi phải dừng lại suy nghĩ về chúng suốt các track còn lại.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

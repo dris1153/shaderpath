@@ -27,9 +27,9 @@ The multiplication order isn't an arbitrary convention: swapping it to $MVP$, or
 
 ## The View Matrix Is the Camera's Transform, Inverted
 
-A camera in the scene has a transform just like any other object — its position and orientation form a "camera-to-world" matrix, call it $C$. The single most confusable point in this lesson: the view matrix isn't $C$, it's $C^{-1}$. The reason is purely geometric: $C$ answers "which world point does this camera-space point correspond to," while what you actually need is the opposite — "what does the world look like from the camera." Inverting the matrix is exactly that reversal.
+A camera in the scene has a transform just like any other object — its position and orientation form a "camera-to-world" matrix, call it $C$. The single most confusable point in this lesson: the view matrix isn't $C$, it's $C^{-1}$ — in Three.js that is exactly `camera.matrixWorldInverse`. The reason is purely geometric: $C$ answers "which world point does this camera-space point correspond to," while what you actually need is the opposite — "what does the world look like from the camera." Inverting the matrix is exactly that reversal.
 
-This is the root of the classic intuition "the camera moves left, the world drifts right": if $C$ translates the camera $+3$ units along $x$, then $C^{-1}$ translates every world point $-3$ along $x$ — the camera perceives itself as sitting still at the origin, while the entire world slides the opposite direction it just moved. Rotation works the same way: the inverse of an orthonormal rotation $R$ is $R^\top$ (the transpose) — spinning the world the exact opposite way the camera just turned.
+This is the root of the classic intuition "the camera moves left, the world drifts right": if $C$ translates the camera $+3$ units along $x$, then $C^{-1}$ translates every world point $-3$ along $x$ — the camera perceives itself as sitting still at the origin, while the entire world slides the opposite direction it just moved. Rotation works the same way: the inverse of an orthonormal rotation matrix $R$ (its columns are unit length and mutually perpendicular) is $R^\top$ (the transpose) — spinning the world the exact opposite way the camera just turned.
 
 ## Building the lookAt Matrix From Eye, Target and Up
 

@@ -30,11 +30,11 @@ These three parameters are the standardized "knobs" of any sine-based oscillatio
 - **Angular frequency $\omega$** (rad/s): multiplies $t$ inside the sine, deciding "how fast the oscillation runs." The period — the time to complete exactly one cycle — is $T = \frac{2\pi}{\omega}$; the frequency in Hz (cycles per second) is $f = \frac{\omega}{2\pi}$. For example, $\omega = \pi$ rad/s gives $T = 2$ seconds per cycle — easy to verify by eye with a stopwatch.
 - **Phase $\phi$** (rad): added inside the sine, shifting the graph along the time axis without changing its shape or speed. $\phi > 0$ makes the wave "start earlier" — at $t=0$ the value is already $A\sin\phi$ instead of $0$. Phase is the right tool whenever two objects should oscillate with the same amplitude and frequency but out of sync — several flags flapping without matching each other, or several bobbing particles that shouldn't all "hop" on the same beat.
 
-The three parameters are linearly independent of one another: changing $A$ never touches $\omega$ or $\phi$, and vice versa — which is exactly why one slider per parameter is always enough to explore the full space of sine-based oscillation.
+The three parameters are independent of one another: changing $A$ never touches $\omega$ or $\phi$, and vice versa — which is exactly why one slider per parameter is always enough to explore the full space of sine-based oscillation.
 
 <Figure
   src="/figures/00-math/unit-circle-to-sine-wave.svg"
-  alt="A circle of radius A with a point at angle theta = omega t + phi, linked by a dashed line across to a sine plot marked with the amplitude A, the period T = 2 pi over omega, and the phase shift phi"
+  alt="A circle of radius A with a point at angle theta = omega t + phi, linked by a dashed line across to a sine plot marked with the amplitude A, the period T = 2 pi over omega, and the time-axis offset phi over omega"
   caption="A is the circle's radius, omega sets how long one lap takes, phi only moves the starting point — three knobs acting on three different parts of one motion."
 />
 
@@ -42,7 +42,7 @@ The three parameters are linearly independent of one another: changing $A$ never
 
 The inverse of "given an angle, find the point" is "given a direction $(\Delta x, \Delta y)$, find the angle" — for instance, the rotation a turret needs to face the mouse. The first instinct is $\theta = \arctan(\Delta y / \Delta x)$, but the single-argument `atan` function has a real mathematical gap: the ratio $\Delta y / \Delta x$ is identical for two exactly opposite directions — $(\Delta x, \Delta y) = (3, 2)$ and $(-3, -2)$ produce the same ratio $2/3$, so `atan` returns the same angle for both, even though they point in completely opposite directions. `atan` only ever returns a value inside $(-90°, 90°)$ — it has no way to tell the four quadrants apart.
 
-`atan2(Δy, Δx)` fixes exactly this by taking **two** separate arguments instead of one ratio — knowing the sign of both $\Delta x$ and $\Delta y$ pins down exactly which quadrant the direction is in, so it returns the correct angle across the entire range $(-180°, 180°]$:
+`atan2(Δy, Δx)` fixes exactly this by taking **two** separate arguments instead of one ratio — knowing the sign of both $\Delta x$ and $\Delta y$ pins down exactly which quadrant the direction is in, so it returns the correct angle across the entire range $[-180°, 180°]$ (JS does return exactly $-180°$ for input $(-0, x<0)$):
 
 ```ts
 function angleToTarget(from: { x: number; y: number }, to: { x: number; y: number }) {
@@ -68,7 +68,7 @@ function organicOffset(t: number) {
 }
 ```
 
-Each term is a "harmonic" wave whose frequency isn't a clean integer multiple of the previous one (2.7 and 5.1, not 2 and 4), so the sum never repeats obviously over a short window — the eye can't easily predict the next cycle, so it reads as more "organic" than any single sine wave. The shrinking amplitudes (1.0 → 0.5 → 0.25) mirror real physics: higher-frequency oscillation typically carries less energy (amplitude) than lower-frequency oscillation. This technique is a crude stepping stone toward FBM (fractal Brownian motion) in Track 7 — the same "stack several frequencies" idea, just swapping sine for noise.
+Each term is a wave component (a partial) whose frequency is **deliberately not** an integer multiple of the previous one (2.7 and 5.1, not 2 and 4 — integer multiples are what "harmonic" actually means, and they are exactly what creates an obvious repeat), so the sum never repeats obviously over a short window — the eye can't easily predict the next cycle, so it reads as more "organic" than any single sine wave. The shrinking amplitudes (1.0 → 0.5 → 0.25) mirror real physics: higher-frequency oscillation typically has a smaller amplitude than lower-frequency oscillation. This technique is a crude stepping stone toward FBM (fractal Brownian motion) in Track 7 — the same "stack several frequencies" idea, just swapping sine for noise.
 
 ## Driving Circular Orbits Directly From Time
 

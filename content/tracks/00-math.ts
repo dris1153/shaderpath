@@ -484,8 +484,8 @@ export const lessons: LessonMeta[] = [
       en: "Mini-build: Orbits & Pulses",
     },
     summary: {
-      vi: "Một cảnh canvas 2D: vật thể bay quỹ đạo, đổi hướng nhìn theo chuột, easing khi tăng tốc — toàn bộ bằng toán của track này.",
-      en: "A 2D canvas scene: bodies on orbits, aiming at the mouse, eased acceleration — built entirely from this track's math.",
+      vi: "Một cảnh canvas 2D: vật thể bay quỹ đạo, đường ngắm đuổi theo chuột bằng decay hàm mũ, màu nhấp nháy trộn trong linear — toàn bộ bằng toán của track này.",
+      en: "A 2D canvas scene: bodies on orbits, an aim line chasing the mouse via exponential decay, colors pulsing in linear space — built entirely from this track's math.",
     },
     difficulty: 3,
     estimatedMinutes: 60,

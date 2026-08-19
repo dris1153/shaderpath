@@ -18,8 +18,8 @@
     }
     .frame { fill: none; stroke: var(--line); stroke-width: 1; }
   </style>
-  <rect x="0" y="0" width="320" height="320" fill="#ffffff" />
-  <g stroke="#000000" stroke-width="1">
+  <rect x="0" y="0" width="320" height="320" fill="#0f1116" />
+  <g stroke="#7dd3fc" stroke-width="1">
     <line x1="160" y1="34" x2="160" y2="20" />
     <line x1="223" y1="50.88" x2="230" y2="38.76" />
     <line x1="269.12" y1="97" x2="281.24" y2="90" />
@@ -33,10 +33,10 @@
     <line x1="50.88" y1="97" x2="38.76" y2="90" />
     <line x1="97" y1="50.88" x2="90" y2="38.76" />
   </g>
-  <line x1="160" y1="160" x2="102.52" y2="120.05" stroke="#000000" stroke-width="4" />
-  <line x1="160" y1="160" x2="248.65" y2="103.74" stroke="#000000" stroke-width="2" />
-  <line x1="160" y1="160" x2="90.05" y2="256.27" stroke="#000000" stroke-width="1" />
+  <line x1="160" y1="160" x2="102.52" y2="120.05" stroke="#7dd3fc" stroke-width="4" />
+  <line x1="160" y1="160" x2="248.65" y2="103.74" stroke="#7dd3fc" stroke-width="2" />
+  <line x1="160" y1="160" x2="90.05" y2="256.27" stroke="#7dd3fc" stroke-width="1" />
   <rect class="frame" x="0.5" y="0.5" width="319" height="319" />
   <text x="0" y="342">One frame at 10:09:36 — ticks and hands only</text>
-  <text x="0" y="358">Default black strokes; no face circle</text>
+  <text x="0" y="358">Strokes #7dd3fc over the dark page; no face circle</text>
 </svg>

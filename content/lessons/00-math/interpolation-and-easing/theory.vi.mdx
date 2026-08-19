@@ -6,7 +6,7 @@ $$
 \text{lerp}(a, b, t) = a + (b - a)\,t
 $$
 
-Xuất phát từ $a$, cộng thêm $t$ phần khoảng cách tới $b$. Tại $t=0$ ra $a$; tại $t=1$ ra $b$; tại $t=0.5$ ra chính giữa. $t$ ngoài $[0,1]$ vẫn hợp lệ về toán học — gọi là **ngoại suy** (extrapolation) — đôi khi hữu ích (overshoot animation) nhưng thường là lỗi nếu không chủ đích. Ví dụ: `lerp(10, 50, 0.25)` cho $10 + 40 \times 0.25 = 20$.
+Xuất phát từ $a$, cộng thêm $t$ phần khoảng cách tới $b$. Tại $t=0$ ra $a$; tại $t=1$ ra $b$; tại $t=0.5$ ra chính giữa. $t$ ngoài $[0,1]$ vẫn hợp lệ về toán học — gọi là **ngoại suy** (extrapolation) — đôi khi hữu ích (overshoot — animation vọt lố qua đích rồi quay lại) nhưng thường là lỗi nếu không chủ đích. Ví dụ: `lerp(10, 50, 0.25)` cho $10 + 40 \times 0.25 = 20$.
 
 ```ts
 function lerp(a: number, b: number, t: number): number {
@@ -14,7 +14,7 @@ function lerp(a: number, b: number, t: number): number {
 }
 ```
 
-Hàm này áp dụng cho mọi đại lượng có cộng và nhân vô hướng — số thực, vector, cả màu RGB (dù chỉ linear-space color mới cho kết quả đúng vật lý, chủ đề bài sRGB sau này) — nên nó là "động cơ" phía sau phần lớn tween và camera transition.
+Hàm này áp dụng cho mọi đại lượng có cộng và nhân vô hướng — số thực, vector, cả màu RGB (dù chỉ linear-space color mới cho kết quả đúng vật lý, chủ đề bài sRGB sau này) — nên nó là "động cơ" phía sau phần lớn tween (đoạn hoạt hình nội suy giữa hai trạng thái) và camera transition. Trong GLSL, lerp mang tên `mix(a, b, t)`; trong three.js là `THREE.MathUtils.lerp` — hai cái tên bạn sẽ gặp lại ở Track 2–3.
 
 ## Inverse lerp và remap: hai người anh em của lerp
 
@@ -34,7 +34,7 @@ function remap(v: number, inMin: number, inMax: number, outMin: number, outMax: 
   return lerp(outMin, outMax, invLerp(inMin, inMax, v));
 }
 
-remap(75, 0, 100, 0, 1);      // 0.75 — % máu còn lại thành hệ số alpha
+remap(75, 0, 100, 0, 1);      // 0.75 — % máu còn lại thành hệ số alpha (độ mờ)
 remap(0.75, 0, 1, -1, 1);     // 0.5  — UV [0,1] thành NDC [-1,1]
 ```
 
@@ -71,7 +71,7 @@ function smoothstep(t: number): number {
 
 ## Easing curve: remap thời gian trước khi lerp
 
-Easing curve chỉ là một hàm $f: [0,1] \to [0,1]$ với $f(0)=0$, $f(1)=1$, dùng để **thay $t$** trước khi đưa vào `lerp`: `lerp(a, b, ease(t))`. `smoothstep` chính là một easing curve (kiểu ease-in-out). Họ hàm mũ cho ba biến thể kinh điển khác:
+Easing curve chỉ là một hàm $f: [0,1] \to [0,1]$ với $f(0)=0$, $f(1)=1$, dùng để **thay $t$** trước khi đưa vào `lerp`: `lerp(a, b, ease(t))`. `smoothstep` chính là một easing curve (kiểu ease-in-out). Họ hàm lũy thừa $t^p$ cho ba biến thể kinh điển khác:
 
 - **easeIn** (chậm đầu, nhanh cuối): $f(t) = t^p$ — $p=2$ là quadratic, $p=3$ là cubic.
 - **easeOut** (nhanh đầu, chậm cuối — "phanh gấp"): $f(t) = 1-(1-t)^p$ — đối xứng ngược của easeIn.
@@ -101,7 +101,7 @@ function dampTowards(value: number, target: number, lambda: number, dt: number):
 }
 ```
 
-Công thức này hội tụ cùng tốc độ **thực** (giây) bất kể framerate — tăng gấp đôi $\Delta t$ tự bù bằng hệ số suy giảm lớn hơn trong một bước, thay vì lặp cùng hệ số nhỏ nhiều lần hơn. Đây là kỹ thuật "frame-rate independent damping" — `value += (target-value)*k` mỗi frame là bản SAI kinh điển; các hàm `SmoothDamp` trong engine hiện đại là bản dt-correct.
+Công thức này hội tụ cùng tốc độ **thực** (giây) bất kể framerate — tăng gấp đôi $\Delta t$ tự bù bằng hệ số suy giảm lớn hơn trong một bước, thay vì lặp cùng hệ số nhỏ nhiều lần hơn. Đây là kỹ thuật "frame-rate independent damping" — `value += (target-value)*k` mỗi frame là bản SAI kinh điển; các hàm kiểu `SmoothDamp` trong engine hiện đại cùng tinh thần dt-correct (nhưng dựa trên lò xo tới hạn, không phải đúng công thức này).
 
 ## Slerp: nội suy trên góc, không phải trên đường thẳng
 
@@ -111,7 +111,7 @@ Công thức này hội tụ cùng tốc độ **thực** (giây) bất kể fra
 
 Ba lỗi hay gặp nhất với lerp và easing:
 
-1. **Quên `clamp` sau `remap`/`invLerp` khi input có thể vượt biên.** Thanh máu hay alpha fade nhận giá trị âm hoặc lớn hơn 1 từ ngoại suy không mong muốn — UI vẽ lố khung hoặc alpha âm bị driver hiểu sai. Luôn `clamp(t, 0, 1)` trước khi dùng $t$ làm alpha.
+1. **Quên `clamp` sau `remap`/`invLerp` khi input có thể vượt biên.** Thanh máu hay alpha fade nhận giá trị âm hoặc lớn hơn 1 từ ngoại suy không mong muốn — UI vẽ lố khung hoặc alpha ngoài $[0,1]$ bị GPU lặng lẽ clamp (với framebuffer thường) — thanh vẽ lố khung, bug bị che mất thay vì báo lỗi. Luôn `clamp(t, 0, 1)` trước khi dùng $t$ làm alpha.
 2. **Nhầm thứ tự tham số `smoothstep` trong GLSL.** `smoothstep(edge0, edge1, x)` — hai tham số đầu là biên, thứ ba là giá trị cần đánh giá; viết nhầm `smoothstep(x, edge0, edge1)` (thói quen từ `clamp`) compile được nhưng cho gradient sai hoàn toàn.
 3. **Dùng `value += (target - value) * k` mỗi frame mà không nhân theo `dt`.** Cùng `k` chạy nhanh chậm khác nhau tuỳ frame rate máy người chơi. Dùng $1 - e^{-\lambda \Delta t}$ để tách tốc độ hội tụ mong muốn khỏi frame rate thực tế.
 

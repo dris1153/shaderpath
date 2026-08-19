@@ -70,6 +70,8 @@ function Arrow({ from, to, color }: { from: Pt; to: Pt; color: string }) {
 }
 
 function DotScene() {
+  const locale = useLocale();
+  const L = LABELS[locale as keyof typeof LABELS] ?? LABELS.vi;
   const { values } = useDemoContext();
   const angleA = numberOf(values, "angleA", 40) * DEG;
   const lenA = numberOf(values, "lenA", 90);

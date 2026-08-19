@@ -40,7 +40,7 @@ export const references: Citation[] = [
     authors: ["Khronos Group"],
     url: "https://registry.khronos.org/webgl/specs/latest/2.0/",
     note: {
-      vi: "Nguồn chuẩn (không phải bài diễn giải lại) định nghĩa chính xác normalized device coordinates, clip space và viewport transform — nơi UV/toạ độ màn hình của bài này cuối cùng đổ vào.",
+      vi: "Nguồn chuẩn (không phải bài diễn giải lại) định nghĩa (qua OpenGL ES 3.0 spec mà nó tham chiếu) normalized device coordinates, clip space và viewport transform — nơi UV/toạ độ màn hình của bài này cuối cùng đổ vào.",
       en: "The authoritative source (not a paraphrase) defining normalized device coordinates, clip space and the viewport transform — where this lesson's UV/screen coordinates ultimately feed into.",
     },
   },

@@ -18,8 +18,8 @@ Then answer: if $hp$ suddenly exceeds 200 (a temporary buff, say $hp=250$), what
         en: "Compute `invLerp(0, 200, 65)` first, then `lerp` that result into $[0.2, 1]$.",
       },
       {
-        vi: "Khi input vượt biên trên khoảng gốc, `remap` ngoại suy hợp lệ về mặt toán học nhưng thường vô nghĩa cho alpha — cần chặn output lại.",
-        en: "When the input exceeds the source range, `remap` extrapolates in a mathematically valid but usually meaningless way for an alpha value — the output needs to be pinned back down.",
+        vi: "Alpha = 1.2 có ý nghĩa gì cho một hệ số hiển thị? Hàm nào ở bài này đưa một giá trị về lại một khoảng cho trước?",
+        en: "What does alpha = 1.2 mean for a display coefficient? Which function from this lesson pins a value back into a given range?",
       },
     ],
     checklist: [
@@ -57,8 +57,8 @@ Fix: always \`clamp(alpha, 0.2, 1)\` (or clamp $t$ to $[0,1]$ before lerping int
       en: `Write a function \`dampTowards(value, target, lambda, dt)\` that smooths \`value\` toward \`target\` using an exponential-decay form that is **dt-correct** — not frame-rate dependent like \`value += (target-value)*k\` every frame.`,
     },
     starterCode: `function dampTowards(value: number, target: number, lambda: number, dt: number): number {
-  // TODO: return the new value converging toward target via
-  // value + (target - value) * (1 - e^(-lambda * dt))
+  // TODO: converge toward target using the dt-correct form derived in the
+  // theory section (the one built on an exponential of -lambda * dt)
   return value;
 }`,
     solutionCode: `function dampTowards(value: number, target: number, lambda: number, dt: number): number {

@@ -14,8 +14,8 @@ Then answer: if $\\omega$ changes from $2$ to $4$ while $A$ and $\\phi$ stay fix
     },
     hints: [
       {
-        vi: "$\\sin(\\pi/2) = 1$, nên $y(0) = A \\times 1$.",
-        en: "$\\sin(\\pi/2) = 1$, so $y(0) = A \\times 1$.",
+        vi: "Thay $t = 0$ vào bên trong sin trước — biểu thức góc còn lại là gì?",
+        en: "Substitute $t = 0$ inside the sine first — what angle expression remains?",
       },
       {
         vi: "$T = 2\\pi/\\omega$ là quan hệ NGHỊCH, không phải thuận: $\\omega$ và $T$ tỉ lệ nghịch với nhau.",
@@ -60,8 +60,8 @@ function orbitPosition(
   omega: number,
   elapsedSeconds: number,
 ): Point {
-  // TODO: angle = omega * elapsedSeconds (do NOT accumulate it across frames),
-  // then return center + radius * (cos(angle), sin(angle))
+  // TODO: compute the angle directly from elapsedSeconds — do NOT accumulate
+  // it across frames; the theory section derives the orbit formula
   return { x: center.x, y: center.y };
 }`,
     solutionCode: `interface Point { x: number; y: number }

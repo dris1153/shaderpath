@@ -1,10 +1,10 @@
 ## Goal
 
-This is Track 0's first mini-build: no new theory, just a working artifact that proves you actually command coordinates, vectors, add/subtract/scale and normalize — not just recognizing the formulas, but using them to build something visible and running.
+This is Track 0's first mini-build: the trig formula you need is provided right in the prompt; the rest is a working artifact that proves you actually command coordinates, unit vectors and scaling — not just recognizing the formulas, but using them to build something visible and running.
 
 ## Requirements
 
-Build a working analog clock on a 2D canvas that tells real system time, no external libraries. A round face with 12 hour marks placed via $(\cos\theta, \sin\theta)$; hour/minute/second hands take their angles from `new Date()` and animate smoothly via `requestAnimationFrame`. Full details live in the Exercises section below — read the requirements there closely before starting.
+Build a working analog clock on a 2D canvas that tells real system time, no external libraries. 12 hour marks arranged in a circle, placed via $(\cos\theta, \sin\theta)$ (the hands need the canvas-adjusted axes — $x=\sin\theta$, $y=-\cos\theta$ — see the hint); hour/minute/second hands take their angles from `new Date()` and animate smoothly via `requestAnimationFrame`. Full details live in the Exercises section below — read the requirements there closely before starting.
 
 ## Structure Hint
 

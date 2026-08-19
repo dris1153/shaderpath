@@ -30,8 +30,8 @@ export const references: Citation[] = [
     authors: ["Joey de Vries"],
     url: "https://learnopengl.com/Getting-started/Coordinate-Systems",
     note: {
-      vi: "Đi qua đúng sáu không gian (local/world/view/clip/NDC/screen) của bài này với hình minh hoạ trực quan, kèm code C++/GLM dựng ma trận view thật.",
-      en: "Walks through this lesson's exact six spaces (local/world/view/clip/NDC/screen) with clear diagrams, plus real C++/GLM code building a view matrix.",
+      vi: "Đi qua các không gian local/world/view/clip/screen của bài này (NDC được bàn ngay trong phần clip space) với hình minh hoạ trực quan, kèm code C++/GLM dựng ma trận view thật.",
+      en: "Walks through the local/world/view/clip/screen spaces of this lesson (NDC is discussed inside the clip-space section) with clear diagrams, plus real C++/GLM code building a view matrix.",
     },
   },
   {
