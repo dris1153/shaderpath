@@ -14,12 +14,12 @@ Then answer: why does the red (R) channel stay exactly $1$ under both blends, wh
     },
     hints: [
       {
-        vi: "Với luỹ thừa, 1 và 0 là điểm bất động: $1^k = 1$ và $0^k = 0$ với mọi $k > 0$ — kênh nào cả hai màu đều bằng 1 hoặc đều bằng 0 thì không đổi khi decode/encode.",
-        en: "1 and 0 are fixed points of any power: $1^k = 1$ and $0^k = 0$ for any $k > 0$ — a channel where both colors are 1 or both are 0 stays the same after decode/encode.",
+        vi: "Thử tính $1^{2.2}$ và $0^{2.2}$, rồi $1^{1/2.2}$ và $0^{1/2.2}$ — có gì đặc biệt ở hai giá trị này?",
+        en: "Try computing $1^{2.2}$ and $0^{2.2}$, then $1^{1/2.2}$ and $0^{1/2.2}$ — what is special about these two values?",
       },
       {
-        vi: "Chỉ kênh nào hai màu KHÁC nhau (0 và 1) mới đổi: trung bình linear của $(0, 1)$ là $0.5$, mã hoá lại bằng $0.5^{1/2.2}$.",
-        en: "Only the channel where the two colors DIFFER (0 and 1) changes: the linear average of $(0, 1)$ is $0.5$, re-encoded via $0.5^{1/2.2}$.",
+        vi: "Nhìn từng kênh một: kênh nào hai màu có giá trị KHÁC nhau? Chỉ kênh đó mới bị hai cách trộn cho ra kết quả khác.",
+        en: "Look channel by channel: where do the two colors actually differ? Only that channel can come out different between the two blends.",
       },
     ],
     checklist: [
@@ -37,16 +37,16 @@ Then answer: why does the red (R) channel stay exactly $1$ under both blends, wh
       },
     ],
     solutionNote: {
-      vi: `Trộn ngây thơ trên sRGB (SAI): mix từng kênh trực tiếp trên giá trị hiển thị. $R:\\ \\mathrm{mix}(1,1,0.5)=1$, $G:\\ \\mathrm{mix}(0,1,0.5)=0.5$, $B:\\ \\mathrm{mix}(1,0,0.5)=0.5$ → $(1, 0.5, 0.5)$: một màu hồng nhạt, xỉn.
+      vi: `Trộn ngây thơ trên sRGB (SAI): mix từng kênh trực tiếp trên giá trị hiển thị. $R:\\ \\mathrm{mix}(1,1,0.5)=1$, $G:\\ \\mathrm{mix}(0,1,0.5)=0.5$, $B:\\ \\mathrm{mix}(1,0,0.5)=0.5$ → $(1, 0.5, 0.5)$: một màu hồng tối, xỉn hơn hẳn.
 
 Đúng cách: decode $\\to$ lấy trung bình trong linear $\\to$ encode lại (xấp xỉ luỹ thừa $2.2$). $R:\\ 1^{2.2}=1,\\ 1^{2.2}=1 \\to$ trung bình $1 \\to$ encode $1^{1/2.2}=1$ (không đổi, vì $0$ và $1$ là điểm bất động). $G:\\ 0^{2.2}=0,\\ 1^{2.2}=1 \\to$ trung bình $0.5 \\to$ encode $0.5^{1/2.2} \\approx 0.730$. $B$ tính tương tự $G$, cũng ra $\\approx 0.730$.
 
-Kết quả đúng: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — một màu hồng sáng, bão hoà hơn hẳn bản ngây thơ, và đúng về vật lý vì ánh sáng cộng tuyến tính trong không gian linear, không phải trên giá trị đã gamma-encode.`,
+Kết quả đúng: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — một màu hồng sáng hơn và nhạt hơn (gần trắng hơn) bản ngây thơ, và đúng về vật lý vì ánh sáng cộng tuyến tính trong không gian linear, không phải trên giá trị đã gamma-encode.`,
       en: `Naive sRGB blend (WRONG): mix each channel directly on the display values. $R:\\ \\mathrm{mix}(1,1,0.5)=1$, $G:\\ \\mathrm{mix}(0,1,0.5)=0.5$, $B:\\ \\mathrm{mix}(1,0,0.5)=0.5$ → $(1, 0.5, 0.5)$: a dull, washed-out pink.
 
 Correct way: decode $\\to$ average in linear space $\\to$ encode back (approximated with a power of $2.2$). $R:\\ 1^{2.2}=1,\\ 1^{2.2}=1 \\to$ average $1 \\to$ encode $1^{1/2.2}=1$ (unchanged, since $0$ and $1$ are fixed points). $G:\\ 0^{2.2}=0,\\ 1^{2.2}=1 \\to$ average $0.5 \\to$ encode $0.5^{1/2.2} \\approx 0.730$. $B$ works out the same way as $G$, also $\\approx 0.730$.
 
-Correct result: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — a brighter, noticeably more saturated pink than the naive blend, and physically correct because light adds linearly in linear space, not on gamma-encoded values.`,
+Correct result: $(1,\\ {\\approx}0.730,\\ {\\approx}0.730)$ — a brighter, paler pink (closer to white) than the naive blend, and physically correct because light adds linearly in linear space, not on gamma-encoded values.`,
     },
   },
   {
@@ -65,12 +65,33 @@ Compared to the naive \`mix(a, b, t)\`, the result at $t = 0.5$ must be noticeab
   // TODO 2: mix in linear space
   // TODO 3: encode the result back to sRGB with pow(., 1.0 / 2.2)
   return mix(a, b, t); // placeholder — this is exactly the NAIVE version to fix
+}
+
+// Leave main() as is: top half = naive mix, bottom half = your linearBlend.
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec3 a = vec3(1.0, 0.0, 0.0);
+  vec3 b = vec3(0.0, 1.0, 0.0);
+  vec3 naive = mix(a, b, uv.x);
+  vec3 fixed_ = linearBlend(a, b, uv.x);
+  fragColor = vec4(uv.y > 0.5 ? naive : fixed_, 1.0);
 }`,
     solutionCode: `vec3 linearBlend(vec3 a, vec3 b, float t) {
   vec3 aLinear = pow(a, vec3(2.2));
   vec3 bLinear = pow(b, vec3(2.2));
   vec3 blended = mix(aLinear, bLinear, t);
   return pow(blended, vec3(1.0 / 2.2));
+}
+
+// Top half = naive mix, bottom half = linearBlend: the seam at mid-blend
+// shows the naive band dipping darker.
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec3 a = vec3(1.0, 0.0, 0.0);
+  vec3 b = vec3(0.0, 1.0, 0.0);
+  vec3 naive = mix(a, b, uv.x);
+  vec3 fixed_ = linearBlend(a, b, uv.x);
+  fragColor = vec4(uv.y > 0.5 ? naive : fixed_, 1.0);
 }`,
     hints: [
       {

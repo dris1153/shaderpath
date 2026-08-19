@@ -44,7 +44,7 @@ Since $\cos\theta$ changes sign at $90°$, the sign of the dot product between t
 - $\vec a \cdot \vec b = 0$: the angle is exactly $90°$ — the vectors are **perpendicular**.
 - $\vec a \cdot \vec b < 0$: the angle is over $90°$ — the two vectors point "opposite" one another.
 
-This drops straight into graphics: check "is this triangle facing the camera" with the dot between the face normal and the view direction; check "is this surface currently lit" with the dot between the normal and the direction toward the light. Both reduce to a single sign check — far cheaper than computing the real angle and comparing, since no inverse trig function is needed, and it can run millions of times per frame on the GPU without worrying about cost. Example: a normal $\hat n = (0, 0, 1)$ and a camera direction $\hat v = (0.2, 0, 0.9)$ (both normalized) give $\hat n \cdot \hat v = 0.9 > 0$ — the face points toward the camera, so it should be drawn; flip the normal to $(0,0,-1)$ and the dot becomes $-0.9 < 0$ — the face turns away and can be skipped.
+This drops straight into graphics: check "is this triangle facing the camera" with the dot between the face normal and the view direction — meaning the vector **from the surface toward the camera**; check "is this surface currently lit" with the dot between the normal and the direction toward the light. Both reduce to a single sign check — far cheaper than computing the real angle and comparing, since no inverse trig function is needed, and it can run millions of times per frame on the GPU without worrying about cost. Example: a normal $\hat n = (0, 0, 1)$ and a camera direction $\hat v = (0.6, 0, 0.8)$ (a true unit vector: $0.36 + 0.64 = 1$) give $\hat n \cdot \hat v = 0.8 > 0$ — the face points toward the camera, so it should be drawn; flip the normal to $(0,0,-1)$ and the dot becomes $-0.8 < 0$ — the face turns away and can be skipped.
 
 ## Projection: Viewing One Vector Through Another's Direction
 
@@ -75,7 +75,7 @@ $$
 
 The resulting vector is perpendicular to both $\vec a$ and $\vec b$ — which specific direction (up or down) it points is settled by the **right-hand rule**: curl your right hand's fingers from $\vec a$ toward $\vec b$ through the angle smaller than $180°$, and the thumb points along $\vec a \times \vec b$. Swapping the operand order flips the sign of the result: $\vec a \times \vec b = -(\vec b \times \vec a)$ — the cross product is **not commutative**, unlike the dot product.
 
-The single most useful example to keep in memory: the $X$ axis crossed with the $Y$ axis gives exactly the $Z$ axis — $(1,0,0) \times (0,1,0) = (0,0,1)$. Plugging any pair of concrete numbers into the formula above and checking it by hand is a faster way to trust it than memorizing it.
+The single most useful example to keep in memory: the $X$ axis crossed with the $Y$ axis gives exactly the $Z$ axis — $(1,0,0) \times (0,1,0) = (0,0,1)$. Plugging the example's 0s and 1s into the formula above and checking it by hand is a faster way to trust it than memorizing it.
 
 ### The Cross Product's Magnitude Is a Parallelogram's Area
 

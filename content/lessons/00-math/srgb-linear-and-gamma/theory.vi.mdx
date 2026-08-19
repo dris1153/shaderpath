@@ -1,12 +1,12 @@
 ## Ánh sáng cộng tuyến tính, mắt người thì không
 
-Vật lý ánh sáng đơn giản: khi hai nguồn sáng chiếu chồng lên cùng một điểm, năng lượng của chúng **cộng tuyến tính** — hai đèn 50W chiếu cùng chỗ cho đúng 100W, không có khúc quanh phi tuyến nào trong bản thân ánh sáng. Hệ quả: mọi phép toán đúng trên ánh sáng — cộng nhiều nguồn sáng, trộn (blend) hai màu, lấy trung bình mẫu khi lọc mipmap hay khử răng cưa — về vật lý phải là phép cộng hoặc trung bình tuyến tính của *năng lượng ánh sáng thật*.
+Vật lý ánh sáng đơn giản: khi hai nguồn sáng chiếu chồng lên cùng một điểm, năng lượng của chúng **cộng tuyến tính** — hai đèn 50W chiếu cùng chỗ cho đúng 100W, không có khúc quanh phi tuyến nào trong bản thân ánh sáng. Hệ quả: mọi phép toán đúng trên ánh sáng — cộng nhiều nguồn sáng, trộn (blend) hai màu, lấy trung bình mẫu khi lọc mipmap (các bản thu nhỏ dần của texture) hay khử răng cưa — về vật lý phải là phép cộng hoặc trung bình tuyến tính của *năng lượng ánh sáng thật*.
 
 Vấn đề: mắt người không cảm nhận độ sáng tuyến tính theo năng lượng ánh sáng. Võng mạc nhạy hơn nhiều với chênh lệch ở vùng tối so với vùng sáng — tăng gấp đôi năng lượng ánh sáng không khiến ta thấy "sáng gấp đôi", chỉ sáng hơn một chút. Vì mắt phân biệt tốt vùng tối, lưu ảnh hiệu quả nghĩa là dành nhiều "mã số" hơn cho vùng tối, ít hơn cho vùng sáng — đúng việc một đường cong **phi tuyến, gần giống luỹ thừa** làm được. Đường cong đó có tên **sRGB**.
 
 ## sRGB: mã hoá theo cảm nhận, không phải theo năng lượng
 
-sRGB (chuẩn hoá bởi IEC từ 1996) là phép biến đổi giữa giá trị pixel trong code (`0..1` hoặc `0..255`) và năng lượng ánh sáng thật, gọi là **linear light**. Xấp xỉ phổ biến nhất — đủ dùng cho hầu hết code đồ hoạ thời gian thực — là luỹ thừa 2.2:
+sRGB (HP và Microsoft đề xuất năm 1996, IEC chuẩn hoá năm 1999) là phép biến đổi giữa giá trị pixel trong code (`0..1` hoặc `0..255`) và năng lượng ánh sáng thật, gọi là **linear light**. Xấp xỉ phổ biến nhất — đủ dùng cho hầu hết code đồ hoạ thời gian thực — là luỹ thừa 2.2 — số mũ của đường cong này chính là cái tên **gamma** vẫn gặp trong "gamma correction":
 
 $$
 \text{linear} \approx \text{srgb}^{2.2}, \qquad \text{srgb} \approx \text{linear}^{1/2.2}
@@ -34,15 +34,15 @@ Sai số này *lộ rõ nhất* khi trộn hai màu bão hoà đối lập thay 
 
 ## Quy tắc vàng: decode → tính toán → encode
 
-Hai ví dụ trên rút ra một quy tắc áp dụng cho *mọi* phép toán ánh sáng, không riêng blend: **giải mã (decode) giá trị sRGB về linear trước khi tính, tính toán trong linear, rồi mã hoá (encode) kết quả về sRGB đúng một lần khi hiển thị**. Cộng nhiều nguồn sáng, nhân màu vật liệu với ánh sáng, lấy trung bình mẫu khi khử răng cưa hay lọc mipmap — tất cả phải tuân theo trình tự decode → compute → encode. Encode hai lần làm ảnh "cháy sáng" giả; không decode trước khi tính (đúng lỗi ở ví dụ trên) làm ảnh tối và xỉn màu giả.
+Hai ví dụ trên rút ra một quy tắc áp dụng cho *mọi* phép toán ánh sáng, không riêng blend: **giải mã (decode) giá trị sRGB về linear trước khi tính, tính toán trong linear, rồi mã hoá (encode) kết quả về sRGB đúng một lần khi hiển thị**. Cộng nhiều nguồn sáng, nhân màu vật liệu với ánh sáng, lấy trung bình mẫu khi khử răng cưa hay lọc mipmap — tất cả phải tuân theo trình tự decode → compute → encode. Encode hai lần làm ảnh bạc màu, sáng giả (washed out); không decode trước khi tính (đúng lỗi ở ví dụ trên) làm ảnh tối và xỉn màu giả.
 
 ## Phép chuyển đổi này nằm ở đâu trong pipeline
 
-Trong pipeline WebGL/OpenGL thực tế, hai điểm là nơi decode/encode xảy ra tự động nếu khai đúng định dạng: **texture sampling** — texture chứa màu (albedo, diffuse map) là ảnh JPEG/PNG lưu ở sRGB; khai định dạng `SRGB8_ALPHA8` (thay vì `RGBA8` thường) khiến GPU tự decode về linear ngay khi shader gọi `texture()`, không cần viết `pow()` tay. Và **framebuffer output** — bật `FRAMEBUFFER_SRGB` (hoặc surface sRGB của WebGL2) khiến GPU tự encode kết quả linear trong shader về sRGB đúng một lần khi ghi ra màn hình. Texture không phải màu (normal map, roughness map, mask) **không** được đánh dấu sRGB — chúng không phải năng lượng ánh sáng, decode qua gamma sẽ làm sai lệch toàn bộ giá trị.
+Trong pipeline WebGL/OpenGL thực tế, hai điểm là nơi decode/encode xảy ra tự động nếu khai đúng định dạng: **texture sampling** — texture chứa màu (albedo/diffuse — màu gốc của bề mặt) là ảnh JPEG/PNG lưu ở sRGB; khai định dạng `SRGB8_ALPHA8` (thay vì `RGBA8` thường) khiến GPU tự decode về linear ngay khi shader gọi `texture()`, không cần viết `pow()` tay. Và **framebuffer output** — trên desktop OpenGL là cờ `FRAMEBUFFER_SRGB`; WebGL2 không có cờ này mà encode tự động khi render vào attachment `SRGB8_ALPHA8` (canvas mặc định không phải sRGB — three.js tự encode bước cuối trong shader), khiến GPU/renderer encode kết quả linear trong shader về sRGB đúng một lần khi ghi ra màn hình. Texture không phải màu (normal map, roughness map, mask) **không** được đánh dấu sRGB — chúng không phải năng lượng ánh sáng, decode qua gamma sẽ làm sai lệch toàn bộ giá trị.
 
-## Three.js quản lý color space ra sao (từ r150)
+## Three.js quản lý color space ra sao (từ r152)
 
-Từ r150, Three.js tự động hoá gần trọn quy tắc trên: `renderer.outputColorSpace = THREE.SRGBColorSpace` (mặc định) đảm nhiệm bước encode cuối khi ghi ra canvas; texture chứa màu (`map`, `emissiveMap`...) cần gắn `texture.colorSpace = THREE.SRGBColorSpace` để GPU tự decode khi sample, còn texture dữ liệu (`normalMap`, `roughnessMap`) giữ `NoColorSpace`. Track 3 đi sâu vào từng thuộc tính này và các lỗi thường gặp khi migrate code cũ (trước r150 dùng `outputEncoding`/`THREE.sRGBEncoding`, API đã bị loại bỏ).
+Từ r152, Three.js tự động hoá gần trọn quy tắc trên: `renderer.outputColorSpace = THREE.SRGBColorSpace` (mặc định) đảm nhiệm bước encode cuối khi ghi ra canvas; texture chứa màu (`map`, `emissiveMap`...) cần gắn `texture.colorSpace = THREE.SRGBColorSpace` để GPU tự decode khi sample, còn texture dữ liệu (`normalMap`, `roughnessMap`) giữ `NoColorSpace`. Track 3 đi sâu vào từng thuộc tính này và các lỗi thường gặp khi migrate code cũ (trước r152 dùng `outputEncoding`/`THREE.sRGBEncoding`, API đã bị loại bỏ).
 
 ## Kết nối về sau
 

@@ -49,8 +49,8 @@ $M(3,2) = 3(0,1) + 2(-1,0) = (0,3) + (-2,0) = (-2,3)$.`,
     id: "compose-2d-matrices",
     kind: "code",
     prompt: {
-      vi: `Viết hai hàm thuần: \`matVec2(m, v)\` nhân ma trận 2×2 với vector, và \`matMul2(m1, m2)\` nhân hai ma trận 2×2 (với quy ước \`matMul2(m1, m2)\` nghĩa là áp dụng \`m2\` trước, \`m1\` sau). Dùng chúng để kiểm tra bằng số: với \`R\` là ma trận xoay $90°$ và \`S\` = diag(2, 1), \`matMul2(S, R)\` và \`matMul2(R, S)\` áp lên vector $(1, 0)$ có cho cùng kết quả không?`,
-      en: `Write two pure functions: \`matVec2(m, v)\` multiplying a 2×2 matrix by a vector, and \`matMul2(m1, m2)\` multiplying two 2×2 matrices (with the convention that \`matMul2(m1, m2)\` means "apply \`m2\` first, then \`m1\`"). Use them to check numerically: with \`R\` a $90°$ rotation matrix and \`S\` = diag(2, 1), does \`matMul2(S, R)\` applied to $(1, 0)$ give the same result as \`matMul2(R, S)\` applied to the same vector?`,
+      vi: `Viết hai hàm thuần: \`matVec2(m, v)\` nhân ma trận 2×2 với vector, và \`matMul2(m1, m2)\` nhân hai ma trận 2×2 (với quy ước \`matMul2(m1, m2)\` nghĩa là áp dụng \`m2\` trước, \`m1\` sau). Dùng chúng để kiểm tra bằng số: với \`R\` là ma trận xoay $90°$ và \`S\` là ma trận scale với hai cột $(2,0)$ và $(0,1)$ (kéo dài trục x gấp đôi), \`matMul2(S, R)\` và \`matMul2(R, S)\` áp lên vector $(1, 0)$ có cho cùng kết quả không?`,
+      en: `Write two pure functions: \`matVec2(m, v)\` multiplying a 2×2 matrix by a vector, and \`matMul2(m1, m2)\` multiplying two 2×2 matrices (with the convention that \`matMul2(m1, m2)\` means "apply \`m2\` first, then \`m1\`"). Use them to check numerically: with \`R\` a $90°$ rotation matrix and \`S\` = the scale matrix with columns $(2,0)$ and $(0,1)$ (doubling the x axis), does \`matMul2(S, R)\` applied to $(1, 0)$ give the same result as \`matMul2(R, S)\` applied to the same vector?`,
     },
     starterCode: `interface Mat2 { a: number; b: number; c: number; d: number } // [[a,b],[c,d]]
 interface Vec2 { x: number; y: number }
@@ -85,8 +85,8 @@ matVec2(matMul2(S, R), { x: 1, y: 0 }); // { x: 0, y: 1 }
 matVec2(matMul2(R, S), { x: 1, y: 0 }); // { x: 0, y: 2 } — different from the result above`,
     hints: [
       {
-        vi: "matVec2 chỉ là công thức \"tổ hợp tuyến tính của cột\" viết bằng code: kết quả.x = m.a*v.x + m.b*v.y, kết quả.y = m.c*v.x + m.d*v.y.",
-        en: "matVec2 is just the \"linear combination of columns\" formula written as code: result.x = m.a*v.x + m.b*v.y, result.y = m.c*v.x + m.d*v.y.",
+        vi: "Mỗi thành phần kết quả là tổ hợp hai cột với trọng số v.x, v.y — viết lại công thức \"tổ hợp tuyến tính của cột\" ở phần lý thuyết thành code.",
+        en: "Each output component is a combination of the two columns weighted by v.x, v.y — turn the theory section's \"linear combination of columns\" formula into code.",
       },
       {
         vi: "matMul2(m1, m2): mỗi cột của m2 (đọc bằng (m2.a, m2.c) và (m2.b, m2.d)) đem qua matVec2 với m1 sẽ ra cột tương ứng của kết quả.",
@@ -95,8 +95,8 @@ matVec2(matMul2(R, S), { x: 1, y: 0 }); // { x: 0, y: 2 } — different from the
     ],
     checklist: [
       {
-        vi: "matVec2 áp dụng ma trận identity {a:1,b:0,c:0,d:1} lên bất kỳ vector nào trả về đúng vector đó",
-        en: "matVec2 applied with the identity matrix {a:1,b:0,c:0,d:1} returns any vector unchanged",
+        vi: "matVec2 áp dụng ma trận đơn vị (identity — hai cột chính là i-mũ và j-mũ giữ nguyên) {a:1,b:0,c:0,d:1} lên bất kỳ vector nào trả về đúng vector đó",
+        en: "matVec2 applied with the identity matrix (its columns are just i-hat and j-hat unchanged) {a:1,b:0,c:0,d:1} returns any vector unchanged",
       },
       {
         vi: "matMul2(S, R) áp lên (1,0) cho ra (0,1)",

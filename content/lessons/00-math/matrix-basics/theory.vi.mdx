@@ -4,7 +4,7 @@ Một ma trận 2×2 không phải một bảng số trừu tượng — nó là
 
 Vì gốc toạ độ luôn đứng yên và lưới các đường thẳng vẫn đều đặn, toàn bộ phép biến đổi được quyết định hoàn toàn chỉ bởi **hai vector**: vị trí mới của hai vector đơn vị $\hat i = (1, 0)$ và $\hat j = (0, 1)$ sau khi biến đổi. Biết hai điểm này đi đâu là biết chính xác cả mặt phẳng bị kéo, xoay, hay nghiêng thế nào — không cần thêm thông tin gì khác. Đây chính là ý tưởng mà phần tiếp theo biến thành một quy tắc đọc ma trận cụ thể.
 
-## Đọc ma trận theo cột: basis vector đi về đâu
+## Đọc ma trận theo cột: vector cơ sở (basis vector) đi về đâu
 
 Một ma trận 2×2 viết ra:
 
@@ -14,7 +14,7 @@ $$
 
 lưu chính xác hai vector đó, mỗi vector một **cột**: cột thứ nhất $(a, c)$ là vị trí mới của $\hat i$, cột thứ hai $(b, d)$ là vị trí mới của $\hat j$. Đây là điều thường bị đọc sai — dễ nhầm hàng với cột, đặc biệt khi nhìn ma trận như một bảng Excel — nhưng quy tắc luôn nhất quán: **cột, không phải hàng**, là nơi thông tin hình học của phép biến đổi nằm.
 
-Ví dụ, ma trận $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$ đọc ngay ra: cột 1 là $(2,0)$ nghĩa là $\hat i$ bị kéo dài gấp đôi theo trục $x$; cột 2 là $(0,1)$ nghĩa là $\hat j$ đứng yên. Không cần nhân bất kỳ con số nào, chỉ nhìn hai cột đã biết đây là phép kéo giãn ngang gấp đôi. Kỹ năng đọc trực tiếp này quan trọng hơn việc thuộc công thức nhân ma trận, vì nó là thứ dùng hằng ngày khi debug một `mat3`/`mat4` in ra console mà không hiểu vì sao object bị méo.
+Ví dụ, ma trận $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$ đọc ngay ra: cột 1 là $(2,0)$ nghĩa là $\hat i$ bị kéo dài gấp đôi theo trục $x$; cột 2 là $(0,1)$ nghĩa là $\hat j$ đứng yên. Không cần nhân bất kỳ con số nào, chỉ nhìn hai cột đã biết đây là phép kéo giãn ngang gấp đôi. Kỹ năng đọc trực tiếp này quan trọng hơn việc thuộc công thức nhân ma trận, vì nó là thứ dùng hằng ngày khi debug một `mat3`/`mat4` (kiểu ma trận 3×3/4×4 trong shader, gặp ở track sau) in ra console mà không hiểu vì sao object bị méo.
 
 <Figure
   src="/figures/00-math/matrix-columns-basis-images.svg"
@@ -36,7 +36,7 @@ tức là **tổ hợp tuyến tính của hai cột**, với trọng số chín
 
 ### Vì sao cột thứ hai là $(-\sin\theta, \cos\theta)$
 
-Xoay mặt phẳng quanh gốc toạ độ một góc $\theta$ (ngược chiều kim đồng hồ, quy ước toán chuẩn với $y$ hướng lên) chỉ cần trả lời: $\hat i$ và $\hat j$ đi đâu? $\hat i = (1,0)$ nằm ở góc $0°$ trên vòng tròn đơn vị; xoay thêm $\theta$ đưa nó tới góc $\theta$, tức điểm $(\cos\theta, \sin\theta)$ — đây chính là định nghĩa của $\sin$ và $\cos$: toạ độ của điểm trên vòng tròn bán kính 1 tại góc $\theta$. Vector $\hat j = (0,1)$ nằm ở góc $90°$; xoay thêm $\theta$ đưa nó tới góc $90° + \theta$, và dùng công thức cộng góc lượng giác $\cos(90°+\theta) = -\sin\theta$, $\sin(90°+\theta) = \cos\theta$, cho toạ độ mới $(-\sin\theta, \cos\theta)$.
+Xoay mặt phẳng quanh gốc toạ độ một góc $\theta$ (ngược chiều kim đồng hồ, quy ước toán chuẩn với $y$ hướng lên) chỉ cần trả lời: $\hat i$ và $\hat j$ đi đâu? $\hat i = (1,0)$ nằm ở góc $0°$ trên vòng tròn đơn vị; xoay thêm $\theta$ đưa nó tới góc $\theta$, tức điểm $(\cos\theta, \sin\theta)$ — đây chính là định nghĩa của $\sin$ và $\cos$: toạ độ của điểm trên vòng tròn bán kính 1 tại góc $\theta$. Vector $\hat j = (0,1)$ nằm ở góc $90°$; xoay thêm $\theta$ đưa nó tới góc $90° + \theta$, và dùng công thức cộng góc lượng giác $\cos(90°+\theta) = -\sin\theta$, $\sin(90°+\theta) = \cos\theta$ (chưa học ở track này — kiểm chứng nhanh bằng cách thay $\theta = 0°$; bài lượng giác cuối track sẽ quay lại), cho toạ độ mới $(-\sin\theta, \cos\theta)$.
 
 Ghép hai cột lại đúng theo quy tắc "cột = ảnh của basis vector" ở phần trên:
 
@@ -50,9 +50,9 @@ Kiểm tra nhanh với $\theta = 90°$: $R(90°) = \begin{pmatrix}0 & -1\\1 & 0\
 
 Ma trận scale đơn giản hơn: $\begin{pmatrix}s_x & 0\\0 & s_y\end{pmatrix}$ kéo giãn độc lập theo từng trục, vì cột 1 chỉ đổi thành phần $x$ ($\hat i \to (s_x, 0)$), cột 2 chỉ đổi thành phần $y$ ($\hat j \to (0, s_y)$) — không trục nào ảnh hưởng trục kia.
 
-Shear (làm nghiêng) khác về bản chất: ma trận $\begin{pmatrix}1 & k\\0 & 1\end{pmatrix}$ giữ nguyên $\hat i = (1,0)$ nhưng đẩy $\hat j$ sang thành $(k, 1)$ — vector đứng bị "đổ nghiêng" theo trục ngang, độ nghiêng tỉ lệ với $k$. Hình vuông đơn vị biến thành hình bình hành lệch, không còn góc vuông nào ngoài cạnh không bị đụng tới. Shear dễ nhầm với xoay vì cả hai đều làm hình "nghiêng đi", nhưng khác nhau ở một điểm mấu chốt: xoay giữ nguyên mọi độ dài cạnh, shear thì không — cạnh chứa $\hat j$ dài ra khi $|k|$ tăng ($\sqrt{k^2+1}$ thay vì $1$).
+Shear (làm nghiêng) khác về bản chất: ma trận $\begin{pmatrix}1 & k\\0 & 1\end{pmatrix}$ giữ nguyên $\hat i = (1,0)$ nhưng đẩy $\hat j$ sang thành $(k, 1)$ — vector đứng bị "đổ nghiêng" theo trục ngang, độ nghiêng tỉ lệ với $k$. Hình vuông đơn vị biến thành hình bình hành lệch, không còn góc vuông nào (cạnh đáy vẫn nằm yên, nhưng góc ở hai đầu của nó đã đổi). Shear dễ nhầm với xoay vì cả hai đều làm hình "nghiêng đi", nhưng khác nhau ở một điểm mấu chốt: xoay giữ nguyên mọi độ dài cạnh, shear thì không — cạnh chứa $\hat j$ dài ra khi $|k|$ tăng ($\sqrt{k^2+1}$ thay vì $1$).
 
-## Composition: vì sao thứ tự nhân ma trận quan trọng
+## Ghép biến đổi (composition): vì sao thứ tự nhân ma trận quan trọng
 
 Áp dụng liên tiếp hai phép biến đổi — biến đổi $A$ rồi biến đổi $B$ — tương đương với nhân ma trận $BA$ (không phải $AB$), vì $B(A\vec v)$ viết gọn thành $(BA)\vec v$: ma trận đứng **gần vector nhất** áp dụng **trước**. Đây là chỗ trực giác hay đánh lừa: đọc $BA$ từ trái sang phải như đọc câu, dễ tưởng $B$ chạy trước — thực tế ngược lại.
 
@@ -61,11 +61,12 @@ Ví dụ số cụ thể để thấy thứ tự đổi kết quả: cho $R = R(
 - **Xoay rồi scale** ($S \cdot R \cdot \vec v$): xoay trước cho $(0,1)$, scale sau giữ nguyên vì thành phần $x$ đang bằng 0 — kết quả $(0, 1)$.
 - **Scale rồi xoay** ($R \cdot S \cdot \vec v$): scale trước cho $(2,0)$, xoay sau đưa nó thành $(0, 2)$ — kết quả $(0, 2)$.
 
-Hai kết quả khác hẳn nhau dù dùng đúng hai ma trận, chỉ đổi thứ tự nhân. Về mặt hình ảnh: "xoay rồi scale" kéo giãn theo trục $x$ **của thế giới**, còn "scale rồi xoay" kéo giãn theo trục $x$ **cũ trước khi xoay**, rồi mới xoay cả kết quả đã méo đó — hai phép biến đổi không hoán vị được trừ trường hợp đặc biệt (ví dụ hai phép scale với nhau luôn giao hoán, nhưng scale với rotate thì hầu như không bao giờ).
+Hai kết quả khác hẳn nhau dù dùng đúng hai ma trận, chỉ đổi thứ tự nhân. Về mặt hình ảnh: "xoay rồi scale" kéo giãn theo trục $x$ **của thế giới**, còn "scale rồi xoay" kéo giãn theo trục $x$ **cũ trước khi xoay**, rồi mới xoay cả kết quả đã méo đó — hai phép biến đổi không hoán vị được trừ trường hợp đặc biệt (ví dụ hai phép scale với nhau luôn giao hoán, nhưng scale không đều — $s_x 
+eq s_y$ — với rotate thì không; scale đều mọi trục thì lại luôn giao hoán với xoay).
 
 ## Kết nối về sau: ma trận trong pipeline 3D
 
-Mọi ý ở đây — đọc theo cột, nhân là tổ hợp tuyến tính, thứ tự quan trọng — giữ nguyên y hệt khi mở rộng lên ma trận 3×3 và 4×4 cho không gian 3D, chỉ thêm cột và hàng chứ không đổi luật chơi. Bài tiếp theo thêm chiều thứ tư (toạ độ đồng nhất) để giải quyết vấn đề ma trận 2×2/3×3 chưa làm được: dịch chuyển (translation) — và ba trục scale/rotate/shear vừa học ở đây sẽ quay lại nguyên vẹn, chỉ lớn hơn một chiều.
+Mọi ý ở đây — đọc theo cột, nhân là tổ hợp tuyến tính, thứ tự quan trọng — giữ nguyên y hệt khi mở rộng lên ma trận 3×3 và 4×4 cho không gian 3D, chỉ thêm cột và hàng chứ không đổi luật chơi. Bài tiếp theo thêm chiều thứ tư (toạ độ đồng nhất) để giải quyết vấn đề ma trận 2×2/3×3 chưa làm được: dịch chuyển (translation) — và ba phép scale/rotate/shear vừa học ở đây sẽ quay lại nguyên vẹn, chỉ lớn hơn một chiều.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

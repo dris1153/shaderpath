@@ -1,12 +1,12 @@
 ## Light Adds Linearly, Human Vision Doesn't
 
-Physics is straightforward here: light energy from two sources landing on the same point **adds linearly**. Two 50W bulbs shining on the same spot make exactly 100W, no more, no less — nothing nonlinear happens in the light itself. The direct consequence: every physically correct light operation — summing multiple lights in a scene, blending two colors, averaging samples for mipmap filtering or antialiasing — has to be a linear sum or average of *actual light energy*.
+Physics is straightforward here: light energy from two sources landing on the same point **adds linearly**. Two 50W bulbs shining on the same spot make exactly 100W, no more, no less — nothing nonlinear happens in the light itself. The direct consequence: every physically correct light operation — summing multiple lights in a scene, blending two colors, averaging samples for mipmap filtering (the progressively smaller copies of a texture) or antialiasing — has to be a linear sum or average of *actual light energy*.
 
 The catch: human vision doesn't perceive brightness linearly with light energy. The retina is far more sensitive to differences in dark tones than in bright ones — doubling the light energy doesn't look "twice as bright," it looks only slightly brighter. Because the eye discriminates dark tones so well, storing an image efficiently means spending more code values on the dark end and fewer on the bright end — exactly what a **nonlinear, roughly power-law** curve does. That curve is called **sRGB**.
 
 ## sRGB: A Perceptual Encoding, Not an Energy One
 
-sRGB (standardized by the IEC in 1996) is the transform between the pixel values you see in code (`0..1` or `0..255`) and actual light energy, called **linear light**. The most common shorthand — good enough for most real-time graphics code — is a power of 2.2:
+sRGB (proposed by HP and Microsoft in 1996, standardized by the IEC in 1999) is the transform between the pixel values you see in code (`0..1` or `0..255`) and actual light energy, called **linear light**. The most common shorthand — good enough for most real-time graphics code — is a power of 2.2 — the exponent of this curve is exactly the **gamma** in "gamma correction":
 
 $$
 \text{linear} \approx \text{srgb}^{2.2}, \qquad \text{srgb} \approx \text{linear}^{1/2.2}
@@ -34,15 +34,15 @@ The error is *most visible* blending two saturated, opposing colors instead of b
 
 ## The Golden Rule: Decode → Compute → Encode
 
-Both examples above point to one rule that applies to *every* light operation, not just blending: **decode sRGB values to linear before computing, do the math in linear, and encode the result back to sRGB exactly once, at display time.** Summing multiple lights, multiplying a material's color by incoming light, averaging samples for antialiasing or mipmap filtering — all of it has to follow decode → compute → encode. Encoding twice (decoding, computing, encoding, then accidentally encoding again downstream) blows highlights out artificially; skipping the decode before computing (the exact mistake above) makes everything look darker and muddier than it should.
+Both examples above point to one rule that applies to *every* light operation, not just blending: **decode sRGB values to linear before computing, do the math in linear, and encode the result back to sRGB exactly once, at display time.** Summing multiple lights, multiplying a material's color by incoming light, averaging samples for antialiasing or mipmap filtering — all of it has to follow decode → compute → encode. Encoding twice (decoding, computing, encoding, then accidentally encoding again downstream) washes the image out with falsely lifted midtones; skipping the decode before computing (the exact mistake above) makes everything look darker and muddier than it should.
 
 ## Where These Conversions Actually Live
 
-In a real WebGL/OpenGL pipeline, two places handle decode/encode automatically once you declare the right format: **texture sampling** — a color texture (albedo, diffuse map) is a JPEG/PNG stored in sRGB; declaring its format as `SRGB8_ALPHA8` (instead of plain `RGBA8`) makes the GPU decode to linear automatically the moment the shader calls `texture()`, no manual `pow()` needed. And **framebuffer output** — enabling `FRAMEBUFFER_SRGB` (or WebGL2's sRGB-aware surface) makes the GPU encode the shader's linear result back to sRGB exactly once when writing to the screen. Non-color textures (normal maps, roughness maps, masks) must **not** be marked sRGB — they don't hold light energy, and gamma-decoding them corrupts every value they carry.
+In a real WebGL/OpenGL pipeline, two places handle decode/encode automatically once you declare the right format: **texture sampling** — a color texture (albedo/diffuse — the base color of a surface) is a JPEG/PNG stored in sRGB; declaring its format as `SRGB8_ALPHA8` (instead of plain `RGBA8`) makes the GPU decode to linear automatically the moment the shader calls `texture()`, no manual `pow()` needed. And **framebuffer output** — on desktop OpenGL that is the `FRAMEBUFFER_SRGB` flag; WebGL2 has no such flag and instead encodes automatically when rendering into an `SRGB8_ALPHA8` attachment (the default canvas is not sRGB — three.js performs the final encode in-shader), making the GPU/renderer encode the shader's linear result back to sRGB exactly once when writing to the screen. Non-color textures (normal maps, roughness maps, masks) must **not** be marked sRGB — they don't hold light energy, and gamma-decoding them corrupts every value they carry.
 
-## How Three.js Manages Color Space (r150+)
+## How Three.js Manages Color Space (r152+)
 
-Since r150, Three.js automates most of this rule: `renderer.outputColorSpace = THREE.SRGBColorSpace` (the default) handles the final encode step when writing to the canvas; every color-carrying texture (`map`, `emissiveMap`, ...) needs `texture.colorSpace = THREE.SRGBColorSpace` so the GPU decodes it on sample, while data textures (`normalMap`, `roughnessMap`) stay `NoColorSpace`. Track 3 covers each of these properties in depth, along with the common migration bugs from pre-r150 code that used `outputEncoding`/`THREE.sRGBEncoding`, an API that's since been removed.
+Since r152, Three.js automates most of this rule: `renderer.outputColorSpace = THREE.SRGBColorSpace` (the default) handles the final encode step when writing to the canvas; every color-carrying texture (`map`, `emissiveMap`, ...) needs `texture.colorSpace = THREE.SRGBColorSpace` so the GPU decodes it on sample, while data textures (`normalMap`, `roughnessMap`) stay `NoColorSpace`. Track 3 covers each of these properties in depth, along with the common migration bugs from pre-r152 code that used `outputEncoding`/`THREE.sRGBEncoding`, an API that's since been removed.
 
 ## Where This Goes Next
 

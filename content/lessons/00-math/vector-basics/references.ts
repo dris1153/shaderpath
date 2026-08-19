@@ -15,12 +15,12 @@ export const references: Citation[] = [
   {
     id: "3blue1brown-vectors",
     type: "video",
-    title: "Vectors, what even are they? — Essence of Linear Algebra, Chapter 1",
+    title: "Vectors | Chapter 1, Essence of linear algebra",
     authors: ["Grant Sanderson (3Blue1Brown)"],
     url: "https://www.youtube.com/watch?v=fNk_zzaMoSs",
     note: {
-      vi: "15 phút hình dung vector từ ba góc nhìn (vật lý, khoa học máy tính, toán học) — trực quan hoá chính xác phần 'mũi tên vs bộ số' đầu bài.",
-      en: "15 minutes visualizing vectors from three angles (physics, computer science, math) — a precise animated version of this lesson's opening 'arrow vs tuple' section.",
+      vi: "Gần 10 phút hình dung vector từ ba góc nhìn (vật lý, khoa học máy tính, toán học) — trực quan hoá chính xác phần 'mũi tên vs bộ số' đầu bài.",
+      en: "Under 10 minutes visualizing vectors from three angles (physics, computer science, math) — a precise animated version of this lesson's opening 'arrow vs tuple' section.",
     },
   },
   {

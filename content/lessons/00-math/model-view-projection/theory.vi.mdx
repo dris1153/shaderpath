@@ -18,18 +18,18 @@ Thứ tự nhân không phải quy ước tuỳ chọn: đổi thành $MVP$ hay 
   caption="Chỉ ba bước đầu là ma trận bạn tự cấp; perspective divide và viewport transform chạy tự động sau vertex shader."
 />
 
-- **Model space**: toạ độ gắn với chính mesh, gốc thường ở tâm hoặc chân object — một cube modeling ở $[-0.5, 0.5]^3$ chưa biết nó sẽ đứng ở đâu trong scene.
+- **Model space** (còn gọi local/object space): toạ độ gắn với chính mesh, gốc thường ở tâm hoặc chân object — một cube modeling ở $[-0.5, 0.5]^3$ chưa biết nó sẽ đứng ở đâu trong scene.
 - **World space**: sau khi nhân $M$, mọi object, ánh sáng, camera cùng chia sẻ một hệ toạ độ — ví dụ $M$ dịch cube trên tới $(3, 0, -5)$, giờ nó thật sự đứng ở đó trong thế giới chung.
-- **View space (camera space)**: sau khi nhân $V$, cùng toạ độ đó được viết lại với camera đứng tại gốc, nhìn dọc trục $-z$ — khoảng cách theo trục $z$ ở đây chính là "cách camera bao xa," giá trị dùng trực tiếp cho công thức chiếu phối cảnh ở phần sau.
+- **View space (camera space)**: sau khi nhân $V$, cùng toạ độ đó được viết lại với camera đứng tại gốc, nhìn dọc trục $-z$ — khoảng cách theo trục $z$ ở đây chính là "cách camera bao xa" (điểm trước camera có $z$ âm — độ sâu là $-z$), giá trị công thức chiếu phối cảnh ở phần sau dùng.
 - **Clip space**: sau khi nhân $P$, một toạ độ 4 chiều đồng nhất $(x, y, z, w)$ — GPU cắt tam giác dựa trên điều kiện $-w \le x, y, z \le w$ ngay tại đây, trước khi chia; tên "clip" xuất phát từ chính bước cắt này.
-- **NDC**: sau khi chia cho $w$ — bước phi tuyến duy nhất trong cả chuỗi — khối clip biến thành khối lập phương $[-1,1]^3$ thật, dễ so sánh và cắt tiếp.
-- **Screen/viewport space**: NDC ánh xạ sang pixel thật của render target qua `gl.viewport()` — một phép affine 2D hoàn toàn tách biệt, không nằm trong ma trận $P$.
+- **NDC**: sau khi chia cho $w$ — bước phi tuyến duy nhất trong cả chuỗi — khối clip biến thành khối lập phương $[-1,1]^3$ thật. Chú ý: $+z$ NDC hướng **vào** màn hình (near → $-1$, far → $+1$) — NDC thuận tay trái, vì $P$ lật trục $z$; "mọi thứ đều tay phải" đúng đến view space thì dừng.
+- **Screen/viewport space**: NDC ánh xạ sang pixel thật của render target qua `gl.viewport()` — một phép affine 2D hoàn toàn tách biệt, không nằm trong ma trận $P$ và **không lật trục nào** (gốc window space nằm dưới-trái, như `gl_FragCoord`).
 
 ## Ma trận view là nghịch đảo transform của camera
 
 Camera trong scene cũng có transform như bất kỳ object nào — vị trí và hướng nhìn tạo thành ma trận "camera-to-world," gọi là $C$. Điểm dễ nhầm nhất bài này: ma trận view không phải $C$, mà là $C^{-1}$. Lý do thuần hình học: $C$ trả lời "điểm nào trong không gian camera tương ứng điểm nào trong world," còn thứ ta cần lại ngược lại — "world trông ra sao từ camera." Nghịch đảo chính là phép đổi chiều đó.
 
-Đây là gốc trực giác kinh điển "camera đi trái, thế giới trôi phải": nếu $C$ dịch camera $+3$ đơn vị theo $x$, thì $C^{-1}$ dịch mọi điểm world $-3$ theo $x$ — camera tự thấy mình đứng yên tại gốc, còn cả thế giới trôi ngược đúng chiều nó vừa di chuyển. Phần quay cũng vậy: nghịch đảo của một ma trận quay orthonormal $R$ là $R^\top$ (chuyển vị) — quay world ngược hệt chiều camera vừa xoay.
+Đây là gốc trực giác kinh điển "camera đi trái, thế giới trôi phải": nếu $C$ dịch camera $+3$ đơn vị theo $x$, thì $C^{-1}$ dịch mọi điểm world $-3$ theo $x$ — camera tự thấy mình đứng yên tại gốc, còn cả thế giới trôi ngược đúng chiều nó vừa di chuyển. Phần quay cũng vậy: nghịch đảo của một ma trận quay trực chuẩn (orthonormal — các cột đều dài 1 và đôi một vuông góc) $R$ là $R^\top$ (chuyển vị) — quay world ngược hệt chiều camera vừa xoay.
 
 ## Dựng ma trận lookAt từ eye, target và up
 
@@ -52,7 +52,7 @@ $\hat f$ ("forward," trỏ ngược hướng nhìn theo quy ước tay phải) l
 
 ## Ma trận perspective ở mức công thức: fov, focal length, near/far
 
-Phần "phối cảnh" thật sự nằm gọn trong bốn con số của $P$:
+Phần "phối cảnh" thật sự nằm gọn trong bốn con số của $P$: **fov** (field of view — góc mở dọc của khung nhìn), **aspect** (tỉ lệ rộng/cao của viewport), **near** và **far** (khoảng cách tới hai mặt phẳng cắt gần/xa — chỉ những gì nằm giữa chúng được vẽ):
 
 $$
 P = \begin{bmatrix}
@@ -63,32 +63,35 @@ P = \begin{bmatrix}
 \end{bmatrix}, \qquad f = \frac{1}{\tan(\text{fov}/2)}
 $$
 
-$f$ đóng vai trò "focal length": fov càng nhỏ (ống kính zoom xa), $\tan(\text{fov}/2)$ càng nhỏ, $f$ càng lớn, khung hình càng "chật" và vật càng to. fov $60°$ cho $f = 1/\tan(30°) \approx 1.732$; fov $90°$ cho $f = 1/\tan(45°) = 1$ — góc rộng hơn hẳn kéo $f$ về gần 1. Hàng cuối $(0, 0, -1, 0)$ là chi tiết hay bị bỏ qua nhất: nó copy đúng $-z_{view}$ vào $w_{clip}$, và $w$ chính là mẫu số của phép chia phối cảnh sắp tới — vật càng xa ($-z_{view}$ càng lớn) thì $w$ càng lớn, chia xong toạ độ càng co lại, đó là toàn bộ cơ chế khiến vật xa trông nhỏ hơn. Hàng thứ ba nén khoảng $[\text{near}, \text{far}]$ (phi tuyến theo $1/z$) vào $[-1, 1]$ của $z_{ndc}$ — độ sâu NDC không tuyến tính với độ sâu thật, sự thật hay gây bug khi so sánh bằng mắt thay vì bằng số.
+$f$ đóng vai trò tiêu cự (focal length); $\tan$ ở đây chỉ là tỉ số đối/kề của tam giác vuông — $\tan(\text{fov}/2)$ là nửa chiều cao khung nhìn tại khoảng cách 1 (bài lượng giác cuối track sẽ học kỹ). fov càng nhỏ (ống kính zoom xa), $\tan(\text{fov}/2)$ càng nhỏ, $f$ càng lớn, khung hình càng "chật" và vật càng to. fov $60°$ cho $f = 1/\tan(30°) \approx 1.732$; fov $90°$ cho $f = 1/\tan(45°) = 1$ — góc rộng hơn hẳn kéo $f$ về gần 1. Hàng cuối $(0, 0, -1, 0)$ là chi tiết hay bị bỏ qua nhất: nó copy đúng $-z_{view}$ vào $w_{clip}$, và $w$ chính là mẫu số của phép chia phối cảnh sắp tới — vật càng xa ($-z_{view}$ càng lớn) thì $w$ càng lớn, chia xong toạ độ càng co lại, đó là toàn bộ cơ chế khiến vật xa trông nhỏ hơn. Hàng thứ ba **cùng phép chia $w$** nén khoảng $[\text{near}, \text{far}]$ (phi tuyến theo $1/z$ — bản thân hàng này tuyến tính, độ cong xuất hiện sau phép chia) vào $[-1, 1]$ của $z_{ndc}$ — độ sâu NDC không tuyến tính với độ sâu thật, sự thật hay gây bug khi so sánh bằng mắt thay vì bằng số.
 
 ## Từ NDC ra pixel: viewport transform
 
-Bước cuối chỉ là scale-and-shift, giống hệt phép bạn làm ở bài UV space, chỉ đảo chiều:
+Bước cuối chỉ là scale-and-shift, và **không lật trục nào**: window space của GL có gốc dưới-trái, $y$ đo từ đáy lên — đúng như `gl_FragCoord` mà bạn sẽ gặp ở Track 1–2:
 
 $$
-x_{screen} = (x_{ndc} \cdot 0.5 + 0.5)\, W, \qquad y_{screen} = \big(1 - (y_{ndc} \cdot 0.5 + 0.5)\big)\, H
+x_{window} = (x_{ndc} \cdot 0.5 + 0.5)\, W, \qquad y_{window} = (y_{ndc} \cdot 0.5 + 0.5)\, H
 $$
 
 ```js
-function ndcToScreen(xNdc, yNdc, W, H) {
+function ndcToWindow(xNdc, yNdc, W, H) {
   return {
     x: (xNdc * 0.5 + 0.5) * W,
-    y: (1 - (yNdc * 0.5 + 0.5)) * H, // lật trục y: NDC hướng lên, pixel hướng xuống
+    y: (yNdc * 0.5 + 0.5) * H, // gl_FragCoord: y đo từ ĐÁY lên, không lật
   };
 }
 
-ndcToScreen(0.5, -0.5, 800, 600); // { x: 600, y: 450 }
+ndcToWindow(0.5, -0.5, 800, 600); // { x: 600, y: 150 } — cách đáy 150px
+
+// CSS/chuột đo y từ ĐỈNH xuống — lật đúng MỘT lần, ở ranh giới trình duyệt,
+// không phải trên GPU: yCss = H - yWindow = 450
 ```
 
-$W, H$ là kích thước viewport tính bằng pixel; trục $y$ vẫn cần lật vì NDC có $y$ hướng lên còn pixel màn hình có $y$ hướng xuống — đúng bài toán bạn đã giải ở Cartesian & UV space, chỉ đổi tên biến.
+$W, H$ là kích thước viewport tính bằng pixel. Việc lật trục $y$ chỉ xảy ra khi đối chiếu với toạ độ CSS/chuột ($y$ hướng xuống) — đúng bài toán bạn đã giải ở Cartesian & UV space — và chỉ được lật **đúng một lần**, ở phía trình duyệt; bản thân bước viewport của GPU giữ $y$ hướng lên.
 
 ## Track sau dùng lại toàn bộ chuỗi này
 
-Track 1 (WebGL thuần) sẽ bắt bạn tự viết chính xác dòng `gl_Position = ...` này trong vertex shader thật; Track 4 (React Three Fiber) đóng gói lookAt và $P$ vào object `Camera`, nhưng bên trong vẫn đúng công thức ở đây; Track 12 (Performance) dùng chính hình dạng frustum suy ra từ $P$ để làm frustum culling — bỏ qua render object nằm ngoài sáu mặt phẳng của khối clip.
+Track 1 (WebGL thuần) sẽ bắt bạn tự viết chính xác dòng `gl_Position = ...` này trong vertex shader thật; Track 4 (React Three Fiber) đóng gói lookAt và $P$ vào object `Camera`, nhưng bên trong vẫn đúng công thức ở đây; Track 12 (Performance) dùng chính hình chóp cụt nhìn (frustum) suy ra từ $P$ để làm frustum culling — bỏ qua render object nằm ngoài sáu mặt phẳng của khối clip.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

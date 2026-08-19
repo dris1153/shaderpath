@@ -18,8 +18,8 @@ Without multiplying all 16 numbers, use the "linear combination of columns" idea
         en: "The first three columns of T are identity — only the fourth column (holding $t$) differs, and it only gets added into the result weighted by the vector's own $w$.",
       },
       {
-        vi: "Với $w=1$, cột thứ 4 được cộng nguyên vẹn; với $w=0$, cột thứ 4 được nhân với 0 — tức không cộng gì cả.",
-        en: "With $w=1$, the fourth column gets added in full; with $w=0$, it's multiplied by zero — meaning nothing gets added at all.",
+        vi: "Cột thứ 4 được nhân với trọng số nào ở mỗi trường hợp? Điều gì xảy ra khi trọng số đó bằng 0?",
+        en: "What weight multiplies the fourth column in each case? What happens when that weight is zero?",
       },
     ],
     checklist: [

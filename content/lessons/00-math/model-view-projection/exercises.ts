@@ -18,8 +18,8 @@ Then answer: this point is only 8 units from the camera while far reaches all th
         en: "w_clip is just -z_view — no complex formula needed for that half.",
       },
       {
-        vi: "Số hạng far*near/z_view làm z_ndc nén phi tuyến: phần lớn khoảng [-1,1] dành cho vùng GẦN near, phần còn lại rất hẹp trải dài hết quãng đường tới far.",
-        en: "The far*near/z_view term compresses z_ndc nonlinearly: most of [-1,1] is spent near the near plane, and the remaining sliver stretches all the way out to far.",
+        vi: "Thử tính z_ndc cho z_view = -0.2 và z_view = -50 với cùng near/far, rồi so xem hai kết quả cách -1 và +1 bao nhiêu.",
+        en: "Compute z_ndc for z_view = -0.2 and z_view = -50 with the same near/far, then compare how far each result sits from -1 and +1.",
       },
     ],
     checklist: [
@@ -32,7 +32,7 @@ Then answer: this point is only 8 units from the camera while far reaches all th
         en: "I computed z_ndc ≈ 0.977 correctly",
       },
       {
-        vi: "Tôi giải thích được vì sao độ chính xác depth buffer tập trung gần near plane, không dàn đều tới far",
+        vi: "Tôi giải thích được vì sao độ chính xác depth buffer (bộ đệm lưu độ sâu mỗi pixel) tập trung gần near plane, không dàn đều tới far",
         en: "I can explain why depth-buffer precision concentrates near the near plane instead of spreading evenly out to far",
       },
     ],
@@ -43,7 +43,7 @@ $z_{clip} = \\frac{far+near}{near-far} \\cdot z_{view} + \\frac{2\\,far\\,near}{
 
 $z_{ndc} = z_{clip} / w_{clip} = 7.815816 / 8 \\approx 0.976977$.
 
-Phép ánh xạ từ $z$ trong view space sang $z$ trong NDC gần đúng là $z_{ndc} \\sim 1/z$ — không tuyến tính. Một điểm chỉ đi được 8% quãng đường từ near tới far theo trục *tuyến tính* đã nằm ở khoảng 99% dải NDC — phần lớn $[-1,1]$ được dùng để phân giải độ sâu gần camera, còn phần nhỏ còn lại bị kéo dãn ra để phủ hết quãng đường tới gần "far". Đây chính là lý do z-fighting xuất hiện ở hình học ở xa, không phải ở gần.`,
+Phép ánh xạ từ $z$ trong view space sang $z$ trong NDC gần đúng là $z_{ndc} \\sim 1/z$ — không tuyến tính. Một điểm chỉ đi được 8% quãng đường từ near tới far theo trục *tuyến tính* đã nằm ở khoảng 99% dải NDC — phần lớn $[-1,1]$ được dùng để phân giải độ sâu gần camera, còn phần nhỏ còn lại bị kéo dãn ra để phủ hết quãng đường tới gần "far". Đây chính là lý do z-fighting (hai bề mặt tranh nhau độ sâu, nhấp nháy khi camera động) xuất hiện ở hình học ở xa, không phải ở gần.`,
       en: `$w_{clip} = -z_{view} = -(-8) = 8$.
 
 $z_{clip} = \\frac{far+near}{near-far} \\cdot z_{view} + \\frac{2\\,far\\,near}{near-far} = \\frac{100.1}{-99.9}\\cdot(-8) + \\frac{20}{-99.9} \\approx 8.016016 - 0.200200 \\approx 7.815816$.

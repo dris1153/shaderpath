@@ -11,7 +11,7 @@ Cách khắc phục: thêm một chiều giả, gọi là $w$, biến điểm 3D
 <Figure
   src="/figures/00-math/homogeneous-4x4-layout.svg"
   alt="Bố cục khối của ma trận 4x4: khối 3x3 rotate và scale, cột translation, và hàng cuối 0 0 0 1"
-  caption="Hàng cuối là thứ phân biệt ma trận affine với ma trận phối cảnh — chỉ ma trận phối cảnh mới ghi w khác 1, và đó là cái kích hoạt phép chia."
+  caption="Hàng cuối là thứ phân biệt ma trận T/R/S của bài này (giữ nguyên w đầu vào) với ma trận chiếu phối cảnh học ở cuối bài — chỉ ma trận chiếu mới ghi w khác 1 cho điểm, và đó là lúc phép chia (luôn chạy trên mọi vertex) thật sự thay đổi kết quả."
 />
 
 ### Ma trận translate 4×4
@@ -39,13 +39,13 @@ $$
 
 Hàng/cột thứ tư của $R_4$ toàn số 0 (trừ góc dưới-phải bằng 1) đảm bảo rotate không "rò rỉ" vào thành phần dịch chuyển — mọi cơ chế từ bài trước áp dụng y nguyên trên khối 3×3 này.
 
-Ghép ba phép translate, rotate, scale vào một ma trận model duy nhất luôn theo thứ tự $M = T \cdot R \cdot S$ — áp dụng phải-sang-trái nghĩa là scale object tại chỗ trước, rotate quanh tâm của chính nó tiếp theo, rồi mới translate cả kết quả ra vị trí trong world. Đây là quy ước gần như phổ biến (Three.js, glTF): nó đảm bảo object luôn xoay quanh **tâm cục bộ** của nó chứ không quanh gốc toạ độ world. Đổi thứ tự, ví dụ $R \cdot T \cdot S$, làm object dịch chuyển ra xa gốc world trước rồi mới xoay quanh gốc world đó — kết quả object bay theo quỹ đạo tròn quanh world thay vì tự xoay tại chỗ, một lỗi hay gặp khi tự tay ghép transform mà quên thứ tự chuẩn.
+Ghép ba phép translate, rotate, scale vào một ma trận model duy nhất gần như luôn theo thứ tự $M = T \cdot R \cdot S$ — áp dụng phải-sang-trái nghĩa là scale object tại chỗ trước, rotate quanh tâm của chính nó tiếp theo, rồi mới translate cả kết quả ra vị trí trong world. Đây là quy ước gần như phổ biến (Three.js, glTF): nó đảm bảo object luôn xoay quanh **tâm cục bộ** của nó chứ không quanh gốc toạ độ world. Đổi thứ tự, ví dụ $R \cdot T \cdot S$, làm object dịch chuyển ra xa gốc world trước rồi mới xoay quanh gốc world đó — kết quả object bay theo quỹ đạo tròn quanh world thay vì tự xoay tại chỗ, một lỗi hay gặp khi tự tay ghép transform mà quên thứ tự chuẩn.
 
 ## Phép chia phối cảnh: xem trước x/w
 
-Toàn bộ ma trận T, R, S ở trên đều **affine** — chúng không bao giờ đụng tới $w$, nó luôn giữ nguyên $1$. Nhưng có một loại ma trận 4×4 khác, ma trận **phối cảnh** (perspective projection, học kỹ ở bài Model → View → Projection), cố ý ghi giá trị khác 1 vào $w$ — thường bằng đúng $-z$ trong không gian camera. Sau khi nhân ma trận này, GPU tự động thực hiện một bước gọi là **phép chia phối cảnh** (perspective divide): chia cả $x, y, z$ cho $w$, trước khi rasterize.
+Toàn bộ ma trận T, R, S ở trên đều **affine** — chúng không bao giờ đụng tới $w$ — giữ nguyên giá trị đầu vào: $1$ cho điểm, $0$ cho hướng (đúng như phần trên vừa tính). Nhưng có một loại ma trận 4×4 khác, ma trận **phối cảnh** (perspective projection, học kỹ ở bài Model → View → Projection), cố ý ghi giá trị khác 1 vào $w$ — thường bằng đúng $-z$ trong không gian camera. Sau khi nhân ma trận này, GPU tự động thực hiện một bước gọi là **phép chia phối cảnh** (perspective divide): chia cả $x, y, z$ cho $w$, trước khi rasterize (bước tô tam giác thành pixel).
 
-Ví dụ đơn giản: một điểm ra khỏi vertex shader ở clip space $(2, 2, 5, w=5)$ chia cho $w$ cho $(0.4, 0.4, 1)$. Một điểm khác ở xa gấp đôi, cùng toạ độ $x=2$ nhưng $w=10$, chia ra $(0.2, 0.2, 1)$ — đúng một nửa vị trí trên màn hình. Đây chính là cơ chế toán học đằng sau việc "vật ở xa trông nhỏ hơn": không phải hiệu ứng đặc biệt nào, chỉ là một phép chia đơn giản, ẩn trong đúng thành phần $w$ mà bài này vừa học cách dùng cho việc khác (translation).
+Ví dụ đơn giản: một điểm sau khi nhân ma trận chiếu (không gian này gọi là clip space, học kỹ ở bài sau) có $(x, y) = (2, 2)$ với $w=5$, chia cho $w$ cho $x/w = 0.4$. Một điểm khác ở xa gấp đôi, cùng toạ độ $x=2$ nhưng $w=10$, chia ra $x/w = 0.2$ — đúng một nửa vị trí trên màn hình. Đây chính là cơ chế toán học đằng sau việc "vật ở xa trông nhỏ hơn": không phải hiệu ứng đặc biệt nào, chỉ là một phép chia đơn giản, ẩn trong đúng thành phần $w$ mà bài này vừa học cách dùng cho việc khác (translation).
 
 ## Kết nối về sau: Model → View → Projection
 

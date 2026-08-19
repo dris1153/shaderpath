@@ -11,7 +11,7 @@ The fix: add an extra fake dimension, called $w$, turning the 3D point $(x,y,z)$
 <Figure
   src="/figures/00-math/homogeneous-4x4-layout.svg"
   alt="Block layout of a 4x4 matrix: the 3x3 rotate and scale block, the translation column, and the bottom row 0 0 0 1"
-  caption="The bottom row is what separates an affine matrix from a projection one — only the latter writes a w other than 1, which is what triggers the divide."
+  caption="The bottom row is what separates this lesson's T/R/S matrices (which pass w through unchanged) from the perspective projection matrix covered at the end — only the projection writes a non-1 w for points, which is when the divide (always applied to every vertex) actually changes the result."
 />
 
 ### The 4×4 Translation Matrix
@@ -43,9 +43,9 @@ Combining translate, rotate and scale into a single model matrix almost always f
 
 ## The Perspective Divide: A Preview of x/w
 
-Every matrix above — T, R, S — is **affine**: none of them ever touch $w$, which stays fixed at $1$. But there's another kind of 4×4 matrix, the **perspective projection** matrix (covered in depth in the Model → View → Projection lesson), that deliberately writes a value other than 1 into $w$ — typically exactly $-z$ in camera space. After multiplying by this matrix, the GPU automatically performs a step called the **perspective divide**: dividing $x$, $y$ and $z$ by $w$, before rasterization.
+Every matrix above — T, R, S — is **affine**: none of them ever touch $w$ — it keeps its incoming value: $1$ for points, $0$ for directions (exactly as computed above). But there's another kind of 4×4 matrix, the **perspective projection** matrix (covered in depth in the Model → View → Projection lesson), that deliberately writes a value other than 1 into $w$ — typically exactly $-z$ in camera space. After multiplying by this matrix, the GPU automatically performs a step called the **perspective divide**: dividing $x$, $y$ and $z$ by $w$, before rasterization.
 
-A simple example: a point leaving the vertex shader at clip space $(2, 2, 5, w=5)$ divides to $(0.4, 0.4, 1)$. Another point twice as far away, with the same $x=2$ but $w=10$, divides to $(0.2, 0.2, 1)$ — exactly half the position on screen. This is the entire mathematical mechanism behind "farther objects look smaller": not a special effect, just a plain division, hiding inside the exact same $w$ component this lesson just repurposed for translation.
+A simple example: a point coming out of the projection multiply (this space is called clip space, covered properly in the next lesson) with $(x, y) = (2, 2)$ and $w=5$ divides to $x/w = 0.4$. Another point twice as far away, with the same $x=2$ but $w=10$, divides to $x/w = 0.2$ — exactly half the position on screen. This is the entire mathematical mechanism behind "farther objects look smaller": not a special effect, just a plain division, hiding inside the exact same $w$ component this lesson just repurposed for translation.
 
 ## Looking Ahead: Model → View → Projection
 

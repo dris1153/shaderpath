@@ -1,8 +1,8 @@
 ## Euler angles: ba phép xoay quanh trục nối tiếp nhau
 
-Một phép xoay 3D bất kỳ chỉ có đúng 3 bậc tự do — ma trận $3\times 3$ có 9 phần tử nhưng luôn ràng buộc lẫn nhau sao cho 3 con số độc lập là đủ mô tả trọn vẹn. Euler angles đóng gói 3 số đó theo cách dễ hình dung nhất: chẻ một phép xoay tổng quát (khó tưởng tượng trực tiếp) thành ba phép xoay đơn giản hơn — mỗi phép chỉ quanh **một trục** — rồi nối tiếp chúng lại. Ba góc này thường gọi là roll/pitch/yaw trong hàng không, hoặc đơn giản là góc quanh $X$, $Y$, $Z$.
+Một phép xoay 3D bất kỳ chỉ có đúng 3 bậc tự do — ma trận $3\times 3$ có 9 phần tử nhưng luôn ràng buộc lẫn nhau sao cho 3 con số độc lập là đủ mô tả trọn vẹn. Euler angles đóng gói 3 số đó theo cách dễ hình dung nhất: chẻ một phép xoay tổng quát (khó tưởng tượng trực tiếp) thành ba phép xoay đơn giản hơn — mỗi phép chỉ quanh **một trục** — rồi nối tiếp chúng lại. Ba góc này thường gọi là roll (lộn quanh trục dọc thân), pitch (chúc/ngẩng), yaw (đảo hướng trái/phải) trong hàng không, hoặc đơn giản là góc quanh $X$, $Y$, $Z$.
 
-Mỗi phép xoay đơn trục là ma trận quen thuộc từ bài Ma trận & Transform:
+Mỗi phép xoay đơn trục là ma trận quen thuộc từ bài Ma trận 2x2 & 3x3:
 
 $$
 \begin{aligned}
@@ -42,7 +42,7 @@ Cùng một cặp góc $90°/90°$, đổi thứ tự áp dụng cho ra $(0,0,-1
 
 **Extrinsic**: cả ba trục là trục thế giới cố định, không trục nào di chuyển giữa các bước. **Intrinsic**: mỗi trục sau được đo trên hệ toạ độ đã bị trục trước xoay theo — trục $Y$ ở bước hai là trục $Y$ *của vật sau khi đã xoay theo $X$*, không phải $Y$ thế giới ban đầu. Một gimbal kim loại lồng nhau thật (la bàn hàng hải) là hiện thân vật lý của intrinsic: vòng ngoài xoay kéo cả vòng giữa và vòng trong theo.
 
-`THREE.Euler` order mặc định `"XYZ"` dùng quy ước intrinsic: xoay quanh $X$ cục bộ trước, $Y$ cục bộ sau (đã nghiêng theo bước trước), $Z$ cục bộ cuối (đã nghiêng theo hai bước trước). Về ma trận, điều này tương đương áp $R_x$ trước lên vector — $R = R_z(\gamma)R_y(\beta)R_x(\alpha)$, đúng ví dụ vừa tính. Bảng đầy đủ 12 order khả dĩ nằm trong tài liệu Eberly ở Tham khảo — không cần thuộc, chỉ cần nhớ: đổi `order` là đổi cả phép toán, không phải đổi nhãn.
+`THREE.Euler` order mặc định `"XYZ"` dùng quy ước intrinsic: xoay quanh $X$ cục bộ trước, $Y$ cục bộ sau (đã nghiêng theo bước trước), $Z$ cục bộ cuối (đã nghiêng theo hai bước trước). Về ma trận, order này là $R = R_x(\alpha)\,R_y(\beta)\,R_z(\gamma)$ — thừa số ngoài cùng bên phải chạm vector trước. Còn ví dụ vừa tính (xoay quanh trục **thế giới** $X$ trước, rồi $Y$, rồi $Z$) là composition $R = R_z(\gamma)R_y(\beta)R_x(\alpha)$ — theo đối ngẫu intrinsic/extrinsic, chuỗi extrinsic đọc xuôi trùng chuỗi intrinsic đọc ngược, nên nó chính là order `"ZYX"` của three. Phần gimbal lock bên dưới dùng composition $R_z R_y R_x$ này cho khớp trực giác yaw–pitch–roll; với `"XYZ"` mặc định, hiện tượng khoá y hệt — chỉ tổ hợp góc đổi từ $\alpha-\gamma$ thành $\alpha+\gamma$. Bảng đầy đủ 12 order khả dĩ nằm trong tài liệu Eberly ở Tham khảo — không cần thuộc, chỉ cần nhớ: đổi `order` là đổi cả phép toán, không phải đổi nhãn.
 
 ## Gimbal lock: khi trục giữa chạm ±90°, một bậc tự do biến mất
 
@@ -84,15 +84,15 @@ Hai bộ ba góc Euler khác hẳn nhau mô tả **cùng một hướng vật l�
 
 ## Vì sao nội suy Euler "lượn" bất ngờ
 
-Lerp trực tiếp ba con số ($\alpha,\beta,\gamma$ mỗi cái theo $t$) không tôn trọng hình học ràng buộc của không gian xoay vừa thấy. Gần $\beta\approx 90°$, ma trận chỉ phụ thuộc $\alpha-\gamma$ — muốn hướng hiển thị đổi mượt, $\alpha$ và $\gamma$ phải trôi cùng nhau; lerp độc lập từng kênh không biết điều đó, nên vật thể lướt chậm bất thường rồi lồng tốc, hoặc quay qua hướng trung gian kỳ quặc dù hai đầu trông "gần nhau". Một nguồn "lượn" khác, tầm thường hơn: lerp góc qua biên $0°/360°$ — nội suy $350°\to10°$ kiểu tuyến tính đơn giản quét gần $340°$ dài thay vì $20°$ ngắn. Cả hai đều là hệ quả của dùng lerp tuyến tính (thiết kế cho số phẳng) trên một không gian không phẳng — bài quaternion tiếp theo sửa đúng chỗ này bằng slerp.
+Lerp (nội suy tuyến tính — trộn đều từ giá trị đầu sang cuối theo $t$) trực tiếp ba con số ($\alpha,\beta,\gamma$ mỗi cái theo $t$) không tôn trọng hình học ràng buộc của không gian xoay vừa thấy. Gần $\beta\approx 90°$, ma trận chỉ phụ thuộc $\alpha-\gamma$ — muốn hướng hiển thị đổi mượt, $\alpha$ và $\gamma$ phải trôi cùng nhau; lerp độc lập từng kênh không biết điều đó, nên vật thể lướt chậm bất thường rồi lồng tốc, hoặc quay qua hướng trung gian kỳ quặc dù hai đầu trông "gần nhau". Một nguồn "lượn" khác, tầm thường hơn: lerp góc qua biên $0°/360°$ — nội suy $350°\to10°$ kiểu tuyến tính đơn giản quét gần $340°$ dài thay vì $20°$ ngắn. Cả hai đều là hệ quả của dùng lerp tuyến tính (thiết kế cho số phẳng) trên một không gian không phẳng — bài quaternion tiếp theo sửa đúng chỗ này bằng slerp.
 
 ## Khi nào Euler đủ dùng, khi nào cần công cụ khác
 
-Euler ổn khi chỉ 2/3 trục thực sự dùng và trục còn lại bị **chặn cứng** tránh xa $90°$: camera FPS chỉ cần pitch (nhìn lên/xuống) và yaw (quay trái/phải), không roll, pitch luôn clamp trong $[-89°,89°]$ — chưa bao giờ chạm điểm lock. Euler vỡ khi vật thể xoay tự do quanh cả ba trục không giới hạn: mô phỏng bay lộn (drone, tàu vũ trụ tự do xoay), hoặc animation blending giữa các pose bất kỳ của rig xương — cả hai sớm muộn đưa hướng xoay qua đúng vùng $\beta=90°$, và nội suy giữa keyframe Euler sẽ "lượn" như phần trên.
+Euler ổn khi chỉ 2/3 trục thực sự dùng và trục còn lại bị **chặn cứng** tránh xa $90°$: camera FPS chỉ cần pitch (nhìn lên/xuống — trong hệ Y-up của three đây là xoay quanh $X$, tức `rotation.x`) và yaw (quay trái/phải — quanh $Y$, `rotation.y`), không roll; pitch luôn clamp trong $[-89°,89°]$ và dùng order `"YXZ"` (như `PointerLockControls`) để trục bị clamp là trục giữa — chưa bao giờ chạm điểm lock. Euler vỡ khi vật thể xoay tự do quanh cả ba trục không giới hạn: mô phỏng bay lộn (drone, tàu vũ trụ tự do xoay), hoặc animation blending giữa các pose bất kỳ của rig xương — cả hai sớm muộn đưa hướng xoay qua đúng vùng $\beta=90°$, và nội suy giữa keyframe Euler sẽ "lượn" như phần trên.
 
 ## Kết nối về sau: quaternion và animation
 
-Bài tiếp theo thay Euler bằng quaternion — không có khái niệm "trục thứ hai, thứ ba" nên không thể gimbal lock, và hỗ trợ nội suy mượt thật (slerp) thay vì lerp từng góc. Từ Track 3, mọi `Object3D` lưu xoay bằng cả `object.rotation` (Euler, tiện chỉnh tay) và `object.quaternion` (nguồn thật dựng ma trận, đồng bộ hai chiều) — `AnimationMixer` luôn nội suy keyframe bằng quaternion, không bao giờ Euler, chính vì lý do vừa học.
+Bài tiếp theo thay Euler bằng quaternion — không có khái niệm "trục thứ hai, thứ ba" nên không thể gimbal lock, và hỗ trợ nội suy mượt thật (slerp) thay vì lerp từng góc. Từ Track 3, mọi `Object3D` lưu xoay bằng cả `object.rotation` (Euler, tiện chỉnh tay) và `object.quaternion` (nguồn thật dựng ma trận, đồng bộ hai chiều) — các track xoay chuẩn (glTF) luôn là quaternion keyframe, được `AnimationMixer` nội suy bằng slerp thay vì lerp Euler, chính vì lý do vừa học.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

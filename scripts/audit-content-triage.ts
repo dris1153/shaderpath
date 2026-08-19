@@ -192,7 +192,10 @@ async function checkGlsl() {
   const browser = await chromium.launch();
   const page = await browser.newPage();
   // A string, not a closure: tsx/esbuild injects __name helpers into
-  // transpiled closures, and those don't exist inside the page.
+  // transpiled closures, and those don't exist inside the page. The string is
+  // wrapped into a self-calling expression below — evaluate() does NOT call a
+  // bare function-expression string (measured: every case returned undefined,
+  // which read as "compiles" for arbitrarily broken shaders).
   const compileInPage = `([vs, fsrc]) => {
     const gl = document.createElement("canvas").getContext("webgl2");
     const mk = (type, src) => {
@@ -214,10 +217,13 @@ async function checkGlsl() {
       ? null : "link: " + gl.getProgramInfoLog(p);
   }`;
   for (const c of cases) {
-    const log = (await page.evaluate(compileInPage, [FULLSCREEN_VERT, c.frag])) as
-      | string
-      | null;
-    if (log) report(c.track, `${c.at}/${c.id}: solution does not compile — ${log.trim()}`);
+    const expr = `(${compileInPage})(${JSON.stringify([FULLSCREEN_VERT, c.frag])})`;
+    const log = (await page.evaluate(expr)) as string | null;
+    if (log) {
+      // GL info logs end in NUL on some drivers, which turns the report binary.
+      const clean = log.replace(/[ --]/g, "").trim();
+      report(c.track, `${c.at}/${c.id}: solution does not compile — ${clean}`);
+    }
   }
   await browser.close();
 }

@@ -14,8 +14,8 @@ Then answer: which rotation does $-q$ (all four components negated) describe com
     },
     hints: [
       {
-        vi: "$\\theta/2 = 60°$. $\\sin 60° \\approx 0.866$, $\\cos 60° = 0.5$. Trục $(0,0,1)$ chỉ để nguyên thành phần $z$ khác không.",
-        en: "$\\theta/2 = 60°$. $\\sin 60° \\approx 0.866$, $\\cos 60° = 0.5$. The axis $(0,0,1)$ leaves only the $z$ component non-zero.",
+        vi: "Chia đôi góc trước khi lấy sin/cos — phần vector là $\\sin(\\theta/2)$ nhân trục, phần $w$ là $\\cos(\\theta/2)$.",
+        en: "Halve the angle before taking sin/cos — the vector part is $\\sin(\\theta/2)$ times the axis, the $w$ part is $\\cos(\\theta/2)$.",
       },
       {
         vi: "Ma trận xoay dựng từ quaternion chỉ chứa tích của từng CẶP thành phần — đảo dấu cả bốn không đổi bất kỳ tích nào.",
@@ -37,12 +37,12 @@ Then answer: which rotation does $-q$ (all four components negated) describe com
       },
     ],
     solutionNote: {
-      vi: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = ((0,0,1)\\times 0.866,\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
+      vi: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = (0.866\\,(0,0,1),\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
 
 $-q = (0, 0, -0.866, -0.5)$ mô tả CÙNG một phép xoay với $q$ (double cover: $R(q) = R(-q)$, vì ma trận xoay chỉ chứa tích từng cặp thành phần).
 
 $\\mathrm{slerp}(q_1, q_2, t)$ đi qua $-q_2$ thay vì $q_2$ khi $\\mathrm{dot}(q_1, q_2) < 0$ — tức góc đo trực tiếp giữa hai quaternion lớn hơn $90^\\circ$, nên đảo dấu một cái trước khi slerp mới ra đường ngắn nhất trên mặt cầu $S^3$.`,
-      en: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = ((0,0,1)\\times 0.866,\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
+      en: `$\\theta/2 = 60^\\circ$, $\\sin 60^\\circ \\approx 0.866$, $\\cos 60^\\circ = 0.5$. $q = (0.866\\,(0,0,1),\\ 0.5) = (0, 0, 0.866, 0.5)$. $\\|q\\| = \\sqrt{0^2+0^2+0.866^2+0.5^2} = \\sqrt{0.75+0.25} = 1$ ✓.
 
 $-q = (0, 0, -0.866, -0.5)$ describes the SAME rotation as $q$ (double cover: $R(q) = R(-q)$, since the rotation matrix only contains products of pairs of components).
 

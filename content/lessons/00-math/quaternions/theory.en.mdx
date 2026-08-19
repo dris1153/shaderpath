@@ -12,9 +12,9 @@ The first three numbers $(x,y,z) = \hat a \sin\frac{\theta}{2}$ are the rotation
 
 Three rules for using quaternions correctly without needing the full Hamilton algebra:
 
-**Always keep the length at 1.** Floating-point error accumulated across many multiplications or manual edits can drift $\|q\|$ away from $1$ — a non-unit quaternion no longer describes a pure rotation; it silently mixes in scaling. Calling `q.normalize()` periodically (Three.js already does this in most of its rotation APIs) is enough.
+**Always keep the length at 1.** Floating-point error accumulated across many multiplications or manual edits can drift $\|q\|$ away from $1$ — a non-unit quaternion no longer describes a pure rotation; it silently mixes in scaling. Three.js **expects** unit quaternions rather than normalizing for you: the setters (`setFromEuler`, `setFromAxisAngle` with a unit axis) produce them, but long `multiply` chains drift — call `q.normalize()` yourself periodically.
 
-**Multiply to compose two rotations**, just like matrix multiplication: $q_2 q_1$ means apply $q_1$ first, $q_2$ second. The Hamilton product formula — written compactly using the exact dot and cross products from the previous lesson, with $\vec v_i = (x_i,y_i,z_i)$:
+**Multiply to compose two rotations**, just like matrix multiplication: $q_2 q_1$ means apply $q_1$ first, $q_2$ second. The Hamilton product formula — written compactly using the exact dot and cross products from the Dot & Cross Products lesson, with $\vec v_i = (x_i,y_i,z_i)$:
 
 $$
 q_2 q_1 = \Big(w_2\vec v_1 + w_1\vec v_2 + \vec v_2\times\vec v_1,\ \ w_1w_2-\vec v_1\cdot\vec v_2\Big)
@@ -26,7 +26,7 @@ You don't need to memorize this formula for everyday use — Three.js provides `
 
 ## Why Quaternions Escape Gimbal Lock
 
-Gimbal lock in the previous lesson happens because Euler composes **three sequential single-axis rotations** — there's a "second" and a "third" axis measured on a frame already tilted by the previous one, and that frame can end up coinciding. A quaternion has no concept of a second or third axis at all: a rotation is a SINGLE point on the 4D unit sphere $S^3$ (since $\|q\|=1$), not the result of three sequential steps that can "line up." There's no intermediate step to compare against $90°$, so there's nothing to lock — this isn't a clever trick papering over the problem, it's a direct consequence of representing a rotation as ONE algebraic object instead of a chain of three transforms.
+Gimbal lock in the previous lesson happens because Euler composes **three sequential single-axis rotations** — there's a "second" and a "third" axis measured on a frame already tilted by the previous one, and that frame can end up coinciding. A quaternion has no concept of a second or third axis at all: a unit quaternion is a point on the unit sphere $S^3$ in 4D space (each rotation corresponds to the antipodal pair $q$/$-q$; $\|q\|=1$), not the result of three sequential steps that can "line up." There's no intermediate step to compare against $90°$, so there's nothing to lock — this isn't a clever trick papering over the problem, it's a direct consequence of representing a rotation as ONE algebraic object instead of a chain of three transforms.
 
 ## Slerp: Interpolating Rotation at Constant Angular Velocity
 
@@ -38,15 +38,15 @@ $$
 
 $\Omega$ is the angle between the two quaternions treated as unit 4D vectors — the exact same dot product formula from before, just applied to 4 components instead of 3. The engineer who first proved and popularized this formula for computer graphics was Ken Shoemake (SIGGRAPH 1985, see References) — its most important consequence: slerp moves at **constant angular velocity** from start to end, with no unexpected speeding up or slowing down along the way.
 
-Compare with the Euler lerp from the previous lesson: as $\beta$ passes near $90°$, the actual matrix only depends on $\alpha-\gamma$ — lerping $\alpha$ and $\gamma$ independently can't preserve that constraint, causing the "swing." Slerp doesn't have this problem because it never splits rotation into three independent channels in the first place — the entire interpolation happens along exactly ONE curve (a great-circle arc) connecting two points on $S^3$, with no separate "channel" that can fall out of sync with another.
+Compare with the Euler lerp from the previous lesson: as $\beta$ passes near $90°$, the actual matrix only depends on a single combination of $\alpha$ and $\gamma$ — lerping $\alpha$ and $\gamma$ independently can't preserve that constraint, causing the "swing." Slerp doesn't have this problem because it never splits rotation into three independent channels in the first place — the entire interpolation happens along exactly ONE curve (a great-circle arc) connecting two points on $S^3$, with no separate "channel" that can fall out of sync with another.
 
 One practical detail that ties back to the "black box" section above: if $q_1 \cdot q_2 < 0$ (the angle $\Omega$ between them measures over $90°$ directly), slerp will take the "long way" around the sphere even though a shorter physical rotation exists — because $q_2$ and $-q_2$ describe the same orientation but sit on opposite sides of $S^3$. The fix is negating one of the two quaternions before slerping whenever the dot product is negative; `THREE.Quaternion.slerp()` already does this internally, but hand-rolling slerp yourself (say, blending several animation clips) and forgetting that check leaves the object spinning an unexplained extra loop.
 
 ## Cost and When Not to Bother
 
-Slerp calls `Math.acos`/`Math.sin` on every evaluation — noticeably more expensive than linear lerp (just multiplies and adds). When two quaternions are already very close together (small $\Omega$, e.g. a camera smoothing toward a target every frame, or a tiny per-tick IK correction), **nlerp** — linearly interpolating the 4 numbers and then renormalizing — produces a result that's nearly indistinguishable by eye, at a much lower cost since there's no trigonometry involved at all. Jonathan Blow walks through this case in detail in "Understanding Slerp, Then Not Using It" (see References) — his central point: a lot of slerp calls in games actually only need nlerp, because $t$ per frame is too small for the angular-velocity difference to matter.
+Slerp calls `Math.acos`/`Math.sin` on every evaluation — noticeably more expensive than linear lerp (just multiplies and adds). When two quaternions are already very close together (small $\Omega$, e.g. a camera smoothing toward a target every frame, or a tiny per-tick IK correction (IK — inverse kinematics, auto-adjusting joints toward a target)), **nlerp** — linearly interpolating the 4 numbers and then renormalizing — produces a result that's nearly indistinguishable by eye, at a much lower cost since there's no trigonometry involved at all. Jonathan Blow walks through this case in detail in "Understanding Slerp, Then Not Using It" (see References) — his central point: a lot of slerp calls in games actually only need nlerp, because $t$ per frame is too small for the angular-velocity difference to matter.
 
-And echoing the previous lesson: if there's only one simple, clamped rotation axis in play (an FPS camera doing pitch/yaw), a quaternion is overkill — a plain `float` with `Math.max/Math.min` is cheaper, easier to read, and has no gimbal lock to worry about in the first place, since only one degree of freedom is actually being used.
+And echoing the previous lesson: if only 1–2 axes are in play and pitch is clamped away from $90°$ (an FPS camera: clamped pitch + free yaw), a quaternion is overkill — two plain `float`s with `Math.max/Math.min` are cheaper, easier to read, and have no gimbal lock to worry about, since the clamped axis never reaches the lock point.
 
 ## Converting Axis-Angle to Quaternion in Code
 
@@ -67,7 +67,7 @@ function axisAngleToQuaternion(axis: Vec3, angleRad: number): Quat {
 }
 ```
 
-In Three.js, this is exactly `new THREE.Quaternion().setFromAxisAngle(axis, angleRad)`; apply a quaternion to a vector with `vector.applyQuaternion(q)`, or assign `object3D.quaternion.copy(q)` directly to rotate a whole object — no need to hand-roll the "sandwich" formula $v' = q v q^{-1}$ for everyday use, exactly the black-box spirit of this lesson.
+In Three.js, this is `new THREE.Quaternion().setFromAxisAngle(axis, angleRad)` — note that `setFromAxisAngle` **assumes** the axis is already normalized; the normalize step in the function above is on you; apply a quaternion to a vector with `vector.applyQuaternion(q)`, or assign `object3D.quaternion.copy(q)` directly to rotate a whole object — no need to hand-roll the "sandwich" formula $v' = q v q^{-1}$ for everyday use, exactly the black-box spirit of this lesson.
 
 ## Where This Leads: Real Objects and Animation Clips
 
@@ -78,7 +78,7 @@ From Track 3 onward, `object3D.quaternion` is the real value Three.js uses to bu
 The three most common quaternion mistakes:
 
 1. **Forgetting to normalize after many multiplications or manual component edits.** Floating-point error accumulates gradually and drifts $\|q\|$ away from $1$ — the object doesn't rotate obviously wrong, it quietly picks up a slight scale distortion, hard to notice by eye until the error grows large enough.
-2. **Slerping without checking the dot product's sign.** Since $q$ and $-q$ describe the same orientation but sit on opposite sides of $S^3$, slerping between two quaternions with $q_1\cdot q_2 < 0$ travels further around the sphere than necessary — the object spins nearly a full extra $360°$ instead of taking the short way. Hand-rolling slerp yourself (blending clips, retargeting animation) and skipping that sign check is a classic bug.
+2. **Slerping without checking the dot product's sign.** Since $q$ and $-q$ describe the same orientation but sit on opposite sides of $S^3$, slerping between two quaternions with $q_1\cdot q_2 < 0$ travels further around the sphere than necessary — the object can spin up to nearly a full extra $360°$ in the worst case (two nearby keyframes with opposite signs) instead of taking the short way. Hand-rolling slerp yourself (blending clips, retargeting animation) and skipping that sign check is a classic bug.
 3. **Treating quaternion multiplication as commutative like real-number multiplication.** $q_1 q_2 \neq q_2 q_1$ in general — swapping the multiplication order flips whether a rotation is applied in local space first or world space first, leaving the object rotated by the right angle but facing entirely the wrong way once several rotations are chained together.
 
 </Callout>

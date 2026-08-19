@@ -12,9 +12,9 @@ Ba số đầu $(x,y,z) = \hat a \sin\frac{\theta}{2}$ là trục quay đã "nhu
 
 Ba quy tắc dùng quaternion đúng cách mà không cần hiểu đại số Hamilton đầy đủ:
 
-**Luôn giữ độ dài bằng 1.** Sai số dấu phẩy động tích luỹ qua nhiều phép nhân/gán tay có thể làm $\|q\|$ trôi khỏi $1$ — một quaternion không đơn vị không còn mô tả phép xoay thuần tuý, nó lặng lẽ pha thêm co giãn vào object. Gọi `q.normalize()` định kỳ (Three.js tự làm việc này ở hầu hết API xoay) là đủ.
+**Luôn giữ độ dài bằng 1.** Sai số dấu phẩy động tích luỹ qua nhiều phép nhân/gán tay có thể làm $\|q\|$ trôi khỏi $1$ — một quaternion không đơn vị không còn mô tả phép xoay thuần tuý, nó lặng lẽ pha thêm co giãn vào object. Three.js **kỳ vọng** quaternion đã đơn vị chứ không tự normalize hộ: các setter (`setFromEuler`, `setFromAxisAngle` với trục đơn vị) cho ra quaternion đơn vị, nhưng chuỗi `multiply` dài sẽ trôi — tự gọi `q.normalize()` định kỳ.
 
-**Nhân để ghép hai phép xoay**, y hệt nhân ma trận: $q_2 q_1$ nghĩa là áp $q_1$ trước, $q_2$ sau. Công thức Hamilton product — viết gọn bằng đúng dot và cross đã học ở bài trước, với $\vec v_i = (x_i,y_i,z_i)$:
+**Nhân để ghép hai phép xoay**, y hệt nhân ma trận: $q_2 q_1$ nghĩa là áp $q_1$ trước, $q_2$ sau. Công thức Hamilton product — viết gọn bằng đúng dot và cross đã học ở bài Dot & Cross products, với $\vec v_i = (x_i,y_i,z_i)$:
 
 $$
 q_2 q_1 = \Big(w_2\vec v_1 + w_1\vec v_2 + \vec v_2\times\vec v_1,\ \ w_1w_2-\vec v_1\cdot\vec v_2\Big)
@@ -26,7 +26,7 @@ Không cần thuộc lòng công thức này để dùng quaternion hàng ngày 
 
 ## Vì sao quaternion không bị gimbal lock
 
-Gimbal lock ở bài trước xảy ra vì Euler compose **ba phép xoay đơn trục tuần tự** — có một trục "thứ hai" và "thứ ba" đo trên khung đã bị trục trước làm nghiêng, và khung đó có thể trùng nhau. Quaternion không hề có khái niệm trục thứ hai, thứ ba: một phép xoay là MỘT điểm duy nhất trên mặt cầu đơn vị 4 chiều $S^3$ (vì $\|q\|=1$), không phải kết quả của ba bước tuần tự có thể "thẳng hàng". Không có bước trung gian nào để so sánh với $90°$, nên không có gì để khoá — đây không phải một mẹo kỹ thuật che giấu vấn đề, mà là hệ quả trực tiếp của việc biểu diễn xoay bằng MỘT đối tượng đại số duy nhất thay vì một chuỗi ba phép biến đổi.
+Gimbal lock ở bài trước xảy ra vì Euler compose **ba phép xoay đơn trục tuần tự** — có một trục "thứ hai" và "thứ ba" đo trên khung đã bị trục trước làm nghiêng, và khung đó có thể trùng nhau. Quaternion không hề có khái niệm trục thứ hai, thứ ba: một quaternion đơn vị là một điểm trên mặt cầu đơn vị $S^3$ trong không gian 4 chiều (mỗi phép xoay ứng với cặp điểm đối nhau $q$/$-q$) (vì $\|q\|=1$), không phải kết quả của ba bước tuần tự có thể "thẳng hàng". Không có bước trung gian nào để so sánh với $90°$, nên không có gì để khoá — đây không phải một mẹo kỹ thuật che giấu vấn đề, mà là hệ quả trực tiếp của việc biểu diễn xoay bằng MỘT đối tượng đại số duy nhất thay vì một chuỗi ba phép biến đổi.
 
 ## Slerp: nội suy xoay với tốc độ góc không đổi
 
@@ -38,15 +38,15 @@ $$
 
 $\Omega$ là góc giữa hai quaternion khi coi chúng là hai vector 4D đơn vị — đúng công thức dot product quen thuộc, chỉ áp lên 4 thành phần thay vì 3. Kỹ thuật viên đầu tiên chứng minh và phổ biến công thức này cho đồ hoạ máy tính là Ken Shoemake (SIGGRAPH 1985, xem Tham khảo) — hệ quả quan trọng nhất của nó: slerp đi với **tốc độ góc không đổi** từ đầu đến cuối, không nhanh chậm bất thường ở giữa đường.
 
-So với lerp Euler ở bài trước: khi $\beta$ đi qua gần $90°$, ma trận thực tế chỉ phụ thuộc $\alpha-\gamma$ — lerp độc lập $\alpha$ và $\gamma$ không giữ được ràng buộc đó, gây "lượn". Slerp không có vấn đề này vì nó không tách xoay thành ba kênh độc lập ngay từ đầu — toàn bộ phép nội suy diễn ra trên đúng MỘT đường cong (great-circle arc) nối hai điểm trên $S^3$, không có "kênh" nào để mất đồng bộ với kênh khác.
+So với lerp Euler ở bài trước: khi $\beta$ đi qua gần $90°$, ma trận thực tế chỉ phụ thuộc một tổ hợp duy nhất của $\alpha$ và $\gamma$ — lerp độc lập $\alpha$ và $\gamma$ không giữ được ràng buộc đó, gây "lượn". Slerp không có vấn đề này vì nó không tách xoay thành ba kênh độc lập ngay từ đầu — toàn bộ phép nội suy diễn ra trên đúng MỘT cung tròn lớn (great-circle arc — đường ngắn nhất trên mặt cầu) nối hai điểm trên $S^3$, không có "kênh" nào để mất đồng bộ với kênh khác.
 
 Một chi tiết thực dụng nối lại với phần "hộp đen" ở trên: nếu $q_1 \cdot q_2 < 0$ (góc $\Omega$ giữa chúng lớn hơn $90°$ khi đo thẳng), slerp sẽ đi "đường xa" trên mặt cầu dù về mặt xoay vật lý có một đường ngắn hơn — vì $q_2$ và $-q_2$ mô tả cùng một hướng nhưng nằm ở hai phía đối nhau của $S^3$. Sửa bằng cách đảo dấu một trong hai quaternion trước khi slerp nếu dot âm; `THREE.Quaternion.slerp()` tự làm bước này, nhưng tự viết slerp tay (ví dụ khi blend nhiều clip animation) mà quên kiểm tra dấu sẽ cho object xoay vòng dư một cách khó hiểu.
 
 ## Chi phí và khi nào không cần bận tâm
 
-Slerp gọi `Math.acos`/`Math.sin` mỗi lần — đắt hơn đáng kể so với lerp tuyến tính (chỉ nhân-cộng). Khi hai quaternion đã rất gần nhau (góc $\Omega$ nhỏ, ví dụ mượt hoá camera bám theo mục tiêu mỗi frame, hoặc IK correction nhỏ mỗi tick), **nlerp** — lerp tuyến tính 4 số rồi normalize lại — cho kết quả gần như không phân biệt được bằng mắt, với chi phí rẻ hơn nhiều vì không có hàm lượng giác nào. Jonathan Blow phân tích chi tiết case này trong bài "Understanding Slerp, Then Not Using It" (xem Tham khảo) — luận điểm chính: rất nhiều chỗ dùng slerp trong game thực ra chỉ cần nlerp, vì $t$ mỗi frame quá nhỏ để khác biệt tốc độ góc còn quan trọng.
+Slerp gọi `Math.acos`/`Math.sin` mỗi lần — đắt hơn đáng kể so với lerp tuyến tính (chỉ nhân-cộng). Khi hai quaternion đã rất gần nhau (góc $\Omega$ nhỏ, ví dụ mượt hoá camera bám theo mục tiêu mỗi frame, hoặc IK correction nhỏ mỗi tick (IK — inverse kinematics, tự động chỉnh khớp xương về đích)), **nlerp** — lerp tuyến tính 4 số rồi normalize lại — cho kết quả gần như không phân biệt được bằng mắt, với chi phí rẻ hơn nhiều vì không có hàm lượng giác nào. Jonathan Blow phân tích chi tiết case này trong bài "Understanding Slerp, Then Not Using It" (xem Tham khảo) — luận điểm chính: rất nhiều chỗ dùng slerp trong game thực ra chỉ cần nlerp, vì $t$ mỗi frame quá nhỏ để khác biệt tốc độ góc còn quan trọng.
 
-Và nhắc lại bài trước: nếu chỉ có một trục xoay đơn giản, bị clamp (camera FPS chỉ pitch/yaw), quaternion là công cụ thừa — một biến `float` với `Math.max/Math.min` rẻ hơn, dễ đọc hơn, và không hề có gimbal lock để lo vì chỉ có một bậc tự do đang dùng tới.
+Và nhắc lại bài trước: nếu chỉ dùng 1–2 trục và trục pitch bị clamp xa $90°$ (camera FPS: pitch clamp + yaw tự do), quaternion là công cụ thừa — hai biến `float` với `Math.max/Math.min` rẻ hơn, dễ đọc hơn, và không hề có gimbal lock để lo vì trục bị khoá không bao giờ tới điểm lock.
 
 ## Từ axis-angle sang quaternion trong code
 
@@ -67,18 +67,18 @@ function axisAngleToQuaternion(axis: Vec3, angleRad: number): Quat {
 }
 ```
 
-Trong Three.js, đây chính xác là `new THREE.Quaternion().setFromAxisAngle(axis, angleRad)`; áp quaternion lên một vector bằng `vector.applyQuaternion(q)`, hoặc gán thẳng `object3D.quaternion.copy(q)` để xoay cả object — không cần tự viết công thức "sandwich" $v' = q v q^{-1}$ cho việc dùng hàng ngày, đúng tinh thần "hộp đen" của bài này.
+Trong Three.js, đây chính là `new THREE.Quaternion().setFromAxisAngle(axis, angleRad)` — lưu ý `setFromAxisAngle` **giả định** axis đã normalize, bước normalize trong hàm trên bạn phải tự làm trước; áp quaternion lên một vector bằng `vector.applyQuaternion(q)`, hoặc gán thẳng `object3D.quaternion.copy(q)` để xoay cả object — không cần tự viết công thức "sandwich" $v' = q v q^{-1}$ cho việc dùng hàng ngày, đúng tinh thần "hộp đen" của bài này.
 
 ## Kết nối về sau: object thật và animation clip
 
-Từ Track 3, `object3D.quaternion` là nguồn thật Three.js dùng để dựng ma trận model — `object3D.rotation` (Euler) chỉ là lớp tiện lợi đồng bộ hai chiều với nó. `AnimationMixer` lưu track xoay trong file GLTF dưới dạng quaternion và nội suy bằng slerp giữa các keyframe, chính là ứng dụng trực tiếp của công thức vừa học. Hai bài tiếp theo trong module này (lượng giác cho animation, nội suy & easing) sẽ tổng quát hoá ý tưởng "nội suy đúng cách" sang những đại lượng không phải xoay — cùng một nguyên tắc, khác đối tượng.
+Từ Track 3, `object3D.quaternion` là nguồn thật Three.js dùng để dựng ma trận model — `object3D.rotation` (Euler) chỉ là lớp tiện lợi đồng bộ hai chiều với nó. `AnimationMixer` lưu track xoay trong file GLTF (định dạng model 3D chuẩn web) dưới dạng quaternion và nội suy bằng slerp giữa các keyframe (mốc thời gian ghi sẵn giá trị), chính là ứng dụng trực tiếp của công thức vừa học. Hai bài tiếp theo trong module này (lượng giác cho animation, nội suy & easing) sẽ tổng quát hoá ý tưởng "nội suy đúng cách" sang những đại lượng không phải xoay — cùng một nguyên tắc, khác đối tượng.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 
 Ba lỗi hay gặp nhất với quaternion:
 
 1. **Quên normalize sau nhiều phép nhân hoặc chỉnh tay component.** Sai số dấu phẩy động tích luỹ dần khiến $\|q\|$ trôi khỏi $1$ — object không quay sai hướng rõ rệt, mà âm thầm bị co giãn nhẹ, rất khó nhận ra bằng mắt cho tới khi sai số đủ lớn.
-2. **Slerp mà không kiểm tra dấu dot product.** Vì $q$ và $-q$ mô tả cùng một hướng nhưng nằm hai phía đối nhau trên $S^3$, slerp giữa hai quaternion có $q_1\cdot q_2 < 0$ đi vòng xa hơn cần thiết — object xoay dư gần $360°$ thay vì đi đường ngắn. Tự viết slerp tay (blend nhiều clip, retarget animation) mà quên bước đảo dấu này là lỗi kinh điển.
+2. **Slerp mà không kiểm tra dấu dot product.** Vì $q$ và $-q$ mô tả cùng một hướng nhưng nằm hai phía đối nhau trên $S^3$, slerp giữa hai quaternion có $q_1\cdot q_2 < 0$ đi vòng xa hơn cần thiết — object có thể xoay dư tới gần $360°$ trong trường hợp xấu nhất (hai keyframe gần nhau nhưng ngược dấu) thay vì đi đường ngắn. Tự viết slerp tay (blend nhiều clip animation, chuyển động tác giữa hai rig) mà quên bước đảo dấu này là lỗi kinh điển.
 3. **Coi phép nhân quaternion giao hoán như nhân số thực.** $q_1 q_2 \neq q_2 q_1$ nói chung — nhầm thứ tự nhân đổi hẳn ý nghĩa "xoay theo hệ local trước hay hệ world trước", khiến object xoay đúng góc nhưng sai hẳn hướng tổng thể khi ghép nhiều phép xoay liên tiếp.
 
 </Callout>

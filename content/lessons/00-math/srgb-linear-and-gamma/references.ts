@@ -28,8 +28,8 @@ export const references: Citation[] = [
     title: "Three.js Manual — Color Management",
     url: "https://threejs.org/manual/en/color-management.html",
     note: {
-      vi: "Nguồn cho phần Three.js r150+ của bài này: renderer.outputColorSpace, texture.colorSpace = SRGBColorSpace, và vì sao data texture phải giữ NoColorSpace.",
-      en: "The source for this lesson's Three.js r150+ section: renderer.outputColorSpace, texture.colorSpace = SRGBColorSpace, and why data textures must stay NoColorSpace.",
+      vi: "Nguồn cho phần Three.js r152+ của bài này: renderer.outputColorSpace, texture.colorSpace = SRGBColorSpace, và vì sao data texture phải giữ NoColorSpace.",
+      en: "The source for this lesson's Three.js r152+ section: renderer.outputColorSpace, texture.colorSpace = SRGBColorSpace, and why data textures must stay NoColorSpace.",
     },
   },
 ];

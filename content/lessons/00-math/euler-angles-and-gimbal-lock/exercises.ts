@@ -18,12 +18,12 @@ Then answer in one sentence: do these two Euler triples describe the same rotati
     },
     hints: [
       {
-        vi: "Trừ trực tiếp: $60° - 25° = 35°$ và $10° - (-25°) = 35°$ — chú ý dấu trừ của số âm.",
-        en: "Subtract directly: $60° - 25° = 35°$ and $10° - (-25°) = 35°$ — watch the sign on the negative number.",
+        vi: "Chú ý dấu trừ của số âm: $a - (-b) = a + b$.",
+        en: "Watch the sign on the negative number: $a - (-b) = a + b$.",
       },
       {
-        vi: "Nếu hai hiệu số bằng nhau, thay vào công thức $R(\\alpha,90°,\\gamma)$ ở bài học sẽ ra đúng cùng một ma trận — không cần biết $\\alpha$ và $\\gamma$ riêng lẻ là bao nhiêu.",
-        en: "If the two differences are equal, plugging them into the lesson's $R(\\alpha,90°,\\gamma)$ formula yields the exact same matrix — you never need to know $\\alpha$ and $\\gamma$ individually.",
+        vi: "So sánh hai hiệu số vừa tính, rồi nhìn lại ma trận $R(\alpha,90°,\gamma)$ ở bài học: nó phụ thuộc những biến nào?",
+        en: "Compare the two differences you computed, then look back at the lesson's $R(\alpha,90°,\gamma)$ matrix: which variables does it actually depend on?",
       },
     ],
     checklist: [
@@ -69,10 +69,10 @@ Same rotation, even though $\\alpha$ and $\\gamma$ individually differ completel
     id: "compose-euler-xyz-vs-zyx",
     kind: "code",
     prompt: {
-      vi: `Hoàn thiện \`rotateZ\` (theo mẫu \`rotateX\`/\`rotateY\` đã có), rồi viết \`applyEulerXYZ\` (order \`"XYZ"\` mặc định của Three.js: xoay X trước, Y sau, Z cuối) và \`applyEulerZYX\` (thứ tự ngược lại: Z trước, Y sau, X cuối) bằng cách lồng ba hàm rotate lại với nhau.
+      vi: `Hoàn thiện \`rotateZ\` (theo mẫu \`rotateX\`/\`rotateY\` đã có), rồi viết \`applyEulerXYZ\` (xoay quanh trục THẾ GIỚI X trước, Y sau, Z cuối) và \`applyEulerZYX\` (ngược lại: Z thế giới trước, Y sau, X cuối) bằng cách lồng ba hàm rotate lại với nhau.
 
 Chạy cả hai với \`v = [1, 0, 0]\` và \`x = y = z = Math.PI / 2\`, và xác nhận hai hàm cho ra hai vector khác nhau.`,
-      en: `Complete \`rotateZ\` (following the \`rotateX\`/\`rotateY\` pattern already given), then write \`applyEulerXYZ\` (Three.js's default \`"XYZ"\` order: rotate X first, then Y, then Z) and \`applyEulerZYX\` (reverse order: Z first, then Y, then X) by nesting the three rotate functions together.
+      en: `Complete \`rotateZ\` (following the \`rotateX\`/\`rotateY\` pattern already given), then write \`applyEulerXYZ\` (rotate about the WORLD X axis first, then Y, then Z) and \`applyEulerZYX\` (the reverse: world Z first, then Y, then X) by nesting the three rotate functions together.
 
 Run both with \`v = [1, 0, 0]\` and \`x = y = z = Math.PI / 2\`, and confirm the two functions return different vectors.`,
     },
@@ -127,7 +127,9 @@ function applyEulerZYX(v: Vec3, x: number, y: number, z: number): Vec3 {
 
 // v=[1,0,0], x=y=z=Math.PI/2:
 // applyEulerXYZ  -> [0, 0, -1]
-// applyEulerZYX  -> [0, 0, 1]   <- opposite Z, same three angles`,
+// applyEulerZYX  -> [0, 0, 1]   <- opposite Z, same three angles
+// (applyEulerZYX matches THREE.Euler order "XYZ": intrinsic X->Y'->Z''
+//  equals extrinsic Z->Y->X)`,
     hints: [
       {
         vi: "rotateZ theo đúng mẫu rotateX/rotateY: thành phần trùng tên trục thì giữ nguyên, hai thành phần còn lại trộn theo cos/sin.",
@@ -148,8 +150,8 @@ function applyEulerZYX(v: Vec3, x: number, y: number, z: number): Vec3 {
         en: "applyEulerXYZ and applyEulerZYX return DIFFERENT vectors for the same [1,0,0] input and 90°/90°/90° angles",
       },
       {
-        vi: "Tôi giải thích được applyEulerXYZ khớp với order mặc định của THREE.Euler",
-        en: "I can explain that applyEulerXYZ matches THREE.Euler's default order",
+        vi: "Tôi giải thích được vì sao applyEulerZYX (Z thế giới trước) mới là hàm khớp order XYZ mặc định của THREE.Euler — chuỗi trục thế giới đọc xuôi bằng chuỗi trục cục bộ đọc ngược",
+        en: "I can explain why applyEulerZYX (world Z first) is the one matching THREE.Euler's default XYZ order — a world-axis sequence read forward equals the local-axis sequence read backward",
       },
     ],
   },

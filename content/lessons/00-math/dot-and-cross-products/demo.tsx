@@ -16,6 +16,7 @@ const LABELS = {
     angleB: "Góc b (°)",
     lenB: "Độ dài b",
     showPerp: "Hiện thành phần vuông góc",
+    projOnB: "chiếu lên b",
   },
   en: {
     title: "Dot Product & Projection",
@@ -24,6 +25,7 @@ const LABELS = {
     angleB: "b angle (°)",
     lenB: "b length",
     showPerp: "Show perpendicular component",
+    projOnB: "proj on b",
   },
 } as const;
 
@@ -122,7 +124,7 @@ function DotScene() {
         <div className="bg-background/85 rounded border px-2 py-1 font-mono text-xs whitespace-nowrap shadow-sm">
           a·b = {dot.toFixed(1)}
           <br />
-          proj on b = {projScalar.toFixed(1)}
+          {L.projOnB} = {projScalar.toFixed(1)}
         </div>
       </Html>
     </>

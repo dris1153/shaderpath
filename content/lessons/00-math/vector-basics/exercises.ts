@@ -18,8 +18,8 @@ Then answer in one sentence: if $a$ and $b$ are two points, which point does $\\
         en: "Adding/subtracting vectors is just adding/subtracting matching components: $(a_x \\pm b_x,\\ a_y \\pm b_y)$.",
       },
       {
-        vi: "$\\vec a - \\vec b$ là vector đi từ điểm $B$ đến điểm $A$ — thử vẽ tip-to-tail để kiểm tra lại nếu chưa chắc.",
-        en: "$\\vec a - \\vec b$ is the vector running from point $B$ to point $A$ — sketch it tip-to-tail if you're unsure.",
+        vi: "Kiểm tra bằng tip-to-tail: đặt đuôi của $\vec a - \vec b$ ở đâu thì cộng với $\vec b$ ra đúng $\vec a$?",
+        en: "Check with tip-to-tail: where must the tail of $\vec a - \vec b$ sit so that adding $\vec b$ lands exactly on $\vec a$?",
       },
     ],
     checklist: [

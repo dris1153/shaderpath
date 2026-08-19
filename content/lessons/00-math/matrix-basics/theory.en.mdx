@@ -14,7 +14,7 @@ $$
 
 stores exactly those two vectors, one per **column**: the first column $(a, c)$ is where $\hat i$ lands, the second column $(b, d)$ is where $\hat j$ lands. This is the detail most often misread — it's easy to confuse rows with columns, especially when a matrix looks like a spreadsheet — but the rule never changes: **columns, not rows**, carry the geometric information.
 
-Take $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$: column 1 is $(2,0)$, meaning $\hat i$ gets stretched to twice its length along $x$; column 2 is $(0,1)$, meaning $\hat j$ doesn't move at all. No multiplication required — the two columns alone say "double horizontal stretch." This direct-reading skill matters more than memorizing the multiplication formula, because it's what you actually reach for when a `mat3`/`mat4` printed to the console looks wrong and you need to know why an object is warped.
+Take $\begin{pmatrix}2 & 0\\0 & 1\end{pmatrix}$: column 1 is $(2,0)$, meaning $\hat i$ gets stretched to twice its length along $x$; column 2 is $(0,1)$, meaning $\hat j$ doesn't move at all. No multiplication required — the two columns alone say "double horizontal stretch." This direct-reading skill matters more than memorizing the multiplication formula, because it's what you actually reach for when a `mat3`/`mat4` (the 3×3/4×4 matrix types in shaders, coming in a later track) printed to the console looks wrong and you need to know why an object is warped.
 
 <Figure
   src="/figures/00-math/matrix-columns-basis-images.svg"
@@ -36,7 +36,7 @@ a **linear combination of the two columns**, weighted by the original vector's $
 
 ### Why the Second Column Is $(-\sin\theta, \cos\theta)$
 
-Rotating the plane around the origin by an angle $\theta$ (counter-clockwise, the standard math convention with $y$ pointing up) just means answering: where do $\hat i$ and $\hat j$ end up? $\hat i = (1,0)$ sits at angle $0°$ on the unit circle; rotating by $\theta$ moves it to angle $\theta$, landing at $(\cos\theta, \sin\theta)$ — which is literally the definition of $\sin$ and $\cos$: the coordinates of a point on the radius-1 circle at angle $\theta$. $\hat j = (0,1)$ sits at angle $90°$; rotating by $\theta$ moves it to $90° + \theta$, and the angle-sum identities $\cos(90°+\theta) = -\sin\theta$, $\sin(90°+\theta) = \cos\theta$ give its new coordinates: $(-\sin\theta, \cos\theta)$.
+Rotating the plane around the origin by an angle $\theta$ (counter-clockwise, the standard math convention with $y$ pointing up) just means answering: where do $\hat i$ and $\hat j$ end up? $\hat i = (1,0)$ sits at angle $0°$ on the unit circle; rotating by $\theta$ moves it to angle $\theta$, landing at $(\cos\theta, \sin\theta)$ — which is literally the definition of $\sin$ and $\cos$: the coordinates of a point on the radius-1 circle at angle $\theta$. $\hat j = (0,1)$ sits at angle $90°$; rotating by $\theta$ moves it to $90° + \theta$, and the angle-sum identities $\cos(90°+\theta) = -\sin\theta$, $\sin(90°+\theta) = \cos\theta$ (not yet covered in this track — sanity-check them at $\theta = 0°$; the trig lesson later in the track returns to this) give its new coordinates: $(-\sin\theta, \cos\theta)$.
 
 Stacking the two columns exactly as the previous section's rule demands:
 
@@ -50,7 +50,7 @@ A quick sanity check at $\theta = 90°$: $R(90°) = \begin{pmatrix}0 & -1\\1 & 0
 
 The scale matrix is simpler: $\begin{pmatrix}s_x & 0\\0 & s_y\end{pmatrix}$ stretches each axis independently, because column 1 only touches the $x$ component ($\hat i \to (s_x, 0)$) and column 2 only touches $y$ ($\hat j \to (0, s_y)$) — neither axis leaks into the other.
 
-Shear is different in kind: $\begin{pmatrix}1 & k\\0 & 1\end{pmatrix}$ leaves $\hat i = (1,0)$ untouched but pushes $\hat j$ to $(k, 1)$ — the vertical edge tilts sideways, proportionally to $k$. The unit square turns into a slanted parallelogram with no right angles left except the one edge that wasn't touched. Shear is easy to confuse with rotation because both make a shape "lean," but they differ on one crucial point: rotation preserves every edge length, shear doesn't — the edge along $\hat j$ grows to $\sqrt{k^2+1}$ instead of staying at $1$ as $|k|$ increases.
+Shear is different in kind: $\begin{pmatrix}1 & k\\0 & 1\end{pmatrix}$ leaves $\hat i = (1,0)$ untouched but pushes $\hat j$ to $(k, 1)$ — the vertical edge tilts sideways, proportionally to $k$. The unit square turns into a slanted parallelogram with no right angles left at all (the bottom edge stays put, but the corner angles at both its ends have changed). Shear is easy to confuse with rotation because both make a shape "lean," but they differ on one crucial point: rotation preserves every edge length, shear doesn't — the edge along $\hat j$ grows to $\sqrt{k^2+1}$ instead of staying at $1$ as $|k|$ increases.
 
 ## Composition: Why Matrix Multiplication Order Matters
 
@@ -61,7 +61,8 @@ A concrete numeric example makes the order visible: take $R = R(90°) = \begin{p
 - **Rotate then scale** ($S \cdot R \cdot \vec v$): rotate first gives $(0,1)$; scaling afterward leaves it unchanged since its $x$ component is already $0$ — result $(0, 1)$.
 - **Scale then rotate** ($R \cdot S \cdot \vec v$): scale first gives $(2,0)$; rotating that afterward turns it into $(0, 2)$ — result $(0, 2)$.
 
-The two outcomes are completely different despite using the exact same two matrices, only in reversed order. Visually: "rotate then scale" stretches along the **world's** $x$-axis, while "scale then rotate" stretches along the $x$-axis **as it was before rotating**, then rotates the already-distorted result — the two operations don't commute except in special cases (two scales always commute with each other, but a scale and a rotation almost never do).
+The two outcomes are completely different despite using the exact same two matrices, only in reversed order. Visually: "rotate then scale" stretches along the **world's** $x$-axis, while "scale then rotate" stretches along the $x$-axis **as it was before rotating**, then rotates the already-distorted result — the two operations don't commute except in special cases (two scales always commute with each other, but a non-uniform scale — $s_x 
+eq s_y$ — and a rotation do not; a uniform scale always commutes with any rotation).
 
 ## Looking Ahead: Matrices in the 3D Pipeline
 

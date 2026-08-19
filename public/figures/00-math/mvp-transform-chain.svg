@@ -74,7 +74,7 @@
   <!-- screen space -->
   <rect class="box" x="120" y="456" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="478" text-anchor="middle">Screen space</text>
-  <text class="note" x="270" y="494" text-anchor="middle">pixels in the render target, y points down</text>
+  <text class="note" x="270" y="494" text-anchor="middle">pixels in the render target, y up (gl_FragCoord)</text>
 
   <!-- legend -->
   <circle cx="126" cy="520" r="5" fill="var(--accent-stroke)" />

@@ -18,12 +18,12 @@ The multiplication order isn't an arbitrary convention: swapping it to $MVP$, or
   caption="Only the first three hops are matrices you supply; the perspective divide and the viewport transform run automatically after the vertex shader."
 />
 
-- **Model space**: coordinates local to the mesh itself, origin usually at its center or base — a cube modeled at $[-0.5, 0.5]^3$ has no idea yet where it will stand in the scene.
+- **Model space** (also called local/object space): coordinates local to the mesh itself, origin usually at its center or base — a cube modeled at $[-0.5, 0.5]^3$ has no idea yet where it will stand in the scene.
 - **World space**: after multiplying by $M$, every object, light and camera shares one coordinate frame — say $M$ translates that cube to $(3, 0, -5)$; it now genuinely sits there in the shared world.
-- **View space (camera space)**: after multiplying by $V$, the same coordinates are rewritten with the camera sitting at the origin, looking down $-z$ — distance along $z$ here is literally "how far in front of the camera," the exact value the perspective formula below needs.
+- **View space (camera space)**: after multiplying by $V$, the same coordinates are rewritten with the camera sitting at the origin, looking down $-z$ — distance along $z$ here is literally "how far in front of the camera" (points in front have negative $z$ — the depth is $-z$), the value the perspective formula below consumes.
 - **Clip space**: after multiplying by $P$, a 4D homogeneous coordinate $(x, y, z, w)$ — the GPU clips triangles against $-w \le x, y, z \le w$ right here, before dividing; that clipping step is where the name "clip space" comes from.
-- **NDC**: after dividing by $w$ — the one nonlinear step in the entire chain — the clip volume becomes a genuine $[-1,1]^3$ cube, simple to compare and clip further.
-- **Screen/viewport space**: NDC remapped to actual render-target pixels via `gl.viewport()` — a fully separate 2D affine step, not part of the projection matrix at all.
+- **NDC**: after dividing by $w$ — the one nonlinear step in the entire chain — the clip volume becomes a genuine $[-1,1]^3$ cube. Note: NDC $+z$ points **into** the screen (near → $-1$, far → $+1$) — NDC is left-handed, because $P$ flips the $z$ axis; "everything is right-handed" stops being true one space earlier.
+- **Screen/viewport space**: NDC remapped to actual render-target pixels via `gl.viewport()` — a fully separate 2D affine step, not part of the projection matrix, and it **flips no axis** (window-space origin is bottom-left, like `gl_FragCoord`).
 
 ## The View Matrix Is the Camera's Transform, Inverted
 
@@ -52,7 +52,7 @@ $\hat f$ ("forward," pointing opposite the view direction under the right-handed
 
 ## The Perspective Matrix at the Formula Level: fov, Focal Length, Near/Far
 
-The actual "perspective" lives in four numbers of $P$:
+The actual "perspective" lives in four numbers of $P$: **fov** (field of view — the vertical opening angle), **aspect** (the viewport width/height ratio), **near** and **far** (distances to the near/far clipping planes — only what lies between them gets drawn):
 
 $$
 P = \begin{bmatrix}
@@ -63,32 +63,35 @@ P = \begin{bmatrix}
 \end{bmatrix}, \qquad f = \frac{1}{\tan(\text{fov}/2)}
 $$
 
-$f$ acts as "focal length": the smaller the fov (a zoomed-in lens), the smaller $\tan(\text{fov}/2)$, the larger $f$, the "tighter" and bigger objects appear. A $60°$ fov gives $f = 1/\tan(30°) \approx 1.732$; a $90°$ fov gives $f = 1/\tan(45°) = 1$ — a much wider angle pulls $f$ down toward 1. The bottom row $(0, 0, -1, 0)$ is the most commonly overlooked detail: it copies $-z_{view}$ straight into $w_{clip}$, and $w$ is exactly the denominator of the upcoming perspective divide — the farther an object is (the larger $-z_{view}$), the larger $w$, and the more the post-divide coordinate shrinks. That's the entire mechanism behind distant objects looking smaller. The third row compresses the $[\text{near}, \text{far}]$ range (nonlinearly, as $1/z$) into $[-1, 1]$ of $z_{ndc}$ — NDC depth isn't linear with real-world depth, a fact that causes bugs whenever depth gets compared by eye instead of by number.
+$f$ acts as the focal length; $\tan$ here is just the opposite/adjacent ratio of a right triangle — $\tan(\text{fov}/2)$ is half the view height at distance 1 (the trig lesson later in the track covers it properly). The smaller the fov (a zoomed-in lens), the smaller $\tan(\text{fov}/2)$, the larger $f$, the "tighter" and bigger objects appear. A $60°$ fov gives $f = 1/\tan(30°) \approx 1.732$; a $90°$ fov gives $f = 1/\tan(45°) = 1$ — a much wider angle pulls $f$ down toward 1. The bottom row $(0, 0, -1, 0)$ is the most commonly overlooked detail: it copies $-z_{view}$ straight into $w_{clip}$, and $w$ is exactly the denominator of the upcoming perspective divide — the farther an object is (the larger $-z_{view}$), the larger $w$, and the more the post-divide coordinate shrinks. That's the entire mechanism behind distant objects looking smaller. The third row **together with the $w$ divide** compresses the $[\text{near}, \text{far}]$ range (nonlinearly, as $1/z$ — the row itself is linear; the curvature appears after the divide) into $[-1, 1]$ of $z_{ndc}$ — NDC depth isn't linear with real-world depth, a fact that causes bugs whenever depth gets compared by eye instead of by number.
 
 ## From NDC to Pixels: the Viewport Transform
 
-The last step is just a scale-and-shift, identical to what you did in the UV space lesson, only flipped:
+The last step is just a scale-and-shift, and it **flips no axis**: GL window space has a bottom-left origin, $y$ measured up from the bottom — exactly like the `gl_FragCoord` you will meet in Tracks 1–2:
 
 $$
-x_{screen} = (x_{ndc} \cdot 0.5 + 0.5)\, W, \qquad y_{screen} = \big(1 - (y_{ndc} \cdot 0.5 + 0.5)\big)\, H
+x_{window} = (x_{ndc} \cdot 0.5 + 0.5)\, W, \qquad y_{window} = (y_{ndc} \cdot 0.5 + 0.5)\, H
 $$
 
 ```js
-function ndcToScreen(xNdc, yNdc, W, H) {
+function ndcToWindow(xNdc, yNdc, W, H) {
   return {
     x: (xNdc * 0.5 + 0.5) * W,
-    y: (1 - (yNdc * 0.5 + 0.5)) * H, // flip y: NDC points up, pixels point down
+    y: (yNdc * 0.5 + 0.5) * H, // gl_FragCoord: y measured from the BOTTOM, no flip
   };
 }
 
-ndcToScreen(0.5, -0.5, 800, 600); // { x: 600, y: 450 }
+ndcToWindow(0.5, -0.5, 800, 600); // { x: 600, y: 150 } — 150px from the bottom
+
+// CSS/mouse coordinates measure y from the TOP — flip exactly ONCE, at the
+// browser boundary, not on the GPU: yCss = H - yWindow = 450
 ```
 
-$W, H$ are the viewport's pixel dimensions; the $y$ axis still needs flipping because NDC has $y$ pointing up while screen pixels have $y$ pointing down — the exact problem you already solved in Cartesian & UV Space, just with different variable names.
+$W, H$ are the viewport's pixel dimensions. The $y$ flip only happens when comparing against CSS/mouse coordinates ($y$ pointing down) — the exact problem you already solved in Cartesian & UV space — and it happens **exactly once**, on the browser side; the GPU's viewport step keeps $y$ pointing up.
 
 ## Where This Chain Resurfaces Later
 
-Track 1 (raw WebGL) will make you write that exact `gl_Position = ...` line yourself, in a real vertex shader; Track 4 (React Three Fiber) packages the lookAt construction and $P$ into a `Camera` object, but the formulas underneath are exactly the ones here; Track 12 (Performance) uses the very frustum shape derived from $P$ to do frustum culling — skipping the render of anything outside the clip volume's six planes.
+Track 1 (raw WebGL) will make you write that exact `gl_Position = ...` line yourself, in a real vertex shader; Track 4 (React Three Fiber) packages the lookAt construction and $P$ into a `Camera` object, but the formulas underneath are exactly the ones here; Track 12 (Performance) uses the very view-frustum shape (the truncated viewing pyramid) derived from $P$ to do frustum culling — skipping the render of anything outside the clip volume's six planes.
 
 <Callout variant="mistake" title="Common mistakes">
 
