@@ -9,6 +9,7 @@ import { shaderMaterial } from "@react-three/drei";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import { stringOf } from "@/components/viz/control-schema";
 import fragmentShader from "./wave.frag";
 import vertexShader from "./wave.vert";
@@ -89,13 +90,15 @@ function PlainWave({ colorHex }: { colorHex: string }) {
     uniforms.uTime.value = state.clock.elapsedTime;
   });
 
+
+  const bindUniforms = useSharedUniforms(uniforms);
   return (
     <mesh rotation-x={-0.6}>
       <planeGeometry args={[2.6, 2.6, 48, 48]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

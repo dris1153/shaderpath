@@ -6,6 +6,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import { booleanOf, numberOf, stringOf } from "@/components/viz/control-schema";
 import fragmentShader from "./domain-warp.frag";
 import vertexShader from "./domain-warp.vert";
@@ -62,6 +63,8 @@ function WarpPlane() {
     invalidate();
   }, [values, uniforms, invalidate]);
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   // Time always advances while the canvas is pumped (§8.3 visible-raf) —
   // uAnimate gates the visible drift inside the shader instead of freezing this call.
   useFrame((state) => {
@@ -72,9 +75,9 @@ function WarpPlane() {
     <mesh>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
       />
     </mesh>
   );

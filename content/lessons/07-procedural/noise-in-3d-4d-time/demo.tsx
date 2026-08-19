@@ -6,6 +6,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import { booleanOf, numberOf, stringOf } from "@/components/viz/control-schema";
 import fragmentShader from "./noise-3d-4d.frag";
 import vertexShader from "./noise-3d-4d.vert";
@@ -68,13 +69,15 @@ function NoisePlane() {
     uniforms.uTime.value = state.clock.elapsedTime;
   });
 
+
+  const bindUniforms = useSharedUniforms(uniforms);
   return (
     <mesh>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );
