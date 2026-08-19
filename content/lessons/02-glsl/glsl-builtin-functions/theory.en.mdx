@@ -1,6 +1,6 @@
 ## A Small Toolkit That Builds Almost Every Procedural Effect
 
-GLSL ships no geometry or effects library — no `Photoshop.blend()`, no CSS `gradient()`. What it has instead is a handful of built-in math functions that compile straight down to GPU hardware (many of them map nearly 1-to-1 onto a dedicated ALU instruction, not a library call), and nearly every 2D procedural effect in this track — gradients, stripes, pulses, concentric rings — is just a combination of about ten functions: `mix`, `clamp`, `step`, `smoothstep`, `fract`, `mod`, `length`, `distance`, `abs`, `sign`, `min`, `max`, `pow`. This lesson walks through each group — not to list bare definitions, but to see _why_ reaching for one of these instead of an equivalent `if` matters, a question the next lesson answers all the way down to real hardware mechanics.
+GLSL ships no geometry or effects library — no `Photoshop.blend()`, no CSS `gradient()`. What it has instead is a handful of built-in math functions that compile straight down to GPU hardware (many of them map nearly 1-to-1 onto a dedicated ALU (arithmetic logic unit — the GPU's math circuit) instruction, not a library call), and nearly every 2D procedural effect in this track — gradients, stripes, pulses, concentric rings — is just a combination of about ten functions: `mix`, `clamp`, `step`, `smoothstep`, `fract`, `mod`, `length`, `distance`, `abs`, `sign`, `min`, `max`, `pow`. This lesson walks through each group — not to list bare definitions, but to see _why_ reaching for one of these instead of an equivalent `if` matters, a question the next lesson answers all the way down to real hardware mechanics.
 
 ## mix and clamp: Blending and Staying in Range
 
@@ -10,7 +10,7 @@ $$
 \text{mix}(a, b, t) = a(1-t) + bt
 $$
 
-This is exactly the `lerp` from Track 0, renamed to GLSL's convention. `t` isn't clamped to $[0,1]$ — passing `t = 1.5` extrapolates past the `a`–`b` segment, useful when you deliberately want overshoot but a trap if you forgot to clamp. `clamp(x, lo, hi)` does exactly that clamping: it hard-forces a value into $[lo, hi]$, most often used to keep an output color inside $[0,1]$ before it's written to `gl_FragColor` — though in practice the GPU clamps output color at display time anyway, so skipping this step tends to "self-correct" silently, quietly hiding a bug in the math that produced the value.
+This is exactly the `lerp` from Track 0, renamed to GLSL's convention. `t` isn't clamped to $[0,1]$ — passing `t = 1.5` extrapolates past the `a`–`b` segment, useful when you deliberately want overshoot but a trap if you forgot to clamp. `clamp(x, lo, hi)` does exactly that clamping: it hard-forces a value into $[lo, hi]$, most often used to keep an output color inside $[0,1]$ before it's written to `fragColor` — though in practice the GPU clamps on write to a standard fixed-point framebuffer anyway, so skipping this step tends to "self-correct" silently, quietly hiding a bug in the math that produced the value.
 
 ## step and smoothstep: Hard Thresholds, Soft Thresholds
 
@@ -20,21 +20,21 @@ $$
 \text{smoothstep}(e_0, e_1, x) = t^2(3 - 2t), \qquad t = \text{clamp}\!\left(\frac{x - e_0}{e_1 - e_0},\ 0,\ 1\right)
 $$
 
-The visible difference: `step` gives a hard, jagged edge (visibly aliased) when used directly as a shape mask; `smoothstep` gives a naturally soft edge — exactly why the previous SDF lesson used it to anti-alias a circle's boundary without MSAA. Chain two `smoothstep` calls — one rising, one falling — and subtract them, and you get a **pulse**: a flat plateau in the middle with soft ramps on either side. This "smoothstep pair" trick returns right below in the composing section.
+The visible difference: `step` gives a hard, jagged edge (visibly aliased) when used directly as a shape mask; `smoothstep` gives a naturally soft edge — exactly why exactly the technique the upcoming Shaping Functions & 2D SDF (signed distance field) lesson uses to anti-alias a circle's boundary without MSAA. Chain two rising `smoothstep` calls — the second shifted further along — and subtract them (the subtraction itself creates the falling edge), and you get a **pulse**: a flat plateau in the middle with soft ramps on either side. This "smoothstep pair" trick returns right below in the composing section.
 
 ## fract and mod: Repetition Without a Loop
 
-`fract(x)` returns `x`'s fractional part — $\text{fract}(x) = x - \lfloor x \rfloor$ — always inside $[0, 1)$ no matter how large `x` gets. Scaling a UV coordinate by `n` and taking `fract` is the cheapest way to split space into `n` repeating cells: `fract(uv.x * 8.0)` turns a 1-unit-long axis into 8 `[0,1)` segments side by side, each one its own local UV copy. `mod(x, y)` is the more general form — the remainder of dividing `x` by `y`, defined via `floor` — and `fract(x)` is simply shorthand for `mod(x, 1.0)`. There's no `for` loop anywhere here: the GPU computes an entire repeating pattern with a single operation, running in parallel across every pixel, not looping sequentially through "cells" the way CPU code usually would.
+`fract(x)` returns `x`'s fractional part — $\text{fract}(x) = x - \lfloor x \rfloor$ — mathematically inside $[0, 1)$ no matter how large `x` gets (with real floats, a very large `x` wipes out the fractional precision — exactly the previous precision lesson). Scaling a UV coordinate by `n` and taking `fract` is the cheapest way to split space into `n` repeating cells: `fract(uv.x * 8.0)` turns a 1-unit-long axis into 8 `[0,1)` segments side by side, each one its own local UV copy. `mod(x, y)` is the more general form — the remainder of dividing `x` by `y`, defined via `floor` — and `fract(x)` is simply shorthand for `mod(x, 1.0)`. There's no `for` loop anywhere here: the GPU computes an entire repeating pattern with a single operation, running in parallel across every pixel, not looping sequentially through "cells" the way CPU code usually would.
 
 ## length, distance, dot, normalize: Geometry Comes Back
 
-These four aren't new — Track 0 already defined them by hand with formulas; now they're one-line GLSL built-ins: `length(v)` gives $\|\vec v\|$, `distance(a, b)` gives $\|\vec a - \vec b\|$ (equivalent to `length(a - b)` but usually better optimized by the driver), `dot(a, b)` gives the dot product, `normalize(v)` gives $\vec v / \|\vec v\|$. The most direct use in this track: `distance(uv, center)` gives the distance from a point to a center, feeding straight into `smoothstep` or `fract` to draw a circle or a set of concentric rings — exactly the SDF technique from the previous lesson, now generalized into "rings" in the composing section below.
+These four aren't new — Track 0 already defined them by hand with formulas; now they're one-line GLSL built-ins: `length(v)` gives $\|\vec v\|$, `distance(a, b)` gives $\|\vec a - \vec b\|$ (equivalent to `length(a - b)`, easier to read), `dot(a, b)` gives the dot product, `normalize(v)` gives $\vec v / \|\vec v\|$. The most direct use in this track: `distance(uv, center)` gives the distance from a point to a center, feeding straight into `smoothstep` or `fract` to draw a circle or a set of concentric rings — exactly the technique the upcoming SDF lesson generalizes, now generalized into "rings" in the composing section below.
 
 ## abs, sign, min, max, pow: Bending and Comparing Values
 
 `abs(x)` drops the sign; `sign(x)` returns `-1`, `0`, or `1` depending on `x`'s sign — handy for selecting a value by sign without an `if`. `min`/`max` compare and pick, the foundation of the SDF union/intersection operations the upcoming Shaping Functions lesson reuses verbatim (`min` for union, `max` for intersection). `pow(x, n)` raises to a power, used to bend a linear gradient into a convex or concave curve — for instance converting sRGB to linear with `pow(x, 2.2)`, as Track 0's color lesson already mentioned.
 
-## Why All of the Above Run "Component-Wise" on Vectors
+## Why Most of the Above Run "Component-Wise" on Vectors
 
 Nearly every function above accepts `vec2`/`vec3`/`vec4` exactly as it accepts a `float` — GLSL applies the operation independently to **each component**, with no special "vector" meaning sneaking in between. `clamp(vec3(-0.2, 0.5, 1.4), 0.0, 1.0)` yields `vec3(0.0, 0.5, 1.0)` — each channel clamped on its own, exactly as if `clamp` had been called three times on three floats and reassembled. This turns an `if` block that handles R/G/B color channels separately into a single function call — not just syntactic convenience, but the actual reason these functions naturally replace `if/else` when working with colors or coordinates.
 
@@ -45,14 +45,14 @@ The three foundational patterns of this track are direct combinations of what wa
 ```glsl
 float stripes = step(0.5, fract(x * n));                                    // hard stripes
 float pulse   = smoothstep(e0, e1, x) - smoothstep(e2, e3, x);              // soft pulse
-float rings   = smoothstep(0.0, w, abs(fract(distance(uv, c) * n) - 0.5));  // concentric rings
+float rings   = 1.0 - smoothstep(0.0, w, abs(fract(distance(uv, c) * n) - 0.5));  // concentric rings
 ```
 
 It's no coincidence all three lines are `if`-free — it's a _style_: every threshold, every transition, every choice between two values can be expressed with `step`/`smoothstep`/`mix` instead of an imperative branch.
 
 ## Style: if/else or step/mix?
 
-Mathematically, `if (x > 0.5) { color = a; } else { color = b; }` and `color = mix(b, a, step(0.5, x));` produce the exact same result — not a single bit different. So why does this track default to the second form as a habit? The answer isn't just "shorter" or "looks more professional." It's directly tied to how a GPU executes thousands of pixels in lockstep within the same hardware group, and an `if` that branches differently between neighboring pixels can cost far more than its harmless CPU-side appearance suggests. The next lesson — The Cost of Branching on GPU — dissects exactly that mechanism through the warp/wavefront concept, and pins down precisely when an `if` is truly free and when it silently doubles the work.
+Mathematically, `if (x > 0.5) { color = a; } else { color = b; }` and `color = mix(b, a, step(0.5, x));` produce the same result at every point except exactly the boundary $x = 0.5$ (`>` picks b, while `step(0.5, 0.5)` returns 1.0 so mix picks a). So why does this track default to the second form as a habit? The answer isn't just "shorter" or "looks more professional." It's directly tied to how a GPU executes thousands of pixels in lockstep within the same hardware group, and an `if` that branches differently between neighboring pixels can cost far more than its harmless CPU-side appearance suggests. The next lesson — The Cost of Branching on GPU — dissects exactly that mechanism through the warp/wavefront concept, and pins down precisely when an `if` is truly free and when it silently doubles the work.
 
 <Callout variant="mistake" title="Common mistakes">
 

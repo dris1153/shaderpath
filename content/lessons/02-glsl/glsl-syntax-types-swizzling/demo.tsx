@@ -7,6 +7,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { stringOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./swizzle-explorer.frag";
 import vertexShader from "./swizzle-explorer.vert";
 
@@ -55,13 +56,15 @@ function SwizzlePlane() {
   }, [values, uniforms, invalidate]);
 
   // Geometry/material created as JSX — R3F auto-disposes them on unmount (§8.2)
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh>
       <planeGeometry args={[2, 2]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

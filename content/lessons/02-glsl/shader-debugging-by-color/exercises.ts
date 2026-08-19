@@ -18,8 +18,8 @@ Explain: what does outputting \`length(v)\` as gray via \`vec3(length(v))\` reve
         en: "length(v) is a SINGLE scalar — feeding it into all 3 RGB channels equally gives one clean gray level, easier to judge 'how much' than a color blending 2 different values.",
       },
       {
-        vi: "Nếu v đã normalize đúng, length(v) = 1.0 luôn đúng — output phải là màu trắng tuyệt đối, đồng đều trên toàn vùng cần kiểm tra. Bất kỳ sắc xám nào khác trắng là bằng chứng trực tiếp.",
-        en: "If v is properly normalized, length(v) = 1.0 always holds — the output must be pure white, uniform across the region under test. Any shade other than white is direct evidence.",
+        vi: "'Normalized' đảm bảo điều gì về độ dài vector? Đẩy con số được đảm bảo đó qua vec3(...) và tự gọi tên màu ra — rồi so với những gì thấy trên màn hìnp.",
+        en: "What does 'normalized' guarantee about the vector's magnitude? Push that guaranteed number through vec3(...) and name the color yourself — then compare with what you see.",
       },
     ],
     checklist: [
@@ -53,8 +53,8 @@ An output darker than white (e.g. $0.3$ instead of $1.0$) is direct, quantifiabl
     id: "probe-and-fix-signed-wave",
     kind: "shader",
     prompt: {
-      vi: `Đoạn shader dưới tính một sóng sin \`wave\` (trong khoảng $[-1, 1]$) rồi xuất thẳng ra màu — kết quả: nửa màn hình đen tuyền, trông như sóng "biến mất". Thêm ĐÚNG MỘT dòng debug probe xác nhận nguyên nhân trước khi sửa, sau đó sửa bằng phép remap đúng.`,
-      en: `The shader below computes a sine wave \`wave\` (in $[-1, 1]$) and outputs it straight to color — the result: half the screen is solid black, as if the wave "disappeared". Add EXACTLY ONE debug probe line to confirm the cause before fixing it, then fix it with the correct remap.`,
+      vi: `Đoạn shader dưới tính một sóng sin \`wave\` (trong khoảng $[-1, 1]$) rồi xuất thẳng ra màu — kết quả: các dải đen chiếm xấp xỉ nửa màn hình, trông như sóng "biến mất". Thêm ĐÚNG MỘT dòng debug probe xác nhận nguyên nhân trước khi sửa, sau đó sửa bằng phép remap đúng.`,
+      en: `The shader below computes a sine wave \`wave\` (in $[-1, 1]$) and outputs it straight to color — the result: dark bands covering roughly half the screen, as if the wave "disappeared". Add EXACTLY ONE debug probe line to confirm the cause before fixing it, then fix it with the correct remap.`,
     },
     starterCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;

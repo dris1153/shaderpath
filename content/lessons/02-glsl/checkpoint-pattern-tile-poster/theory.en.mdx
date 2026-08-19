@@ -4,11 +4,11 @@ The GLSL track's closing mini-build: construct a working, fullscreen tiled poste
 
 ## Requirements
 
-The fragment shader draws an even grid (tiling via `fract`/`floor`), where each cell shows one of **at least 2 distinct SDF motifs** (e.g. a circle and a rounded box) chosen by cell-id; each cell **spins on its own with `uTime`** via a `mat2` built with the correct column constructor; the whole scene carries a **global gradient tint**; every motif's edge is **anti-aliased with `smoothstep`**, no jagged pixels. Full details live in the Exercises section below.
+The fragment shader draws an even grid (tiling via `fract`/`floor`), where each cell shows one of **at least 2 distinct SDF motifs** (e.g. a circle and a rounded box) chosen by cell-id; each cell **spins on its own with `uTime`** via a `mat2` built with the correct column constructor; the tint gradient spans the poster horizontally across the motifs (the background stays flat); every motif's edge is **anti-aliased with `smoothstep`**, no jagged pixels. Full details live in the Exercises section below.
 
 ## Structure Hint
 
-Four steps, in order: (1) tile UV into a grid, getting `cellId = floor(uv * N)` and local coordinates `cellUv = fract(uv * N) - 0.5`; (2) use `cellId` to pick a motif (even/odd parity or a hash); (3) rotate `cellUv` with `rotate2d(uTime + offset)` — the offset comes from hashing `cellId` so cells desync from each other; (4) compute the SDF, turn it into a mask with `smoothstep`, blend in the gradient tint, then composite onto the background.
+Four steps, in order: (1) tile UV into a grid, getting `cellId = floor(uv * N)` and local coordinates `cellUv = fract(uv * N) - 0.5`; (2) use `cellId` to pick a motif (even/odd parity, or a hash — this compact one is plenty: `fract(sin(dot(id, vec2(127.1, 311.7))) * 43758.5453)`); (3) rotate `cellUv` with `rotate2d(uTime + offset)` — the offset comes from hashing `cellId` so cells desync from each other; (4) compute the SDF (`sdCircle`/`sdBox` from the SDF lesson), turn it into a mask with `smoothstep`, tint the motif with the gradient, then composite onto the background. Note: the 6×6 grid divides uv on both axes, so cells are square only on a square canvas — the reference renders at 1:1; drag the preview pane roughly square, or multiply `uv.x` by `uResolution.x / uResolution.y` before tiling.
 
 ## What "Done" Looks Like
 

@@ -7,12 +7,12 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng một **poster fullscreen lát gạch động**, chỉ bằng GLSL của module này — SDF, tiling, ma trận và gradient.
 
-Yêu cầu: chia màn hình thành lưới đều bằng \`fract\`/\`floor\`; mỗi ô hiện MỘT trong ít nhất 2 motif SDF khác nhau (ví dụ hình tròn và hình vuông bo góc), chọn theo cell-id; mỗi ô tự xoay theo \`uTime\` bằng \`mat2\` dựng đúng constructor cột; toàn cảnh phủ một gradient tint toàn cục; biên mỗi motif anti-alias bằng \`smoothstep\`, không răng cưa.
+Yêu cầu: chia màn hình thành lưới đều bằng \`fract\`/\`floor\`; mỗi ô hiện MỘT trong ít nhất 2 motif SDF khác nhau (ví dụ hình tròn và hình vuông bo góc), chọn theo cell-id; mỗi ô tự xoay theo \`uTime\` bằng \`mat2\` dựng đúng constructor cột; dải tint gradient trải ngang qua các motif (nền giữ màu phẳng); biên mỗi motif anti-alias bằng \`smoothstep\`, không răng cưa.
 
 Gợi ý cấu trúc: \`cellId = floor(uv * N)\` để chọn motif, \`cellUv = fract(uv * N) - 0.5\` làm toạ độ cục bộ để xoay quanh tâm ô, một hàm \`hash(cellId)\` để các ô không đồng bộ hoàn toàn.`,
       en: `Build an **animated, fullscreen tiled poster**, using only this module's GLSL — SDFs, tiling, matrices and gradients.
 
-Requirements: tile the screen into an even grid with \`fract\`/\`floor\`; each cell shows ONE of at least 2 distinct SDF motifs (e.g. a circle and a rounded box), chosen by cell-id; each cell spins on its own with \`uTime\` via a \`mat2\` built with the correct column constructor; the whole scene carries a global gradient tint; every motif's edge is anti-aliased with \`smoothstep\`, no jagged pixels.
+Requirements: tile the screen into an even grid with \`fract\`/\`floor\`; each cell shows ONE of at least 2 distinct SDF motifs (e.g. a circle and a rounded box), chosen by cell-id; each cell spins on its own with \`uTime\` via a \`mat2\` built with the correct column constructor; the tint gradient spans the motifs across the poster (the background stays flat); every motif's edge is anti-aliased with \`smoothstep\`, no jagged pixels.
 
 Suggested structure: \`cellId = floor(uv * N)\` to pick the motif, \`cellUv = fract(uv * N) - 0.5\` as local coordinates to rotate around the cell's center, a \`hash(cellId)\` helper so cells don't spin in perfect sync.`,
     },
@@ -141,8 +141,8 @@ void main() {
         en: "Each cell spins on uTime, and cells are not perfectly in sync thanks to the hash(cellId) offset",
       },
       {
-        vi: "Ma trận xoay dùng đúng constructor cột — thử gõ sai để xác nhận cả lưới xoay ngược chiều nếu đảo cột",
-        en: "The rotation matrix uses the correct column constructor — deliberately swap it to confirm the whole grid spins the wrong way if columns are reversed",
+        vi: "Ma trận xoay dùng đúng constructor cột — thử gõ sai để xác nhận cả lưới xoay ngược chiều (nhìn rõ nhất ở các ô hộp — hình tròn bất biến khi xoay) nếu đảo cột",
+        en: "The rotation matrix uses the correct column constructor — deliberately swap it to confirm the whole grid spins the wrong way (visible on the box cells — circles are rotation-invariant) if columns are reversed",
       },
       {
         vi: "Biên mỗi motif mượt, không răng cưa — kiểm tra bằng cách phóng to gần một cạnh",
@@ -150,7 +150,7 @@ void main() {
       },
       {
         vi: "Gradient tint phủ toàn cảnh, bố cục tổng thể dễ đọc chứ không rối mắt",
-        en: "The gradient tint covers the whole scene, and the overall composition reads clearly instead of looking noisy",
+        en: "The gradient tint spans the motifs across the poster, and the overall composition reads clearly instead of looking noisy",
       },
     ],
   },

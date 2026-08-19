@@ -4,7 +4,7 @@ GLSL (OpenGL Shading Language) borrows C's surface syntax — semicolons, curly 
 
 ## Scalar Types and the No-Implicit-Cast Trap
 
-GLSL has four basic scalar types: `float`, `int`, `uint` (unsigned integer), and `bool`. Unlike C/C++, which automatically promotes `int` to `float` inside mixed arithmetic, GLSL ES has essentially no implicit conversion in assignments or arithmetic expressions — converting between types always requires an explicit constructor call like `float(n)` or `int(x)` (vector constructors like `vec3(1)` fall under this same explicit-conversion mechanism, not some implicit-cast exception).
+GLSL has four basic scalar types: `float`, `int`, `uint` (unsigned integer), and `bool`. Unlike C/C++, which automatically promotes `int` to `float` inside mixed arithmetic, GLSL ES has no implicit conversion at all in assignments or arithmetic expressions — converting between types always requires an explicit constructor call like `float(n)` or `int(x)` (vector constructors like `vec3(1)` fall under this same explicit-conversion mechanism, not some implicit-cast exception).
 
 ### `1 / 2` Isn't `0.5` — It's `0`
 
@@ -63,7 +63,7 @@ For most people coming from JavaScript/TypeScript, type errors — not brace mis
 
 ## Where This Foundation Leads: Built-ins and Precision
 
-The type and swizzle vocabulary from this lesson shows up in nearly every line of shader code from here on. The built-in functions lesson right after this one leans entirely on `mix`/`clamp`/`smoothstep` having component-wise overloads thanks to the exact type system you just learned; the precision-qualifiers lesson right after that adds a second axis — not just "what type" but "how many bits sit behind that type" — onto the very same `float`/`vec3` declarations you're now comfortable with.
+The type and swizzle vocabulary from this lesson shows up in nearly every line of shader code from here on. The precision-qualifiers lesson right after this one adds a second axis — not just "what type" but "how many bits sit behind that type" — onto the very same `float`/`vec3` declarations you're now comfortable with; the built-in functions lesson that follows leans entirely on `mix`/`clamp`/`smoothstep` having component-wise overloads thanks to the exact type system you just learned.
 
 <Callout variant="mistake" title="Common mistakes">
 

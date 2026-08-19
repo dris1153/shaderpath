@@ -11,7 +11,7 @@ vec3 ringScene(vec2 p, bool normalizeN) {
   vec2 L = vec2(cos(uLightAngle), sin(uLightAngle));
   vec2 N = normalizeN ? normalize(p) : p; // the bug lives here: N is never normalized
   float highlight = dot(N, L);
-  float glintEdge0 = normalizeN ? 0.85 : 0.9;
+  float glintEdge0 = 0.9; // same threshold in both modes: the fix is normalize alone
   float glint = smoothstep(glintEdge0, 1.0, highlight);
 
   float d = abs(length(p) - uRadius);

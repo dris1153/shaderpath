@@ -5,17 +5,17 @@ export const exercises: Exercise[] = [
     id: "checkerboard-divergence",
     kind: "concept",
     prompt: {
-      vi: `Một warp NVIDIA gồm đúng 32 lane liên tiếp theo trục X của màn hình (pixel $x = 0, 1, 2, \\dots, 31$). Fragment shader chứa \`if (mod(pixelX, 2.0) < 1.0) { ... nhánh nặng ... } else { ... nhánh nhẹ ... }\` — rẽ nhánh theo tính chẵn/lẻ của toạ độ pixel (kiểu caro 1 pixel).
+      vi: `Giả sử một warp phủ đúng 32 pixel liên tiếp theo trục X của màn hình (thực tế phần cứng gói lane theo khối 2×2, tuỳ hãng) (pixel $x = 0, 1, 2, \\dots, 31$). Fragment shader chứa \`if (mod(pixelX, 2.0) < 1.0) { ... nhánh nặng ... } else { ... nhánh nhẹ ... }\` — rẽ nhánh theo tính chẵn/lẻ của toạ độ pixel (kiểu caro 1 pixel).
 
 Hỏi: trong warp 32 lane này, bao nhiêu lane đi nhánh nặng, bao nhiêu lane đi nhánh nhẹ? Warp có bị coi là phân kỳ (divergent) không? So sánh tổng chi phí thực thi của warp này với chi phí của MỘT warp không phân kỳ (toàn bộ 32 lane cùng đi một nhánh).`,
-      en: `An NVIDIA warp is exactly 32 consecutive lanes along the screen's X axis (pixels $x = 0, 1, 2, \\dots, 31$). A fragment shader contains \`if (mod(pixelX, 2.0) < 1.0) { ... heavy branch ... } else { ... light branch ... }\` — branching on whether the pixel coordinate is even or odd (a 1-pixel checkerboard).
+      en: `Suppose a warp covers exactly 32 consecutive pixels along the screen's X axis (real hardware packs lanes in 2×2 quads, vendor-specific) (pixels $x = 0, 1, 2, \\dots, 31$). A fragment shader contains \`if (mod(pixelX, 2.0) < 1.0) { ... heavy branch ... } else { ... light branch ... }\` — branching on whether the pixel coordinate is even or odd (a 1-pixel checkerboard).
 
 Question: in this 32-lane warp, how many lanes take the heavy branch, and how many take the light one? Is this warp divergent? Compare this warp's total execution cost to a NON-divergent warp (all 32 lanes taking the same branch).`,
     },
     hints: [
       {
-        vi: "Chẵn/lẻ luân phiên liên tục: pixel 0 chẵn, 1 lẻ, 2 chẵn... trong 32 lane liên tiếp, đúng một nửa là chẵn, một nửa là lẻ.",
-        en: "Even/odd alternates every pixel: 0 even, 1 odd, 2 even... across 32 consecutive lanes, exactly half are even and half are odd.",
+        vi: "Chẵn/lẻ luân phiên từng pixel một — tự đếm phân bố trong 32 pixel liên tiếp.",
+        en: "Even/odd alternates pixel by pixel — count the distribution across 32 consecutive pixels yourself.",
       },
       {
         vi: "Divergence không quan tâm tỉ lệ 50/50 hay 90/10 — chỉ quan tâm CÓ ít nhất 2 lane khác nhánh trong cùng warp hay không.",

@@ -22,7 +22,7 @@ void main() {
 
   // Faint iso-contours make the distance field itself visible
   float iso = abs(fract(d * 20.0) - 0.5);
-  color = mix(color, vec3(1.0), smoothstep(0.08, 0.0, iso) * 0.15);
+  color = mix(color, vec3(1.0), (1.0 - smoothstep(0.0, 0.08, iso)) * 0.15);
 
   gl_FragColor = vec4(color, 1.0);
 }

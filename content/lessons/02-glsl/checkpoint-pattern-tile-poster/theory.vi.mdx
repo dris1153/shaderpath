@@ -4,11 +4,11 @@ Mini-build khép lại Track GLSL: dựng một poster fullscreen lát gạch đ
 
 ## Yêu cầu
 
-Fragment shader vẽ một lưới ô đều (tiling bằng `fract`/`floor`), mỗi ô hiện một trong **ít nhất 2 motif SDF khác nhau** (ví dụ hình tròn và hình vuông bo góc) chọn theo cell-id; mỗi ô **tự xoay theo `uTime`** bằng ma trận `mat2` dựng đúng constructor cột; toàn cảnh phủ một **gradient tint toàn cục**; biên mỗi motif **anti-alias bằng `smoothstep`**, không răng cưa. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
+Fragment shader vẽ một lưới ô đều (tiling bằng `fract`/`floor`), mỗi ô hiện một trong **ít nhất 2 motif SDF khác nhau** (ví dụ hình tròn và hình vuông bo góc) chọn theo cell-id; mỗi ô **tự xoay theo `uTime`** bằng ma trận `mat2` dựng đúng constructor cột; dải tint gradient trải ngang qua các motif (nền giữ màu phẳng); biên mỗi motif **anti-alias bằng `smoothstep`**, không răng cưa. Chi tiết đầy đủ nằm trong phần Bài tập bên dưới.
 
 ## Gợi ý cấu trúc
 
-Bốn bước, đúng thứ tự: (1) chia UV thành lưới, lấy `cellId = floor(uv * N)` và toạ độ cục bộ `cellUv = fract(uv * N) - 0.5`; (2) dùng `cellId` để chọn motif (parity chẵn/lẻ hoặc hash); (3) xoay `cellUv` bằng `rotate2d(uTime + offset)` — offset lấy từ hash của `cellId` để các ô không đồng bộ; (4) tính SDF, chuyển thành mask bằng `smoothstep`, trộn với gradient tint rồi mới composite lên nền.
+Bốn bước, đúng thứ tự: (1) chia UV thành lưới, lấy `cellId = floor(uv * N)` và toạ độ cục bộ `cellUv = fract(uv * N) - 0.5`; (2) dùng `cellId` để chọn motif (parity chẵn/lẻ, hoặc hash — một hàm băm gọn đủ dùng: `fract(sin(dot(id, vec2(127.1, 311.7))) * 43758.5453)`); (3) xoay `cellUv` bằng `rotate2d(uTime + offset)` — offset lấy từ hash của `cellId` để các ô không đồng bộ; (4) tính SDF (`sdCircle`/`sdBox` từ bài SDF), chuyển thành mask bằng `smoothstep`, tint motif bằng gradient rồi mới composite lên nền. Lưu ý: lưới 6×6 chia uv theo cả hai trục nên chỉ vuông trên canvas vuông — ảnh tham chiếu render ở 1:1; kéo pane preview về gần vuông, hoặc nhân `uv.x` với `uResolution.x / uResolution.y` trước khi chia lưới.
 
 ## Thế nào là "xong"
 

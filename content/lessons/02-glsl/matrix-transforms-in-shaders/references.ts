@@ -4,7 +4,7 @@ export const references: Citation[] = [
   {
     id: "book-of-shaders-2d-matrices",
     type: "article",
-    title: "The Book of Shaders — Chapter 8: Matrices",
+    title: "The Book of Shaders — Chapter 8: 2D Matrices",
     authors: ["Patricio Gonzalez Vivo", "Jen Lowe"],
     url: "https://thebookofshaders.com/08/",
     note: {
@@ -17,7 +17,7 @@ export const references: Citation[] = [
     type: "article",
     title: "OpenGL Transformation — Column-major Matrices",
     authors: ["Song Ho Ahn"],
-    url: "https://www.songho.ca/opengl/gl_transform.html",
+    url: "https://www.songho.ca/opengl/gl_matrix.html",
     note: {
       vi: "Giải thích chi tiết quy ước lưu trữ ma trận theo cột của OpenGL/GLSL — nguồn tham chiếu chuẩn cho lỗi 'gõ nhầm hàng thành cột' nêu trong bài.",
       en: "A detailed explanation of OpenGL/GLSL's column-major storage convention — the reference for the 'typed row-major into a column-major constructor' bug covered in this lesson.",

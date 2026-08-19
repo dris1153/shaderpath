@@ -28,8 +28,8 @@ Then: if someone MEANT to rotate $90°$ counter-clockwise but listed $R(90°)$'s
     },
     hints: [
       {
-        vi: "Cột 0 của m là ảnh của basis vector (1,0) sau biến đổi — chính là m * vec2(1,0). Đọc thẳng từ hai tham số đầu của constructor.",
-        en: "Column 0 of m is the image of the basis vector (1,0) after the transform — literally m * vec2(1,0). Read it straight off the constructor's first two args.",
+        vi: "Vector cơ sở (1,0) chọn đúng một cột của m — cột nào, và constructor đổ những tham số nào vào cột đó?",
+        en: "The basis vector (1,0) selects exactly one column of m — which one, and which constructor arguments fill it?",
       },
       {
         vi: "Ma trận xoay chuẩn R(θ) có cột 0 = (cosθ, sinθ). So khớp (0, 1) với (cosθ, sinθ) để suy ra θ.",

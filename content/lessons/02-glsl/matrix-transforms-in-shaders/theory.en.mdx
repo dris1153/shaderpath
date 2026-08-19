@@ -32,7 +32,7 @@ vec2 p = rotate2d(angle) * uv; // rotate the COORDINATE by +angle
 // → the visible pattern appears to rotate by -angle on screen
 ```
 
-<Playground source={"mat2 rotate2d(float a) {\n  float c = cos(a);\n  float s = sin(a);\n  return mat2(c, s, -s, c); // column-major: col0=(c,s), col1=(-s,c)\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float angle = (uMouse.x - 0.5) * 6.2831853; // drag mouse sideways to rotate\n  vec2 p = rotate2d(angle) * (uv - 0.5) + 0.5;\n  vec2 cell = floor(p * 8.0);\n  float parity = mod(cell.x + cell.y, 2.0);\n  vec3 color = mix(vec3(0.95, 0.5, 0.2), vec3(0.08, 0.1, 0.18), parity);\n  fragColor = vec4(color, 1.0);\n}\n"} />
+<Playground source={"mat2 rotate2d(float a) {\n  float c = cos(a);\n  float s = sin(a);\n  return mat2(c, s, -s, c); // column-major: col0=(c,s), col1=(-s,c)\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float angle = (uMouse.x - 0.5) * 6.2831853; // drag mouse sideways to rotate\n  vec2 p = rotate2d(angle) * (uv - 0.5) + 0.5; // -0.5/+0.5: center pivot - explained below\n  vec2 cell = floor(p * 8.0);\n  float parity = mod(cell.x + cell.y, 2.0);\n  vec3 color = mix(vec3(0.95, 0.5, 0.2), vec3(0.08, 0.1, 0.18), parity);\n  fragColor = vec4(color, 1.0);\n}\n"} />
 
 ## Pivot: Rotating Around Any Point, Not Just the Origin
 
@@ -80,9 +80,9 @@ vec2 applyTransform(mat3 m, vec2 p) {
 }
 ```
 
-One `mat3` multiply replaces three separate translate-transform-translate-back lines — useful once you need to compose several transforms in sequence (rotate, then translate, then rotate again) without stacking rounding error or re-writing the same translation boilerplate at every step.
+One `mat3` multiply can package the whole translate-transform-translate-back chain (note: `build2DTransform(angle, translate)` by itself is "rotate about the origin, then translate" — for it to equal a rotation about pivot $c$, pass $t = c - R\,c$) — useful once you need to compose several transforms in sequence (rotate, then translate, then rotate again) without stacking rounding error or re-writing the same translation boilerplate at every step.
 
-This technique doesn't stop at GLSL: Track 4 (React Three Fiber) applies the exact same translate→transform→translate-back principle whenever you set `mesh.position`/`rotation`/`scale` — Three.js's `Object3D.updateMatrix()` builds the model matrix in precisely that order behind the scenes. Track 8 (Raymarching) reuses the same translate-transform-translate-back trick to repeat a shape infinitely with O(1) memory in domain repetition, and Track 6 (Custom Shaders) lets you inject these `mat3`/`mat4` matrices directly into Three's built-in pipeline via `onBeforeCompile`.
+This technique doesn't stop at GLSL: Track 4 (React Three Fiber): when you set `mesh.position`/`rotation`/`scale`, Three.js's `Object3D.updateMatrix()` builds the model matrix as the T·R·S composition (right-to-left: scale → rotate → translate) about the object's local origin — this lesson's pivot trick is what you reproduce in three by nesting the mesh inside a group placed at the pivot. Track 8 (Raymarching) reuses the same translate-transform-translate-back trick to repeat a shape infinitely with O(1) memory in domain repetition, and Track 6 (Custom Shaders) lets you inject these `mat3`/`mat4` matrices directly into Three's built-in pipeline via `onBeforeCompile`.
 
 <Callout variant="mistake" title="Common mistakes">
 

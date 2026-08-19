@@ -45,7 +45,7 @@ $$
 
 For $d < e_0$ the result is $0$, for $d > e_1$ it's $1$, and in between it's a smooth S-curve (zero derivative at both ends) instead of an abrupt jump. In the demo, `uEdge0 = -0.02` and `uEdge1 = 0.02` build a roughly $0.04$-unit-wide band in UV space around the circle's boundary — drag those two sliders far apart to watch the edge turn visibly blurry, or squeeze them back toward 0 to watch jaggedness return as the band collapses toward a near-binary jump.
 
-A fixed constant like `±0.02` is only correct at one specific zoom level — zoom the camera in, or change the canvas resolution, and that same band either blurs too much or thins back into aliasing. The production-grade approach is `fwidth(d)`, a built-in that computes the screen-space derivative (roughly, how much $d$ changes between neighboring pixels), and using that value itself as the band width: `smoothstep(-fwidth(d), fwidth(d), d)`. That keeps the edge at roughly 1 pixel wide regardless of zoom or resolution, because `fwidth` always reflects the current pixel-to-unit ratio at draw time. `fwidth` (along with `dFdx`/`dFdy`) is a core built-in in GLSL ES 3.00 (WebGL2) — this lesson uses a fixed constant to keep things simple for learning, but it's worth knowing exactly where that shortcut's limits are.
+A fixed constant like `±0.02` is only correct at one specific zoom level — zoom the camera in, or change the canvas resolution, and that same band either blurs too much or thins back into aliasing. The production-grade approach is `fwidth(d)`, a built-in that computes the screen-space derivative (roughly, how much $d$ changes between neighboring pixels), and using that value itself as the band width: `smoothstep(-fwidth(d), fwidth(d), d)`. That keeps the edge at roughly 1–2 pixels wide regardless of zoom or resolution, because `fwidth` always reflects the current pixel-to-unit ratio at draw time. `fwidth` (along with `dFdx`/`dFdy`) is a core built-in in GLSL ES 3.00 (WebGL2) — this lesson uses a fixed constant to keep things simple for learning, but it's worth knowing exactly where that shortcut's limits are.
 
 ## Combining: Outlines via abs(d), Glow via Exponential Falloff
 
@@ -54,18 +54,33 @@ Once $d$ exists, two common effects are just two different transforms of that sa
 **Outline:** `abs(d)` "folds" the number line around 0 — both a slightly-inside point and a slightly-outside point map to the same small positive value. Threshold that folded value with a second `smoothstep`, using the desired outline half-width `w`:
 
 ```glsl
-float ring = smoothstep(w, 0.0, abs(d));
+float ring = 1.0 - smoothstep(0.0, w, abs(d));
 ```
 
 `ring` sits near 1 right at the boundary (on both sides) and fades toward 0 moving away from it in either direction — a uniform-width outline of thickness `2w`, "free" without ever building a separate offset shape.
 
-**Glow:** instead of a binary threshold, feed $d$ (clamped to the outside-only part, `max(d, 0.0)`) through an exponential decay:
+**Glow:** instead of a binary threshold, feed $d$ through an exponential decay — `max(d, 0.0)` only stops exp from exploding inside (where $d$ is negative, exp of positive $-kd$ becomes huge); to keep the fill untinted, also multiply by an outside mask:
 
 ```glsl
-color += glowColor * exp(-k * max(d, 0.0));
+color += glowColor * exp(-k * max(d, 0.0)) * outsideMask; // outsideMask ~0 inside, 1 outside
 ```
 
 The further a point sits from the boundary, the more negative the exponent, the smaller `exp` gets — producing a naturally fading halo with no texture and no separate blur pass, just one line of math on a $d$ you already have. The demo shows a related variant of the same trick: the band `abs(fract(d * 20.0) - 0.5)` draws faint iso-contour lines repeating every $0.05$ units of $d$ — effectively a "topographic map" of the distance field itself, readable straight off the screen.
+
+## Boxes, Rounded Boxes, and Combining Shapes with min/max
+
+The circle isn't the only SDF worth memorizing. A box centered at the origin with half-size `b`:
+
+```glsl
+float sdBox(vec2 p, vec2 b) {
+  vec2 q = abs(p) - b;
+  return length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0);
+}
+```
+
+`abs(p) - b` measures per-axis overhang; the `length(max(q, 0))` term gives the true Euclidean distance outside (corners included), while `min(max(q.x, q.y), 0)` supplies the correct negative value inside. For a **rounded box** of radius `r`, just use `sdBox(p, b) - r` — subtracting a constant inflates the boundary evenly in every direction.
+
+Two SDFs combine with exactly the two functions you just learned: `min(d1, d2)` is **union** (inside if near either shape), `max(d1, d2)` is **intersection** (must be inside both). Test a point inside shape 1 but outside shape 2: $d_1 < 0 < d_2$, so `min` is negative (in the union) while `max` is positive (outside the intersection) — matching intuition.
 
 ## Why "Distance First, Color Later" Beats Direct Color Math
 
@@ -79,6 +94,6 @@ The three most common mistakes when starting out with SDFs and smoothstep:
 
 1. **Using a binary threshold (`d < 0.0 ? a : b`) instead of smoothstep.** A hard threshold has no transition band — each pixel commits fully to one color, with no concept of partial coverage — so the boundary shows up visibly jagged, most obviously along near-45°-diagonal edges.
 2. **Hardcoding `edge0`/`edge1` as fixed constants (like the demo's `±0.02`) and carrying them into a different scene.** That constant is only correct at the exact zoom/resolution it was tuned for — zooming or resizing the canvas either blurs the edge too much or thins it back into aliasing; production code needs `fwidth(d)` so the band width scales with actual on-screen pixels.
-3. **Computing an outline with `abs(d)` but forgetting to threshold it with a second smoothstep.** Folding the number line (`abs(d)`) alone doesn't draw an outline by itself — it's still a continuous range of values; skipping the second threshold step (`smoothstep(w, 0.0, abs(d))`) usually floods the whole shape with the outline color, or produces no visible outline at all from a flipped comparison.
+3. **Computing an outline with `abs(d)` but forgetting to threshold it with a second smoothstep.** Folding the number line (`abs(d)`) alone doesn't draw an outline by itself — it's still a continuous range of values; skipping the second threshold step (`1.0 - smoothstep(0.0, w, abs(d))`) usually floods the whole shape with the outline color, or produces no visible outline at all from a flipped comparison.
 
 </Callout>

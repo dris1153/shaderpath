@@ -5,7 +5,7 @@ export const exercises: Exercise[] = [
     id: "grid-id-local-by-hand",
     kind: "concept",
     prompt: {
-      vi: `Cho $N = 4$ và điểm $uv = (0.3, 0.6)$. Không chạy code, tính \`grid = uv * N\`, \`id = floor(grid)\`, \`local = fract(grid)\`, rồi xác định parity caro của ô đó bằng $\\mathrm{mod}(id.x + id.y,\\, 2)$.
+      vi: `Cho $N = 4$ và điểm $uv = (0.3, 0.6)$. Không chạy code, tính \`grid = uv * N\`, \`id = floor(grid)\`, \`local = fract(grid)\`, rồi xác định tính chẵn lẻ (parity) caro của ô đó bằng $\\mathrm{mod}(id.x + id.y,\\, 2)$.
 
 Sau đó: giữ nguyên $uv = (0.3, 0.6)$ nhưng đổi $N$ thành $8$, tính lại parity. Vì sao cùng một điểm trên canvas có thể đổi màu caro chỉ vì $N$ thay đổi, dù toạ độ $uv$ của nó không hề đổi?`,
       en: `Given $N = 4$ and the point $uv = (0.3, 0.6)$. Without running code, compute \`grid = uv * N\`, \`id = floor(grid)\`, \`local = fract(grid)\`, then find that cell's checker parity via $\\mathrm{mod}(id.x + id.y,\\, 2)$.
@@ -14,8 +14,8 @@ Then: keeping $uv = (0.3, 0.6)$ fixed but changing $N$ to $8$, recompute the par
     },
     hints: [
       {
-        vi: "grid = (0.3*4, 0.6*4) = (1.2, 2.4). floor và fract áp riêng từng thành phần.",
-        en: "grid = (0.3*4, 0.6*4) = (1.2, 2.4). floor and fract apply component-wise.",
+        vi: "Nhân từng thành phần của uv với N, rồi áp floor và fract riêng cho từng thành phần.",
+        en: "Multiply each uv component by N, then apply floor and fract per component-wise.",
       },
       {
         vi: "id chỉ đổi khi grid vượt qua một biên số nguyên — đổi N thay đổi chính giá trị grid tại cùng một uv, nên nó có thể rơi vào một ô khác hẳn (id khác, parity khác).",

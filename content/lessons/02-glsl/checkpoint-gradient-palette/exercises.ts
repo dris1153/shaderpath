@@ -69,8 +69,8 @@ void main() {
         en: "t should be the SUM of uv.x and uTime scaled by a small factor (e.g. 0.15) — addition, not multiplication, so both influence color independently.",
       },
       {
-        vi: "step(0.5, uv.x) cho 0.0 ở nửa trái, 1.0 ở nửa phải — dùng thẳng làm tham số t thứ ba của mix(left, right, t).",
-        en: "step(0.5, uv.x) gives 0.0 on the left half, 1.0 on the right — use it directly as mix(left, right, t)'s third argument.",
+        vi: "step(0.5, uv.x) cho một bộ chọn 0/1 theo nửa màn hình — tham số nào của mix nhận một hệ số chọn như vậy?",
+        en: "step(0.5, uv.x) yields a 0/1 selector per screen half — which mix argument slot takes a selector like that?",
       },
     ],
     checklist: [

@@ -1,10 +1,10 @@
 ## Why Every Fragment Shader Must Declare `precision`
 
-GLSL ES vertex shaders come with a built-in default precision for `float` (`highp`), but fragment shaders do NOT — the spec deliberately leaves the fragment stage without a default, because some embedded drivers/GPUs only guarantee `mediump` support there, not `highp`. The practical result: the first line of nearly every fragment shader in this course is `precision highp float;` (or `mediump`/`lowp` when that's the deliberate point) — omitting it is a hard compile error on many strict mobile/WebGL drivers, even though desktop Chrome/ANGLE often silently picks a default precision for you and compiles anyway, hiding the bug until it ships to a different device. `int` has its own default (`mediump` in both stages), so it rarely needs an explicit declaration, but `float` in a fragment shader always does.
+GLSL ES vertex shaders come with a built-in default precision for `float` (`highp`), but fragment shaders do NOT — the spec deliberately leaves the fragment stage without a default, a legacy of the ES 2.0 era, when fragment-stage `highp` was still optional on embedded GPUs. The practical result: the first line of nearly every fragment shader in this course is `precision highp float;` (or `mediump`/`lowp` when that's the deliberate point) — omitting it is a hard compile error on many strict mobile/WebGL drivers, and it is the same hard error on every platform — every browser validates through ANGLE with the familiar "No precision specified for (float)"; this course's playground declares the line for you in the prelude. `int` has its own default (`highp` in vertex, `mediump` in fragment), so it rarely needs an explicit declaration, but `float` in a fragment shader always does.
 
 ## highp, mediump, lowp: What the Spec Actually Guarantees
 
-The three precision qualifiers aren't a vague "faster but less accurate" dial — the GLSL ES 3.00 spec (Table 4.7) pins down two hard FLOOR numbers every driver must meet: relative precision (equivalent to a mantissa bit count) and representable range (equivalent to an exponent bit count). Real hardware is usually better than this floor, never worse.
+The three precision qualifiers aren't a vague "faster but less accurate" dial — the GLSL ES 3.00 spec (§4.5.1 Range and Precision) pins down two hard FLOOR numbers every driver must meet: precision (equivalent to a mantissa bit count — the digits part of a float) and representable range (equivalent to an exponent bit count — the scale part). Real hardware is usually better than this floor, never worse.
 
 <Figure
   src="/figures/02-glsl/float-precision-anatomy.svg"
@@ -12,9 +12,9 @@ The three precision qualifiers aren't a vague "faster but less accurate" dial �
   caption="Range and precision are two separate budgets bought with two separate fields, so 'mediump is half of highp' is the wrong mental model — the mantissa loses more than half its bits while the exponent gives up only three."
 />
 
-### highp: Close to a Real 32-Bit Float, at Least 16 Mantissa Bits
+### highp: IEEE-754 binary32, As the Spec Requires
 
-`highp` guarantees a range of at least $[-2^{62}, 2^{62}]$ and a relative precision of at least $2^{-16}$ (mantissa $\geq 16$ bits) — lower than genuine IEEE 754 single precision's floor (a 23-bit mantissa), but in practice almost every GPU shipping today, mobile included, implements `highp` as a full 32-bit float.
+GLSL ES 3.00 **requires** `highp` float to be stored as IEEE-754 single precision (binary32): range $(-2^{126}, 2^{127})$, relative precision $2^{-24}$, a 23-bit stored mantissa — not a low floor that GPUs generously exceed. (The $[-2^{62}, 2^{62}]$ / $2^{-16}$ floor many articles quote is **GLSL ES 1.00 / WebGL1** — the era when fragment highp was still optional.)
 
 ### mediump: A 10-Bit Mantissa Floor — Not "Half of highp"
 
@@ -22,7 +22,7 @@ The three precision qualifiers aren't a vague "faster but less accurate" dial �
 
 ### lowp: A Range of Just $[-2, 2]$, Fit for Little Beyond Color
 
-`lowp` guarantees only $[-2, 2]$ with a relative precision of $2^{-8}$ — narrow enough that it's unsafe for most accumulating math, but just enough for a normalized $0..1$ color channel or a simple visibility mask.
+`lowp` guarantees only $[-2, 2]$ with an **absolute** precision of $2^{-8}$ — fixed-point-like even steps of $2^{-8}$ across the range, a different model from floats — narrow enough that it's unsafe for most accumulating math, but just enough for a normalized $0..1$ color channel or a simple visibility mask.
 
 ## The Hardware Cost: Why Lower Precision Can Genuinely Run Faster
 

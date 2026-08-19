@@ -29,7 +29,7 @@ fragColor = vec4(vec3(x * 0.5 + 0.5), 1.0); // -1..1 → 0..1
 fragColor = vec4(vec3(step(threshold, suspectValue)), 1.0); // white if >= threshold, black otherwise
 ```
 
-**Catch NaN/Inf with an alarm color.** `NaN` propagates silently through every operation downstream of it (0/0, `sqrt` of a negative, `acos` outside $[-1,1]$) and usually shows up as black or randomly flickering pixels — easy to mistake for a different bug. Intercept it with a top-priority condition, painting a color that can't be confused with anything else in the scene:
+**Catch NaN/Inf with an alarm color.** `NaN` propagates silently through every operation downstream of it (0/0, `sqrt` of a negative, `acos` outside $[-1,1]$ — the spec calls these undefined results; on most real GPUs they come out as NaN) and usually shows up as black or randomly flickering pixels — easy to mistake for a different bug. Intercept it with a top-priority condition, painting a color that can't be confused with anything else in the scene:
 
 ```glsl
 if (isnan(suspectValue)) { fragColor = vec4(1.0, 0.0, 1.0, 1.0); return; } // magenta = NaN
@@ -43,7 +43,7 @@ if (isinf(suspectValue)) { fragColor = vec4(1.0, 1.0, 0.0, 1.0); return; } // ye
 `gl_FragCoord` gives the absolute pixel coordinate on screen — use it to restrict a probe to one small region instead of covering the whole screen, useful when the value under suspicion only makes sense locally (say, one specific grid cell in a tiling pattern):
 
 ```glsl
-if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) {
+if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) { // a 64x64 box in the BOTTOM-left: gl_FragCoord's origin is opposite CSS
   fragColor = vec4(vec3(suspectValue), 1.0);
   return; // early return so the probe region doesn't blend with the rest of the scene
 }
@@ -61,17 +61,17 @@ The three techniques above only pay off paired with discipline, not random edits
 
 ## A Real Case: "The Ring Renders Black"
 
-A rim-light effect on a ring: approximate a normal direction with `vec2 N = p` (where `p = uv - center`), then compare `dot(N, L)` against a high threshold to produce a glinting highlight along the ring's edge. The actual result: the whole ring renders solid black, no highlight ever appears no matter how `L`'s angle is rotated.
+A rim-light (edge-glow) effect on a ring: approximate a normal direction with `vec2 N = p` (where `p = uv - center`), then compare `dot(N, L)` against a high threshold to produce a glinting highlight along the ring's edge. The actual result: the whole ring renders solid black, no highlight ever appears no matter how `L`'s angle is rotated.
 
 Three color probes progressively narrow down the suspect list:
 
-1. **Probe A — output raw `N`, unremapped:** `vec3(N, 0.0)`. Half the screen is solid black (negative values clamped) — the first clue: this value is signed and might not fall inside the expected range.
+1. **Probe A — output raw `N`, unremapped:** `vec3(N, 0.0)`. Each channel goes dark on its negative half — only the bottom-left quadrant, where both are negative, is truly black — the first clue: this value is signed and might not fall inside the expected range.
 2. **Probe B — remap `N` with `N * 0.5 + 0.5`:** a proper unit vector should remap to colors spanning close to $0$ through close to $1$, with clear contrast. In practice the output is flat and murky, clustered around mid-gray $0.5$ — direct evidence that $\|N\|$ is far smaller than $1$, meaning `N` is **not normalized**.
 3. **Probe C — isolate the threshold condition itself:** `vec3(step(0.9, dot(N, L)))`. The whole screen is black — confirming `dot(N, L)` never crosses $0.9$, which is exactly why the highlight never lights up.
 
 A one-line fix — `vec2 N = normalize(p);` — and the highlight appears exactly as designed. The three probes weren't guesswork: they narrowed the suspect list from "the whole effect is wrong" down to one missing `normalize()` call, exactly the divide-and-conquer spirit from the previous section.
 
-Debug-by-color doesn't stop at this track: Track 7 (Procedural & Noise) needs raw hash/noise values probed before trusting them inside an FBM, and Track 9 (GPGPU) applies this same principle to inspect position/velocity data encoded in a texture — the only difference is probing a texture instead of an inline expression.
+Debug-by-color doesn't stop at this track: Track 7 (Procedural & Noise) needs raw hash/noise values probed before trusting them inside an FBM (fractal Brownian motion — stacked noise layers), and Track 9 (GPGPU) applies this same principle to inspect position/velocity data encoded in a texture — the only difference is probing a texture instead of an inline expression.
 
 <Callout variant="mistake" title="Common mistakes">
 

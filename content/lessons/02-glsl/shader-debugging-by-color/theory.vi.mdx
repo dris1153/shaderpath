@@ -29,7 +29,7 @@ fragColor = vec4(vec3(x * 0.5 + 0.5), 1.0); // -1..1 → 0..1
 fragColor = vec4(vec3(step(threshold, suspectValue)), 1.0); // trắng nếu >= threshold, đen nếu không
 ```
 
-**Bắt NaN/Inf bằng màu báo động.** `NaN` lan truyền âm thầm qua mọi phép toán sau nó (chia 0/0, `sqrt` của số âm, `acos` ngoài $[-1,1]$) và thường hiển thị thành các pixel đen hoặc nhấp nháy ngẫu nhiên — rất dễ bị nhầm là lỗi khác. Chặn đứng nó bằng một điều kiện ưu tiên cao nhất, tô hẳn một màu không thể lẫn với bất cứ thứ gì khác trong cảnh:
+**Bắt NaN/Inf bằng màu báo động.** `NaN` lan truyền âm thầm qua mọi phép toán sau nó (chia 0/0, `sqrt` của số âm, `acos` ngoài $[-1,1]$ — spec gọi là kết quả không xác định; trên phần lớn GPU thực tế ra NaN) và thường hiển thị thành các pixel đen hoặc nhấp nháy ngẫu nhiên — rất dễ bị nhầm là lỗi khác. Chặn đứng nó bằng một điều kiện ưu tiên cao nhất, tô hẳn một màu không thể lẫn với bất cứ thứ gì khác trong cảnh:
 
 ```glsl
 if (isnan(suspectValue)) { fragColor = vec4(1.0, 0.0, 1.0, 1.0); return; } // magenta = NaN
@@ -43,7 +43,7 @@ if (isinf(suspectValue)) { fragColor = vec4(1.0, 1.0, 0.0, 1.0); return; } // v�
 `gl_FragCoord` cho toạ độ pixel tuyệt đối trên màn hình — dùng nó để giới hạn probe vào đúng một vùng nhỏ thay vì phủ toàn màn hình, hữu ích khi giá trị cần soi chỉ có ý nghĩa cục bộ (ví dụ một ô lưới cụ thể trong pattern tiling):
 
 ```glsl
-if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) {
+if (gl_FragCoord.x < 64.0 && gl_FragCoord.y < 64.0) { // ô 64x64 ở góc DƯỚI-trái: gốc gl_FragCoord ngược với CSS
   fragColor = vec4(vec3(suspectValue), 1.0);
   return; // return sớm để vùng probe không lẫn với phần còn lại của cảnh
 }
@@ -61,17 +61,17 @@ Ba kỹ thuật trên chỉ phát huy tác dụng khi đi kèm kỷ luật, khô
 
 ## Ca thực tế: "vòng tròn render ra màu đen"
 
-Một hiệu ứng rim-light trên một vòng tròn: tính hướng pháp tuyến gần đúng bằng `vec2 N = p` (với `p = uv - center`), rồi so `dot(N, L)` với một ngưỡng cao để tạo điểm sáng lấp lánh trên viền vòng. Kết quả thực tế: cả vòng tròn render ra màu đen tuyền, không một điểm sáng nào xuất hiện dù xoay góc nhìn `L` thế nào.
+Một hiệu ứng ánh sáng viền (rim light) trên một vòng tròn: tính hướng pháp tuyến gần đúng bằng `vec2 N = p` (với `p = uv - center`), rồi so `dot(N, L)` với một ngưỡng cao để tạo điểm sáng lấp lánh trên viền vòng. Kết quả thực tế: cả vòng tròn render ra màu đen tuyền, không một điểm sáng nào xuất hiện dù xoay góc nhìn `L` thế nào.
 
 Ba probe màu lần lượt thu hẹp nghi phạm:
 
-1. **Probe A — xuất thẳng `N` chưa remap:** `vec3(N, 0.0)`. Một nửa màn hình đen thui (giá trị âm bị clamp) — dấu hiệu đầu tiên: giá trị này có dấu và có thể không nằm trong khoảng kỳ vọng.
+1. **Probe A — xuất thẳng `N` chưa remap:** `vec3(N, 0.0)`. Mỗi kênh tắt trên nửa âm của nó — góc phần tư dưới-trái, nơi cả hai kênh cùng âm, mới đen tuyền — dấu hiệu đầu tiên: giá trị này có dấu và có thể không nằm trong khoảng kỳ vọng.
 2. **Probe B — remap `N` bằng `N * 0.5 + 0.5`:** đúng ra một vector đơn vị phải cho màu trải rộng gần $0$ đến gần $1$, tương phản rõ. Thực tế màu ra rất "bệt", quẩn quanh xám giữa $0.5$ — bằng chứng trực tiếp: $\|N\|$ nhỏ hơn $1$ rất nhiều, tức `N` **chưa được normalize**.
 3. **Probe C — cô lập chính điều kiện ngưỡng:** `vec3(step(0.9, dot(N, L)))`. Toàn màn hình đen — xác nhận `dot(N, L)` không bao giờ vượt $0.9$, đúng là nguyên nhân trực tiếp khiến điểm sáng chẳng bao giờ bật lên.
 
 Sửa chỉ một dòng — `vec2 N = normalize(p);` — và điểm sáng xuất hiện đúng như thiết kế. Ba probe không đoán mò: chúng thu hẹp nghi phạm từ "cả hiệu ứng sai" xuống đúng một dòng thiếu `normalize()`, đúng tinh thần chia-để-trị đã nói ở phần trước.
 
-Kỹ thuật debug-by-color không dừng lại ở Track này: Track 7 (Procedural & Noise) sẽ cần probe giá trị hash/noise thô trước khi tin chúng cho vào FBM, và Track 9 (GPGPU) dùng đúng nguyên lý này để soi dữ liệu position/velocity được mã hoá trong texture — chỉ khác là bạn probe một texture thay vì một biểu thức inline.
+Kỹ thuật debug-by-color không dừng lại ở Track này: Track 7 (Procedural & Noise) sẽ cần probe giá trị hash/noise thô trước khi tin chúng cho vào FBM (fractal Brownian motion — chồng nhiều lớp noise), và Track 9 (GPGPU) dùng đúng nguyên lý này để soi dữ liệu position/velocity được mã hoá trong texture — chỉ khác là bạn probe một texture thay vì một biểu thức inline.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

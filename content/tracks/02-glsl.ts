@@ -284,8 +284,8 @@ export const lessons: LessonMeta[] = [
       en: "Matrix Transforms in Shaders",
     },
     summary: {
-      vi: "Xoay, scale, translate một UV space bằng mat2/mat3 ngay trong fragment shader — cùng công thức Track 0 đã học, giờ áp dụng để xoay pattern hoặc dựng camera 2D procedural.",
-      en: "Rotate, scale and translate UV space with mat2/mat3 right inside a fragment shader — the same formulas from Track 0, now applied to spin a pattern or build a procedural 2D camera.",
+      vi: "Xoay, scale, translate một UV space bằng mat2/mat3 ngay trong fragment shader — cùng công thức Track 0 đã học, giờ áp dụng để xoay pattern quanh pivot tuỳ ý.",
+      en: "Rotate, scale and translate UV space with mat2/mat3 right inside a fragment shader — the same formulas from Track 0, now applied to spin a pattern around an arbitrary pivot.",
     },
     difficulty: 3,
     estimatedMinutes: 35,
@@ -318,8 +318,8 @@ export const lessons: LessonMeta[] = [
       en: "Debugging Shaders by Color",
     },
     summary: {
-      vi: "Không có console.log trong GLSL: kỹ thuật debug chính là xuất giá trị cần kiểm tra ra kênh màu (đỏ = giá trị âm, xanh lá = trong khoảng, xanh dương = giá trị cụ thể) rồi đọc bằng mắt.",
-      en: "There is no console.log in GLSL: the core debugging technique is outputting the value you want to inspect as a color channel (red = negative, green = in-range, blue = a specific value) and reading it visually.",
+      vi: "Không có console.log trong GLSL: kỹ thuật debug chính là xuất giá trị cần kiểm tra ra kênh màu (remap về thang xám, đóng gói vào RGB, probe bằng step) rồi đọc bằng mắt.",
+      en: "There is no console.log in GLSL: the core debugging technique is outputting the value you want to inspect as a color channel (grayscale remap, RGB packing, step probes) and reading it visually.",
     },
     difficulty: 2,
     estimatedMinutes: 25,
@@ -329,12 +329,12 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["matrix-transforms-in-shaders"],
     objectives: {
       vi: [
-        "Xuất một giá trị trung gian (UV, SDF, normal...) ra gl_FragColor để kiểm tra bằng mắt",
+        "Xuất một giá trị trung gian (UV, SDF, normal...) ra fragColor để kiểm tra bằng mắt",
         "Dùng quy ước màu nhất quán (âm/dương, trong/ngoài khoảng) để đọc kết quả debug nhanh hơn",
         "Kết hợp debug-by-color với Spector.js hoặc browser devtools để xác nhận giá trị chính xác",
       ],
       en: [
-        "Output an intermediate value (UV, SDF, normal...) to gl_FragColor to inspect it visually",
+        "Output an intermediate value (UV, SDF, normal...) to fragColor to inspect it visually",
         "Use a consistent color convention (negative/positive, in/out of range) to read debug output faster",
         "Pair debug-by-color with Spector.js or browser devtools to confirm the exact values",
       ],
@@ -352,8 +352,8 @@ export const lessons: LessonMeta[] = [
       en: "Mini-build: Animated Tiled Pattern Poster",
     },
     summary: {
-      vi: "Một poster fullscreen: pattern lát gạch không seam, biến dạng bằng ma trận theo thời gian, tô màu bằng cosine palette từ checkpoint trước — tổng kết toàn bộ track GLSL.",
-      en: "A fullscreen poster: a seamless tiled pattern, warped by a time-based matrix, colored with the cosine palette from the earlier checkpoint — a synthesis of the entire GLSL track.",
+      vi: "Một poster fullscreen: pattern lát gạch không seam, biến dạng bằng ma trận theo thời gian, tô màu bằng gradient tint hai màu — tổng kết toàn bộ track GLSL.",
+      en: "A fullscreen poster: a seamless tiled pattern, warped by a time-based matrix, colored with a two-color gradient tint — a synthesis of the entire GLSL track.",
     },
     difficulty: 3,
     estimatedMinutes: 55,
@@ -363,11 +363,11 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["shader-debugging-by-color"],
     objectives: {
       vi: [
-        "Kết hợp SDF, tiling, matrix transform và cosine palette trong một shader duy nhất",
+        "Kết hợp SDF, tiling, matrix transform và gradient tint trong một shader duy nhất",
         "Tự debug bằng kỹ thuật debug-by-color trước khi đối chiếu với đáp án",
       ],
       en: [
-        "Combine SDFs, tiling, matrix transforms and the cosine palette in a single shader",
+        "Combine SDFs, tiling, matrix transforms and a gradient tint in a single shader",
         "Self-debug using the debug-by-color technique before checking the solution",
       ],
     },

@@ -4,7 +4,7 @@ GLSL (OpenGL Shading Language) mượn cú pháp bề ngoài của C — dấu c
 
 ## Kiểu vô hướng và cái bẫy không có ép kiểu ngầm
 
-GLSL có bốn kiểu vô hướng cơ bản: `float`, `int`, `uint` (số nguyên không dấu), và `bool`. Khác với C/C++ vốn tự động thăng cấp `int` thành `float` khi cần trong biểu thức số học, GLSL ES gần như không có ép kiểu ngầm ở phép gán hay biểu thức số học nào — muốn đổi kiểu, phải gọi tường minh qua constructor như `float(n)` hay `int(x)` (constructor vector như `vec3(1)` cũng thuộc nhóm chuyển đổi tường minh này, không phải một ngoại lệ ép kiểu ngầm).
+GLSL có bốn kiểu vô hướng cơ bản: `float`, `int`, `uint` (số nguyên không dấu), và `bool`. Khác với C/C++ vốn tự động thăng cấp `int` thành `float` khi cần trong biểu thức số học, GLSL ES không có ép kiểu ngầm ở phép gán hay biểu thức số học nào — muốn đổi kiểu, phải gọi tường minh qua constructor như `float(n)` hay `int(x)` (constructor vector như `vec3(1)` cũng thuộc nhóm chuyển đổi tường minh này, không phải một ngoại lệ ép kiểu ngầm).
 
 ### `1 / 2` không phải `0.5` — nó là `0`
 
@@ -63,7 +63,7 @@ Với hầu hết người học đến từ JavaScript/TypeScript, lỗi kiểu
 
 ## Nền tảng này dẫn tới đâu: hàm dựng sẵn và precision
 
-Từ vựng kiểu và swizzle học ở đây xuất hiện ở gần như mọi dòng shader từ giờ trở đi. Bài hàm dựng sẵn ngay sau đây dựa hoàn toàn vào việc `mix`/`clamp`/`smoothstep` đều có overload hoạt động theo từng thành phần vector nhờ đúng hệ thống kiểu vừa học; bài precision qualifier ngay sau đó lại thêm một trục thứ hai — không chỉ "kiểu gì" mà còn "bao nhiêu bit đứng sau kiểu đó" — vào chính những khai báo `float`/`vec3` bạn vừa quen tay.
+Từ vựng kiểu và swizzle học ở đây xuất hiện ở gần như mọi dòng shader từ giờ trở đi. Bài precision qualifier ngay sau đây thêm một trục thứ hai — không chỉ "kiểu gì" mà còn "bao nhiêu bit đứng sau kiểu đó" — vào chính những khai báo `float`/`vec3` bạn vừa quen tay; bài hàm dựng sẵn tiếp theo nữa dựa hoàn toàn vào việc `mix`/`clamp`/`smoothstep` đều có overload hoạt động theo từng thành phần vector nhờ đúng hệ thống kiểu vừa học.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

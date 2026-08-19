@@ -60,7 +60,7 @@ With $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` turns on (value $\\approx 1$) w
   // TODO 1: circle SDF centred on the mouse
   float d = 0.0;
 
-  // TODO 2: smooth mask around d = 0 (band ~0.01 wide: use smoothstep(-0.005, 0.005, d))
+  // TODO 2: smooth mask around d = 0 — a band about 0.01 wide centered on the boundary
   float mask = 0.0;
 
   vec3 shapeColor = vec3(0.98, 0.45, 0.2);
@@ -85,7 +85,9 @@ With $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` turns on (value $\\approx 1$) w
   vec3 bg = vec3(0.05, 0.06, 0.1);
   vec3 color = mix(shapeColor, bg, mask);
 
-  color += vec3(0.3, 0.6, 1.0) * exp(-14.0 * max(d, 0.0));
+  // mask (~0 inside, 1 outside) keeps the glow out of the fill; max() only
+  // stops exp from blowing up inside.
+  color += vec3(0.3, 0.6, 1.0) * exp(-14.0 * max(d, 0.0)) * mask;
 
   fragColor = vec4(color, 1.0);
 }`,
@@ -95,8 +97,8 @@ With $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` turns on (value $\\approx 1$) w
         en: "`p` is already shifted so the mouse position is the origin (`uv - uMouse`) — the circle SDF is just `length(p) - r`, no need to subtract the center again.",
       },
       {
-        vi: "`max(d, 0.0)` chặn phần trong hình (d âm) về 0 trước khi đưa vào exp — nếu không, glow sẽ cộng dồn cả bên trong hình, làm sáng loá phần fill.",
-        en: "`max(d, 0.0)` clamps the inside-the-shape part (negative d) to 0 before it hits exp — skip this and the glow adds up inside the shape too, blowing out the fill.",
+        vi: "`max(d, 0.0)` chỉ chặn exp khỏi bùng nổ bên trong (exp của số dương lớn); thứ thật sự giữ glow ở NGOÀI hình là nhân thêm mask (≈0 trong hình, 1 ngoài hình).",
+        en: "`max(d, 0.0)` only stops exp from exploding inside (exp of a large positive); what actually keeps the glow OUTSIDE the shape is multiplying by the mask (~0 inside, 1 outside).",
       },
     ],
     checklist: [

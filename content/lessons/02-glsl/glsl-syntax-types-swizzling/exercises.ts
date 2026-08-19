@@ -30,8 +30,8 @@ Then explain line (e) specifically: why its error has nothing to do with int/flo
     },
     hints: [
       {
-        vi: "Chỉ có (a), (b) và (e) lỗi — nhưng (a)/(b) lỗi vì lý do khác hẳn (e). Tách hai nhóm nguyên nhân trước khi kết luận.",
-        en: "Only (a), (b) and (e) fail — but (a)/(b) fail for a completely different reason than (e). Separate the two failure causes before concluding.",
+        vi: "Có hai họ nguyên nhân lỗi trong danh sách: literal sai kiểu, và swizzle đòi thành phần mà nguồn không có — thử từng dòng với cả hai.",
+        en: "Two failure families are present: literal-type mismatch, and a swizzle asking for a component the source does not have — test every line against both.",
       },
       {
         vi: "vec2 chỉ có đúng 2 thành phần: x và y (hay r/g, s/t). Gọi thêm .z hay .b trên nó luôn sai, bất kể ở vế đọc hay ghi.",

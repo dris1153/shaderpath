@@ -1,10 +1,10 @@
 ## Vì sao mọi fragment shader phải khai báo `precision`
 
-Vertex shader trong GLSL ES có sẵn precision mặc định cho `float` (là `highp`), nhưng fragment shader thì KHÔNG — đặc tả cố tình không đặt mặc định ở fragment stage, vì một số driver/GPU nhúng chỉ đảm bảo hỗ trợ `mediump` ở đó, không phải `highp`. Hệ quả: dòng đầu tiên của mọi fragment shader trong khoá học này gần như luôn là `precision highp float;` (hoặc `mediump`/`lowp` khi cố ý) — thiếu dòng này là lỗi biên dịch cứng trên nhiều driver mobile/WebGL nghiêm ngặt, dù trên desktop Chrome/ANGLE trình biên dịch thường tự chọn giùm một precision mặc định và im lặng cho qua, che giấu lỗi cho tới khi chạy trên thiết bị khác. Kiểu `int` có mặc định riêng (`mediump` ở cả hai stage) nên ít khi cần khai báo tường minh, nhưng `float` ở fragment shader thì luôn cần.
+Vertex shader trong GLSL ES có sẵn precision mặc định cho `float` (là `highp`), nhưng fragment shader thì KHÔNG — đặc tả cố tình không đặt mặc định ở fragment stage, di sản từ thời ES 2.0, khi `highp` ở fragment shader còn là tuỳ chọn với GPU nhúng. Hệ quả: dòng đầu tiên của mọi fragment shader trong khoá học này gần như luôn là `precision highp float;` (hoặc `mediump`/`lowp` khi cố ý) — thiếu dòng này là lỗi biên dịch cứng trong WebGL trên **mọi** nền tảng — trình duyệt nào cũng validate qua ANGLE với thông báo quen thuộc "No precision specified for (float)"; playground của khoá học đã khai sẵn dòng này trong prelude. Kiểu `int` có mặc định riêng (`highp` ở vertex, `mediump` ở fragment) nên ít khi cần khai báo tường minh, nhưng `float` ở fragment shader thì luôn cần.
 
 ## highp, mediump, lowp: đặc tả nói gì, không phải đoán mò
 
-Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơn nhưng kém chính xác hơn" — đặc tả GLSL ES 3.00 (Bảng 4.7) quy định rõ hai con số SÀN tối thiểu mỗi driver bắt buộc phải đạt được: độ chính xác tương đối (tương đương số bit mantissa) và dải giá trị biểu diễn được (tương đương số bit exponent). Phần cứng thật thường tốt hơn sàn này, không bao giờ tệ hơn.
+Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơn nhưng kém chính xác hơn" — đặc tả GLSL ES 3.00 (§4.5.1 Range and Precision) quy định rõ hai con số SÀN tối thiểu mỗi driver bắt buộc phải đạt được: độ chính xác (tương đương số bit mantissa — phần định trị, "các chữ số" của float) và dải giá trị biểu diễn được (tương đương số bit exponent — phần mũ, "thang" của float) (tương đương số bit exponent). Phần cứng thật thường tốt hơn sàn này, không bao giờ tệ hơn.
 
 <Figure
   src="/figures/02-glsl/float-precision-anatomy.svg"
@@ -12,9 +12,9 @@ Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơ
   caption="Dải giá trị và độ chính xác là hai ngân sách riêng do hai trường bit riêng quyết định, nên 'mediump là một nửa highp' là mô hình sai — mantissa mất hơn một nửa số bit trong khi exponent chỉ nhường đúng ba bit."
 />
 
-### highp: gần với float 32-bit chuẩn, mantissa tối thiểu 16 bit
+### highp: chính là IEEE-754 binary32 theo yêu cầu của spec
 
-`highp` đảm bảo dải tối thiểu $[-2^{62}, 2^{62}]$ và độ chính xác tương đối tối thiểu $2^{-16}$ (tương đương mantissa $\geq 16$ bit) — thấp hơn con số sàn của IEEE 754 single-precision thật (mantissa 23 bit), nhưng trong thực tế gần như mọi GPU đang bán ra (kể cả mobile) triển khai `highp` bằng đúng float 32-bit đầy đủ.
+GLSL ES 3.00 **yêu cầu** `highp` float lưu đúng định dạng IEEE-754 single precision (binary32): dải $(-2^{126}, 2^{127})$, độ chính xác tương đối $2^{-24}$, mantissa 23 bit — không phải một "sàn thấp rồi GPU tự hào phóng". (Sàn $[-2^{62}, 2^{62}]$ với $2^{-16}$ mà nhiều tài liệu nhắc là của **GLSL ES 1.00 / WebGL1** — thời highp ở fragment còn tuỳ chọn.)
 
 ### mediump: sàn tối thiểu 10-bit mantissa — không phải "nửa highp"
 
@@ -22,7 +22,7 @@ Ba precision qualifier không phải một nút vặn mơ hồ kiểu "nhanh hơ
 
 ### lowp: dải chỉ $[-2, 2]$, gần như chỉ hợp cho màu
 
-`lowp` chỉ đảm bảo dải $[-2, 2]$ với độ chính xác tương đối $2^{-8}$ — hẹp đến mức không đủ an toàn cho hầu hết phép toán tích luỹ, nhưng vừa đủ cho một kênh màu đã chuẩn hoá $0..1$ hoặc một mặt nạ hiển thị đơn giản.
+`lowp` chỉ đảm bảo dải $[-2, 2]$ với độ chính xác **tuyệt đối** $2^{-8}$ — như fixed-point bước đều $2^{-8}$ trên cả dải, khác hẳn mô hình float — hẹp đến mức không đủ an toàn cho hầu hết phép toán tích luỹ, nhưng vừa đủ cho một kênh màu đã chuẩn hoá $0..1$ hoặc một mặt nạ hiển thị đơn giản.
 
 ## Chi phí phần cứng: vì sao precision thấp hơn có thể nhanh hơn thật
 
@@ -48,7 +48,7 @@ Precision nằm âm thầm dưới mọi khai báo `uniform`/`varying` ở bài 
 
 Ba lỗi hay gặp nhất với precision qualifier:
 
-1. **Quên khai báo `precision ... float;` trong fragment shader.** Biên dịch được trên desktop Chrome vì driver tự chọn giùm một precision mặc định, nhưng lỗi cứng trên nhiều driver mobile/WebGL nghiêm ngặt — bug kiểu "chạy máy mình, vỡ máy khách" chỉ lộ ra khi test trên thiết bị thật.
+1. **Quên khai báo `precision ... float;` trong fragment shader.** Trong WebGL đây là lỗi biên dịch cứng như nhau trên mọi máy ("No precision specified for (float)"). Chuyện "chạy desktop, vỡ mobile" có thật nhưng nguồn gốc khác: cùng `mediump`, desktop cấp 32-bit còn nhiều GPU mobile cấp 16-bit — shader đúng cú pháp vẫn vỡ sạn trên điện thoại.
 2. **Dùng `mediump` cho world-space position hoặc pha thời gian tích luỹ dài.** `uTime` nhân với một tần số lớn rồi lưu bằng `mediump` gây jitter tăng dần theo thời gian chạy ứng dụng, không phải lỗi xuất hiện ngay lập tức nên dễ lọt qua một lượt test nhanh vài giây.
 3. **Coi `lowp` là lựa chọn "an toàn, tiết kiệm" cho mọi giá trị 0..1.** Quên rằng một phép tính trung gian (ví dụ cộng dồn nhiều lớp bloom trước khi tone-map) có thể vượt dải $[-2, 2]$ dù giá trị hiển thị cuối cùng vẫn nằm trong $0..1$ — `lowp` clip sai ngay giữa chừng phép tính, trước khi kịp ra tới bước chuẩn hoá cuối.
 

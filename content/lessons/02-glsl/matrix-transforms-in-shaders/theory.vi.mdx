@@ -32,7 +32,7 @@ vec2 p = rotate2d(angle) * uv; // xoay TOẠ ĐỘ +angle
 // → pattern hiển thị lại xoay -angle trên màn hình
 ```
 
-<Playground source={"mat2 rotate2d(float a) {\n  float c = cos(a);\n  float s = sin(a);\n  return mat2(c, s, -s, c); // column-major: col0=(c,s), col1=(-s,c)\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float angle = (uMouse.x - 0.5) * 6.2831853; // keo chuot ngang de xoay\n  vec2 p = rotate2d(angle) * (uv - 0.5) + 0.5;\n  vec2 cell = floor(p * 8.0);\n  float parity = mod(cell.x + cell.y, 2.0);\n  vec3 color = mix(vec3(0.95, 0.5, 0.2), vec3(0.08, 0.1, 0.18), parity);\n  fragColor = vec4(color, 1.0);\n}\n"} />
+<Playground source={"mat2 rotate2d(float a) {\n  float c = cos(a);\n  float s = sin(a);\n  return mat2(c, s, -s, c); // column-major: col0=(c,s), col1=(-s,c)\n}\n\nvoid main() {\n  vec2 uv = gl_FragCoord.xy / uResolution;\n  float angle = (uMouse.x - 0.5) * 6.2831853; // keo chuot ngang de xoay\n  vec2 p = rotate2d(angle) * (uv - 0.5) + 0.5; // -0.5/+0.5: pivot tam canvas - phan sau giai thich\n  vec2 cell = floor(p * 8.0);\n  float parity = mod(cell.x + cell.y, 2.0);\n  vec3 color = mix(vec3(0.95, 0.5, 0.2), vec3(0.08, 0.1, 0.18), parity);\n  fragColor = vec4(color, 1.0);\n}\n"} />
 
 ## Pivot: xoay quanh một điểm bất kỳ, không chỉ quanh gốc
 
@@ -80,9 +80,9 @@ vec2 applyTransform(mat3 m, vec2 p) {
 }
 ```
 
-Một phép nhân `mat3` thay cho ba dòng translate-transform-translate-back rời rạc — hữu ích khi cần compose nhiều transform liên tiếp (rotate rồi translate rồi rotate tiếp) mà không muốn cộng dồn sai số hoặc viết lặp code dịch chuyển ở mỗi bước.
+Một phép nhân `mat3` gói được cả chuỗi translate-transform-translate-back (lưu ý: `build2DTransform(angle, translate)` tự nó là "xoay quanh gốc rồi tịnh tiến" — muốn nó bằng phép xoay quanh pivot $c$, phải truyền $t = c - R\,c$) — hữu ích khi cần compose nhiều transform liên tiếp (rotate rồi translate rồi rotate tiếp) mà không muốn cộng dồn sai số hoặc viết lặp code dịch chuyển ở mỗi bước.
 
-Kỹ thuật ở bài này không dừng lại trong GLSL: Track 4 (React Three Fiber) áp đúng nguyên lý translate→transform→translate-back khi bạn set `mesh.position`/`rotation`/`scale` — `Object3D.updateMatrix()` của Three.js dựng ma trận model theo đúng thứ tự đó phía sau hậu trường. Track 8 (Raymarching) dùng lại chính phép translate-transform-translate-back để lặp một hình vô hạn lần trong domain repetition với bộ nhớ O(1), còn Track 6 (Custom Shader) sẽ cho bạn tự tay inject những ma trận `mat3`/`mat4` này vào pipeline dựng sẵn của Three qua `onBeforeCompile`.
+Kỹ thuật ở bài này không dừng lại trong GLSL: Track 4 (React Three Fiber): khi bạn set `mesh.position`/`rotation`/`scale`, `Object3D.updateMatrix()` của Three.js dựng ma trận model theo composition T·R·S (phải-sang-trái: scale → rotate → translate) quanh gốc cục bộ của object — mẹo pivot của bài này chính là thứ bạn tái hiện trong three bằng cách lồng mesh vào một group đặt tại pivot. Track 8 (Raymarching) dùng lại chính phép translate-transform-translate-back để lặp một hình vô hạn lần trong domain repetition với bộ nhớ O(1), còn Track 6 (Custom Shader) sẽ cho bạn tự tay inject những ma trận `mat3`/`mat4` này vào pipeline dựng sẵn của Three qua `onBeforeCompile`.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

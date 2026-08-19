@@ -1,6 +1,6 @@
 ## Bộ công cụ nhỏ dựng được gần như mọi hiệu ứng procedural
 
-GLSL không có thư viện hình học hay hiệu ứng dựng sẵn — không `Photoshop.blend()`, không CSS `gradient()`. Thứ nó có là một nhúm hàm toán học built-in, biên dịch thẳng xuống phần cứng GPU (nhiều hàm trong số này ánh xạ gần như 1-1 xuống một lệnh ALU chuyên dụng, không phải hàm thư viện gọi qua lại), và gần như toàn bộ hiệu ứng 2D procedural của track này — gradient, sọc, xung nhịp, vòng tròn đồng tâm — chỉ là tổ hợp của khoảng mười hàm: `mix`, `clamp`, `step`, `smoothstep`, `fract`, `mod`, `length`, `distance`, `abs`, `sign`, `min`, `max`, `pow`. Bài này đi qua từng nhóm — không để liệt kê định nghĩa suông, mà để thấy _tại sao_ chọn hàm này thay vì viết `if` tương đương lại quan trọng, câu hỏi mà bài kế tiếp trả lời triệt để bằng cơ chế phần cứng thật.
+GLSL không có thư viện hình học hay hiệu ứng dựng sẵn — không `Photoshop.blend()`, không CSS `gradient()`. Thứ nó có là một nhúm hàm toán học built-in, biên dịch thẳng xuống phần cứng GPU (nhiều hàm trong số này ánh xạ gần như 1-1 xuống một lệnh ALU (arithmetic logic unit — mạch tính toán của GPU) chuyên dụng, không phải hàm thư viện gọi qua lại), và gần như toàn bộ hiệu ứng 2D procedural của track này — gradient, sọc, xung nhịp, vòng tròn đồng tâm — chỉ là tổ hợp của khoảng mười hàm: `mix`, `clamp`, `step`, `smoothstep`, `fract`, `mod`, `length`, `distance`, `abs`, `sign`, `min`, `max`, `pow`. Bài này đi qua từng nhóm — không để liệt kê định nghĩa suông, mà để thấy _tại sao_ chọn hàm này thay vì viết `if` tương đương lại quan trọng, câu hỏi mà bài kế tiếp trả lời triệt để bằng cơ chế phần cứng thật.
 
 ## mix và clamp: pha trộn và giữ trong khoảng
 
@@ -10,7 +10,7 @@ $$
 \text{mix}(a, b, t) = a(1-t) + bt
 $$
 
-Đây chính là `lerp` mà Track 0 đã học, chỉ đổi tên theo quy ước GLSL. `t` không bị ép về $[0,1]$ — truyền `t = 1.5` sẽ ngoại suy ra ngoài đoạn nối `a`–`b`, hành vi hữu ích khi cố ý overshoot nhưng cũng là bẫy nếu quên kẹp. `clamp(x, lo, hi)` làm đúng việc kẹp đó: ép cứng giá trị vào $[lo, hi]$, dùng nhiều nhất để đảm bảo output màu không vượt $[0,1]$ trước khi ghi ra `gl_FragColor` — dù trên thực tế GPU tự clamp màu output khi hiển thị, nên bỏ sót bước này thường "tự sửa" một cách âm thầm, che giấu luôn cả lỗi ở logic tính toán phía trước.
+Đây chính là `lerp` mà Track 0 đã học, chỉ đổi tên theo quy ước GLSL. `t` không bị ép về $[0,1]$ — truyền `t = 1.5` sẽ ngoại suy ra ngoài đoạn nối `a`–`b`, hành vi hữu ích khi cố ý overshoot nhưng cũng là bẫy nếu quên kẹp. `clamp(x, lo, hi)` làm đúng việc kẹp đó: ép cứng giá trị vào $[lo, hi]$, dùng nhiều nhất để đảm bảo output màu không vượt $[0,1]$ trước khi ghi ra `fragColor` — dù trên thực tế GPU tự clamp khi ghi vào framebuffer định dạng thường, nên bỏ sót bước này thường "tự sửa" một cách âm thầm, che giấu luôn cả lỗi ở logic tính toán phía trước.
 
 ## step và smoothstep: ngưỡng cứng, ngưỡng mượt
 
@@ -20,21 +20,21 @@ $$
 \text{smoothstep}(e_0, e_1, x) = t^2(3 - 2t), \qquad t = \text{clamp}\!\left(\frac{x - e_0}{e_1 - e_0},\ 0,\ 1\right)
 $$
 
-Khác biệt nhìn thấy được: `step` cho viền răng cưa cứng (alias rõ) khi dùng trực tiếp làm mặt nạ hình; `smoothstep` cho viền mượt tự nhiên — đúng lý do bài SDF trước dùng nó để anti-alias biên hình tròn mà không cần MSAA. Ghép hai `smoothstep` — một tăng, một giảm — rồi trừ nhau tạo ra một **xung** (pulse): cao nguyên phẳng ở giữa, hai sườn mượt hai bên. Kỹ thuật "cặp smoothstep" này quay lại ngay trong phần ghép hàm bên dưới.
+Khác biệt nhìn thấy được: `step` cho viền răng cưa cứng (alias rõ) khi dùng trực tiếp làm mặt nạ hình; `smoothstep` cho viền mượt tự nhiên — đúng kỹ thuật mà bài Shaping Functions & 2D SDF (signed distance field — hàm khoảng cách có dấu) sắp tới dùng để anti-alias biên hình tròn mà không cần MSAA. Ghép hai `smoothstep` cùng tăng — cái thứ hai dịch xa hơn — rồi trừ nhau tạo ra một **xung** (pulse; chính phép trừ tạo ra sườn xuống): cao nguyên phẳng ở giữa, hai sườn mượt hai bên. Kỹ thuật "cặp smoothstep" này quay lại ngay trong phần ghép hàm bên dưới.
 
 ## fract và mod: lặp lại không cần vòng lặp
 
-`fract(x)` trả về phần thập phân của `x` — $\text{fract}(x) = x - \lfloor x \rfloor$ — luôn nằm trong $[0, 1)$ bất kể `x` lớn cỡ nào. Nhân toạ độ UV lên `n` lần rồi `fract` là cách rẻ nhất để chia không gian thành `n` ô lặp lại: `fract(uv.x * 8.0)` biến một trục dài 1 đơn vị thành 8 đoạn `[0,1)` xếp cạnh nhau, mỗi đoạn là một bản sao UV cục bộ của riêng nó. `mod(x, y)` tổng quát hơn — phần dư khi chia `x` cho `y` theo định nghĩa dùng `floor` — và `fract(x)` chỉ là cách viết gọn của `mod(x, 1.0)`. Không có vòng lặp `for` nào ở đây: GPU tính ra cả một pattern lặp lại bằng đúng một phép toán, chạy song song cho mọi pixel, không phải lặp tuần tự qua từng "ô" như code CPU quen làm.
+`fract(x)` trả về phần thập phân của `x` — $\text{fract}(x) = x - \lfloor x \rfloor$ — về mặt toán học nằm trong $[0, 1)$ bất kể `x` lớn cỡ nào (với float thật, `x` rất lớn làm phần thập phân mất sạch độ chính xác — đúng bài precision vừa học). Nhân toạ độ UV lên `n` lần rồi `fract` là cách rẻ nhất để chia không gian thành `n` ô lặp lại: `fract(uv.x * 8.0)` biến một trục dài 1 đơn vị thành 8 đoạn `[0,1)` xếp cạnh nhau, mỗi đoạn là một bản sao UV cục bộ của riêng nó. `mod(x, y)` tổng quát hơn — phần dư khi chia `x` cho `y` theo định nghĩa dùng `floor` — và `fract(x)` chỉ là cách viết gọn của `mod(x, 1.0)`. Không có vòng lặp `for` nào ở đây: GPU tính ra cả một pattern lặp lại bằng đúng một phép toán, chạy song song cho mọi pixel, không phải lặp tuần tự qua từng "ô" như code CPU quen làm.
 
 ## length, distance, dot, normalize: hình học quay lại
 
-Bốn hàm này không mới — Track 0 đã định nghĩa chúng bằng công thức tay, giờ chúng là hàm built-in một dòng của GLSL: `length(v)` cho $\|\vec v\|$, `distance(a, b)` cho $\|\vec a - \vec b\|$ (tương đương `length(a - b)` nhưng thường được driver tối ưu tốt hơn), `dot(a, b)` cho tích vô hướng, `normalize(v)` cho $\vec v / \|\vec v\|$. Ứng dụng trực tiếp nhất trong track này: `distance(uv, center)` cho khoảng cách từ một điểm tới tâm, đưa thẳng vào `smoothstep` hoặc `fract` để vẽ hình tròn hoặc vòng tròn đồng tâm — chính là kỹ thuật SDF của bài trước, giờ tổng quát hoá thành "rings" ở phần ghép hàm phía dưới.
+Bốn hàm này không mới — Track 0 đã định nghĩa chúng bằng công thức tay, giờ chúng là hàm built-in một dòng của GLSL: `length(v)` cho $\|\vec v\|$, `distance(a, b)` cho $\|\vec a - \vec b\|$ (tương đương `length(a - b)`, gọn hơn khi đọc), `dot(a, b)` cho tích vô hướng, `normalize(v)` cho $\vec v / \|\vec v\|$. Ứng dụng trực tiếp nhất trong track này: `distance(uv, center)` cho khoảng cách từ một điểm tới tâm, đưa thẳng vào `smoothstep` hoặc `fract` để vẽ hình tròn hoặc vòng tròn đồng tâm — chính là kỹ thuật bài SDF sắp tới sẽ tổng quát hoá — ở đây thành "rings" trong phần ghép hàm phía dưới.
 
 ## abs, sign, min, max, pow: uốn và so sánh giá trị
 
 `abs(x)` bỏ dấu; `sign(x)` trả về `-1`, `0` hoặc `1` tuỳ dấu của `x` — hữu ích để chọn giá trị theo dấu mà không cần `if`. `min`/`max` so sánh và chọn, nền tảng của các phép hợp/giao SDF mà bài Shaping Functions sắp tới dùng lại nguyên xi (`min` cho union, `max` cho intersection). `pow(x, n)` nâng luỹ thừa, dùng để bẻ một gradient tuyến tính thành cong lồi hoặc lõm — chẳng hạn chuyển sRGB sang linear bằng `pow(x, 2.2)` như bài màu ở Track 0 đã nhắc.
 
-## Vì sao mọi hàm trên chạy "component-wise" trên vector
+## Vì sao hầu hết hàm trên chạy "component-wise" trên vector
 
 Gần như toàn bộ hàm ở trên nhận `vec2`/`vec3`/`vec4` y hệt nhận `float` — GLSL áp dụng phép toán độc lập lên **từng thành phần**, không có ý nghĩa "vector" đặc biệt nào chen vào giữa. `clamp(vec3(-0.2, 0.5, 1.4), 0.0, 1.0)` cho ra `vec3(0.0, 0.5, 1.0)` — mỗi kênh bị kẹp riêng, đúng như gọi `clamp` ba lần cho ba số thực rồi ghép lại. Điều này biến một khối `if` xử lý từng kênh màu R/G/B tách biệt thành đúng một lời gọi hàm duy nhất — không chỉ là tiện lợi cú pháp, mà chính là lý do các hàm này thay được `if/else` một cách tự nhiên khi làm việc với màu hay toạ độ.
 
@@ -45,14 +45,14 @@ Ba pattern nền tảng của track này chỉ là tổ hợp trực tiếp nh�
 ```glsl
 float stripes = step(0.5, fract(x * n));                                    // sọc cứng
 float pulse   = smoothstep(e0, e1, x) - smoothstep(e2, e3, x);              // xung mượt
-float rings   = smoothstep(0.0, w, abs(fract(distance(uv, c) * n) - 0.5));  // vòng đồng tâm
+float rings   = 1.0 - smoothstep(0.0, w, abs(fract(distance(uv, c) * n) - 0.5));  // vòng đồng tâm (1 trên vạch)
 ```
 
 Không phải trùng hợp mà ba dòng trên đều "sạch" `if` — đó là _phong cách_ viết shader: mọi ngưỡng, mọi chuyển tiếp, mọi lựa chọn giữa hai giá trị đều diễn đạt được bằng `step`/`smoothstep`/`mix` thay vì rẽ nhánh mệnh lệnh.
 
 ## Style: if/else hay step/mix?
 
-Về mặt toán học, `if (x > 0.5) { color = a; } else { color = b; }` và `color = mix(b, a, step(0.5, x));` cho ra đúng một kết quả — không sai lệch một bit nào. Vậy tại sao track này ưu tiên vế sau như một thói quen mặc định? Câu trả lời không chỉ là "gọn hơn" hay "trông chuyên nghiệp hơn". Nó liên quan trực tiếp đến cách một GPU thực thi hàng nghìn pixel song song trong cùng một nhóm phần cứng, và một `if` phân nhánh khác nhau giữa các pixel lân cận có thể đắt hơn hẳn vẻ ngoài vô hại của nó trên CPU. Bài tiếp theo — Cái giá của branching trên GPU — mổ xẻ chính xác cơ chế đó bằng khái niệm warp/wavefront, và chỉ rõ khi nào `if` thật sự miễn phí, khi nào nó âm thầm nhân đôi công việc.
+Về mặt toán học, `if (x > 0.5) { color = a; } else { color = b; }` và `color = mix(b, a, step(0.5, x));` cho ra cùng kết quả ở mọi điểm trừ đúng biên $x = 0.5$ (`>` chọn b, còn `step(0.5, 0.5)` trả 1.0 nên mix chọn a). Vậy tại sao track này ưu tiên vế sau như một thói quen mặc định? Câu trả lời không chỉ là "gọn hơn" hay "trông chuyên nghiệp hơn". Nó liên quan trực tiếp đến cách một GPU thực thi hàng nghìn pixel song song trong cùng một nhóm phần cứng, và một `if` phân nhánh khác nhau giữa các pixel lân cận có thể đắt hơn hẳn vẻ ngoài vô hại của nó trên CPU. Bài tiếp theo — Cái giá của branching trên GPU — mổ xẻ chính xác cơ chế đó bằng khái niệm warp/wavefront, và chỉ rõ khi nào `if` thật sự miễn phí, khi nào nó âm thầm nhân đôi công việc.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

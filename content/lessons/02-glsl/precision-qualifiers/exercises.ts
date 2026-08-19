@@ -5,10 +5,10 @@ export const exercises: Exercise[] = [
     id: "explain-relative-precision-jitter",
     kind: "concept",
     prompt: {
-      vi: `Đặc tả GLSL ES 3.00 đảm bảo \`mediump float\` có độ chính xác TƯƠNG ĐỐI tối thiểu $2^{-10}$ (khoảng 10-bit mantissa) và \`highp float\` có độ chính xác tương đối tối thiểu $2^{-16}$ — đây là các con số SÀN theo đặc tả, phần cứng thật thường tốt hơn.
+      vi: `Đặc tả GLSL ES 3.00 đảm bảo \`mediump float\` có độ chính xác TƯƠNG ĐỐI tối thiểu $2^{-10}$ (khoảng 10-bit mantissa) còn \`highp float\` phải là IEEE-754 binary32 (độ chính xác tương đối $2^{-24}$) — con số mediump là SÀN theo đặc tả, phần cứng thật thường tốt hơn.
 
 Một shader tính \`sin(uTime * 10000.0)\` bằng \`mediump float\`, với \`uTime\` là số giây trôi qua từ lúc trang tải, tăng dần không giới hạn. Giải thích: vì sao biểu thức này ngày càng dễ giật (jitter) khi \`uTime\` lớn dần theo thời gian chạy, dù bản thân \`sin()\` luôn trả về giá trị gọn trong $[-1, 1]$ — độ chính xác tương đối ở đây áp dụng lên ĐẠI LƯỢNG NÀO, không phải lên kết quả \`sin\` cuối cùng?`,
-      en: `The GLSL ES 3.00 spec guarantees \`mediump float\` has a RELATIVE precision of at least $2^{-10}$ (roughly a 10-bit mantissa) and \`highp float\` has a relative precision of at least $2^{-16}$ — these are the spec's FLOOR numbers, real hardware is usually better.
+      en: `The GLSL ES 3.00 spec guarantees \`mediump float\` has a RELATIVE precision of at least $2^{-10}$ (roughly a 10-bit mantissa) while \`highp float\` must be IEEE-754 binary32 (relative precision $2^{-24}$) — the mediump number is the spec's FLOOR; real hardware is usually better.
 
 A shader computes \`sin(uTime * 10000.0)\` using \`mediump float\`, where \`uTime\` is seconds elapsed since page load, growing without bound. Explain: why does this expression get progressively more prone to jitter as \`uTime\` grows, even though \`sin()\` itself always returns a value neatly inside $[-1, 1]$ — which QUANTITY does the relative precision actually apply to here, not the final \`sin\` result?`,
     },
@@ -43,14 +43,14 @@ A shader computes \`sin(uTime * 10000.0)\` using \`mediump float\`, where \`uTim
 
 $uTime = 10s \\to M \\sim 100{,}000 \\to$ bước nhảy $\\sim 100{,}000 \\times 2^{-10} \\sim 97.7$. $uTime = 10000s \\to M \\sim 100{,}000{,}000 \\to$ bước nhảy $\\sim 10^8 \\times 2^{-10} \\sim 97{,}656$.
 
-Bước nhảy càng lớn nghĩa là pha đưa vào \`sin()\` nhảy qua càng nhiều giá trị liên tiếp bị "gộp" lại thành một — animation mượt lúc đầu, giật dần theo thời gian chạy, đúng như triệu chứng jitter mô tả trong lý thuyết.`,
+Bước nhảy càng lớn nghĩa là pha đưa vào \`sin()\` nhảy qua càng nhiều giá trị liên tiếp bị "gộp" lại thành một — với tần số 10000, bước nhảy vượt cả một chu kỳ sin chỉ sau vài giây — animation vỡ gần như ngay, và càng chạy lâu càng tệ; đúng cơ chế jitter mô tả trong lý thuyết.`,
       en: `\`mediump\` has RELATIVE precision of $2^{-10}$: the absolute error near a value of magnitude $M$ is roughly $M \\times 2^{-10}$, NOT a fixed constant.
 
 \`sin(uTime * 10000.0)\` always returns a tidy $[-1, 1]$, but relative precision doesn't apply to that result — it applies to the intermediate expression \`uTime * 10000.0\` itself, BEFORE it reaches \`sin()\`.
 
 $uTime = 10s \\to M \\sim 100{,}000 \\to$ step size $\\sim 100{,}000 \\times 2^{-10} \\sim 97.7$. $uTime = 10000s \\to M \\sim 100{,}000{,}000 \\to$ step size $\\sim 10^8 \\times 2^{-10} \\sim 97{,}656$.
 
-A larger step means the phase fed into \`sin()\` jumps across more and more consecutive values getting "collapsed" into one — smooth animation at first, progressively more jittery over runtime, exactly matching the jitter symptom described in the theory.`,
+A larger step means the phase fed into \`sin()\` jumps across more and more consecutive values getting "collapsed" into one — at frequency 10000 the step exceeds a whole sine period within seconds — the animation breaks almost immediately and only worsens with runtime; exactly the jitter mechanism described in the theory.`,
     },
   },
   {

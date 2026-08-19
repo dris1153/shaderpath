@@ -24,7 +24,7 @@ Cả hai chỉ khác nhau ở cách đo `t`: linear đo theo một trục, radia
 
 Phép nhân-rồi-fract này chia không gian thành hai "không gian" tách biệt:
 
-- **Global space**: chính `uv`, trải dài liên tục trên toàn canvas, `[0, 1)`.
+- **Global space**: chính `uv`, trải dài liên tục trên toàn canvas, `[0, 1]`.
 - **Cell space** (hay local space): `fract(uv * N)`, luôn nằm trong `[0, 1)` bất kể đang ở ô nào — toạ độ "reset" mỗi khi bước sang ô mới.
 
 Phần nguyên bị `fract` bỏ đi không hề mất — `floor(uv * N)` giữ lại đúng phần đó, cho ra **cell id**: một cặp số nguyên xác định đang đứng ở ô nào. Ghép cả hai, mọi vị trí toàn cục tách gọn thành "ô nào" + "ở đâu trong ô đó":
@@ -39,7 +39,7 @@ vec2 local = fract(grid); // ở đâu trong ô, luôn 0..1
 
 Có `id` rồi, việc tiếp theo là dùng nó để mỗi ô trông khác nhau thay vì lặp y hệt nhau. Caro (checkerboard) là ví dụ kinh điển: `mod(id.x + id.y, 2.0)` cho ra $0$ hoặc $1$ xen kẽ theo đúng quy luật bàn cờ, vì tổng hai số nguyên đổi tính chẵn/lẻ mỗi khi một trong hai toạ độ tăng thêm 1.
 
-Demo của bài (chọn hoạ tiết "Caro") dùng đúng biểu thức đó để chọn giữa hai màu nền cho từng ô. Lệch hàng kiểu gạch xây (brick offset) là một biến hoá khác — không đổi màu, mà đổi **vị trí biên ô**: dịch `uv.x` thêm nửa độ rộng một ô ở các hàng lẻ, thực hiện *trước* khi nhân với `N`:
+Demo của bài (chọn hoạ tiết "Caro") dùng đúng biểu thức đó để chọn giữa hai màu hoạ tiết (foreground) cho từng ô. Lệch hàng kiểu gạch xây (brick offset) là một biến hoá khác — không đổi màu, mà đổi **vị trí biên ô**: dịch `uv.x` thêm nửa độ rộng một ô ở các hàng lẻ, thực hiện *trước* khi nhân với `N`:
 
 ```glsl
 float rowId = floor(uv.y * N);
@@ -62,7 +62,7 @@ mat2 rotate2d(float angle) {
 vec2 cell = rotate2d(uRotation) * (fract(grid) - 0.5);
 ```
 
-Đây chính xác là hàm `rotate2d` từ chương "2D Matrices" của The Book of Shaders. Một điểm tinh tế: ta đang xoay toạ độ **lấy mẫu** (điểm dùng để tính motif), không xoay trực tiếp hình vẽ ra — nên chiều xoay nhìn thấy trên màn hình ngược với dấu góc truyền vào. Bài kế tiếp (Ma trận biến đổi trong shader) mổ xẻ đúng hiện tượng "khung quy chiếu đảo ngược" này và cách compose nhiều phép biến đổi theo đúng thứ tự.
+Đây cùng ý tưởng với `rotate2d` ở chương "2D Matrices" của The Book of Shaders — lưu ý BoS xếp đối số theo thứ tự chuyển vị (tương đương $R(-	heta)$), nên chiều xoay quan sát được ở BoS ngược với bài này. Một điểm tinh tế: ta đang xoay toạ độ **lấy mẫu** (điểm dùng để tính motif), không xoay trực tiếp hình vẽ ra — nên chiều xoay nhìn thấy trên màn hình ngược với dấu góc truyền vào. Bài kế tiếp (Ma trận biến đổi trong shader) mổ xẻ đúng hiện tượng "khung quy chiếu đảo ngược" này và cách compose nhiều phép biến đổi theo đúng thứ tự.
 
 Thử ngay trong demo: hoạ tiết "Caro" ở góc xoay $0°$ lấp kín tuyệt đối từng ô (box SDF của nó vừa khít biên ô); tăng dần góc xoay, bốn góc ô bắt đầu hở ra thành tam giác nền tối — vì biên ô thật (định bởi `fract`) đứng yên, chỉ có "cây cọ" lấy mẫu bên trong xoay theo.
 
@@ -70,7 +70,7 @@ Thử ngay trong demo: hoạ tiết "Caro" ở góc xoay $0°$ lấp kín tuyệ
 
 `fract()` có một điểm gián đoạn cứng tại mọi biên số nguyên — giá trị nhảy thẳng từ gần-1 về 0 ngay lập tức khi bước sang ô kế tiếp. Nếu một motif không đối xứng quanh tâm ô của chính nó (ví dụ một hình tròn được tính SDF trực tiếp trên `fract(grid)` chưa trừ $0.5$, tức lệch hẳn về phía góc dưới-trái ô), khoảng cách từ nó đến bốn cạnh ô sẽ không đều nhau — cạnh gần bị motif tràn sang ô hàng xóm, cạnh xa để hở khoảng trống lớn. Đó chính là **seam**: một đường ráp nối lởm chởm, khoảng cách giữa các motif không đều ở hai phía một biên ô.
 
-`fract(grid) - 0.5` không loại bỏ điểm gián đoạn của `fract` — điểm đó vẫn tồn tại ở tầng dưới. Điều nó làm là đặt lại **gốc toạ độ $0$ đúng vào tâm hình học của mỗi ô**, khiến mọi motif dựng bằng `length()` hay `abs()` (vốn đối xứng quanh gốc) tự động cách đều cả bốn cạnh ô — không còn lệch về phía nào. Không có seam nào biến mất về mặt toán học; chỉ là motif giờ đối xứng hoàn hảo nên mắt người không còn thấy khoảng cách bất đối xứng đó nữa.
+`fract(grid) - 0.5` không loại bỏ điểm gián đoạn của `fract` — điểm đó vẫn tồn tại ở tầng dưới. Điều nó làm là đặt lại **gốc toạ độ $0$ đúng vào tâm hình học của mỗi ô**, khiến mọi motif dựng bằng `length()` hay `abs()` (vốn đối xứng quanh gốc) tự động cách đều cả bốn cạnh ô — không còn lệch về phía nào. Điểm gián đoạn toạ độ vẫn còn đó, nhưng với motif đối xứng chẵn (dựng từ `length`/`abs`), trường giá trị vẽ ra liên tục thật sự qua biên ô — seam biến mất trong kết quả render, không chỉ trong mắt.
 
 ## Từ một ô đơn lẻ đến poster hoàn chỉnh
 
@@ -82,6 +82,6 @@ Ba lỗi hay gặp nhất khi mới dựng pattern bằng fract/floor:
 
 1. **Tính caro trên toạ độ liên tục thay vì trên id đã floor.** Viết `mod(uv.x * N + uv.y * N, 2.0)` thay vì `mod(floor(uv.x*N) + floor(uv.y*N), 2.0)` cho ra dải màu chuyển tiếp mượt dọc theo hai trục thay vì các ô caro sắc cạnh — vì `mod` trên số thực liên tục không hề tạo bước nhảy đúng tại biên ô, chỉ `floor` mới rời rạc hoá được vị trí thành chỉ số ô nguyên.
 2. **Xoay trước khi căn giữa.** Viết `rotate2d(angle) * fract(grid)` (thiếu `- 0.5`) khiến phép xoay quay quanh góc $(0,0)$ của ô thay vì tâm — motif văng lệch hẳn sang một phía, thậm chí chồm sang ô bên cạnh khi góc xoay đủ lớn.
-3. **Áp dụng offset lệch hàng sau khi đã nhân N.** Cộng độ lệch vào biến `grid` (đã nhân N) thay vì vào `uv` gốc (trước khi nhân) làm độ dịch sai hẳn đơn vị — dịch nguyên cả vài ô thay vì đúng nửa ô, và độ lệch không còn nhất quán mỗi khi đổi slider số ô N, vì quên chia lại `0.5` cho `N` ở đúng không gian toạ độ.
+3. **Áp dụng offset lệch hàng sau khi đã nhân N.** Cộng độ lệch vào biến `grid` (đã nhân N) thay vì vào `uv` gốc (trước khi nhân) làm độ dịch sai hẳn đơn vị: giữ nguyên hằng `0.5/N` khi cộng ở không gian grid co độ lệch xuống còn $(0.5/N)$ của một ô — gần như vô hình, và càng tệ khi N tăng. Ở không gian grid, độ dịch nửa ô đúng là `0.5` chẵn.
 
 </Callout>

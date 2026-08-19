@@ -12,7 +12,7 @@ Một signed distance field (SDF) 2D là một hàm $d(p)$ nhận toạ độ đ
 - $d(p) = 0$: $p$ nằm đúng trên **biên** — đây là đường viền thật của hình.
 - $d(p) > 0$: $p$ nằm **ngoài** hình, $d(p)$ là khoảng cách dương đến điểm biên gần nhất.
 
-So với một phép kiểm tra nhị phân kiểu "điểm này có nằm trong hình không?" (trả về `true`/`false`), SDF giữ lại nhiều thông tin hơn hẳn: không chỉ biết trong hay ngoài, mà biết **còn cách biên bao xa**. Chính phần thông tin "còn cách bao xa" đó là nguyên liệu cho mọi kỹ thuật ở phần sau bài — antialiasing, viền, glow — none trong số đó khả thi nếu chỉ có một bit `true`/`false`.
+So với một phép kiểm tra nhị phân kiểu "điểm này có nằm trong hình không?" (trả về `true`/`false`), SDF giữ lại nhiều thông tin hơn hẳn: không chỉ biết trong hay ngoài, mà biết **còn cách biên bao xa**. Chính phần thông tin "còn cách bao xa" đó là nguyên liệu cho mọi kỹ thuật ở phần sau bài — antialiasing, viền, glow — không kỹ thuật nào trong số đó khả thi nếu chỉ có một bit `true`/`false`.
 
 ## Dựng SDF hình tròn: length(p) - r
 
@@ -45,7 +45,7 @@ $$
 
 Với $d < e_0$ kết quả là $0$, với $d > e_1$ kết quả là $1$, và ở giữa là một đường cong S mượt (đạo hàm bằng 0 ở hai đầu) thay vì bước nhảy đột ngột. Trong demo, `uEdge0 = -0.02` và `uEdge1 = 0.02` tạo một dải rộng khoảng $0.04$ đơn vị UV quanh biên hình tròn — kéo hai slider này ra xa nhau để thấy viền nhoè hẳn, kéo sát lại gần 0 để thấy răng cưa quay trở lại gần như bước nhảy nhị phân.
 
-Hằng số cố định như `±0.02` chỉ đúng ở một độ phóng cụ thể — phóng to camera hoặc đổi độ phân giải canvas, dải đó hoặc nhoè quá mức hoặc mỏng đến mức lại răng cưa. Cách chuẩn production là dùng `fwidth(d)`, hàm dựng sẵn tính đạo hàm màn hình (screen-space derivative — độ đổi giá trị của $d$ giữa các pixel lân cận), rồi lấy chính nó làm bề rộng dải: `smoothstep(-fwidth(d), fwidth(d), d)`. Cách này tự động giữ viền rộng đúng khoảng 1 pixel bất kể zoom hay resolution, vì `fwidth` luôn phản ánh đúng tỉ lệ pixel/đơn vị tại thời điểm vẽ. `fwidth` (cùng `dFdx`/`dFdy`) là built-in lõi trong GLSL ES 3.00 (WebGL2) — bài dùng hằng số cố định để đơn giản hoá cho mục đích học, nhưng đáng biết ranh giới đó tồn tại.
+Hằng số cố định như `±0.02` chỉ đúng ở một độ phóng cụ thể — phóng to camera hoặc đổi độ phân giải canvas, dải đó hoặc nhoè quá mức hoặc mỏng đến mức lại răng cưa. Cách chuẩn production là dùng `fwidth(d)`, hàm dựng sẵn tính đạo hàm màn hình (screen-space derivative — độ đổi giá trị của $d$ giữa các pixel lân cận), rồi lấy chính nó làm bề rộng dải: `smoothstep(-fwidth(d), fwidth(d), d)`. Cách này tự động giữ viền rộng khoảng 1–2 pixel bất kể zoom hay resolution, vì `fwidth` luôn phản ánh đúng tỉ lệ pixel/đơn vị tại thời điểm vẽ. `fwidth` (cùng `dFdx`/`dFdy`) là built-in lõi trong GLSL ES 3.00 (WebGL2) — bài dùng hằng số cố định để đơn giản hoá cho mục đích học, nhưng đáng biết ranh giới đó tồn tại.
 
 ## Kết hợp: viền qua abs(d), glow qua suy giảm mũ
 
@@ -54,18 +54,33 @@ Một khi đã có $d$, hai hiệu ứng phổ biến chỉ là hai phép biến
 **Viền (outline):** `abs(d)` "gấp" trục số quanh 0 — cả điểm hơi trong lẫn hơi ngoài biên đều cho ra một giá trị nhỏ dương. Ngưỡng giá trị đã gấp đó bằng một `smoothstep` thứ hai, với nửa-độ-rộng đường viền mong muốn `w`:
 
 ```glsl
-float ring = smoothstep(w, 0.0, abs(d));
+float ring = 1.0 - smoothstep(0.0, w, abs(d));
 ```
 
 `ring` gần 1 ở sát biên (cả hai phía) và tắt dần về 0 khi ra xa biên theo cả hai hướng — một đường viền độ rộng đều `2w`, "miễn phí" mà không cần dựng thêm hình offset nào.
 
-**Glow:** thay vì ngưỡng nhị phân, cho $d$ (chỉ phần ngoài hình, `max(d, 0.0)`) chạy qua một hàm suy giảm mũ:
+**Glow:** thay vì ngưỡng nhị phân, cho $d$ chạy qua một hàm suy giảm mũ — `max(d, 0.0)` chỉ chặn exp khỏi bùng nổ bên trong (nơi $d$ âm, exp của $-kd$ dương sẽ khổng lồ); muốn phần fill không bị nhuộm glow, nhân thêm mặt nạ ngoài-hình:
 
 ```glsl
-color += glowColor * exp(-k * max(d, 0.0));
+color += glowColor * exp(-k * max(d, 0.0)) * outsideMask; // outsideMask ~0 trong hình, 1 ngoài
 ```
 
 Điểm càng ở xa biên, số mũ càng âm sâu, `exp` càng nhỏ — cho quầng sáng mờ dần tự nhiên mà không cần texture hay blur pass riêng, chỉ một dòng toán trên $d$ đã có sẵn. Demo minh hoạ một biến thể khác của cùng nguyên tắc: dải `abs(fract(d * 20.0) - 0.5)` vẽ các đường đồng mức (iso-contour) mờ lặp lại mỗi $0.05$ đơn vị $d$ — về bản chất là "bản đồ địa hình" của chính distance field, đọc trực tiếp bằng mắt.
+
+## Hộp, hộp bo góc, và ghép hình bằng min/max
+
+Hình tròn không phải SDF duy nhất đáng thuộc. Hình hộp (box) tâm gốc, nửa kích thước `b`:
+
+```glsl
+float sdBox(vec2 p, vec2 b) {
+  vec2 q = abs(p) - b;
+  return length(max(q, vec2(0.0))) + min(max(q.x, q.y), 0.0);
+}
+```
+
+`abs(p) - b` đo phần "thò ra" theo từng trục; vế `length(max(q, 0))` cho khoảng cách Euclid thật ở ngoài (kể cả góc), vế `min(max(q.x, q.y), 0)` cho giá trị âm đúng ở trong. Muốn **bo góc** bán kính `r`, chỉ cần `sdBox(p, b) - r` — trừ một hằng số làm biên "phồng" đều ra mọi phía.
+
+Hai SDF ghép được bằng đúng hai hàm vừa học: `min(d1, d2)` là **hợp** (union — điểm thuộc hình nếu gần một trong hai), `max(d1, d2)` là **giao** (intersection — phải nằm trong cả hai). Thử với một điểm nằm trong hình 1 nhưng ngoài hình 2: $d_1 < 0 < d_2$, nên `min` âm (thuộc hợp) còn `max` dương (ngoài giao) — đúng như trực giác.
 
 ## Vì sao "khoảng cách trước, màu sau" thắng tính màu trực tiếp
 
@@ -79,6 +94,6 @@ Ba lỗi hay gặp nhất khi mới làm việc với SDF và smoothstep:
 
 1. **Dùng ngưỡng nhị phân (`d < 0.0 ? a : b`) thay vì smoothstep.** Ngưỡng cứng không có dải chuyển tiếp — mỗi pixel commit hẳn về một màu, không có khái niệm "phủ một phần" — nên biên hiện răng cưa rõ rệt, nhất là ở các góc nghiêng gần chéo 45°.
 2. **Hardcode `edge0`/`edge1` bằng hằng số cố định (như `±0.02` trong demo) rồi mang sang cảnh khác.** Hằng số đó chỉ đúng ở đúng một độ phóng/độ phân giải nó được tinh chỉnh — zoom hoặc đổi kích thước canvas làm viền hoặc nhoè quá mức hoặc mỏng tới mức răng cưa quay lại; sản phẩm thật cần `fwidth(d)` để bề rộng dải tự scale theo pixel thực tế.
-3. **Tính viền bằng `abs(d)` nhưng quên ngưỡng nó lại bằng smoothstep thứ hai.** Chỉ gấp trục số (`abs(d)`) không tự vẽ ra đường viền nào — nó vẫn là một dải giá trị liên tục; quên bước threshold thứ hai (`smoothstep(w, 0.0, abs(d))`) thường khiến toàn bộ hình bị tô đầy màu viền, hoặc ngược lại không có viền nào hiện ra vì so sánh sai chiều.
+3. **Tính viền bằng `abs(d)` nhưng quên ngưỡng nó lại bằng smoothstep thứ hai.** Chỉ gấp trục số (`abs(d)`) không tự vẽ ra đường viền nào — nó vẫn là một dải giá trị liên tục; quên bước threshold thứ hai (`1.0 - smoothstep(0.0, w, abs(d))`) thường khiến toàn bộ hình bị tô đầy màu viền, hoặc ngược lại không có viền nào hiện ra vì so sánh sai chiều.
 
 </Callout>
