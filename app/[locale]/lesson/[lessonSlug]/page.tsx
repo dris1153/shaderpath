@@ -9,8 +9,9 @@ import {
 import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
 import type { Locale } from "@/content/types";
 import { getLesson } from "@/lib/curriculum";
+import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
@@ -85,14 +86,15 @@ export default async function LessonPage({
       <article className="min-w-0">
         {/* Mobile toolbar: sidebar + TOC in Sheets (spec §7 responsive) */}
         <div className="mb-4 flex items-center gap-2 lg:hidden">
+          {/* buttonVariants instead of render={<Button/>}: Button is a shared
+              component, so RSC flattens it inside this client prop and its
+              data-slot diverges between SSR and hydration. */}
           <Sheet>
             <SheetTrigger
-              render={
-                <Button variant="outline" size="sm">
-                  <IconMenu2 /> {t("openNav")}
-                </Button>
-              }
-            />
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              <IconMenu2 /> {t("openNav")}
+            </SheetTrigger>
             <SheetContent side="left" className="p-4">
               <SheetTitle className="sr-only">{t("openNav")}</SheetTitle>
               {sidebar}
@@ -101,12 +103,13 @@ export default async function LessonPage({
           {toc.length > 0 && (
             <Sheet>
               <SheetTrigger
-                render={
-                  <Button variant="outline" size="sm" className="xl:hidden">
-                    <IconList /> {t("openToc")}
-                  </Button>
-                }
-              />
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "sm" }),
+                  "xl:hidden"
+                )}
+              >
+                <IconList /> {t("openToc")}
+              </SheetTrigger>
               <SheetContent side="right" className="p-4">
                 <SheetTitle className="sr-only">{t("openToc")}</SheetTitle>
                 <LessonToc toc={toc} />
