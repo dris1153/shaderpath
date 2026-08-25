@@ -205,6 +205,15 @@ canvas.addEventListener("pointermove", (event) => {
   hovered = next;
 });
 
+canvas.addEventListener("pointerleave", () => {
+  // Without this, the last hovered product keeps glowing after the pointer
+  // leaves the canvas.
+  if (hovered && hovered !== selected) {
+    (hovered.material as THREE.MeshStandardMaterial).emissive.setHex(0x000000);
+  }
+  hovered = null;
+});
+
 canvas.addEventListener("pointerdown", (event) => {
   setPointer(event);
   const hit = pickItem();

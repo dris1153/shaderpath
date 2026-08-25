@@ -7,12 +7,12 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng một **cảnh tĩnh vật Three.js thuần** (không React) từ các geometry built-in, phối nhiều loại material, có ánh sáng và camera trôi nhẹ — tổng hợp toàn bộ bài \`materials-from-basic-to-physical\` thành một bố cục thật.
 
-Yêu cầu: ít nhất 4 geometry built-in khác nhau (\`BoxGeometry\`, \`SphereGeometry\`, \`ConeGeometry\`, \`TorusGeometry\`...), mỗi geometry có \`position\`/\`scale\`/\`rotation\` riêng, không xếp chồng gốc toạ độ; ít nhất 3 loại material khác nhau, trong đó ít nhất một \`MeshStandardMaterial\` có \`metalness\`/\`roughness\` được canh chỉnh có chủ đích (không để mặc định); đúng một \`AmbientLight\` và một \`DirectionalLight\`; camera trôi nhẹ liên tục quanh cảnh bằng \`requestAnimationFrame\`; một hàm \`dispose()\` giải phóng toàn bộ geometry/material/renderer khi gọi.
+Yêu cầu: ít nhất 4 geometry built-in khác nhau (\`BoxGeometry\`, \`SphereGeometry\`, \`ConeGeometry\`, \`TorusGeometry\`...), mỗi geometry có \`position\`/\`scale\`/\`rotation\` riêng, không xếp chồng gốc toạ độ; ít nhất 3 loại material khác nhau, trong đó ít nhất một \`MeshStandardMaterial\` có \`metalness\`/\`roughness\` được canh chỉnh có chủ đích (không để mặc định); đúng một \`AmbientLight\` và một \`DirectionalLight\` (hai loại light này học kỹ ở bài Lights & Shadow Maps ngay sau checkpoint — công thức đủ dùng: \`scene.add(new THREE.AmbientLight(0xffffff, 0.4))\` lấp vùng tối, \`const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(4, 6, 3); scene.add(sun)\` chiếu tia song song từ hướng đó); camera trôi nhẹ liên tục quanh cảnh bằng \`requestAnimationFrame\`; một hàm \`dispose()\` giải phóng toàn bộ geometry/material/renderer khi gọi.
 
 Gợi ý cấu trúc: giữ hai mảng \`geometries[]\` và \`materials[]\`, push ngay lúc tạo mesh — \`dispose()\` chỉ là vòng lặp qua hai mảng đó.`,
       en: `Build a **vanilla Three.js still-life scene** (no React) from built-in geometries, combining several material types, with lighting and a gently drifting camera — a synthesis of everything in \`materials-from-basic-to-physical\` into one real composition.
 
-Requirements: at least 4 different built-in geometries (\`BoxGeometry\`, \`SphereGeometry\`, \`ConeGeometry\`, \`TorusGeometry\`...), each with its own \`position\`/\`scale\`/\`rotation\`, nothing stacked at the origin; at least 3 different material types, with at least one \`MeshStandardMaterial\` whose \`metalness\`/\`roughness\` are deliberately tuned (not left at defaults); exactly one \`AmbientLight\` and one \`DirectionalLight\`; the camera drifts gently and continuously via \`requestAnimationFrame\`; a \`dispose()\` function that frees every geometry/material/renderer when called.
+Requirements: at least 4 different built-in geometries (\`BoxGeometry\`, \`SphereGeometry\`, \`ConeGeometry\`, \`TorusGeometry\`...), each with its own \`position\`/\`scale\`/\`rotation\`, nothing stacked at the origin; at least 3 different material types, with at least one \`MeshStandardMaterial\` whose \`metalness\`/\`roughness\` are deliberately tuned (not left at defaults); exactly one \`AmbientLight\` and one \`DirectionalLight\` (both are taught properly in the Lights & Shadow Maps lesson right after this checkpoint — the working recipe: \`scene.add(new THREE.AmbientLight(0xffffff, 0.4))\` fills the dark side, \`const sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(4, 6, 3); scene.add(sun)\` casts parallel rays from that direction); the camera drifts gently and continuously via \`requestAnimationFrame\`; a \`dispose()\` function that frees every geometry/material/renderer when called.
 
 Suggested structure: keep two arrays, \`geometries[]\` and \`materials[]\`, pushing into them right when each mesh is created — \`dispose()\` then becomes a loop over those two arrays.`,
     },
@@ -93,6 +93,8 @@ scene.add(ground);
 const sphereGeo = new THREE.SphereGeometry(0.9, 48, 48);
 const sphereMat = new THREE.MeshStandardMaterial({
   color: 0xd8dde6,
+  // metalness 1 with no environment map renders near-black with one highlight —
+  // real metal needs reflections (Track 11); 1.0 is deliberate here.
   metalness: 1,
   roughness: 0.15,
 });
@@ -150,8 +152,8 @@ window.addEventListener("beforeunload", dispose, { once: true });`,
     referenceImage: "/figures/03-threejs/checkpoint-primitive-still-life.png",
     hints: [
       {
-        vi: "Đặt object theo bố cục thật: dùng position.set khác nhau cho từng mesh, và cho 1-2 object scale không đồng nhất — đừng để tất cả nằm ở gốc toạ độ như lúc mới tạo.",
-        en: "Compose with intent: give each mesh a different position.set, and a non-uniform scale on 1-2 objects — don't leave everything sitting at the origin the way it spawns.",
+        vi: "Đặt object theo bố cục thật: dùng position.set khác nhau cho từng mesh, và chỉnh scale/rotation có chủ đích ở vài object — đừng để tất cả nằm ở gốc toạ độ như lúc mới tạo.",
+        en: "Compose with intent: give each mesh a different position.set, and deliberate scale/rotation on a few objects — don't leave everything sitting at the origin the way it spawns.",
       },
       {
         vi: "Với MeshStandardMaterial, chọn cặp metalness/roughness có ý nghĩa thay vì để mặc định (metalness=0, roughness=1) — ví dụ 1/0.15 cho kim loại bóng, 0/0.9 cho vật liệu mờ.",
@@ -164,8 +166,8 @@ window.addEventListener("beforeunload", dispose, { once: true });`,
     ],
     checklist: [
       {
-        vi: "Có ít nhất 4 geometry built-in khác nhau, mỗi cái vị trí/scale/rotation riêng biệt, không chồng nhau",
-        en: "At least 4 different built-in geometries, each with its own position/scale/rotation, not overlapping",
+        vi: "Có ít nhất 4 geometry built-in khác nhau, mỗi cái vị trí riêng biệt và scale/rotation có chủ đích nơi hợp lý, không chồng nhau",
+        en: "At least 4 different built-in geometries, each with its own position and deliberate scale/rotation where it matters, not overlapping",
       },
       {
         vi: "Có ít nhất 3 loại material khác nhau xuất hiện trong scene",

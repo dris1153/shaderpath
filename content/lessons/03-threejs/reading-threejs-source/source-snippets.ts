@@ -17,7 +17,7 @@ export const SOURCE_SNIPPETS: SourceSnippet[] = [
     file: "src/core/Object3D.js#L874-L908",
     url: "https://github.com/mrdoob/three.js/blob/r185/src/core/Object3D.js#L874-L908",
     code: `attach( object ) {
-  // adds object as a child of this, while keeping its world transform
+  // adds object as a child of this, while maintaining the object's world transform
   this.updateWorldMatrix( true, false );
   _m1.copy( this.matrixWorld ).invert();
 
@@ -26,10 +26,11 @@ export const SOURCE_SNIPPETS: SourceSnippet[] = [
     _m1.multiply( object.parent.matrixWorld );
   }
 
-  object.applyMatrix4( _m1 ); // rewrites position/quaternion/scale
+  object.applyMatrix4( _m1 ); // <- editorial note: rewrites position/quaternion/scale
   object.removeFromParent();
   object.parent = this;
   this.children.push( object );
+  // ... (dispatches added/childadded events)
 
   object.updateWorldMatrix( false, true );
   return this;
@@ -48,7 +49,7 @@ _frustum.setFromProjectionMatrix( _projScreenMatrix, ... );
 
 // later, once per Mesh while walking the scene graph:
 if ( ! object.frustumCulled || _frustum.intersectsObject( object ) ) {
-  // only reachable here does the object enter the render list
+  // only here does the object enter the render list
   currentRenderList.push( object, geometry, material, groupOrder, ... );
 }`,
   },
@@ -77,7 +78,7 @@ function reversePainterSortStable( a, b ) {
     label: { vi: "WebGLState: cache gl.enable/disable", en: "WebGLState: caching gl.enable/disable" },
     file: "src/renderers/webgl/WebGLState.js#L461-481",
     url: "https://github.com/mrdoob/three.js/blob/r185/src/renderers/webgl/WebGLState.js#L461-L481",
-    code: `let enabledCapabilities = {};
+    code: `let enabledCapabilities = {}; // declared earlier in the module (L355)
 
 function enable( id ) {
   if ( enabledCapabilities[ id ] !== true ) {

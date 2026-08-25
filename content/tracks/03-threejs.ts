@@ -297,8 +297,8 @@ export const lessons: LessonMeta[] = [
     order: 8,
     title: { vi: "Mini-build: GLTF Viewer", en: "Mini-build: GLTF Viewer" },
     summary: {
-      vi: "Một trình xem model GLTF hoàn chỉnh: environment lighting, shadow map, texture nén — tổng hợp toàn bộ module ánh sáng/texture/asset thành một công cụ dùng lại được.",
-      en: "A complete GLTF viewer: environment lighting, shadow maps, compressed textures — a synthesis of the lighting/texture/asset module into a reusable tool.",
+      vi: "Một trình xem model GLTF hoàn chỉnh: GLTFLoader.parse, tự động khung hình bằng Box3, OrbitControls, shadow map và dispose sạch — tổng hợp module ánh sáng/texture/asset thành một công cụ dùng lại được.",
+      en: "A complete GLTF viewer: GLTFLoader.parse, Box3 auto-framing, OrbitControls, shadow maps and clean disposal — a synthesis of the lighting/texture/asset module into a reusable tool.",
     },
     difficulty: 3,
     estimatedMinutes: 55,
@@ -467,14 +467,14 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["scene-graph-and-transforms"],
     objectives: {
       vi: [
-        "Truy vết render() từ lúc gọi đến lúc gl.drawElements/drawArrays thực sự chạy",
+        "Truy vết render() qua cập nhật matrix, frustum culling và bước sort render list",
         "Đọc updateMatrixWorld() và chỉ ra đúng thứ tự nhân matrix cha-con",
-        "Tìm được vị trí trong source nơi Three.js quản lý state WebGL (chương trình shader, texture unit) để tránh set trùng",
+        "Tìm được cache trạng thái trong WebGLState (enable/disable capability) giúp Three.js tránh lệnh GL trùng lặp",
       ],
       en: [
-        "Trace render() from the call site down to the actual gl.drawElements/drawArrays call",
+        "Trace render() through matrix updates, frustum culling and the render-list sort",
         "Read updateMatrixWorld() and identify the correct parent-child matrix multiplication order",
-        "Locate where in the source Three.js manages WebGL state (shader programs, texture units) to avoid redundant sets",
+        "Locate the capability cache in WebGLState that lets Three.js skip redundant GL calls",
       ],
     },
     hasDemo: true,
@@ -490,8 +490,8 @@ export const lessons: LessonMeta[] = [
       en: "Mini-build: Interactive Showroom",
     },
     summary: {
-      vi: "Một showroom 3D với model GLTF có animation, click để chọn object bằng raycasting, camera điều khiển bằng OrbitControls — bài tổng kết toàn bộ Track 3 trước khi chuyển sang R3F.",
-      en: "A 3D showroom with an animated GLTF model, click-to-select via raycasting, and an OrbitControls-driven camera — the capstone of Track 3 before moving on to R3F.",
+      vi: "Một showroom 3D dựng từ geometry built-in: click chọn sản phẩm bằng raycasting, camera điều khiển bằng OrbitControls, shadow rig hoàn chỉnh — bài tổng kết toàn bộ Track 3 trước khi chuyển sang R3F.",
+      en: "A 3D showroom built from built-in geometry: click-to-select via raycasting, an OrbitControls-driven camera and a full shadow rig — the capstone of Track 3 before moving on to R3F.",
     },
     difficulty: 3,
     estimatedMinutes: 60,
@@ -501,11 +501,11 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["reading-threejs-source"],
     objectives: {
       vi: [
-        "Kết hợp GLTF, AnimationMixer, raycasting và controls vào một scene tương tác hoàn chỉnh",
+        "Kết hợp raycasting, OrbitControls, shadow rig và animation theo delta vào một scene tương tác hoàn chỉnh",
         "Đóng track Three.js thuần với một sản phẩm sẽ được dựng lại bằng R3F ở track kế tiếp",
       ],
       en: [
-        "Combine GLTF, AnimationMixer, raycasting and controls into one complete interactive scene",
+        "Combine raycasting, OrbitControls, a shadow rig and delta-based animation into one complete interactive scene",
         "Close the vanilla Three.js track with a build that gets rebuilt in R3F in the next track",
       ],
     },

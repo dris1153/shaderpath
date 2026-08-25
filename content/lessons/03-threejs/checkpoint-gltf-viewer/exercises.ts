@@ -5,14 +5,14 @@ export const exercises: Exercise[] = [
     id: "build-gltf-viewer",
     kind: "build",
     prompt: {
-      vi: `Dựng một mini GLTF viewer hoàn chỉnh, dùng lại đúng file glTF nhúng và hàm \`disposeHierarchy\` từ bài \`loading-gltf-draco-meshopt\` — không thư viện nào ngoài \`three\` và \`three/addons\`.
+      vi: `Dựng một mini GLTF viewer hoàn chỉnh, dùng lại đúng file glTF nhúng (\`import { EMBEDDED_COLOR_CUBE_GLTF } from "./embedded-color-cube-gltf"\`, nạp qua \`loader.parse(JSON.stringify(EMBEDDED_COLOR_CUBE_GLTF), "", onLoad, onError)\` — không cần mạng) và hàm \`disposeHierarchy\` từ bài \`loading-gltf-draco-meshopt\` — không thư viện nào ngoài \`three\` và \`three/addons\`.
 
-Yêu cầu: parse glTF bằng \`GLTFLoader.parse()\`; tính bounding box bằng \`new THREE.Box3().setFromObject(model)\`, suy ra tâm (\`box.getCenter\`) và bán kính bao (\`box.getBoundingSphere\`) để tự động đặt camera sao cho model luôn vừa khung hình dù to hay nhỏ, không hardcode khoảng cách; gắn \`OrbitControls\` quay quanh đúng tâm đó; thêm \`DirectionalLight\` (\`castShadow = true\`) và \`AmbientLight\`, đổ bóng model lên một mặt phẳng ground (\`receiveShadow = true\`); toggle wireframe; dispose toàn bộ hierarchy, controls và renderer khi unmount.
+Yêu cầu: parse glTF bằng \`GLTFLoader.parse()\`; tính bounding box bằng \`new THREE.Box3().setFromObject(model)\`, suy ra tâm (\`box.getCenter\`) và bán kính bao (\`box.getBoundingSphere\`) để tự động đặt camera sao cho model luôn vừa khung hình dù to hay nhỏ, không hardcode khoảng cách; gắn \`OrbitControls\` quay quanh đúng tâm đó (addon này học kỹ ở bài Cameras & Controls phía sau — công thức cắm đủ dùng ngay: \`import { OrbitControls } from "three/addons/controls/OrbitControls.js"\`, \`new OrbitControls(camera, renderer.domElement)\`, bật \`enableDamping\` và gọi \`controls.update()\` mỗi frame); thêm \`DirectionalLight\` (\`castShadow = true\`) và \`AmbientLight\`, đổ bóng model lên một mặt phẳng ground (\`receiveShadow = true\`); toggle wireframe; dispose toàn bộ hierarchy, controls và renderer khi unmount.
 
 Công thức khoảng cách camera theo fov (đo theo chiều đứng): $d = \\dfrac{r}{\\sin(\\text{fov} / 2)}$, với $r$ là bán kính bounding sphere của model và fov tính theo radian.`,
-      en: `Build a complete mini GLTF viewer, reusing the exact same embedded glTF file and the \`disposeHierarchy\` function from the \`loading-gltf-draco-meshopt\` lesson — no libraries beyond \`three\` and \`three/addons\`.
+      en: `Build a complete mini GLTF viewer, reusing the exact same embedded glTF file (\`import { EMBEDDED_COLOR_CUBE_GLTF } from "./embedded-color-cube-gltf"\`, loaded via \`loader.parse(JSON.stringify(EMBEDDED_COLOR_CUBE_GLTF), "", onLoad, onError)\` — no network needed) and the \`disposeHierarchy\` function from the \`loading-gltf-draco-meshopt\` lesson — no libraries beyond \`three\` and \`three/addons\`.
 
-Requirements: parse the glTF with \`GLTFLoader.parse()\`; compute a bounding box with \`new THREE.Box3().setFromObject(model)\`, derive its center (\`box.getCenter\`) and bounding radius (\`box.getBoundingSphere\`) to automatically place the camera so the model is always framed regardless of size, with no hardcoded distance; attach \`OrbitControls\` orbiting around that exact center; add a \`DirectionalLight\` (\`castShadow = true\`) and an \`AmbientLight\`, casting the model's shadow onto a ground plane (\`receiveShadow = true\`); include a wireframe toggle; dispose the entire hierarchy, the controls and the renderer on unmount.
+Requirements: parse the glTF with \`GLTFLoader.parse()\`; compute a bounding box with \`new THREE.Box3().setFromObject(model)\`, derive its center (\`box.getCenter\`) and bounding radius (\`box.getBoundingSphere\`) to automatically place the camera so the model is always framed regardless of size, with no hardcoded distance; attach \`OrbitControls\` orbiting around that exact center (this addon is taught properly in the later Cameras & Controls lesson — the plug-in recipe is all you need here: \`import { OrbitControls } from "three/addons/controls/OrbitControls.js"\`, \`new OrbitControls(camera, renderer.domElement)\`, enable \`enableDamping\` and call \`controls.update()\` every frame); add a \`DirectionalLight\` (\`castShadow = true\`) and an \`AmbientLight\`, casting the model's shadow onto a ground plane (\`receiveShadow = true\`); include a wireframe toggle; dispose the entire hierarchy, the controls and the renderer on unmount.
 
 Camera-distance-from-fov formula (measured vertically): $d = \\dfrac{r}{\\sin(\\text{fov} / 2)}$, where $r$ is the model's bounding sphere radius and fov is in radians.`,
     },
@@ -46,7 +46,7 @@ loader.parse(JSON.stringify(EMBEDDED_COLOR_CUBE_GLTF), "", (gltf) => {
   // TODO 4: new THREE.Box3().setFromObject(model) -> center + bounding sphere
   //         radius -> position camera and controls.target using the fov
   //         distance formula so the model is framed regardless of its size
-}, undefined, (err) => console.error("GLTF load failed", err));
+}, (err) => console.error("GLTF load failed", err));
 
 function setWireframe(value: boolean) {
   // TODO 5: apply "value" to every material's wireframe property
@@ -86,7 +86,7 @@ scene.add(ground);
 
 scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
-dirLight.position.set(3, 5, 2);
+dirLight.position.set(-4, 6, 2); // across from the camera so the shadow lands in frame
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.set(1024, 1024);
 scene.add(dirLight);
@@ -122,7 +122,7 @@ loader.parse(
 
     camera.position
       .copy(center)
-      .add(new THREE.Vector3(distance * 0.6, distance * 0.5, distance * 0.6));
+      .add(new THREE.Vector3(0.6, 0.5, 0.6).normalize().multiplyScalar(distance));
     camera.near = Math.max(distance / 100, 0.01);
     camera.far = distance * 10;
     camera.updateProjectionMatrix();
@@ -130,7 +130,6 @@ loader.parse(
     controls.target.copy(center);
     controls.update();
   },
-  undefined,
   (err) => console.error("GLTF load failed", err),
 );
 
@@ -142,14 +141,16 @@ function setWireframe(value: boolean) {
   }
 }
 
+let rafId = 0;
 function animate() {
-  requestAnimationFrame(animate);
+  rafId = requestAnimationFrame(animate);
   controls.update();
   renderer.render(scene, camera);
 }
 animate();
 
 function dispose() {
+  cancelAnimationFrame(rafId);
   controls.dispose();
   scene.traverse((obj) => {
     if (!(obj instanceof THREE.Mesh)) return;
@@ -166,12 +167,13 @@ function dispose() {
     }
   });
   renderer.dispose();
-}`,
+}
+window.addEventListener("beforeunload", dispose);`,
     referenceImage: "/figures/03-threejs/checkpoint-gltf-viewer.png",
     hints: [
       {
-        vi: "Box3.setFromObject phải chạy SAU khi model đã add vào scene và bên trong callback onLoad — gọi trước khi glTF parse xong sẽ ra bounding box rỗng (kích thước 0).",
-        en: "Box3.setFromObject must run AFTER the model has been added to the scene, inside the onLoad callback — calling it before the glTF finishes parsing yields an empty (zero-size) bounding box.",
+        vi: "Box3.setFromObject phải chạy bên trong callback onLoad, sau khi parse xong — gọi sớm hơn sẽ ra bounding box rỗng (kích thước 0). Model có nằm trong scene hay chưa không quan trọng.",
+        en: "Box3.setFromObject must run inside the onLoad callback, after parsing completes — any earlier and you get an empty bounding box (size 0). Whether the model is in the scene yet does not matter.",
       },
       {
         vi: "d = r / sin(fov/2), với r là bán kính bounding sphere (Box3.getBoundingSphere) — object càng lớn thì r càng lớn, d tự tăng theo, không cần hardcode khoảng cách camera.",
@@ -200,12 +202,12 @@ function dispose() {
         en: "The wireframe toggle applies to every material on the model, not just the first mesh found",
       },
       {
-        vi: "Sau khi unmount, không còn geometry/material/texture nào bị giữ lại — kiểm tra qua renderer.info.memory hoặc devtools memory snapshot",
-        en: "After unmount, no geometry/material/texture is left retained — verified via renderer.info.memory or a devtools memory snapshot",
+        vi: "Sau khi gọi dispose(), không còn geometry/material/texture nào bị giữ lại — kiểm tra qua renderer.info.memory hoặc devtools memory snapshot",
+        en: "After calling dispose(), no geometry/material/texture is left retained — verified via renderer.info.memory or a devtools memory snapshot",
       },
       {
-        vi: "Không có 2 model trùng nhau trong scene khi component remount hai lần dưới React Strict Mode",
-        en: "No duplicate model ends up in the scene when the component remounts twice under React Strict Mode",
+        vi: "Tôi giải thích được vì sao dưới React Strict Mode (effect chạy hai lần khi mount), viewer này cần guard chống add model hai lần — và guard đó đặt ở đâu",
+        en: "I can explain why under React Strict Mode (effects run twice on mount) this viewer needs a guard against adding the model twice — and where that guard belongs",
       },
     ],
   },
