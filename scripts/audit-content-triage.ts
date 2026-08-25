@@ -53,7 +53,8 @@ for (const f of walk(FIGURES_DIR)) {
 // --- 2. internal lesson links ----------------------------------------------
 for (const f of contentFiles.filter((f) => f.endsWith(".mdx"))) {
   const src = fs.readFileSync(f, "utf8");
-  for (const m of src.matchAll(/\/lesson\/([a-z0-9-]+)/g)) {
+  // Trailing lookahead keeps file paths (components/lesson/foo.tsx) out.
+  for (const m of src.matchAll(/\/lesson\/([a-z0-9-]+)(?![a-z0-9.-])/g)) {
     if (!VALID_SLUGS.has(m[1]!)) {
       report(trackOf(f), `${path.basename(path.dirname(f))}: dead lesson link /lesson/${m[1]}`);
     }

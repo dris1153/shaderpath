@@ -9,12 +9,24 @@ export const exercises: Exercise[] = [
 
 Yêu cầu: đế \`sdTorus\`, thân \`sdCapsule\`, đầu \`sdSphere\` — hàn cả ba lại bằng \`opSmoothUnion\` thành một khối liền, chọn \`k\` riêng cho từng mối nối. Thêm một torus mỏng làm cổ áo, hàn nhẹ vào thân bằng smin với \`k\` nhỏ hơn hẳn. Khoét một mặt phẳng vào một bên bằng \`opSubtract\` với một box — thao tác này làm **sau cùng**, sau khi mọi \`opSmoothUnion\` đã xong. Toàn khối tự xoay chậm quanh trục dọc bằng cách nhân ma trận xoay vào \`p.xz\` ngay đầu \`map()\`, trước khi gọi \`scene(p)\` — không xoay camera. Tô màu hai tông theo độ cao \`p.y\` của điểm chạm, nhân với hệ số Lambert \`max(dot(n, lightDir), 0)\` từ \`calcNormal\` đã cho sẵn.
 
-Starter code đã có vòng lặp raymarch, \`calcNormal\`, tất cả primitive và phép toán cần dùng, cùng camera. Việc của bạn chỉ là lắp ráp hàm \`scene(p)\`.`,
+Bài dạng build không hiển thị starter code — bạn dựng từ đầu trong playground, dùng lại thư viện chuẩn của các bài trước (vòng lặp sphere tracing, \`calcNormal\` tetrahedron, \`sdSphere\`/\`sdTorus\`/\`sdCapsule\`/\`sdBox\`, \`opSmoothUnion\`, \`opSubtract\`, ma trận xoay 2D). Bảng linh kiện — vị trí/kích thước đã tinh chỉnh sẵn để chồng lấn đúng, việc của bạn là hàn và khoét:
+
+- \`base = sdTorus(p - vec3(0.0, -0.95, 0.0), vec2(0.5, 0.16))\`
+- \`body = sdCapsule(p, vec3(0.0, -0.85, 0.0), vec3(0.0, 0.55, 0.0), 0.38)\`
+- \`head = sdSphere(p - vec3(0.0, 0.95, 0.0), 0.42)\`
+- \`collar = sdTorus(p - vec3(0.0, 0.35, 0.0), vec2(0.4, 0.06))\`
+- \`cutBox = sdBox(p - vec3(0.55, 0.1, 0.0), vec3(0.35, 0.9, 0.9))\``,
       en: `Build a stylized chess-pawn-like figure entirely from SDFs in a raymarch fragment shader.
 
 Requirements: a \`sdTorus\` base, \`sdCapsule\` body, \`sdSphere\` head — weld all three with \`opSmoothUnion\` into one continuous mass, choosing a separate \`k\` per joint. Add a thin torus as a collar, blended into the body with a smaller \`k\`. Carve a flat face into one side with \`opSubtract\` against a box — this happens **last**, after every \`opSmoothUnion\` is done. The whole piece slowly self-rotates around its vertical axis by multiplying a rotation matrix into \`p.xz\` at the top of \`map()\`, before calling \`scene(p)\` — not by rotating the camera. Color it with two height-based tones keyed on the hit point's \`p.y\`, multiplied by a Lambert term \`max(dot(n, lightDir), 0)\` from the already-provided \`calcNormal\`.
 
-The starter code already has the raymarch loop, \`calcNormal\`, every primitive and operator you need, and the camera. Your job is only to assemble the \`scene(p)\` function.`,
+Build-kind exercises show no starter code — you build from scratch in the playground, reusing the standard library from earlier lessons (the sphere tracing loop, tetrahedron \`calcNormal\`, \`sdSphere\`/\`sdTorus\`/\`sdCapsule\`/\`sdBox\`, \`opSmoothUnion\`, \`opSubtract\`, a 2D rotation matrix). The parts list — positions/sizes already tuned to overlap correctly; your job is to weld and carve:
+
+- \`base = sdTorus(p - vec3(0.0, -0.95, 0.0), vec2(0.5, 0.16))\`
+- \`body = sdCapsule(p, vec3(0.0, -0.85, 0.0), vec3(0.0, 0.55, 0.0), 0.38)\`
+- \`head = sdSphere(p - vec3(0.0, 0.95, 0.0), 0.42)\`
+- \`collar = sdTorus(p - vec3(0.0, 0.35, 0.0), vec2(0.4, 0.06))\`
+- \`cutBox = sdBox(p - vec3(0.55, 0.1, 0.0), vec3(0.35, 0.9, 0.9))\``,
     },
     starterCode: `float sdSphere(vec3 p, float r) {
   return length(p) - r;

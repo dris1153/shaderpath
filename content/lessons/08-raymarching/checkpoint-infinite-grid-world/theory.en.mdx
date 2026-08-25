@@ -8,7 +8,7 @@ The fragment shader raymarches a field of pillars repeated infinitely along the 
 
 ## Structure Hint
 
-Four TODOs, in order, in the starter code: (1) round-based domain repetition on `p.xz`, storing the cell-id BEFORE folding so height hashing stays per-cell; (2) normals from four `map()` calls using the tetrahedron technique; (3) soft shadows — march toward the sun, starting from a point nudged along the normal to dodge self-shadowing; (4) AO — sample `map()` along the normal at a few growing distances, subtracting the real distance to measure how "boxed in" a point is.
+Four steps, in order (build exercises start from scratch — no visible starter): (1) round-based domain repetition on `p.xz`, storing the cell-id BEFORE folding so height hashing stays per-cell; (2) normals from four `map()` calls using the tetrahedron technique; (3) soft shadows — march toward the sun, starting from a point nudged along the normal to dodge self-shadowing; (4) AO — sample `map()` along the normal at a few growing distances, subtracting the real distance to measure how "boxed in" a point is.
 
 ## What "Done" Looks Like
 

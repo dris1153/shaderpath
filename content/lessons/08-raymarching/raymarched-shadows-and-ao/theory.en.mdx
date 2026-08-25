@@ -86,7 +86,7 @@ Both techniques in this lesson only add extra `map()` calls in places the scene 
 The three most common mistakes when implementing raymarched soft shadows and AO:
 
 1. **Forgetting to offset the shadow ray's origin along the normal.** Marching straight from $p$ (which sits exactly on the $f=0$ boundary) means the very first step almost always reads $f \approx 0$, misread as "hit an occluder immediately" — the whole scene turns pitch black because every point shadows itself (shadow acne).
-2. **Forgetting `clamp(res, 0.0, 1.0)` at the end of `softShadow`.** With a large $k$ and a first march step near an occluder's boundary, the ratio `k*d/(t-y)` can exceed 1 — multiplying that unclamped value straight into `diffuse` blows out the region right at the shadow's edge instead of fading smoothly.
+2. **Forgetting the `ph = h` update at the end of each loop iteration.** The improved formula leans on the PREVIOUS step's distance (`ph`) to estimate the closest point between two samples: drop that line and `ph` stays at its huge initial value, $y \to 0$, $d \to h$ — the function silently degenerates into the naive `k*d/t`, banding returns, and nothing errors. (The final `clamp(res, 0.0, 1.0)` is mere insurance by contrast: `res` starts at 1.0 and only ever passes through `min` with a non-negative ratio, so it can never exceed 1 on its own.)
 3. **Multiplying AO into the diffuse term too, not just ambient.** AO approximates blocked indirect light, not direct light (the shadow ray already handles that) — multiplying AO into diffuse double-counts the same occlusion effect, making contact points between an object and the ground look unnaturally dark and "muddy."
 
 </Callout>

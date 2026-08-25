@@ -72,9 +72,9 @@
   <path class="ray" d="M270,302 L156,150" marker-end="url(#rh)" />
   <circle class="dot" cx="270" cy="310" r="3.5" />
   <path class="tick" d="M270,310 L270,300" />
-  <circle class="dot" cx="193.8" cy="208.4" r="3" />
-  <circle class="gap" cx="193.8" cy="208.4" r="11" />
-  <path class="measure" d="M193.8,208.4 L185,215" />
+  <circle class="dot" cx="197.6" cy="205.5" r="3" />
+  <circle class="gap" cx="197.6" cy="205.5" r="15.8" />
+  <path class="measure" d="M197.6,205.5 L185,215" />
 
   <!-- clear -->
   <path class="ray" d="M330,302 L246,190" marker-end="url(#rh)" />

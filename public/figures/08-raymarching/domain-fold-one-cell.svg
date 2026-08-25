@@ -116,10 +116,10 @@
 
   <path class="ground" d="M140,458 L440,458" />
   <path class="divider" d="M140,402 L140,466 M290,402 L290,466 M440,402 L440,466" />
-  <rect class="obj" x="215" y="418" width="52.5" height="40" rx="4" />
+  <rect class="obj" x="225.5" y="418" width="52.5" height="40" rx="4" />
   <rect class="obj-home" x="375.5" y="418" width="52.5" height="40" rx="4" />
 
-  <path class="measure" d="M267.5,432 L267.5,444 M267.5,438 L302,438" />
+  <path class="measure" d="M278,432 L278,444 M278,438 L302,438" />
   <path class="measure-ok" d="M375.5,432 L375.5,444 M302,438 L375.5,438" />
   <path class="measure" d="M302,432 L302,444" />
   <circle class="dot" cx="302" cy="438" r="4" />

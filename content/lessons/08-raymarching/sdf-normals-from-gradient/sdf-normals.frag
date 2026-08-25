@@ -46,7 +46,8 @@ vec3 normalCentralDiff(vec3 p, float eps) {
 }
 
 // 4 taps: Quilez's tetrahedron trick (iquilezles.org/articles/normalsSDF) —
-// same order of accuracy as central differences, 33% fewer map() calls.
+// 33% fewer map() calls; trades a bit of accuracy (cross-curvature error
+// central differences cancel) that is invisible at normal-sized eps.
 vec3 normalTetrahedron(vec3 p, float eps) {
   const vec2 k = vec2(1.0, -1.0);
   return normalize(

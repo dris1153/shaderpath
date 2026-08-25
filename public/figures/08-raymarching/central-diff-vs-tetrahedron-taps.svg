@@ -86,7 +86,7 @@
   <text class="note" x="168" y="340" text-anchor="middle">6 map() calls</text>
   <text class="note" x="464" y="308" text-anchor="middle">(1,−1,−1), (−1,−1,1), (−1,1,−1), (1,1,1), all ×ε</text>
   <text class="note" x="472" y="324" text-anchor="middle">each direction doubles as its own weight</text>
-  <text class="note" x="472" y="340" text-anchor="middle">4 map() calls, same O(ε²) accuracy</text>
+  <text class="note" x="472" y="340" text-anchor="middle">4 map() calls — cheaper, slightly less exact</text>
 
   <path class="rule" d="M24,364 L616,364" />
   <text class="note" x="24" y="390">One third fewer calls, for the same normal. That saving is only worth having because the normal is evaluated</text>

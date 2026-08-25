@@ -9,12 +9,12 @@ export const exercises: Exercise[] = [
 
 Yêu cầu: domain repetition kiểu round-based chỉ trên \`p.xz\` (giữ nguyên \`p.y\` — đây là sàn, không phải khối thể tích); mỗi trụ có chiều cao lệch nhẹ theo hash của cell-id; normal ước lượng bằng kỹ thuật tetrahedron; bóng đổ mềm từ một mặt trời thấp; ambient occlusion 5-tap làm tối chỗ trụ tiếp đất; vật liệu hai tông màu theo chiều cao trụ; camera trôi chậm theo \`uTime\` để cảm nhận được sự vô hạn.
 
-Gợi ý cấu trúc: bốn TODO trong starter code, làm đúng thứ tự — (1) fold domain, (2) normal, (3) soft shadow, (4) AO.`,
+Bài dạng build không hiển thị starter code — dựng từ đầu, theo đúng thứ tự bốn bước: (1) fold domain round-based trên p.xz, lưu cell-id TRƯỚC khi fold để hash chiều cao; (2) normal tetrahedron 4 lần gọi map(); (3) soft shadow march về phía mặt trời, xuất phát từ điểm đã dịch theo normal; (4) AO 5-tap dọc normal, trừ khoảng cách thật.`,
       en: `Build a complete raymarched scene in the GLSL Playground: a field of pillars repeated infinitely along the two ground axes (xz), with the module's full shading stack — normals, soft shadows, ambient occlusion.
 
 Requirements: round-based domain repetition on \`p.xz\` only (leave \`p.y\` untouched — this is a floor, not a volumetric block); every pillar's height varies slightly from a hash of its cell-id; normals from the tetrahedron technique; soft shadows cast by a low sun; 5-tap ambient occlusion darkening where pillars meet the ground; a two-tone material that varies by pillar height; a camera that drifts slowly on \`uTime\` so the infinity actually reads as infinite.
 
-Suggested structure: four TODOs in the starter code, in order — (1) fold the domain, (2) normals, (3) soft shadows, (4) AO.`,
+Build-kind exercises show no starter code — build from scratch, in this exact order: (1) round-based domain fold on p.xz, storing the cell-id BEFORE folding so height hashing stays per-cell; (2) tetrahedron normals from four map() calls; (3) soft shadows marched toward the sun, starting from a point nudged along the normal; (4) 5-tap AO along the normal, subtracting the real distance.`,
     },
     starterCode: `float hash31(vec3 p) {
   p = fract(p * vec3(0.1031, 0.1030, 0.0973));

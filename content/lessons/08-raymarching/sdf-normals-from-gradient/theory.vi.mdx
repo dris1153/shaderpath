@@ -33,7 +33,7 @@ vec3 normalCentralDiff(vec3 p, float eps) {
 }
 ```
 
-Để ý code trên **không chia cho $2\varepsilon$** dù công thức toán có mẫu số đó — không phải thiếu sót. `normalize()` ngay sau đó tự loại bỏ mọi hệ số vô hướng dương chung của cả ba thành phần, nên chia trước rồi normalize cho kết quả giống hệt bỏ qua phép chia, chỉ tốn thêm ba phép chia vô ích. Ví dụ tay: sphere SDF $f(p) = \|p\| - 1$ tại $p = (1,0,0)$, $\varepsilon = 0.01$: $f(1.01,0,0) - f(0.99,0,0) = 0.02$ theo trục $x$, còn $y$, $z$ triệt tiêu về $\approx 0$ do đối xứng — vector $(0.02, 0, 0)$ normalize ra $(1,0,0)$, đúng normal hướng ra ngoài, không cần biết bán kính cầu.
+Để ý code trên **không chia cho $2\varepsilon$** dù công thức toán có mẫu số đó — không phải thiếu sót. `normalize()` ngay sau đó tự loại bỏ mọi hệ số vô hướng dương chung của cả ba thành phần, nên chia trước rồi normalize cho kết quả giống hệt bỏ qua phép chia, chỉ tốn thêm ba phép chia vô ích. Ví dụ tay: sphere SDF $f(p) = \|p\| - 1$ tại $p = (1,0,0)$, $\varepsilon = 0.01$: $f(1.01,0,0) - f(0.99,0,0) = 0.01 - (-0.01) = 0.02$ theo trục $x$ (điểm $p$ nằm đúng trên bề mặt), còn $y$, $z$ triệt tiêu về $\approx 0$ do đối xứng — vector $(0.02, 0, 0)$ normalize ra $(1,0,0)$, đúng normal hướng ra ngoài, không cần biết bán kính cầu.
 
 ## Kỹ thuật tetrahedron: bốn mẫu, cùng bậc chính xác
 
@@ -51,12 +51,12 @@ vec3 normalTetrahedron(vec3 p, float eps) {
 }
 ```
 
-Bốn hướng lấy mẫu $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ là bốn đỉnh của một tứ diện nội tiếp khối lập phương cạnh $2\varepsilon$. Mỗi số hạng nhân trọng số $k_i$ (chính hướng lấy mẫu) với $f$ tại điểm đó rồi cộng dồn; tổng có trọng số này triệt tiêu đúng thành phần $f(p)$ không đổi (bốn vector $k_i$ tự cộng lại bằng 0), chỉ còn lại xấp xỉ tuyến tính của gradient — cùng bậc chính xác $O(\varepsilon^2)$ như central difference sáu mẫu, không phải thô hơn. Tiết kiệm: $6 \to 4$ lần gọi `map()` là giảm đúng $\frac{6-4}{6} \approx 33\%$ chi phí tính normal — đáng kể khi `map()` là cả một cây SDF phức tạp, không chỉ một `length(p) - r`. Đây là kỹ thuật mặc định trong hầu hết shader raymarch sản xuất thật, từ Shadertoy tới game thương mại (nguồn: bài viết gốc của Quilez, phần Tham khảo).
+Bốn hướng lấy mẫu $(1,-1,-1)$, $(-1,-1,1)$, $(-1,1,-1)$, $(1,1,1)$ là bốn đỉnh của một tứ diện nội tiếp khối lập phương cạnh $2\varepsilon$. Mỗi số hạng nhân trọng số $k_i$ (chính hướng lấy mẫu) với $f$ tại điểm đó rồi cộng dồn; tổng có trọng số này triệt tiêu đúng thành phần $f(p)$ không đổi (bốn vector $k_i$ tự cộng lại bằng 0), chỉ còn lại xấp xỉ tuyến tính của gradient. Cái giá phải trả: bốn điểm mẫu KHÔNG đối xứng qua $p$ (không có $-k_i$ nào trong bộ), nên các số hạng độ cong chéo không triệt tiêu như ở central difference — sai số tương đối là $O(\varepsilon)$ thay vì $O(\varepsilon^2)$. Với $\varepsilon$ cỡ thường dùng, khác biệt đó gần như vô hình trên màn hình; Quilez giới thiệu trick này vì RẺ hơn, không phải vì chính xác ngang. Tiết kiệm: $6 \to 4$ lần gọi `map()` là giảm đúng $\frac{6-4}{6} \approx 33\%$ chi phí tính normal — đáng kể khi `map()` là cả một cây SDF phức tạp, không chỉ một `length(p) - r`. Đây là kỹ thuật mặc định trong hầu hết shader raymarch sản xuất thật, từ Shadertoy tới game thương mại (nguồn: bài viết gốc của Quilez, phần Tham khảo).
 
 <Figure
   src="/figures/08-raymarching/central-diff-vs-tetrahedron-taps.svg"
   alt="Cùng một khối lập phương cạnh 2ε quanh điểm chạm, vẽ hai lần: bên trái sáu mẫu ở tâm các mặt theo ±x, ±y, ±z; bên phải bốn mẫu ở các đỉnh xen kẽ nối thành một tứ diện"
-  caption="Hai cách lấy mẫu ước lượng cùng một gradient với cùng bậc chính xác; tetrahedron chỉ đọc bốn điểm thay vì sáu. Khoản tiết kiệm đó chỉ đáng giá vì normal được tính đúng một lần mỗi pixel, không bao giờ nằm trong vòng lặp march."
+  caption="Hai cách lấy mẫu ước lượng cùng một gradient; tetrahedron chỉ đọc bốn điểm thay vì sáu, đổi lại nhặt thêm chút sai số độ cong chéo mà central difference triệt tiêu được. Khoản tiết kiệm đáng giá vì normal được tính đúng một lần mỗi pixel, không bao giờ nằm trong vòng lặp march."
 />
 
 ## Chọn epsilon: bo tròn cạnh sắc hay vỡ hạt vì nhiễu số thực

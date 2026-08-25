@@ -14,12 +14,12 @@ Compare the result to $\\min(d_A, d_B) = 0.05$: is \`smin\` larger, smaller, or 
     },
     hints: [
       {
-        vi: "Tính $h$ trước: $0.5 + 0.5 \\times (0.08 - 0.05) / 0.1 = 0.5 + 0.15 = 0.65$, đã nằm trong $[0,1]$ nên không bị clamp.",
-        en: "Compute $h$ first: $0.5 + 0.5 \\times (0.08 - 0.05) / 0.1 = 0.5 + 0.15 = 0.65$, already inside $[0,1]$ so clamp doesn't change it.",
+        vi: "Tính $h$ trước theo khuôn $0.5 + 0.5 \\cdot (d_B - d_A) / k$ — thay số rồi kiểm tra kết quả có lọt ra ngoài $[0,1]$ khiến clamp phải can thiệp hay không.",
+        en: "Compute $h$ first from the template $0.5 + 0.5 \\cdot (d_B - d_A) / k$ — plug the numbers in, then check whether it escapes $[0,1]$ and forces the clamp to act.",
       },
       {
-        vi: "`mix(dB, dA, h)` với $h=0.65$ đã lớn hơn $\\min(d_A,d_B)$ một chút — số hạng trừ $k h (1-h)$ mới là phần kéo kết quả xuống dưới cả `min`.",
-        en: "`mix(dB, dA, h)` at $h=0.65$ is already slightly above $\\min(d_A,d_B)$ — the subtracted term $k h (1-h)$ is what pulls the result below even the plain `min`.",
+        vi: "`mix(dB, dA, h)` mới chỉ nội suy giữa hai khoảng cách — số hạng trừ $k h (1-h)$ mới là phần kéo kết quả xuống dưới cả `min`.",
+        en: "`mix(dB, dA, h)` only interpolates between the two distances — the subtracted term $k h (1-h)$ is what pulls the result below even the plain `min`.",
       },
     ],
     checklist: [

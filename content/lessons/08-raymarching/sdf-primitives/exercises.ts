@@ -68,11 +68,12 @@ The Y axis wins because $b_y - |p_{2,y}| = 0.3 - 0.1 = 0.2$ is the smallest rema
   vec2 pa = vec2(0.0);
   vec2 ba = vec2(0.0);
 
-  // TODO 2: h = clamp(dot(pa,ba)/dot(ba,ba), 0.0, 1.0)
-  // (this is exactly the projection formula from Track 0, clamped onto segment [a,b])
+  // TODO 2: project pa onto ba (the Track 0 projection formula), then clamp
+  // the parameter onto the segment [0, 1]. Add a tiny epsilon to the
+  // denominator — when the mouse makes b == a, dot(ba, ba) hits zero.
   float h = 0.0;
 
-  // TODO 3: d = length(pa - ba*h) - r
+  // TODO 3: distance from p to the projected point, minus the radius r
   float d = 0.0;
 
   vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);
@@ -92,7 +93,9 @@ The Y axis wins because $b_y - |p_{2,y}| = 0.3 - 0.1 = 0.2$ is the smallest rema
 
   vec2 pa = p - a;
   vec2 ba = b - a;
-  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  // +1e-6: when the mouse sits exactly on a, ba is the zero vector and the
+  // bare division would be undefined (NaN frame)
+  float h = clamp(dot(pa, ba) / (dot(ba, ba) + 1e-6), 0.0, 1.0);
   float d = length(pa - ba * h) - r;
 
   vec3 col = vec3(1.0) - sign(d) * vec3(0.1, 0.4, 0.7);

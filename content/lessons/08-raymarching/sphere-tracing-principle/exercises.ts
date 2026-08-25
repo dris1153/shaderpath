@@ -57,8 +57,8 @@ A ray tilted near the silhouette doesn't get that luck: the nearest surface sits
     id: "1d-sphere-tracing-step-visualizer",
     kind: "shader",
     prompt: {
-      vi: `Trong playground (uTime, uResolution, uMouse, fragColor có sẵn), dựng một trục số 1D nằm ngang: pixel tại cột \`x\` biểu diễn giá trị \`t = uv.x * 4.0\`. Cảnh 1D chỉ có một "điểm" tại \`target = 2.0\` với hàm khoảng cách \`d = abs(t - target) - 0.15\` (y hệt \`sdSphere\`, chỉ bớt một chiều). Chạy vòng lặp sphere tracing từ \`t = 0.0\`, tối đa 8 bước, và với MỖI bước \`i\`, nếu \`abs(x - t) < 0.02\` thì tô sáng pixel đó theo màu chuyển dần từ xanh (bước đầu) sang đỏ (bước cuối) — kết quả phải là một chuỗi chấm sáng dọc trục, dính sát nhau hơn khi \`t\` tiến gần \`target\`.`,
-      en: `In the playground (uTime, uResolution, uMouse, fragColor are all available), build a horizontal 1D number line: the pixel at column \`x\` represents the value \`t = uv.x * 4.0\`. The 1D scene has a single "point" at \`target = 2.0\` with distance function \`d = abs(t - target) - 0.15\` (exactly \`sdSphere\`, minus one dimension). Run the sphere tracing loop from \`t = 0.0\`, up to 8 steps, and on EACH step \`i\`, if \`abs(x - t) < 0.02\`, light up that pixel with a color fading from blue (early steps) to red (late steps) — the result should be a row of dots along the axis, bunching closer together as \`t\` approaches \`target\`.`,
+      vi: `Trong playground (uTime, uResolution, uMouse, fragColor có sẵn), dựng một trục số 1D nằm ngang: pixel tại cột \`x\` biểu diễn giá trị \`t = uv.x * 4.0\`. Cảnh 1D chỉ có một "điểm" tại \`target = 2.0\` với field \`d = (abs(t - target) - 0.15) * 0.35\` — một BOUND SDF cố ý: nhân 0.35 mô phỏng field chỉ hứa "ít nhất chừng này" (SDF chính xác 1D sẽ tới đích trong đúng một bước, chẳng có gì để xem). Chạy vòng lặp sphere tracing từ \`t = 0.0\`, tối đa 8 bước, và với MỖI bước \`i\`, nếu \`abs(x - t) < 0.02\` thì tô sáng pixel đó theo màu chuyển dần từ xanh (bước đầu) sang đỏ (bước cuối) — kết quả phải là một chuỗi chấm sáng dọc trục, dính sát nhau hơn khi \`t\` tiến gần \`target\`.`,
+      en: `In the playground (uTime, uResolution, uMouse, fragColor are all available), build a horizontal 1D number line: the pixel at column \`x\` represents the value \`t = uv.x * 4.0\`. The 1D scene has a single "point" at \`target = 2.0\` with the field \`d = (abs(t - target) - 0.15) * 0.35\` — a deliberately BOUND SDF: the 0.35 factor simulates a field that only promises "at least this far" (an exact 1D SDF would land in exactly one step, leaving nothing to watch). Run the sphere tracing loop from \`t = 0.0\`, up to 8 steps, and on EACH step \`i\`, if \`abs(x - t) < 0.02\`, light up that pixel with a color fading from blue (early steps) to red (late steps) — the result should be a row of dots along the axis, bunching closer together as \`t\` approaches \`target\`.`,
     },
     starterCode: `void main() {
   vec2 uv = gl_FragCoord.xy / uResolution;
@@ -69,7 +69,8 @@ A ray tilted near the silhouette doesn't get that luck: the nearest surface sits
   vec3 color = vec3(0.08, 0.08, 0.12);
 
   for (int i = 0; i < 8; i++) {
-    // TODO 1: f(t) = 1D distance to target, safe radius 0.15
+    // TODO 1: f(t) = (abs(t - target) - 0.15) * 0.35 — the 0.35 makes it a
+    // conservative bound so the march visibly creeps up on the target
     float d = 0.0;
 
     // TODO 2: if this pixel (x) is close enough to the current t position (abs(x - t) < 0.02),
@@ -90,7 +91,7 @@ A ray tilted near the silhouette doesn't get that luck: the nearest surface sits
   vec3 color = vec3(0.08, 0.08, 0.12);
 
   for (int i = 0; i < 8; i++) {
-    float d = abs(t - target) - 0.15;
+    float d = (abs(t - target) - 0.15) * 0.35;
 
     if (abs(x - t) < 0.02) {
       color = mix(vec3(0.3, 0.6, 1.0), vec3(1.0, 0.3, 0.2), float(i) / 8.0);
@@ -104,8 +105,8 @@ A ray tilted near the silhouette doesn't get that luck: the nearest surface sits
 }`,
     hints: [
       {
-        vi: "`d = abs(t - target) - 0.15` chính là hàm khoảng cách 1D — y hệt `sdSphere`, chỉ bớt một chiều không gian.",
-        en: "`d = abs(t - target) - 0.15` is exactly the 1D distance function — `sdSphere` with one dimension removed.",
+        vi: "`abs(t - target) - 0.15` chính là `sdSphere` bớt một chiều; nhân 0.35 biến nó thành bound SDF — mỗi bước chỉ đi 35% quãng an toàn, nên chuỗi chấm co dần lại thay vì nhảy một phát tới đích.",
+        en: "`abs(t - target) - 0.15` is `sdSphere` minus one dimension; the 0.35 factor turns it into a bound SDF — each step covers only 35% of the safe span, so the dot row contracts instead of landing in one jump.",
       },
       {
         vi: "So sánh bằng `abs(x - t)` chứ không phải `x - t`, vì pixel có thể nằm ở bên nào của `t` cũng cần được tô nếu đủ gần — đây là phép test khoảng cách, không phải test dấu.",

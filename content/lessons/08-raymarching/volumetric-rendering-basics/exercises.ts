@@ -53,7 +53,8 @@ Smallest $n$ with $0.85^n < 0.01$: $n > \\ln(0.01) / \\ln(0.85) = (-4.6052) / (-
       en: `In the playground, \`densityAt(x)\` describes a 1D "cloud slice" along $x \\in [0,1]$ (a bell shape centered at $x=0.5$). For each pixel, march from $x=0$ to that pixel's own \`uv.x\` value in \`steps\` equal steps, implementing the correct front-to-back accumulation loop: add \`T * density * stepLen * emitted\` to \`acc\` FIRST, then multiply $T$ by \`exp(-density * stepLen)\`, and \`break\` early once $T < 0.01$. Correct result: scanning left to right, the color fades from background toward the cloud color around $x=0.5$, then holds steady (never reverses).`,
     },
     starterCode: `float densityAt(float x) {
-  float d = exp(-pow((x - 0.5) * 6.0, 2.0));
+  float u = (x - 0.5) * 6.0;
+  float d = exp(-u * u); // u*u, not pow(): GLSL pow is undefined for negative base
   return d * 3.0;
 }
 
@@ -79,7 +80,8 @@ void main() {
   fragColor = vec4(color, 1.0);
 }`,
     solutionCode: `float densityAt(float x) {
-  float d = exp(-pow((x - 0.5) * 6.0, 2.0));
+  float u = (x - 0.5) * 6.0;
+  float d = exp(-u * u); // u*u, not pow(): GLSL pow is undefined for negative base
   return d * 3.0;
 }
 

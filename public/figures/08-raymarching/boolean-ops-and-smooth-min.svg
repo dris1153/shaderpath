@@ -76,8 +76,8 @@
   <path class="axis" d="M440,130 L600,130" />
   <polyline class="field" points="441.7,93.2 516.5,162.0 591.3,93.2" />
   <polyline class="field" points="487.0,93.2 551.3,152.4 600.0,107.6" />
-  <path class="res-fill" d="M481.7,130 L511.3,144.4 L516.5,139.6 L527.0,130 Z" />
-  <polyline class="res" points="442.2,93.2 511.3,144.4 516.5,139.6 551.3,107.6 563.5,118.8 591.3,93.2" />
+  <path class="res-fill" d="M481.7,130 L504.3,150.8 L511.3,144.4 L516.5,139.6 L527.0,130 Z" />
+  <polyline class="res" points="442.2,93.2 504.3,150.8 511.3,144.4 516.5,139.6 551.3,107.6 563.5,118.8 591.3,93.2" />
 
   <text class="note" x="120" y="188" text-anchor="middle">both lobes survive</text>
   <text class="note" x="320" y="188" text-anchor="middle">only where both are negative</text>

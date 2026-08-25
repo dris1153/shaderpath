@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useLocale } from "next-intl";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
@@ -9,6 +9,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { booleanOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./sdf-object.frag";
 import vertexShader from "./sdf-object.vert";
 
@@ -92,6 +93,17 @@ function Scene() {
     state.gl.render(state.scene, state.camera);
   }, 1);
 
+  const bindUniforms = useSharedUniforms(uniforms);
+  // shaderMaterial needs both refs: the depthTest toggle (materialRef) and
+  // the by-reference uniforms binding (bindUniforms).
+  const bindMaterial = useCallback(
+    (mat: THREE.ShaderMaterial | null) => {
+      materialRef.current = mat!;
+      bindUniforms(mat);
+    },
+    [bindUniforms],
+  );
+
   return (
     <>
       <ambientLight intensity={0.5} />
@@ -103,10 +115,9 @@ function Scene() {
       <mesh ref={proxyRef}>
         <sphereGeometry args={[2.6, 48, 32]} />
         <shaderMaterial
-          ref={materialRef}
+          ref={bindMaterial}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
-          uniforms={uniforms}
         />
       </mesh>
     </>

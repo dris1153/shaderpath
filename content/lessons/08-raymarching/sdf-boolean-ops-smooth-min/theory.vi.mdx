@@ -24,9 +24,9 @@ $$
 
 Đảo dấu $d_B$ biến "trong $B$" (âm) thành "ngoài" (dương) và ngược lại — tức lộn ngược $B$ thành một cái khuôn, rồi lấy giao ($A \cap \overline{B}$, phần của $A$ nằm ngoài khuôn đó) bằng max như phần trước. Thử với số thật: điểm $p$ nằm sâu trong cả hai hình, $d_A(p) = -0.3$, $d_B(p) = -0.1$. Kết quả subtraction là $\max(-0.3,\, -(-0.1)) = \max(-0.3, 0.1) = 0.1$ — dương, tức $p$ bị coi là **ngoài** hình cuối, dù nó thực sự nằm trong $A$, vì nó cũng nằm trong $B$ nên bị khoét mất. Đổi thứ tự thành $\max(d_B, -d_A)$ khoét ngược lại — $A$ ra khỏi $B$ — một hình hoàn toàn khác, không phải chỉ đảo tên biến vô hại.
 
-## Union chính xác, intersection/subtraction chỉ là biên trên
+## Union chính xác, intersection/subtraction chỉ là cận dưới an toàn
 
-Một sự thật ít ai nói rõ: nếu $d_A$ và $d_B$ đều là SDF chính xác (đúng khoảng cách Euclid tới bề mặt), thì $d_{\cup} = \min(d_A, d_B)$ **vẫn chính xác** — điểm gần bề mặt union nhất đúng là điểm gần hình gần hơn nhất. Nhưng $\max(d_A, d_B)$ (dùng cho intersection và subtraction) thì **không** còn là khoảng cách Euclid thật ở vùng gần góc giao giữa hai bề mặt — nó chỉ đảm bảo là một biên trên an toàn (1-Lipschitz, không bao giờ bước quá xa và xuyên qua bề mặt), đủ để sphere tracing không bị lỗi, nhưng bước march có thể ngắn hơn mức tối ưu gần đường nối, và giá trị khoảng cách không dùng được cho việc khác cần độ chính xác thật (ví dụ ước lượng thể tích, hay một hiệu ứng phụ nào đó đọc trực tiếp $d$ làm khoảng cách vật lý). Ghi nhớ điều này trước khi tin tưởng distance field "bên trong" một union/intersection phức tạp.
+Một sự thật ít ai nói rõ: nếu $d_A$ và $d_B$ đều là SDF chính xác (đúng khoảng cách Euclid tới bề mặt), thì $d_{\cup} = \min(d_A, d_B)$ **vẫn chính xác** — điểm gần bề mặt union nhất đúng là điểm gần hình gần hơn nhất. Nhưng $\max(d_A, d_B)$ (dùng cho intersection và subtraction) thì **không** còn là khoảng cách Euclid thật ở vùng gần góc giao giữa hai bề mặt — nó chỉ đảm bảo là một cận dưới an toàn — không bao giờ LỚN hơn khoảng cách thật (1-Lipschitz), nên bước march không bao giờ vượt quá và xuyên qua bề mặt, đủ để sphere tracing không bị lỗi, nhưng bước march có thể ngắn hơn mức tối ưu gần đường nối, và giá trị khoảng cách không dùng được cho việc khác cần độ chính xác thật (ví dụ ước lượng thể tích, hay một hiệu ứng phụ nào đó đọc trực tiếp $d$ làm khoảng cách vật lý). Ghi nhớ điều này trước khi tin tưởng distance field "bên trong" một union/intersection phức tạp.
 
 ## Smooth min: pha trộn như đất sét, không cắt cứng
 
@@ -57,10 +57,10 @@ Xa vùng giao ($|d_A - d_B| \gg k$), $h$ bão hoà về 0 hoặc 1, số hạng 
 Ngoài polynomial còn biến thể exponential, mượt hơn nhưng tốn `exp`/`log`:
 
 $$
-\mathrm{smin}_{exp}(a, b, k) = -\frac{1}{k}\ln\!\big(e^{-ka} + e^{-kb}\big)
+\mathrm{smin}_{exp}(a, b, k) = -k\,\ln\!\big(e^{-a/k} + e^{-b/k}\big)
 $$
 
-Quilez còn liệt kê thêm root, sigmoid, quartic... — khác nhau chủ yếu ở dáng đường cong nối, không khác nhau về ý tưởng. Tham số $k$ luôn là **bán kính pha trộn trong không gian thế giới**, không phải hệ số trừu tượng: $k$ quá nhỏ so với khoảng cách hai hình gần nhau nhất thì kết quả gần như `min` cứng, kéo slider gần như vô tác dụng; $k$ quá lớn so với kích thước hình thì hai hình tan chảy thành một khối tròn xoè, mất hẳn silhouette gốc — chọn $k$ cỡ 20–40% bán kính hình nhỏ hơn trong cặp thường cho kết quả "dính liền nhưng vẫn nhận ra hai khối".
+(Dạng mũ hay gặp trong bài gốc của Quilez viết $-(1/k)\ln(e^{-ka}+e^{-kb})$ — ở đó $k$ mang đơn vị nghịch đảo độ dài và chạy NGƯỢC chiều: $k$ lớn mới là min cứng; bản trên đã chuẩn hoá để $k$ luôn là bề rộng pha trộn.) Quilez còn liệt kê thêm root, sigmoid, quartic... — khác nhau chủ yếu ở dáng đường cong nối, không khác nhau về ý tưởng. Tham số $k$ luôn là **bán kính pha trộn trong không gian thế giới**, không phải hệ số trừu tượng: $k$ quá nhỏ so với khoảng cách hai hình gần nhau nhất thì kết quả gần như `min` cứng, kéo slider gần như vô tác dụng; $k$ quá lớn so với kích thước hình thì hai hình tan chảy thành một khối tròn xoè, mất hẳn silhouette gốc — chọn $k$ cỡ 20–40% bán kính hình nhỏ hơn trong cặp thường cho kết quả "dính liền nhưng vẫn nhận ra hai khối".
 
 ## Smooth subtraction, smooth intersection: đảo dấu từ smooth min
 

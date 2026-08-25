@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Một lưới lặp domain có kích thước ô $c = 2$ (mỗi trục), đặt một sphere bán kính $r = 0.4$ tại tâm mỗi ô bằng công thức $q = \\mathrm{mod}(p + 0.5c,\\ c) - 0.5c$. Không chạy code, tính $q$ khi $p = (2.6,\\ 0,\\ 0)$ theo TỪNG trục, rồi tính $d(p) = \\|q\\| - r$.
 
-Sau đó: nếu bán kính đổi thành $r = 1.1$ (đường kính $2.2$ vượt quá $c = 2$), giải thích CƠ CHẾ cụ thể khiến giá trị $d(p)$ mà công thức trên trả về không còn đáng tin — chỉ rõ điều kiện Lipschitz-1 bị vi phạm ở đâu, và một tia raymarch có thể xuyên qua bề mặt thật (overstepping) như thế nào từ đó.`,
+Sau đó: giữ nguyên $r = 0.4$ nhưng dời tâm sphere LỆCH khỏi tâm ô — sau khi fold, đánh giá \`sdSphere(q - vec3(0.7, 0.0, 0.0), 0.4)\`. Xét điểm truy vấn $p = (-0.95, 0, 0)$ sát mép trái ô: tính $d(p)$ mà công thức trả về, so với khoảng cách tới bản sao của ô BÊN TRÁI (tâm tại $(-1.3, 0, 0)$), rồi giải thích điều kiện Lipschitz-1 vỡ ở đâu và tia raymarch xuyên qua bề mặt thật (overstepping) như thế nào. (Ghi chú: sphere đặt ĐÚNG tâm thì to quá cỡ ô cũng không overstepping — đối xứng gương qua biên giữ trường 1-Lipschitz; bất đối xứng mới là thủ phạm.)`,
       en: `A domain-repeated grid has cell size $c = 2$ (per axis), placing a sphere of radius $r = 0.4$ at the center of every cell via $q = \\mathrm{mod}(p + 0.5c,\\ c) - 0.5c$. Without running code, compute $q$ for $p = (2.6,\\ 0,\\ 0)$ on EACH axis, then compute $d(p) = \\|q\\| - r$.
 
-Then: if the radius becomes $r = 1.1$ (diameter $2.2$ exceeds $c = 2$), explain the concrete MECHANISM that makes the $d(p)$ this formula returns unreliable — point to exactly where the Lipschitz-1 condition breaks, and how a raymarch ray can step through the real surface (overstepping) as a result.`,
+Then: keep $r = 0.4$ but move the sphere OFF the cell center — after folding, evaluate \`sdSphere(q - vec3(0.7, 0.0, 0.0), 0.4)\`. Take the query point $p = (-0.95, 0, 0)$, right by a cell's left border: compute the $d(p)$ the formula returns, compare it against the distance to the LEFT neighbor cell's copy (centered at $(-1.3, 0, 0)$), then explain exactly where the Lipschitz-1 condition breaks and how a raymarch ray steps through the real surface (overstepping). (Note: a sphere placed dead-center never oversteps even when it outgrows the cell — mirror symmetry across borders keeps the field 1-Lipschitz; asymmetry is the culprit.)`,
     },
     hints: [
       {
@@ -18,8 +18,8 @@ Then: if the radius becomes $r = 1.1$ (diameter $2.2$ exceeds $c = 2$), explain 
         en: "mod(2.6 + 1, 2) = mod(3.6, 2) = 1.6, then subtract 1 to get 0.6. Apply the same to the y and z axes (both 0 here) and q comes out clean.",
       },
       {
-        vi: "Công thức chỉ đúng khi $\\|q\\| < 0.5c$ là bán kính vật thể — nghĩa là vật thể phải nằm gọn trong nửa ô. So sánh $r = 1.1$ với $0.5c = 1.0$ để thấy điều kiện đó vỡ ở đâu.",
-        en: "The formula only holds when the object's radius stays under $0.5c$ — the object must fit entirely inside half a cell. Compare $r = 1.1$ against $0.5c = 1.0$ to see exactly where that condition breaks.",
+        vi: "Điểm sát mép TRÁI ô: bản sao \"chính chủ\" nằm lệch về bên phải (xa), còn bản sao của ô bên trái nằm ngay sát mép — nhưng công thức fold chỉ đánh giá bản chính chủ. Tính cả hai khoảng cách rồi so.",
+        en: "A point hugging the cell's LEFT border: the \"home\" copy sits shifted to the right (far away), while the left neighbor's copy sits just past the border — yet the fold only evaluates the home copy. Compute both distances and compare.",
       },
     ],
     checklist: [
@@ -28,8 +28,8 @@ Then: if the radius becomes $r = 1.1$ (diameter $2.2$ exceeds $c = 2$), explain 
         en: "I correctly computed $q = (0.6, 0, 0)$ and $d(p) = 0.6 - 0.4 = 0.2$",
       },
       {
-        vi: "Tôi chỉ ra được $r = 1.1 > 0.5c = 1.0$ là điều kiện cụ thể bị vi phạm",
-        en: "I identified $r = 1.1 > 0.5c = 1.0$ as the specific condition being violated",
+        vi: "Tôi tính được cả hai khoảng cách tại $p = (-0.95, 0, 0)$ và chỉ ra bản sao ô lân cận mới là bề mặt gần nhất, không phải bản sao mà fold đánh giá",
+        en: "I computed both distances at $p = (-0.95, 0, 0)$ and showed the neighbor cell's copy is the true nearest surface, not the copy the fold evaluates",
       },
       {
         vi: "Tôi giải thích được vì sao d(p) bị thổi phồng gần biên ô khiến bước march nhảy quá xa, xuyên qua bề mặt thật",
@@ -39,10 +39,10 @@ Then: if the radius becomes $r = 1.1$ (diameter $2.2$ exceeds $c = 2$), explain 
     solutionNote: {
       vi: `$q_x = \\mathrm{mod}(2.6 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(3.6, 2.0) - 1.0 = 1.6 - 1.0 = 0.6$. $q_y = \\mathrm{mod}(0.0 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(1.0, 2.0) - 1.0 = 1.0 - 1.0 = 0.0$. $q_z$ giống $q_y$, bằng $0.0$. $q = (0.6, 0.0, 0.0) \\Rightarrow d(p) = |q| - r = 0.6 - 0.4 = 0.2$.
 
-Với $r = 1.1$: nửa ô là $0.5c = 1.0$, và bán kính quả cầu ($1.1$) đã vượt quá mức đó — quả cầu tràn sang ô lân cận trước cả khi ta truy vấn gần biên. Tại một điểm truy vấn gần cạnh ô, bản sao ở ô LÂN CẬN có thể thực sự gần hơn bản sao "gốc" mà công thức fold trả về — nhưng \`map()\` chỉ bao giờ đánh giá bản gốc, nên $d(p)$ trả về LỚN HƠN khoảng cách thật tới bề mặt gần nhất. Sphere tracing giả định $d(p)$ là một cận dưới an toàn (Lipschitz-1) của khoảng cách thật đó; một $d(p)$ bị thổi phồng phá vỡ đảm bảo đó, nên bước tính từ nó có thể nhảy thẳng qua bề mặt thật ngay tại đường nối giữa hai ô — tia bị overshoot, tạo ra lỗ hổng hoặc cạnh răng cưa đúng dọc theo đường lưới thay vì một bề mặt liền mạch, sạch sẽ.`,
+Với tâm lệch $(0.7, 0, 0)$, tại $p = (-0.95, 0, 0)$: fold cho $q = (-0.95, 0, 0)$, công thức trả $d(p) = |q - (0.7,0,0)| - 0.4 = 1.65 - 0.4 = 1.25$. Nhưng bản sao của ô bên trái có tâm tại $(-2 + 0.7, 0, 0) = (-1.3, 0, 0)$: khoảng cách thật là $|-0.95 - (-1.3)| - 0.4 = 0.35 - 0.4 = -0.05$ — điểm truy vấn đang nằm BÊN TRONG bản sao đó, trong khi $d(p)$ tuyên bố còn cách bề mặt những $1.25$ đơn vị! \`map()\` chỉ đánh giá bản "chính chủ", nên $d(p)$ LỚN HƠN khoảng cách thật. Sphere tracing giả định $d(p)$ là cận dưới an toàn (Lipschitz-1); một $d(p)$ thổi phồng phá vỡ đảm bảo đó — bước tính từ nó nhảy thẳng qua bề mặt thật ngay đường nối giữa hai ô, tạo lỗ hổng hoặc răng cưa dọc đường lưới. (Sphere đặt đúng tâm thì đối xứng gương qua biên giữ trường sau fold liên tục và 1-Lipschitz — to quá cỡ ô chỉ làm các bản sao dính/cắt nhau sai hình, không overstepping.)`,
       en: `$q_x = \\mathrm{mod}(2.6 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(3.6, 2.0) - 1.0 = 1.6 - 1.0 = 0.6$. $q_y = \\mathrm{mod}(0.0 + 1.0, 2.0) - 1.0 = \\mathrm{mod}(1.0, 2.0) - 1.0 = 1.0 - 1.0 = 0.0$. $q_z$ matches $q_y$, also $0.0$. $q = (0.6, 0.0, 0.0) \\Rightarrow d(p) = |q| - r = 0.6 - 0.4 = 0.2$.
 
-With $r = 1.1$: half the cell is $0.5c = 1.0$, and the sphere's radius ($1.1$) already exceeds it — the sphere overlaps into the neighboring cell before you even query anything near the border. At a query point close to a cell edge, the copy in the ADJACENT cell can be genuinely nearer than the "home" copy the fold formula returns — but \`map()\` only ever evaluates the home copy, so $d(p)$ comes back LARGER than the true nearest-surface distance. Sphere tracing's step size assumes $d(p)$ is a safe (Lipschitz-1) lower bound on that true distance; an inflated $d(p)$ breaks that guarantee, so a step computed from it can jump straight past the real surface at the seam between two cells — the ray overshoots, producing a hole or a jagged edge exactly along the grid line instead of a clean, continuous surface.`,
+With the center offset to $(0.7, 0, 0)$, at $p = (-0.95, 0, 0)$: the fold gives $q = (-0.95, 0, 0)$, so the formula returns $d(p) = |q - (0.7,0,0)| - 0.4 = 1.65 - 0.4 = 1.25$. But the left neighbor cell's copy is centered at $(-2 + 0.7, 0, 0) = (-1.3, 0, 0)$: the true distance is $|-0.95 - (-1.3)| - 0.4 = 0.35 - 0.4 = -0.05$ — the query point is INSIDE that copy, while $d(p)$ claims the surface is a full $1.25$ units away! \`map()\` only ever evaluates the "home" copy, so $d(p)$ comes back LARGER than the true distance. Sphere tracing assumes $d(p)$ is a safe (Lipschitz-1) lower bound; an inflated $d(p)$ breaks that guarantee — a step computed from it jumps straight past the real surface at the seam between cells, producing holes or jagged edges along the grid lines. (A dead-centered sphere keeps mirror symmetry across borders, so the folded field stays continuous and 1-Lipschitz — outgrowing the cell merely merges/clips the copies into the wrong shape, no overstepping.)`,
     },
   },
   {
@@ -77,7 +77,7 @@ float map(vec3 p, out vec3 cellId) {
 void main() {
   vec2 uv = (gl_FragCoord.xy / uResolution - 0.5) * 2.0;
 
-  vec3 ro = vec3(uMouse.x * 6.0 - 3.0, uMouse.y * 3.0, 6.0);
+  vec3 ro = vec3(uMouse.x * 6.0 - 3.0, uMouse.y * 3.0, 7.0);
   vec3 rd = normalize(vec3(uv, -1.5));
 
   vec3 col = vec3(0.05, 0.06, 0.09);
@@ -121,7 +121,7 @@ float map(vec3 p, out vec3 cellId) {
 void main() {
   vec2 uv = (gl_FragCoord.xy / uResolution - 0.5) * 2.0;
 
-  vec3 ro = vec3(uMouse.x * 6.0 - 3.0, uMouse.y * 3.0, 6.0);
+  vec3 ro = vec3(uMouse.x * 6.0 - 3.0, uMouse.y * 3.0, 7.0);
   vec3 rd = normalize(vec3(uv, -1.5));
 
   vec3 col = vec3(0.05, 0.06, 0.09);

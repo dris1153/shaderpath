@@ -187,8 +187,8 @@ void main() {
     ],
     checklist: [
       {
-        vi: "Kéo chuột ra góc màn hình (tia trượt khỏi bounding sphere): hình nền hiện ngay, không có viền/artefact lạ quanh mép",
-        en: "Drag toward a screen corner (ray misses the bounding sphere): the background shows immediately, no stray edge/artifact near the border",
+        vi: "Nhìn các góc màn hình (tia trượt khỏi bounding sphere): hình nền hiện ngay, không có viền/artefact lạ quanh mép",
+        en: "Look at the screen corners (rays miss the bounding sphere): the background shows immediately, no stray edge/artifact near the border",
       },
       {
         vi: "Hai sphere vẫn hợp mượt bằng smooth min như trước khi sửa — thay đổi không làm hỏng hình dạng cảnh",

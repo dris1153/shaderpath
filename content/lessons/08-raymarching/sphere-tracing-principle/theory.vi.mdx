@@ -57,7 +57,7 @@ Tăng `maxSteps` cho thêm cơ hội hội tụ, lấp lỗ — đổi lại chi
 
 ## epsilon: quá lớn thì lồi lõm, quá nhỏ thì banding
 
-`epsilon` định nghĩa "đủ gần bề mặt là bao nhiêu". Vì một SDF chuẩn tăng đúng 1 đơn vị khi di chuyển 1 đơn vị khoảng cách thực (tính chất Lipschitz-1, đã nhắc ở bài `shaping-functions-and-2d-sdf`), `epsilon` chính là **sai số vị trí bề mặt tính bằng đơn vị thế giới thực**. `epsilon` lớn nghĩa là điểm "hit" có thể lệch xa bề mặt thật đến từng đó đơn vị; trên mặt cong, sai số đó thành các mặt phẳng nhỏ giả không đều — bề mặt trông lồi lõm, sần sùi thay vì trơn.
+`epsilon` định nghĩa "đủ gần bề mặt là bao nhiêu". Vì một SDF chuẩn thay đổi tối đa 1 đơn vị khi di chuyển 1 đơn vị khoảng cách thực — và bằng đúng khoảng cách tới bề mặt tại chính f(p) — (tính chất Lipschitz-1, đã nhắc ở bài `shaping-functions-and-2d-sdf`), `epsilon` chính là **sai số vị trí bề mặt tính bằng đơn vị thế giới thực**. `epsilon` lớn nghĩa là điểm "hit" có thể lệch xa bề mặt thật đến từng đó đơn vị; trên mặt cong, sai số đó thành các mặt phẳng nhỏ giả không đều — bề mặt trông lồi lõm, sần sùi thay vì trơn.
 
 `epsilon` quá nhỏ gây vấn đề ngược: gần vùng march chậm (grazing, hoặc SDF chỉ là cận trên chứ không chính xác — chủ đề bài `sdf-primitives` tiếp theo), tia cần nhiều bước mới đạt ngưỡng nhỏ đó, dễ hết `maxSteps` trước khi đạt — số bước còn lại khác nhau theo từng pixel khiến bề mặt hiện thành dải rời rạc (banding) thay vì gradient mượt, đồng thời tốn hiệu năng hơn vì mỗi pixel gần bề mặt march gần hết ngân sách.
 

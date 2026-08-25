@@ -86,7 +86,7 @@ Cả hai kỹ thuật của bài này chỉ cộng thêm các lời gọi `map()
 Ba lỗi hay gặp nhất khi cài bóng mềm và AO trong raymarch:
 
 1. **Quên offset điểm gốc shadow ray theo normal.** March thẳng từ $p$ (đúng trên biên $f=0$) khiến bước march đầu tiên gần như luôn đọc được $f \approx 0$, bị hiểu nhầm thành "chạm vật cản ngay lập tức" — toàn cảnh hiện ra tối om vì mọi điểm tự che chính nó (shadow acne).
-2. **Quên `clamp(res, 0.0, 1.0)` ở cuối `softShadow`.** Với $k$ lớn và bước march đầu gần biên vật cản, tỉ số `k*d/(t-y)` có thể vượt quá 1 — nhân thẳng giá trị đó vào `diffuse` mà không clamp làm vùng sát biên bóng sáng loá bất thường thay vì mờ dần mượt mà.
+2. **Quên cập nhật `ph = h` ở cuối mỗi vòng lặp.** Công thức cải tiến dựa vào khoảng cách của bước TRƯỚC (`ph`) để ước lượng điểm gần nhất giữa hai mẫu: bỏ dòng đó thì `ph` đứng nguyên ở giá trị khởi tạo khổng lồ, $y \to 0$, $d \to h$ — hàm lặng lẽ thoái hoá về đúng bản naive `k*d/t`, banding quay lại mà không có lỗi nào báo. (Còn `clamp(res, 0.0, 1.0)` cuối hàm chỉ là bảo hiểm: `res` khởi tạo 1.0 và chỉ đi qua `min` với tỉ số không âm, tự nó không bao giờ vượt 1.)
 3. **Nhân AO vào cả thành phần diffuse, không chỉ ambient.** AO mô phỏng ánh sáng gián tiếp bị che, không phải ánh sáng trực tiếp (đã có shadow ray lo việc đó) — nhân AO vào diffuse là đếm hai lần cùng một hiệu ứng che khuất, khiến các góc tiếp xúc giữa vật và sàn tối bất thường, "bẩn" một cách không tự nhiên.
 
 </Callout>

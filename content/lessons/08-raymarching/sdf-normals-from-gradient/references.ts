@@ -8,8 +8,8 @@ export const references: Citation[] = [
     authors: ["Inigo Quilez"],
     url: "https://iquilezles.org/articles/normalsSDF/",
     note: {
-      vi: "Nguồn gốc kỹ thuật tetrahedron 4 mẫu dùng trong bài — giải thích vì sao bốn điểm lấy mẫu ở đỉnh tứ diện cho cùng bậc chính xác với sáu mẫu central-difference, kèm shader mẫu chạy được trên Shadertoy.",
-      en: "The origin of the four-sample tetrahedron technique used in this lesson — explains why four tetrahedron-vertex samples match six-sample central differences in accuracy, with a runnable Shadertoy example.",
+      vi: "Nguồn gốc kỹ thuật tetrahedron 4 mẫu dùng trong bài — trình bày trick như một cách rẻ hơn central-difference (bốn lần gọi thay vì sáu), kèm shader mẫu chạy được trên Shadertoy.",
+      en: "The origin of the four-sample tetrahedron technique used in this lesson — presented as a cheaper alternative to central differences (four calls instead of six), with a runnable Shadertoy example.",
     },
   },
   {

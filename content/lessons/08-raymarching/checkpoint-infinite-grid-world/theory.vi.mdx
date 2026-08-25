@@ -8,7 +8,7 @@ Fragment shader raymarch một trường trụ (pillar) lặp vô hạn theo hai
 
 ## Gợi ý cấu trúc
 
-Bốn TODO đúng thứ tự trong starter code: (1) domain repetition round-based trên `p.xz`, lưu cell-id TRƯỚC khi fold để hash chiều cao; (2) normal bằng 4 lần gọi `map()` theo kỹ thuật tetrahedron; (3) soft shadow — march dọc hướng mặt trời, bắt đầu từ điểm đã dịch theo normal để tránh tự đổ bóng lên chính mình; (4) AO — lấy mẫu `map()` dọc normal ở vài khoảng cách tăng dần, trừ khoảng cách thật để đo mức độ "bị vây quanh".
+Bốn bước đúng thứ tự (bài build tự dựng từ đầu, không có starter hiển thị): (1) domain repetition round-based trên `p.xz`, lưu cell-id TRƯỚC khi fold để hash chiều cao; (2) normal bằng 4 lần gọi `map()` theo kỹ thuật tetrahedron; (3) soft shadow — march dọc hướng mặt trời, bắt đầu từ điểm đã dịch theo normal để tránh tự đổ bóng lên chính mình; (4) AO — lấy mẫu `map()` dọc normal ở vài khoảng cách tăng dần, trừ khoảng cách thật để đo mức độ "bị vây quanh".
 
 ## Thế nào là "xong"
 
