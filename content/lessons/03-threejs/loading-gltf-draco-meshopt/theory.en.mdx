@@ -28,16 +28,16 @@ loader.load(
     });
     const head = gltf.scene.getObjectByName("Head");
   },
-  (xhr) => console.log(`${((xhr.loaded / xhr.total) * 100).toFixed(0)}%`),
+  (xhr) => console.log(xhr.total ? `${((xhr.loaded / xhr.total) * 100).toFixed(0)}%` : "..."),
   (err) => console.error("GLTF load failed", err),
 );
 ```
 
-`load()` takes four arguments — URL, `onLoad`, `onProgress`, `onError` — and doesn't return a `Promise` by default, though three.js also ships `loader.loadAsync(url)` if you'd rather `await` it. The returned `gltf` object isn't just `scene` — it also carries `scenes` (if the file has more than one), `cameras`, `animations` (an array of `AnimationClip`, used in the later AnimationMixer lesson), and `parser`, which exposes the raw JSON if you ever need to dig deeper. `gltf.scene.traverse()` (inherited from `Object3D`, covered properly in the Scene Graph lesson) walks every descendant depth-first — this is exactly where you flip `castShadow`/`receiveShadow` in bulk, since the glTF file itself doesn't carry that flag. `getObjectByName()` matches on the `name` set in Blender/Maya at export time; names aren't guaranteed unique across a scene, so the call returns only the first match it finds.
+`load()` takes four arguments — URL, `onLoad`, `onProgress`, `onError` — and doesn't return a `Promise` by default, though three.js also ships `loader.loadAsync(url)` if you'd rather `await` it. The returned `gltf` object isn't just `scene` — it also carries `scenes` (always an array), `cameras`, `animations` (an array of `AnimationClip`, used in the later AnimationMixer lesson), and `parser`, which exposes the raw JSON if you ever need to dig deeper. `gltf.scene.traverse()` (inherited from `Object3D`, covered properly in the Scene Graph lesson) walks every descendant depth-first — this is exactly where you flip `castShadow`/`receiveShadow` in bulk, since the glTF file itself doesn't carry that flag. `getObjectByName()` matches on the `name` set in Blender/Maya at export time; names aren't guaranteed unique across a scene, so the call returns only the first match it finds.
 
 ## Compressing Geometry: Draco and meshopt
 
-Both techniques attack the same problem — raw, uncompressed geometry usually accounts for most of a glTF file's size — but they trade off differently. The general definition of compression ratio:
+Both techniques attack the same problem — raw, uncompressed geometry usually accounts for a substantial share of a glTF file's size — and the majority in dense, lightly-textured models — but they trade off differently. The general definition of space savings (note: "compression ratio" conventionally means raw/compressed):
 
 $$
 \text{ratio} = 1 - \dfrac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}}
@@ -45,7 +45,7 @@ $$
 
 ### Draco: Strong Compression, at the Cost of a WASM Decode
 
-Draco (Google's open-source library) quantizes position/normal/uv and entropy-encodes the mesh's connectivity graph, typically cutting geometry size by more than 90% on dense-polygon meshes (source: the Draco project's README). The cost shows up at runtime: the browser has to fetch an additional WASM decoder (`draco_decoder.wasm`, a few hundred KB) and spend CPU time decompressing before the mesh is usable — for a mesh with a few hundred thousand vertices, decode can take tens of milliseconds, worth surfacing a loading state for rather than treating as instant.
+Draco (Google's open-source library) quantizes position/normal/uv and entropy-encodes the mesh's connectivity graph, typically cutting geometry size substantially — the ratio depends on mesh density and quantization level (Draco's README describes it only qualitatively; it publishes no measured figure). The cost shows up at runtime: the browser has to fetch an additional WASM decoder (`draco_decoder.wasm`, a few hundred KB) and spend CPU time decompressing before the mesh is usable — for a mesh with a few hundred thousand vertices, decode can take tens of milliseconds, worth surfacing a loading state for rather than treating as instant.
 
 ```js
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
@@ -59,7 +59,7 @@ loader.setDRACOLoader(dracoLoader);
 
 ### meshopt: Faster to Decode, the gltfpack Pipeline
 
-meshopt (Arseny Kapoulkine's `meshoptimizer` library) takes a different approach: it reorders vertices for GPU cache locality and quantizes data in a way that plays nicely with generic compressors (gzip/brotli, which a web server already has enabled) rather than writing its own entropy coder the way Draco does. The resulting file, compressed over HTTP, usually lands close to Draco in size, but because there's no complex entropy decode step, client-side decompression is noticeably faster than Draco — per the meshoptimizer project's own benchmarks (an estimate — see the source), the gap can reach an order of magnitude on large meshes. The build tool is `gltfpack`, run at build time, not runtime: `gltfpack -i model.glb -o model.opt.glb -cc`.
+meshopt (Arseny Kapoulkine's `meshoptimizer` library) takes a different approach: it reorders vertices for GPU cache locality and quantizes data in a way that plays nicely with generic compressors (gzip/brotli, which a web server already has enabled) rather than writing its own entropy coder the way Draco does. The resulting file, compressed over HTTP, usually lands close to Draco in size, but because there's no complex entropy decode step, client-side decompression is noticeably faster than Draco — the meshoptimizer README publishes absolute decode speeds around 3–6 GB/s for the vertex/index codecs — fast enough that decompression time all but vanishes from the loading path. The build tool is `gltfpack`, run at build time, not runtime: `gltfpack -i model.glb -o model.opt.glb -cc`.
 
 ```js
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -71,7 +71,7 @@ Which one to reach for depends on your actual bottleneck: favor Draco when downl
 
 ## Tracking Progress and Handling Load Errors
 
-`onProgress` receives a `ProgressEvent`; many servers don't send `Content-Length`, so `event.lengthComputable` can be `false` and `event.total` can be `0` — always guard the division before computing a percentage to display. `onError` catches both network failures (404, CORS) and structural ones — the most common case is a file using the `KHR_draco_mesh_compression` or `EXT_meshopt_compression` extension without the matching decoder registered: GLTFLoader throws a clear "Unhandled glTF extension" error instead of silently returning an empty mesh. Always show a loading UI (a skeleton) while waiting for `onLoad`, and an error UI when `onError` fires — never leave the canvas blank and unresponsive on failure.
+`onProgress` receives a `ProgressEvent`; many servers don't send `Content-Length`, so `event.lengthComputable` can be `false` and `event.total` can be `0` — always guard the division before computing a percentage to display. `onError` catches both network failures (404, CORS) and structural ones — the most common case is a file using the `KHR_draco_mesh_compression` or `EXT_meshopt_compression` extension without the matching decoder registered: GLTFLoader throws a clear error — "No DRACOLoader instance provided." or "setMeshoptDecoder must be called before loading compressed files" — instead of silently returning an empty mesh. (Genuinely unknown extensions only console.warn and are skipped, not thrown.) Always show a loading UI (a skeleton) while waiting for `onLoad`, and an error UI when `onError` fires — never leave the canvas blank and unresponsive on failure.
 
 ## Cleaning Up a Loaded Hierarchy: Traverse + Dispose
 
@@ -100,7 +100,7 @@ Scanning every material property with `Object.keys` instead of listing fixed nam
 
 The three most common mistakes when loading compressed GLTF:
 
-1. **Forgetting to call `setDRACOLoader`/`setMeshoptDecoder` before the first `load()`.** A file using the `KHR_draco_mesh_compression` or `EXT_meshopt_compression` extension without the matching decoder registered makes GLTFLoader throw an "Unhandled glTF extension" error outright — registering the decoder after calling `load()` has no effect; it has to be attached to the loader first.
+1. **Forgetting to call `setDRACOLoader`/`setMeshoptDecoder` before the first `load()`.** A file using the `KHR_draco_mesh_compression` or `EXT_meshopt_compression` extension without the matching decoder registered makes GLTFLoader throw outright ("No DRACOLoader instance provided." / "setMeshoptDecoder must be called...") — the decoder must exist before the parse step begins; the safe convention is to attach it before calling `load()`.
 2. **Calling `loader.load()` again every time an effect re-runs, without cancelling the previous request.** Under React Strict Mode, effects run twice on mount — without a `cancelled` flag checked in the cleanup, the first call's `onLoad` still fires after the component has unmounted/remounted, adding a duplicate mesh to the scene or writing into dead state.
 3. **Forgetting to dispose the hierarchy when swapping models or unmounting.** The old `gltf.scene` still holds geometry/material/texture VRAM even after being removed from `scene` — most visible when a user flips through several models in one viewer, with VRAM climbing and never coming back down.
 

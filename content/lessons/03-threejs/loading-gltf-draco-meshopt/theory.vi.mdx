@@ -28,7 +28,7 @@ loader.load(
     });
     const head = gltf.scene.getObjectByName("Head");
   },
-  (xhr) => console.log(`${((xhr.loaded / xhr.total) * 100).toFixed(0)}%`),
+  (xhr) => console.log(xhr.total ? `${((xhr.loaded / xhr.total) * 100).toFixed(0)}%` : "..."),
   (err) => console.error("Nạp GLTF thất bại", err),
 );
 ```
@@ -37,7 +37,7 @@ loader.load(
 
 ## Nén hình học: Draco và meshopt
 
-Cả hai kỹ thuật giải quyết cùng một vấn đề — geometry thô, không nén, thường chiếm phần lớn dung lượng file glTF — nhưng đánh đổi khác nhau. Định nghĩa chung của tỉ lệ nén:
+Cả hai kỹ thuật giải quyết cùng một vấn đề — geometry thô, không nén, thường chiếm phần đáng kể dung lượng file glTF — và là phần lớn ở model dày polygon, ít texture — nhưng đánh đổi khác nhau. Định nghĩa chung của mức tiết kiệm (space savings — lưu ý: "compression ratio" theo quy ước là raw/compressed):
 
 $$
 \text{ratio} = 1 - \dfrac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}}
@@ -45,7 +45,7 @@ $$
 
 ### Draco: nén mạnh, đổi lấy chi phí giải mã wasm
 
-Draco (thư viện mã nguồn mở của Google) lượng tử hoá position/normal/uv rồi entropy-encode luôn đồ thị connectivity của mesh, thường giảm kích thước hình học hơn 90% với mesh dày polygon (nguồn: README của dự án Draco). Cái giá phải trả nằm ở runtime: trình duyệt phải tải thêm một decoder WASM (`draco_decoder.wasm`, vài trăm KB) và tốn thời gian CPU giải nén trước khi mesh sẵn sàng dùng — với mesh vài trăm nghìn vertex, decode có thể mất hàng chục mili-giây, đáng để hiện loading state thay vì coi là tức thời.
+Draco (thư viện mã nguồn mở của Google) lượng tử hoá position/normal/uv rồi entropy-encode luôn đồ thị connectivity của mesh, thường giảm kích thước hình học đáng kể — tỉ lệ phụ thuộc mật độ mesh và mức lượng tử hoá (README của Draco chỉ mô tả định tính, không công bố con số đo). Cái giá phải trả nằm ở runtime: trình duyệt phải tải thêm một decoder WASM (`draco_decoder.wasm`, vài trăm KB) và tốn thời gian CPU giải nén trước khi mesh sẵn sàng dùng — với mesh vài trăm nghìn vertex, decode có thể mất hàng chục mili-giây, đáng để hiện loading state thay vì coi là tức thời.
 
 ```js
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
@@ -55,11 +55,11 @@ dracoLoader.setDecoderPath("/draco/"); // thư mục chứa draco_decoder.wasm/j
 loader.setDRACOLoader(dracoLoader);
 ```
 
-`setDecoderPath` phải trỏ tới một thư mục thật sự host các file decoder (copy từ `three/examples/jsm/libs/draco/`) — sai đường dẫn không báo lỗi ngay lập tức, chỉ khiến request tới file `.wasm` trả 404 và load thất bại âm thầm trong console.
+Với bundler (Next.js của khoá học này), DRACOLoader tự resolve decoder từ package qua `import.meta.url` — `setDecoderPath` dùng khi tự host/CDN, và phải trỏ tới thư mục thật sự chứa decoder (copy từ `three/examples/jsm/libs/draco/`) — sai đường dẫn không báo lỗi ngay lập tức, chỉ khiến request tới file `.wasm` trả 404 và load thất bại âm thầm trong console.
 
 ### meshopt: giải mã nhanh hơn, pipeline gltfpack
 
-meshopt (thư viện `meshoptimizer` của Arseny Kapoulkine) đi hướng khác: sắp lại thứ tự vertex để tận dụng cache trên GPU, lượng tử hoá dữ liệu theo cách thân thiện với bộ nén tổng quát (gzip/brotli mà server web gần như luôn bật sẵn) thay vì tự viết entropy coder riêng như Draco. Kích thước file nén qua HTTP thường gần tương đương Draco, nhưng vì không cần entropy-decode phức tạp, tốc độ giải nén ở client nhanh hơn Draco rõ rệt — theo benchmark của chính dự án meshoptimizer (ước lượng, xem nguồn), chênh lệch có thể tới cả chục lần với mesh lớn. Công cụ build đi kèm là `gltfpack`, chạy ở bước build: `gltfpack -i model.glb -o model.opt.glb -cc`.
+meshopt (thư viện `meshoptimizer` của Arseny Kapoulkine) đi hướng khác: sắp lại thứ tự vertex để tận dụng cache trên GPU, lượng tử hoá dữ liệu theo cách thân thiện với bộ nén tổng quát (gzip/brotli mà server web gần như luôn bật sẵn) thay vì tự viết entropy coder riêng như Draco. Kích thước file nén qua HTTP thường gần tương đương Draco, nhưng vì không cần entropy-decode phức tạp, tốc độ giải nén ở client nhanh hơn Draco rõ rệt — README của meshoptimizer công bố tốc độ decode tuyệt đối cỡ 3–6 GB/s (codec vertex/index) — nhanh tới mức thời gian giải nén gần như biến mất khỏi đường tải. Công cụ build đi kèm là `gltfpack`, chạy ở bước build: `gltfpack -i model.glb -o model.opt.glb -cc`.
 
 ```js
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
@@ -71,7 +71,7 @@ Chọn kỹ thuật nào phụ thuộc bottleneck thật của dự án: ưu ti�
 
 ## Theo dõi tiến trình và xử lý lỗi khi tải
 
-`onProgress` nhận một `ProgressEvent`; nhiều server không trả `Content-Length` nên `event.lengthComputable` có thể là `false` và `event.total` bằng `0` — luôn guard chia cho 0 trước khi tính phần trăm hiển thị. `onError` bắt cả lỗi mạng (404, CORS) lẫn lỗi cấu trúc — trường hợp hay gặp nhất là file dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà bạn quên đăng ký đúng decoder: GLTFLoader ném lỗi rõ ràng dạng "Unhandled glTF extension" thay vì âm thầm trả về mesh rỗng. Luôn hiện UI loading (skeleton) trong lúc chờ `onLoad`, và UI báo lỗi khi `onError` bắn — không được để canvas trắng không phản hồi gì khi có sự cố.
+`onProgress` nhận một `ProgressEvent`; nhiều server không trả `Content-Length` nên `event.lengthComputable` có thể là `false` và `event.total` bằng `0` — luôn guard chia cho 0 trước khi tính phần trăm hiển thị. `onError` bắt cả lỗi mạng (404, CORS) lẫn lỗi cấu trúc — trường hợp hay gặp nhất là file dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà bạn quên đăng ký đúng decoder: GLTFLoader ném lỗi rõ ràng — "No DRACOLoader instance provided." hoặc "setMeshoptDecoder must be called before loading compressed files" — thay vì âm thầm trả về mesh rỗng. (Extension lạ khác thì chỉ console.warn rồi bỏ qua, không ném.) Luôn hiện UI loading (skeleton) trong lúc chờ `onLoad`, và UI báo lỗi khi `onError` bắn — không được để canvas trắng không phản hồi gì khi có sự cố.
 
 ## Dọn dẹp một hierarchy đã nạp: traverse + dispose
 
@@ -100,7 +100,7 @@ Quét mọi property của material bằng `Object.keys` thay vì liệt kê tê
 
 Ba lỗi hay gặp nhất khi nạp GLTF nén:
 
-1. **Quên gọi `setDRACOLoader`/`setMeshoptDecoder` trước lần `load()` đầu tiên.** File dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà chưa đăng ký decoder tương ứng khiến GLTFLoader ném thẳng lỗi "Unhandled glTF extension" — đăng ký sau khi đã gọi `load()` không có tác dụng, decoder phải gắn vào loader trước.
+1. **Quên gọi `setDRACOLoader`/`setMeshoptDecoder` trước lần `load()` đầu tiên.** File dùng extension `KHR_draco_mesh_compression` hoặc `EXT_meshopt_compression` mà chưa đăng ký decoder tương ứng khiến GLTFLoader ném thẳng lỗi ("No DRACOLoader instance provided." / "setMeshoptDecoder must be called...") — decoder phải có mặt trước khi bước parse bắt đầu; quy ước an toàn là gắn trước khi gọi `load()`.
 2. **Gọi lại `loader.load()` mỗi lần effect chạy lại mà không hủy request cũ.** Dưới React Strict Mode, effect chạy hai lần khi mount — nếu không có cờ `cancelled` trong cleanup, `onLoad` của lần gọi đầu vẫn chạy sau khi component đã unmount/remount, add trùng mesh vào scene hoặc ghi vào state đã chết.
 3. **Quên dispose hierarchy khi đổi model hoặc unmount.** `gltf.scene` cũ vẫn giữ geometry/material/texture trên VRAM dù đã bị gỡ khỏi `scene` — thấy rõ nhất khi người dùng đổi qua lại nhiều model trong một viewer, VRAM tăng dần mà không bao giờ giảm.
 

@@ -1,8 +1,8 @@
 ## Five Light Types, Two Very Different Cost Tiers
 
-Three.js ships five light types you'll reach for constantly, and they split into two cost tiers that matter a lot once shadows enter the picture. The first tier — `AmbientLight` and `HemisphereLight` — has no direction, no position that affects shading, and critically: **neither can cast a shadow**. `AmbientLight(color, intensity)` adds a flat, uniform color to every fragment regardless of its normal — a pure "fill" that keeps areas untouched by direct light from going fully black. `HemisphereLight(skyColor, groundColor, intensity)` is a touch more nuanced: it interpolates between two colors based on the surface normal's $y$ component (faces pointing skyward lean toward `skyColor`, faces pointing down toward `groundColor`) — still just a direction-based blend, no shadow map, no light-space transform involved. Both are close to free: the added per-fragment cost is one addition (or one `mix`), and neither adds a single extra draw call.
+Three.js ships five light types you'll reach for constantly, and they split into two cost tiers that matter a lot once shadows enter the picture. The first tier — `AmbientLight` and `HemisphereLight` — casts no directional rays, and critically: **neither can cast a shadow**. `AmbientLight(color, intensity)` adds a flat, uniform color to every fragment regardless of its normal — a pure "fill" that keeps areas untouched by direct light from going fully black. `HemisphereLight(skyColor, groundColor, intensity)` is a touch more nuanced: it interpolates between two colors based on the surface normal against the light's axis — the default axis points up, so skyward faces lean toward `skyColor`, downward faces toward `groundColor` (the light's position defines that axis) — still just a direction-based blend, no shadow map, no light-space transform involved. Both are close to free: the added per-fragment cost is one addition (or one `mix`), and neither adds a single extra draw call.
 
-The second tier — `DirectionalLight`, `PointLight`, `SpotLight` — has a real direction and **can** cast shadows, but the three aren't equally expensive. `DirectionalLight` simulates the sun: parallel rays, no distance falloff, direction defined by the vector from `light.position` to `light.target.position`. `SpotLight` emits from a point in a cone, with an extra `angle` (cone half-angle) and `penumbra` (edge softness) — slightly pricier than Directional since it computes an extra angular/distance falloff per fragment. `PointLight` radiates in every direction from a point — there's no "back side" — so once shadows are enabled it has to render **six** times into the six faces of a cube map (a 90° `PerspectiveCamera` per face) instead of once like Directional/Spot. That's the real cost ladder: fill lights (Ambient/Hemisphere) < a directional light with no shadow < Directional/Spot with shadows (one extra pass) < Point with shadows (six extra passes).
+The second tier — `DirectionalLight`, `PointLight`, `SpotLight` — has a real direction and **can** cast shadows, but the three aren't equally expensive. `DirectionalLight` simulates the sun: parallel rays, no distance falloff, direction defined by the vector from `light.position` to `light.target.position`. `SpotLight` emits from a point in a cone, with an extra `angle` (cone half-angle) and `penumbra` (edge softness) — slightly pricier than Directional since it computes an extra angular/distance falloff per fragment. `PointLight` radiates in every direction from a point — there's no "back side" — so once shadows are enabled it has to render **six** times into the six faces of a cube map (one 90° `PerspectiveCamera` re-aimed at each of the six faces) instead of once like Directional/Spot. That's the real cost ladder: fill lights (Ambient/Hemisphere) < a directional light with no shadow < Directional/Spot with shadows (one extra pass) < Point with shadows (six extra passes).
 
 ## Shadows Aren't Automatic: Four Flags, All Four Must Be On
 
@@ -41,22 +41,22 @@ Size this box to hug the area that actually needs shadows — too large wastes r
 
 ## shadow.mapSize: Resolution and Its Real Memory Cost
 
-`light.shadow.mapSize.set(w, h)` (defaults to $512 \times 512$) sets the resolution of the depth texture used as the shadow map. As an estimate, assuming each texel stores a 16-bit (2-byte) depth value — a common size for this kind of render target:
+`light.shadow.mapSize.set(w, h)` (defaults to $512 \times 512$) sets the resolution of the depth texture used as the shadow map. In three 0.185 each shadow map gets an RGBA8 render target (4 bytes/texel) plus a depth texture (~4 bytes/texel) — about 8 bytes per texel:
 
 $$
-512 \times 512 = 262{,}144 \text{ texels} \times 2\text{ bytes} \approx 512\text{ KB}
+512 \times 512 = 262{,}144 \text{ texels} \times 8\text{ bytes} \approx 2\text{ MB}
 $$
 
 Doubling one dimension doesn't double memory — it **quadruples** it, since texel count grows along both dimensions at once:
 
 $$
 \begin{aligned}
-1024 \times 1024 &\approx 2\text{ MB} \quad (4\times \text{ vs. } 512)\\[4pt]
-2048 \times 2048 &\approx 8\text{ MB} \quad (4\times \text{ vs. } 1024,\ 16\times \text{ vs. } 512)
+1024 \times 1024 &\approx 8\text{ MB} \quad (4\times \text{ vs. } 512)\\[4pt]
+2048 \times 2048 &\approx 32\text{ MB} \quad (4\times \text{ vs. } 1024,\ 16\times \text{ vs. } 512)
 \end{aligned}
 $$
 
-And for `PointLight`, multiply by another 6, since its shadow map is a six-face cube map — a $2048^2$ Point light shadow costs roughly $8\text{MB} \times 6 \approx 48\text{MB}$ for a single light, a very practical reason never to casually crank `mapSize` up on a Point light.
+And for `PointLight`, multiply by another 6, since its shadow map is a six-face cube map — a $2048^2$ Point light shadow costs roughly $32\text{MB} \times 6 \approx 192\text{MB}$ for a single light, a very practical reason never to casually crank `mapSize` up on a Point light.
 
 ## Shadow Acne and Peter-Panning: Same Root Cause, Opposite Symptoms
 
@@ -66,7 +66,7 @@ A shadow map stores exactly **one** depth value per texel — that texel stands 
 
 ## Softening the Edge: From a Binary Compare to PCF/PCFSoft
 
-A raw depth comparison returns a binary result — in shadow or not — which makes shadow edges razor-sharp and jagged, following the shadow map's texel grid exactly. `renderer.shadowMap.type = THREE.PCFShadowMap` (Three.js's default) samples a small cluster of neighboring texels around the fragment's shadow-map coordinate and averages that binary result into a continuous fraction — producing a soft gradient at the edge instead of a hard line, at the cost of a few extra texture fetches per fragment. `THREE.PCFSoftShadowMap` uses a wider sampling kernel for a noticeably softer, more natural edge, at a cost that's negligible on modern GPUs relative to the visual payoff.
+A raw depth comparison returns a binary result — in shadow or not — which makes shadow edges razor-sharp and jagged, following the shadow map's texel grid exactly. `renderer.shadowMap.type = THREE.PCFShadowMap` (Three.js's default) samples a small cluster of neighboring texels around the fragment's shadow-map coordinate and averages that binary result into a continuous fraction — producing a soft gradient at the edge instead of a hard line, at the cost of a few extra texture fetches per fragment. For softer edges still, tune `shadow.radius` per light. (`THREE.PCFSoftShadowMap` is gone — since 0.185, assigning it just logs a deprecation warning and falls back to the default `PCFShadowMap`.)
 
 ## Where This Connects Later
 
@@ -78,6 +78,6 @@ The three most common light/shadow-map mistakes:
 
 1. **Turning on `castShadow` for a light and mesh but forgetting `renderer.shadowMap.enabled = true`.** The entire shadow pipeline stays off at the renderer level, so every per-object castShadow/receiveShadow flag becomes meaningless with no error to tell you why.
 2. **Forgetting `receiveShadow = true` on the ground.** The object still casts a perfectly correct shadow into the shadow map, but the ground never samples that map while shading, so no shadow appears — easy to misdiagnose as a light or camera bug instead of one missing flag on the receiving mesh.
-3. **Cranking `bias` way up to "fix" shadow acne without re-checking the contact point.** The acne disappears but flips into peter-panning, the shadow drifting off the object's base; increase it in small steps instead, or reach for `normalBias` before pushing raw `bias` too far.
+3. **Pushing `bias` too far negative to "fix" shadow acne without re-checking the contact point.** The acne disappears but flips into peter-panning, the shadow drifting off the object's base; grow the negative bias in small steps instead, or reach for `normalBias` before pushing raw `bias` too far.
 
 </Callout>

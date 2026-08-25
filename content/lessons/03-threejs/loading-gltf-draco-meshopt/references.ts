@@ -39,8 +39,8 @@ export const references: Citation[] = [
     authors: ["Google"],
     url: "https://github.com/google/draco",
     note: {
-      vi: "README của thư viện Draco — nguồn cho con số tỉ lệ nén ~90%+ và giải thích cơ chế lượng tử hoá + entropy encoding dùng trong bài.",
-      en: "The Draco library's README — the source for the ~90%+ compression figure cited in this lesson, and an explanation of the quantization + entropy-encoding mechanism.",
+      vi: "README của thư viện Draco — giải thích cơ chế lượng tử hoá + entropy encoding dùng trong bài (mô tả định tính, không công bố con số nén đo được).",
+      en: "The Draco library's README — explains the quantization + entropy-encoding mechanism this lesson uses (qualitative description; it publishes no measured compression figure).",
     },
   },
   {
@@ -50,8 +50,8 @@ export const references: Citation[] = [
     authors: ["Arseny Kapoulkine"],
     url: "https://github.com/zeux/meshoptimizer",
     note: {
-      vi: "Repo gốc của meshopt và công cụ gltfpack — có benchmark decode speed so với Draco, nguồn cho phần so sánh tốc độ trong bài.",
-      en: "The original meshopt and gltfpack repo — includes decode-speed benchmarks against Draco, the source for this lesson's speed comparison.",
+      vi: "Repo gốc của meshopt và công cụ gltfpack — README công bố tốc độ decode tuyệt đối (3–6 GB/s cho codec vertex/index), nguồn cho phần tốc độ trong bài.",
+      en: "The original meshopt and gltfpack repo — its README publishes absolute decode speeds (3–6 GB/s for the vertex/index codecs), the source for this lesson's speed section.",
     },
   },
 ];

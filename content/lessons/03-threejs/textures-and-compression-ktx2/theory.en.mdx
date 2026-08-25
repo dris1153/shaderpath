@@ -38,7 +38,7 @@ checker.needsUpdate = true; // required once after writing raw pixel data
 
 ## Filtering, Mipmap, Wrap: Track 1's Names Renamed to Three.js's API
 
-Every concept from Track 1's texture lesson still applies, just under new property names: `TEXTURE_MAG_FILTER`/`MIN_FILTER` become `texture.magFilter`/`texture.minFilter`; `gl.NEAREST`/`gl.LINEAR` become `THREE.NearestFilter`/`THREE.LinearFilter`; `gl.LINEAR_MIPMAP_LINEAR` (trilinear) becomes `THREE.LinearMipmapLinearFilter` — also Three's default `minFilter`. Calling `gl.generateMipmap()` by hand turns into the `texture.generateMipmaps = true` flag (on by default) — Three generates the mip chain itself on upload, nothing else to call. Wrap modes keep their meaning: `TEXTURE_WRAP_S`/`_T` become `texture.wrapS`/`texture.wrapT`, and `gl.REPEAT`/`CLAMP_TO_EDGE`/`MIRRORED_REPEAT` become `THREE.RepeatWrapping`/`THREE.ClampToEdgeWrapping`/`THREE.MirroredRepeatWrapping`; `texture.repeat.set(u, v)` (a `Vector2`) sets the tile count, meaningful only with Repeat/MirroredRepeat wrapping.
+Every concept from Track 1's texture lesson still applies, just under new property names: `TEXTURE_MAG_FILTER`/`MIN_FILTER` become `texture.magFilter`/`texture.minFilter`; `gl.NEAREST`/`gl.LINEAR` become `THREE.NearestFilter`/`THREE.LinearFilter`; `gl.LINEAR_MIPMAP_LINEAR` (trilinear) becomes `THREE.LinearMipmapLinearFilter` — also Three's default `minFilter`. Calling `gl.generateMipmap()` by hand turns into the `texture.generateMipmaps = true` flag (on by default) — Three generates the mip chain itself on upload, nothing else to call. Wrap modes keep their meaning: `TEXTURE_WRAP_S`/`_T` become `texture.wrapS`/`texture.wrapT`, and `gl.REPEAT`/`CLAMP_TO_EDGE`/`MIRRORED_REPEAT` become `THREE.RepeatWrapping`/`THREE.ClampToEdgeWrapping`/`THREE.MirroredRepeatWrapping`; `texture.repeat.set(u, v)` (a `Vector2`) sets the tile count — real tiling only happens with Repeat/MirroredRepeat wrapping; under Clamp, UVs past $[0,1]$ pin to the edge (the image shrinks and edge texels smear).
 
 One difference worth noting: Three defaults `texture.flipY = true` — the opposite of raw WebGL's `false` default — so the `UNPACK_FLIP_Y_WEBGL` headache Track 1 warned about mostly disappears once you're working inside Three, because the library already flips on upload.
 
@@ -76,7 +76,8 @@ const ktx2Loader = new KTX2Loader()
   .detectSupport(renderer); // MUST run before loading — picks the target format
 
 const compressed = await ktx2Loader.loadAsync("/textures/brick-albedo.ktx2");
-compressed.colorSpace = THREE.SRGBColorSpace; // the colorSpace rule still applies
+// KTX2 carries color-space info in its container - the loader sets
+// texture.colorSpace itself; verify rather than overwrite it.
 ```
 
 As a practical estimate: common GPU-compressed formats land around 4–8 bits per pixel, versus 32 bits per pixel for raw RGBA8 — roughly 4–8× lighter than a decoded original at close to equivalent visual quality (the real ratio depends on format and content).

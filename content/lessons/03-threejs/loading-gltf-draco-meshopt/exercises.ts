@@ -14,8 +14,8 @@ For each scenario, pick Draco or meshopt, and justify it with the actual mechani
     },
     hints: [
       {
-        vi: "Draco đổi kích thước file nhỏ hơn lấy chi phí decode CPU cao hơn qua WASM; meshopt đổi kích thước gần bằng lấy tốc độ decode nhanh hơn nhiều.",
-        en: "Draco trades a smaller file for a heavier WASM CPU decode; meshopt trades near-equal size for a much faster decode.",
+        vi: "Một kỹ thuật tối ưu kích thước file, một tối ưu tốc độ decode — mỗi cái trả giá ở đâu, và giá đó trả một lần hay trả lặp lại?",
+        en: "One technique optimizes file size, the other decode speed — where does each pay its price, and is that price paid once or repeatedly?",
       },
       {
         vi: "Nghĩ về đại lượng nào là bottleneck thật trong mỗi tình huống: băng thông mạng một lần duy nhất, hay tổng CPU decode cộng dồn qua nhiều lần load liên tiếp.",
@@ -24,12 +24,12 @@ For each scenario, pick Draco or meshopt, and justify it with the actual mechani
     ],
     checklist: [
       {
-        vi: "Tôi chọn đúng kỹ thuật cho tình huống catalog cuộn liên tục (meshopt, vì decode nhanh quan trọng hơn khi model đổi liên tục)",
-        en: "I picked the right technique for the continuously-scrolling catalog (meshopt, since fast decode matters more when models keep swapping)",
+        vi: "Tôi chọn một kỹ thuật cho tình huống catalog cuộn liên tục và bảo vệ lựa chọn bằng chi phí decode lặp lại",
+        en: "I picked a technique for the continuously-scrolling catalog and defended it via the repeated decode cost",
       },
       {
-        vi: "Tôi chọn đúng kỹ thuật cho tình huống model kiến trúc tải một lần (Draco, vì kích thước file là bottleneck chính)",
-        en: "I picked the right technique for the once-loaded architectural model (Draco, since file size is the main bottleneck)",
+        vi: "Tôi chọn một kỹ thuật cho tình huống model kiến trúc tải một lần và bảo vệ lựa chọn bằng bottleneck của nó",
+        en: "I picked a technique for the once-loaded architectural model and defended it via its bottleneck",
       },
       {
         vi: "Tôi giải thích được đúng cơ chế đánh đổi (kích thước file vs tốc độ decode), không chỉ nói chung chung",

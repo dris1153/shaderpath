@@ -15,14 +15,14 @@ const LABELS = {
     angle: "Góc sáng (độ)",
     bias: "shadow.bias",
     mapSize: "shadow.mapSize",
-    hint: "Bias = 0 ở góc sáng thấp lộ ngay shadow acne trên quả cầu; kéo bias lên quá cao thì bóng của khối hộp tách khỏi chân — đó là peter-panning.",
+    hint: "Bias = 0 ở góc sáng thấp lộ ngay shadow acne trên quả cầu; kéo bias xuống quá âm thì bóng của khối hộp tách khỏi chân — đó là peter-panning.",
   },
   en: {
     title: "Shadow Lab — Light Angle, Bias & Map Size",
     angle: "Light angle (deg)",
     bias: "shadow.bias",
     mapSize: "shadow.mapSize",
-    hint: "bias = 0 at a low light angle exposes shadow acne on the sphere right away; push bias too high and the box's shadow detaches from its base — that's peter-panning.",
+    hint: "bias = 0 at a low light angle exposes shadow acne on the sphere right away; push bias too far negative and the box's shadow detaches from its base — that's peter-panning.",
   },
 } as const;
 
@@ -54,7 +54,6 @@ function ShadowLab() {
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     renderer.setPixelRatio(1); // sizing loop below already bakes DPR into width/height
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x11151c);
