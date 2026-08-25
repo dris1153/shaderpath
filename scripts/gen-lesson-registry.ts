@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import GithubSlugger from "github-slugger";
 import { LESSON_SLUGS } from "../content/slugs";
+import { stripInlineMath } from "../lib/tex-to-text";
 
 // Emits typed maps from the content/lessons filesystem (decision D2):
 //   LESSON_REGISTRY     slug×locale → dynamic import of theory MDX
@@ -43,10 +44,66 @@ function extractToc(mdxSource: string): TocItem[] {
   return items;
 }
 
+interface PitfallItem {
+  label: string;
+  detail?: string;
+}
+
+function stripInlineMarkdown(text: string): string {
+  // keep `_` (snake_case identifiers, not _emphasis_) and lone `*`
+  // (gl.uniform* is API text, not markdown) — only bold pairs are markup here
+  return stripInlineMath(text)
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\*\*/g, "")
+    .replace(/`/g, "")
+    .trim();
+}
+
+// Pulls the numbered/bulleted items out of the lesson's single
+// `<Callout variant="mistake">` block. Items follow the house pattern
+// `1. **Bold lead.** explanation…` — the bold lead becomes the node label.
+function extractPitfalls(mdxSource: string): PitfallItem[] {
+  const start = mdxSource.indexOf('<Callout variant="mistake"');
+  if (start === -1) return [];
+  const end = mdxSource.indexOf("</Callout>", start);
+  if (end === -1) return [];
+  const items: string[] = [];
+  let current: string[] | null = null;
+  // split tolerates CRLF: `.` never matches `\r`, which would break the `$` anchor
+  for (const line of mdxSource.slice(start, end).split(/\r?\n/)) {
+    const m = /^\s*(?:\d+\.|-)\s+(.*)$/.exec(line);
+    if (m?.[1]) {
+      if (current) items.push(current.join(" "));
+      current = [m[1]];
+    } else if (current) {
+      if (line.trim() === "") {
+        items.push(current.join(" "));
+        current = null;
+      } else {
+        current.push(line.trim());
+      }
+    }
+  }
+  if (current) items.push(current.join(" "));
+  return items.map((raw) => {
+    const lead = /^\*\*(.+?)\*\*\s*(.*)$/.exec(raw);
+    if (lead?.[1]) {
+      const label = stripInlineMarkdown(lead[1]).replace(/[.,;:]$/, "");
+      const detail = stripInlineMarkdown(lead[2] ?? "");
+      return detail ? { label, detail } : { label };
+    }
+    const text = stripInlineMarkdown(raw);
+    if (text.length <= 60) return { label: text };
+    const cut = text.lastIndexOf(" ", 60);
+    return { label: `${text.slice(0, cut > 20 ? cut : 60)}…`, detail: text };
+  });
+}
+
 const slugSet = new Set<string>(LESSON_SLUGS);
 const theoryEntries: string[] = [];
 const referenceEntries: string[] = [];
 const tocEntries: string[] = [];
+const pitfallEntries: string[] = [];
 const demoEntries: string[] = [];
 const exerciseEntries: string[] = [];
 const warnings: string[] = [];
@@ -77,16 +134,26 @@ if (fs.existsSync(LESSONS_DIR)) {
           .join("\n");
         theoryEntries.push(`  "${lessonDir}": {\n${fields}\n  },`);
 
+        const pitfallFields: string[] = [];
         const tocFields = locales
           .map((l) => {
             const src = fs.readFileSync(
               path.join(lessonPath, `theory.${l}.mdx`),
               "utf8",
             );
+            const pitfalls = extractPitfalls(src);
+            if (pitfalls.length > 0) {
+              pitfallFields.push(`    ${l}: ${JSON.stringify(pitfalls)},`);
+            }
             return `    ${l}: ${JSON.stringify(extractToc(src))},`;
           })
           .join("\n");
         tocEntries.push(`  "${lessonDir}": {\n${tocFields}\n  },`);
+        if (pitfallFields.length > 0) {
+          pitfallEntries.push(
+            `  "${lessonDir}": {\n${pitfallFields.join("\n")}\n  },`,
+          );
+        }
       }
 
       if (fs.existsSync(path.join(lessonPath, "references.ts"))) {
@@ -143,6 +210,19 @@ export const TOC_REGISTRY: Partial<
 ${tocEntries.join("\n")}
 };
 
+export interface PitfallItem {
+  label: string;
+  detail?: string;
+}
+
+// Mistake-callout items per lesson×locale; lessons without the callout are
+// absent (their mind map hides the pitfalls branch).
+export const PITFALLS_REGISTRY: Partial<
+  Record<LessonSlug, Partial<Record<Locale, PitfallItem[]>>>
+> = {
+${pitfallEntries.join("\n")}
+};
+
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
 
 export const EXERCISES_REGISTRY: Partial<
@@ -174,6 +254,6 @@ fs.writeFileSync(
   "utf8",
 );
 console.log(
-  `lesson registry: ${theoryEntries.length} theory, ${referenceEntries.length} references, ${demoEntries.length} demos, ${exerciseEntries.length} exercises`,
+  `lesson registry: ${theoryEntries.length} theory, ${referenceEntries.length} references, ${demoEntries.length} demos, ${exerciseEntries.length} exercises, ${pitfallEntries.length} pitfall sets`,
 );
 for (const w of warnings) console.warn(`  ${w}`);

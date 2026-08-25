@@ -3,12 +3,14 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import {
   LESSON_REGISTRY,
+  PITFALLS_REGISTRY,
   REFERENCES_REGISTRY,
   TOC_REGISTRY,
 } from "@/content/lesson-registry.generated";
 import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
-import type { Locale } from "@/content/types";
-import { getLesson } from "@/lib/curriculum";
+import type { LessonMeta, Locale } from "@/content/types";
+import { getDependents, getLesson } from "@/lib/curriculum";
+import { buildLessonMindMap } from "@/lib/mind-map";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,6 +24,7 @@ import { ExerciseSection } from "@/components/exercise/exercise-section";
 import { BookmarkToggle } from "@/components/notes/bookmark-toggle";
 import { LessonNotesLayer } from "@/components/notes/lesson-notes-layer";
 import { LessonDemoHost } from "@/components/lesson/lesson-demo-host";
+import { LessonMindMap } from "@/components/lesson/lesson-mind-map";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { LearnAnywayNotice } from "@/components/lesson/learn-anyway-notice";
 import { LessonHeader } from "@/components/lesson/lesson-header";
@@ -63,6 +66,28 @@ export default async function LessonPage({
   const references = referencesLoader
     ? (await referencesLoader()).references
     : [];
+
+  const tm = await getTranslations("mindMap");
+  const mindMap = buildLessonMindMap({
+    meta: lesson,
+    locale,
+    toc,
+    pitfalls: usedLocale
+      ? (PITFALLS_REGISTRY[lesson.slug]?.[usedLocale] ?? [])
+      : [],
+    prerequisites: lesson.prerequisites
+      .map((p) => getLesson(p))
+      .filter((p): p is LessonMeta => p !== undefined),
+    dependents: getDependents(lesson.slug),
+    strings: {
+      objectives: tm("objectives"),
+      content: tm("content"),
+      pitfalls: tm("pitfalls"),
+      links: tm("links"),
+      prerequisiteNote: tm("prerequisiteNote"),
+      dependentNote: tm("dependentNote"),
+    },
+  });
 
   const sidebar = (
     <LessonSidebar
@@ -124,6 +149,18 @@ export default async function LessonPage({
           </div>
           <LessonHeader lesson={lesson} locale={locale} />
         </div>
+
+        <LessonMindMap
+          tree={mindMap}
+          strings={{
+            title: tm("title"),
+            open: tm("open"),
+            close: tm("close"),
+            zoomIn: tm("zoomIn"),
+            zoomOut: tm("zoomOut"),
+            reset: tm("reset"),
+          }}
+        />
 
         <LearnAnywayNotice slug={lesson.slug} />
 

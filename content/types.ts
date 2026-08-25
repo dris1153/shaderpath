@@ -57,6 +57,16 @@ export interface TrackDef {
   moduleIds: string[];
 }
 
+// Mind map trees are per-locale: "section" node ids are heading slugs (which
+// differ between vi/en MDX), "link" node ids are lesson slugs.
+export interface MindMapNode {
+  id: string;
+  label: string;
+  detail?: string;
+  kind: "objective" | "section" | "pitfall" | "link";
+  children?: MindMapNode[];
+}
+
 export interface Citation {
   id: string;
   type: "book" | "paper" | "article" | "spec" | "video" | "repo";

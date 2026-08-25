@@ -118,7 +118,6 @@
   "lesson": {
     "backToTrack": "Back to track",
     "onThisPage": "On this page",
-    "objectives": "After this lesson you will",
     "references": "References",
     "prev": "Previous",
     "next": "Next",
@@ -136,6 +135,20 @@
     "openToc": "On this page",
     "copyCode": "Copy",
     "copiedCode": "Copied"
+  },
+  "mindMap": {
+    "title": "Mind map",
+    "objectives": "Objectives",
+    "content": "Content",
+    "pitfalls": "Common mistakes",
+    "links": "Connections",
+    "prerequisiteNote": "Learn first",
+    "dependentNote": "Leads to",
+    "open": "Expand map",
+    "close": "Close",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "reset": "Recenter"
   },
   "exercise": {
     "title": "Exercises",

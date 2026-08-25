@@ -118,7 +118,6 @@
   "lesson": {
     "backToTrack": "Về track",
     "onThisPage": "Trong bài này",
-    "objectives": "Sau bài này bạn sẽ",
     "references": "Tài liệu tham khảo",
     "prev": "Bài trước",
     "next": "Bài sau",
@@ -136,6 +135,20 @@
     "openToc": "Trong bài",
     "copyCode": "Sao chép",
     "copiedCode": "Đã sao chép"
+  },
+  "mindMap": {
+    "title": "Sơ đồ tư duy",
+    "objectives": "Mục tiêu",
+    "content": "Nội dung",
+    "pitfalls": "Lỗi hay gặp",
+    "links": "Kết nối",
+    "prerequisiteNote": "Cần học trước",
+    "dependentNote": "Dẫn tới",
+    "open": "Phóng to sơ đồ",
+    "close": "Đóng",
+    "zoomIn": "Phóng to",
+    "zoomOut": "Thu nhỏ",
+    "reset": "Căn giữa lại"
   },
   "exercise": {
     "title": "Bài tập",

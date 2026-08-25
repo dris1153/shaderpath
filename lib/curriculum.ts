@@ -22,8 +22,22 @@ const ORDERED_SLUGS: LessonSlug[] = TRACKS.flatMap((t) =>
     .flatMap((m) => m.lessonSlugs),
 );
 
+const dependentsBySlug = new Map<LessonSlug, LessonMeta[]>();
+for (const l of LESSONS) {
+  for (const p of l.prerequisites) {
+    const arr = dependentsBySlug.get(p);
+    if (arr) arr.push(l);
+    else dependentsBySlug.set(p, [l]);
+  }
+}
+
 export function getLesson(slug: LessonSlug): LessonMeta | undefined {
   return lessonBySlug.get(slug);
+}
+
+/** Lessons that list `slug` among their prerequisites (curriculum order). */
+export function getDependents(slug: LessonSlug): LessonMeta[] {
+  return dependentsBySlug.get(slug) ?? [];
 }
 
 export function getTrack(id: TrackId): TrackDef | undefined {
