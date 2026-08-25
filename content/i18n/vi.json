@@ -113,7 +113,13 @@
     "elective": "Tự chọn",
     "locked": "Chưa mở khoá",
     "difficulty": "Độ khó {level}/5",
-    "minutes": "{minutes} phút"
+    "minutes": "{minutes} phút",
+    "viewList": "Danh sách",
+    "viewMap": "Sơ đồ",
+    "mapLegendCompleted": "Đã hoàn thành",
+    "mapLegendUnlocked": "Sẵn sàng học",
+    "mapLegendLocked": "Chưa mở khoá theo lộ trình",
+    "mapA11y": "Sơ đồ thiên về chuột/cảm ứng — chế độ Danh sách đầy đủ hơn cho bàn phím và trình đọc màn hình."
   },
   "lesson": {
     "backToTrack": "Về track",

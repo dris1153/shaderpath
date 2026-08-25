@@ -113,7 +113,13 @@
     "elective": "Elective",
     "locked": "Locked",
     "difficulty": "Difficulty {level}/5",
-    "minutes": "{minutes} min"
+    "minutes": "{minutes} min",
+    "viewList": "List",
+    "viewMap": "Map",
+    "mapLegendCompleted": "Completed",
+    "mapLegendUnlocked": "Ready to learn",
+    "mapLegendLocked": "Not yet unlocked",
+    "mapA11y": "The map favors mouse and touch — List view is the fuller experience for keyboard and screen readers."
   },
   "lesson": {
     "backToTrack": "Back to track",
