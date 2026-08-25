@@ -173,8 +173,9 @@ function GeometryPlayground({ L }: { L: Labels }) {
     const mesh = new THREE.Mesh(geometry, material);
     scene.add(mesh);
 
+    // No setPixelRatio: the loop below sizes the drawing buffer in device
+    // pixels itself, and setSize multiplies by the stored pixel ratio.
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
     stateRef.current = { renderer, scene, camera, mesh, material };
 

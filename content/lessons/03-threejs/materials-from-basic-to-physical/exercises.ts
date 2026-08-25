@@ -53,8 +53,8 @@ At metalness = 0.7, diffuseColor has already shrunk to 30% of its original inten
     id: "material-ladder-factory",
     kind: "code",
     prompt: {
-      vi: `Viết hàm \`createLadderMaterial(kind, params)\` trả về đúng \`THREE.Material\` cho từng bậc thang (\`basic\`/\`lambert\`/\`phong\`/\`standard\`/\`physical\`). \`basic\`/\`lambert\`/\`phong\` chỉ nhận \`color\`; \`standard\`/\`physical\` nhận thêm \`metalness\`/\`roughness\`.`,
-      en: `Write a \`createLadderMaterial(kind, params)\` function returning the correct \`THREE.Material\` for each ladder rung (\`basic\`/\`lambert\`/\`phong\`/\`standard\`/\`physical\`). \`basic\`/\`lambert\`/\`phong\` only take \`color\`; \`standard\`/\`physical\` additionally take \`metalness\`/\`roughness\`.`,
+      vi: `Viết hàm \`createLadderMaterial(kind, params)\` trả về đúng \`THREE.Material\` cho từng bậc thang (\`basic\`/\`lambert\`/\`phong\`/\`standard\`/\`physical\`). \`basic\`/\`lambert\` chỉ nhận \`color\`; \`phong\` có thể thêm \`shininess\`; \`standard\`/\`physical\` nhận thêm \`metalness\`/\`roughness\` (physical có thể thêm \`clearcoat\`).`,
+      en: `Write a \`createLadderMaterial(kind, params)\` function returning the correct \`THREE.Material\` for each ladder rung (\`basic\`/\`lambert\`/\`phong\`/\`standard\`/\`physical\`). \`basic\`/\`lambert\` only take \`color\`; \`phong\` may add \`shininess\`; \`standard\`/\`physical\` additionally take \`metalness\`/\`roughness\` (physical may add \`clearcoat\`).`,
     },
     starterCode: `import * as THREE from "three";
 
@@ -75,7 +75,17 @@ function createLadderMaterial(
   // metalness/roughness into them triggers a TypeScript excess-property error.
   throw new Error("not implemented");
 }`,
-    solutionCode: `function createLadderMaterial(
+    solutionCode: `import * as THREE from "three";
+
+type MaterialKind = "basic" | "lambert" | "phong" | "standard" | "physical";
+
+interface LadderParams {
+  color: number;
+  metalness: number; // only standard/physical use this
+  roughness: number; // only standard/physical use this
+}
+
+function createLadderMaterial(
   kind: MaterialKind,
   params: LadderParams,
 ): THREE.Material {

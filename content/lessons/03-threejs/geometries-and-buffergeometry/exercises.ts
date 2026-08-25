@@ -18,8 +18,8 @@ Then answer: does raising $s$ from $2$ to $4$ (doubling it) double the triangle 
         en: "One face has s×s cells, 2 triangles per cell → 2s² triangles per face. Multiply by 6 faces.",
       },
       {
-        vi: "triangles(s) = 12s² — một hàm BẬC HAI theo s, không phải tuyến tính. Nhân đôi s nghĩa là nhân s² với 4.",
-        en: "triangles(s) = 12s² — a QUADRATIC function of s, not linear. Doubling s means multiplying s² by 4.",
+        vi: "Mỗi mặt của hộp là một lưới s×s ô, mỗi ô 2 tam giác, và hộp có 6 mặt — công thức chứa s ở bậc mấy? Bậc đó nói gì về việc nhân đôi s?",
+        en: "Each box face is an s×s grid of cells, each cell 2 triangles, and a box has 6 faces — what power of s does the formula carry? What does that power say about doubling s?",
       },
     ],
     checklist: [

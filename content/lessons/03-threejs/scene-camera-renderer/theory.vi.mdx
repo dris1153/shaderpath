@@ -12,7 +12,7 @@ Mọi ứng dụng Three.js, dù đơn giản hay phức tạp đến đâu, đ�
 
 ## WebGLRenderer: sở hữu context, quyết định độ phân giải
 
-`new THREE.WebGLRenderer({ canvas })` gọi `canvas.getContext("webgl2")` (hoặc fallback `webgl`) cho bạn — đúng lệnh Track 1 bắt bạn gõ tay ở bài tam giác đầu tiên. Từ đây renderer giữ context đó làm state riêng; bạn không tự gọi `gl.clear`, `gl.viewport`, hay `gl.drawElements` nữa — mọi API `render()` công khai đều là lớp bọc quanh chính xác những lệnh gl bạn từng viết tay ở Track 1.
+`new THREE.WebGLRenderer({ canvas })` gọi `canvas.getContext("webgl2")` cho bạn (three từ r163 chỉ chạy WebGL2 — trình duyệt không hỗ trợ sẽ báo lỗi, không còn fallback WebGL1) — đúng lệnh Track 1 bắt bạn gõ tay ở bài tam giác đầu tiên. Từ đây renderer giữ context đó làm state riêng; bạn không tự gọi `gl.clear`, `gl.viewport`, hay `gl.drawElements` nữa — mọi API `render()` công khai đều là lớp bọc quanh chính xác những lệnh gl bạn từng viết tay ở Track 1.
 
 ### `setSize` và `updateStyle`
 
@@ -20,7 +20,7 @@ Mọi ứng dụng Three.js, dù đơn giản hay phức tạp đến đâu, đ�
 
 ### `setPixelRatio`: clamp trước khi set
 
-`renderer.setPixelRatio(window.devicePixelRatio)` nghe hợp lý nhưng nguy hiểm trên thiết bị DPR cao: một điện thoại DPR 3 với màn hình CSS $390\times844$ cho buffer $1170\times2532 \approx 2{,}96$ triệu pixel; clamp về DPR 2 (khuyến nghị chuẩn, `Math.min(window.devicePixelRatio, 2)`) cho buffer $780\times1688 \approx 1{,}32$ triệu pixel — ít hơn khoảng $2{,}25$ lần số fragment invocation mỗi frame, gần như không đổi gì về độ nét mắt phân biệt được (Track 1, bài canvas & DPR, đã đo chính xác ngưỡng này).
+`renderer.setPixelRatio(window.devicePixelRatio)` nghe hợp lý nhưng nguy hiểm trên thiết bị DPR cao: một điện thoại DPR 3 với màn hình CSS $390\times844$ cho buffer $1170\times2532 \approx 2{,}96$ triệu pixel; clamp về DPR 2 (khuyến nghị chuẩn, `Math.min(window.devicePixelRatio, 2)`) cho buffer $780\times1688 \approx 1{,}32$ triệu pixel — ít hơn khoảng $2{,}25$ lần số fragment invocation mỗi frame, gần như không đổi gì về độ nét mắt phân biệt được (Track 1, bài canvas & DPR, đã giải thích ngưỡng này).
 
 ## `render()` là một khung hình — vòng lặp là việc của bạn
 

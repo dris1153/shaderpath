@@ -180,11 +180,11 @@ export const lessons: LessonMeta[] = [
     prerequisites: ["materials-from-basic-to-physical"],
     objectives: {
       vi: [
-        "Bố cục một cảnh nhiều object với vị trí/scale/rotation hợp lý và ít nhất 2 loại material",
+        "Bố cục một cảnh nhiều object với vị trí/scale/rotation hợp lý và ít nhất 3 loại material",
         "Tự đối chiếu bố cục và ánh sáng với checklist trước khi xem đáp án",
       ],
       en: [
-        "Compose a multi-object scene with sensible position/scale/rotation and at least 2 material types",
+        "Compose a multi-object scene with sensible position/scale/rotation and at least 3 material types",
         "Self-verify composition and lighting against the checklist before checking the solution",
       ],
     },

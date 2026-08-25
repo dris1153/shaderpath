@@ -12,7 +12,7 @@ Every Three.js app, no matter how simple or elaborate, starts from exactly three
 
 ## WebGLRenderer: Owning the Context, Driving Resolution
 
-`new THREE.WebGLRenderer({ canvas })` calls `canvas.getContext("webgl2")` (or falls back to `webgl`) for you — the exact call Track 1 made you type by hand in the first-triangle lesson. From here the renderer keeps that context as private state; you never call `gl.clear`, `gl.viewport`, or `gl.drawElements` yourself again — every public `render()` call is a wrapper around precisely the gl calls you wrote by hand in Track 1.
+`new THREE.WebGLRenderer({ canvas })` calls `canvas.getContext("webgl2")` for you (three is WebGL2-only since r163 — a browser without it gets an error, there is no WebGL1 fallback) — the exact call Track 1 made you type by hand in the first-triangle lesson. From here the renderer keeps that context as private state; you never call `gl.clear`, `gl.viewport`, or `gl.drawElements` yourself again — every public `render()` call is a wrapper around precisely the gl calls you wrote by hand in Track 1.
 
 ### `setSize` and `updateStyle`
 
@@ -20,7 +20,7 @@ Every Three.js app, no matter how simple or elaborate, starts from exactly three
 
 ### `setPixelRatio`: Clamp Before You Set It
 
-`renderer.setPixelRatio(window.devicePixelRatio)` sounds reasonable but is dangerous on high-DPR devices: a DPR-3 phone with a $390\times844$ CSS screen produces a $1170\times2532 \approx 2.96$ million pixel buffer; clamping to DPR 2 (the standard recommendation, `Math.min(window.devicePixelRatio, 2)`) gives a $780\times1688 \approx 1.32$ million pixel buffer — roughly $2.25\times$ fewer fragment invocations per frame, for a sharpness difference the eye essentially can't tell apart (Track 1's canvas & DPR lesson measured exactly this threshold).
+`renderer.setPixelRatio(window.devicePixelRatio)` sounds reasonable but is dangerous on high-DPR devices: a DPR-3 phone with a $390\times844$ CSS screen produces a $1170\times2532 \approx 2.96$ million pixel buffer; clamping to DPR 2 (the standard recommendation, `Math.min(window.devicePixelRatio, 2)`) gives a $780\times1688 \approx 1.32$ million pixel buffer — roughly $2.25\times$ fewer fragment invocations per frame, for a sharpness difference the eye essentially can't tell apart (Track 1's canvas & DPR lesson explained this threshold).
 
 ## `render()` Is One Frame — the Loop Is Yours
 
