@@ -11,7 +11,9 @@ import type { Exercise } from "../content/types";
 // RUNNING each lesson's own solutionCode, the same contract as
 // render-reference-shots.ts: the picture a learner compares against cannot
 // drift from the answer the lesson teaches. Run by hand after editing a
-// solution; not part of the build. Usage: pnpm gen:shots:three
+// solution; not part of the build. Usage: pnpm gen:shots:three [slug...]
+// With slugs, only those checkpoints re-render — the rest keep their PNGs
+// untouched instead of picking up byte-level drift.
 //
 // A vanilla solution needs no bundler: an import map resolves "three" and
 // "three/addons/*" in the browser against the installed package, so stripping
@@ -239,9 +241,23 @@ function serve(shot: ThreeShot, entryJs: string): Promise<http.Server> {
 }
 
 async function main() {
+  const requested = process.argv.slice(2);
+  const unknown = requested.filter(
+    (slug) => !THREE_SHOTS.some((s) => s.slug === slug),
+  );
+  if (unknown.length > 0) {
+    throw new Error(
+      `unknown slug(s): ${unknown.join(", ")}\nknown: ${THREE_SHOTS.map((s) => s.slug).join(", ")}`,
+    );
+  }
+  const shots =
+    requested.length > 0
+      ? THREE_SHOTS.filter((s) => requested.includes(s.slug))
+      : THREE_SHOTS;
+
   const browser = await chromium.launch();
 
-  for (const shot of THREE_SHOTS) {
+  for (const shot of shots) {
     const solution = await solutionOf(shot.track, shot.slug);
     const entryJs = shot.react ? await bundleReact(shot, solution) : toJs(solution);
     const server = await serve(shot, entryJs);
