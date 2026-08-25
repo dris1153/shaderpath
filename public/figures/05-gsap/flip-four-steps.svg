@@ -82,5 +82,5 @@
   <text class="api" x="398" y="240" text-anchor="middle">Flip.from(state, vars) does these three for you</text>
 
   <text class="note" x="20" y="274">Between the two calls you may mutate the DOM however you like — Flip re-measures.</text>
-  <text class="note" x="20" y="292">Only transform runs during Play, so no frame of the animation costs a layout pass.</text>
+  <text class="note" x="20" y="292">With scale: true, only transform runs during Play — no frame costs a layout pass.</text>
 </svg>

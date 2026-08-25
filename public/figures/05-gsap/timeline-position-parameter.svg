@@ -55,13 +55,13 @@
 
   <!-- row 3: default ">" -->
   <rect class="bar" x="362" y="120" width="100" height="16" rx="4" />
-  <text class="row" x="248" y="132" text-anchor="end">box-3 — "&gt;" (default)</text>
-  <text class="note" x="248" y="148" text-anchor="end">after the previous end</text>
+  <text class="row" x="248" y="132" text-anchor="end">box-3 — (default)</text>
+  <text class="note" x="248" y="148" text-anchor="end">at the timeline end</text>
 
   <!-- row 4: overlap -->
   <rect class="bar-accent" x="432" y="156" width="50" height="16" rx="4" />
   <text class="row" x="248" y="168" text-anchor="end">box-4 — "-=0.3"</text>
-  <text class="note" x="248" y="184" text-anchor="end">0.3 s before that end</text>
+  <text class="note" x="248" y="184" text-anchor="end">0.3 s before timeline end</text>
 
   <!-- row 5: label offset -->
   <rect class="bar-accent" x="502" y="192" width="40" height="16" rx="4" />

@@ -18,9 +18,9 @@ Giới hạn bắt đầu khi cần điều phối: `animation-delay` giả lậ
 
 ### Framer Motion / Motion: React-idiomatic, layout animation và gesture
 
-Motion (tên mới của Framer Motion từ 2025) nói đúng ngôn ngữ component React: `<motion.div>` với `animate`, `whileHover`/`whileTap` thay vì tự viết `addEventListener`; `<AnimatePresence>` animate cả lúc unmount — điều CSS/JS thuần không làm sạch được vì React đã xoá node trước khi animation kịp chạy. Điểm mạnh riêng: layout animation — đặt prop `layout`, Motion tự đo vị trí/kích thước trước-sau khi layout đổi rồi animate mượt giữa hai trạng thái, chính là kỹ thuật FLIP (plugin Flip của GSAP dạy ở module trước) nhưng chạy tự động, không cần tự gọi `getBoundingClientRect`.
+Motion (tên mới của Framer Motion từ cuối 2024) nói đúng ngôn ngữ component React: `<motion.div>` với `animate`, `whileHover`/`whileTap` thay vì tự viết `addEventListener`; `<AnimatePresence>` animate cả lúc unmount — điều CSS/JS thuần không làm sạch được vì React đã xoá node trước khi animation kịp chạy. Điểm mạnh riêng: layout animation — đặt prop `layout`, Motion tự đo vị trí/kích thước trước-sau khi layout đổi rồi animate mượt giữa hai trạng thái, chính là kỹ thuật FLIP (plugin Flip của GSAP dạy ở module trước) nhưng chạy tự động, không cần tự gọi `getBoundingClientRect`.
 
-Giới hạn: `useScroll` đủ cho parallax nhẹ nhưng không có pin/scrub/snap tách biệt như ScrollTrigger. Và lợi thế ergonomic gắn chặt React — dùng ở Vue/vanilla vẫn được (`animate()` độc lập framework) nhưng mất phần component-aware đáng giá nhất. Nền tảng này không cài Motion — không `import` nào của nó xuất hiện trong demo, chỉ bàn ở đây như lựa chọn thật ngoài kia.
+Giới hạn: `useScroll` đủ cho parallax nhẹ nhưng không có pin/scrub/snap tách biệt như ScrollTrigger. Và lợi thế ergonomic gắn chặt React — dùng ở Vue/vanilla vẫn được (`animate()` độc lập framework) nhưng mất phần component-aware đáng giá nhất. Nền tảng này không cài Motion — không `import` nào của nó xuất hiện trong demo, chỉ bàn ở đây như lựa chọn thật ngoài kia; demo bài này thế chỗ Motion bằng một bản spring WAAPI tự viết — đúng cơ chế Web Animations API mà engine hybrid của Motion dùng bên dưới.
 
 ### GSAP: timeline mệnh lệnh và hệ sinh thái ScrollTrigger
 

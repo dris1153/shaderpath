@@ -18,7 +18,7 @@ A `ScrollTrigger` needs to know which scroll range counts as "active," defined b
 
 ### Pin: holding an element still, and the layout hole it creates
 
-`pin: true` holds the trigger fixed on screen (by default via `transform`, not `position: fixed`, so it works correctly even nested inside other containers) for the entire `start`-`end` range, producing the "scroll continues but the element doesn't drift away" feeling. The catch: if a pinned element left the normal layout flow with no trace, everything below it would jump up to fill the gap the instant pinning begins — so `pinSpacing: true` (the default) automatically inserts a spacer exactly as tall as the pin duration, keeping the document's layout unchanged while the element itself stays visually still. Turning `pinSpacing` off removes that spacer — reasonable when you're managing layout yourself, but a trap if toggled without understanding the side effect.
+`pin: true` holds the trigger fixed on screen (with the window as scroller — the default — pin uses real `position: fixed`; with an element scroller it switches to holding via `transform`, as this lesson's demo does) for the entire `start`-`end` range, producing the "scroll continues but the element doesn't drift away" feeling. The catch: if a pinned element left the normal layout flow with no trace, everything below it would jump up to fill the gap the instant pinning begins — so `pinSpacing: true` (the default) automatically inserts a spacer exactly as tall as the pin duration, keeping the document's layout unchanged while the element itself stays visually still. Turning `pinSpacing` off removes that spacer — reasonable when you're managing layout yourself, but a trap if toggled without understanding the side effect.
 
 ## toggleActions: four verbs for non-scrub triggers
 
@@ -26,11 +26,11 @@ When you're NOT using `scrub`, ScrollTrigger still needs to know what to do with
 
 ## Markers: the debug tool to reach for first
 
-`markers: true` draws two pairs of colored lines directly into the DOM (start/end), one pair anchored to the scroller, one to the trigger, each labeled with the ScrollTrigger's variable name — when the two pairs line up, `start`/`end` are behaving exactly as expected. This is the first tool to reach for whenever a trigger point looks wrong, before guessing at numbers; with a custom scroller (the final section below), the markers are attached to THAT scroller instead of `document.body`, so they scroll along with its content instead of drifting freely across the whole page.
+`markers: true` draws two pairs of colored lines directly into the DOM (start/end), one pair anchored to the scroller, one to the trigger, each labeled start/end (plus the `id` option's value when you set one) — when the two pairs line up, `start`/`end` are behaving exactly as expected. This is the first tool to reach for whenever a trigger point looks wrong, before guessing at numbers; with a custom scroller (the final section below), the markers are attached to THAT scroller instead of `document.body`, so they scroll along with its content instead of drifting freely across the whole page.
 
 ## Snap: turning a continuous scroll range into discrete steps
 
-`snap` (usually paired with `scrub`) forces scroll position to "round" to an allowed set of values the moment the user stops scrolling: `snapTo: 1` only accepts 0 or 1 (start/end progress); `snapTo: 0.25` creates four steps at 0, 0.25, 0.5, 0.75, 1; or you can pass an array of numbers/labels directly to snap to those exact points. Mechanically, ScrollTrigger tweens the scroller's own scroll position (not one of your tweens) to the nearest allowed value, so the "snap into place" motion stays smooth instead of jumping abruptly.
+`snap` (usually paired with `scrub`) forces scroll position to "round" to an allowed set of values the moment the user stops scrolling: `snap: 1` only accepts 0 or 1 (start/end progress); `snap: 0.25` creates steps at 0, 0.25, 0.5, 0.75, 1; to snap to an array of numbers or labels, use the object form — `snap: { snapTo: [...] }` — as this lesson's demo does. Mechanically, ScrollTrigger tweens the scroller's own scroll position (not one of your tweens) to the nearest allowed value, so the "snap into place" motion stays smooth instead of jumping abruptly.
 
 ## The one-trigger-one-job discipline and `ScrollTrigger.refresh()`
 

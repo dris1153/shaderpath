@@ -30,7 +30,7 @@ tween.progress(0.5); // nhảy thẳng tới đúng 50% animation đã eased
 tween.timeScale(2); // chạy nhanh gấp đôi, giữ nguyên hình dạng ease
 ```
 
-`progress()` và `timeScale()` là hai method dễ bị bỏ qua nhất, nhưng lại quan trọng nhất về sau: `progress(t)` nhảy trực tiếp animation tới đúng tiến trình $t \in [0, 1]$ đã đi qua hàm ease — không phải tới thời điểm $t \times duration$ theo thời gian tuyến tính — nên tween thật sự là một **bộ sinh giá trị scrubbing-friendly**: gán `progress` từ vị trí cuộn trang, từ vị trí kéo chuột, hay từ bất kỳ input liên tục nào, animation luôn khớp chính xác. Đây chính là cơ chế ScrollTrigger dùng để đồng bộ animation với scroll ở module sau — không có phép màu nào khác, chỉ là gọi `progress()` liên tục theo vị trí cuộn.
+`progress()` và `timeScale()` là hai method dễ bị bỏ qua nhất, nhưng lại quan trọng nhất về sau: `progress(t)` đặt playhead tới đúng thời điểm $t \times duration$ theo thời gian tuyến tính ($t \in [0, 1]$) — hàm ease chỉ áp lúc render, nên giá trị bạn thấy tại đó là $ease(t)$ — nên tween thật sự là một **bộ sinh giá trị scrubbing-friendly**: gán `progress` từ vị trí cuộn trang, từ vị trí kéo chuột, hay từ bất kỳ input liên tục nào, animation luôn khớp chính xác. Đây chính là cơ chế ScrollTrigger dùng để đồng bộ animation với scroll ở module sau — không có phép màu nào khác, chỉ là gọi `progress()` liên tục theo vị trí cuộn.
 
 ## Timeline: sắp xếp nhiều tween theo thời gian tương đối
 
@@ -41,8 +41,8 @@ const tl = gsap.timeline();
 
 tl.to(".box-1", { x: 100, duration: 1 })
   .to(".box-2", { x: 100, duration: 1 }, "<") // bắt đầu CÙNG lúc box-1 bắt đầu
-  .to(".box-3", { x: 100, duration: 1 }) // mặc định ">": bắt đầu khi tween trước KẾT THÚC
-  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // chồng lấn: sớm hơn 0.3s so với lúc tween trước kết thúc
+  .to(".box-3", { x: 100, duration: 1 }) // mặc định: nối vào CUỐI timeline (ở đây trùng lúc tween trước kết thúc)
+  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // chồng lấn: lùi 0.3s từ CUỐI timeline
   .addLabel("settle")
   .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
 ```
@@ -50,7 +50,7 @@ tl.to(".box-1", { x: 100, duration: 1 })
 <Figure
   src="/figures/05-gsap/timeline-position-parameter.svg"
   alt="Trục thời gian của một timeline: năm tween được đặt bằng position parameter, và một tween có stagger trải dài qua nhiều mốc"
-  caption="Đặt lên trục thời gian mới thấy position parameter luôn đo tương đối so với mốc ngay trước nó, còn một tween có stagger chiếm chỗ dài hơn duration của chính nó."
+  caption="Đặt lên trục thời gian mới thấy position parameter đo tương đối: mặc định và +=/-= so với cuối timeline, chỉ </> so với animation vừa thêm — còn một tween có stagger chiếm chỗ dài hơn duration của chính nó."
 />
 
 So với cách cộng dồn `delay` thủ công cho từng tween rời rạc:
@@ -61,7 +61,7 @@ gsap.to(".box-2", { x: 100, duration: 1, delay: 1 });
 gsap.to(".box-3", { x: 100, duration: 1, delay: 2 });
 ```
 
-...position parameter sống sót qua chỉnh sửa, còn delay cộng dồn thì không. Mỗi position tính tương đối — so với animation TRƯỚC nó, hoặc so với một label — nên chèn thêm tween, xoá bớt, hay chỉ đổi `duration` của box-1, timeline tự dồn lại toàn bộ phần còn lại đúng theo quan hệ đã khai báo. Với delay cộng dồn, cùng thay đổi đó buộc tính lại tay từng con số phía sau — cách chắc chắn nhất khiến một sequence "mục ruỗng" khi có người chỉnh sửa timing sau này.
+...position parameter sống sót qua chỉnh sửa, còn delay cộng dồn thì không. Mỗi position tính tương đối — so với cuối timeline (mặc định, `+=`/`-=`), so với animation vừa thêm (`<`/`>`), hoặc so với một label — nên chèn thêm tween, xoá bớt, hay chỉ đổi `duration` của box-1 từ 1 lên 1.5 giây, timeline tự dồn lại toàn bộ phần còn lại đúng theo quan hệ đã khai báo. Với delay cộng dồn, cùng thay đổi đó buộc tính lại tay từng con số phía sau — cách chắc chắn nhất khiến một sequence "mục ruỗng" khi có người chỉnh sửa timing sau này.
 
 ## Lồng timeline: dàn dựng theo từng thành phần
 
@@ -150,7 +150,7 @@ Bài kế tiếp đào sâu vào chính `ease` — cách đọc đường cong, 
 Ba lỗi hay gặp nhất với tween, timeline và stagger:
 
 1. **Cộng dồn `delay` thủ công thay vì dùng position parameter.** `delay: 0`, `delay: 1`, `delay: 2` trên ba tween rời rạc trông hoạt động, nhưng chèn thêm một bước ở giữa hay đổi `duration` của bước đầu buộc tính lại tay toàn bộ số phía sau — position parameter (`"<"`, `"-=0.2"`, label) tính tương đối nên tự dồn lại đúng khi sequence bị chỉnh sửa.
-2. **Quên stagger kéo dài tổng thời lượng sequence.** $T_{total} = duration + (n-1) \cdot each$, không phải bằng `duration` của một tween đơn lẻ — chèn bước tiếp theo ngay sau một tween có stagger bằng position mặc định `">"` mà quên cộng thêm $(n-1) \cdot each$ khiến bước đó chạy trước khi phần tử cuối cùng animate xong.
+2. **Quên stagger kéo dài tổng thời lượng sequence.** $T_{total} = duration + (n-1) \cdot each$, không phải bằng `duration` của một tween đơn lẻ. Bản thân timeline biết điều này — tween có stagger là MỘT tween với duration đã bao gồm cả stagger, nên bước nối tiếp mặc định vẫn chờ đúng phần tử cuối cùng xong. Cái bẫy nằm ở chỗ khác: khi bạn tự ước lượng nhịp — đặt position bằng số tuyệt đối, tính chỗ đặt label, đồng bộ với âm thanh — mà chỉ đếm `duration`, quên cộng $(n-1) \cdot each$, mọi con số phía sau lệch cả một quãng stagger.
 3. **Nhầm `stagger: 0.1` (số = `each`, độ trễ CỐ ĐỊNH giữa các phần tử) với `stagger: { amount: 0.1 }` (tổng thời lượng CỐ ĐỊNH, độ trễ mỗi phần tử co lại khi thêm phần tử).** Thêm phần tử vào danh sách khi đang dùng `each` kéo dài cả sequence; thêm phần tử khi đang dùng `amount` giữ nguyên tổng thời lượng nhưng làm hiệu ứng "dồn" lại gần nhau hơn — hai hành vi trái ngược dễ gây bất ngờ nếu nhầm khoá.
 
 </Callout>

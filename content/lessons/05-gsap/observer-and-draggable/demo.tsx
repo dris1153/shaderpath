@@ -104,8 +104,11 @@ function CardDeck({ L, labels }: { L: Labels; labels: readonly string[] }) {
       target: deckRef.current,
       type: "wheel,touch,pointer",
       preventDefault: true,
-      onDown: () => goTo(1),
-      onUp: () => goTo(-1),
+      // wheelSpeed -1 aligns wheel with touch: swipe-up and scroll-down
+      // both fire onUp = next (touch deltas follow the finger).
+      wheelSpeed: -1,
+      onUp: () => goTo(1),
+      onDown: () => goTo(-1),
     });
   }, [count]);
 

@@ -1,6 +1,6 @@
 ## SplitText miễn phí từ bản 3.13: vì sao điều đó quan trọng
 
-Cho tới cuối 2024, `SplitText` là plugin trả phí, chỉ có trong gói Club GSAP — muốn tách text thành char/word/line để animate riêng từng phần, bạn phải trả tiền hoặc tự viết lại (rất dễ sai, nhất là phần accessibility). Sau khi Webflow mua lại GreenSock, GSAP 3.13 (đầu 2025) đưa toàn bộ plugin "bonus" — SplitText, Flip, MorphSVG, Draggable — về miễn phí kể cả dùng thương mại, đồng thời viết lại hoàn toàn `SplitText` từ đầu: gọn nhẹ hơn, và quan trọng nhất với bài này — tự động xử lý `aria-hidden`/`aria-label` thay vì để bạn tự lo accessibility. Bản cài trong dự án là 3.15 — toàn bộ API dưới đây khớp chính xác phiên bản đó, không phải tài liệu cũ từ thời còn trả phí.
+Trong nhiều năm, `SplitText` là plugin trả phí, chỉ có trong gói Club GSAP — muốn tách text thành char/word/line để animate riêng từng phần, bạn phải trả tiền hoặc tự viết lại (rất dễ sai, nhất là phần accessibility). Sau khi Webflow mua lại GreenSock, GSAP 3.13 (tháng 4/2025) đưa toàn bộ plugin "bonus" — SplitText, Flip, MorphSVG, Draggable — về miễn phí kể cả dùng thương mại, đồng thời viết lại hoàn toàn `SplitText` từ đầu: gọn nhẹ hơn, và quan trọng nhất với bài này — tự động xử lý `aria-hidden`/`aria-label` thay vì để bạn tự lo accessibility. Bản cài trong dự án là 3.15 — toàn bộ API dưới đây khớp chính xác phiên bản đó, không phải tài liệu cũ từ thời còn trả phí.
 
 ## Cái gì thực sự xảy ra trong DOM khi bạn split
 
@@ -18,7 +18,7 @@ Tách một câu thành 40 `<div>` ký tự riêng biệt, mặc định trình 
 
 ### Line mask: bọc overflow-hidden quanh từng dòng
 
-Muốn dòng chữ "trượt lên" từ dưới mép ẩn (như credit cuối phim), riêng char/word rise không đủ — cần một khung `overflow: hidden` bao quanh mỗi dòng để phần đang ở dưới bị CẮT, không lộ ra ngoài khung trước khi animate tới. Đặt `mask: "lines"` trong config, SplitText tự tạo wrapper đó cho bạn — mỗi dòng nằm trong một `<div>` cha `overflow: hidden` riêng, target animate vẫn là `split.lines`.
+Muốn dòng chữ "trượt lên" từ dưới mép ẩn (như credit cuối phim), riêng char/word rise không đủ — cần một khung `overflow: hidden` bao quanh mỗi dòng để phần đang ở dưới bị CẮT, không lộ ra ngoài khung trước khi animate tới. Đặt `mask: "lines"` trong config, SplitText tự tạo wrapper đó cho bạn — mỗi dòng nằm trong một `<div>` cha riêng được đặt `overflow: clip`, target animate vẫn là `split.lines`.
 
 ### Word cascade: cả từ di chuyển như một khối
 
@@ -38,7 +38,7 @@ Một đoạn văn 300 ký tự split theo chars tạo ra 300 `<div>` — nghe �
 
 ## Khi nào KHÔNG nên split văn bản
 
-Split hợp lý cho headline ngắn, số lượng ký tự/từ cố định tại thời điểm render. KHÔNG nên split thân bài (body copy) dài — quá nhiều phần tử cho lợi ích thị giác nhỏ — và với nội dung đa ngôn ngữ, ranh giới "từ" khác nhau giữa các ngôn ngữ: tiếng Việt dùng khoảng trắng giữa âm tiết, không phải giữa từ có nghĩa, mà split theo `"words"` mặc định của SplitText tách theo khoảng trắng — cắt tiếng Việt thành từng ÂM TIẾT chứ không phải từ, có thể không phải điều bạn muốn. Một điểm đáng yên tâm: dấu tiếng Việt (ă, â, ê, ô, ơ, ư và các thanh điệu) là ký tự Unicode precomposed (NFC) — mỗi ký tự có dấu là MỘT code point duy nhất, không phải chữ cái và dấu ghép riêng — nên split theo `"chars"` tách đúng từng ký tự có dấu trọn vẹn, không làm rơi dấu hay tách đôi.
+Split hợp lý cho headline ngắn, số lượng ký tự/từ cố định tại thời điểm render. KHÔNG nên split thân bài (body copy) dài — quá nhiều phần tử cho lợi ích thị giác nhỏ — và với nội dung đa ngôn ngữ, ranh giới "từ" khác nhau giữa các ngôn ngữ: tiếng Việt dùng khoảng trắng giữa âm tiết, không phải giữa từ có nghĩa, mà split theo `"words"` mặc định của SplitText tách theo khoảng trắng — cắt tiếng Việt thành từng ÂM TIẾT chứ không phải từ, có thể không phải điều bạn muốn. Một điểm đáng yên tâm: dấu tiếng Việt (ă, â, ê, ô, ơ, ư và các thanh điệu) là ký tự Unicode precomposed (NFC) — mỗi ký tự có dấu là MỘT code point duy nhất, không phải chữ cái và dấu ghép riêng — nên split theo `"chars"` tách đúng từng ký tự có dấu trọn vẹn, không làm rơi dấu hay tách đôi — và bản SplitText hiện tại còn tách theo grapheme cluster (`Intl.Segmenter`), nên kể cả dạng NFD hiếm gặp cũng giữ nguyên một phần tử trên trình duyệt hiện đại.
 
 Bài checkpoint đóng track (Mini-build: Trang scrollytelling) sẽ ghép `split.lines` với ScrollTrigger scrub đã học ở module trước — headline không chỉ reveal một lần khi vào viewport, mà tiến/lùi theo đúng vị trí cuộn, biến kỹ thuật của bài này thành một phần của toàn bộ trang.
 

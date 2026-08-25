@@ -30,12 +30,12 @@ Without running the code, compute the start time (in seconds, from the timeline'
     },
     hints: [
       {
-        vi: `\`.a\` không có position parameter nên bắt đầu tại $t=0$. \`"-=0.2"\` trên \`.b\` neo vào thời điểm KẾT THÚC của tween ngay trước nó (\`.a\` kết thúc ở $t=1$), lùi lại $0.2$s — không neo vào lúc bắt đầu.`,
-        en: `\`.a\` has no position parameter, so it starts at $t=0$. \`"-=0.2"\` on \`.b\` anchors to the END of the tween right before it (\`.a\` ends at $t=1$), pulled back $0.2$s — not to its start.`,
+        vi: `\`.a\` không có position parameter — mặc định nối vào CUỐI TIMELINE hiện tại (lúc đó là $t=0$). \`"-=0.2"\` trên \`.b\` cũng neo vào cuối timeline (lúc đó là $1.0$, do \`.a\` đặt ra), lùi lại $0.2$s — mốc neo là cuối timeline, không phải "tween ngay trước".`,
+        en: `\`.a\` has no position parameter — by default it appends at the CURRENT END OF THE TIMELINE (which is $t=0$ then). \`"-=0.2"\` on \`.b\` also anchors to the timeline's end (then $1.0$, set by \`.a\`), pulled back $0.2$s — the anchor is the timeline's end, not "the previous tween".`,
       },
       {
-        vi: `\`"<"\` trên \`.c\` neo vào thời điểm BẮT ĐẦU của tween ngay trước nó (\`.b\`), không phải lúc \`.b\` kết thúc. \`"+=0.3"\` trên \`.d\` neo vào lúc KẾT THÚC của tween ngay trước nó (\`.c\`).`,
-        en: `\`"<"\` on \`.c\` anchors to the START of the tween right before it (\`.b\`), not to when \`.b\` ends. \`"+=0.3"\` on \`.d\` anchors to the END of the tween right before it (\`.c\`).`,
+        vi: `\`"<"\` trên \`.c\` neo vào lúc BẮT ĐẦU của animation vừa thêm gần nhất (\`.b\`) — chỉ \`"<"\`/\`">"\` mới tham chiếu tween trước. \`"+=0.3"\` trên \`.d\` quay lại neo CUỐI TIMELINE: là điểm kết thúc muộn nhất trong các tween đã thêm, không nhất thiết là lúc \`.c\` kết thúc.`,
+        en: `\`"<"\` on \`.c\` anchors to the START of the most recently added animation (\`.b\`) — only \`"<"\`/\`">"\` reference the previous tween. \`"+=0.3"\` on \`.d\` anchors to the TIMELINE'S END again: the latest end time among all added tweens, not necessarily when \`.c\` ends.`,
       },
     ],
     checklist: [
@@ -48,29 +48,33 @@ Without running the code, compute the start time (in seconds, from the timeline'
         en: "I correctly computed .c running 0.8 → 1.3 (anchored to when .b STARTS, not ends)",
       },
       {
-        vi: "Tôi tính đúng .d chạy 1.6 → 2.0 và suy ra tổng thời lượng timeline là 2.0 giây",
-        en: "I correctly computed .d running 1.6 → 2.0 and derived a total timeline duration of 2.0 seconds",
+        vi: "Tôi tính đúng .d chạy 1.7 → 2.1 (neo vào cuối timeline 1.4 do .b đặt ra, không phải lúc .c kết thúc ở 1.3) và suy ra tổng thời lượng timeline là 2.1 giây",
+        en: "I correctly computed .d running 1.7 → 2.1 (anchored to the timeline's end 1.4 set by .b, not .c's end at 1.3) and derived a total timeline duration of 2.1 seconds",
       },
     ],
     solutionNote: {
-      vi: `\`.a\`: không có position -> mặc định bắt đầu tại $t=0$ (tween đầu tiên). duration 1 -> chạy $0 \\to 1$.
+      vi: `\`.a\`: không có position -> nối vào cuối timeline hiện tại, tức $t=0$ (timeline còn rỗng). duration 1 -> chạy $0 \\to 1$; cuối timeline giờ là $1.0$.
 
-\`.b\`: \`"-=0.2"\` neo vào lúc KẾT THÚC của \`.a\` ($t=1$), lùi lại $0.2$s -> bắt đầu ở $t=0.8$. duration 0.6 -> chạy $0.8 \\to 1.4$.
+\`.b\`: \`"-=0.2"\` neo vào CUỐI TIMELINE ($1.0$), lùi lại $0.2$s -> bắt đầu ở $t=0.8$. duration 0.6 -> chạy $0.8 \\to 1.4$; cuối timeline giờ là $1.4$. (Con số trùng với "cuối \`.a\`" chỉ vì \`.a\` đang là tween kết thúc muộn nhất.)
 
-\`.c\`: \`"<"\` neo vào lúc BẮT ĐẦU của \`.b\` ($t=0.8$), không phải lúc \`.b\` kết thúc -> \`.c\` cũng bắt đầu ở $t=0.8$. duration 0.5 -> chạy $0.8 \\to 1.3$.
+\`.c\`: \`"<"\` neo vào lúc BẮT ĐẦU của animation vừa thêm gần nhất (\`.b\`, $t=0.8$) -> \`.c\` cũng bắt đầu ở $t=0.8$. duration 0.5 -> chạy $0.8 \\to 1.3$; cuối timeline vẫn là $1.4$.
 
-\`.d\`: \`"+=0.3"\` neo vào lúc KẾT THÚC của \`.c\` ($t=1.3$), cộng thêm $0.3$s -> bắt đầu ở $t=1.6$. duration 0.4 -> chạy $1.6 \\to 2.0$.
+\`.d\`: \`"+=0.3"\` neo vào CUỐI TIMELINE — là $1.4$ (do \`.b\`), KHÔNG phải lúc \`.c\` kết thúc ($1.3$) -> bắt đầu ở $t=1.7$. duration 0.4 -> chạy $1.7 \\to 2.1$.
 
-Tổng thời lượng timeline = thời điểm KẾT THÚC MUỘN NHẤT trong 4 tween = $\\max(1.0, 1.4, 1.3, 2.0) = 2.0$ giây.`,
-      en: `\`.a\`: no position -> defaults to starting at $t=0$ (the first tween). duration 1 -> runs $0 \\to 1$.
+Tổng thời lượng timeline = thời điểm KẾT THÚC MUỘN NHẤT = $\\max(1.0, 1.4, 1.3, 2.1) = 2.1$ giây.
 
-\`.b\`: \`"-=0.2"\` anchors to the END of \`.a\` ($t=1$), pulled back $0.2$s -> starts at $t=0.8$. duration 0.6 -> runs $0.8 \\to 1.4$.
+Quy tắc chung: position bỏ trống và \`"+=x"\`/\`"-=x"\` đều neo vào cuối timeline; chỉ \`"<"\`/\`">"\` tham chiếu animation vừa thêm gần nhất.`,
+      en: `\`.a\`: no position -> appended at the timeline's current end, i.e. $t=0$ (the timeline is empty). duration 1 -> runs $0 \\to 1$; the timeline's end is now $1.0$.
 
-\`.c\`: \`"<"\` anchors to the START of \`.b\` ($t=0.8$), not to when \`.b\` ends -> \`.c\` also starts at $t=0.8$. duration 0.5 -> runs $0.8 \\to 1.3$.
+\`.b\`: \`"-=0.2"\` anchors to the TIMELINE'S END ($1.0$), pulled back $0.2$s -> starts at $t=0.8$. duration 0.6 -> runs $0.8 \\to 1.4$; the timeline's end is now $1.4$. (The number coincides with "\`.a\`'s end" only because \`.a\` is the latest-ending tween so far.)
 
-\`.d\`: \`"+=0.3"\` anchors to the END of \`.c\` ($t=1.3$), plus $0.3$s -> starts at $t=1.6$. duration 0.4 -> runs $1.6 \\to 2.0$.
+\`.c\`: \`"<"\` anchors to the START of the most recently added animation (\`.b\`, $t=0.8$) -> \`.c\` also starts at $t=0.8$. duration 0.5 -> runs $0.8 \\to 1.3$; the timeline's end is still $1.4$.
 
-Total timeline duration = the LATEST end time among the 4 tweens = $\\max(1.0, 1.4, 1.3, 2.0) = 2.0$ seconds.`,
+\`.d\`: \`"+=0.3"\` anchors to the TIMELINE'S END — $1.4$ (set by \`.b\`), NOT \`.c\`'s end ($1.3$) -> starts at $t=1.7$. duration 0.4 -> runs $1.7 \\to 2.1$.
+
+Total timeline duration = the LATEST end time = $\\max(1.0, 1.4, 1.3, 2.1) = 2.1$ seconds.
+
+General rule: an omitted position and \`"+=x"\`/\`"-=x"\` all anchor to the timeline's end; only \`"<"\`/\`">"\` reference the most recently added animation.`,
     },
   },
   {

@@ -18,8 +18,8 @@ Then, splitting the same sentence by \`"chars"\` — does the character \`à\` (
         en: "words split on whitespace (the default wordDelimiter) — count the groups of characters with no space in the middle, no Vietnamese semantics required.",
       },
       {
-        vi: "à trong tiếng Việt chuẩn Unicode NFC là một code point duy nhất (U+00E0), không phải \"a\" cộng dấu tổ hợp riêng — trừ khi văn bản gốc chưa chuẩn hoá (dạng NFD).",
-        en: "à in standard Vietnamese Unicode NFC is a single code point (U+00E0), not \"a\" plus a separate combining mark — unless the source text is unnormalized (NFD form).",
+        vi: "à trong tiếng Việt chuẩn Unicode NFC là một code point duy nhất (U+00E0), không phải \"a\" cộng dấu tổ hợp riêng — và SplitText còn tách theo grapheme cluster nên dạng NFD cũng không bị tách đôi.",
+        en: "à in standard Vietnamese Unicode NFC is a single code point (U+00E0), not \"a\" plus a separate combining mark — and SplitText segments by grapheme cluster, so even NFD form is not split apart.",
       },
     ],
     checklist: [
@@ -39,10 +39,10 @@ Then, splitting the same sentence by \`"chars"\` — does the character \`à\` (
     solutionNote: {
       vi: `\`split.words = ["Chào", "bạn"]\` — 2 phần tử, vì SplitText mặc định cắt theo khoảng trắng (\`wordDelimiter\`), không phân tích ngữ nghĩa.
 
-"à" trong "Chào" là U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — một code point Unicode DUY NHẤT ở dạng NFC (precomposed). SplitText lặp qua chuỗi theo code point, nên "à" luôn nằm trọn trong một \`<div>\` ký tự, không bao giờ bị cắt thành "a" + dấu huyền riêng — trừ khi input gốc đã ở dạng NFD (combining mark tách rời), trường hợp hiếm gặp khi gõ tiếng Việt qua bàn phím/OS chuẩn.`,
+"à" trong "Chào" là U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — một code point Unicode DUY NHẤT ở dạng NFC (precomposed). SplitText tách chuỗi theo grapheme cluster (dùng \`Intl.Segmenter\` khi có), nên "à" luôn nằm trọn trong một \`<div>\` ký tự, không bao giờ bị cắt thành "a" + dấu huyền riêng — kể cả khi input ở dạng NFD (combining mark tách rời) trên trình duyệt hiện đại; chỉ nhánh fallback regex (trình duyệt không có Segmenter) mới phụ thuộc dạng NFC.`,
       en: `\`split.words = ["Chào", "bạn"]\` — 2 elements, since SplitText's default splits on whitespace (\`wordDelimiter\`), it never analyzes semantics.
 
-"à" in "Chào" is U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — a SINGLE Unicode code point in NFC (precomposed) form. SplitText iterates the string by code point, so "à" always stays inside one character \`<div>\`, never getting split into "a" plus a separate grave-accent mark — unless the source input is already in NFD form (a separated combining mark), a rare case with standard Vietnamese keyboards/OS input.`,
+"à" in "Chào" is U+00E0 (LATIN SMALL LETTER A WITH GRAVE) — a SINGLE Unicode code point in NFC (precomposed) form. SplitText segments the string by grapheme cluster (via \`Intl.Segmenter\` when available), so "à" always stays inside one character \`<div>\`, never getting split into "a" plus a separate grave-accent mark — even NFD-form input (a separated combining mark) stays whole in modern browsers; only the regex fallback (no Segmenter) depends on NFC form.`,
     },
   },
   {

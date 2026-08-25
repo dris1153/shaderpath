@@ -26,7 +26,7 @@ Bước Invert áp `transform: translate(Δx, Δy) scale(sx, sy)` lên phần t�
 
 ### Play: chỉ animate transform và opacity về identity
 
-Bước cuối chỉ đơn giản: animate transform vừa áp ở trên về `none` (identity) trong khoảng `duration` cho trước. Vì transform là thuộc tính duy nhất đang thay đổi — không phải `top`/`width`/`grid-column` — trình duyệt chạy toàn bộ animation trên compositor thread, không tính lại layout ở frame nào giữa chừng. Đây là lý do FLIP không phải "một mẹo hay", mà là cách DUY NHẤT để animate một thay đổi layout tuỳ ý mà vẫn giữ animation rẻ như animate transform thuần — vì bản chất mọi animation FLIP RỐT CUỘC chỉ là animate transform.
+Bước cuối chỉ đơn giản: animate transform vừa áp ở trên về `none` (identity) trong khoảng `duration` cho trước. Khi chỉ có vị trí thay đổi (hoặc khi bật `scale: true` cho thay đổi kích thước — xem phần giới hạn bên dưới), transform là thuộc tính duy nhất đang thay đổi — không phải `top`/`width`/`grid-column` — nên trình duyệt chạy toàn bộ animation trên compositor thread, không tính lại layout ở frame nào giữa chừng. Đây là lý do FLIP không phải "một mẹo hay", mà là cách DUY NHẤT để animate một thay đổi layout tuỳ ý mà vẫn giữ animation rẻ như animate transform thuần — vì bản chất mọi animation FLIP RỐT CUỘC chỉ là animate transform.
 
 ## API của Flip: getState → mutate → from
 
@@ -61,7 +61,7 @@ Ba tình huống Flip gần như luôn tốt hơn tween tay: chuyển đổi gri
 
 ## Giới hạn: text và border phản ứng lạ khi scale
 
-Flip animate bằng `transform: scale()`, không phải đổi `width`/`height`/`font-size` thật — nghĩa là MỌI THỨ bên trong phần tử bị scale đều, kể cả những gì không nên: chữ trong phần tử scale lên 3 lần trông méo/nhoè (browser scale bitmap-rendered glyph, không re-layout text theo font-size mới), và border 1px cũng scale thành 3px dày bất thường thay vì vẫn mảnh 1px. Hai cách né: dùng `scale: false` để Flip đổi `width`/`height` thật thay vì scale ảo (đắt hơn vì kích hoạt layout, nhưng text/border giữ đúng tỉ lệ), hoặc thiết kế phần tử flip chỉ chứa hình khối/ảnh — không có text quan trọng — và để text bên trong fade in riêng sau khi Play hoàn tất.
+Mặc định, Flip animate thay đổi kích thước bằng `width`/`height` THẬT — mỗi frame là một lần layout (đắt hơn), nhưng chữ và border được re-layout đúng tỉ lệ suốt animation. `scale: true` mới là cờ opt-in chuyển sang `transform: scale()` (demo bài này bật nó): rẻ hơn hẳn vì chạy trên compositor, nhưng MỌI THỨ bên trong bị scale đều, kể cả những gì không nên — chữ scale lên 3 lần trông méo/nhoè (browser scale glyph đã render, không re-layout text theo font-size mới), và border 1px thành 3px dày bất thường. Cách chọn: bật `scale: true` khi phần tử flip chỉ chứa hình khối/ảnh — không có text quan trọng — và để text bên trong fade in riêng sau khi Play hoàn tất; giữ mặc định `width`/`height` khi text/border phải giữ đúng tỉ lệ, chấp nhận chi phí layout.
 
 Cuối cùng: mọi animation FLIP nói ở trên chỉ là một trường hợp cụ thể của quy tắc tổng quát hơn — chỉ có `transform` và `opacity` chạy được trên compositor thread mà không đụng tới layout/paint. Bài Animation thân thiện compositor ở module sau đi sâu vào chính xác vì sao, và cách xác nhận bằng DevTools rằng một animation thật sự đang chạy rẻ như FLIP hứa hẹn.
 

@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng một **trang scrollytelling hoàn chỉnh** tổng hợp toàn bộ track GSAP. Assume DOM đã có sẵn: \`#scroller\` (\`overflow-y: auto\`, chiều cao cố định) chứa \`.hero\` (\`.hero-title\`, \`.hero-sub\`, \`.hero-cta\`), \`.chapter-a\` (chứa \`.shape\`), \`.chapter-b\` (chứa \`.headline\` với textContent thô, chưa tách ký tự), \`.chapter-c\` (chứa \`.card-grid\` với vài \`.card\`), cộng \`#nav-up\`/\`#nav-down\` bên ngoài scroller.
 
-Yêu cầu: (1) hero timeline tự chạy khi tải trang, không cần cuộn; (2) chapter A ghim và scrub theo cuộn (transform-only); (3) chapter B tách \`.headline\` thành từng ký tự thủ công (không dùng SplitText plugin) rồi stagger vào bằng \`toggleActions: "play reverse play reverse"\`, không scrub; (4) chapter C dùng Flip đổi layout \`.card-grid\` khi cuộn tới một điểm cố định — \`Flip.getState\` phải chạy TRƯỚC khi đổi class; (5) \`#nav-up\`/\`#nav-down\` và một Observer (wheel/touch) cùng gọi một hàm \`goToChapter\` chung, không \`preventDefault\` để không chặn cuộn tự nhiên của chapter A; (6) \`gsap.matchMedia()\` tách nhánh \`prefers-reduced-motion: reduce\` (set thẳng trạng thái cuối) khỏi nhánh đầy đủ.`,
+Yêu cầu: (1) hero timeline tự chạy khi tải trang, không cần cuộn; (2) chapter A ghim và scrub theo cuộn (transform-only); (3) chapter B tách \`.headline\` thành từng ký tự thủ công (không dùng SplitText plugin) — giữ \`aria-label\` chứa nguyên văn trên \`.headline\` và \`aria-hidden\` trên từng span để screen reader vẫn đọc được — rồi stagger vào bằng \`toggleActions: "play reverse play reverse"\`, không scrub; (4) chapter C dùng Flip đổi layout \`.card-grid\` khi cuộn tới một điểm cố định — \`Flip.getState\` phải chạy TRƯỚC khi đổi class; (5) \`#nav-up\`/\`#nav-down\` và một Observer (wheel/touch) cùng gọi một hàm \`goToChapter\` chung — không \`preventDefault\`, có khoá \`animating\` để một cử chỉ dài chỉ nhảy đúng một chương, ghép \`onUp → tiến\` với \`wheelSpeed: -1\` cho vuốt và cuộn thống nhất, và bỏ qua cử chỉ khi scrollTop đang nằm trong vùng pin của chapter A (đọc \`start\`/\`end\` từ ScrollTrigger của nó) để scrub tự nhiên không bị cướp; (6) \`gsap.matchMedia()\` tách nhánh \`prefers-reduced-motion: reduce\` (set thẳng trạng thái cuối) khỏi nhánh đầy đủ.`,
       en: `Build a **complete scrollytelling page** synthesizing the whole GSAP track. Assume the DOM already exists: \`#scroller\` (\`overflow-y: auto\`, fixed height) containing \`.hero\` (\`.hero-title\`, \`.hero-sub\`, \`.hero-cta\`), \`.chapter-a\` (containing \`.shape\`), \`.chapter-b\` (containing \`.headline\` with raw textContent, not yet split), \`.chapter-c\` (containing \`.card-grid\` with a few \`.card\` elements), plus \`#nav-up\`/\`#nav-down\` outside the scroller.
 
-Requirements: (1) the hero timeline plays on page load, no scroll needed; (2) chapter A pins and scrubs with scroll (transform-only); (3) chapter B manually splits \`.headline\` into individual characters (no SplitText plugin) then staggers them in via \`toggleActions: "play reverse play reverse"\`, not scrubbed; (4) chapter C uses Flip to change \`.card-grid\`'s layout once scroll reaches a fixed point — \`Flip.getState\` must run BEFORE the class change; (5) \`#nav-up\`/\`#nav-down\` and an Observer (wheel/touch) both call one shared \`goToChapter\` function, without \`preventDefault\` so chapter A's native scrubbing scroll keeps working; (6) \`gsap.matchMedia()\` separates the \`prefers-reduced-motion: reduce\` branch (sets the final state directly) from the full animation branch.`,
+Requirements: (1) the hero timeline plays on page load, no scroll needed; (2) chapter A pins and scrubs with scroll (transform-only); (3) chapter B manually splits \`.headline\` into individual characters (no SplitText plugin) — keeping an \`aria-label\` with the original text on \`.headline\` and \`aria-hidden\` on each span so screen readers still read it — then staggers them in via \`toggleActions: "play reverse play reverse"\`, not scrubbed; (4) chapter C uses Flip to change \`.card-grid\`'s layout once scroll reaches a fixed point — \`Flip.getState\` must run BEFORE the class change; (5) \`#nav-up\`/\`#nav-down\` and an Observer (wheel/touch) both call one shared \`goToChapter\` function — no \`preventDefault\`, an \`animating\` lock so one long gesture jumps exactly one chapter, \`onUp → forward\` paired with \`wheelSpeed: -1\` so swipe and scroll agree, and gestures ignored while scrollTop sits inside chapter A's pinned range (read \`start\`/\`end\` off its ScrollTrigger) so native scrubbing is never hijacked; (6) \`gsap.matchMedia()\` separates the \`prefers-reduced-motion: reduce\` branch (sets the final state directly) from the full animation branch.`,
     },
     starterCode: `import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -120,13 +120,19 @@ const navDown = document.querySelector<HTMLButtonElement>("#nav-down")!;
 
 // Manual split (no SplitText): wrap each character in its own span so GSAP
 // can stagger them individually.
-headline.innerHTML = headline.textContent!
+const headlineText = headline.textContent!;
+headline.setAttribute("aria-label", headlineText); // spans below are hidden
+headline.innerHTML = headlineText
   .split("")
-  .map((ch) => \`<span class="char">\${ch === " " ? "&nbsp;" : ch}</span>\`)
+  .map(
+    (ch) =>
+      \`<span class="char" aria-hidden="true">\${ch === " " ? "&nbsp;" : ch}</span>\`,
+  )
   .join("");
 const chars = gsap.utils.toArray<HTMLElement>(".char", headline);
 
 let animCtx: gsap.Context;
+let scrubTrigger: ScrollTrigger | undefined;
 
 function setFlipLayout(stacked: boolean) {
   const state = Flip.getState(cardGrid.children);
@@ -154,7 +160,7 @@ export function buildScrollytellingPage() {
 
       // Chapter A: pinned + scrubbed, transform-only.
       gsap.set(shape, { x: 0, scale: 1 });
-      gsap.to(shape, {
+      const shapeTween = gsap.to(shape, {
         x: 220,
         scale: 1.6,
         ease: "none",
@@ -167,6 +173,7 @@ export function buildScrollytellingPage() {
           scrub: true,
         },
       });
+      scrubTrigger = shapeTween.scrollTrigger;
 
       // Chapter B: toggleActions reveal, staggered per-character headline.
       gsap.set(chars, { autoAlpha: 0, y: 20 });
@@ -201,7 +208,10 @@ function chapterOffsets(): number[] {
   return [0, chapterA.offsetTop, chapterB.offsetTop, chapterC.offsetTop];
 }
 
+let animating = false;
+
 function goToChapter(delta: number) {
+  if (animating) return; // one long gesture = exactly one chapter
   const offsets = chapterOffsets();
   const current = scroller.scrollTop;
   const currentIndex = offsets.reduce(
@@ -211,10 +221,12 @@ function goToChapter(delta: number) {
   );
   const nextIndex = Math.min(Math.max(currentIndex + delta, 0), offsets.length - 1);
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  animating = true;
   gsap.to(scroller, {
     scrollTop: offsets[nextIndex],
     duration: reduced ? 0 : 0.6,
     ease: "power2.inOut",
+    onComplete: () => (animating = false),
   });
 }
 
@@ -222,14 +234,22 @@ navUp.addEventListener("click", () => goToChapter(-1));
 navDown.addEventListener("click", () => goToChapter(1));
 
 // Observer must NOT preventDefault: chapter A's pin+scrub needs native
-// scroll deltas to keep working -- Observer only adds a discrete jump on
-// top of normal scrolling, it doesn't replace it.
+// scroll deltas to keep working. Inside A's pinned range, gestures are left
+// entirely to native scrubbing; elsewhere they jump one chapter. wheelSpeed
+// -1 aligns wheel with touch (swipe-up = scroll-down = next -> onUp).
+function gestureJump(delta: number) {
+  const st = scrubTrigger;
+  if (st && scroller.scrollTop >= st.start && scroller.scrollTop < st.end) return;
+  goToChapter(delta);
+}
+
 const navObserver = Observer.create({
   target: scroller,
   type: "wheel,touch",
   tolerance: 12,
-  onDown: () => goToChapter(1),
-  onUp: () => goToChapter(-1),
+  wheelSpeed: -1,
+  onUp: () => gestureJump(1),
+  onDown: () => gestureJump(-1),
 });
 
 export function teardownScrollytellingPage() {
@@ -248,8 +268,8 @@ buildScrollytellingPage();`,
         en: "Flip.getState must be called BEFORE the layout class changes; calling it after captures the state that's ALREADY changed, leaving Flip nothing to invert and interpolate from.",
       },
       {
-        vi: "Observer và scroll tự nhiên của trình duyệt chạy song song có chủ đích ở đây: đừng preventDefault trong Observer.create, nếu không chapter A (pin+scrub) mất khả năng cuộn liên tục để scrub timeline.",
-        en: "Observer and the browser's native scroll run in parallel on purpose here: don't preventDefault in Observer.create, or chapter A (pin+scrub) loses the continuous scroll it needs to scrub its timeline.",
+        vi: "Observer và scroll tự nhiên chạy song song có chủ đích: đừng preventDefault, nếu không chapter A (pin+scrub) mất cuộn liên tục. Nhưng phải nhường vùng pin của A cho scrub (so scrollTop với start/end của ScrollTrigger đó), khoá bằng cờ animating, và ghép onUp → tiến với wheelSpeed: -1 vì delta touch đi theo ngón tay — vuốt lên nghĩa là đi tiếp.",
+        en: "Observer and native scroll run in parallel on purpose: don't preventDefault, or chapter A (pin+scrub) loses its continuous scroll. But yield A's pinned range to scrubbing (compare scrollTop against that ScrollTrigger's start/end), gate with an animating flag, and pair onUp → forward with wheelSpeed: -1 since touch deltas follow the finger — swiping up means going forward.",
       },
     ],
     checklist: [
@@ -262,16 +282,16 @@ buildScrollytellingPage();`,
         en: "Chapter A pins at the right moment and scrubs smoothly with scroll position, no layout jump when pinning starts",
       },
       {
-        vi: "Chapter B: từng ký tự headline stagger vào đúng thứ tự khi cuộn tới, và animate ngược lại khi cuộn ngược ra khỏi (toggleActions)",
-        en: "Chapter B: each headline character staggers in, in order, when scrolled into view, and reverses when scrolled back out (toggleActions)",
+        vi: "Chapter B: từng ký tự headline stagger vào đúng thứ tự khi cuộn tới, animate ngược khi cuộn ra (toggleActions), và .headline giữ aria-label nguyên văn với các span aria-hidden",
+        en: "Chapter B: each headline character staggers in, in order, when scrolled into view, reverses when scrolled back out (toggleActions), and .headline keeps a verbatim aria-label with aria-hidden spans",
       },
       {
         vi: "Chapter C: cuộn/bấm tới điểm trigger đổi .card-grid từ layout thường sang stacked (và ngược lại) bằng Flip, các card trượt mượt sang vị trí mới thay vì nhảy cóc",
         en: "Chapter C: scrolling/reaching the trigger point switches .card-grid from its normal layout to stacked (and back) via Flip, cards sliding smoothly to their new positions instead of jumping",
       },
       {
-        vi: "Mũi tên #nav-up/#nav-down và cử chỉ Observer (wheel/touch) đều nhảy đúng một chapter mỗi lần, không nhảy quá hoặc thiếu",
-        en: "The #nav-up/#nav-down arrows and Observer gestures (wheel/touch) both jump exactly one chapter at a time, never overshooting or falling short",
+        vi: "Mũi tên #nav-up/#nav-down luôn nhảy đúng một chapter; cử chỉ Observer nhảy đúng một chapter khi ở ngoài vùng pin của chapter A, còn bên trong vùng đó thì nhường hẳn cho scrub tự nhiên",
+        en: "The #nav-up/#nav-down arrows always jump exactly one chapter; Observer gestures jump exactly one chapter outside chapter A's pinned range, and inside it they yield entirely to native scrubbing",
       },
       {
         vi: "Bật 'prefers-reduced-motion: reduce' (DevTools rendering tab) tắt hoàn toàn pin/scrub/stagger/flip, nội dung hiện thẳng ở trạng thái cuối",

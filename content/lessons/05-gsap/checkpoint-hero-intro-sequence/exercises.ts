@@ -7,7 +7,7 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dàn dựng một timeline intro cho hero section: 3 hình khối trang trí, headline, sub-line và nút CTA — tất cả nằm trong một \`gsap.timeline\` duy nhất, sắp xếp bằng label, không phải nhiều tween gọi rời rạc.
 
-Thứ tự bắt buộc: 3 hình khối bay vào từ các cạnh màn hình theo stagger; headline trồi lên bằng ease \`back\`; sub-line mờ dần hiện ra ở vị trí \`<0.2\` — tức 0.2 giây sau khi tween headline BẮT ĐẦU chạy, không phải sau khi nó kết thúc; CTA xuất hiện cuối cùng với một cú overshoot nhỏ hơn hoặc mạnh hơn headline tuỳ bạn chọn, miễn là rõ ràng là điểm nhấn cuối chuỗi. Mọi phần tử phải được ẩn bằng \`gsap.set\` trước khi timeline chạy để tránh FOUC, và nút Replay phải khởi động lại đúng timeline đó mà không đụng vào \`timeScale\` người dùng đã chọn.`,
+Thứ tự bắt buộc: 3 hình khối bay vào từ các cạnh màn hình theo stagger; headline trồi lên bằng ease \`back\`; sub-line mờ dần hiện ra ở vị trí \`<0.2\` — tức 0.2 giây sau khi tween headline BẮT ĐẦU chạy, không phải sau khi nó kết thúc; CTA xuất hiện cuối cùng với một cú overshoot mạnh hơn hẳn overshoot của headline — nó là điểm nhấn cuối chuỗi. Mọi phần tử phải được ẩn bằng \`gsap.set\` trước khi timeline chạy để tránh FOUC, và nút Replay phải khởi động lại đúng timeline đó mà không đụng vào \`timeScale\` người dùng đã chọn.`,
       en: `Choreograph a hero-section intro timeline: 3 decorative shapes, a headline, a sub-line and a CTA button — all inside one single \`gsap.timeline\`, sequenced with labels instead of several separately-called tweens.
 
 Required order: the 3 shapes fly in from the screen edges with a stagger; the headline rises in with a \`back\` ease; the sub-line fades in at the position \`<0.2\` — meaning 0.2 seconds after the headline tween STARTS, not after it finishes; the CTA appears last with a small overshoot, distinctly stronger than the headline's so it reads as the sequence's punchline. Every element must be hidden with \`gsap.set\` before the timeline runs to avoid FOUC, and the Replay button must restart that same timeline without touching whatever \`timeScale\` the user already picked.`,
@@ -110,8 +110,8 @@ const ctx = gsap.context(() => {
 tl.play();
 
 replayBtn.addEventListener("click", () => {
-  // restart(true) rewinds (including any startAt) and plays from 0 — it
-  // never touches timeScale, so a user-picked playback speed survives replay
+  // restart(true) honors the timeline's own delay (includeDelay) and plays
+  // from 0 — it never touches timeScale, so a user-picked speed survives
   tl.restart(true);
 });
 
@@ -121,7 +121,7 @@ export function teardownHeroIntro() {
     referenceImage: "/figures/05-gsap/checkpoint-hero-intro-sequence.svg",
     hints: [
       {
-        vi: "Position parameter quyết định mọi thứ: \"shapes\" đặt một label tại đầu timeline hiện tại; \"<0.2\" nghĩa là 0.2 giây SAU KHI tween ngay trước nó bắt đầu, không phải sau khi kết thúc; không truyền tham số nào nghĩa là nối tiếp ngay sau tween trước — không cần cộng dồn delay thủ công.",
+        vi: "Position parameter quyết định mọi thứ: \"shapes\" đặt một label tại ĐIỂM CUỐI hiện tại của timeline (ở đây là 0 vì timeline còn rỗng); \"<0.2\" nghĩa là 0.2 giây SAU KHI tween ngay trước nó bắt đầu, không phải sau khi kết thúc; không truyền tham số nào nghĩa là nối tiếp ngay sau tween trước — không cần cộng dồn delay thủ công.",
         en: "The position parameter controls everything: \"shapes\" places a label at the current end of the timeline; \"<0.2\" means 0.2 seconds AFTER the previous tween STARTS, not after it ends; passing no parameter means append right after the previous tween — no manual delay math needed.",
       },
       {

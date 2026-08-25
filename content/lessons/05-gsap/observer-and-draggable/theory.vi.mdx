@@ -11,12 +11,15 @@ Observer.create({
   target: deckRef.current, // chỉ lắng nghe TRONG phần tử này, không phải window
   type: "wheel,touch,pointer",
   preventDefault: true,
-  onDown: () => goToNextCard(),
-  onUp: () => goToPreviousCard(),
+  wheelSpeed: -1, // align wheel with touch: swipe-up AND scroll-down both mean "next"
+  onUp: () => goToNextCard(),
+  onDown: () => goToPreviousCard(),
 });
 ```
 
 `target` là chi tiết dễ bỏ qua nhất nhưng quan trọng nhất: Observer chỉ đăng ký listener trên phần tử đó, không phải toàn `window`. `preventDefault: true` chỉ chặn hành vi mặc định (cuộn trang, pull-to-refresh) của sự kiện xảy ra bên trong `target` — cuộn trang bên ngoài phần tử đó vẫn hoạt động bình thường. Đặt `target` nhầm thành `window` cùng `preventDefault: true` là cách nhanh nhất để "khoá cứng" toàn bộ trang, một lỗi dễ mắc và khó nhận ra khi test nhanh trong lúc chỉ cuộn thử bên trong widget.
+
+Chiều của callback cũng đáng dừng lại một nhịp: với touch/pointer, delta đo theo chuyển động của ngón tay — vuốt LÊN cho deltaY âm nên bắn `onUp` — trong khi wheel cuộn xuống cho deltaY dương nên bắn `onDown`. Hai cử chỉ "đi tiếp" tự nhiên đó ngược dấu nhau; vì vậy demo chính thức của GSAP (và ví dụ trên) ghép `onUp → next` với `wheelSpeed: -1` để vuốt lên và cuộn xuống cùng rơi về một callback.
 
 ## Pattern: đổi section toàn màn hình bằng Observer
 
@@ -30,7 +33,8 @@ Observer.create({
   target: deckRef.current,
   type: "wheel,touch,pointer",
   preventDefault: true,
-  onDown: () => {
+  wheelSpeed: -1,
+  onUp: () => {
     if (animating || current >= sections.length - 1) return;
     animating = true;
     gsap.to(sections[current], { autoAlpha: 0, xPercent: -100, onComplete: () => (animating = false) });
@@ -39,7 +43,7 @@ Observer.create({
 });
 ```
 
-Cờ `animating` không phải chi tiết thừa — không có nó, một cử chỉ vuốt/cuộn dài sẽ bắn nhiều sự kiện `onDown` liên tiếp trước khi tween đầu tiên kịp chạy xong, khiến nhiều section bị bỏ qua cùng lúc.
+Cờ `animating` không phải chi tiết thừa — không có nó, một cử chỉ vuốt/cuộn dài sẽ bắn nhiều sự kiện `onUp` liên tiếp trước khi tween đầu tiên kịp chạy xong, khiến nhiều section bị bỏ qua cùng lúc.
 
 ## Draggable: kéo có bounds, quán tính thật, và snap
 

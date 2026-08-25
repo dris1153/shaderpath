@@ -4,7 +4,7 @@ ScrollTrigger là plugin đăng ký thêm cho GSAP (`gsap.registerPlugin(ScrollT
 
 ### Trigger: cú pháp `start`/`end` và ý nghĩa hai nửa
 
-Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt động", định nghĩa bằng `start` và `end`, mỗi giá trị là một chuỗi hai nửa: `"<mép của trigger> <mép của scroller>"`. Ví dụ `start: "top 80%"` nghĩa là khi mép TRÊN của trigger chạm tới điểm nằm 80% chiều cao scroller tính từ đỉnh. Mỗi nửa chấp nhận từ khoá (`top`/`center`/`bottom`) hoặc con số/phần trăm; `end: "bottom top"` (giá trị phổ biến cho trigger không pin) nghĩa là trigger kết thúc khi mép DƯỚI chạm mép TRÊN của scroller — tức đã cuộn hoàn toàn ra khỏi viewport. `getBoundingClientRect()` là cơ chế nền: ScrollTrigger đo vị trí trigger so với scroller lúc tạo/refresh, quy đổi thành hai mốc pixel cố định rồi so sánh với scroll position hiện tại mỗi frame.
+Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt động", định nghĩa bằng `start` và `end`, mỗi giá trị là một chuỗi hai nửa: `"<mép của trigger> <mép của scroller>"`. Ví dụ `start: "top 80%"` nghĩa là khi mép TRÊN của trigger chạm tới điểm nằm 80% chiều cao scroller tính từ đỉnh — với scroller cao 800px, đó chính là lúc mép trên của trigger cắt vạch 640px tính từ mép trên viewport. Mỗi nửa chấp nhận từ khoá (`top`/`center`/`bottom`) hoặc con số/phần trăm; `end: "bottom top"` (giá trị phổ biến cho trigger không pin) nghĩa là trigger kết thúc khi mép DƯỚI chạm mép TRÊN của scroller — tức đã cuộn hoàn toàn ra khỏi viewport. `getBoundingClientRect()` là cơ chế nền: ScrollTrigger đo vị trí trigger so với scroller lúc tạo/refresh, quy đổi thành hai mốc pixel cố định rồi so sánh với scroll position hiện tại mỗi frame.
 
 <Figure
   src="/figures/05-gsap/scrolltrigger-start-end-anatomy.svg"
@@ -18,7 +18,7 @@ Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt �
 
 ### Pin: giữ phần tử đứng yên và "lỗ hổng" layout nó tạo ra
 
-`pin: true` giữ trigger đứng yên trên màn hình (mặc định bằng `transform`, không phải `position: fixed`, nên vẫn đúng khi lồng trong container khác) suốt đoạn `start`-`end`. Vấn đề: nếu phần tử pin thoát khỏi luồng layout mà không để lại dấu vết, nội dung phía dưới sẽ nhảy lên lấp khoảng trống ngay khi pin bắt đầu — vì vậy `pinSpacing: true` (mặc định) tự chèn một khoảng đệm đúng bằng chiều cao quãng pin, giữ layout document không đổi trong khi phần tử thực tế đứng yên. Tắt `pinSpacing` xoá khoảng đệm đó — hợp lý khi tự lo layout, nhưng là bẫy nếu tắt mà không hiểu tác dụng phụ.
+`pin: true` giữ trigger đứng yên trên màn hình (với scroller là cửa sổ — mặc định — pin dùng `position: fixed` thật; khi scroller là một phần tử, pin chuyển sang giữ bằng `transform`, như demo bài này) suốt đoạn `start`-`end`. Vấn đề: nếu phần tử pin thoát khỏi luồng layout mà không để lại dấu vết, nội dung phía dưới sẽ nhảy lên lấp khoảng trống ngay khi pin bắt đầu — vì vậy `pinSpacing: true` (mặc định) tự chèn một khoảng đệm đúng bằng chiều cao quãng pin, giữ layout document không đổi trong khi phần tử thực tế đứng yên. Tắt `pinSpacing` xoá khoảng đệm đó — hợp lý khi tự lo layout, nhưng là bẫy nếu tắt mà không hiểu tác dụng phụ.
 
 ## toggleActions: bốn động từ cho trigger không scrub
 
@@ -26,11 +26,11 @@ Khi KHÔNG dùng `scrub`, ScrollTrigger vẫn cần biết phải làm gì với
 
 ## Markers: công cụ debug nên bật đầu tiên
 
-`markers: true` vẽ hai cặp vạch màu (start/end) vào DOM — một cặp neo theo scroller, một cặp neo theo trigger, mỗi vạch ghi rõ tên biến — khi hai cặp trùng nhau, `start`/`end` đang đúng như kỳ vọng. Đây là công cụ đầu tiên nên bật khi trigger point trông sai vị trí, trước khi đoán mò sửa số; với scroller tuỳ chỉnh (mục cuối bài), marker gắn vào ĐÚNG scroller đó thay vì `document.body`, nên vẫn cuộn cùng nội dung thay vì trôi tự do trên toàn trang.
+`markers: true` vẽ hai cặp vạch màu (start/end) vào DOM — một cặp neo theo scroller, một cặp neo theo trigger, mỗi vạch ghi nhãn start/end (kèm `id` nếu bạn đặt option `id`) — khi hai cặp trùng nhau, `start`/`end` đang đúng như kỳ vọng. Đây là công cụ đầu tiên nên bật khi trigger point trông sai vị trí, trước khi đoán mò sửa số; với scroller tuỳ chỉnh (mục cuối bài), marker gắn vào ĐÚNG scroller đó thay vì `document.body`, nên vẫn cuộn cùng nội dung thay vì trôi tự do trên toàn trang.
 
 ## Snap: biến dải cuộn liên tục thành các bước rời rạc
 
-`snap` (thường đi kèm `scrub`) buộc vị trí cuộn "làm tròn" về một tập giá trị cho phép ngay khi người dùng ngừng cuộn: `snapTo: 1` chỉ chấp nhận 0 hoặc 1; `snapTo: 0.25` tạo bốn bước 0, 0.25, 0.5, 0.75, 1; hoặc truyền một mảng số/nhãn label để snap về đúng các điểm đó. Cơ chế: ScrollTrigger tự tween scroll position của scroller (không phải tween của bạn) tới giá trị hợp lệ gần nhất, nên chuyển động "khớp về" luôn mượt.
+`snap` (thường đi kèm `scrub`) buộc vị trí cuộn "làm tròn" về một tập giá trị cho phép ngay khi người dùng ngừng cuộn: `snap: 1` chỉ chấp nhận 0 hoặc 1; `snap: 0.25` tạo các bước 0, 0.25, 0.5, 0.75, 1; muốn snap về một mảng số hay các label thì dùng dạng object — `snap: { snapTo: [...] }` — như demo bài này. Cơ chế: ScrollTrigger tự tween scroll position của scroller (không phải tween của bạn) tới giá trị hợp lệ gần nhất, nên chuyển động "khớp về" luôn mượt.
 
 ## Kỷ luật một-trigger-một-nhiệm-vụ và `ScrollTrigger.refresh()`
 

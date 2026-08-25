@@ -203,12 +203,12 @@ export const lessons: LessonMeta[] = [
     objectives: {
       vi: [
         "Giải thích vì sao hai render loop độc lập (RAF của GSAP và của R3F) đánh nhau",
-        "Đăng ký gsap.ticker để GSAP điều khiển loop, hoặc để useFrame đọc giá trị đã tween",
+        "Nhận diện anti-pattern đăng ký render lên gsap.ticker cạnh <Canvas>; để useFrame đọc giá trị đã tween",
         "Đồng bộ progress của ScrollTrigger vào state đọc được trong useFrame mà không tạo loop thứ hai",
       ],
       en: [
         "Explain why two independent render loops (GSAP's RAF and R3F's) fight each other",
-        "Register gsap.ticker so GSAP drives the loop, or let useFrame read already-tweened values",
+        "Recognize the anti-pattern of registering a render on gsap.ticker beside <Canvas>; let useFrame read already-tweened values",
         "Sync ScrollTrigger progress into state readable inside useFrame without spawning a second loop",
       ],
     },

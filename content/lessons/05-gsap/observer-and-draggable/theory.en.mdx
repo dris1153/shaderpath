@@ -11,12 +11,15 @@ Observer.create({
   target: deckRef.current, // listens ONLY inside this element, not window
   type: "wheel,touch,pointer",
   preventDefault: true,
-  onDown: () => goToNextCard(),
-  onUp: () => goToPreviousCard(),
+  wheelSpeed: -1, // align wheel with touch: swipe-up AND scroll-down both mean "next"
+  onUp: () => goToNextCard(),
+  onDown: () => goToPreviousCard(),
 });
 ```
 
 `target` is the easiest detail to overlook and the most important one: Observer only registers listeners on that element, never on the whole `window`. `preventDefault: true` only suppresses the default behavior (page scroll, pull-to-refresh) of events happening inside `target` — scrolling outside that element still works normally. Setting `target` to `window` alongside `preventDefault: true` is the fastest way to lock down the entire page, an easy mistake to make and an easy one to miss if you only test by scrolling inside the widget itself.
+
+The callbacks' direction convention deserves a beat too: for touch/pointer, deltas track the finger's motion — swiping UP yields a negative deltaY and fires `onUp` — while a wheel scrolled down yields a positive deltaY and fires `onDown`. Those two natural "go forward" gestures carry opposite signs; that's why GSAP's official demos (and the example above) pair `onUp → next` with `wheelSpeed: -1`, so swipe-up and scroll-down land in the same callback.
 
 ## Pattern: Fullscreen Section Swap With Observer
 
@@ -30,7 +33,8 @@ Observer.create({
   target: deckRef.current,
   type: "wheel,touch,pointer",
   preventDefault: true,
-  onDown: () => {
+  wheelSpeed: -1,
+  onUp: () => {
     if (animating || current >= sections.length - 1) return;
     animating = true;
     gsap.to(sections[current], { autoAlpha: 0, xPercent: -100, onComplete: () => (animating = false) });
@@ -39,7 +43,7 @@ Observer.create({
 });
 ```
 
-The `animating` flag isn't an incidental detail — without it, one long swipe or scroll gesture fires several consecutive `onDown` events before the first tween finishes, skipping several sections at once.
+The `animating` flag isn't an incidental detail — without it, one long swipe or scroll gesture fires several consecutive `onUp` events before the first tween finishes, skipping several sections at once.
 
 ## Draggable: Bounded Drag, Real Inertia, and Snap
 

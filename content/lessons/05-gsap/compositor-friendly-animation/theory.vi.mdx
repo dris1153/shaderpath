@@ -42,7 +42,7 @@ Ba kỹ thuật né layout mà vẫn đạt hiệu ứng tương tự: (1) progr
 
 ## GSAP viết transform thế nào, và force3D là gì
 
-GSAP không ghi từng sub-property transform (`x`, `y`, `scale`, `rotation`...) thành nhiều lệnh `style.transform` riêng lẻ — nó gộp mọi sub-property đang animate trên một phần tử thành đúng một chuỗi `transform` rồi ghi một lần mỗi tick, tránh trình duyệt phải parse lại chuỗi transform nhiều lần trong cùng một frame. Thuộc tính `force3D` (mặc định `"auto"`) quyết định GSAP có tự thêm `translateZ(0)` để ép layer promotion hay không: ở `"auto"`, GSAP chỉ làm vậy khi phát hiện bạn dùng thuộc tính 3D thật (`z`, `rotationX`/`rotationY`, `perspective`); `force3D: true` ép mọi tween 2D cũng lên layer riêng (đánh đổi VRAM như mục will-change ở trên); `force3D: false` tắt hẳn hành vi này khi bạn cố tình muốn tránh tạo thêm layer.
+GSAP không ghi từng sub-property transform (`x`, `y`, `scale`, `rotation`...) thành nhiều lệnh `style.transform` riêng lẻ — nó gộp mọi sub-property đang animate trên một phần tử thành đúng một chuỗi `transform` rồi ghi một lần mỗi tick, tránh trình duyệt phải parse lại chuỗi transform nhiều lần trong cùng một frame. Thuộc tính `force3D` (mặc định `"auto"`) quyết định GSAP có tự thêm `translateZ(0)` để ép layer promotion hay không: ở `"auto"`, GSAP render MỌI tween transform bằng ma trận 3D trong lúc tween đang chạy rồi hạ về 2D khi kết thúc — layer promotion chỉ tồn tại trong lúc animate, không phải vì nó "phát hiện thuộc tính 3D"; `force3D: true` giữ 3D (và layer riêng) cả khi đứng yên (đánh đổi VRAM như mục will-change ở trên); `force3D: false` tắt hẳn hành vi này khi bạn cố tình muốn tránh tạo thêm layer.
 
 ## Điểm này dẫn tới đâu
 

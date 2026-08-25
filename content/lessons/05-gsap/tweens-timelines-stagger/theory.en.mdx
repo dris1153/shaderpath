@@ -30,7 +30,7 @@ tween.progress(0.5); // jump straight to 50% through the eased motion
 tween.timeScale(2); // run twice as fast, same eased shape
 ```
 
-`progress()` and `timeScale()` are the two most overlooked methods, and the most important ones later on: `progress(t)` jumps the animation directly to eased progress $t \in [0, 1]$ — not to time $t \times duration$ measured linearly — so a tween is really a **scrubbing-friendly value generator**: drive `progress` from a scroll position, a drag position, or any continuous input, and the animation always lines up exactly. This is the entire mechanism ScrollTrigger uses to sync animation to scroll in a later module — no extra magic, just `progress()` called repeatedly against the scroll position.
+`progress()` and `timeScale()` are the two most overlooked methods, and the most important ones later on: `progress(t)` places the playhead at exactly $t \times duration$ in linear time ($t \in [0, 1]$) — the ease is applied at render time, so the value you see there is $ease(t)$ — so a tween is really a **scrubbing-friendly value generator**: drive `progress` from a scroll position, a drag position, or any continuous input, and the animation always lines up exactly. This is the entire mechanism ScrollTrigger uses to sync animation to scroll in a later module — no extra magic, just `progress()` called repeatedly against the scroll position.
 
 ## Timelines: Sequencing Tweens on Relative Time
 
@@ -41,8 +41,8 @@ const tl = gsap.timeline();
 
 tl.to(".box-1", { x: 100, duration: 1 })
   .to(".box-2", { x: 100, duration: 1 }, "<") // starts the SAME moment box-1 starts
-  .to(".box-3", { x: 100, duration: 1 }) // default ">": starts when the previous tween ENDS
-  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // overlap: starts 0.3s before the previous tween ends
+  .to(".box-3", { x: 100, duration: 1 }) // default: appended at the timeline END (here that coincides with the previous tween ending)
+  .to(".box-4", { y: -20, duration: 0.5 }, "-=0.3") // overlap: pulled back 0.3s from the timeline END
   .addLabel("settle")
   .to(".box-5", { opacity: 1, duration: 0.4 }, "settle+=0.2");
 ```
@@ -50,7 +50,7 @@ tl.to(".box-1", { x: 100, duration: 1 })
 <Figure
   src="/figures/05-gsap/timeline-position-parameter.svg"
   alt="A timeline time axis: five tweens placed by their position parameter, and a staggered tween spread across several offsets"
-  caption="On a time axis it becomes obvious that a position parameter is always measured against the marker just before it, and that a staggered tween occupies a longer slot than its own duration."
+  caption="On a time axis it becomes obvious that a position parameter measures relatively: the default and +=/-= against the timeline end, only </> against the most recently added animation — and that a staggered tween occupies a longer slot than its own duration."
 />
 
 Compare that to manually stacking `delay` on separate tweens:
@@ -61,7 +61,7 @@ gsap.to(".box-2", { x: 100, duration: 1, delay: 1 });
 gsap.to(".box-3", { x: 100, duration: 1, delay: 2 });
 ```
 
-...position parameters survive edits, stacked delays don't. Each position is relative — to the animation right before it, or to a named label — so inserting a tween in the middle, deleting one, or just bumping box-1's `duration` from 1 to 1.5 seconds re-flows everything after it automatically, exactly as declared. With stacked delays, that same change forces hand-recomputing every number downstream — the most reliable way an animation sequence rots once someone edits its timing later.
+...position parameters survive edits, stacked delays don't. Each position is relative — to the timeline's end (the default and `+=`/`-=`), to the most recently added animation (`<`/`>`), or to a named label — so inserting a tween in the middle, deleting one, or just bumping box-1's `duration` from 1 to 1.5 seconds re-flows everything after it automatically, exactly as declared. With stacked delays, that same change forces hand-recomputing every number downstream — the most reliable way an animation sequence rots once someone edits its timing later.
 
 ## Nesting Timelines: Choreography by Component
 
@@ -150,7 +150,7 @@ The next lesson digs into `ease` itself — how to read a curve, how to design a
 The three most common tween/timeline/stagger mistakes:
 
 1. **Stacking `delay` by hand instead of using a position parameter.** `delay: 0`, `delay: 1`, `delay: 2` on three separate tweens looks fine at first, but inserting a step in the middle or bumping the first tween's `duration` forces recomputing every number downstream by hand — a position parameter (`"<"`, `"-=0.2"`, a label) is relative, so it re-flows automatically when the sequence gets edited.
-2. **Forgetting stagger extends the sequence's total length.** $T_{total} = duration + (n-1) \cdot each$, not just a single tween's `duration` — chaining the next step right after a staggered tween with the default `">"` position while forgetting to account for $(n-1) \cdot each$ makes that step fire before the last element has actually finished animating.
+2. **Forgetting stagger extends the sequence's total length.** $T_{total} = duration + (n-1) \cdot each$, not just a single tween's `duration`. The timeline itself already knows this — a staggered tween is ONE tween whose duration includes the stagger, so the next appended step still waits for the last element to finish. The trap is elsewhere: whenever you estimate pacing by hand — absolute-number positions, computing where to drop a label, syncing to audio — and count only `duration`, forgetting $(n-1) \cdot each$, every number downstream drifts by a full stagger.
 3. **Mixing up `stagger: 0.1` (a number = `each`, a FIXED per-element delay) with `stagger: { amount: 0.1 }` (a FIXED total duration, where each element's delay shrinks as more are added).** Adding elements while using `each` lengthens the whole sequence; adding elements while using `amount` keeps the total the same but bunches the effect closer together — two opposite behaviors that are easy to trip over if the wrong key gets used.
 
 </Callout>

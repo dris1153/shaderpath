@@ -51,8 +51,8 @@ export const references: Citation[] = [
     authors: ["MDN Web Docs"],
     url: "https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API",
     note: {
-      vi: "API trình duyệt gốc mà cả GSAP lẫn Motion (ở chế độ hybrid) dựa vào phía dưới — hữu ích để hiểu vì sao 'chạy trên compositor' không phải phép màu của riêng một thư viện nào.",
-      en: "The native browser API both GSAP and Motion (in hybrid mode) sit on top of — useful for understanding why 'runs on the compositor' isn't magic unique to any one library.",
+      vi: "API trình duyệt gốc mà engine hybrid của Motion dựa vào, và là cơ chế thứ ba trong demo bài này (GSAP thì không — nó tự chạy rAF và ghi inline style) — hữu ích để hiểu vì sao 'chạy trên compositor' không phải phép màu của riêng một thư viện nào.",
+      en: "The native browser API Motion's hybrid engine sits on top of, and the third mechanism in this lesson's demo (GSAP does not — it runs its own rAF and writes inline styles) — useful for understanding why 'runs on the compositor' isn't magic unique to any one library.",
     },
   },
 ];
