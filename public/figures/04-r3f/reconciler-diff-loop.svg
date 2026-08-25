@@ -53,7 +53,7 @@
 
   <rect class="box-accent" x="26" y="146" width="574" height="48" rx="8" />
   <text class="title title-accent" x="313" y="168" text-anchor="middle">react-reconciler diffs it against the previous fiber tree</text>
-  <text class="note" x="313" y="186" text-anchor="middle">nodes are matched by position in the tree, then by key</text>
+  <text class="note" x="313" y="186" text-anchor="middle">nodes are matched by key when present, otherwise by position</text>
 
   <path class="arrow" d="M313,194 L313,208 M118,208 L508,208" />
   <path class="arrow" d="M118,206 L118,216" marker-end="url(#head)" />

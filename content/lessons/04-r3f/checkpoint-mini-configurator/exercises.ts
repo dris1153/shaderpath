@@ -62,10 +62,10 @@ function ChairModel({
   });
 
   const legPositions: [number, number, number][] = [
-    [-0.5, -0.42, -0.42],
-    [0.5, -0.42, -0.42],
-    [-0.5, -0.42, 0.42],
-    [0.5, -0.42, 0.42],
+    [-0.5, -0.255, -0.42],
+    [0.5, -0.255, -0.42],
+    [-0.5, -0.255, 0.42],
+    [0.5, -0.255, 0.42],
   ];
 
   return (
@@ -157,7 +157,7 @@ function ChairModel({
   // the cleanup effect below).
   const boxGeometry = useMemo(() => new THREE.BoxGeometry(1, 1, 1), []);
   const legGeometry = useMemo(
-    () => new THREE.CylinderGeometry(0.05, 0.05, 0.9, 12),
+    () => new THREE.CylinderGeometry(0.05, 0.05, 0.39, 12),
     [],
   );
 
@@ -178,10 +178,10 @@ function ChairModel({
   });
 
   const legPositions: [number, number, number][] = [
-    [-0.5, -0.42, -0.42],
-    [0.5, -0.42, -0.42],
-    [-0.5, -0.42, 0.42],
-    [0.5, -0.42, 0.42],
+    [-0.5, -0.255, -0.42],
+    [0.5, -0.255, -0.42],
+    [-0.5, -0.255, 0.42],
+    [0.5, -0.255, 0.42],
   ];
 
   return (

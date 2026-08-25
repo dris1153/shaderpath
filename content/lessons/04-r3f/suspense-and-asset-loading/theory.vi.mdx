@@ -73,7 +73,7 @@ function handleSwap(nextUrl: string) {
 
 ## Suspense ở quy mô lớn: cách nền tảng này lazy-mount cả bài học
 
-Ý tưởng cốt lõi của Suspense — đừng trả giá cho thứ chưa cần render — lặp lại ở một quy mô hoàn toàn khác ngay trong chính route bài học bạn đang đọc: `app/[locale]/lesson/[lessonSlug]/page.tsx` tra `DEMO_REGISTRY[lesson.slug]`, một `import()` động, và chỉ `await` nó khi route đó thực sự được truy cập. Cơ chế khác hẳn (đây là code-splitting phía Server Component bằng `await import()`, không phải throw-Promise-catch-ở-Suspense phía client) — nhưng động lực giống hệt nhau: không tải, không chạy code cho một demo người dùng chưa xem tới.
+Ý tưởng cốt lõi của Suspense — đừng trả giá cho thứ chưa cần render — vận hành ngay trong chính trang bài học bạn đang đọc, và bằng đúng cơ chế vừa học: `components/lesson/lesson-demo-host.tsx` tra `DEMO_REGISTRY[lesson.slug]` (một `import()` động cho từng bài) rồi bọc qua `React.lazy` bên trong một `<Suspense>` với fallback skeleton. `lazy` chỉ thực sự tải chunk khi component render lần đầu, và trong lúc chờ thì chunk đó "treo" đúng theo hợp đồng throw-promise mà `Suspense` hứng để hiện skeleton. Khác duy nhất ở thứ được chờ: ở đây là chunk JavaScript của demo, không phải texture hay glTF — không tải, không chạy code cho một demo người dùng chưa xem tới.
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 

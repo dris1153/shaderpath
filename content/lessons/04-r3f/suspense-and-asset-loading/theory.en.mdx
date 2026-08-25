@@ -73,7 +73,7 @@ function handleSwap(nextUrl: string) {
 
 ## Suspense at Scale: How This Platform Lazy-Mounts Entire Lessons
 
-Suspense's core idea — don't pay for rendering something not needed yet — repeats at a completely different scale right inside the lesson route you're reading now: `app/[locale]/lesson/[lessonSlug]/page.tsx` looks up `DEMO_REGISTRY[lesson.slug]`, a dynamic `import()`, and only `await`s it once that route is actually visited. The mechanism is entirely different (this is Server Component code-splitting via `await import()`, not client-side throw-Promise-catch-at-Suspense) — but the motivation is identical: don't load or run code for a demo the user hasn't reached yet.
+Suspense's core idea — don't pay for rendering something not needed yet — is at work inside the very lesson page you're reading, using exactly the mechanism you just learned: `components/lesson/lesson-demo-host.tsx` looks up `DEMO_REGISTRY[lesson.slug]` (a per-lesson dynamic `import()`) and wraps it in `React.lazy` inside a `<Suspense>` with a skeleton fallback. `lazy` only actually fetches the chunk on the component's first render, and while it loads, that chunk suspends via the same throw-promise contract that `Suspense` catches to show the skeleton. The only difference is what's being awaited: here it's the demo's JavaScript chunk, not a texture or a glTF — no loading, no running code for a demo the user hasn't reached yet.
 
 <Callout variant="mistake" title="Common mistakes">
 

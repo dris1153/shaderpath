@@ -1,6 +1,6 @@
 ## Tên JSX viết thường = tên class Three.js
 
-`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>` không phải tên thẻ HTML tuỳ ý hay component React ẩn danh — chúng là tên class THREE viết thường chữ cái đầu, đúng nghĩa đen. R3F đăng ký sẵn (qua một lệnh `extend(THREE)` chạy ngầm khi import `@react-three/fiber`) toàn bộ export của namespace `THREE` thành một "catalog" ánh xạ chuỗi thường → constructor: `mesh` → `THREE.Mesh`, `boxGeometry` → `THREE.BoxGeometry`, `meshStandardMaterial` → `THREE.MeshStandardMaterial`, `group` → `THREE.Group`. Quy tắc chỉ một bước: bỏ tiền tố `THREE.`, viết hoa chữ đầu thành thường. Không có danh sách "prop hợp lệ" riêng cho từng element JSX — hợp lệ hay không phụ thuộc hoàn toàn vào chính class THREE đó có property/constructor argument tên đó hay không, tra thẳng docs Three.js là đủ.
+`<mesh>`, `<boxGeometry>`, `<meshStandardMaterial>` không phải tên thẻ HTML tuỳ ý hay component React ẩn danh — chúng là tên class THREE viết thường chữ cái đầu, đúng nghĩa đen. R3F đăng ký sẵn (qua một lệnh `extend(THREE)` chạy khi `<Canvas>` đầu tiên mount — dùng `createRoot` thủ công thì bạn tự `extend`) toàn bộ export của namespace `THREE` thành một "catalog" ánh xạ chuỗi thường → constructor: `mesh` → `THREE.Mesh`, `boxGeometry` → `THREE.BoxGeometry`, `meshStandardMaterial` → `THREE.MeshStandardMaterial`, `group` → `THREE.Group`. Quy tắc chỉ một bước: bỏ tiền tố `THREE.`, viết hoa chữ đầu thành thường. Không có danh sách "prop hợp lệ" riêng cho từng element JSX — hợp lệ hay không phụ thuộc hoàn toàn vào chính class THREE đó có property/constructor argument tên đó hay không, tra thẳng docs Three.js là đủ.
 
 Hệ quả: mọi class THREE, kể cả class R3F "chưa từng biết tới", tự động dùng được trong JSX ngay khi viết đúng tên viết thường — không cần chờ R3F cập nhật. Đây là lý do phần cuối bài giới thiệu `extend()`: cách đăng ký thêm một class KHÔNG nằm trong namespace `THREE` mặc định vào đúng catalog đó.
 
@@ -25,7 +25,7 @@ Vì `args` map thẳng vào lời gọi `new`, R3F không có cách nào khác �
 
 Prop không phải `args` không đi qua constructor — R3F tạo object trước bằng `new Class()` (hoặc `new Class(...args)`), rồi gán TỪNG prop còn lại như một property assignment thuần: `<mesh position={[1, 0, 0]}>` chạy y hệt `mesh.position.set(1, 0, 0)` (R3F phát hiện `.position` là một `THREE.Vector3` có sẵn `.set()` và gọi nó, thay vì gán đè bằng Vector3 mới — giữ nguyên instance xuyên suốt vòng đời object, quan trọng vì code khác có thể đang giữ tham chiếu tới đúng Vector3 đó). Đây là lý do đổi `position` rẻ hơn hẳn đổi `args`: không buffer GPU nào bị đụng tới, chỉ ba con số CPU thay đổi.
 
-Với property nhận một `Vector3`/`Euler` (ba trục bằng nhau, ví dụ phóng to đều), R3F cho phép truyền thẳng một SỐ đơn thay vì mảng ba phần tử — `<mesh scale={2} />` tương đương `<mesh scale={[2, 2, 2]} />`. Rút gọn này chỉ áp dụng cho các property vector chuẩn (`position`, `rotation`, `scale`), không phải quy tắc chung cho mọi prop — logic nằm trong chính R3F khi nó phát hiện kiểu property đích là vector.
+Với property nhận một `Vector3`/`Euler` (ba trục bằng nhau, ví dụ phóng to đều), R3F cho phép truyền thẳng một SỐ đơn thay vì mảng ba phần tử — `<mesh scale={2} />` tương đương `<mesh scale={[2, 2, 2]} />`. Rút gọn này chỉ áp dụng cho property có `setScalar` như `Vector3` (`position`, `scale`) — `rotation` là `Euler`, KHÔNG có `setScalar`, nên `rotation={n}` rơi vào `set(n)` với hai thành phần undefined → NaN lúc chạy. Logic nằm trong chính R3F khi nó phát hiện kiểu property đích.
 
 ## Pierced prop: gán sâu vào property lồng nhau bằng dấu gạch ngang
 
@@ -49,7 +49,7 @@ Một `<mesh>` không tự biết `<boxGeometry>` con của nó phải gán vào
 
 ## Giá trị "không serialize được": vector nhận mảng, màu nhận chuỗi
 
-`Vector3`, `Euler`, `Color` không phải kiểu dữ liệu JSON-serializable thuần — chúng là class THREE thật, có method. R3F chấp nhận PROP dạng "gọn" (mảng số, hoặc chuỗi) rồi tự chuyển đổi bằng đúng API của class đó thay vì gán đè: prop `color` nhận chuỗi CSS (`"hotpink"`, `"#ff0088"`) và R3F gọi `material.color.set("hotpink")` — không tạo `Color` mới, chỉ set lại giá trị Color instance sẵn có. Tương tự, prop `position` nhận mảng ba số và R3F gọi `.set(...array)` thay vì gán đè property.
+`Vector3`, `Euler`, `Color` không phải kiểu dữ liệu JSON-serializable thuần — chúng là class THREE thật, có method. R3F chấp nhận PROP dạng "gọn" (mảng số, hoặc chuỗi) rồi tự chuyển đổi bằng đúng API của class đó thay vì gán đè: prop `color` nhận chuỗi CSS (`"hotpink"`, `"#ff0088"`, `"rgb(255,0,136)"`) và R3F gọi `material.color.set("hotpink")` — không tạo `Color` mới, chỉ set lại giá trị Color instance sẵn có. Tương tự, prop `position` nhận mảng ba số và R3F gọi `.set(...array)` thay vì gán đè property.
 
 Nguyên tắc chung: bất kỳ property đích nào có method `.set()` (hầu hết class toán học của THREE đều có), R3F ưu tiên gọi `.set()` thay vì gán đè bằng object mới — giữ nguyên identity của instance, tránh cấp phát thừa mỗi lần re-render, và giữ tham chiếu cũ (nếu code khác đang giữ) vẫn hợp lệ.
 
@@ -72,7 +72,7 @@ Mọi quy tắc đã học trong bài này (`args`, property prop, pierced prop,
 Ba lỗi hay gặp nhất khi ánh xạ JSX sang Three.js:
 
 1. **Đưa giá trị animate mượt vào `args`.** `args` chỉ chạy một lần lúc constructor — đổi nó mỗi frame (ví dụ nối `args={[radius, 32, 32]}` với một `radius` animate) huỷ và dựng lại toàn bộ geometry, re-upload buffer GPU liên tục thay vì chỉ mutate `scale`.
-2. **Quên `attach` khi geometry/material không nằm trực tiếp trong `<mesh>`.** Ngầm định `attach="geometry"`/`attach="material"` chỉ hoạt động khi object đó là CON TRỰC TIẾP của `<mesh>`; bọc nó qua một component trung gian tự viết mà quên set `attach` tường minh khiến object "trôi nổi" không gắn vào đâu, mesh hiển thị sai hoặc trống.
+2. **Đặt geometry/material dưới nhầm HOST cha.** Auto-attach quyết định theo KIỂU instance (`isBufferGeometry` → `attach="geometry"`, `isMaterial` → `"material"`) và gắn vào host cha gần nhất — bọc qua component React tự viết vẫn ổn (component không tạo host node), nhưng lồng geometry dưới một `<group>` sẽ gắn thành `group.geometry`: không lỗi, không hiển thị gì. Với thứ không auto-attach được (ví dụ texture vào slot cụ thể), phải set `attach` tường minh.
 3. **Tưởng `color="hotpink"` tạo Color mới mỗi lần re-render.** R3F gọi `.set()` trên Color instance có sẵn, không cấp phát object mới — nhưng nếu bạn TỰ tạo `new THREE.Color()` trong thân component (ngoài `useMemo`) rồi truyền qua một prop khác, bạn mới thực sự tạo object rác mỗi lần render, không phải do JSX gây ra.
 
 </Callout>

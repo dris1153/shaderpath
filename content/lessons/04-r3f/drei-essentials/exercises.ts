@@ -18,8 +18,8 @@ Without running code: explain how (A)'s per-frame raycast cost scales with $n$ (
         en: "Each `<Html occlude>` raycasts independently, sharing no result with other instances — n markers means n raycasts, each one sweeping through the scene's meshes looking for the nearest hit.",
       },
       {
-        vi: "Với một quả cầu, một marker bị che khi và chỉ khi nó nằm ở \"nửa sau\" nhìn từ camera — điều này suy ra trực tiếp từ dấu của một dot product, không cần bắn tia hình học thật.",
-        en: "For a sphere, a marker is occluded exactly when it sits on the \"far half\" as seen from the camera — that falls straight out of the sign of a dot product, no real geometric ray needed.",
+        vi: "Với một quả cầu, ranh giới thấy/không thấy là đường chân trời mà camera nhìn thấy trên mặt cầu — một phép so sánh dot product với ngưỡng phụ thuộc bán kính và khoảng cách camera, không cần bắn tia hình học thật.",
+        en: "For a sphere, the visible/hidden boundary is the horizon circle the camera sees on the sphere — one dot-product comparison against a threshold built from the radius and the camera distance, no real geometric ray needed.",
       },
     ],
     checklist: [
@@ -39,12 +39,12 @@ Without running code: explain how (A)'s per-frame raycast cost scales with $n$ (
     solutionNote: {
       vi: `(A) 40× \`<Html occlude>\`: mỗi instance tự raycast từ camera tới đúng điểm neo của NÓ, kiểm tra va chạm với các mesh trong scene — $n$ marker × $m$ mesh occluder nên chi phí xấp xỉ $O(n \\cdot m)$ raycast test mỗi frame, không chia sẻ được giữa các marker dù chúng cùng bị một quả cầu duy nhất che.
 
-(B) Occluder là một quả cầu tâm $C$, bán kính $r$. Marker tại vị trí $P$ bị che khi nó nằm ở nửa hướng ra xa camera: tính \`toMarker = normalize(P - C)\` và \`toCamera = normalize(camera.position - C)\`, marker hiển thị khi \`dot(toMarker, toCamera) > 0\`.
+(B) Occluder là một quả cầu tâm $C$, bán kính $r$; camera cách tâm $d = |camera.position - C|$. Từ khoảng cách hữu hạn, camera thấy ÍT hơn một nửa quả cầu — đường chân trời là vòng tròn tiếp tuyến, nơi $\cos\theta = r/d$. Tính \`toMarker = normalize(P - C)\` và \`toCamera = normalize(camera.position - C)\`: marker hiển thị khi \`dot(toMarker, toCamera) > r / d\` (ngưỡng $0$ — "đúng nửa cầu" — chỉ là xấp xỉ khi camera ở rất xa).
 
 Đây chỉ là một dot product mỗi marker, không raycast, không phụ thuộc số mesh khác trong scene, nên chi phí là $O(n)$ thay vì $O(n \\cdot m)$. Vẫn nên dùng (A) khi occluder không phải hình đơn giản (mesh bất kỳ, nhiều lớp che nhau) hoặc số marker quá ít để chênh lệch hiệu năng còn đáng để viết code riêng.`,
       en: `(A) 40× \`<Html occlude>\`: each instance raycasts from the camera to its OWN anchor point, checking against the scene's meshes — $n$ markers × $m$ occluder meshes means a per-frame cost of roughly $O(n \\cdot m)$ raycast tests, with no sharing between markers even though they're all occluded by the same single sphere.
 
-(B) The occluder is a sphere centered at $C$ with radius $r$. A marker at position $P$ is occluded when it sits on the half facing away from the camera: compute \`toMarker = normalize(P - C)\` and \`toCamera = normalize(camera.position - C)\`; the marker is visible when \`dot(toMarker, toCamera) > 0\`.
+(B) The occluder is a sphere centered at $C$ with radius $r$; the camera sits at distance $d = |camera.position - C|$. From a finite distance the camera sees LESS than half the sphere — the horizon is the tangency circle, where $\cos\theta = r/d$. Compute \`toMarker = normalize(P - C)\` and \`toCamera = normalize(camera.position - C)\`: the marker is visible when \`dot(toMarker, toCamera) > r / d\` (the $0$ threshold — "exactly half the sphere" — is only the far-camera approximation).
 
 That's one dot product per marker, no raycasting, with no dependency on how many other meshes are in the scene — so the cost is $O(n)$ instead of $O(n \\cdot m)$. Approach (A) is still worth using when the occluder isn't a simple shape (an arbitrary mesh, multiple overlapping occluders) or when the marker count is too small for the performance gap to be worth writing dedicated code for.`,
     },

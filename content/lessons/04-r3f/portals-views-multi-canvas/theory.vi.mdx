@@ -53,12 +53,16 @@ function Hud() {
   const [hudScene] = useState(() => new THREE.Scene());
   const camRef = useRef<THREE.OrthographicCamera>(null);
 
-  useFrame(({ gl }) => {
+  useFrame(({ gl, scene, camera }) => {
     if (!camRef.current) return;
+    // priority > 0 TẮT render tự động của R3F — callback này phải tự vẽ
+    // scene chính trước, rồi mới vẽ HUD đè lên (đúng pattern drei <Hud>).
+    gl.autoClear = true;
+    gl.render(scene, camera);
     gl.autoClear = false;
     gl.clearDepth(); // xoá depth buffer, GIỮ nguyên màu đã vẽ ở scene chính
     gl.render(hudScene, camRef.current);
-  }, 1); // priority > 0 → tự quản lý render, chạy SAU scene chính
+  }, 1);
 
   return createPortal(
     <>

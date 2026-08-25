@@ -1,19 +1,19 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocale } from "next-intl";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { Button } from "@/components/ui/button";
-import { useDisposable } from "@/lib/hooks/use-disposable";
+import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
     title: "Mount/unmount stress test: leak vs không leak",
     leakyTitle: "Leaky — new THREE.X(), không dispose",
-    cleanTitle: "Clean — JSX auto-dispose + useDisposable",
+    cleanTitle: "Clean — JSX auto-dispose + disposable registry",
     mount: "Mount",
     unmount: "Unmount",
     geo: "geo",
@@ -23,7 +23,7 @@ const LABELS = {
   en: {
     title: "Mount/Unmount Stress Test: Leaky vs Clean",
     leakyTitle: "Leaky — new THREE.X(), never disposed",
-    cleanTitle: "Clean — JSX auto-dispose + useDisposable",
+    cleanTitle: "Clean — JSX auto-dispose + disposable registry",
     mount: "Mount",
     unmount: "Unmount",
     geo: "geo",
@@ -87,26 +87,32 @@ function LeakyBoxes() {
 // Clean: 9 boxes are plain JSX — R3F itself instantiated that geometry and
 // material from the <boxGeometry>/<meshStandardMaterial> tags, so its
 // auto-dispose pass frees them on unmount. Box #0 is built imperatively on
-// purpose (same shape as the leak above) but registered with this
-// platform's useDisposable hook, whose own unmount effect disposes it —
+// purpose (same shape as the leak above) but created inside an effect that
+// owns a disposable registry and disposes it in its cleanup —
 // proving the fix is "register cleanup", not "avoid new THREE.X()".
 function CleanBoxes() {
-  const disposables = useDisposable();
-
-  const manualMesh = useMemo(() => {
-    const geometry = disposables.register(new THREE.BoxGeometry(0.5, 0.5, 0.5));
-    const material = disposables.register(
+  // Created inside an effect, not useMemo: Strict Mode's simulated unmount
+  // disposes the registry, and a memoized object would come back dead.
+  const [manualMesh, setManualMesh] = useState<THREE.Mesh | null>(null);
+  useEffect(() => {
+    const registry = createDisposableRegistry();
+    const geometry = registry.register(new THREE.BoxGeometry(0.5, 0.5, 0.5));
+    const material = registry.register(
       new THREE.MeshStandardMaterial({ color: "#22c55e" }),
     );
-    material.map = disposables.register(makeSolidTexture([200, 255, 220]));
+    material.map = registry.register(makeSolidTexture([200, 255, 220]));
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(...POSITIONS[0]!);
-    return mesh;
-  }, [disposables]);
+    setManualMesh(mesh);
+    return () => {
+      registry.disposeAll();
+      setManualMesh(null);
+    };
+  }, []);
 
   return (
     <>
-      <primitive object={manualMesh} />
+      {manualMesh && <primitive object={manualMesh} />}
       {POSITIONS.slice(1).map((pos, i) => (
         <mesh key={i} position={pos}>
           <boxGeometry args={[0.5, 0.5, 0.5]} />

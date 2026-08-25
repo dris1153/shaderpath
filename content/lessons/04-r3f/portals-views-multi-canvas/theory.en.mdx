@@ -53,12 +53,16 @@ function Hud() {
   const [hudScene] = useState(() => new THREE.Scene());
   const camRef = useRef<THREE.OrthographicCamera>(null);
 
-  useFrame(({ gl }) => {
+  useFrame(({ gl, scene, camera }) => {
     if (!camRef.current) return;
+    // priority > 0 DISABLES R3F's automatic render — this callback must draw
+    // the main scene itself first, then the HUD on top (drei <Hud>'s pattern).
+    gl.autoClear = true;
+    gl.render(scene, camera);
     gl.autoClear = false;
     gl.clearDepth(); // wipe the depth buffer, KEEP the main scene's color output
     gl.render(hudScene, camRef.current);
-  }, 1); // priority > 0 → takes over rendering manually, runs AFTER the main scene
+  }, 1);
 
   return createPortal(
     <>

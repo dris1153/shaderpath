@@ -49,12 +49,12 @@ The plain-JSX version (\`<mesh><sphereGeometry/></mesh>\`): R3F itself creates t
     id: "fix-leaky-ring-with-use-disposable",
     kind: "code",
     prompt: {
-      vi: `Component \`LeakyRing\` bên dưới dựng \`geometry\` và \`material\` bằng \`new THREE.X()\` rồi gắn vào scene qua \`<primitive object={mesh} />\` — đúng trường hợp R3F không tự dispose được. Sửa lại bằng \`useDisposable\` (hook nhà của nền tảng này, \`lib/hooks/use-disposable.ts\`) để \`geometry\` và \`material\` được dispose đúng lúc component unmount — không đổi hình dạng hay màu sắc hiển thị.`,
-      en: `The \`LeakyRing\` component below builds \`geometry\` and \`material\` with \`new THREE.X()\` and attaches them to the scene via \`<primitive object={mesh} />\` — exactly the case R3F can't auto-dispose. Fix it with \`useDisposable\` (this platform's house hook, \`lib/hooks/use-disposable.ts\`) so \`geometry\` and \`material\` get disposed the moment the component unmounts — without changing the rendered shape or color.`,
+      vi: `Component \`LeakyRing\` bên dưới dựng \`geometry\` và \`material\` bằng \`new THREE.X()\` rồi gắn vào scene qua \`<primitive object={mesh} />\` — đúng trường hợp R3F không tự dispose được. Sửa lại bằng \`createDisposableRegistry\` (từ file hook nhà của nền tảng, \`lib/hooks/use-disposable.ts\`): tạo VÀ đăng ký object bên trong một \`useEffect\`, cleanup gọi \`registry.disposeAll()\` — như vậy \`geometry\` và \`material\` được dispose đúng lúc unmount, và chu kỳ unmount/remount giả lập của Strict Mode sẽ dựng bộ object mới thay vì dùng lại object đã bị dispose. Không đổi hình dạng hay màu sắc hiển thị.`,
+      en: `The \`LeakyRing\` component below builds \`geometry\` and \`material\` with \`new THREE.X()\` and attaches them to the scene via \`<primitive object={mesh} />\` — exactly the case R3F can't auto-dispose. Fix it with \`createDisposableRegistry\` (from this platform's house hook file, \`lib/hooks/use-disposable.ts\`): create AND register the objects inside a \`useEffect\` whose cleanup calls \`registry.disposeAll()\` — that way \`geometry\` and \`material\` are disposed the moment the component unmounts, and Strict Mode's simulated unmount/remount cycle builds a fresh set of objects instead of reusing disposed ones. Don't change the rendered shape or color.`,
     },
     starterCode: `import { useMemo } from "react";
 import * as THREE from "three";
-import { useDisposable } from "@/lib/hooks/use-disposable";
+import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 // BUG: geometry/material built with \`new\`, never disposed — every mount
 // leaks one geometry + one material forever.
@@ -69,52 +69,55 @@ function LeakyRing() {
     [geometry, material],
   );
 
-  // TODO: use useDisposable() to register \`geometry\` and \`material\` so
-  // they get disposed automatically when LeakyRing unmounts.
+  // TODO: move the \`new\` calls into a useEffect that owns its own
+  // createDisposableRegistry() — register both objects there and dispose
+  // them in the effect cleanup.
 
   return <primitive object={mesh} />;
 }`,
-    solutionCode: `import { useMemo } from "react";
+    solutionCode: `import { useEffect, useState } from "react";
 import * as THREE from "three";
-import { useDisposable } from "@/lib/hooks/use-disposable";
+import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 function CleanRing() {
-  const disposables = useDisposable();
+  const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
 
-  const geometry = useMemo(
-    () => disposables.register(new THREE.RingGeometry(0.5, 1, 32)),
-    [disposables],
-  );
-  const material = useMemo(
-    () =>
-      disposables.register(new THREE.MeshBasicMaterial({ color: "#f97316" })),
-    [disposables],
-  );
-  const mesh = useMemo(
-    () => new THREE.Mesh(geometry, material),
-    [geometry, material],
-  );
+  // Each effect run owns its registry: Strict Mode's simulated unmount
+  // disposes one set, the re-run builds a fresh one — nothing dead survives.
+  useEffect(() => {
+    const registry = createDisposableRegistry();
+    const geometry = registry.register(new THREE.RingGeometry(0.5, 1, 32));
+    const material = registry.register(
+      new THREE.MeshBasicMaterial({ color: "#f97316" }),
+    );
+    setMesh(new THREE.Mesh(geometry, material));
+    return () => {
+      registry.disposeAll();
+      setMesh(null);
+    };
+  }, []);
 
+  if (!mesh) return null;
   return <primitive object={mesh} />;
 }`,
     hints: [
       {
-        vi: "`useDisposable()` trả về một registry ổn định qua re-render — gọi `registry.register(obj)` ngay chỗ bạn `new` ra `obj`, nó trả lại chính `obj` đó nguyên vẹn.",
-        en: "`useDisposable()` returns a registry that's stable across re-renders — call `registry.register(obj)` right where you `new` up `obj`; it hands `obj` straight back unchanged.",
+        vi: "Chuyển các lệnh `new THREE.X()` vào trong một `useEffect([])`: mỗi lần effect chạy tự tạo `createDisposableRegistry()` riêng, `registry.register(obj)` trả lại chính `obj` nguyên vẹn, và cleanup gọi `registry.disposeAll()`.",
+        en: "Move the `new THREE.X()` calls inside a `useEffect([])`: each effect run creates its own `createDisposableRegistry()`, `registry.register(obj)` hands `obj` straight back unchanged, and the cleanup calls `registry.disposeAll()`.",
       },
       {
-        vi: "Thêm `disposables` vào dependency array của mỗi `useMemo` liên quan — registry ổn định nên không gây tạo lại geometry/material mỗi lần render.",
-        en: "Add `disposables` to the dependency array of each relevant `useMemo` — the registry is stable, so this doesn't cause geometry/material to be recreated on every render.",
+        vi: "Mesh giờ sinh ra trong effect nên phải đi qua state (`useState<THREE.Mesh | null>`) để tới được JSX — render `null` cho tới khi mesh tồn tại.",
+        en: "The mesh is now born inside the effect, so it must travel through state (`useState<THREE.Mesh | null>`) to reach JSX — render `null` until it exists.",
       },
     ],
     checklist: [
       {
-        vi: "Cả `geometry` và `material` đều được bọc qua `disposables.register(...)`",
-        en: "Both `geometry` and `material` are wrapped through `disposables.register(...)`",
+        vi: "Cả `geometry` và `material` đều được tạo và `register(...)` bên trong effect, cleanup gọi `registry.disposeAll()`",
+        en: "Both `geometry` and `material` are created and `register(...)`-ed inside the effect, with the cleanup calling `registry.disposeAll()`",
       },
       {
-        vi: "`disposables` nằm trong dependency array của cả hai `useMemo` liên quan",
-        en: "`disposables` is included in the dependency array of both relevant `useMemo` calls",
+        vi: "Không còn `useMemo` nào giữ object disposable — dưới Strict Mode object memo hoá sẽ quay lại ở trạng thái đã bị dispose",
+        en: "No `useMemo` holds a disposable object anymore — under Strict Mode a memoized object would come back already disposed",
       },
       {
         vi: "Component vẫn render đúng chiếc nhẫn màu cam như trước khi sửa, chỉ khác ở việc dispose khi unmount",

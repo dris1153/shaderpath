@@ -175,8 +175,8 @@ export function AssetGallery({ active }: { active: boolean }) {
         en: "Each slot needs its OWN Suspense — wrapping a single Suspense around all 3 `<Exhibit>`s forces ALL of them to wait for the slowest slot (2200ms) before any can show, losing the whole benefit of loading independently.",
       },
       {
-        vi: "Pedestal geometry/material tạo Ở MODULE SCOPE, gán vào `<mesh>` qua prop `geometry=`/`material=` — không viết `<boxGeometry />`/`<meshStandardMaterial />` như JSX con, nếu không R3F sẽ coi đó là instance riêng của từng slot và tự dispose khi 1 slot unmount, ảnh hưởng các slot khác.",
-        en: "Build pedestal geometry/material AT MODULE SCOPE, assign to `<mesh>` via the `geometry=`/`material=` prop — don't write `<boxGeometry />`/`<meshStandardMaterial />` as JSX children, or R3F will treat them as each slot's own instance and auto-dispose them when one slot unmounts, breaking the others.",
+        vi: "Pedestal geometry/material tạo Ở MODULE SCOPE, gán vào `<mesh>` qua prop `geometry=`/`material=` — không viết `<boxGeometry />`/`<meshStandardMaterial />` như JSX con — mỗi slot sẽ tạo instance riêng của nó, tức 3 bản sao giống hệt nhau trên GPU thay vì một bộ dùng chung.",
+        en: "Build pedestal geometry/material AT MODULE SCOPE, assign to `<mesh>` via the `geometry=`/`material=` prop — don't write `<boxGeometry />`/`<meshStandardMaterial />` as JSX children — each slot would then create its own instance, i.e. 3 identical copies on the GPU instead of one shared set.",
       },
       {
         vi: "`DelayedLoader` nhận tham số constructor (`build`, `delayMs`) nên không thể truyền dạng class trực tiếp cho `useLoader` như với `GLTFLoader` — phải tự tạo instance trước rồi truyền instance đó vào `useLoader`, đúng pattern ở bài `suspense-and-asset-loading`.",

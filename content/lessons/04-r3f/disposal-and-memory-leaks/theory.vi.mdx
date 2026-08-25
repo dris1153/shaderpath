@@ -44,28 +44,29 @@ useEffect(() => {
 }, []);
 ```
 
-**2. `useMemo` giữ object ổn định qua re-render, cộng effect riêng chỉ để dispose** — khi object cần dùng ở nhiều chỗ khác trong component, không chỉ trong effect tạo ra nó:
+**2. `useMemo` giữ object ổn định qua re-render, cộng effect riêng chỉ để dispose** — khi object cần dùng ở nhiều chỗ khác trong component, không chỉ trong effect tạo ra nó. Cẩn thận: pattern này vướng đúng cái bẫy Strict Mode mô tả ở phần dưới — object memo bị dispose ở lần unmount mô phỏng rồi quay lại ở trạng thái đã chết:
 
 ```tsx
 const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
 useEffect(() => () => geometry.dispose(), [geometry]);
 ```
 
-**3. `useDisposable`** — hook dùng chung của nền tảng này (`lib/hooks/use-disposable.ts`), gộp cả hai pattern trên vào một registry, tránh quên `return () => ...dispose()` rải rác:
+**3. Registry dùng chung của nền tảng** — `createDisposableRegistry` (`lib/hooks/use-disposable.ts`), gộp mọi lệnh dispose rải rác vào một chỗ mà vẫn giữ dạng tạo-trong-effect an toàn của pattern 1: `register` từng object ngay lúc `new`, cleanup gọi đúng một lệnh `disposeAll()`:
 
 ```tsx
-const disposables = useDisposable();
-const geometry = useMemo(
-  () => disposables.register(new THREE.SphereGeometry(1, 32, 32)),
-  [disposables],
-);
+useEffect(() => {
+  const registry = createDisposableRegistry();
+  const geometry = registry.register(new THREE.SphereGeometry(1, 32, 32));
+  meshRef.current!.geometry = geometry;
+  return () => registry.disposeAll();
+}, []);
 ```
 
-`register(obj)` đẩy `obj` vào một mảng nội bộ rồi trả nguyên lại — không đổi kiểu hay hành vi runtime; `registerFn(fn)` nhận callback dọn dẹp bất kỳ (huỷ listener, cancel RAF) cho thứ không có `.dispose()`. Hook chỉ có một effect, chạy đúng lúc unmount, gọi `fns` trước (LIFO, dừng loop/listener), rồi `objects` sau (LIFO, huỷ resource GPU) — để không callback nào chạy trên resource đã dispose. Một cleanup lỗi không chặn các cleanup còn lại — mỗi lệnh gọi bọc `try/catch` riêng.
+`register(obj)` đẩy `obj` vào một mảng nội bộ rồi trả nguyên lại — không đổi kiểu hay hành vi runtime; `registerFn(fn)` nhận callback dọn dẹp bất kỳ (huỷ listener, cancel RAF) cho thứ không có `.dispose()`. `disposeAll()` gọi `fns` trước (LIFO, dừng loop/listener), rồi `objects` sau (LIFO, huỷ resource GPU) — để không callback nào chạy trên resource đã dispose. Một cleanup lỗi không chặn các cleanup còn lại — mỗi lệnh gọi bọc `try/catch` riêng.
 
 ## Strict Mode và bài học loseContext
 
-React Strict Mode (mặc định ở dev) cố tình mount → unmount → mount lại mỗi component ngay khi xuất hiện, để lộ cleanup không an toàn khi chạy hai lần. Với dispose GPU resource việc này vô hại — dispose object của mount 1, tạo object mới ở mount 2, không có gì để lo.
+React Strict Mode (mặc định ở dev) cố tình mount → unmount → mount lại mỗi component ngay khi xuất hiện, để lộ cleanup không an toàn khi chạy hai lần. Với GPU resource, an toàn hay không phụ thuộc vào NƠI tạo object: Strict Mode chỉ chạy lại effect, còn state/memo được GIỮ NGUYÊN qua lần remount mô phỏng — object `useMemo` bị dispose ở lần unmount giả rồi bị dùng lại ở mount 2 (đã chết). Tạo-trong-effect mới là pattern an toàn: mỗi lần effect chạy tạo object mới, cleanup dispose đúng object của lần đó.
 
 Nhưng nền tảng này từng dính lỗi tinh vi hơn, đúng ở cơ chế double-mount này: một demo WebGL thuần từng gọi `gl.getExtension('WEBGL_lose_context').loseContext()` trong cleanup, nghĩ là "reset sạch context mỗi lần unmount". Vấn đề: Strict Mode remount **dùng lại đúng element `<canvas>`**, và context đã "lost" không tự phục hồi trên canvas đó nếu không tự bắt `webglcontextrestored` rồi khởi tạo lại cả pipeline. Kết quả: demo chạy được lần mount đầu, trắng vĩnh viễn ở lần hai — ngay trong dev, tái hiện 100%. Bài học không riêng cho `loseContext`: cleanup nào phá huỷ *container đang được tái sử dụng* (canvas, context, singleton) — thay vì chỉ dispose *resource bạn tự tạo bên trong nó* — không sống sót qua double-mount của Strict Mode.
 
@@ -78,7 +79,7 @@ Ba pattern dispose ở trên quay lại liên tục về sau: Track 9 (GPGPU) pi
 Ba lỗi hay gặp nhất với disposal trong R3F:
 
 1. **Tưởng `<primitive object={mesh} />` cũng auto-dispose như mesh JSX bình thường.** Tài liệu R3F nói rõ primitive KHÔNG bao giờ tự dispose — object bên trong luôn cần dispose tay, dù tự `new` hay lấy từ `useGLTF`.
-2. **Dispose một geometry/material đang được nhiều mesh dùng chung.** `.dispose()` là hành động một chiều: gọi xong buffer GPU biến mất ngay — mesh khác còn tham chiếu geometry đó sẽ vẽ ra rác hoặc quăng lỗi WebGL ở lần render kế tiếp. Dùng chung thì đặt `dispose={null}` và tự quản lý vòng đời ở nơi tạo ra, không phải từng consumer.
+2. **Dispose một geometry/material đang được nhiều mesh dùng chung.** `.dispose()` giải phóng buffer GPU ngay — nhưng mesh khác còn tham chiếu geometry đó khiến renderer lặng lẽ upload lại từ mảng CPU ở lần vẽ kế: không lỗi, không rác, chỉ là lệnh dispose bị vô hiệu và tốn một lần upload — VRAM không hề được giải phóng như bạn tưởng. Dùng chung thì đặt `dispose={null}` và tự quản lý vòng đời ở nơi tạo ra, không phải từng consumer.
 3. **Gọi `loseContext()`/`forceContextLoss()` trong cleanup để "dọn sạch" canvas.** Strict Mode tái sử dụng đúng canvas element khi remount, context đã lost không tự phục hồi — cách đúng là dispose từng geometry/material/texture tự tạo, để trình duyệt tự thu hồi context khi canvas thật sự rời DOM.
 
 </Callout>

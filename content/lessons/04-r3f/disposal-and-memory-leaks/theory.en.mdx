@@ -44,28 +44,29 @@ useEffect(() => {
 }, []);
 ```
 
-**2. `useMemo` to keep the object stable across re-renders, plus a separate effect purely for disposal** — needed when the object is read elsewhere in the component, not only inside the effect that built it:
+**2. `useMemo` to keep the object stable across re-renders, plus a separate effect purely for disposal** — needed when the object is read elsewhere in the component, not only inside the effect that built it. Careful: this pattern walks straight into the Strict Mode trap described below — the memoized object gets disposed at the simulated unmount and comes back dead:
 
 ```tsx
 const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
 useEffect(() => () => geometry.dispose(), [geometry]);
 ```
 
-**3. `useDisposable`** — this platform's shared hook (`lib/hooks/use-disposable.ts`), folding both patterns above into a single registry so you can't forget a scattered `return () => ...dispose()`:
+**3. This platform's shared registry** — `createDisposableRegistry` (`lib/hooks/use-disposable.ts`), folding every scattered dispose call into one place while keeping pattern 1's safe create-inside-an-effect shape: `register` each object right where you `new` it, and the cleanup makes a single `disposeAll()` call:
 
 ```tsx
-const disposables = useDisposable();
-const geometry = useMemo(
-  () => disposables.register(new THREE.SphereGeometry(1, 32, 32)),
-  [disposables],
-);
+useEffect(() => {
+  const registry = createDisposableRegistry();
+  const geometry = registry.register(new THREE.SphereGeometry(1, 32, 32));
+  meshRef.current!.geometry = geometry;
+  return () => registry.disposeAll();
+}, []);
 ```
 
-`register(obj)` just pushes `obj` into an internal array and hands it straight back — no type change, no runtime behavior change; `registerFn(fn)` accepts any arbitrary cleanup callback (removing a listener, cancelling a RAF) for things without a `.dispose()` method. The hook itself holds exactly one effect, firing precisely on unmount, running `fns` first (LIFO — stop loops and listeners), then `objects` (LIFO — free GPU resources), so no leftover callback ever runs against an already-disposed resource. One failing cleanup doesn't block the rest — every call is wrapped in its own `try/catch`.
+`register(obj)` just pushes `obj` into an internal array and hands it straight back — no type change, no runtime behavior change; `registerFn(fn)` accepts any arbitrary cleanup callback (removing a listener, cancelling a RAF) for things without a `.dispose()` method. `disposeAll()` runs `fns` first (LIFO — stop loops and listeners), then `objects` (LIFO — free GPU resources), so no leftover callback ever runs against an already-disposed resource. One failing cleanup doesn't block the rest — every call is wrapped in its own `try/catch`.
 
 ## Strict Mode and the loseContext Cautionary Tale
 
-React Strict Mode (on by default in dev) deliberately mounts, unmounts, then remounts every component the moment it appears, to surface cleanup that isn't safe to run twice. For disposing GPU resources this is harmless — disposing mount 1's object, then creating a fresh one for mount 2, is exactly correct behavior, nothing to worry about.
+React Strict Mode (on by default in dev) deliberately mounts, unmounts, then remounts every component the moment it appears, to surface cleanup that isn't safe to run twice. For GPU resources, safety depends on WHERE the object is created: Strict Mode only replays effects, while state/memo are PRESERVED across the simulated remount — a `useMemo`'d object gets disposed on the fake unmount and then reused, already dead, on mount 2. Create-inside-effect is the safe pattern: each effect run creates fresh objects, and its cleanup disposes exactly that run's objects.
 
 But this platform once hit a much subtler bug tied to that exact double-mount mechanism: a raw-WebGL demo used to call `gl.getExtension('WEBGL_lose_context').loseContext()` in its cleanup, on the assumption it would "cleanly reset the context every unmount." The catch: a Strict Mode remount **reuses the same `<canvas>` element**, and a context once "lost" cannot be recovered on that canvas without manually catching `webglcontextrestored` and rebuilding the entire pipeline. The result: the demo worked on the first mount and stayed permanently blank on the second — in dev, reproducing 100% of the time, not some rare edge case. The lesson generalizes past `loseContext`: any cleanup that destroys the *container being reused* (the canvas, the context, a singleton) — rather than only disposing the *resources you created inside it* — cannot survive Strict Mode's double-mount.
 
@@ -78,7 +79,7 @@ These three cleanup patterns keep resurfacing: Track 9 (GPGPU) ping-pongs betwee
 The three most common disposal mistakes in R3F:
 
 1. **Assuming `<primitive object={mesh} />` auto-disposes like an ordinary JSX mesh.** The R3F docs are explicit that primitives NEVER auto-dispose — the object inside always needs manual disposal, whether you `new`'d it yourself or got it from `useGLTF`.
-2. **Disposing a geometry/material still shared by multiple meshes.** `.dispose()` is a one-way action: call it, and the GPU buffer is gone immediately — any other mesh still referencing that geometry renders garbage or throws a WebGL error on its next draw call. For shared resources, set `dispose={null}` and manage the lifecycle at the place that created it, not at each consumer.
+2. **Disposing a geometry/material still shared by multiple meshes.** `.dispose()` frees the GPU buffer immediately — but any other mesh still referencing that geometry makes the renderer silently re-upload it from the CPU arrays on the next draw: no garbage, no error, just a defeated dispose plus an extra upload — the VRAM is never actually reclaimed. For shared resources, set `dispose={null}` and manage the lifecycle at the place that created it, not at each consumer.
 3. **Calling `loseContext()`/`forceContextLoss()` in cleanup to "clean up" the canvas.** Strict Mode reuses the exact same canvas element on remount, and a lost context doesn't recover on its own — the correct cleanup is disposing every geometry/material/texture you created, and letting the browser reclaim the context once the canvas truly leaves the DOM.
 
 </Callout>
