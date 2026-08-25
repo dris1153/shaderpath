@@ -4,7 +4,7 @@ A heavy `.glb` file is usually heavy for two independent reasons, and each one n
 
 ## Compressing Geometry with Draco: Quantize, Then Entropy-Code
 
-Draco (Google, open source) does two things in sequence. First, quantization: instead of storing `position` as `float32` (32 bits per component), Draco stores it with far fewer fixed bits (commonly 11–14 bits for position, 7–10 for normal, 10–12 for uv by default — configurable via `quantization bits`, cited: the Draco README). Second, entropy coding: the mesh's connectivity graph (which vertices form which triangles) gets compressed with an Edgebreaker variant — an algorithm that exploits the fact that most meshes are one connected surface, encoding a few bits per triangle instead of storing raw indices. The combined result: dense-polygon meshes can shrink geometry size by up to over 90% (source: the Draco project's README), equivalent to a compression ratio of
+Draco (Google, open source) does two things in sequence. First, quantization: instead of storing `position` as `float32` (32 bits per component), Draco stores it with far fewer fixed bits (commonly 11–14 bits for position, 8–10 for normal, 10–12 for uv by default (low end: draco_encoder defaults; high end: gltf-transform defaults) — configurable via `quantization bits`). Second, entropy coding: the mesh's connectivity graph (which vertices form which triangles) gets compressed with an Edgebreaker variant — an algorithm that exploits the fact that most meshes are one connected surface, encoding a few bits per triangle instead of storing raw indices. The combined result: dense-polygon meshes can shrink geometry size by up to over 90% (the Khronos announcement of the glTF Draco extension quotes "up to 12x" — about 92%), equivalent to a compression ratio of
 
 $$
 \text{ratio} = 1 - \frac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}} \approx 0.9
@@ -94,7 +94,7 @@ await document.transform(prune(), dedup(), draco());
 await io.write("output.glb", document);
 ```
 
-One thing worth being honest about: programmatic KTX2 compression (`toKTX2`) currently does NOT live in the public `@gltf-transform/functions` package — it only exists internally in the `cli` package, which spawns the Basis Universal encoder/transcoder directly (source: the project's GitHub issue #675). A batch script that needs KTX2 textures typically `spawn`s the `gltf-transform etc1s`/`uastc` CLI itself as a child process rather than importing a function — not a limitation of your setup, but a real limitation of the library as of this writing.
+One thing worth being honest about: programmatic KTX2 compression (the `toktx` function) currently does NOT live in the public `@gltf-transform/functions` package — it only exists internally in the `cli` package, which spawns the Basis Universal encoder/transcoder directly (source: the project's GitHub issue #675). A batch script that needs KTX2 textures typically `spawn`s the `gltf-transform etc1s`/`uastc` CLI itself as a child process rather than importing a function — not a limitation of your setup, but a real limitation of the library as of this writing.
 
 ## meshopt: An Alternative to Draco
 

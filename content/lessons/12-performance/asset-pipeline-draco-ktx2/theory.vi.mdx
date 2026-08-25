@@ -4,7 +4,7 @@ Một file `.glb` nặng thường nặng vì hai lý do độc lập, và mỗi
 
 ## Nén hình học với Draco: lượng tử hoá rồi entropy-code
 
-Draco (Google, mã nguồn mở) làm hai việc tuần tự. Bước một, lượng tử hoá: thay vì lưu `position` dạng `float32` (32 bit/thành phần), Draco lưu bằng một số bit cố định nhỏ hơn nhiều (mặc định thường 11–14 bit cho position, 7–10 bit cho normal, 10–12 bit cho uv — con số cấu hình được qua `quantization bits`, cited: README Draco). Bước hai, entropy coding: đồ thị connectivity của mesh (thứ tự vertex tạo thành tam giác) được nén bằng một biến thể của Edgebreaker — thuật toán tận dụng việc phần lớn mesh liền mạch để mã hoá bằng vài bit trên mỗi tam giác thay vì lưu index thô. Kết quả cộng gộp: mesh dày polygon có thể giảm tới hơn 90% dung lượng geometry (nguồn: README dự án Draco), tương đương tỉ lệ nén
+Draco (Google, mã nguồn mở) làm hai việc tuần tự. Bước một, lượng tử hoá: thay vì lưu `position` dạng `float32` (32 bit/thành phần), Draco lưu bằng một số bit cố định nhỏ hơn nhiều (mặc định thường 11–14 bit cho position, 8–10 bit cho normal, 10–12 bit cho uv (đầu thấp là mặc định của draco_encoder, đầu cao của gltf-transform) — con số cấu hình được qua `quantization bits`). Bước hai, entropy coding: đồ thị connectivity của mesh (thứ tự vertex tạo thành tam giác) được nén bằng một biến thể của Edgebreaker — thuật toán tận dụng việc phần lớn mesh liền mạch để mã hoá bằng vài bit trên mỗi tam giác thay vì lưu index thô. Kết quả cộng gộp: mesh dày polygon có thể giảm tới hơn 90% dung lượng geometry (thông cáo Khronos về extension Draco cho glTF nêu "up to 12x" — tương đương ~92%), tương đương tỉ lệ nén
 
 $$
 \text{ratio} = 1 - \frac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}} \approx 0.9
@@ -94,7 +94,7 @@ await document.transform(prune(), dedup(), draco());
 await io.write("output.glb", document);
 ```
 
-Một điểm cần trung thực: nén KTX2 lập trình (`toKTX2`) hiện KHÔNG nằm trong gói `@gltf-transform/functions` công khai — nó chỉ tồn tại nội bộ trong gói `cli`, spawn thẳng ra decoder/encoder Basis Universal (nguồn: GitHub issue #675 của dự án). Script batch xử lý texture KTX2 vì vậy thường `spawn` chính CLI `gltf-transform etc1s`/`uastc` như một child process thay vì import hàm — không phải giới hạn của bạn, mà là giới hạn thật của thư viện tại thời điểm viết bài này.
+Một điểm cần trung thực: nén KTX2 lập trình (hàm `toktx`) hiện KHÔNG nằm trong gói `@gltf-transform/functions` công khai — nó chỉ tồn tại nội bộ trong gói `cli`, spawn thẳng ra decoder/encoder Basis Universal (nguồn: GitHub issue #675 của dự án). Script batch xử lý texture KTX2 vì vậy thường `spawn` chính CLI `gltf-transform etc1s`/`uastc` như một child process thay vì import hàm — không phải giới hạn của bạn, mà là giới hạn thật của thư viện tại thời điểm viết bài này.
 
 ## meshopt: lựa chọn thay Draco
 
