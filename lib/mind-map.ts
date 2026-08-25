@@ -65,9 +65,20 @@ export function buildLessonMindMap(args: {
   prerequisites: LessonMeta[];
   dependents: LessonMeta[];
   strings: MindMapStrings;
+  /** Handwritten branches from mindmap.ts; replaces the auto-built ones. */
+  overrideBranches?: MindMapNode[];
 }): MindMapNode {
   const { meta, locale, toc, pitfalls, prerequisites, dependents, strings } =
     args;
+  if (args.overrideBranches && args.overrideBranches.length > 0) {
+    return {
+      id: "root",
+      kind: "section",
+      label: meta.title[locale],
+      detail: meta.summary[locale],
+      children: args.overrideBranches,
+    };
+  }
   const branches: MindMapNode[] = [];
 
   if (meta.objectives[locale].length > 0) {

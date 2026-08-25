@@ -2,7 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { LESSONS } from "../content/curriculum";
+import { LESSON_SLUGS } from "../content/slugs";
 import type { Citation, Exercise } from "../content/types";
+import { extractToc } from "../lib/mdx-toc";
+import { lintMindMapOverride } from "../lib/mind-map-lint";
 
 // A3: mechanical gate for the content rules (spec §3.2/§10/§11, amended by D9).
 // Usage: pnpm lint:content [--require math,webgl]
@@ -163,6 +166,36 @@ async function lintLesson(trackDir: string, slug: string) {
         report(`${at}: ${file} has <Figure src="${src}"> but public${src} is missing`);
       }
     }
+  }
+
+  // --- mind-map override (optional; gated hard when present) ----------
+  const mmPath = path.join(dir, "mindmap.ts");
+  if (fs.existsSync(mmPath) && (!viExists || !enExists)) {
+    // Without the MDX, every section anchor would misleadingly report
+    // "matches no heading" — name the real problem instead.
+    errors.push(
+      `${at}: mindmap.ts requires both theory files (theory.${viExists ? "en" : "vi"}.mdx missing)`,
+    );
+  } else if (fs.existsSync(mmPath)) {
+    const { mindMap } = (await import(pathToFileURL(mmPath).href)) as {
+      mindMap: unknown;
+    };
+    const idsOf = (p: string) =>
+      new Set(
+        fs.existsSync(p)
+          ? extractToc(fs.readFileSync(p, "utf8")).map((t) => t.id)
+          : [],
+      );
+    const result = lintMindMapOverride({
+      at,
+      mindMap,
+      headingIds: { vi: idsOf(viPath), en: idsOf(enPath) },
+      lessonSlugs: new Set(LESSON_SLUGS),
+    });
+    // Override mistakes are always errors: a drifted handwritten map is worse
+    // than no map, regardless of --require track scoping.
+    errors.push(...result.errors);
+    warnings.push(...result.warnings);
   }
 
   // --- references (regular lessons only; optional for checkpoints) ----

@@ -2,7 +2,13 @@
 // Regenerate with: pnpm gen:registry
 import type { ComponentType } from "react";
 import type { LessonSlug } from "./slugs";
-import type { Citation, Exercise, Locale } from "./types";
+import type {
+  Citation,
+  Exercise,
+  Locale,
+  Localized,
+  MindMapNode,
+} from "./types";
 
 export type LessonModuleLoader = () => Promise<{ default: ComponentType }>;
 export type ReferencesLoader = () => Promise<{ references: Citation[] }>;
@@ -1958,6 +1964,21 @@ export const PITFALLS_REGISTRY: Partial<
     vi: [{"label":"Quên nhân b theo format hoặc quên nhân k=4/3 khi bật mipmap","detail":"Đổi từ RGBA8 sang half-float mà không nhân đôi b, hoặc bật mipmap mà không nhân thêm 4/3, khiến ước tính ngân sách sai lệch hàng chục phần trăm — đủ để một scene \"vừa đủ\" thực ra đã vượt ngân sách từ lâu."},{"label":"Coi renderer.info.memory.textures là \"MB đang dùng\"","detail":"Đó là số lượng object, không phải byte — một texture 512 × 512 và một texture 4096 × 4096 đều cộng đúng 1 vào con số này, nên dựa vào nó để quyết định ngân sách luôn cho kết quả sai."},{"label":"Nghĩ PNG/JPEG \"đã nén rồi nên an toàn\"","detail":"texImage2D giải nén về RGBA thô trước khi upload — một ảnh JPG nhẹ vẫn tốn đúng dung lượng RGBA8 đầy đủ trên GPU, không tiết kiệm gì so với ảnh chưa nén; chỉ định dạng nén GPU thật sự (S3TC/ETC2/ASTC, qua KTX2) mới giữ được mức nén đó trong VRAM."}],
     en: [{"label":"Forgetting to multiply by b for the format, or by k=4/3 when mipmaps are on","detail":"Switching from RGBA8 to half-float without doubling b, or enabling mipmaps without the extra 4/3, throws a budget estimate off by tens of percent — enough that a scene that \"just fits\" was actually over budget all along."},{"label":"Treating renderer.info.memory.textures as \"MB in use.\"","detail":"It's an object count, not bytes — a 512 × 512 texture and a 4096 × 4096 texture both add exactly 1 to it, so basing a budget decision on it always gives the wrong answer."},{"label":"Assuming PNG/JPEG is \"already compressed, so it's safe.\"","detail":"texImage2D decodes back to raw RGBA before uploading — a lightweight JPG still costs the full RGBA8 footprint on the GPU, saving nothing over an uncompressed image; only real GPU-native compression (S3TC/ETC2/ASTC, via KTX2) keeps that compression inside VRAM."}],
   },
+};
+
+// Handwritten mind-map overrides (one file, both locales); when present the
+// lesson page uses it instead of the auto-generated tree. Gated by
+// lint-content (anchor validity, vi/en parity).
+export type MindMapLoader = () => Promise<{
+  mindMap: Localized<MindMapNode[]>;
+}>;
+
+export const MIND_MAP_OVERRIDES: Partial<Record<LessonSlug, MindMapLoader>> = {
+  "matrix-basics": () => import("./lessons/00-math/matrix-basics/mindmap"),
+  "model-view-projection": () => import("./lessons/00-math/model-view-projection/mindmap"),
+  "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/mindmap"),
+  "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/mindmap"),
+  "brdf-and-microfacets": () => import("./lessons/11-pbr/brdf-and-microfacets/mindmap"),
 };
 
 export type ExercisesLoader = () => Promise<{ exercises: Exercise[] }>;

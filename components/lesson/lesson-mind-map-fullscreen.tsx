@@ -72,7 +72,7 @@ export default function LessonMindMapFullscreen({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent
         showCloseButton={false}
-        className="bg-background top-0 left-0 block h-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-none p-0 ring-0"
+        className="bg-background top-0 left-0 block h-full w-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-none p-0 ring-0 sm:max-w-none"
       >
         <div className="absolute top-3 right-3 left-3 z-10 flex items-center justify-between gap-2">
           <DialogTitle className="truncate text-sm font-medium">

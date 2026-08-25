@@ -3,6 +3,7 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { IconList, IconMenu2 } from "@tabler/icons-react";
 import {
   LESSON_REGISTRY,
+  MIND_MAP_OVERRIDES,
   PITFALLS_REGISTRY,
   REFERENCES_REGISTRY,
   TOC_REGISTRY,
@@ -68,7 +69,13 @@ export default async function LessonPage({
     : [];
 
   const tm = await getTranslations("mindMap");
+  const overrideLoader = MIND_MAP_OVERRIDES[lesson.slug];
+  const overrideBranches =
+    overrideLoader && usedLocale
+      ? (await overrideLoader()).mindMap[usedLocale]
+      : undefined;
   const mindMap = buildLessonMindMap({
+    overrideBranches,
     meta: lesson,
     locale,
     toc,
@@ -150,7 +157,11 @@ export default async function LessonPage({
           <LessonHeader lesson={lesson} locale={locale} />
         </div>
 
+        {/* key: App Router reuses this component across lesson navigations;
+            without a remount, a stale expandedId from the previous lesson's
+            branches would leave every branch collapsed. */}
         <LessonMindMap
+          key={lesson.slug}
           tree={mindMap}
           strings={{
             title: tm("title"),

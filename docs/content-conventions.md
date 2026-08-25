@@ -86,6 +86,33 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
 - A build exercise may still keep a `starterCode` field as author-side
   scaffolding; nothing user-facing may reference it.
 
+## Mind maps
+
+- Every lesson renders a mind map above the theory, **auto-generated** from
+  audited data: objectives, `##`/`###` headings (split `label: detail` at the
+  first colon; heading slug = scroll anchor), the mistake-Callout items, and
+  prerequisite/dependent links. The auto map cannot drift — never hand-fix it;
+  fix the lesson.
+- A lesson may ship a handwritten `mindmap.ts` exporting
+  `mindMap: Localized<MindMapNode[]>` (one file, both locales — same
+  convention as `exercises.ts`). The array is the root's branches; the root
+  itself (title + summary) stays automatic. Override only when regrouping
+  ideas teaches something the heading order cannot; restating the TOC in a
+  different shape is not a reason.
+- Override rules (enforced by `pnpm lint:content`, always errors): every
+  `kind:"section"` node below the top level must use a real heading slug of
+  that locale's MDX; every `kind:"link"` node must use an existing lesson
+  slug; vi/en trees must be structurally identical (same kinds and nesting;
+  labels/anchors translate); link nodes must reference the same lessons in
+  both locales; node ids stay unique. Labels over 8 words warn — nodes are
+  labels, not sentences.
+- Since the Objectives card was absorbed into the map, an override should
+  keep the objectives content reachable (its own branch or folded into
+  thematic branches) — convention, not lint.
+- Scope note: mind maps postdate the original platform spec (adopted
+  2026-08-26, plan `260826-0005-lesson-mind-maps`); audits should treat them
+  as in-scope content, judged against the lesson they summarize.
+
 ## API era
 
 - **three 0.185**: `outputColorSpace` (not `outputEncoding`), `SRGBColorSpace`

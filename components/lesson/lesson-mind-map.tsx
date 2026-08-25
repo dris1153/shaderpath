@@ -29,7 +29,13 @@ export function LessonMindMap({
   strings: MindMapUiStrings;
 }) {
   // Accordion: one branch open at a time so the inline map always fits.
-  const [expandedId, setExpandedId] = useState<string | null>("content");
+  // Overridden trees may name their branches freely — fall back to the first.
+  const [expandedId, setExpandedId] = useState<string | null>(
+    () =>
+      (tree.children?.some((b) => b.id === "content")
+        ? "content"
+        : tree.children?.[0]?.id) ?? null,
+  );
   const [fullscreen, setFullscreen] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const layout = useMemo(() => layoutMindMap(tree, expandedId), [tree, expandedId]);
