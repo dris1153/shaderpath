@@ -1,6 +1,6 @@
 ## Perlin noise: chuẩn hoá gradient noise trên lưới vuông
 
-Bài trước (Value & Gradient noise) đã dựng gradient noise: mỗi góc ô lưới giữ một vector gradient ngẫu nhiên, giá trị tại một điểm bên trong ô là nội suy giữa các dot product của gradient đó với vector lệch từ góc đến điểm. Perlin noise CHÍNH LÀ gradient noise đó, đóng gói thành thuật toán chuẩn với ba mảnh: cách chọn gradient tại mỗi góc, đường cong nội suy (fade curve), và công thức nội suy n-tuyến trên toàn bộ góc ô. Ken Perlin công bố bản gốc năm 1985 trong "An Image Synthesizer", rồi tự sửa lại năm 2002 trong bài ngắn "Improving Noise" — cả hai còn dùng được, khác nhau đúng ở fade curve, mục tiếp theo mổ xẻ khác biệt đó.
+Bài trước (Value & Gradient noise) đã dựng gradient noise: mỗi góc ô lưới giữ một vector gradient ngẫu nhiên, giá trị tại một điểm bên trong ô là nội suy giữa các dot product của gradient đó với vector lệch từ góc đến điểm. Perlin noise CHÍNH LÀ gradient noise đó, đóng gói thành thuật toán chuẩn với ba mảnh: cách chọn gradient tại mỗi góc, đường cong nội suy (fade curve), và công thức nội suy n-tuyến trên toàn bộ góc ô. Ken Perlin công bố bản gốc năm 1985 trong "An Image Synthesizer" (công trình sau này mang về cho ông giải Academy Award for Technical Achievement năm 1997), rồi tự sửa lại năm 2002 trong bài ngắn "Improving Noise" — cả hai còn dùng được, khác nhau đúng ở fade curve, mục tiếp theo mổ xẻ khác biệt đó.
 
 ## Chọn gradient tại góc lưới: bảng permutation cổ điển và hash trên GPU
 

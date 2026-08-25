@@ -6,7 +6,7 @@ The only workable answer is a hash function: a pure math function that takes a c
 
 ## The Classic sin/fract Hash, and How It Works
 
-The most common 2D→1D hash, popularized widely by The Book of Shaders:
+The most common 2D→1D hash — long-circulating shader folklore, popularized widely by The Book of Shaders (BoS uses the 12.9898/78.233 constants; below is the familiar Inigo Quilez variant):
 
 ```glsl
 float hash21(vec2 p) {

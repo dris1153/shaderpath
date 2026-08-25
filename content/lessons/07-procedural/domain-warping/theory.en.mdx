@@ -66,10 +66,10 @@ The two `fbm()` calls building $q_x$ and $q_y$ use different offsets — $(0,0)$
 <Figure
   src="/figures/07-procedural/domain-warp-nesting.svg"
   alt="Three stacked tiers: the first builds q from two fbm calls, the second builds r from p plus s times q, the last produces f; dashed arrows carry q and r back into the next tier's coordinate, beside a cost table of 5, 15 and 25 noise calls"
-  caption="q and r never enter the result — they enter the next tier's sampling coordinate, which is why the cost multiplies instead of adding."
+  caption="q and r never enter the result — they enter the next tier's sampling coordinate; relative to plain fbm the bill becomes ×3 then ×5, since each layer adds two full fbm evaluations."
 />
 
-## Cost: Every Layer Multiplies the fbm Call Count
+## Cost: Every Layer Adds Two Full fbm Evaluations
 
 Domain warping isn't free. A 5-octave FBM already costs 5 `noise()` calls; one warp layer needs 2 `fbm()` calls to build $q$ plus 1 more for the final result — $3 \times 5 = 15$ `noise()` calls per pixel total. Two layers, adding $r$, multiply that further: 2 for $q$, 2 for $r$, 1 for the final result — $5 \times 5 = 25$ calls, nearly double a single layer. On a 1920×1080 screen at DPR 2 (an estimated ~8.3 million fragments per frame), the gap between 15 and 25 `noise()` calls per pixel adds up to tens of millions of extra operations per frame. Treat warp-layer count as an octave budget to balance: more layers always look better, but cost grows roughly linearly with layer count, and on mobile GPUs that shows up fast as ballooning frame time.
 
@@ -87,6 +87,6 @@ The three most common mistakes when starting out with domain warping:
 
 1. **Using the same offset (or offset = 0) for both channels of q.** That makes $q_x = q_y$ at every point — the warp only pulls in one fixed diagonal direction instead of swirling naturally in every direction, even though the image still "looks" warped.
 2. **Setting strength too high right away.** With `strength` beyond a few times the noise cell size, the result stops being "controlled distortion" and breaks into near-random chaotic noise — losing exactly the smooth structure warping is supposed to preserve. Start from 0 and increase gradually while watching, rather than guessing a large number upfront.
-3. **Forgetting that each nested layer multiplies cost, not adds to it.** Adding an $r$ layer to a shader that already has $q$ isn't "a bit more work" — it nearly doubles the per-pixel `fbm()` call count; enabling both layers across a screen-filling scene without measuring frame time first can easily drop a mid-range GPU below 30fps.
+3. **Underestimating each nested layer's bill.** Adding an $r$ layer to a shader that already has $q$ isn't "a bit more work" — each layer adds two full `fbm()` evaluations per pixel (5 → 15 → 25 noise calls vs plain fbm); enabling both layers across a screen-filling scene without measuring frame time first can easily drop a mid-range GPU below 30fps.
 
 </Callout>

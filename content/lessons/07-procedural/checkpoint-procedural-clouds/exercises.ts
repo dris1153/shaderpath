@@ -5,12 +5,12 @@ export const exercises: Exercise[] = [
     id: "build-procedural-cloud-scene",
     kind: "build",
     prompt: {
-      vi: `Dựng một cảnh mây thủ tục hoàn chỉnh trong GLSL Playground, chỉ bằng hash, noise và FBM đã có sẵn trong starter code.
+      vi: `Dựng một cảnh mây thủ tục hoàn chỉnh trong GLSL Playground, chỉ bằng hash, noise và FBM. Starter cấp sẵn (mở solution để xem cấu trúc nếu cần): \`hash(vec2)\`, \`valueNoise(vec2)\`, \`fbm(vec2)\` 5 octave, cùng ba hằng \`COVERAGE\`/\`SOFTNESS\`/\`SUN_POS\` và 5 TODO đánh dấu chỗ cần điền — bạn cũng có thể tự viết lại từ các bài trước, kết quả tương đương.
 
 Yêu cầu: một sky gradient dọc theo \`uv.y\` (chân trời sáng hơn đỉnh trời); một lớp mây định hình bằng \`smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)\` với \`COVERAGE\` và \`SOFTNESS\` là hằng số khai báo sẵn; \`raw\` là tổ hợp của hai lần gọi \`fbm()\` trôi theo \`uTime\` ở hai tốc độ khác nhau (một lớp nhanh, một lớp chậm hơn) để có cảm giác song song thị sai chứ không phải một texture cuộn đều; một phép warp nhẹ lên toạ độ lấy mẫu trước khi tính \`raw\` cuối cùng, để mây không phải khối tròn đều đặn; và một quầng sáng ấm hơn ở đúng dải biên mây khi gần vị trí \`SUN_POS\`.
 
 Gợi ý cấu trúc: viết đúng năm TODO trong starter code theo thứ tự — sky gradient, hai lớp FBM trôi song song, warp toạ độ, định hình mật độ bằng smoothstep, rồi viền sáng theo khoảng cách tới mặt trời.`,
-      en: `Build a complete procedural cloud scene in the GLSL Playground, using only the hashing, noise and FBM already provided in the starter code.
+      en: `Build a complete procedural cloud scene in the GLSL Playground, using only hashing, noise and FBM. The starter supplies (open the solution to see the structure if needed): \`hash(vec2)\`, \`valueNoise(vec2)\`, a 5-octave \`fbm(vec2)\`, the three constants \`COVERAGE\`/\`SOFTNESS\`/\`SUN_POS\`, and 5 marked TODOs — you can also rewrite it all from the earlier lessons with the same result.
 
 Requirements: a vertical sky gradient across \`uv.y\` (horizon brighter than zenith); a cloud layer shaped by \`smoothstep(COVERAGE, COVERAGE + SOFTNESS, raw)\` with \`COVERAGE\` and \`SOFTNESS\` as pre-declared constants; \`raw\` combining two \`fbm()\` calls drifting on \`uTime\` at two different speeds (one fast layer, one slower) for a parallax feel instead of one uniformly scrolling texture; a light warp on the sampling coordinate before the final \`raw\` evaluation, so clouds aren't uniform round blobs; and a warmer glow exactly at the cloud's edge band near \`SUN_POS\`.
 

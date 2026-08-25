@@ -26,7 +26,7 @@ $$
 \nabla \cdot F = \frac{\partial}{\partial x}\!\left(\frac{\partial \psi}{\partial y}\right) + \frac{\partial}{\partial y}\!\left(-\frac{\partial \psi}{\partial x}\right) = \frac{\partial^2 \psi}{\partial x\, \partial y} - \frac{\partial^2 \psi}{\partial y\, \partial x} = 0
 $$
 
-Hai đạo hàm riêng phần hỗn hợp $\partial^2\psi/\partial x\partial y$ và $\partial^2\psi/\partial y\partial x$ bằng nhau với mọi hàm đủ mượt (định lý Schwarz/Clairaut) — nên hiệu của chúng luôn bằng 0, bất kể $\psi$ cụ thể là FBM gì. Vì đường đồng mức của một hàm mượt không bao giờ tự cắt chính nó, hệ quả trực tiếp là: streamline của một curl field không bao giờ giao nhau — chính là "chữ ký thị giác" xoáy nước, không rối, đặc trưng của curl noise trong mọi demo bạn từng thấy.
+Hai đạo hàm riêng phần hỗn hợp $\partial^2\psi/\partial x\partial y$ và $\partial^2\psi/\partial y\partial x$ bằng nhau với mọi hàm đủ mượt (định lý Schwarz/Clairaut) — nên hiệu của chúng luôn bằng 0, bất kể $\psi$ cụ thể là FBM gì. Streamline của một curl field không bao giờ giao nhau tại nơi vận tốc khác 0 (tính duy nhất nghiệm của quỹ đạo) — nơi hiếm hoi đường đồng mức tự cắt (điểm yên ngựa) thì vận tốc đúng bằng 0 — chính là "chữ ký thị giác" xoáy nước, không rối, đặc trưng của curl noise trong mọi demo bạn từng thấy.
 
 ## Đạo hàm số: sai phân trung tâm và đánh đổi epsilon
 
@@ -62,6 +62,6 @@ Ba lỗi hay gặp nhất khi cài curl noise:
 
 1. **Dùng thẳng $\nabla\psi$ làm vận tốc, quên bước xoay 90°.** Trông vẫn "có vẻ chuyển động" trong vài giây đầu, nhưng theo thời gian hạt luôn dồn cục về phía các cực trị của $\psi$ — đúng hiện tượng nén mở đầu bài, dễ nhầm là lỗi tham số hoá thay vì thiếu đúng một bước hoán vị hai thành phần và đổi dấu.
 2. **Chọn epsilon cố định mà không theo tần số noise.** Tăng `uScale` (nén noise vào không gian nhỏ hơn) mà giữ nguyên epsilon tuyệt đối khiến hai điểm lấy mẫu sai phân trung tâm rơi gần như trùng một ô lưới noise — đạo hàm ước lượng gần như 0 sai, hoặc ngược lại nhảy giá trị bất thường giữa hai ô kề nhau, tuỳ vị trí epsilon rơi vào.
-3. **Chỉ chứng minh phân kỳ triệt tiêu bằng mắt (nhìn hạt không dồn cục) mà không hiểu đó là tính chất đại số, không phải hên xui số học.** Dẫn tới việc "tối ưu" công thức curl bằng cách xấp xỉ thô đạo hàm hỗn hợp theo hai cách khác nhau cho $\partial\psi/\partial y$ và $-\partial\psi/\partial x$ (ví dụ epsilon khác nhau mỗi hướng) — phá vỡ đúng điều kiện làm hai đạo hàm hỗn hợp bằng nhau, phân kỳ không còn triệt tiêu chính xác nữa dù công thức trông vẫn "giống" curl.
+3. **Chỉ chứng minh phân kỳ triệt tiêu bằng mắt (nhìn hạt không dồn cục) mà không hiểu đó là tính chất đại số, không phải hên xui số học.** Dẫn tới việc "tối ưu" công thức curl bằng cách xấp xỉ thô đạo hàm hỗn hợp theo hai cách khác nhau cho $\partial\psi/\partial y$ và $-\partial\psi/\partial x$ (ví dụ epsilon khác nhau mỗi hướng) — phá vỡ đúng điều kiện làm hai đạo hàm hỗn hợp bằng nhau, phân kỳ mất luôn cả mức xấp xỉ O(ε²) mà sơ đồ sai phân đối xứng còn giữ được, dù công thức trông vẫn "giống" curl.
 
 </Callout>

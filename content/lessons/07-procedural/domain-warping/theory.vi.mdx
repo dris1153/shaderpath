@@ -66,10 +66,10 @@ Hai lời gọi `fbm()` dựng $q_x$ và $q_y$ dùng offset khác nhau — $(0,0
 <Figure
   src="/figures/07-procedural/domain-warp-nesting.svg"
   alt="Ba tầng xếp dọc: tầng một dựng q từ hai lần gọi fbm, tầng hai dựng r từ p cộng s nhân q, tầng cuối cho f; các mũi tên đứt nét đưa q và r trở lại làm toạ độ của tầng sau, kèm bảng chi phí 5, 15 và 25 lần gọi noise"
-  caption="q và r không đi vào kết quả — chúng đi vào toạ độ lấy mẫu của tầng kế tiếp, nên chi phí nhân lên chứ không cộng thêm."
+  caption="q và r không đi vào kết quả — chúng đi vào toạ độ lấy mẫu của tầng kế tiếp; so với fbm trơn, hoá đơn thành ×3 rồi ×5 vì mỗi lớp cộng thêm hai lần gọi fbm trọn vẹn."
 />
 
-## Chi phí: mỗi lớp nhân thêm số lần gọi fbm
+## Chi phí: mỗi lớp cộng thêm hai lần gọi fbm trọn vẹn
 
 Domain warping không miễn phí. Một FBM 5 octave đã tốn 5 lần gọi `noise()`; một lớp warp cần 2 lần gọi `fbm()` để dựng $q$ cộng 1 lần cho kết quả cuối — tổng $3 \times 5 = 15$ lần `noise()` mỗi pixel. Hai lớp, dùng cả $r$, nhân thêm: 2 lần cho $q$, 2 lần cho $r$, 1 lần cho kết quả cuối — tổng $5 \times 5 = 25$ lần, gần gấp đôi một lớp. Trên màn hình 1920×1080 ở DPR 2 (ước lượng ~8.3 triệu fragment mỗi khung hình), chênh lệch 15 so với 25 lần `noise()` mỗi pixel cộng dồn thành hàng chục triệu phép tính thêm mỗi khung. Nên nghĩ về số lớp warp như một ngân sách octave cần cân đối: nhiều lớp hơn luôn đẹp hơn, nhưng chi phí tăng gần tuyến tính theo số lớp, và trên mobile GPU nó lộ ra rất nhanh dưới dạng frame time tăng vọt.
 
@@ -87,6 +87,6 @@ Ba lỗi hay gặp nhất khi mới dùng domain warping:
 
 1. **Dùng cùng một offset (hoặc offset = 0) cho cả hai kênh của q.** Khiến $q_x = q_y$ tại mọi điểm — warp chỉ kéo theo đúng một hướng chéo cố định thay vì xoáy tự nhiên theo mọi hướng, dù ảnh vẫn "trông có vẻ" đã warp.
 2. **Đặt strength quá lớn ngay từ đầu.** Với `strength` vượt quá vài lần kích thước một ô noise, kết quả không còn là "méo có kiểm soát" mà vỡ thành nhiễu hỗn loạn gần như ngẫu nhiên — mất hẳn cấu trúc mượt mà warping vốn phải giữ lại. Tăng dần từ 0 và quan sát, đừng đoán ngay một con số lớn.
-3. **Quên rằng mỗi lớp lồng nhân chi phí, không cộng.** Thêm lớp $r$ vào một shader đã có $q$ không phải "cộng thêm một chút việc" — nó gần như nhân đôi số lần gọi `fbm()` mỗi pixel; bật cả hai lớp trên một cảnh phủ kín màn hình mà không đo frame time trước dễ khiến GPU tầm trung tụt hẳn xuống dưới 30fps.
+3. **Xem nhẹ hoá đơn của mỗi lớp lồng.** Thêm lớp $r$ vào một shader đã có $q$ không phải "cộng thêm một chút việc" — mỗi lớp cộng thêm hai lần gọi `fbm()` trọn vẹn mỗi pixel (5 → 15 → 25 lần gọi noise so với fbm trơn); bật cả hai lớp trên một cảnh phủ kín màn hình mà không đo frame time trước dễ khiến GPU tầm trung tụt hẳn xuống dưới 30fps.
 
 </Callout>

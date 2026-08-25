@@ -6,7 +6,7 @@ Giải pháp duy nhất khả thi là hash function: một hàm toán thuần nh
 
 ## Hash sin/fract kinh điển và cách nó hoạt động
 
-Hash 2D→1D phổ biến nhất, do The Book of Shaders phổ biến rộng rãi:
+Hash 2D→1D phổ biến nhất — snippet folklore lâu đời của giới shader, được The Book of Shaders phổ biến rộng rãi (BoS dùng hằng 12.9898/78.233; bản dưới là biến thể quen thuộc của Inigo Quilez):
 
 ```glsl
 float hash21(vec2 p) {

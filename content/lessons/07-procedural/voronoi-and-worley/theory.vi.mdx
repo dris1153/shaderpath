@@ -51,7 +51,7 @@ Euclid ($\|\cdot\|_2$) cho ô tròn, hữu cơ — hình dung mặc định khi 
 
 ## Jitter: từ lưới đều tăm tắp đến hỗn loạn hoàn toàn
 
-`uJitter` nhân trực tiếp vào độ lệch hash trước khi cộng vào vị trí ô: `r = b + h * jitter - f`. Tại `jitter = 0`, mọi điểm đứng yên giữa ô của nó (`h * 0 = 0`, chỉ còn offset `b`) — Voronoi suy biến thành lưới đều tăm tắp, dự đoán được hoàn toàn. Tại `jitter = 1`, điểm dịch tự do trong toàn ô theo đúng giá trị hash — lưới nền vẫn còn (đây luôn là Voronoi trên lưới vuông, không phải Poisson-disk thật) nhưng mắt không còn nhận ra. Giá trị trung gian là núm xoay liên tục giữa "trật tự nhân tạo" và "hỗn loạn hữu cơ" — chỉnh nó trong demo để thấy đúng thời điểm lưới vuông "tan" thành các tế bào bất định hình.
+`uJitter` nhân trực tiếp vào độ lệch hash trước khi cộng vào vị trí ô: `r = b + h * jitter - f`. Tại `jitter = 0`, mọi điểm nằm ngay góc lưới của ô nó (`h * 0 = 0`, chỉ còn offset `b` — tức điểm lattice) — Voronoi suy biến thành lưới đều tăm tắp, dự đoán được hoàn toàn. Tại `jitter = 1`, điểm dịch tự do trong toàn ô theo đúng giá trị hash — lưới nền vẫn còn (đây luôn là Voronoi trên lưới vuông, không phải Poisson-disk thật) nhưng mắt không còn nhận ra. Giá trị trung gian là núm xoay liên tục giữa "trật tự nhân tạo" và "hỗn loạn hữu cơ" — chỉnh nó trong demo để thấy đúng thời điểm lưới vuông "tan" thành các tế bào bất định hình.
 
 ## Voronoi mượt: xoá điểm gãy đạo hàm bằng log-sum-exp
 

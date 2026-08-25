@@ -107,8 +107,8 @@
   <text class="cell" x="220" y="318" text-anchor="end">5</text>
   <text class="cell" x="420" y="318" text-anchor="end">25</text>
   <text class="note" x="440" y="291">per pixel, every frame &#8212;</text>
-  <text class="note" x="440" y="309">a layer multiplies the bill,</text>
-  <text class="note" x="440" y="327">it does not add to it</text>
+  <text class="note" x="440" y="309">each layer adds two full fbm</text>
+  <text class="note" x="440" y="327">evaluations (x3, x5 vs plain fbm)</text>
 
   <text class="foot" x="310" y="356" text-anchor="middle">Give q's two channels different offsets, or q.x = q.y everywhere and the warp only pulls along one diagonal.</text>
   <text class="foot" x="310" y="374" text-anchor="middle">q and r are smooth fields too: colouring by them, not just by f, is what separates flat swirl from marble.</text>

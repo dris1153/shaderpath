@@ -32,8 +32,8 @@ Then answer: if the \`fbm()\` octave count goes from $N=5$ to $N=8$ for smoother
         en: "I correctly computed the noise() call count at N=5 as 5×5=25 per pixel",
       },
       {
-        vi: "Tôi tính đúng ở N=8 là 5×8=40 lần, và giải thích được vì sao chi phí tăng theo TÍCH của số lớp warp và số octave, không phải tổng",
-        en: "I correctly computed 5×8=40 calls at N=8, and can explain why cost scales with the PRODUCT of warp-layer count and octave count, not their sum",
+        vi: "Tôi tính đúng ở N=8 là 5×8=40 lần, và giải thích được vì sao chi phí bằng TÍCH của số lần gọi fbm() (2·số lớp + 1) và số octave, không phải tổng",
+        en: "I correctly computed 5×8=40 calls at N=8, and can explain why cost equals the PRODUCT of the fbm() call count (2·layers + 1) and the octave count, not their sum",
       },
     ],
     solutionNote: {
@@ -43,14 +43,14 @@ Mỗi lần gọi \`fbm()\` gọi \`noise()\` đúng $N$ lần, nên tổng số
 
 Với $N=5$: $5 \\times 5 = 25$ lần. Với $N=8$: $5 \\times 8 = 40$ lần.
 
-Tăng từ 25 lên 40 (thêm 15 lần, tăng 60%) — chi phí warp nhân theo tích của số lớp warp và số octave, không phải tổng của chúng.`,
+Tăng từ 25 lên 40 (thêm 15 lần, tăng 60%) — chi phí warp bằng tích của số lần gọi fbm() (2·số lớp + 1 = 5) và số octave, không phải tổng của chúng.`,
       en: `The total number of \`fbm()\` calls for a two-layer warp is fixed, independent of octave count: $q$ needs 2 calls, $r$ needs 2 calls, $f$ needs 1 call, totaling $2+2+1=5$.
 
 Every \`fbm()\` call invokes \`noise()\` exactly $N$ times, so the total \`noise()\` calls per pixel is $5N$.
 
 At $N=5$: $5 \\times 5 = 25$ calls. At $N=8$: $5 \\times 8 = 40$ calls.
 
-Going from 25 to 40 (15 more calls, a 60% increase) — warp cost scales with the PRODUCT of warp-layer count and octave count, not their sum.`,
+Going from 25 to 40 (15 more calls, a 60% increase) — warp cost equals the PRODUCT of the fbm() call count (2·layers + 1 = 5) and the octave count, not their sum.`,
     },
   },
   {

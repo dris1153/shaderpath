@@ -51,7 +51,7 @@ Euclidean ($\|\cdot\|_2$) gives round, organic cells — the shape most people p
 
 ## Jitter: From a Perfect Grid to Full Chaos
 
-`uJitter` multiplies directly into the hash offset before it's added to the cell position: `r = b + h * jitter - f`. At `jitter = 0`, every feature point sits dead-center in its cell (since `h * 0 = 0` leaves only the `b` offset) — the Voronoi pattern degenerates into a perfectly even, entirely predictable grid. At `jitter = 1`, points move freely across the full cell footprint according to their hash value — the underlying lattice is still there (this stays a Voronoi diagram over a square grid, not true Poisson-disk sampling), but the eye stops recognizing it. Values in between form a continuous dial between "visible artificial order" and "organic chaos" — sweep it in the demo and watch the exact point where the square grid dissolves into shapeless cells.
+`uJitter` multiplies directly into the hash offset before it's added to the cell position: `r = b + h * jitter - f`. At `jitter = 0`, every feature point sits right at its cell's lattice corner (since `h * 0 = 0` leaves only the `b` offset — the lattice point itself) — the Voronoi pattern degenerates into a perfectly even, entirely predictable grid. At `jitter = 1`, points move freely across the full cell footprint according to their hash value — the underlying lattice is still there (this stays a Voronoi diagram over a square grid, not true Poisson-disk sampling), but the eye stops recognizing it. Values in between form a continuous dial between "visible artificial order" and "organic chaos" — sweep it in the demo and watch the exact point where the square grid dissolves into shapeless cells.
 
 ## Smooth Voronoi: Erasing the Derivative Kink with Log-Sum-Exp
 

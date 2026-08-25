@@ -1,6 +1,6 @@
 ## Một octave chỉ có một kích thước chi tiết — vật liệu thật có chi tiết ở mọi kích thước
 
-Một lần gọi Perlin hoặc Simplex (bài trước) cho một trường noise với đúng MỘT "kích thước đặc trưng" — quyết định trực tiếp bởi tần số lấy mẫu đưa vào hàm noise. Phóng to một vân đá, một đám mây, hay một dải núi thật, chi tiết không dừng ở một kích thước — hình dạng lớn (khối núi), gờ vừa (vách đá), sạn nhỏ (bề mặt lởm chởm) — tất cả chồng lên nhau cùng lúc. Một hàm noise đơn tần không tạo ra được cấu trúc nhiều tầng đó dù chọn tần số nào; FBM (fractal Brownian motion — tên mượn từ toán xác suất, trong đồ hoạ chỉ đơn giản là "chồng noise nhiều tần số") giải đúng bài toán này bằng cách cộng nhiều lớp noise cùng dạng, mỗi lớp một tần số và biên độ khác nhau.
+Một lần gọi Perlin hoặc Simplex (bài trước) cho một trường noise với đúng MỘT "kích thước đặc trưng" — khoảng cách trung bình giữa các đỉnh/lõm kế tiếp, quyết định trực tiếp bởi tần số lấy mẫu đưa vào hàm noise. Phóng to một vân đá, một đám mây, hay một dải núi thật, chi tiết không dừng ở một kích thước — hình dạng lớn (khối núi), gờ vừa (vách đá), sạn nhỏ (bề mặt lởm chởm) — tất cả chồng lên nhau cùng lúc. Một hàm noise đơn tần không tạo ra được cấu trúc nhiều tầng đó dù chọn tần số nào; FBM (fractional Brownian motion — tên mượn từ toán xác suất; giới đồ hoạ quen đọc "fractal", và trong shader chỉ đơn giản là "chồng noise nhiều tần số") giải đúng bài toán này bằng cách cộng nhiều lớp noise cùng dạng, mỗi lớp một tần số và biên độ khác nhau.
 
 ## Vòng lặp FBM: gain thu nhỏ biên độ, lacunarity phóng to tần số
 

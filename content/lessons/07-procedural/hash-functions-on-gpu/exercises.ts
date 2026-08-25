@@ -84,8 +84,8 @@ $17.13$ and $91.7$ are odd numbers, not multiples of the grid step (usually a sm
         en: "`cell` is already integer-valued (from `floor`) — feed it directly into the polynomial hash, don't multiply by `uv` again.",
       },
       {
-        vi: "Thứ tự đúng: `fract(vec3(cell.xyx) * 0.1031)`, rồi `p3 += dot(p3, p3.yzx + 33.33)`, rồi `fract((p3.x + p3.y) * p3.z)` — bước `dot` ở giữa là bước trộn ba kênh vào nhau, thiếu nó kết quả vẫn gần như tuyến tính.",
-        en: "Order matters: `fract(vec3(cell.xyx) * 0.1031)`, then `p3 += dot(p3, p3.yzx + 33.33)`, then `fract((p3.x + p3.y) * p3.z)` — the middle `dot` step mixes the three channels together; skip it and the result stays nearly linear.",
+        vi: "Cấu trúc ba bước: (1) fract của cell nhân một hằng nhỏ để đưa vào (0,1), (2) một bước dot trộn ba kênh vào nhau — thiếu nó kết quả vỡ, (3) fract của tích hai kênh với kênh còn lại. Hằng số nằm ngay trong bài lý thuyết.",
+        en: "Three-step structure: (1) fract of the cell times a small constant to land in (0,1), (2) a dot step that mixes the three channels — skip it and the result breaks, (3) fract of two channels' sum times the third. The constants are right in the theory section.",
       },
     ],
     checklist: [

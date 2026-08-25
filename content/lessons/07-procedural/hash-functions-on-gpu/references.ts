@@ -8,8 +8,8 @@ export const references: Citation[] = [
     authors: ["Patricio Gonzalez Vivo", "Jen Lowe"],
     url: "https://thebookofshaders.com/10/",
     note: {
-      vi: "Nguồn gốc của công thức fract(sin(dot(...))*43758.5453) dùng trong bài này, kèm giải thích trực quan vì sao dot + sin + fract tạo ra giá trị trông ngẫu nhiên.",
-      en: "The origin of the fract(sin(dot(...))*43758.5453) formula used in this lesson, with an intuitive walkthrough of why dot + sin + fract produces something that looks random.",
+      vi: "Bản trình bày quen thuộc nhất của công thức fract(sin(dot(...))*43758.5453) dùng trong bài này (snippet folklore, BoS phổ biến chứ không phát minh), kèm giải thích trực quan vì sao dot + sin + fract tạo ra giá trị trông ngẫu nhiên.",
+      en: "The best-known walkthrough of the fract(sin(dot(...))*43758.5453) formula used in this lesson (long-standing folklore that BoS popularized rather than invented), with an intuitive explanation of why dot + sin + fract looks random.",
     },
   },
   {
