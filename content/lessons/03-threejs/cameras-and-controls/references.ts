@@ -41,8 +41,8 @@ export const references: Citation[] = [
     authors: ["mrdoob and three.js contributors"],
     url: "https://github.com/mrdoob/three.js/blob/dev/examples/jsm/controls/OrbitControls.js",
     note: {
-      vi: "Nguồn thật của mọi con số mặc định (dampingFactor 0.05, minPolarAngle 0, maxPolarAngle Math.PI...) và ghi chú \"must call update() in your animation loop\" trích dẫn trong bài.",
-      en: "The actual source behind every default value quoted here (dampingFactor 0.05, minPolarAngle 0, maxPolarAngle Math.PI...) and the \"must call update() in your animation loop\" note cited in this lesson.",
+      vi: "Nguồn thật của mọi con số mặc định (dampingFactor 0.05, minPolarAngle 0, maxPolarAngle Math.PI...) và ghi chú trong source: update() bắt buộc khi bật enableDamping/autoRotate, và phải gọi sau mọi thay đổi tay lên transform camera.",
+      en: "The actual source behind every default value quoted here (dampingFactor 0.05, minPolarAngle 0, maxPolarAngle Math.PI...) and the source's own note: update() is required when enableDamping/autoRotate are on, and must run after any manual camera-transform change.",
     },
   },
 ];

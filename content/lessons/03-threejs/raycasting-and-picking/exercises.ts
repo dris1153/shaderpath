@@ -18,8 +18,8 @@ Compute the **correct** NDC (with the $y$ flip) for this point. Then compute the
         en: "First compute u = x/width, v = y/height. Correct NDC: (2u-1, 1-2v). Wrong NDC (missing the flip): (2u-1, 2v-1) — only the y component's sign differs.",
       },
       {
-        vi: "Hai điểm chỉ khác nhau ở dấu của thành phần y trong NDC — nghĩ về việc lật một điểm qua trục hoành (y=0) nghĩa là gì trên màn hình.",
-        en: "The two points differ only in the sign of the NDC y component — think about what flipping a point across the horizontal axis (y=0) means on screen.",
+        vi: "Hai điểm chỉ khác nhau ở dấu của thành phần y trong NDC — điều đó tương ứng phép biến đổi hình học nào trên màn hình?",
+        en: "The two points differ only in the sign of the NDC y component — which geometric transformation on screen does that correspond to?",
       },
     ],
     checklist: [

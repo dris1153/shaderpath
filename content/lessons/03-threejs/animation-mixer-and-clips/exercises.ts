@@ -68,10 +68,10 @@ function animate() {
   renderer.render(scene, camera);
 }`,
     solutionNote: {
-      vi: `Thiếu dòng \`mixer.update(delta)\` bên trong \`animate()\`. \`action.play()\` chỉ đổi \`action._startTime\` / cờ nội bộ của action — nó không đọc/ghi \`mesh.position\` hay \`mesh.quaternion\`. Việc GHI giá trị chỉ xảy ra bên trong \`mixer.update(delta)\`, advance theo delta rồi nội suy track. Không gọi \`update()\` thì object giữ nguyên pose ban đầu mãi mãi.
+      vi: `Thiếu dòng \`mixer.update(delta)\` bên trong \`animate()\`. \`action.play()\` chỉ kích hoạt action trên mixer (bật cờ enabled, đưa vào danh sách active) — nó không đọc/ghi \`mesh.position\` hay \`mesh.quaternion\`. Việc GHI giá trị chỉ xảy ra bên trong \`mixer.update(delta)\`, advance theo delta rồi nội suy track. Không gọi \`update()\` thì object giữ nguyên pose ban đầu mãi mãi.
 
 Đổi thứ tự \`animate()\`/\`play()\` không thay đổi gì: cả hai chỉ set state, bug nằm ở việc THIẾU một lệnh gọi (update), không phải thứ tự các lệnh đã có.`,
-      en: `The missing line is \`mixer.update(delta)\` inside \`animate()\`. \`action.play()\` only changes \`action._startTime\` / the action's internal flag — it never reads or writes \`mesh.position\` or \`mesh.quaternion\`. Actually writing the value only happens inside \`mixer.update(delta)\`, which advances by delta and interpolates the track. Without calling \`update()\`, the object keeps its original pose forever.
+      en: `The missing line is \`mixer.update(delta)\` inside \`animate()\`. \`action.play()\` only activates the action on the mixer (sets the enabled flag, joins the active list) — it never reads or writes \`mesh.position\` or \`mesh.quaternion\`. Actually writing the value only happens inside \`mixer.update(delta)\`, which advances by delta and interpolates the track. Without calling \`update()\`, the object keeps its original pose forever.
 
 Swapping the order of \`animate()\`/\`play()\` changes nothing: both calls only set state — the bug is a MISSING call (update), not the order of the calls that already exist.`,
     },

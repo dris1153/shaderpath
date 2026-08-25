@@ -18,8 +18,8 @@ Then answer in one sentence: why should you avoid clamping to exactly \`minPolar
         en: "Convert radians to degrees by multiplying by $180/\\pi \\approx 57.2958$. Compute $\\pi - 0.15$ before converting units.",
       },
       {
-        vi: "Ở đúng góc cực 0 hay $\\pi$, camera nhìn thẳng xuống/lên trục xoay — vector \"lên\" không còn xác định duy nhất, giống vấn đề gimbal đã gặp ở Track 0.",
-        en: "At polar angle exactly 0 or $\\pi$, the camera looks straight down/up the rotation axis — the \"up\" vector stops being uniquely defined, the same gimbal-style problem from Track 0.",
+        vi: "Hãy tưởng tượng camera nhìn thẳng dọc trục xoay — lúc đó hướng \"lên\" của nó có còn duy nhất không? Track 0 từng gặp hiện tượng cùng họ.",
+        en: "Picture the camera looking straight along the rotation axis — is its \"up\" direction still unique there? Track 0 met a problem from the same family.",
       },
     ],
     checklist: [
