@@ -18,8 +18,8 @@ Using exactly the $(n \\cdot \\omega_i) = \\cos\\theta$ term in $L_o = L_e + \\i
         en: "The energy ratio only depends on the ratio of the two cosine values, since $L_i$ and $f_r$ are assumed unchanged between the two moments — every other term of the equation cancels out when you take the ratio.",
       },
       {
-        vi: "$\\cos(0°) = 1$, $\\cos(60°) = 0.5$ — tỉ lệ chính là $0.5 / 1 = 50\\%$. Đây là chính công thức $dA_\\perp = dA\\cos\\theta$: cùng một chùm sáng, chiếu xiên hơn thì trải rộng hơn trên cùng diện tích panel.",
-        en: "$\\cos(0°) = 1$, $\\cos(60°) = 0.5$ — the ratio is simply $0.5 / 1 = 50\\%$. This is exactly the $dA_\\perp = dA\\cos\\theta$ formula: the same beam, arriving at a shallower angle, spreads over a larger footprint on the same panel area.",
+        vi: "Tra hai giá trị cosine ở 0° và 60° rồi lấy tỉ số. Trực giác đứng sau là công thức $dA_\\perp = dA\\cos\\theta$: cùng một chùm sáng, chiếu xiên hơn thì trải rộng hơn trên cùng diện tích panel.",
+        en: "Look up the two cosine values at 0° and 60°, then take their ratio. The intuition behind it is the $dA_\\perp = dA\\cos\\theta$ formula: the same beam, arriving at a shallower angle, spreads over a larger footprint on the same panel area.",
       },
     ],
     checklist: [

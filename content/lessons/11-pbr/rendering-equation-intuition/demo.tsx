@@ -8,6 +8,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { numberOf, stringOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./equation-anatomy.frag";
 import vertexShader from "./equation-anatomy.vert";
 
@@ -120,13 +121,15 @@ function EquationAnatomySphere() {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.2;
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1.2, 64, 64]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

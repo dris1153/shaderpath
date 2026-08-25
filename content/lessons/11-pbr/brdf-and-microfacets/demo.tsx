@@ -8,6 +8,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { numberOf, stringOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./cook-torrance-explorer.frag";
 import vertexShader from "./cook-torrance-explorer.vert";
 
@@ -81,13 +82,15 @@ function CookTorranceSphere() {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.15;
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh ref={meshRef}>
       <sphereGeometry args={[1.2, 96, 96]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

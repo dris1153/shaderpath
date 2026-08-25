@@ -7,14 +7,14 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng lưới sweep vật liệu kinh điển bằng React Three Fiber: 6×6 quả cầu, trục \`metalness\` chạy 0 -> 1 theo cột, trục \`roughness\` chạy 0 -> 1 theo hàng, đặt dưới một environment procedural (\`RoomEnvironment\` qua \`PMREMGenerator\`) cộng đúng một key light — không HDRI thật, không thêm light nào khác.
 
-Yêu cầu: đúng 36 quả cầu dùng chung MỘT \`SphereGeometry\`; mỗi quả cầu có material riêng với \`metalness\`/\`roughness\` tính từ chỉ số hàng/cột; nhãn hai trục bằng \`Text\` hoặc \`Html\` của drei; environment dispose đầy đủ (render target + PMREMGenerator + scene nguồn) khi unmount hoặc rebuild.
+Hằng số: lưới 6×6 (GRID_SIZE = 6), khoảng cách tâm SPACING = 1.3 (offset = (i - 2.5) × 1.3), mức mỗi trục i/5, và albedo ẤM CÓ MÀU — solution dùng BASE_COLOR = "#b8813a" — bắt buộc để thấy kim loại nhuốm màu phản xạ. Yêu cầu: đúng 36 quả cầu dùng chung MỘT \`SphereGeometry\`; mỗi quả cầu có material riêng với \`metalness\`/\`roughness\` tính từ chỉ số hàng/cột; nhãn hai trục bằng \`Text\` hoặc \`Html\` của drei; environment dispose đầy đủ (render target + PMREMGenerator + scene nguồn) khi unmount hoặc rebuild.
 
-Sau khi lưới chạy đúng, viết một khối comment ngay trong code đối chiếu ba quan sát với lý thuyết Fresnel/microfacet đã học: vì sao hàng dielectric ($metalness=0$) sáng lên ở góc xiên, vì sao hàng kim loại ($metalness=1$) nhuốm màu albedo, và vì sao hàng giữa ($metalness \\approx 0.5$) trông sai vật lý so với hai đầu.`,
+Sau khi lưới chạy đúng, viết một khối comment ngay trong code đối chiếu ba quan sát với lý thuyết Fresnel/microfacet đã học: vì sao cột dielectric ($metalness=0$) sáng lên ở góc xiên, vì sao cột kim loại ($metalness=1$) nhuốm màu albedo, và vì sao cột giữa ($metalness \\approx 0.5$) trông sai vật lý so với hai đầu.`,
       en: `Build the classic material-sweep grid in React Three Fiber: 6×6 spheres, \`metalness\` running 0 -> 1 across columns, \`roughness\` running 0 -> 1 across rows, sitting under a procedural environment (\`RoomEnvironment\` via \`PMREMGenerator\`) plus exactly one key light — no real HDRI, no other lights added.
 
-Requirements: exactly 36 spheres sharing ONE \`SphereGeometry\`; each sphere gets its own material with \`metalness\`/\`roughness\` computed from its row/column index; both axes labeled with drei's \`Text\` or \`Html\`; the environment fully disposed (render target + PMREMGenerator + source scene) on unmount or rebuild.
+Constants: a 6×6 grid (GRID_SIZE = 6), center spacing SPACING = 1.3 (offset = (i - 2.5) × 1.3), per-axis levels i/5, and a WARM, COLORED albedo — the solution uses BASE_COLOR = "#b8813a" — required to see metal tint its reflections. Requirements: exactly 36 spheres sharing ONE \`SphereGeometry\`; each sphere gets its own material with \`metalness\`/\`roughness\` computed from its row/column index; both axes labeled with drei's \`Text\` or \`Html\`; the environment fully disposed (render target + PMREMGenerator + source scene) on unmount or rebuild.
 
-Once the grid runs correctly, write a comment block right in the code cross-checking three observations against the Fresnel/microfacet theory you learned: why the dielectric row ($metalness=0$) brightens at grazing angles, why the metal row ($metalness=1$) tints with the albedo color, and why the middle row ($metalness \\approx 0.5$) looks physically wrong compared to both ends.`,
+Once the grid runs correctly, write a comment block right in the code cross-checking three observations against the Fresnel/microfacet theory you learned: why the dielectric column ($metalness=0$) brightens at grazing angles, why the metal column ($metalness=1$) tints with the albedo color, and why the middle column ($metalness \\approx 0.5$) looks physically wrong compared to both ends.`,
     },
     starterCode: `"use client";
 
@@ -193,24 +193,25 @@ export default function MaterialStudyGrid() {
 
 // Observations vs. theory:
 //
-// 1. Dielectric row (metalness=0, bottom-left to bottom-right along
-//    roughness=0): orbiting the camera to a grazing angle brightens the
-//    specular rim on every sphere in this row even though BASE_COLOR is a
+// 1. Dielectric column (metalness=0 — the LEFT column, roughness
+//    sweeping bottom to top): orbiting the camera to a grazing angle
+//    brightens the specular rim on every sphere in it even though BASE_COLOR is a
 //    warm copper tone — exactly the Schlick prediction F(theta) rising
 //    toward 1 as theta->90 degrees, independent of the low F0~=0.04 base.
 //
-// 2. Metal row (metalness=1, top row): reflections are tinted the same
+// 2. Metal column (metalness=1 — the RIGHT column): reflections are tinted the same
 //    copper color as BASE_COLOR, because F0 = albedo when metalness=1 (no
 //    diffuse term survives) — the env reflection literally IS the material
 //    color modulated by the room's lighting.
 //
-// 3. Middle row (metalness=0.5): looks physically wrong because real-world
+// 3. Middle columns (metalness 0.4-0.6): look physically wrong because real-world
 //    materials are essentially never partially metallic at the microfacet
 //    level (a surface is either bare metal or it isn't) — this row is a
 //    blend Three.js happily computes (diffuseColor scaled by 1-metalness,
 //    F0 lerped toward albedo) but that blend has no physical referent,
 //    which is why production textures paint metalness as a near-binary
-//    mask instead of a smooth gradient.`,
+//    mask instead of a smooth gradient. (Rows sweep roughness: the top
+//    row is the roughest, blurring the env reflection to the highest mip.)`,
     referenceImage: "/figures/11-pbr/checkpoint-material-study.png",
     hints: [
       {
@@ -232,16 +233,16 @@ export default function MaterialStudyGrid() {
         en: "The grid is correct on both axes: 6 metalness levels across columns (0 -> 1), 6 roughness levels across rows (0 -> 1), exactly 36 spheres",
       },
       {
-        vi: "Fresnel thấy rõ ở góc nhìn xiên trên hàng dielectric (metalness=0) — orbit camera ra góc thấp để kiểm tra viền sáng lên",
-        en: "Fresnel is clearly visible at a grazing angle on the dielectric row (metalness=0) — orbit the camera to a low angle to confirm the rim brightens",
+        vi: "Fresnel thấy rõ ở góc nhìn xiên trên cột dielectric (metalness=0) — orbit camera ra góc thấp để kiểm tra viền sáng lên",
+        en: "Fresnel is clearly visible at a grazing angle on the dielectric column (metalness=0) — orbit the camera to a low angle to confirm the rim brightens",
       },
       {
         vi: "Hàng kim loại (metalness=1) nhuốm đúng màu BASE_COLOR trong phản xạ, không phải màu trắng trung tính",
-        en: "The metal row (metalness=1) tints its reflections with BASE_COLOR, not a neutral white",
+        en: "The metal column (metalness=1) tints its reflections with BASE_COLOR, not a neutral white",
       },
       {
         vi: "Hàng dielectric (metalness=0) giữ F0 trung tính — phản xạ specular KHÔNG nhuốm màu BASE_COLOR dù roughness thấp",
-        en: "The dielectric row (metalness=0) keeps a neutral F0 — its specular reflection does NOT tint with BASE_COLOR even at low roughness",
+        en: "The dielectric column (metalness=0) keeps a neutral F0 — its specular reflection does NOT tint with BASE_COLOR even at low roughness",
       },
       {
         vi: "Environment (render target của PMREMGenerator, PMREMGenerator, và scene.environment) được dispose/reset đầy đủ khi component unmount — không rò rỉ GPU khi remount nhiều lần",

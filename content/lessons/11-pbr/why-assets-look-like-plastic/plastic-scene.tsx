@@ -99,8 +99,19 @@ function ProductMaterial({
   toggles: PlasticToggles;
   maps: { roughnessMap: THREE.Texture; normalMap: THREE.Texture };
 }) {
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
+
+  // Map presence is a compile-time #ifdef: adding/removing roughnessMap or
+  // normalMap needs a program recompile, and neither R3F's applyProps nor
+  // the renderer's needsProgramChange checks trigger one — without this the
+  // map toggles silently do nothing until an unrelated recompile.
+  useEffect(() => {
+    if (matRef.current) matRef.current.needsUpdate = true;
+  }, [toggles.roughnessFix, toggles.normalFix]);
+
   return (
     <meshStandardMaterial
+      ref={matRef}
       color={toggles.albedoFix ? "#8a5340" : "#0a0705"}
       metalness={toggles.metalnessFix ? 0 : 0.5}
       roughness={toggles.roughnessFix ? 0.35 : 0.06}

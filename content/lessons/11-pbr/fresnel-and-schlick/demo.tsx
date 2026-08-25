@@ -8,6 +8,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { booleanOf, numberOf, stringOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fresnelVert from "./fresnel-object.vert";
 import fresnelFrag from "./fresnel-object.frag";
 
@@ -128,13 +129,14 @@ function FresnelSphere({
   radius: number;
 }) {
   const uniforms = useFresnelUniforms(preset);
+  const bindUniforms = useSharedUniforms(uniforms);
   return (
     <mesh position={position}>
       <sphereGeometry args={[radius, 64, 48]} />
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={fresnelVert}
         fragmentShader={fresnelFrag}
-        uniforms={uniforms}
       />
     </mesh>
   );
@@ -142,13 +144,14 @@ function FresnelSphere({
 
 function WaterPlane() {
   const uniforms = useFresnelUniforms(WATER);
+  const bindUniforms = useSharedUniforms(uniforms);
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[16, 16]} />
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={fresnelVert}
         fragmentShader={fresnelFrag}
-        uniforms={uniforms}
       />
     </mesh>
   );

@@ -105,5 +105,5 @@
   <text class="note" x="445" y="484" text-anchor="middle">cascade 2</text>
 
   <text class="note" x="24" y="506">Each slice gets its own directional light and its own 2048² map, so texel footprint stays small where it matters.</text>
-  <text class="note" x="24" y="524">'practical' — the default of the three split modes — blends a uniform split with a logarithmic one; cascades defaults to 3.</text>
+  <text class="note" x="24" y="524">'practical' — the default of the four split modes — blends a uniform split with a logarithmic one; cascades defaults to 3.</text>
 </svg>

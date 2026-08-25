@@ -30,7 +30,7 @@ $$
 D(h) = \frac{\alpha^2}{\pi\big((n\cdot h)^2(\alpha^2 - 1) + 1\big)^2}, \qquad \alpha = \text{roughness}^2
 $$
 
-Squaring roughness into $\alpha$ isn't decoration — it's Karis's (2013) remap so a roughness slider "feels linear" to a human eye (the first half of the slider changes the lobe shape as much as the second half, instead of dumping most of the visible change into the first few percent of a raw-roughness slider). The smaller $\alpha$ is, the more sensitive the denominator becomes to $(n\cdot h)$, the sharper the lobe — GGX is well known for having a longer "tail" than older distributions (Beckmann, Blinn-Phong) far from the lobe center, meaning a highlight gets a soft, spreading halo instead of an abrupt cutoff, which matches measured real materials better.
+Squaring roughness into $\alpha$ isn't decoration — it's Disney's (Burley 2012) remap, popularized by Karis (2013), so a roughness slider "feels linear" to a human eye (the first half of the slider changes the lobe shape as much as the second half, instead of dumping most of the visible change into the first few percent of a raw-roughness slider). The smaller $\alpha$ is, the more sensitive the denominator becomes to $(n\cdot h)$, the sharper the lobe — GGX is well known for having a longer "tail" than older distributions (Beckmann, Blinn-Phong) far from the lobe center, meaning a highlight gets a soft, spreading halo instead of an abrupt cutoff, which matches measured real materials better.
 
 ## G — Smith Shadowing-Masking: Why Skipping G Makes Edges "Glow Too Bright"
 
@@ -57,7 +57,7 @@ where $F_0$ is the reflectance at normal incidence ($0°$) — for dielectrics (
 
 ## The 4(n·v)(n·l) Normalization and Energy Balance via kd
 
-The $4(n\cdot v)(n\cdot l)$ denominator isn't a free-floating scaling factor — it falls out of a change of variables when converting the integral from "microfacet space" into "$\omega_i,\omega_o$ space" during Cook-Torrance's original derivation (Cook & Torrance, 1982), needed to keep $f_r$'s units correct as a BRDF. Since the specular term above already "claims" the fraction of energy that got reflected ($F$), whatever's left for diffuse scattering has to subtract exactly that fraction, or the surface would paint out more light than it physically received — that's the meaning of $k_d = (1-F)(1-\text{metalness})$: the extra $(1-\text{metalness})$ factor exists because metals, in theory, have zero diffuse scattering at all (any light that doesn't specularly reflect gets absorbed by free electrons instead), and diffuse then uses exactly $k_d \cdot \text{albedo}/\pi$ — the same Lambert formula from the previous lesson, just multiplied by this energy-balancing factor.
+The $4(n\cdot v)(n\cdot l)$ denominator isn't a free-floating scaling factor — it falls out of a change of variables when converting the integral from "microfacet space" into "$\omega_i,\omega_o$ space" in the Torrance–Sparrow (1967) microfacet family — the modern $1/4$ normalization is derived rigorously in Walter et al. (2007, eq. 20); the 1982 Cook & Torrance paper uses a slightly different normalization — needed to keep $f_r$'s units correct as a BRDF. Since the specular term above already "claims" the fraction of energy that got reflected ($F$), whatever's left for diffuse scattering has to subtract exactly that fraction, or the surface would paint out more light than it physically received — that's the meaning of $k_d = (1-F)(1-\text{metalness})$: the extra $(1-\text{metalness})$ factor exists because metals, in theory, have zero diffuse scattering at all (any light that doesn't specularly reflect gets absorbed by free electrons instead), and diffuse then uses exactly $k_d \cdot \text{albedo}/\pi$ — the same Lambert formula from the previous lesson, just multiplied by this energy-balancing factor.
 
 ## Building the GLSL Implementation Step by Step
 
@@ -69,7 +69,7 @@ float D_GGX(vec3 N, vec3 H, float roughness) {
   float a2 = a * a;
   float ndoth = max(dot(N, H), 0.0);
   float denom = ndoth * ndoth * (a2 - 1.0) + 1.0;
-  return a2 / (3.14159265 * denom * denom + 1e-7);
+  return a2 / (3.14159265 * denom * denom); // roughness is clamped > 0, so the denominator cannot hit 0
 }
 
 float G1_SchlickGGX(float ndotx, float k) {

@@ -30,7 +30,7 @@ $$
 D(h) = \frac{\alpha^2}{\pi\big((n\cdot h)^2(\alpha^2 - 1) + 1\big)^2}, \qquad \alpha = \text{roughness}^2
 $$
 
-Bình phương roughness thành $\alpha$ không phải trang trí — là remap của Karis (2013) để thanh trượt roughness "cảm giác tuyến tính" hơn với mắt người, thay vì dồn hết thay đổi vào đoạn đầu nếu dùng roughness thẳng. $\alpha$ càng nhỏ, mẫu số càng nhạy với $(n\cdot h)$, lobe càng nhọn — GGX có "đuôi" dài hơn hẳn các phân bố cũ (Beckmann, Blinn-Phong), tức highlight có quầng mờ lan rộng thay vì cắt cụt, khớp hơn với vật liệu đo thật.
+Bình phương roughness thành $\alpha$ không phải trang trí — là remap của Disney (Burley 2012), được Karis (2013) phổ biến, để thanh trượt roughness "cảm giác tuyến tính" hơn với mắt người, thay vì dồn hết thay đổi vào đoạn đầu nếu dùng roughness thẳng. $\alpha$ càng nhỏ, mẫu số càng nhạy với $(n\cdot h)$, lobe càng nhọn — GGX có "đuôi" dài hơn hẳn các phân bố cũ (Beckmann, Blinn-Phong), tức highlight có quầng mờ lan rộng thay vì cắt cụt, khớp hơn với vật liệu đo thật.
 
 ## G — Smith shadowing-masking: vì sao thiếu G làm rìa "cháy sáng"
 
@@ -57,7 +57,7 @@ với $F_0$ là phản xạ tại góc tới vuông góc — chất điện môi
 
 ## Chuẩn hoá 4(n·v)(n·l) và cân bằng năng lượng kd
 
-Mẫu số $4(n\cdot v)(n\cdot l)$ không phải hệ số tự do — xuất phát từ phép đổi biến khi chuyển tích phân từ "không gian microfacet" sang "không gian $\omega_i,\omega_o$" trong dẫn xuất gốc (Cook & Torrance, 1982), cần để $f_r$ giữ đúng đơn vị BRDF. Vì specular đã "lấy" một phần năng lượng phản xạ ($F$), phần còn lại cho khuếch tán phải trừ đúng phần đó — đây là ý nghĩa $k_d = (1-F)(1-\text{metalness})$: nhân thêm $(1-\text{metalness})$ vì kim loại không có tán xạ khuếch tán (ánh sáng không phản xạ gương bị electron tự do hấp thụ), diffuse dùng đúng $k_d \cdot \text{albedo}/\pi$ — công thức Lambert bài trước, nhân thêm hệ số cân bằng năng lượng.
+Mẫu số $4(n\cdot v)(n\cdot l)$ không phải hệ số tự do — xuất phát từ phép đổi biến khi chuyển tích phân từ "không gian microfacet" sang "không gian $\omega_i,\omega_o$" trong họ mô hình microfacet Torrance–Sparrow (1967) — dạng chuẩn hoá $1/4$ hiện đại được Walter et al. (2007, eq. 20) dẫn ra chặt chẽ; bài báo Cook & Torrance 1982 dùng một dạng chuẩn hoá hơi khác — cần để $f_r$ giữ đúng đơn vị BRDF. Vì specular đã "lấy" một phần năng lượng phản xạ ($F$), phần còn lại cho khuếch tán phải trừ đúng phần đó — đây là ý nghĩa $k_d = (1-F)(1-\text{metalness})$: nhân thêm $(1-\text{metalness})$ vì kim loại không có tán xạ khuếch tán (ánh sáng không phản xạ gương bị electron tự do hấp thụ), diffuse dùng đúng $k_d \cdot \text{albedo}/\pi$ — công thức Lambert bài trước, nhân thêm hệ số cân bằng năng lượng.
 
 ## Cài GLSL từ đầu: dựng Cook-Torrance từng bước
 
@@ -69,7 +69,7 @@ float D_GGX(vec3 N, vec3 H, float roughness) {
   float a2 = a * a;
   float ndoth = max(dot(N, H), 0.0);
   float denom = ndoth * ndoth * (a2 - 1.0) + 1.0;
-  return a2 / (3.14159265 * denom * denom + 1e-7);
+  return a2 / (3.14159265 * denom * denom); // roughness đã clamp > 0 nên mẫu số không thể bằng 0
 }
 
 float G1_SchlickGGX(float ndotx, float k) {

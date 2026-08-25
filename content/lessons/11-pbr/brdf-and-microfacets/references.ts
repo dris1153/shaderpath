@@ -44,8 +44,8 @@ export const references: Citation[] = [
     year: 1982,
     url: "https://dl.acm.org/doi/10.1145/357290.357293",
     note: {
-      vi: "Bài báo gốc đặt tên và dẫn xuất công thức Cook-Torrance, gồm cả nguồn gốc số hạng chuẩn hoá $4(n\\cdot v)(n\\cdot l)$ từ phép đổi biến tích phân — đọc để thấy công thức hiện đại trong bài học bắt nguồn từ đâu.",
-      en: "The original paper that names and derives the Cook-Torrance formula, including where the $4(n\\cdot v)(n\\cdot l)$ normalization term comes from via the integral's change of variables — read it to see where this lesson's modern formula actually originates.",
+      vi: "Bài báo gốc đặt tên công thức Cook-Torrance. Lưu ý: dạng chuẩn hoá năm 1982 hơi khác dạng hiện đại — số hạng $4(n\\cdot v)(n\\cdot l)$ như bài học dùng được dẫn ra chặt chẽ trong Walter et al. 2007 (eq. 20), trên nền mô hình Torrance–Sparrow 1967.",
+      en: "The original paper that names the Cook-Torrance formula. Note: the 1982 normalization differs slightly from the modern form — the $4(n\\cdot v)(n\\cdot l)$ term as this lesson uses it is derived rigorously in Walter et al. 2007 (eq. 20), building on the 1967 Torrance–Sparrow model.",
     },
   },
 ];

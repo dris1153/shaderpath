@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Hoàn thành component \`StudioLightingSetup\`: một cảnh trình bày sản phẩm ba điểm sáng — key (\`RectAreaLight\`), fill (cường độ IBL), rim (\`RectAreaLight\` nhỏ phía sau) — cộng một đèn phụ CHỈ để đổ bóng mềm đúng hướng key, trên một sàn bệ bóng phản chiếu đúng hình dạng panel.
 
-Skeleton (JSX ba đèn, sàn, vật thể trưng bày) đã đầy đủ — việc của bạn là lấp 6 TODO trong effect thiết lập: (1) bật shadow map trên renderer với \`PCFSoftShadowMap\`, (2) hướng key và rim vào vật thể, (3) cấu hình đèn đổ bóng phụ (cùng hướng key, cường độ gần như 0, \`castShadow\`, mapSize + bias hợp lý), (4) dựng \`RoomEnvironment\` qua \`PMREMGenerator\` làm \`scene.environment\` với \`environmentIntensity\` đóng vai trò fill (~1/4 so với key, ước lượng), (5) chỉnh \`toneMappingExposure\`, (6) dispose sạch mọi tài nguyên tạo ra khi unmount.`,
+Bài dạng build tự dựng từ đầu (không có starter hiển thị): JSX gồm ba đèn (key/rim là \`rectAreaLight\`, đèn bóng là \`directionalLight\`), sàn bệ bóng và vật thể trưng bày (torus knot procedural), cộng một effect thiết lập theo 6 bước: (1) bật shadow map trên renderer với \`PCFShadowMap\` cộng \`shadow.radius\` để làm mềm (PCFSoftShadowMap đã deprecated từ r0.185 — renderer tự hạ về PCFShadowMap kèm cảnh báo, như bài shadow đã học), (2) hướng key và rim vào vật thể, (3) cấu hình đèn đổ bóng phụ (cùng hướng key, cường độ gần như 0, \`castShadow\`, mapSize + bias hợp lý), (4) dựng \`RoomEnvironment\` qua \`PMREMGenerator\` làm \`scene.environment\` với \`environmentIntensity\` đóng vai trò fill (~1/4 so với key, ước lượng), (5) chỉnh \`toneMappingExposure\`, (6) dispose sạch mọi tài nguyên tạo ra và KHÔI PHỤC trạng thái renderer/scene dùng chung (shadowMap, toneMapping, background) khi unmount.`,
       en: `Complete the \`StudioLightingSetup\` component: a three-point product-presentation scene — key (\`RectAreaLight\`), fill (the IBL's own strength), rim (a small \`RectAreaLight\` behind the subject) — plus a dedicated light that ONLY casts a soft shadow in the key's direction, on a glossy pedestal floor that reflects the panel's shape correctly.
 
-The skeleton (the three lights' JSX, the floor, the showcased object) is complete — your job is filling 6 TODOs in the setup effect: (1) enable the renderer's shadow map with \`PCFSoftShadowMap\`, (2) aim the key and rim at the subject, (3) configure the dedicated shadow light (same direction as the key, near-zero intensity, \`castShadow\`, sensible mapSize + bias), (4) build a \`RoomEnvironment\` through \`PMREMGenerator\` as \`scene.environment\` with \`environmentIntensity\` acting as the fill (~1/4 of the key, estimated), (5) tune \`toneMappingExposure\`, (6) dispose every resource you created on unmount.`,
+Build exercises start from scratch (no visible starter): JSX with the three lights (key/rim as \`rectAreaLight\`, the shadow light a \`directionalLight\`), a glossy pedestal floor and a showcased object (a procedural torus knot), plus a setup effect in 6 steps: (1) enable the renderer's shadow map with \`PCFShadowMap\` plus \`shadow.radius\` for softness (PCFSoftShadowMap is deprecated in r0.185 — the renderer falls back to PCFShadowMap with a warning, as the shadow lesson taught), (2) aim the key and rim at the subject, (3) configure the dedicated shadow light (same direction as the key, near-zero intensity, \`castShadow\`, sensible mapSize + bias), (4) build a \`RoomEnvironment\` through \`PMREMGenerator\` as \`scene.environment\` with \`environmentIntensity\` acting as the fill (~1/4 of the key, estimated), (5) tune \`toneMappingExposure\`, (6) dispose everything you created AND restore the shared renderer/scene state (shadowMap, toneMapping, background) on unmount.`,
     },
     starterCode: `"use client";
 
@@ -34,7 +34,8 @@ export function StudioLightingSetup() {
 
   useEffect(() => {
     // TODO 1: renderer shadow setup — gl.shadowMap.enabled = true,
-    // gl.shadowMap.type = THREE.PCFSoftShadowMap.
+    // gl.shadowMap.type = THREE.PCFShadowMap (PCFSoft is deprecated; use
+    // shadow.radius on the light for softness).
 
     // TODO 2: point the key and rim RectAreaLights at SUBJECT (.lookAt).
 
@@ -109,9 +110,19 @@ export function StudioLightingSetup() {
   const shadowLightRef = useRef<THREE.DirectionalLight>(null!);
 
   useEffect(() => {
-    // 1. PCFSoftShadowMap — the softest built-in filter, matches a softbox key.
+    // Snapshot shared renderer/scene state FIRST — cleanup restores it.
+    const prev = {
+      shadowsEnabled: gl.shadowMap.enabled,
+      shadowType: gl.shadowMap.type,
+      toneMapping: gl.toneMapping,
+      exposure: gl.toneMappingExposure,
+      background: scene.background,
+    };
+
+    // 1. PCFShadowMap + shadow.radius below — PCFSoftShadowMap is
+    // deprecated in r0.185 (the renderer warns and falls back to PCF).
     gl.shadowMap.enabled = true;
-    gl.shadowMap.type = THREE.PCFSoftShadowMap;
+    gl.shadowMap.type = THREE.PCFShadowMap;
 
     // 2. Aim both RectAreaLights at the subject — RectAreaLight has no target
     // object like SpotLight/DirectionalLight, orientation comes from lookAt.
@@ -162,11 +173,17 @@ export function StudioLightingSetup() {
     gl.toneMappingExposure = 1.05;
 
     return () => {
-      // 6. Every GPU resource created in this effect must go — this canvas
-      // is reused by other demos/checkpoints on the same page.
+      // 6. Every GPU resource created in this effect must go — and the
+      // shared renderer/scene state must be restored: this canvas is
+      // reused by other demos/checkpoints on the same page.
       scene.environment = null;
       envTexture.dispose();
       scene.remove(shadowLight.target);
+      gl.shadowMap.enabled = prev.shadowsEnabled;
+      gl.shadowMap.type = prev.shadowType;
+      gl.toneMapping = prev.toneMapping;
+      gl.toneMappingExposure = prev.exposure;
+      scene.background = prev.background;
     };
   }, [gl, scene]);
 

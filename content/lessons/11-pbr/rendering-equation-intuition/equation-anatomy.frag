@@ -49,6 +49,9 @@ void main() {
   } else if (uMode == 2) {
     color = specular;
   } else {
+    // Le enters the sum unmodified in the equation; the 0.15 here only
+    // dims the DEMO'S uEmissiveColor so combined view isn't blown out —
+    // think of it as a dimmer emissive material, not a changed formula.
     color = emission * 0.15 + diffuse + specular;
   }
 

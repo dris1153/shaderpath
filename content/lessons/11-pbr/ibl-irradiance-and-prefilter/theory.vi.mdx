@@ -46,7 +46,7 @@ const envRT = pmrem.fromScene(environmentScene); // hoặc pmrem.fromEquirectang
 scene.environment = envRT.texture;
 ```
 
-`.fromScene(scene, sigma?, near?, far?, options?)` render scene đó ra cubemap rồi prefilter — đây chính là cách `RoomEnvironment` (một scene nhỏ gồm hộp và panel phát sáng) tạo ra ambience mà không cần file HDRI thật. `.fromEquirectangular(texture)` nhận thẳng một ảnh equirect 2:1 có sẵn (HDRI load bằng `RGBELoader`, hoặc bất kỳ equirect procedural nào) và prefilter ảnh đó.
+`.fromScene(scene, sigma?, near?, far?, options?)` render scene đó ra cubemap rồi prefilter — đây chính là cách `RoomEnvironment` (một scene nhỏ gồm hộp và panel phát sáng) tạo ra ambience mà không cần file HDRI thật. `.fromEquirectangular(texture)` nhận thẳng một ảnh equirect 2:1 có sẵn (HDRI load bằng `HDRLoader`, hoặc bất kỳ equirect procedural nào) và prefilter ảnh đó.
 
 Một chi tiết nên kiểm tra tận nguồn thay vì tin truyền miệng: Three **không** lưu hai texture riêng (irradiance cubemap + prefiltered specular cubemap) mà dựng đúng MỘT atlas nhiều mip theo scheme "CubeUV" (`cube_uv_reflection_fragment.glsl.js`) — mỗi mip tile cả sáu mặt cube vào một texture 2D phẳng, sample qua hàm tự viết `textureCubeUV()` thay vì `textureCube` thường, vì mipmap cubemap chuẩn không biểu diễn được "mỗi mip cần một convolution kernel khác nhau". Diffuse irradiance tái dùng đúng atlas đó ở mip mờ nhất: `getIBLIrradiance()` trong `envmap_physical_pars_fragment.glsl.js` gọi `textureCubeUV(envMap, N, 1.0)` — roughness=1.0, đỉnh mip chain — thay vì chạy một convolve cosine riêng. Lối tắt này (GGX blur ở roughness=1 không tương đương toán học với cosine convolve thật) đủ gần về thị giác để bỏ hẳn việc lưu một texture thứ hai.
 
@@ -62,14 +62,14 @@ Gán kết quả PMREM vào `scene.environment` (thay vì `.envMap` của từng
 
 BRDF LUT (thừa số thứ hai của split-sum) nằm trong `lights_physical_pars_fragment.glsl.js`, hàm `EnvironmentBRDF()`: `vec2 fab = texture2D(dfgLUT, vec2(roughness, dotNV)).rg; return specularColor * fab.x + specularF90 * fab.y;` — đúng công thức scale/bias ở trên. Ở bản Three.js project này dùng, LUT không tính trên GPU lúc runtime (khác nhiều engine/tutorial cũ hay render nó vào render target lúc khởi động) — nó bake sẵn thành một `DataTexture` 16×16 `RG16F` (`DFGLUTData.js`, "4096 samples per texel"), nhúng thẳng vào bundle JS, upload một lần làm uniform `dfgLUT`. Đánh đổi hợp lý: zero chi phí warm-up GPU, đổi lại độ phân giải cố định 16×16 — chấp nhận được vì LUT vốn mượt, tần số thấp.
 
-## Thực hành: RoomEnvironment cho ambience studio, RGBELoader cho HDRI thật
+## Thực hành: RoomEnvironment cho ambience studio, HDRLoader cho HDRI thật
 
 Muốn ambience nhanh, không phụ thuộc asset nhị phân nào (đúng ràng buộc của các checkpoint/demo trong khoá này), `RoomEnvironment` từ `three/addons/environments/RoomEnvironment.js` kết hợp `PMREMGenerator.fromScene()` là đủ — nó chỉ là một scene nhỏ gồm hộp màu và panel phát sáng, dựng thuần bằng code. Với một dự án thật muốn đúng một mood cụ thể (hoàng hôn, softbox studio, trời âm u), load hẳn một file `.hdr`:
 
 ```ts
-import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
+import { HDRLoader } from "three/addons/loaders/HDRLoader.js";
 
-new RGBELoader().load("/hdri/studio.hdr", (hdri) => {
+new HDRLoader().load("/hdri/studio.hdr", (hdri) => {
   hdri.mapping = THREE.EquirectangularReflectionMapping;
   const envRT = pmremGenerator.fromEquirectangular(hdri);
   scene.environment = envRT.texture;

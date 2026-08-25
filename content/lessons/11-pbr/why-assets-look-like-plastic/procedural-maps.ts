@@ -5,12 +5,25 @@ import * as THREE from "three";
 // textures only). Each function returns a fresh CanvasTexture the caller
 // owns and must dispose.
 
+// Deterministic PRNG (house convention: no Math.random in demos, so every
+// mount and every screenshot renders the identical maps).
+function mulberry32(seed: number) {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 // Cause #1 ("roughness too low + uniform"): a real surface's roughness
 // drifts slightly point to point (fingerprints, wear, dust) — this bakes
 // fine per-pixel grain plus a handful of soft smudge patches into the
 // green channel, which is the ONE channel MeshStandardMaterial.roughnessMap
 // reads (roughnessmap_fragment multiplies material.roughness by texture.g).
 export function createRoughnessVariationTexture(size = 256): THREE.CanvasTexture {
+  const rand = mulberry32(1234);
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
@@ -20,7 +33,7 @@ export function createRoughnessVariationTexture(size = 256): THREE.CanvasTexture
 
   const grain = ctx.getImageData(0, 0, size, size);
   for (let i = 0; i < grain.data.length; i += 4) {
-    const n = (Math.random() - 0.5) * 36;
+    const n = (rand() - 0.5) * 36;
     grain.data[i] = (grain.data[i] ?? 0) + n;
     grain.data[i + 1] = (grain.data[i + 1] ?? 0) + n;
     grain.data[i + 2] = (grain.data[i + 2] ?? 0) + n;
@@ -28,11 +41,11 @@ export function createRoughnessVariationTexture(size = 256): THREE.CanvasTexture
   ctx.putImageData(grain, 0, 0);
 
   for (let i = 0; i < 22; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const r = size * (0.08 + Math.random() * 0.12);
+    const x = rand() * size;
+    const y = rand() * size;
+    const r = size * (0.08 + rand() * 0.12);
     const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
-    const darker = Math.random() > 0.5;
+    const darker = rand() > 0.5;
     gradient.addColorStop(0, darker ? "rgba(70,70,70,0.35)" : "rgba(255,255,255,0.25)");
     gradient.addColorStop(1, "rgba(128,128,128,0)");
     ctx.fillStyle = gradient;
@@ -52,6 +65,7 @@ export function createRoughnessVariationTexture(size = 256): THREE.CanvasTexture
 // FROM a procedural height field via central-difference (the standard
 // height->normal technique), not random RGB noise pretending to be normals.
 export function createNormalMapTexture(size = 256): THREE.CanvasTexture {
+  const rand = mulberry32(1251);
   const heightCanvas = document.createElement("canvas");
   heightCanvas.width = size;
   heightCanvas.height = size;
@@ -59,11 +73,11 @@ export function createNormalMapTexture(size = 256): THREE.CanvasTexture {
   hctx.fillStyle = "#808080";
   hctx.fillRect(0, 0, size, size);
   for (let i = 0; i < 130; i++) {
-    const x = Math.random() * size;
-    const y = Math.random() * size;
-    const r = 2 + Math.random() * 5;
+    const x = rand() * size;
+    const y = rand() * size;
+    const r = 2 + rand() * 5;
     const gradient = hctx.createRadialGradient(x, y, 0, x, y, r);
-    const bump = Math.random() > 0.5;
+    const bump = rand() > 0.5;
     gradient.addColorStop(0, bump ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)");
     gradient.addColorStop(1, "rgba(128,128,128,0)");
     hctx.fillStyle = gradient;

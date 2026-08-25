@@ -7,12 +7,12 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Ở bước tổ hợp cuối của split-sum, Three.js tính specular IBL bằng \`specularColor * fab.x + specularF90 * fab.y\`, trong đó \`fab\` đọc từ BRDF LUT theo \`(roughness, dotNV)\`.
 
-Giả sử tại một điểm cụ thể LUT trả về \`fab = (0.9, 0.02)\`, \`specularF90 = 1\`, $F_0 = (1.0, 0.8, 0.35)$ (ước lượng F0 của vàng — xem bảng F0 kim loại trong tài liệu Filament ở phần Tham khảo) và mẫu prefiltered environment tại hướng phản xạ là $L = (2.0, 1.8, 1.5)$ (linear radiance).
+Giả sử tại một điểm cụ thể LUT trả về \`fab = (0.9, 0.02)\`, \`specularF90 = 1\`, $F_0 = (1.0, 0.8, 0.35)$ (ước lượng F0 của vàng theo cột LINEAR trong bảng Filament — bài BRDF trích cột sRGB nên số khác: 1.00/0.85/0.57; xem Tham khảo) và mẫu prefiltered environment tại hướng phản xạ là $L = (2.0, 1.8, 1.5)$ (linear radiance).
 
 Tính vector specular IBL cuối cùng bằng $L \\times (F_0 \\cdot \\text{fab.x} + \\text{specularF90} \\cdot \\text{fab.y})$ (nhân theo từng thành phần màu). Sau đó trả lời: số nào trong hai số của \`fab\` — scale (\`fab.x\`) hay bias (\`fab.y\`) — chịu trách nhiệm cho viền sáng trắng xuất hiện ở góc nhìn xiên trên một kim loại có màu như vàng, và vì sao số đó không phụ thuộc $F_0$?`,
       en: `In the final recombination step of split-sum, Three.js computes specular IBL as \`specularColor * fab.x + specularF90 * fab.y\`, where \`fab\` is read from the BRDF LUT by \`(roughness, dotNV)\`.
 
-Say at one point the LUT returns \`fab = (0.9, 0.02)\`, \`specularF90 = 1\`, $F_0 = (1.0, 0.8, 0.35)$ (an estimate for gold's F0 — see the metal F0 table in the Filament docs under References) and the prefiltered environment sample along the reflection direction is $L = (2.0, 1.8, 1.5)$ (linear radiance).
+Say at one point the LUT returns \`fab = (0.9, 0.02)\`, \`specularF90 = 1\`, $F_0 = (1.0, 0.8, 0.35)$ (an estimate for gold's F0 from the LINEAR column of the Filament table — the BRDF lesson quotes the sRGB column, hence different numbers: 1.00/0.85/0.57; see References) and the prefiltered environment sample along the reflection direction is $L = (2.0, 1.8, 1.5)$ (linear radiance).
 
 Compute the final specular IBL vector as $L \\times (F_0 \\cdot \\text{fab.x} + \\text{specularF90} \\cdot \\text{fab.y})$ (component-wise per color channel). Then answer: which of the two numbers in \`fab\` — scale (\`fab.x\`) or bias (\`fab.y\`) — is responsible for the white rim that appears at grazing angles on a colored metal like gold, and why doesn't that number depend on $F_0$?`,
     },

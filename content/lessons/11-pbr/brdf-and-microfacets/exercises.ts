@@ -14,8 +14,8 @@ Compute $D_{\\text{peak}}$ for two cases: roughness $=0.1$ (remember $\\alpha = 
     },
     hints: [
       {
-        vi: "Ở $n\\cdot h=1$, mẫu số trở thành $(\\alpha^2-1)+1 = \\alpha^2$ — thay vào $D$ ta được $\\alpha^2 / (\\pi \\cdot (\\alpha^2)^2) = 1/(\\pi\\alpha^2)$, đúng công thức đã cho sẵn.",
-        en: "At $n\\cdot h=1$, the denominator becomes $(\\alpha^2-1)+1 = \\alpha^2$ — substituting into $D$ gives $\\alpha^2 / (\\pi \\cdot (\\alpha^2)^2) = 1/(\\pi\\alpha^2)$, matching the formula already given.",
+        vi: "Bắt đầu bằng việc thay $n\\cdot h=1$ vào mẫu số của $D$ — nó rút gọn về một biểu thức chỉ còn $\\alpha$, rồi phần còn lại tự giản ước.",
+        en: "Start by substituting $n\\cdot h=1$ into $D$'s denominator — it collapses to an expression in $\\alpha$ alone, and the rest cancels itself.",
       },
       {
         vi: "roughness $=0.1 \\Rightarrow \\alpha = 0.01$; roughness $=0.9 \\Rightarrow \\alpha = 0.81$. Bình phương $\\alpha$ trước khi chia, đừng quên $\\alpha$ đã là roughness bình phương rồi.",
@@ -95,7 +95,7 @@ Ratio $3183.1 / 0.4852 \\approx 6560\\times$ — a rough surface turns $D$ into 
   float ndoth = clamp(p.x, 0.0, 1.0);
 
   float denom = ndoth * ndoth * (alpha2 - 1.0) + 1.0;
-  float D = alpha2 / (3.14159265 * denom * denom + 1e-7);
+  float D = alpha2 / (3.14159265 * denom * denom); // roughness clamped > 0: no epsilon needed (it would flatten the spike)
 
   float curveY = 1.0 - 2.0 / (1.0 + D * 0.05);
 

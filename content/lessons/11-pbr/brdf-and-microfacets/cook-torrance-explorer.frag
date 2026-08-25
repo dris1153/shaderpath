@@ -15,13 +15,15 @@ uniform int uMode; // 0 = combined, 1 = D, 2 = G, 3 = F (each isolated as graysc
 const float PI = 3.14159265359;
 
 // D: GGX / Trowbridge-Reitz normal distribution (Walter et al. 2007).
-// alpha = roughness^2 is Karis's (2013) perceptually-linear remap.
+// alpha = roughness^2 is Disney's (Burley 2012) perceptually-linear remap.
 float distributionGGX(vec3 N, vec3 H, float roughness) {
   float a = roughness * roughness;
   float a2 = a * a;
   float ndoth = max(dot(N, H), 0.0);
   float denom = ndoth * ndoth * (a2 - 1.0) + 1.0;
-  return a2 / (PI * denom * denom + 1e-7);
+  // No epsilon: roughness is clamped well above 0, and adding 1e-7 here
+  // flattens the very spike this demo exists to show at low roughness.
+  return a2 / (PI * denom * denom);
 }
 
 // G1: Schlick-GGX single-direction masking term.
