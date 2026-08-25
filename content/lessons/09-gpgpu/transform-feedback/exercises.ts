@@ -14,8 +14,8 @@ export const exercises: Exercise[] = [
         en: "The vertex shader runs in parallel across MANY particles at once, with no guarantee about which particle's invocation runs before another's.",
       },
       {
-        vi: "Nếu particle #5 đọc dữ liệu của particle #3 trong khi particle #3 CÓ THỂ đã ghi hoặc chưa ghi xong dữ liệu mới của chính nó vào cùng buffer, kết quả phụ thuộc vào thời điểm chạy thực tế — đó là race condition.",
-        en: "If particle #5 reads particle #3's data while particle #3 may or may not have already written its own new data into that same buffer, the result depends on actual execution timing — that's a race condition.",
+        vi: "Hãy xét điều gì xảy ra khi một particle đọc dữ liệu của particle KHÁC trong cùng buffer mà cả hai đang vừa đọc vừa ghi — thứ tự thực thi giữa các invocation có được đảm bảo không?",
+        en: "Consider what happens when one particle reads ANOTHER particle's data in the same buffer both are reading and writing — is any execution order between invocations guaranteed?",
       },
     ],
     checklist: [

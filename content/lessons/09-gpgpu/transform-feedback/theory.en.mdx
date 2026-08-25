@@ -31,7 +31,7 @@ gl.disable(gl.RASTERIZER_DISCARD);
 
 ## `RASTERIZER_DISCARD`: a Pass That Only Computes, Never Draws
 
-A normal draw call always rasterizes: turning points/triangles into pixels and running a fragment shader. The update pass here needs none of that — it only needs the vertex shader to run and write its buffer output, while `gl_Position` gets computed purely to satisfy GLSL's syntax, carrying no geometric meaning at all (`vec4(0.0)` is enough). `gl.enable(gl.RASTERIZER_DISCARD)` tells the GPU to drop the rasterize + fragment stages entirely for every following draw call, until `gl.disable(gl.RASTERIZER_DISCARD)`. That's why the update program still needs a valid fragment shader to link (GLSL requires one), but its contents don't matter — no fragment invocation ever runs it.
+A normal draw call always rasterizes: turning points/triangles into pixels and running a fragment shader. The update pass here needs none of that — it only needs the vertex shader to run and write its buffer output, while `gl_Position` is written as `vec4(0.0)` purely to keep its value defined — GLSL never requires writing it (leave it out and the value is simply undefined, but this pass discards before rasterization so nobody reads it anyway). `gl.enable(gl.RASTERIZER_DISCARD)` tells the GPU to drop the rasterize + fragment stages entirely for every following draw call, until `gl.disable(gl.RASTERIZER_DISCARD)`. That's why the update program still needs a valid fragment shader to link (GLSL requires one), but its contents don't matter — no fragment invocation ever runs it.
 
 ## Double-Buffering with VAOs Instead of Textures
 

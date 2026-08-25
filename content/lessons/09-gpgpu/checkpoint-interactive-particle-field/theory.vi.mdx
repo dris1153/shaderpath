@@ -8,7 +8,7 @@ Một compute shader cập nhật vị trí hàng chục nghìn particle mỗi f
 
 ## Gợi ý cấu trúc
 
-Vận tốc mỗi particle là **tổng**, không phải lựa chọn: `vel = flowField(pos) + mouseForce(pos, pointer)`. Chỉ có `mouseForce` phụ thuộc con trỏ và cần TODO; phần wiring lấy vị trí con trỏ trong không gian mặt phẳng (raycasting vào một plane) đã có sẵn trong starter, không cần đụng vào.
+Vận tốc mỗi particle là **tổng**, không phải lựa chọn: `vel = flowField(pos) + mouseForce(pos, pointer)`. Chỉ có `mouseForce` phụ thuộc con trỏ; phần wiring lấy vị trí con trỏ trong không gian mặt phẳng (raycast từ sự kiện pointer xuống một plane, lưu vào ref) là hạ tầng dựng một lần rồi để yên — đề bài mô tả đủ cách dựng.
 
 ## Thế nào là "xong"
 

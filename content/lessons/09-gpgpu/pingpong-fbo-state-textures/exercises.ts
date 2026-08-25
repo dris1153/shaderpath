@@ -28,8 +28,8 @@ Then explain with a concrete mechanism: what happens at the driver level if you 
         en: "I correctly computed total bytes for the position A+B pair at 128×128 RGBA16F (≈256KB)",
       },
       {
-        vi: "Tôi giải thích được feedback loop là undefined behavior ở cấp đặc tả, không phải một bug có thể \"sửa\" bằng cách thử lại",
-        en: "I explained that a feedback loop is spec-level undefined behavior, not a bug you can \"fix\" by retrying",
+        vi: "Tôi phân biệt được hai cấp hành vi: WebGL bỏ qua draw và sinh INVALID_OPERATION kèm cảnh báo console, còn OpenGL ES gốc là undefined behavior",
+        en: "I distinguished the two behavior levels: WebGL skips the draw with INVALID_OPERATION plus a console warning, while native OpenGL ES leaves it undefined",
       },
       {
         vi: "Tôi nêu được vì sao kết quả đúng trên một GPU không chứng minh code đúng trên GPU khác",
@@ -39,10 +39,10 @@ Then explain with a concrete mechanism: what happens at the driver level if you 
     solutionNote: {
       vi: `Một texture $128 \\times 128$ RGBA16F $= 128 \\times 128 \\times 4 \\times 2 = 131{,}072$ byte. Cặp A + B (ping-pong) $= 131{,}072 \\times 2 = 262{,}144$ byte $\\approx 256$KB.
 
-Render vào A trong khi cũng sample chính A: đặc tả OpenGL/WebGL gọi đây là feedback loop — thứ tự đọc/ghi giữa các fragment invocation chạy song song không được đảm bảo. Driver có thể trả giá trị cũ cho một số texel, giá trị mới cho số khác, tuỳ cách nó lập lịch warp/wavefront — hành vi này phụ thuộc kiến trúc GPU cụ thể, nên "chạy đúng" trên một máy test không phải là bằng chứng nó đúng theo spec, chỉ là driver đó tình cờ chọn một thứ tự che giấu được lỗi; đổi GPU hoặc đổi phiên bản driver, kết quả có thể khác ngay lập tức.`,
+Render vào A trong khi cũng sample chính A là feedback loop. Trong WebGL — môi trường của khoá học — đặc tả biến nó thành lỗi xác định: draw call bị bỏ qua, \`INVALID_OPERATION\` được sinh ra, console in "Feedback loop formed between Framebuffer and active Texture"; trạng thái vì thế ĐỨNG YÊN chứ không loang lổ. Ở OpenGL ES gốc (ngoài trình duyệt), đây là undefined behavior — thứ tự đọc/ghi giữa các invocation song song không đảm bảo, kết quả tuỳ GPU/driver. Cả hai cấp đều dẫn tới cùng kết luận: cần hai texture và swap vai trò mỗi frame.`,
       en: `One $128 \\times 128$ RGBA16F texture $= 128 \\times 128 \\times 4 \\times 2 = 131{,}072$ bytes. The A + B ping-pong pair $= 131{,}072 \\times 2 = 262{,}144$ bytes $\\approx 256$KB.
 
-Rendering into A while also sampling that same A: the OpenGL/WebGL spec calls this a feedback loop — the read/write order across parallel fragment invocations is never guaranteed. The driver may return the old value for some texels and the new value for others, depending on how it schedules warps/wavefronts — this behavior depends on the specific GPU architecture, so "working correctly" on one test machine isn't proof it's correct per spec, it just means that driver happened to pick an ordering that hides the bug; swap the GPU or driver version and the result can differ immediately.`,
+Rendering into A while also sampling that same A is a feedback loop. In WebGL — this course's environment — the spec turns it into a defined error: the draw call is skipped, \`INVALID_OPERATION\` is generated, and the console logs "Feedback loop formed between Framebuffer and active Texture"; the state therefore FREEZES rather than corrupting. In native OpenGL ES (outside the browser) it is undefined behavior — read/write order across parallel invocations is unguaranteed, results varying by GPU/driver. Both levels lead to the same conclusion: two textures, roles swapped every frame.`,
     },
   },
   {

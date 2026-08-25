@@ -31,7 +31,7 @@ gl.disable(gl.RASTERIZER_DISCARD);
 
 ## `RASTERIZER_DISCARD`: pass chỉ để tính, không để vẽ
 
-Một draw call bình thường luôn rasterize: biến điểm/tam giác thành pixel rồi chạy fragment shader. Pass update ở đây không cần bước đó — nó chỉ cần vertex shader chạy và ghi ra buffer, còn `gl_Position` tính ra chỉ để hợp lệ cú pháp, không mang ý nghĩa hình học nào (`vec4(0.0)` là đủ). `gl.enable(gl.RASTERIZER_DISCARD)` báo cho GPU bỏ hẳn giai đoạn rasterize + fragment cho các draw call tiếp theo, cho tới khi `gl.disable(gl.RASTERIZER_DISCARD)`. Vì vậy chương trình update vẫn phải có một fragment shader hợp lệ để link (GLSL bắt buộc), nhưng nội dung của nó không quan trọng — không có invocation fragment nào từng chạy.
+Một draw call bình thường luôn rasterize: biến điểm/tam giác thành pixel rồi chạy fragment shader. Pass update ở đây không cần bước đó — nó chỉ cần vertex shader chạy và ghi ra buffer, còn `gl_Position` ghi `vec4(0.0)` chỉ để giá trị xác định — GLSL không hề bắt buộc phải ghi nó (bỏ qua thì giá trị bất định, nhưng pass này discard trước khi rasterize nên chẳng ai đọc tới). `gl.enable(gl.RASTERIZER_DISCARD)` báo cho GPU bỏ hẳn giai đoạn rasterize + fragment cho các draw call tiếp theo, cho tới khi `gl.disable(gl.RASTERIZER_DISCARD)`. Vì vậy chương trình update vẫn phải có một fragment shader hợp lệ để link (GLSL bắt buộc), nhưng nội dung của nó không quan trọng — không có invocation fragment nào từng chạy.
 
 ## Double-buffer bằng VAO thay vì texture
 

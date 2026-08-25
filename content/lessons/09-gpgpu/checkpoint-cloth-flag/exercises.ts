@@ -7,12 +7,12 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng \`ClothFlag\`, một component React Three Fiber độc lập: lá cờ 64×48 mô phỏng bằng mass-spring + Verlet trên \`GPUComputationRenderer\`, đúng bộ khung ping-pong + Jacobi relax của bài cloth-simulation-basics, ghim dọc mép cột cờ (\`col 0\`) thay vì mép trên.
 
-Skeleton (wiring \`GPUComputationRenderer\`, hai biến \`texturePosition\`/\`texturePositionPrev\`, vòng lặp Jacobi relax structural+shear, mesh + \`PlaneGeometry\`) đã đầy đủ — việc của bạn là lấp 4 TODO: (1) chiếu lực gió lên pháp tuyến ước lượng trong shader tích phân, (2) công thức Verlet có damping, (3) tính lại pháp tuyến từ 4 hàng xóm trong vertex shader hiển thị, (4) tô hai tông trước/sau kèm sọc kẻ trong fragment shader hiển thị.
+Bài dạng build tự dựng từ đầu (không có starter hiển thị). Khung cần dựng: \`GPUComputationRenderer\` 64×48 với hai biến — \`texturePosition\` (shader tích phân + relax, phụ thuộc \`[positionVar, prevVar]\`) và \`texturePositionPrev\` (chỉ copy vị trí hiện tại, phụ thuộc \`[positionVar]\`) — nhớ rằng init() tự khai báo sampler cho MỌI dependency kể cả self, đừng khai lại trong shader; vòng lặp Jacobi relax structural+shear chạy nhiều pass mỗi frame; mesh \`PlaneGeometry\` hiển thị bind uniforms qua \`ref={useSharedUniforms(...)}\`. Bốn phần lõi phải tự viết: (1) chiếu lực gió lên pháp tuyến ước lượng trong shader tích phân, (2) công thức Verlet có damping với \`uDt\` cố định 1/60, (3) tính lại pháp tuyến từ 4 hàng xóm trong vertex shader hiển thị, (4) tô hai tông trước/sau kèm sọc kẻ trong fragment shader hiển thị.
 
 Lá cờ phải render như một mesh tô màu đặc (không wireframe), ổn định khi chạy liên tục, không nổ constraint.`,
       en: `Build \`ClothFlag\`, a standalone React Three Fiber component: a 64×48 flag simulated with mass-spring + Verlet on \`GPUComputationRenderer\`, the exact ping-pong + Jacobi relax framework from the cloth-simulation-basics lesson, pinned down the pole-edge column (\`col 0\`) instead of the top edge.
 
-The skeleton (wiring \`GPUComputationRenderer\`, the two \`texturePosition\`/\`texturePositionPrev\` variables, the structural+shear Jacobi relax loop, the mesh + \`PlaneGeometry\`) is complete — your job is filling 4 TODOs: (1) project the wind force onto the estimated normal inside the integration shader, (2) the damped Verlet formula, (3) recompute the normal from 4 neighbors in the display vertex shader, (4) two-tone front/back shading plus a stripe pattern in the display fragment shader.
+Build exercises start from scratch (no visible starter). Scaffolding to build: a 64×48 \`GPUComputationRenderer\` with two variables — \`texturePosition\` (integrate + relax shader, depending on \`[positionVar, prevVar]\`) and \`texturePositionPrev\` (a plain copy of the current position, depending on \`[positionVar]\`) — remembering init() auto-declares a sampler for EVERY dependency including self, so never redeclare them in the shader; a structural+shear Jacobi relax loop running several passes per frame; a display \`PlaneGeometry\` mesh binding uniforms via \`ref={useSharedUniforms(...)}\`. The four core pieces to write: (1) project the wind force onto the estimated normal inside the integration shader, (2) the damped Verlet formula with a fixed \`uDt\` of 1/60, (3) recompute the normal from 4 neighbors in the display vertex shader, (4) two-tone front/back shading plus a stripe pattern in the display fragment shader.
 
 The flag must render as a solidly shaded mesh (not wireframe), stay stable running continuously, and never blow up its constraints.`,
     },
@@ -22,17 +22,17 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const RES_X = 64;
 const RES_Y = 48;
 const FLAG_W = 3;
 const FLAG_H = 2;
 
-// Self-dependency: GPUComputationRenderer only auto-wires a variable's
-// OTHER dependencies (see cloth-simulation-basics theory) — texturePosition
-// must be declared and manually assigned below.
+// init() auto-declares a sampler uniform for EVERY declared dependency —
+// self included — so texturePosition/texturePositionPrev need no manual
+// declaration here (redeclaring is a redefinition compile error).
 const integrateShader = /* glsl */ \`
-  uniform sampler2D texturePosition;
   uniform sampler2D uInitial; // xyz = rest position, w = pin flag (pole edge)
   uniform vec2 uTexel;
   uniform float uDt;
@@ -233,7 +233,6 @@ function createFlagSim(gl: THREE.WebGLRenderer): FlagSim {
 
   const integrateUniforms = { uTime: { value: 0 }, uWindStrength: { value: 3.5 } };
   Object.assign(positionVar.material.uniforms, {
-    texturePosition: { value: null }, // self-dependency, not auto-wired
     uInitial: { value: initialTexture },
     uTexel: { value: texel },
     uDt: { value: 1 / 60 },
@@ -325,12 +324,16 @@ export function ClothFlag() {
     renderUniforms.texturePosition.value = sim.step(paramsRef.current.iterations);
   });
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture write above would never render.
+  const bindRenderUniforms = useSharedUniforms(renderUniforms);
+
   return (
-    <mesh geometry={geometry}>
+    <mesh geometry={geometry} frustumCulled={false}>
       <shaderMaterial
+        ref={bindRenderUniforms}
         vertexShader={renderVertex}
         fragmentShader={renderFragment}
-        uniforms={renderUniforms}
         side={THREE.DoubleSide}
       />
     </mesh>
@@ -342,6 +345,7 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const RES_X = 64;
 const RES_Y = 48;
@@ -349,7 +353,8 @@ const FLAG_W = 3;
 const FLAG_H = 2;
 
 const integrateShader = /* glsl */ \`
-  uniform sampler2D texturePosition;
+  // texturePosition / texturePositionPrev are auto-declared by init() for
+  // this variable's dependencies — redeclaring them is a compile error.
   uniform sampler2D uInitial; // xyz = rest position, w = pin flag (pole edge)
   uniform vec2 uTexel;
   uniform float uDt;
@@ -386,9 +391,9 @@ const integrateShader = /* glsl */ \`
     vec3 windDir = vec3(1.0, 0.0, 0.3);
     vec3 windRaw = windDir * uWindStrength * g;
 
-    // Projected onto the surface normal: only the component of wind that
-    // pushes ALONG the face survives, clamped at 0 so wind never "sucks"
-    // the cloth from behind — this is what makes it flap, not slide.
+    // Projected onto the surface normal: only the wind component along the
+    // NORMAL (perpendicular to the face) survives, clamped at 0 so wind
+    // never "sucks" the cloth from behind — flap, not slide.
     vec3 wind = normal * max(dot(normal, windRaw), 0.0) * length(windRaw);
 
     vec3 accel = uGravity + wind;
@@ -549,7 +554,6 @@ function createFlagSim(gl: THREE.WebGLRenderer): FlagSim {
 
   const integrateUniforms = { uTime: { value: 0 }, uWindStrength: { value: 3.5 } };
   Object.assign(positionVar.material.uniforms, {
-    texturePosition: { value: null }, // self-dependency, not auto-wired
     uInitial: { value: initialTexture },
     uTexel: { value: texel },
     uDt: { value: 1 / 60 },
@@ -638,12 +642,16 @@ export function ClothFlag() {
     renderUniforms.texturePosition.value = sim.step(paramsRef.current.iterations);
   });
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture write above would never render.
+  const bindRenderUniforms = useSharedUniforms(renderUniforms);
+
   return (
-    <mesh geometry={geometry}>
+    <mesh geometry={geometry} frustumCulled={false}>
       <shaderMaterial
+        ref={bindRenderUniforms}
         vertexShader={renderVertex}
         fragmentShader={renderFragment}
-        uniforms={renderUniforms}
         side={THREE.DoubleSide}
       />
     </mesh>
@@ -655,8 +663,8 @@ export function ClothFlag() {
         en: "`uDt` is a fixed constant (1/60), NEVER taken from the real per-frame delta — swapping in `state.clock.getDelta()` sounds more 'accurate' but makes Verlet's implicit velocity inconsistent frame to frame, destabilizing the constraint solve even though the integration formula itself isn't wrong.",
       },
       {
-        vi: "Gió chiếu lên pháp tuyến nghĩa là chỉ phần lực SONG SONG với bề mặt còn lại: `normal * max(dot(normal, windRaw), 0.0) * length(windRaw)` — cộng thẳng `windRaw` vào gia tốc (bỏ qua bước chiếu) làm cả tấm vải trôi cứng theo một hướng như một khối phẳng, không có cảm giác phần phật.",
-        en: "Projecting wind onto the normal means only the force component PARALLEL to the surface survives: `normal * max(dot(normal, windRaw), 0.0) * length(windRaw)` — adding `windRaw` straight into acceleration (skipping the projection) makes the whole sheet drift rigidly in one direction like a flat slab, with no sense of flutter.",
+        vi: "Gió chiếu lên pháp tuyến nghĩa là chỉ giữ phần lực dọc theo PHÁP TUYẾN (vuông góc với bề mặt), kẹp về 0 khi gió thổi từ mặt sau — cộng thẳng `windRaw` vào gia tốc (bỏ qua bước chiếu) làm cả tấm vải trôi cứng theo một hướng như một khối phẳng, không có cảm giác phần phật.",
+        en: "Projecting wind onto the normal means keeping only the force component along the NORMAL (perpendicular to the surface), clamped to 0 when wind hits from behind — adding `windRaw` straight into acceleration (skipping the projection) makes the whole sheet drift rigidly in one direction like a flat slab, with no sense of flutter.",
       },
       {
         vi: "Pháp tuyến trong vertex shader hiển thị phải tính lại MỖI FRAME từ `texturePosition` (cross của right-left và up-down) — dùng pháp tuyến gốc của `PlaneGeometry` phẳng sẽ luôn chỉ thẳng ra (0,0,1) bất kể vải biến dạng thế nào, ánh sáng sẽ không bao giờ đổi theo nếp gấp.",

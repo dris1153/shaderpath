@@ -38,7 +38,7 @@ $$
 
 ### Ước lượng chi phí vòng lặp JavaScript
 
-Vậy chi phí thật nằm ở đâu? Một JS engine đã warm-up có thể chạy hàng chục tới hàng trăm triệu phép toán số học đơn giản mỗi giây (ước lượng, dao động mạnh theo engine và CPU) — vòng lặp cập nhật 100.000 particle × khoảng 10 phép toán (cộng vận tốc, trọng lực, ghi 3 thành phần) chỉ tốn khoảng 1 triệu phép toán, lý thuyết dưới 0.1ms. Vậy tại sao thực tế vẫn giật?
+Vậy chi phí thật nằm ở đâu? Một JS engine đã warm-up, trong vòng lặp số học chặt đã JIT, có thể đạt cỡ hàng trăm triệu tới hàng tỉ phép toán đơn giản mỗi giây (ước lượng, dao động mạnh theo engine và CPU) — vòng lặp cập nhật 100.000 particle × khoảng 10 phép toán (cộng vận tốc, trọng lực, ghi 3 thành phần) chỉ tốn khoảng 1 triệu phép toán, lý thuyết cỡ vài ms đổ xuống. Vậy tại sao thực tế vẫn giật?
 
 Ba lý do cộng dồn, không phải một. **Một**, `TypedArray` ghi rải rác theo offset không được JIT vector hoá tốt như một phép toán ma trận thuần. **Hai**, bất kỳ allocation ẩn nào trong loop — ví dụ tạo `new THREE.Vector3()` tạm thời thay vì ghi trực tiếp vào mảng — kích hoạt garbage collector, và một lần GC pause có thể ăn vài millisecond bất ngờ, đúng lúc frame đang căng. **Ba**, `bufferSubData` không chỉ tốn thời gian copy tỉ lệ với kích thước buffer, nó còn có overhead cố định mỗi lần gọi để đồng bộ driver với GPU — overhead này lặp lại **mỗi frame**, không phải một lần duy nhất. Ba chi phí này chạy trên cùng main thread với React re-render, xử lý input, tất cả — nên chúng cộng dồn đúng vào ngân sách 16.6ms cần cho 60fps. Đây, chứ không phải bus, mới là nút thắt thật.
 

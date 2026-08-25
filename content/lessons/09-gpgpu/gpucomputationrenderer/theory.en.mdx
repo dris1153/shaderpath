@@ -20,7 +20,7 @@ const positionVariable = gpuCompute.addVariable("texturePosition", positionShade
 
 ## `setVariableDependencies` and Auto-Injected Uniforms
 
-A compute variable needs to read its own previous frame and/or another variable's data to compute the next one — `setVariableDependencies(variable, [dep1, dep2, ...])` declares exactly that list. In the classic two-variable swirl: velocity depends on `[velocity, position]` (old velocity for damping, position for the radius-based swirl force), position depends on `[velocity, position]` (new velocity to integrate, old position to accumulate onto):
+A compute variable needs to read its own previous frame and/or another variable's data to compute the next one — `setVariableDependencies(variable, [dep1, dep2, ...])` declares exactly that list. In the classic two-variable swirl: velocity depends on `[velocity, position]` (old velocity for damping, position for the radius-based swirl force), position depends on `[velocity, position]` (velocity — from the PREVIOUS frame, since every dependency binds from the same `currentTextureIndex` — to integrate, old position to accumulate onto):
 
 ```ts
 gpuCompute.setVariableDependencies(velocityVariable, [velocityVariable, positionVariable]);

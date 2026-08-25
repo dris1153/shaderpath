@@ -44,8 +44,9 @@ void main() {
   vec3 down = texture2D(texturePosition, uv - vec2(0.0, uTexel.y)).xyz;
   vec3 normal = normalize(cross(right - left, up - down) + vec3(0.0, 0.0, 1e-5));
 
-  // Wind = directional gust, projected onto the local normal so it only
-  // ever pushes the cloth along its face — never straight through it.
+  // Wind = directional gust, projected onto the local normal: only the
+  // component perpendicular to the face (along the normal) pushes — a
+  // face-on gust flaps the cloth, an edge-on gust slides right past.
   float g = 0.5 + 0.5 * gust(pos.xy, uTime);
   vec3 windDir = vec3(1.0, 0.0, 0.35);
   vec3 wind = windDir * uWindStrength * g;

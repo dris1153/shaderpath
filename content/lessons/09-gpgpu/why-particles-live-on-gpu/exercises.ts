@@ -18,8 +18,8 @@ Then explain: if this number is only a tiny fraction of the available bandwidth,
         en: "Multiply particle count × 3 components × 4 bytes for bytes/frame, then multiply by 60 for bytes/s.",
       },
       {
-        vi: "Băng thông bus gần như không bao giờ là nút thắt ở quy mô particle system điển hình trên web — nghĩ tới ba thứ khác đang cạnh tranh cùng main thread: vòng lặp JS, garbage collector, và overhead cố định của mỗi lệnh gọi upload.",
-        en: "Bus bandwidth is almost never the bottleneck at typical web particle-system scale — think about three other things competing on the same main thread: the JS loop, the garbage collector, and the fixed overhead of each upload call.",
+        vi: "Băng thông bus gần như không bao giờ là nút thắt ở quy mô particle system điển hình trên web — hãy nghĩ xem những công việc nào khác đang cạnh tranh cùng MAIN THREAD mỗi frame, và chi phí nào lặp lại theo từng lệnh gọi chứ không theo từng byte.",
+        en: "Bus bandwidth is almost never the bottleneck at typical web particle-system scale — ask instead what other work competes on the MAIN THREAD each frame, and which costs repeat per call rather than per byte.",
       },
     ],
     checklist: [

@@ -38,7 +38,7 @@ $$
 
 ### Estimating the JavaScript Loop Cost
 
-So where's the real cost? A warmed-up JS engine can push tens to hundreds of millions of simple arithmetic operations per second (an estimate, varying widely by engine and CPU) — updating 100,000 particles at roughly 10 operations each (add velocity, apply gravity, write three components) is only about 1 million operations, in theory under 0.1ms. So why does it still stutter in practice?
+So where's the real cost? A warmed-up JS engine, in a JIT-compiled tight numeric loop, can reach on the order of hundreds of millions to billions of simple operations per second (an estimate, varying widely by engine and CPU) — updating 100,000 particles at roughly 10 operations each (add velocity, apply gravity, write three components) is only about 1 million operations, in theory a few milliseconds at most. So why does it still stutter in practice?
 
 Three causes stack up, not one. **First**, `TypedArray` writes at scattered offsets don't get vectorized by the JIT the way a pure matrix operation would. **Second**, any hidden allocation inside the loop — say, a temporary `new THREE.Vector3()` instead of writing straight into the array — triggers the garbage collector, and a single GC pause can eat several unpredictable milliseconds right when the frame is already tight. **Third**, `bufferSubData` doesn't just cost time proportional to buffer size; it carries a fixed per-call overhead to synchronize the driver with the GPU — and that overhead repeats **every frame**, not once. All three costs run on the same main thread as React re-renders, input handling, everything else — so they stack directly into the 16.6ms budget a 60fps frame needs. This, not the bus, is the real bottleneck.
 

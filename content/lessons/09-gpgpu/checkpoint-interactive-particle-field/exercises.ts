@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng một component \`InteractiveParticleField\` bằng React Three Fiber + \`GPUComputationRenderer\`: một compute shader cập nhật vị trí 65536 particle (lưới texture 256×256) mỗi frame, kết hợp curl noise làm dòng chảy nền với một lực xuyên tâm điều khiển bởi con trỏ — đẩy ra khi hover, hút vào khi giữ chuột, cường độ giảm mượt theo khoảng cách bằng \`smoothstep\`. Render bằng \`InstancedMesh\` (quad nhỏ mỗi particle), tô màu theo tốc độ \`length(vel)\` lưu ở kênh alpha của texture vị trí.
 
-Phần lấy vị trí con trỏ trong không gian mặt phẳng (raycasting vào plane \`z = 0\`) và phần dựng \`GPUComputationRenderer\` + \`InstancedMesh\` đã đầy đủ trong starter — việc của bạn là hoàn thành đúng 3 TODO bên trong compute shader.`,
+Bài dạng build tự dựng từ đầu (không có starter hiển thị). Khung cần dựng: pointer-tracking bằng ray từ sự kiện pointer xuống plane \`z = 0\` (lưu point/active/down vào một ref, không setState mỗi move); \`GPUComputationRenderer\` 256×256 với một variable \`texturePosition\` tự phụ thuộc chính nó qua \`setVariableDependencies(positionVar, [positionVar])\` — LƯU Ý: init() tự khai báo \`uniform sampler2D texturePosition;\` cho mọi dependency kể cả self, tự khai lại trong shader là lỗi redefinition; render bằng \`InstancedMesh\` đọc texture qua \`ref={useSharedUniforms(uniforms)}\` (không dùng prop \`uniforms\`). Compute shader cần: curl noise làm dòng nền, lực xuyên tâm theo con trỏ với \`smoothstep\` theo khoảng cách (đẩy khi hover, hút khi giữ), và wrap toroidal trong biên.`,
       en: `Build an \`InteractiveParticleField\` component with React Three Fiber + \`GPUComputationRenderer\`: a compute shader updates 65536 particle positions (a 256×256 texture grid) every frame, combining curl noise as the ambient flow with a radial force driven by the pointer — push away on hover, pull in while the mouse is held, strength fading smoothly with distance via \`smoothstep\`. Render with \`InstancedMesh\` (a small quad per particle), colored by speed \`length(vel)\` stored in the position texture's alpha channel.
 
-The part that gets the pointer's position in plane space (raycasting onto the \`z = 0\` plane) and the \`GPUComputationRenderer\` + \`InstancedMesh\` scaffolding are already complete in the starter — your job is to finish exactly 3 TODOs inside the compute shader.`,
+Build exercises start from scratch (no visible starter). Scaffolding to build: pointer tracking via a ray from pointer events onto the \`z = 0\` plane (store point/active/down in a ref, no setState per move); a 256×256 \`GPUComputationRenderer\` with one \`texturePosition\` variable depending on itself via \`setVariableDependencies(positionVar, [positionVar])\` — NOTE: init() auto-declares \`uniform sampler2D texturePosition;\` for every dependency including self, so declaring it again in the shader is a redefinition error; render with an \`InstancedMesh\` reading the texture through \`ref={useSharedUniforms(uniforms)}\` (not the \`uniforms\` prop). The compute shader needs: curl noise as the ambient flow, a pointer-driven radial force faded by \`smoothstep\` over distance (push on hover, pull while held), and a toroidal wrap inside the bounds.`,
     },
     starterCode: `"use client";
 
@@ -18,13 +18,15 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const GRID = 256; // 256 * 256 = 65536 particles
 const COUNT = GRID * GRID;
 const BOUNDS = 3.0; // particles wrap inside [-BOUNDS, BOUNDS] on x/y
 
 const computeShader = /* glsl */ \`
-  uniform sampler2D texturePosition;
+  // texturePosition is auto-declared by init() for the self-dependency —
+  // declaring it here too would be a redefinition compile error.
   uniform float uTime;
   uniform float uDelta;
   uniform vec2 uPointer;
@@ -183,11 +185,10 @@ function createParticleCompute(gl: THREE.WebGLRenderer): ParticleCompute {
     uRadius: { value: 1.1 },
     uStrength: { value: 3.5 },
   };
-  // Self-dependency is the one case GPUComputationRenderer does NOT wire
-  // automatically (it only auto-declares/auto-fills the uniform for a
-  // variable's OTHER dependencies) — this key must exist before compute()
-  // assigns .value to it every frame.
-  Object.assign(positionVar.material.uniforms, { texturePosition: { value: null } }, uniforms);
+  // init() auto-declares "uniform sampler2D texturePosition;" and creates
+  // its uniform slot for EVERY declared dependency — self included — and
+  // compute() rebinds it each frame. Only the custom uniforms are ours.
+  Object.assign(positionVar.material.uniforms, uniforms);
 
   const error = gpu.init();
   if (error) console.error(error);
@@ -279,6 +280,10 @@ export function InteractiveParticleField() {
     };
   }, [gl]);
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture write below would never render.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state, delta) => {
     const compute = computeRef.current;
     if (!compute) return;
@@ -295,7 +300,11 @@ export function InteractiveParticleField() {
 
   return (
     <instancedMesh args={[geometry, undefined, COUNT]} frustumCulled={false}>
-      <shaderMaterial vertexShader={particleVertex} fragmentShader={particleFragment} uniforms={uniforms} />
+      <shaderMaterial
+        ref={bindUniforms}
+        vertexShader={particleVertex}
+        fragmentShader={particleFragment}
+      />
     </instancedMesh>
   );
 }`,
@@ -305,13 +314,15 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const GRID = 256; // 256 * 256 = 65536 particles
 const COUNT = GRID * GRID;
 const BOUNDS = 3.0; // particles wrap inside [-BOUNDS, BOUNDS] on x/y
 
 const computeShader = /* glsl */ \`
-  uniform sampler2D texturePosition;
+  // texturePosition is auto-declared by init() for the self-dependency —
+  // declaring it here too would be a redefinition compile error.
   uniform float uTime;
   uniform float uDelta;
   uniform vec2 uPointer;
@@ -466,7 +477,7 @@ function createParticleCompute(gl: THREE.WebGLRenderer): ParticleCompute {
     uRadius: { value: 1.1 },
     uStrength: { value: 3.5 },
   };
-  Object.assign(positionVar.material.uniforms, { texturePosition: { value: null } }, uniforms);
+  Object.assign(positionVar.material.uniforms, uniforms);
 
   const error = gpu.init();
   if (error) console.error(error);
@@ -555,6 +566,10 @@ export function InteractiveParticleField() {
     };
   }, [gl]);
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture write below would never render.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state, delta) => {
     const compute = computeRef.current;
     if (!compute) return;
@@ -571,7 +586,11 @@ export function InteractiveParticleField() {
 
   return (
     <instancedMesh args={[geometry, undefined, COUNT]} frustumCulled={false}>
-      <shaderMaterial vertexShader={particleVertex} fragmentShader={particleFragment} uniforms={uniforms} />
+      <shaderMaterial
+        ref={bindUniforms}
+        vertexShader={particleVertex}
+        fragmentShader={particleFragment}
+      />
     </instancedMesh>
   );
 }`,

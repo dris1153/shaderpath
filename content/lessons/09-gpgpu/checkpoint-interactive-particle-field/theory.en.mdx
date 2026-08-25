@@ -8,7 +8,7 @@ A compute shader updates tens of thousands of particle positions every frame, co
 
 ## Structure Hint
 
-Each particle's velocity is a **sum**, not a choice: `vel = flowField(pos) + mouseForce(pos, pointer)`. Only `mouseForce` depends on the pointer and needs a TODO; the wiring that gets the pointer's position in plane space (raycasting onto a plane) is already provided in the starter — no need to touch it.
+Each particle's velocity is a **sum**, not a choice: `vel = flowField(pos) + mouseForce(pos, pointer)`. Only `mouseForce` depends on the pointer; the wiring that gets the pointer's position in plane space (a ray from pointer events onto a plane, stored in a ref) is set-up-once infrastructure — the prompt describes how to build it.
 
 ## What "Done" Looks Like
 

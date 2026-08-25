@@ -24,7 +24,7 @@ void main() {
   vPosition = pos;
   vVelocity = vel;
 
-  // RASTERIZER_DISCARD drops this before rasterization: GLSL requires
-  // gl_Position to be written, but the value itself is never used.
+  // RASTERIZER_DISCARD drops this before rasterization: writing
+  // gl_Position is optional (unwritten = undefined), set for tidiness only.
   gl_Position = vec4(0.0);
 }

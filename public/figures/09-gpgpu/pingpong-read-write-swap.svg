@@ -86,9 +86,9 @@
   <text class="title" x="38" y="272">Why two targets and not one</text>
   <text class="note" x="38" y="294">Sampling a texture that is also the colour</text>
   <text class="note" x="38" y="311">attachment of the same draw call is a feedback</text>
-  <text class="note" x="38" y="328">loop: the spec promises no read-before-write</text>
-  <text class="note" x="38" y="345">order across parallel invocations, and no driver</text>
-  <text class="note" x="38" y="362">reports an error when you do it.</text>
+  <text class="note" x="38" y="328">loop: WebGL skips the draw with</text>
+  <text class="note" x="38" y="345">INVALID_OPERATION and a console warning;</text>
+  <text class="note" x="38" y="362">native GL leaves the order undefined.</text>
 
   <rect class="box" x="330" y="248" width="286" height="120" rx="8" />
   <text class="title" x="344" y="272">What the swap actually costs</text>

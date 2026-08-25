@@ -1,6 +1,6 @@
 ## Why You Can't Read and Write the Same Texture in One Pass
 
-Say you have a state texture `state`, and you want a fragment shader that "reads `state`, adds an acceleration, writes back to `state`" — exactly like a CPU loop overwriting the same array it's reading from. On the GPU, this is **undefined behavior** per the OpenGL/WebGL specification: when the same texture is both an input (sampler) and an output (framebuffer attachment) of the same draw call, the driver gives no guarantee about read-before-write ordering across the parallel fragment invocations — the result can be correct for one texel, wrong for another, and differ across GPUs. This is called a **feedback loop**, and it's the entire reason the ping-pong technique exists.
+Say you have a state texture `state`, and you want a fragment shader that "reads `state`, adds an acceleration, writes back to `state`" — exactly like a CPU loop overwriting the same array it's reading from. On the GPU, when the same texture is both an input (sampler) and an output (framebuffer attachment) of one draw call — a **feedback loop** — native OpenGL ES treats it as undefined behavior (no read/write ordering guarantee across parallel fragment invocations). WebGL, this course's platform, is stricter: the spec (section "Feedback Loops Between Textures and the Framebuffer") turns it into a defined error — the draw call is SKIPPED, `INVALID_OPERATION` is generated, and the browser logs "Feedback loop formed between Framebuffer and active Texture" to the console. At either level the conclusion stands: you cannot read and write the same texture — which is the entire reason the ping-pong technique exists.
 
 ## Ping-Pong: Two Render Targets Trading Read/Write
 
@@ -26,7 +26,7 @@ const targetA = new THREE.WebGLRenderTarget(size, size, options);
 const targetB = new THREE.WebGLRenderTarget(size, size, options);
 ```
 
-`NearestFilter` isn't a cosmetic choice — a texel here is **data**, not color. Linearly interpolating between particle #41's position and #42's (two neighboring texels, usually completely unrelated) carries no physical meaning; `LinearFilter` would silently blend the data into a meaningless value. `HalfFloatType` gives enough range and precision for most positions/velocities (details below) while costing half the memory of `FloatType`. WebGL2 needs the `EXT_color_buffer_float` extension to render **into** a float or half-float texture — Three.js automatically requests this extension when you create that kind of render target; if the device doesn't support it (rare, mostly a few older mobile GPUs), it just `console.warn`s once and the framebuffer counts as incomplete, so the texture reads back as all zeros.
+`NearestFilter` isn't a cosmetic choice — a texel here is **data**, not color. Linearly interpolating between particle #41's position and #42's (two neighboring texels, usually completely unrelated) carries no physical meaning; `LinearFilter` would silently blend the data into a meaningless value. `HalfFloatType` gives enough range and precision for most positions/velocities (details below) while costing half the memory of `FloatType`. WebGL2 needs the `EXT_color_buffer_float` extension to render **into** a float or half-float texture — Three.js automatically requests this extension when you create that kind of render target; if the device doesn't support it (rare, mostly a few older mobile GPUs), it just `console.warn`s once and the framebuffer counts as incomplete — what reads back is garbage or black, driver-dependent.
 
 ### The Compute Scene: A Screen-Filling Quad + an Orthographic Camera
 
@@ -99,7 +99,7 @@ Next frame, `read` points at the texture just written last frame — correct cau
 
 ## Half Float's Precision
 
-`HalfFloatType` (16-bit) has a range of roughly $\pm 65{,}504$, with precision that thins out as values grow — around $1$, the gap between two representable numbers is about $2^{-10} \approx 0.001$; around $1000$, that gap jumps to about $1$. For particle positions in a typical 3D scene, usually a few units to a few hundred units, half float has precision to spare. The problem only shows up if you dump raw real-world coordinates spanning tens of thousands of units straight into a state texture — in that case, subtract a local origin before writing.
+`HalfFloatType` (16-bit) has a range of roughly $\pm 65{,}504$, with precision that thins out as values grow — around $1$, the gap between two representable numbers is about $2^{-10} \approx 0.001$; around $1000$, that gap jumps to roughly $0.5$–$1$ (the $0.5$ step runs up to $1024$, the $1$ step from there). For particle positions in a typical 3D scene, usually a few units to a few hundred units, half float has precision to spare. The problem only shows up if you dump raw real-world coordinates spanning tens of thousands of units straight into a state texture — in that case, subtract a local origin before writing.
 
 ## Where This Lesson Leads
 
@@ -107,7 +107,7 @@ The next lesson's `GPUComputationRenderer` wraps up exactly the machinery you ju
 
 <Callout variant="mistake" title="Common mistakes">
 
-1. **Binding the same render target as both the input sampler and the output framebuffer in one draw call** — say, forgetting to flip `read`/`write` after a swap, or wiring the wrong texture to a uniform. The result is subtly wrong, sometimes only showing up on specific GPUs, and brutally hard to debug because the driver reports no error at all.
+1. **Binding the same render target as both the input sampler and the output framebuffer in one draw call** — say, forgetting to flip `read`/`write` after a swap, or wiring the wrong texture to a uniform. In WebGL that draw call is skipped and the browser logs a feedback-loop warning to the console — the symptom is a FROZEN state (the write frame gets swallowed), so open the console before second-guessing your shader.
 2. **Not clamping `uDelta` after a slow frame or a hidden-then-reopened tab** — delta can spike to hundreds of milliseconds. Particles tunnel straight through boundary bounds or their velocities explode, because Euler integration with a large delta is no longer numerically stable.
 3. **Forgetting `renderer.setRenderTarget(null)` after the compute pass.** Three.js keeps rendering everything after that — including the main scene — into the stale render target; the screen sits frozen or black, while the console reports nothing wrong, because technically every render call still "succeeded."
 

@@ -11,6 +11,7 @@ import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { booleanOf, numberOf, stringOf } from "@/components/viz/control-schema";
 import { useDisposable } from "@/lib/hooks/use-disposable";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import velocityShader from "./flow-field-velocity.glsl";
 import positionShader from "./flow-field-position.glsl";
 import pointsVertexShader from "./flow-field-points.vert";
@@ -195,12 +196,14 @@ function FlowFieldParticles() {
     pointsUniforms.uMaxSpeed.value = strength * 1.2;
   });
 
+  const bindPointsUniforms = useSharedUniforms(pointsUniforms);
+
   return (
-    <points geometry={geometry}>
+    <points geometry={geometry} frustumCulled={false}>
       <shaderMaterial
         vertexShader={pointsVertexShader}
         fragmentShader={pointsFragmentShader}
-        uniforms={pointsUniforms}
+        ref={bindPointsUniforms}
         transparent
         depthWrite={false}
         blending={THREE.AdditiveBlending}

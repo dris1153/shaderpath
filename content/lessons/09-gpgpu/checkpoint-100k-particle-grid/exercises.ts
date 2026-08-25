@@ -7,14 +7,14 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Dựng một component React Three Fiber \`ParticleGrid100k\`: một lưới 320×320 (~102.400) particle sắp phẳng trong mặt phẳng XY, vị trí và vận tốc cập nhật hoàn toàn trên GPU qua \`GPUComputationRenderer\` — không có vòng lặp CPU nào chạy mỗi frame.
 
-Compute variable \`textureVelocity\`: lực lò xo kéo particle về "nhà" (vị trí nghỉ), suy thẳng từ toạ độ UV của chính texture trạng thái (không cần texture riêng lưu home); cộng một nhiễu ngẫu nhiên nhỏ; nhân với damping mỗi frame để hệ tắt dần. Mỗi \`BURST_PERIOD\` giây, bơm thêm một xung lực một-frame đẩy particle theo hướng ngẫu nhiên.
+Compute variable \`textureVelocity\`: lực lò xo kéo particle về "nhà" (vị trí nghỉ), suy thẳng từ toạ độ UV của chính texture trạng thái (không cần texture riêng lưu home); cộng một nhiễu ngẫu nhiên nhỏ; nhân với damping mỗi frame để hệ tắt dần. Mỗi \`BURST_PERIOD\` giây (hằng số tự chọn, ví dụ 5), bơm thêm một xung lực một-frame đẩy mỗi particle theo một hướng ngẫu nhiên riêng (hash theo texel). Hằng số gợi ý: lưới 320×320, bước lưới ~0.03, lực lò xo ~8, damping ~0.92.
 
 Compute variable \`texturePosition\`: tích phân Euler đơn giản \`pos += vel * dt\`.
 
 Render bằng \`<points>\`: geometry dựng tay với hai attribute — \`position\` (placeholder, giá trị thật lấy từ texture) và \`aReference\` (uv trỏ vào đúng texel trạng thái của particle đó). Tô màu theo tốc độ tức thời (độ lớn vận tốc → dải màu hue). Dispose sạch \`GPUComputationRenderer\` và geometry khi component unmount.`,
       en: `Build a React Three Fiber component \`ParticleGrid100k\`: a flat 320×320 (~102,400) particle grid in the XY plane, with position and velocity updating entirely on the GPU through \`GPUComputationRenderer\` — no CPU loop running per frame.
 
-The \`textureVelocity\` compute variable: a spring force pulling each particle back to its "home" (rest position), derived directly from the state texture's own UV coordinate (no separate texture needed to store it); plus a small random perturbation; multiplied by damping every frame so the system settles. Every \`BURST_PERIOD\` seconds, inject a one-frame impulse scattering particles in a random direction.
+The \`textureVelocity\` compute variable: a spring force pulling each particle back to its "home" (rest position), derived directly from the state texture's own UV coordinate (no separate texture needed to store it); plus a small random perturbation; multiplied by damping every frame so the system settles. Every \`BURST_PERIOD\` seconds (a constant of your choosing, e.g. 5), inject a one-frame impulse scattering each particle in its own hashed random direction. Suggested constants: a 320×320 grid, grid step ~0.03, spring strength ~8, damping ~0.92.
 
 The \`texturePosition\` compute variable: plain Euler integration, \`pos += vel * dt\`.
 
@@ -25,6 +25,7 @@ Render with \`<points>\`: a hand-built geometry with two attributes — \`positi
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import { GPUComputationRenderer, type Variable } from "three/addons/misc/GPUComputationRenderer.js";
 
 const SIZE = 320; // 320 * 320 = 102,400 particles
@@ -184,6 +185,8 @@ export function ParticleGrid100k() {
   const gpuRef = useRef<GpuState | null>(null);
 
   const geometry = useMemo(() => buildParticleGeometry(), []);
+  // R3F does not auto-dispose objects passed via the geometry prop.
+  useEffect(() => () => geometry.dispose(), [geometry]);
   const uniforms = useMemo(
     () => ({
       uTexturePosition: { value: null as THREE.Texture | null },
@@ -212,6 +215,10 @@ export function ParticleGrid100k() {
     };
   }, [gl, invalidate]);
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture writes below would never render.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state, rawDelta) => {
     const gpu = gpuRef.current;
     if (!gpu) return;
@@ -230,9 +237,9 @@ export function ParticleGrid100k() {
   return (
     <points geometry={geometry}>
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={pointsVertexShader}
         fragmentShader={pointsFragmentShader}
-        uniforms={uniforms}
         transparent
         depthWrite={false}
         blending={THREE.AdditiveBlending}
@@ -245,6 +252,7 @@ export function ParticleGrid100k() {
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import { GPUComputationRenderer, type Variable } from "three/addons/misc/GPUComputationRenderer.js";
 
 const SIZE = 320; // 320 * 320 = 102,400 particles
@@ -403,6 +411,8 @@ export function ParticleGrid100k() {
   const gpuRef = useRef<GpuState | null>(null);
 
   const geometry = useMemo(() => buildParticleGeometry(), []);
+  // R3F does not auto-dispose objects passed via the geometry prop.
+  useEffect(() => () => geometry.dispose(), [geometry]);
   const uniforms = useMemo(
     () => ({
       uTexturePosition: { value: null as THREE.Texture | null },
@@ -447,6 +457,10 @@ export function ParticleGrid100k() {
     };
   }, [gl, invalidate]);
 
+  // Bind by ref: the uniforms JSX prop would copy entries into the
+  // material's own map, so the texture writes below would never render.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state, rawDelta) => {
     const gpu = gpuRef.current;
     if (!gpu) return;
@@ -465,9 +479,9 @@ export function ParticleGrid100k() {
   return (
     <points geometry={geometry}>
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={pointsVertexShader}
         fragmentShader={pointsFragmentShader}
-        uniforms={uniforms}
         transparent
         depthWrite={false}
         blending={THREE.AdditiveBlending}

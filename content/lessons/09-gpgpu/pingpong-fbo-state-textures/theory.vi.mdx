@@ -1,6 +1,6 @@
 ## Vì sao không thể đọc và ghi cùng một texture trong một pass
 
-Giả sử bạn có một texture trạng thái `state`, và muốn viết một fragment shader "đọc `state`, cộng thêm gia tốc, ghi ngược lại `state`" — y hệt cách một vòng lặp CPU ghi đè lên chính mảng nó đang đọc. Trên GPU, thao tác này là **undefined behavior** theo đặc tả OpenGL/WebGL: khi cùng một texture vừa là input (sampler) vừa là output (framebuffer attachment) của cùng một draw call, driver không đảm bảo thứ tự đọc trước hay ghi trước cho từng fragment invocation chạy song song — kết quả có thể đúng ở texel này, sai ở texel khác, và khác nhau giữa các GPU. Đây gọi là **feedback loop**, và nó là lý do kỹ thuật ping-pong tồn tại.
+Giả sử bạn có một texture trạng thái `state`, và muốn viết một fragment shader "đọc `state`, cộng thêm gia tốc, ghi ngược lại `state`" — y hệt cách một vòng lặp CPU ghi đè lên chính mảng nó đang đọc. Trên GPU, khi cùng một texture vừa là input (sampler) vừa là output (framebuffer attachment) của cùng một draw call — gọi là **feedback loop** — OpenGL ES gốc coi đây là undefined behavior (không đảm bảo thứ tự đọc/ghi giữa các fragment invocation song song). WebGL, nền tảng của khoá học này, còn chặt hơn: đặc tả (mục "Feedback Loops Between Textures and the Framebuffer") biến nó thành lỗi xác định — draw call bị BỎ QUA, sinh `INVALID_OPERATION`, và trình duyệt in cảnh báo "Feedback loop formed between Framebuffer and active Texture" ra console. Dù ở cấp nào, kết luận không đổi: không thể vừa đọc vừa ghi cùng một texture — đó là lý do kỹ thuật ping-pong tồn tại.
 
 ## Ping-pong: hai render target thay phiên đọc/ghi
 
@@ -26,7 +26,7 @@ const targetA = new THREE.WebGLRenderTarget(size, size, options);
 const targetB = new THREE.WebGLRenderTarget(size, size, options);
 ```
 
-`NearestFilter` không phải tuỳ chọn thẩm mỹ — texel ở đây là **dữ liệu**, không phải màu sắc. Nội suy tuyến tính giữa vị trí particle #41 và #42 (hai texel cạnh nhau, thường chẳng liên quan gì đến nhau) không mang ý nghĩa vật lý nào; `LinearFilter` sẽ âm thầm làm nhoè dữ liệu thành một giá trị vô nghĩa. `HalfFloatType` giữ range và độ chính xác đủ cho phần lớn vị trí/vận tốc (chi tiết ở phần sau) trong khi chỉ tốn nửa bộ nhớ so với `FloatType`. WebGL2 cần extension `EXT_color_buffer_float` để render **vào** một texture float hoặc half-float — Three.js tự động request extension này khi tạo render target loại đó; nếu thiết bị không hỗ trợ (hiếm, chủ yếu vài GPU di động cũ), nó chỉ `console.warn` một lần rồi framebuffer coi như incomplete, texture đọc ra toàn số 0.
+`NearestFilter` không phải tuỳ chọn thẩm mỹ — texel ở đây là **dữ liệu**, không phải màu sắc. Nội suy tuyến tính giữa vị trí particle #41 và #42 (hai texel cạnh nhau, thường chẳng liên quan gì đến nhau) không mang ý nghĩa vật lý nào; `LinearFilter` sẽ âm thầm làm nhoè dữ liệu thành một giá trị vô nghĩa. `HalfFloatType` giữ range và độ chính xác đủ cho phần lớn vị trí/vận tốc (chi tiết ở phần sau) trong khi chỉ tốn nửa bộ nhớ so với `FloatType`. WebGL2 cần extension `EXT_color_buffer_float` để render **vào** một texture float hoặc half-float — Three.js tự động request extension này khi tạo render target loại đó; nếu thiết bị không hỗ trợ (hiếm, chủ yếu vài GPU di động cũ), nó chỉ `console.warn` một lần rồi framebuffer coi như incomplete — kết quả đọc ra là rác hoặc đen tuỳ driver.
 
 ### Compute scene: quad phủ kín khung hình + camera orthographic
 
@@ -99,7 +99,7 @@ Frame sau, `read` trỏ sang texture vừa được ghi ở frame trước — �
 
 ## Độ chính xác của half float
 
-`HalfFloatType` (16-bit) có range khoảng $\pm 65{,}504$ và độ chính xác giảm dần khi giá trị lớn — quanh giá trị $1$, khoảng cách giữa hai số biểu diễn được gần $2^{-10} \approx 0.001$; quanh giá trị $1000$, khoảng cách đó nhảy lên khoảng $1$. Với vị trí particle trong một cảnh 3D thường nằm trong khoảng vài đơn vị tới vài trăm đơn vị, half float dư sức chính xác. Vấn đề chỉ xuất hiện nếu bạn dồn thẳng toạ độ thế giới thực có biên độ hàng chục nghìn đơn vị vào texture trạng thái — khi đó nên trừ đi một gốc cục bộ trước khi ghi.
+`HalfFloatType` (16-bit) có range khoảng $\pm 65{,}504$ và độ chính xác giảm dần khi giá trị lớn — quanh giá trị $1$, khoảng cách giữa hai số biểu diễn được gần $2^{-10} \approx 0.001$; quanh giá trị $1000$, khoảng cách đó nhảy lên cỡ $0.5$–$1$ (bậc $0.5$ tới ngay trước $1024$, bậc $1$ từ $1024$). Với vị trí particle trong một cảnh 3D thường nằm trong khoảng vài đơn vị tới vài trăm đơn vị, half float dư sức chính xác. Vấn đề chỉ xuất hiện nếu bạn dồn thẳng toạ độ thế giới thực có biên độ hàng chục nghìn đơn vị vào texture trạng thái — khi đó nên trừ đi một gốc cục bộ trước khi ghi.
 
 ## Bài này dẫn tới đâu
 
@@ -107,7 +107,7 @@ Frame sau, `read` trỏ sang texture vừa được ghi ở frame trước — �
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 
-1. **Bind cùng một render target vừa làm input sampler vừa làm output framebuffer trong cùng draw call** — ví dụ quên đảo `read`/`write` sau swap, hoặc gán nhầm uniform texture. Kết quả sai lệch tinh vi, có khi chỉ lộ ra trên vài GPU cụ thể, cực khó debug vì driver không báo lỗi nào.
+1. **Bind cùng một render target vừa làm input sampler vừa làm output framebuffer trong cùng draw call** — ví dụ quên đảo `read`/`write` sau swap, hoặc gán nhầm uniform texture. Trong WebGL, draw call đó bị bỏ qua và trình duyệt in cảnh báo feedback loop ra console — triệu chứng là trạng thái ĐỨNG YÊN (frame ghi bị nuốt), nên hãy mở console trước khi đoán mò về shader.
 2. **Không clamp `uDelta` sau một frame chậm hoặc tab bị ẩn rồi mở lại** — delta có thể nhảy vọt tới vài trăm mili-giây. Particle "nhảy" xuyên qua biên va chạm hoặc vận tốc nổ tung, vì tích phân Euler với delta lớn không còn ổn định số học.
 3. **Quên `renderer.setRenderTarget(null)` sau compute pass.** Three.js tiếp tục render mọi thứ sau đó — kể cả scene chính — vào render target cũ; màn hình đứng yên hoặc đen, trong khi console không báo lỗi nào vì về mặt kỹ thuật, mọi lệnh render vẫn "thành công".
 

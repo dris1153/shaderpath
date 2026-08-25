@@ -11,6 +11,7 @@ import { useDemoContext } from "@/components/viz/demo-context";
 import { booleanOf } from "@/components/viz/control-schema";
 import { Button } from "@/components/ui/button";
 import { useDisposable } from "@/lib/hooks/use-disposable";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./particle.frag";
 import vertexShader from "./particle.vert";
 import fullscreenVertexShader from "./fullscreen.vert";
@@ -84,6 +85,9 @@ function SimulationScene({ resetSignal }: { resetSignal: number }) {
     [],
   );
 
+  const bindParticleUniforms = useSharedUniforms(particleUniforms);
+  const bindStateViewUniforms = useSharedUniforms(stateViewUniforms);
+
   useFrame((_, delta) => {
     if (!pausedRef.current) sim.step(delta);
     particleUniforms.uTexturePosition.value = sim.positionTexture;
@@ -99,14 +103,14 @@ function SimulationScene({ resetSignal }: { resetSignal: number }) {
         <shaderMaterial
           vertexShader={fullscreenVertexShader}
           fragmentShader={stateViewFragmentShader}
-          uniforms={stateViewUniforms}
+          ref={bindStateViewUniforms}
         />
       </mesh>
     );
   }
 
   return (
-    <points>
+    <points frustumCulled={false}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
@@ -117,7 +121,7 @@ function SimulationScene({ resetSignal }: { resetSignal: number }) {
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={particleUniforms}
+        ref={bindParticleUniforms}
         transparent
         depthWrite={false}
       />

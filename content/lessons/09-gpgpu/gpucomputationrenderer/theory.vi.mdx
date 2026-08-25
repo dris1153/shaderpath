@@ -20,7 +20,7 @@ const positionVariable = gpuCompute.addVariable("texturePosition", positionShade
 
 ## `setVariableDependencies` và uniform được tiêm tự động
 
-Một biến compute cần đọc dữ liệu của chính nó (frame trước) và/hoặc của biến khác để tính frame sau — `setVariableDependencies(variable, [dep1, dep2, ...])` khai báo đúng danh sách đó. Với hệ xoáy hai biến kinh điển: velocity phụ thuộc `[velocity, position]` (cần vận tốc cũ để damping, cần vị trí để tính lực xoáy theo bán kính), position phụ thuộc `[velocity, position]` (cần vận tốc mới để tích phân, cần vị trí cũ để cộng dồn):
+Một biến compute cần đọc dữ liệu của chính nó (frame trước) và/hoặc của biến khác để tính frame sau — `setVariableDependencies(variable, [dep1, dep2, ...])` khai báo đúng danh sách đó. Với hệ xoáy hai biến kinh điển: velocity phụ thuộc `[velocity, position]` (cần vận tốc cũ để damping, cần vị trí để tính lực xoáy theo bán kính), position phụ thuộc `[velocity, position]` (cần vận tốc — của FRAME TRƯỚC, vì mọi dependency đều bind từ cùng `currentTextureIndex` — để tích phân, cần vị trí cũ để cộng dồn):
 
 ```ts
 gpuCompute.setVariableDependencies(velocityVariable, [velocityVariable, positionVariable]);
@@ -51,7 +51,7 @@ particleMaterial.uniforms.texturePosition.value =
 
 ## `resolution`: define được tiêm sẵn, không phải uniform
 
-Constructor gọi `addResolutionDefine` cho mọi biến, đặt `material.defines.resolution` thành chuỗi `"vec2(128.0, 128.0)"` — Three biên dịch `defines` thành dòng `#define resolution vec2(128.0, 128.0)` đặt trước cả shader. Vì là `#define` (thay thế văn bản thuần), không phải `uniform`, bạn dùng `resolution` trong shader mà không khai báo gì cả — nhưng cũng vì thế, tự khai báo thêm `uniform vec2 resolution;` sẽ vỡ: trình biên dịch thay `resolution` bằng `vec2(128.0, 128.0)` ở MỌI chỗ xuất hiện, kể cả trong chính dòng khai báo, biến nó thành `uniform vec2 vec2(128.0, 128.0);` — lỗi cú pháp. Công thức đọc texel của chính mình luôn là `gl_FragCoord.xy / resolution.xy`: khác bài UV space ở Track 0 phải tự cộng $+0.5$ vì chỉ số pixel không phải tâm pixel, `gl_FragCoord` đã được rasterizer tính sẵn ở TÂM pixel — không cần cộng gì thêm.
+`addVariable` (qua `createShaderMaterial`) gọi `addResolutionDefine` cho mọi biến, đặt `material.defines.resolution` thành chuỗi `"vec2(128.0, 128.0)"` — Three biên dịch `defines` thành dòng `#define resolution vec2(128.0, 128.0)` đặt trước cả shader. Vì là `#define` (thay thế văn bản thuần), không phải `uniform`, bạn dùng `resolution` trong shader mà không khai báo gì cả — nhưng cũng vì thế, tự khai báo thêm `uniform vec2 resolution;` sẽ vỡ: trình biên dịch thay `resolution` bằng `vec2(128.0, 128.0)` ở MỌI chỗ xuất hiện, kể cả trong chính dòng khai báo, biến nó thành `uniform vec2 vec2(128.0, 128.0);` — lỗi cú pháp. Công thức đọc texel của chính mình luôn là `gl_FragCoord.xy / resolution.xy`: khác bài UV space ở Track 0 phải tự cộng $+0.5$ vì chỉ số pixel không phải tâm pixel, `gl_FragCoord` đã được rasterizer tính sẵn ở TÂM pixel — không cần cộng gì thêm.
 
 ## Giới hạn của GPUComputationRenderer
 

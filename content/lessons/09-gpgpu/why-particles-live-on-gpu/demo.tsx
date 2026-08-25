@@ -8,6 +8,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { numberOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./particle-common.frag";
 import cpuVertexShader from "./cpu-particles.vert";
 import gpuVertexShader from "./gpu-particles.vert";
@@ -117,6 +118,8 @@ function GpuParticles({
     if (frameCount.current % 10 === 0) onMs(ms);
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <points>
       <bufferGeometry key={count}>
@@ -131,7 +134,7 @@ function GpuParticles({
       <shaderMaterial
         vertexShader={gpuVertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
         transparent
         depthWrite={false}
       />
