@@ -99,7 +99,7 @@ Next frame, `read` points at the texture just written last frame — correct cau
 
 ## Half Float's Precision
 
-`HalfFloatType` (16-bit) has a range of roughly $\pm 65{,}504$, with precision that thins out as values grow — around $1$, the gap between two representable numbers is about $2^{-10} \approx 0.001$; around $1000$, that gap jumps to roughly $0.5$–$1$ (the $0.5$ step runs up to $1024$, the $1$ step from there). For particle positions in a typical 3D scene, usually a few units to a few hundred units, half float has precision to spare. The problem only shows up if you dump raw real-world coordinates spanning tens of thousands of units straight into a state texture — in that case, subtract a local origin before writing.
+`HalfFloatType` (16-bit) has a range of roughly $\pm 65{,}504$, with precision that thins out as values grow — around $1$, the gap between two representable numbers is about $2^{-10} \approx 0.001$; around $1000$, that gap jumps to roughly $0.5$–$1$ (the $0.5$ step runs up to $1024$, the $1$ step from $1024$ on). For particle positions in a typical 3D scene, usually a few units to a few hundred units, half float has precision to spare. The problem only shows up if you dump raw real-world coordinates spanning tens of thousands of units straight into a state texture — in that case, subtract a local origin before writing.
 
 ## Where This Lesson Leads
 
