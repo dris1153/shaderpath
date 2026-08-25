@@ -73,6 +73,19 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
   never happens implicitly. `normalize(vec3(0.0))` and `pow` with a negative
   base are undefined — prose must not present them as safe.
 
+## Exercise kinds and starter visibility
+
+- The UI renders `starterCode` only for `kind: "code" | "shader"`
+  (`components/exercise/exercise-card.tsx`). `kind: "build"` shows no starter
+  — **by design**: checkpoints are built from scratch.
+- Therefore a build exercise's prompt (+ hints) must be self-contained: every
+  required API, tuned constant, parts table, and step order the task depends
+  on lives in the prompt text — never only in `starterCode`, TODO comments,
+  or the solution. Prompts must not say "the starter already has X" or
+  "fill in the N TODOs".
+- A build exercise may still keep a `starterCode` field as author-side
+  scaffolding; nothing user-facing may reference it.
+
 ## API era
 
 - **three 0.185**: `outputColorSpace` (not `outputEncoding`), `SRGBColorSpace`

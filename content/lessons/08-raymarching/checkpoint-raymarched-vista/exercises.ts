@@ -292,16 +292,16 @@ void main() {
     referenceImage: "/figures/08-raymarching/checkpoint-raymarched-vista.png",
     hints: [
       {
-        vi: "TODO 1 chỉ là một điều kiện boolean trước khối march, không đổi gì bên trong: \`canHitTerrain = !(ro.y > MAX_HEIGHT && rd.y >= 0.0)\` — camera đã ở trên độ cao tối đa VÀ tia không hướng xuống thì chắc chắn trượt.",
-        en: "TODO 1 is just a boolean condition before the march block, nothing inside changes: \`canHitTerrain = !(ro.y > MAX_HEIGHT && rd.y >= 0.0)\` — camera already above max height AND the ray not pointing downward guarantees a miss.",
+        vi: "Bước 1 (chặn khoảng march) chỉ là một điều kiện boolean trước khối march, không đổi gì bên trong: \`canHitTerrain = !(ro.y > MAX_HEIGHT && rd.y >= 0.0)\` — camera đã ở trên độ cao tối đa VÀ tia không hướng xuống thì chắc chắn trượt.",
+        en: "Step 1 (bounding the march) is just a boolean condition before the march block, nothing inside changes: \`canHitTerrain = !(ro.y > MAX_HEIGHT && rd.y >= 0.0)\` — camera already above max height AND the ray not pointing downward guarantees a miss.",
       },
       {
         vi: "raymarchTerrain KHÔNG phải sphere tracing — không có SDF thật cho heightfield, nên nó bước theo kiểu tăng dần rồi nhị phân tinh chỉnh (kỹ thuật terrain marching của Quilez), khác hẳn vòng lặp d(p) các bài trước. Đừng cố áp lại logic sphere tracing vào đây.",
         en: "raymarchTerrain is NOT sphere tracing — a heightfield has no real SDF, so it grows its steps then bisection-refines (Quilez's terrain-marching technique), unlike the d(p) loop from earlier lessons. Don't try to force sphere-tracing logic back in here.",
       },
       {
-        vi: "TODO 5 cần HAI mix() nối tiếp: trước tiên grass→rock theo slope, rồi kết quả đó →snow theo một mask RIÊNG kết hợp cả p.y cao VÀ slope thấp (nhân hai smoothstep lại) — không phải ba nhánh if/else.",
-        en: "TODO 5 needs TWO chained mix() calls: first grass→rock by slope, then that result →snow using a SEPARATE mask combining both high p.y AND low slope (multiply two smoothsteps together) — not three if/else branches.",
+        vi: "Bước 5 (tô màu) cần HAI mix() nối tiếp: trước tiên grass→rock theo slope, rồi kết quả đó →snow theo một mask RIÊNG kết hợp cả p.y cao VÀ slope thấp (nhân hai smoothstep lại) — không phải ba nhánh if/else.",
+        en: "Step 5 (coloring) needs TWO chained mix() calls: first grass→rock by slope, then that result →snow using a SEPARATE mask combining both high p.y AND low slope (multiply two smoothsteps together) — not three if/else branches.",
       },
     ],
     checklist: [
@@ -322,8 +322,8 @@ void main() {
         en: "No holes along the mountain silhouette — if you see jagged gaps between terrain and sky, the march step is growing too fast; reduce the multiplier in \`t +=\`",
       },
       {
-        vi: "Bầu trời phía trên đường chân trời bỏ qua march hoàn toàn nhờ TODO 1 — không có vệt lag hay khựng hình khi camera bay hướng lên",
-        en: "Sky above the horizon skips marching entirely thanks to TODO 1 — no stutter or frame hitch when the camera flies with its nose pointed up",
+        vi: "Bầu trời phía trên đường chân trời bỏ qua march hoàn toàn nhờ bước 1 — không có vệt lag hay khựng hình khi camera bay hướng lên",
+        en: "Sky above the horizon skips marching entirely thanks to step 1 — no stutter or frame hitch when the camera flies with its nose pointed up",
       },
       {
         vi: "Camera bay chậm và mượt suốt toàn cảnh, khung hình giữ ổn định không giật cục dù địa hình liên tục march lại mỗi frame",
