@@ -28,7 +28,7 @@ Borrowed from film photography: the **toe** is the curve segment in shadows, com
 
 ## Architecture: Where Tone Mapping Actually Lives in EffectComposer
 
-The most commonly misunderstood detail: `RenderPass` renders the scene into an internal `WebGLRenderTarget`, not the screen. Reading `WebGLRenderer.js` directly: whenever the current render target isn't `null`, the renderer forces `toneMapping = NoToneMapping` and the color space to the linear working space — regardless of whatever `renderer.toneMapping` is set to. Every intermediate render target inside a composer always holds raw, un-tone-mapped linear HDR data.
+The most commonly misunderstood detail: `RenderPass` renders the scene into an internal `WebGLRenderTarget`, not the screen. Reading `WebGLPrograms.js` directly (its `getParameters`): whenever the current render target isn't `null`, the renderer forces `toneMapping = NoToneMapping` and the color space to the linear working space — regardless of whatever `renderer.toneMapping` is set to. Every intermediate render target inside a composer always holds raw, un-tone-mapped linear HDR data.
 
 Tone mapping actually happens only in `OutputPass` — it reads `renderer.toneMapping`/`toneMappingExposure`, applies the matching formula, then encodes to sRGB, bundling both steps into one pass. The comment in `OutputPass.js` states it plainly: this pass should sit at the end of the chain, and any pass requiring sRGB input must come after it. A composer keeps HDR linear data alive as long as possible, "casting" it down to displayable LDR exactly once, at the very end.
 

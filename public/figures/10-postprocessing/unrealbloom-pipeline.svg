@@ -112,6 +112,6 @@
 
   <text class="note" x="30" y="352">Only step 1 ever looks at threshold. Everything after it is a fixed blur, so a surface</text>
   <text class="note" x="30" y="370">that already cleared the cutoff keeps glowing however you tune strength or radius.</text>
-  <text class="note" x="30" y="396">Tone mapping inside RenderPass clamps materials to [0,1] before step 1 reads them —</text>
-  <text class="note" x="30" y="414">toneMapped = false on the real emitters is what keeps values above 1.0 alive.</text>
+  <text class="note" x="30" y="396">RenderPass renders into a render target, where three skips material tone mapping —</text>
+  <text class="note" x="30" y="414">so the buffer step 1 reads is linear HDR by construction; values above 1.0 survive.</text>
 </svg>

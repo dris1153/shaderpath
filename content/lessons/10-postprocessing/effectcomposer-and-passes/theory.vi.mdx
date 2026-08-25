@@ -30,11 +30,11 @@ for (let i = 0; i < this.passes.length; i++) {
 
 ### ShaderPass: fullscreen quad và quy ước tDiffuse
 
-`ShaderPass(shader, textureID = 'tDiffuse')` bọc một fragment shader tuỳ ý thành một pass. Mỗi lần render, nó tự gán `uniforms[textureID].value = readBuffer.texture` — nghĩa là bất kỳ shader nào muốn nhận ảnh từ bước trước chỉ cần khai báo đúng một `uniform sampler2D tDiffuse;`, không cần tự truyền tay. Bản thân quad chạy shader không dùng geometry của scene — nó là một `FullScreenQuad` dùng chung, phủ kín `[-1,1]` trong không gian clip. Demo của bài này dùng đúng khuôn mẫu này cho một pass tint/invert: `tint-pass.vert` và `tint-pass.frag` (xem file sibling) — vertex shader gần như trong suốt, toàn bộ logic nằm ở fragment.
+`ShaderPass(shader, textureID = 'tDiffuse')` bọc một fragment shader tuỳ ý thành một pass. Mỗi lần render, nó tự gán `uniforms[textureID].value = readBuffer.texture` — nghĩa là bất kỳ shader nào muốn nhận ảnh từ bước trước chỉ cần khai báo đúng một `uniform sampler2D tDiffuse;`, không cần tự truyền tay. Bản thân quad chạy shader không dùng geometry của scene — mỗi pass giữ một `FullScreenQuad` riêng (chỉ tam giác geometry bên dưới là module dùng chung), phủ kín `[-1,1]` trong không gian clip. Demo của bài này dùng đúng khuôn mẫu này cho một pass tint/invert: `tint-pass.vert` và `tint-pass.frag` (xem file sibling) — vertex shader gần như trong suốt, toàn bộ logic nằm ở fragment.
 
 ### OutputPass: tonemapping + color space, đúng một lần ở cuối
 
-`OutputPass` đọc trực tiếp `renderer.toneMapping` và `renderer.outputColorSpace` — không phải baked sẵn lúc khởi tạo — và chỉ build lại shader define khi hai giá trị đó thật sự đổi (so sánh cache nội bộ). Nó áp đúng 6 đường cong tonemapping mà material thường dùng (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral), rồi chuyển sang sRGB nếu color space yêu cầu. Bỏ qua OutputPass (hoặc tương đương) ở cuối chuỗi nghĩa là pass cuối ghi thẳng dữ liệu linear ra canvas — canvas vốn hiển thị byte theo chuẩn sRGB — ảnh nhận được sẽ nhợt nhạt hoặc quá tối so với ý đồ.
+`OutputPass` đọc trực tiếp `renderer.toneMapping` và `renderer.outputColorSpace` — không phải baked sẵn lúc khởi tạo — và chỉ build lại shader define khi hai giá trị đó thật sự đổi (so sánh cache nội bộ). Nó áp 6 đường cong tonemapping dựng sẵn (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) cộng nhánh `CustomToneMapping`, rồi chuyển sang sRGB nếu color space yêu cầu. Bỏ qua OutputPass (hoặc tương đương) ở cuối chuỗi nghĩa là pass cuối ghi thẳng dữ liệu linear ra canvas — canvas vốn hiển thị byte theo chuẩn sRGB — ảnh nhận được sẽ nhợt nhạt hoặc quá tối so với ý đồ.
 
 ## Anatomy của một pass: enabled, needsSwap, renderToScreen
 
@@ -42,8 +42,8 @@ Ba cờ này (định nghĩa trong lớp `Pass` cơ sở) là toàn bộ hợp �
 
 <Figure
   src="/figures/10-postprocessing/pass-chain-ping-pong.svg"
-  alt="Ba ô pass nằm trên lưới hai hàng renderTarget1 và renderTarget2, cho thấy target nào đang là readBuffer và target nào là writeBuffer ở mỗi bước, với lần swapBuffers() duy nhất đánh dấu giữa ShaderPass và OutputPass"
-  caption="readBuffer và writeBuffer là hai VAI TRÒ hoán đổi cho nhau, không phải hai texture cố định — RenderPass mồi sẵn readBuffer mà không swap, nên cả chuỗi chỉ cần đúng một lần swap."
+  alt="Ba ô pass nằm trên lưới hai hàng renderTarget1 và renderTarget2, cho thấy target nào đang là readBuffer và target nào là writeBuffer ở mỗi bước, với lần swapBuffers() mang ý nghĩa đánh dấu giữa ShaderPass và OutputPass"
+  caption="readBuffer và writeBuffer là hai VAI TRÒ hoán đổi cho nhau, không phải hai texture cố định — RenderPass mồi sẵn readBuffer mà không swap, nên cả chuỗi chỉ có một lần swap MANG Ý NGHĨA (OutputPass cuối vẫn kích thêm một swap theo mặc định needsSwap, nhưng không còn pass nào đọc nữa)."
 />
 
 ## Chiếm quyền vòng lặp render trong R3F
@@ -56,11 +56,11 @@ useFrame(({ gl }) => {
 }, 1); // priority = 1: R3F bỏ qua lệnh render mặc định của chính nó frame này
 ```
 
-Cùng quy ước với callback ping-pong ở Track 9 — priority mặc định là 0; bất kỳ subscriber nào khai priority khác 0 khiến R3F nhường quyền render hoàn toàn cho subscriber đó. Composer vẫn cần `composer.setSize(width, height)` mỗi khi kích thước canvas đổi (R3F tự resize canvas/camera, nhưng KHÔNG tự resize buffer nội bộ của composer), và vẫn tuân thủ demand-frameloop + `invalidate()` như mọi demo khác trên nền tảng này. Khi unmount, `composer.dispose()` chỉ giải phóng đúng hai render target của chính nó cộng `copyPass` nội bộ — **không** giải phóng các pass bạn tự thêm vào; `ShaderPass`/`OutputPass` cần được `.dispose()` riêng.
+Cùng quy ước với callback ping-pong ở Track 9 — priority mặc định là 0; bất kỳ subscriber nào khai priority LỚN HƠN 0 khiến R3F nhường quyền render hoàn toàn cho subscriber đó (số âm không kích cơ chế này). Composer vẫn cần `composer.setSize(width, height)` mỗi khi kích thước canvas đổi (R3F tự resize canvas/camera, nhưng KHÔNG tự resize buffer nội bộ của composer), và vẫn tuân thủ demand-frameloop + `invalidate()` như mọi demo khác trên nền tảng này. Khi unmount, `composer.dispose()` chỉ giải phóng đúng hai render target của chính nó cộng `copyPass` nội bộ — **không** giải phóng các pass bạn tự thêm vào; `ShaderPass`/`OutputPass` cần được `.dispose()` riêng.
 
 ## Cái giá của một pass: fillrate
 
-Canvas demo này chạy ở DPR tối đa 2 (`dpr={[1,2]}`, quy ước chung của nền tảng). Với một canvas hiển thị 960×540 CSS pixel, buffer nội bộ thực tế là:
+Canvas demo này chạy ở DPR tối đa 2 (`dpr={[1,2]}` — tier chất lượng CAO của nền tảng; tier mid/low giới hạn 1.5/1). Với một canvas hiển thị 960×540 CSS pixel, buffer nội bộ thực tế là:
 
 $$
 960 \times 540 \times 2^2 \approx 2.1 \times 10^{6}

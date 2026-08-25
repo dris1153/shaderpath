@@ -3,9 +3,10 @@
 // A few primitives + two HDR emissive accents: enough contrast for the
 // AO-lite pass (crevices on the knot) and enough true-HDR brightness
 // (emissiveIntensity > 1) for bloom to have something real to extract.
-// toneMapped={false} on every material keeps RenderPass's output pure
-// linear HDR — tone mapping only ever happens in the OutputPass step,
-// never baked in earlier (see the lesson's canonical-order section).
+// No toneMapped juggling needed: RenderPass renders into the composer's
+// render target, and three skips material tone mapping entirely for RT
+// rendering — the buffer is linear HDR by construction. Tone mapping
+// happens exactly once, at the OutputPass step.
 const ACCENTS: { position: [number, number, number]; color: string; intensity: number }[] = [
   { position: [-1.1, 0.5, 0.1], color: "#ff2e88", intensity: 6 },
   { position: [1.15, 0.35, -0.3], color: "#21e6ff", intensity: 8 },
@@ -19,12 +20,12 @@ export function PostfxScene() {
 
       <mesh position={[0, -0.9, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <planeGeometry args={[6, 6]} />
-        <meshStandardMaterial color="#141821" roughness={0.9} toneMapped={false} />
+        <meshStandardMaterial color="#141821" roughness={0.9} />
       </mesh>
 
       <mesh>
         <torusKnotGeometry args={[0.55, 0.18, 128, 24]} />
-        <meshStandardMaterial color="#5a6270" roughness={0.35} metalness={0.4} toneMapped={false} />
+        <meshStandardMaterial color="#5a6270" roughness={0.35} metalness={0.4} />
       </mesh>
 
       {ACCENTS.map((accent) => (
@@ -34,7 +35,7 @@ export function PostfxScene() {
             color={accent.color}
             emissive={accent.color}
             emissiveIntensity={accent.intensity}
-            toneMapped={false}
+           
           />
         </mesh>
       ))}

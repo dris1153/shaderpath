@@ -19,7 +19,11 @@ const COLUMN_COLORS = [
 export function Corridor({ onFocusPick }: { onFocusPick: (distance: number) => void }) {
   function handleClick(e: ThreeEvent<MouseEvent>) {
     e.stopPropagation();
-    onFocusPick(e.distance);
+    // BokehPass compares focus against view-axis depth (-viewZ), which the
+    // theory warns is NOT the Euclidean ray distance e.distance — off-axis
+    // clicks would misfocus by several percent otherwise.
+    const viewPos = e.point.clone().applyMatrix4(e.camera.matrixWorldInverse);
+    onFocusPick(-viewPos.z);
   }
 
   return (

@@ -14,8 +14,8 @@ Using the linear approximation \`blur = clamp((focus - depth) * aperture, -maxbl
     },
     hints: [
       {
-        vi: "Với A: (10 - 4) * 0.02 = 0.12, nằm trong [-0.15, 0.15] nên không bị clamp. Với B: (10 - 25) * 0.02 = -0.30, vượt maxblur nên bị kẹp về -0.15.",
-        en: "For A: (10 - 4) * 0.02 = 0.12, inside [-0.15, 0.15] so it's not clamped. For B: (10 - 25) * 0.02 = -0.30, exceeds maxblur so it clamps to -0.15.",
+        vi: "Thay từng điểm vào (focus - depth) * aperture rồi so kết quả với khoảng [-maxblur, maxblur] — một điểm nằm trong khoảng, điểm kia thì không.",
+        en: "Plug each point into (focus - depth) * aperture, then compare the result against the [-maxblur, maxblur] range — one lands inside, the other does not.",
       },
       {
         vi: "focus - depth dương nghĩa là điểm gần hơn mặt phẳng lấy nét (tiền cảnh); âm nghĩa là xa hơn (hậu cảnh). Bán kính blur trong shader dùng trực tiếp giá trị này nhân vào offset lấy mẫu.",

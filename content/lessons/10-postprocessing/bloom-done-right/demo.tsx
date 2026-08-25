@@ -36,10 +36,10 @@ interface ComposerState {
   bloomPass: UnrealBloomPass;
 }
 
-// Emitters keep toneMapped=false permanently, independent of the HDR
-// toggle below — without it, R3F's default ACESFilmicToneMapping clamps
-// their output to [0,1] inside RenderPass before bloom ever reads it
-// (see theory: "the trap: tonemapping clamps before bloom sees it").
+// toneMapped=false here only matters when the composer is OFF (direct
+// to screen): it keeps the emitters visibly blown out for comparison.
+// Inside the composer chain three already skips material tone mapping for
+// render-target rendering, so the HDR values reach bloom either way.
 function EmitterMesh({
   children,
   color,

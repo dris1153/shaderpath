@@ -30,11 +30,11 @@ This is the exact ping-pong FBO technique from Track 9 (`pingpong-fbo-state-text
 
 ### ShaderPass: the Fullscreen Quad and the tDiffuse Convention
 
-`ShaderPass(shader, textureID = 'tDiffuse')` wraps an arbitrary fragment shader into a pass. On every render call it auto-assigns `uniforms[textureID].value = readBuffer.texture` — meaning any shader that wants the previous step's image just needs to declare exactly one `uniform sampler2D tDiffuse;`, no manual wiring required. The quad itself doesn't use scene geometry at all — it's a shared `FullScreenQuad` filling `[-1,1]` in clip space. This lesson's demo uses that exact mold for a tint/invert pass: `tint-pass.vert` and `tint-pass.frag` (see the sibling files) — the vertex shader is close to a no-op, with all the logic sitting in the fragment stage.
+`ShaderPass(shader, textureID = 'tDiffuse')` wraps an arbitrary fragment shader into a pass. On every render call it auto-assigns `uniforms[textureID].value = readBuffer.texture` — meaning any shader that wants the previous step's image just needs to declare exactly one `uniform sampler2D tDiffuse;`, no manual wiring required. The quad itself doesn't use scene geometry at all — each pass keeps its own `FullScreenQuad` (only the underlying triangle geometry is module-shared), filling `[-1,1]` in clip space. This lesson's demo uses that exact mold for a tint/invert pass: `tint-pass.vert` and `tint-pass.frag` (see the sibling files) — the vertex shader is close to a no-op, with all the logic sitting in the fragment stage.
 
 ### OutputPass: Tonemapping + Color Space, Exactly Once at the End
 
-`OutputPass` reads `renderer.toneMapping` and `renderer.outputColorSpace` directly — not baked in at construction time — and only rebuilds its shader defines when those two values actually change (checked against an internal cache). It applies the same 6 tonemapping curves materials normally use (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral), then converts to sRGB if the color space calls for it. Skipping OutputPass (or an equivalent) at the end of the chain means the last pass writes linear data straight to the canvas — which expects sRGB-encoded bytes — and the resulting image looks washed out or too dark relative to what was intended.
+`OutputPass` reads `renderer.toneMapping` and `renderer.outputColorSpace` directly — not baked in at construction time — and only rebuilds its shader defines when those two values actually change (checked against an internal cache). It applies the 6 built-in tonemapping curves (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) plus a `CustomToneMapping` branch, then converts to sRGB if the color space calls for it. Skipping OutputPass (or an equivalent) at the end of the chain means the last pass writes linear data straight to the canvas — which expects sRGB-encoded bytes — and the resulting image looks washed out or too dark relative to what was intended.
 
 ## Anatomy of a Pass: enabled, needsSwap, renderToScreen
 
@@ -42,8 +42,8 @@ These three flags (defined on the base `Pass` class) are the entire contract the
 
 <Figure
   src="/figures/10-postprocessing/pass-chain-ping-pong.svg"
-  alt="Three pass boxes above a two-row grid of renderTarget1 and renderTarget2, showing which target is readBuffer and which is writeBuffer at each step, with the single swapBuffers() marked between ShaderPass and OutputPass"
-  caption="readBuffer and writeBuffer are two roles that trade places, not two fixed textures — RenderPass primes readBuffer without swapping, so the whole chain needs exactly one swap."
+  alt="Three pass boxes above a two-row grid of renderTarget1 and renderTarget2, showing which target is readBuffer and which is writeBuffer at each step, with the meaningful swapBuffers() marked between ShaderPass and OutputPass"
+  caption="readBuffer and writeBuffer are two roles that trade places, not two fixed textures — RenderPass primes readBuffer without swapping, so only one swap MATTERS in the whole chain (the final OutputPass still triggers one more by default needsSwap, but no pass reads after it)."
 />
 
 ## Taking Over the Render Loop in R3F
@@ -56,11 +56,11 @@ useFrame(({ gl }) => {
 }, 1); // priority = 1: R3F skips its own default render this frame
 ```
 
-Same convention as the ping-pong callback in Track 9 — the default priority is 0; any subscriber declaring a non-zero priority makes R3F hand over rendering entirely to that subscriber. The composer still needs `composer.setSize(width, height)` whenever canvas size changes (R3F auto-resizes the canvas/camera, but does NOT auto-resize the composer's internal buffers), and still follows the demand-frameloop + `invalidate()` contract like every other demo on this platform. On unmount, `composer.dispose()` only frees its own two render targets plus its internal `copyPass` — it does **not** free any pass you added yourself; `ShaderPass`/`OutputPass` need their own `.dispose()` call.
+Same convention as the ping-pong callback in Track 9 — the default priority is 0; any subscriber declaring a priority GREATER than 0 makes R3F hand over rendering entirely to that subscriber (negative values do not trigger this). The composer still needs `composer.setSize(width, height)` whenever canvas size changes (R3F auto-resizes the canvas/camera, but does NOT auto-resize the composer's internal buffers), and still follows the demand-frameloop + `invalidate()` contract like every other demo on this platform. On unmount, `composer.dispose()` only frees its own two render targets plus its internal `copyPass` — it does **not** free any pass you added yourself; `ShaderPass`/`OutputPass` need their own `.dispose()` call.
 
 ## The Cost of a Pass: Fillrate
 
-This demo's canvas runs at a max DPR of 2 (`dpr={[1,2]}`, this platform's standing convention). For a canvas displaying at 960×540 CSS pixels, the composer's actual internal buffer resolution is:
+This demo's canvas runs at a max DPR of 2 (`dpr={[1,2]}` — this platform's HIGH quality tier; mid/low cap at 1.5/1). For a canvas displaying at 960×540 CSS pixels, the composer's actual internal buffer resolution is:
 
 $$
 960 \times 540 \times 2^2 \approx 2.1 \times 10^{6}

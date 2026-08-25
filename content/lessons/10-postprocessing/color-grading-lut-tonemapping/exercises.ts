@@ -14,8 +14,8 @@ Then answer: what is the $R:G:B$ ratio before tone mapping (simplified), and wha
     },
     hints: [
       {
-        vi: "Thay số trực tiếp: R' = 6/(1+6) = 6/7, G' = 1.5/2.5, B' = 0.2/1.2. Giữ dạng phân số hoặc ít nhất 3 chữ số thập phân.",
-        en: "Substitute directly: R' = 6/(1+6) = 6/7, G' = 1.5/2.5, B' = 0.2/1.2. Keep fractions or at least 3 decimal places.",
+        vi: "Thay từng kênh vào x/(1+x) một cách độc lập — giữ dạng phân số hoặc ít nhất 3 chữ số thập phân để bước so sánh sau còn thấy khác biệt.",
+        en: "Substitute each channel into x/(1+x) independently — keep fractions or at least 3 decimal places so the later comparison step still shows the difference.",
       },
       {
         vi: "So sánh tỉ lệ kênh lớn nhất trên kênh nhỏ nhất TRƯỚC (6/0.2 = 30) và SAU (R'/B'). Hàm x/(1+x) tiệm cận 1 rất nhanh với x lớn — hai input rất khác nhau (6.0 và 60.0) đều cho ra gần 1, nén mất chênh lệch.",

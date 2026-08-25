@@ -14,8 +14,8 @@ Compute the total bytes moved per frame at DPR 2, then at DPR 1 (same canvas, sa
     },
     hints: [
       {
-        vi: "DPR 2: texel = 2560*1440 = 3.686.400; 1 pass ≈ 3.686.400*16 ≈ 58,98MB; 4 pass ≈ 235,9MB. DPR 1: texel = 1280*720 = 921.600; 4 pass ≈ 58,98MB.",
-        en: "DPR 2: texels = 2560*1440 = 3,686,400; 1 pass ≈ 3,686,400*16 ≈ 58.98MB; 4 passes ≈ 235.9MB. DPR 1: texels = 1280*720 = 921,600; 4 passes ≈ 58.98MB.",
+        vi: "Số texel = (chiều rộng CSS × DPR) × (chiều cao CSS × DPR) — DPR nhân ĐÔI theo mỗi chiều nên texel tăng theo DPR². Nhân với 16 byte rồi với số pass.",
+        en: "Texel count = (CSS width × DPR) × (CSS height × DPR) — DPR multiplies BOTH axes, so texels scale with DPR². Multiply by 16 bytes, then by the pass count.",
       },
       {
         vi: "Số pass là một thừa số nhân CHUNG cho cả hai phép tính (DPR 1 và DPR 2) — nó triệt tiêu khi lấy tỉ lệ, chỉ còn lại đúng $(\\text{DPR}_2/\\text{DPR}_1)^2$.",
@@ -41,7 +41,7 @@ Compute the total bytes moved per frame at DPR 2, then at DPR 1 (same canvas, sa
     id: "estimate-chain-bytes",
     kind: "code",
     prompt: {
-      vi: `Viết hàm \`estimateChainBytes\` ước lượng tổng byte di chuyển mỗi frame cho một chuỗi pass, theo đúng mô hình "trung thực" của bài: mỗi pass có \`resScale\` (tỉ lệ độ phân giải so với full-res, ví dụ bloom's mip chạy ở 0.5, 0.25...) và \`draws\` (số lượt đọc+ghi ở độ phân giải đó). Байte mỗi texel cố định 16 (đọc 8 + ghi 8, HDR half-float).`,
+      vi: `Viết hàm \`estimateChainBytes\` ước lượng tổng byte di chuyển mỗi frame cho một chuỗi pass, theo đúng mô hình "trung thực" của bài: mỗi pass có \`resScale\` (tỉ lệ độ phân giải so với full-res, ví dụ bloom's mip chạy ở 0.5, 0.25...) và \`draws\` (số lượt đọc+ghi ở độ phân giải đó). Byte mỗi texel cố định 16 (đọc 8 + ghi 8, HDR half-float).`,
       en: `Write \`estimateChainBytes\`, estimating total bytes moved per frame for a pass chain using this lesson's "honest" model: each pass has a \`resScale\` (resolution scale relative to full-res, e.g. a bloom mip running at 0.5, 0.25...) and \`draws\` (number of read+write draws at that scale). Bytes per texel is fixed at 16 (8 read + 8 write, HDR half-float).`,
     },
     starterCode: `interface PassCost {

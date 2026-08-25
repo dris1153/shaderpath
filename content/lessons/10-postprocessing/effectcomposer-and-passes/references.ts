@@ -30,8 +30,8 @@ export const references: Citation[] = [
     authors: ["mrdoob and three.js contributors"],
     url: "https://github.com/mrdoob/three.js/blob/dev/examples/jsm/postprocessing/Pass.js",
     note: {
-      vi: "Định nghĩa gốc của enabled/needsSwap/renderToScreen và FullScreenQuad dùng chung cho mọi pass — nguồn cho phần 'Anatomy của một pass'.",
-      en: "The original definition of enabled/needsSwap/renderToScreen and the shared FullScreenQuad every pass reuses — the source for the 'Anatomy of a Pass' section.",
+      vi: "Định nghĩa gốc của enabled/needsSwap/renderToScreen và FullScreenQuad (mỗi pass tạo instance riêng; chỉ tam giác geometry là module dùng chung) — nguồn cho phần 'Anatomy của một pass'.",
+      en: "The original definition of enabled/needsSwap/renderToScreen and FullScreenQuad (each pass constructs its own; only the triangle geometry is module-shared) — the source for the 'Anatomy of a Pass' section.",
     },
   },
   {

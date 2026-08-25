@@ -28,7 +28,7 @@ Vay mượn từ nhiếp ảnh phim: **toe** là đoạn cong ở vùng tối, n
 
 ## Kiến trúc: tone mapping nằm ở đâu trong EffectComposer
 
-Chi tiết dễ hiểu lầm nhất: `RenderPass` render scene vào một `WebGLRenderTarget` nội bộ, không phải màn hình. Đọc thẳng `WebGLRenderer.js`: khi render target hiện tại khác `null`, renderer tự ép `toneMapping = NoToneMapping` và color space về không gian linear — bất kể `renderer.toneMapping` đang set gì. Mọi render target trung gian trong composer luôn chứa dữ liệu linear HDR thô, chưa tone map.
+Chi tiết dễ hiểu lầm nhất: `RenderPass` render scene vào một `WebGLRenderTarget` nội bộ, không phải màn hình. Đọc thẳng `WebGLPrograms.js` (hàm `getParameters`): khi render target hiện tại khác `null`, renderer tự ép `toneMapping = NoToneMapping` và color space về không gian linear — bất kể `renderer.toneMapping` đang set gì. Mọi render target trung gian trong composer luôn chứa dữ liệu linear HDR thô, chưa tone map.
 
 Tone map thật sự chỉ xảy ra ở `OutputPass` — đọc `renderer.toneMapping`/`toneMappingExposure`, áp đúng công thức, rồi encode sang sRGB, gộp cả hai bước trong một lần chạy. Comment trong `OutputPass.js` nói rõ: pass này nên đặt cuối chuỗi, và pass nào cần input đã ở sRGB phải nằm sau nó. Composer giữ HDR linear càng lâu càng tốt, chỉ "đổ khuôn" về LDR hiển thị đúng một lần, ở cuối.
 

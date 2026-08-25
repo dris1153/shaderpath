@@ -7,57 +7,63 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Một renderer có \`toneMapping = THREE.ACESFilmicToneMapping\` (mặc định của R3F). Cảnh có hai quả cầu cùng \`emissive\` màu trắng, \`emissiveIntensity = 2.4\`: quả cầu A dùng material mặc định (\`toneMapped: true\`), quả cầu B có \`toneMapped: false\`. \`UnrealBloomPass\` được đặt \`threshold = 1.3\`.
 
-Không chạy code, hãy giải thích quả cầu nào thật sự bị pass bloom "nhìn thấy" là đủ sáng để phát glow, và vì sao — bám theo đúng điều kiện \`toneMapping = material.toneMapped ? renderer.toneMapping : NoToneMapping\` và việc mọi đường cong tonemapping kết thúc bằng \`saturate()\`.`,
+Xét HAI cách render: (X) qua \`EffectComposer\` — \`RenderPass → UnrealBloomPass → OutputPass\`; (Y) gọi thẳng \`renderer.render()\` ra màn hình, không composer.
+
+Không chạy code: trong (X), pass bloom "thấy" mỗi quả cầu ở giá trị luminance bao nhiêu, quả nào bloom, và cờ \`toneMapped\` đóng vai trò gì? Trong (Y), hai quả cầu khác nhau thế nào trên màn hình? Bám đúng điều kiện thật trong \`WebGLPrograms.getParameters\`: tonemapping của material chỉ được giữ khi \`material.toneMapped\` VÀ render target hiện tại là \`null\` — và mọi đường cong tonemapping kết thúc bằng \`saturate()\`.`,
       en: `A renderer has \`toneMapping = THREE.ACESFilmicToneMapping\` (R3F's default). The scene has two spheres, both with white \`emissive\` and \`emissiveIntensity = 2.4\`: sphere A uses the default material (\`toneMapped: true\`), sphere B has \`toneMapped: false\`. \`UnrealBloomPass\` is set to \`threshold = 1.3\`.
 
-Without running any code, explain which sphere the bloom pass actually "sees" as bright enough to glow, and why — follow exactly the condition \`toneMapping = material.toneMapped ? renderer.toneMapping : NoToneMapping\` and the fact that every tonemapping curve ends with \`saturate()\`.`,
+Consider TWO ways to render: (X) through an \`EffectComposer\` — \`RenderPass → UnrealBloomPass → OutputPass\`; (Y) calling \`renderer.render()\` straight to the screen, no composer.
+
+Without running any code: in (X), at what luminance does the bloom pass "see" each sphere, which spheres bloom, and what role does the \`toneMapped\` flag play? In (Y), how do the two spheres differ on screen? Follow the REAL condition in \`WebGLPrograms.getParameters\`: a material's tone mapping is kept only when \`material.toneMapped\` AND the current render target is \`null\` — and every tonemapping curve ends with \`saturate()\`.`,
     },
     hints: [
       {
-        vi: "Với sphere A, material.toneMapped=true nên toneMapping thật sự áp dụng = renderer.toneMapping (ACESFilmic) — luminance 2.4 bị saturate() kẹp về gần 1.0 ngay trong RenderPass, trước khi bloom kịp đọc.",
-        en: "For sphere A, material.toneMapped=true so the effective toneMapping = renderer.toneMapping (ACESFilmic) — a luminance of 2.4 gets clamped near 1.0 by saturate() right inside RenderPass, before bloom ever reads it.",
+        vi: "Trong (X), RenderPass render vào readBuffer — một render target. Điều kiện render-target-null fail cho CẢ HAI quả cầu, bất kể cờ toneMapped của từng material đang là gì.",
+        en: "In (X), RenderPass renders into readBuffer — a render target. The render-target-null condition fails for BOTH spheres, regardless of what each material's toneMapped flag says.",
       },
       {
-        vi: "Với sphere B, toneMapped=false ép toneMapping thành NoToneMapping cho riêng material đó — giá trị linear 2.4 đi thẳng vào buffer không bị chạm tới, dù renderer chung vẫn đang bật ACESFilmic cho mọi thứ khác.",
-        en: "For sphere B, toneMapped=false forces toneMapping to NoToneMapping for that specific material — the raw linear value 2.4 goes straight into the buffer untouched, even though the renderer overall still has ACESFilmic on for everything else.",
+        vi: "Trong (Y), render thẳng ra màn hình — render target là null, điều kiện chỉ còn phụ thuộc cờ của từng material; và saturate() ở cuối đường cong quyết định giá trị hiển thị của quả cầu bị tonemap.",
+        en: "In (Y), rendering straight to the screen — the render target is null, so the condition reduces to each material's own flag; and the saturate() ending the curve decides the tonemapped sphere's displayed value.",
       },
     ],
     checklist: [
       {
-        vi: "Tôi giải thích đúng sphere A bị clamp về gần 1.0, thấp hơn threshold 1.3, nên KHÔNG bloom",
-        en: "I correctly explain sphere A gets clamped near 1.0, below the 1.3 threshold, so it does NOT bloom",
+        vi: "Tôi trả lời đúng: trong (X), CẢ A lẫn B đều ghi 2.4 vào buffer và ĐỀU bloom (2.4 > 1.3) — toneMapped là no-op bên trong composer",
+        en: "I correctly answer: in (X), BOTH A and B write 2.4 into the buffer and BOTH bloom (2.4 > 1.3) — toneMapped is a no-op inside the composer",
       },
       {
-        vi: "Tôi giải thích đúng sphere B giữ nguyên giá trị 2.4, vượt threshold 1.3, nên CÓ bloom",
-        en: "I correctly explain sphere B keeps its raw 2.4 value, above the 1.3 threshold, so it DOES bloom",
+        vi: "Tôi trả lời đúng: trong (Y), A bị tonemap + saturate() nên hiển thị ~1.0 (tối hơn), B bỏ qua tonemap nên cháy sáng — và không có bloom nào vì không có composer",
+        en: "I correctly answer: in (Y), A is tonemapped + saturate()d to ~1.0 (dimmer) while B skips tone mapping and blows out — and nothing blooms because there is no composer",
       },
       {
-        vi: "Tôi nêu được saturate()/clamp trong đường cong tonemapping là nguyên nhân cơ chế, không chỉ nói chung chung 'A bị tối hơn'",
-        en: "I identify saturate()/clamp inside the tonemapping curve as the mechanism, not just a vague 'A looks dimmer' explanation",
+        vi: "Tôi chỉ đúng điều kiện render-target-null là cơ chế quyết định, không phải riêng cờ toneMapped",
+        en: "I identify the render-target-null condition as the deciding mechanism, not the toneMapped flag alone",
       },
     ],
     solutionNote: {
-      vi: `Sphere A (\`toneMapped: true\`, mặc định): toneMapping hiệu lực $=$ \`material.toneMapped ? renderer.toneMapping : NoToneMapping\` $=$ \`true ? ACESFilmicToneMapping : ...\` $=$ \`ACESFilmicToneMapping\`. Fragment shader gọi \`ACESFilmicToneMapping(color)\`, hàm này trả về \`saturate(color)\`, nên luminance $2.4$ bị clamp về xấp xỉ $1.0$ trước khi ghi vào \`readBuffer\`. \`UnrealBloomPass\` đọc được luminance $\\approx 1.0 < 1.3$ (threshold), nên KHÔNG bloom.
+      vi: `(X) Composer: \`RenderPass\` render vào \`readBuffer\` — một render target, không phải \`null\` — nên \`WebGLPrograms.getParameters\` ép toneMapping của MỌI material về \`NoToneMapping\`, cờ \`toneMapped\` không có tiếng nói. Cả A lẫn B ghi đúng luminance $2.4$ vào buffer HalfFloat; \`UnrealBloomPass\` đọc $2.4 > 1.3$ cho cả hai, nên CẢ HAI đều bloom như nhau. Tonemap chỉ xảy ra một lần, ở \`OutputPass\` cuối chuỗi.
 
-Sphere B (\`toneMapped: false\`): toneMapping hiệu lực $=$ \`false ? ... : NoToneMapping\` $=$ \`NoToneMapping\`. \`#if defined(TONE_MAPPING)\` là false cho riêng material này nên không có bước saturate — luminance $2.4$ đi thẳng vào buffer HalfFloat, nguyên vẹn. \`UnrealBloomPass\` đọc được luminance $2.4 > 1.3$ (threshold), nên CÓ bloom.`,
-      en: `Sphere A (\`toneMapped: true\`, the default): the effective toneMapping $=$ \`material.toneMapped ? renderer.toneMapping : NoToneMapping\` $=$ \`true ? ACESFilmicToneMapping : ...\` $=$ \`ACESFilmicToneMapping\`. The fragment shader calls \`ACESFilmicToneMapping(color)\`, which returns \`saturate(color)\`, so a luminance of $2.4$ gets clamped down to approximately $1.0$ before it's written into \`readBuffer\`. \`UnrealBloomPass\` reads a luminance of $\\approx 1.0 < 1.3$ (the threshold), so it does NOT bloom.
+(Y) Render thẳng ra màn hình: render target là \`null\`, điều kiện chỉ còn cờ material. A (\`toneMapped: true\`) đi qua \`ACESFilmicToneMapping(color)\` kết thúc bằng \`saturate()\` — hiển thị $\\approx 1.0$, tối hơn. B (\`toneMapped: false\`) bỏ qua tonemap — giá trị $2.4$ đổ thẳng, cháy sáng trắng. Và không có bloom nào cả: bloom là một pass của composer, (Y) không có composer.`,
+      en: `(X) Composer: \`RenderPass\` renders into \`readBuffer\` — a render target, not \`null\` — so \`WebGLPrograms.getParameters\` forces EVERY material's toneMapping to \`NoToneMapping\`; the \`toneMapped\` flag gets no say. Both A and B write a raw luminance of $2.4$ into the HalfFloat buffer; \`UnrealBloomPass\` reads $2.4 > 1.3$ for both, so BOTH bloom identically. Tone mapping happens exactly once, in the chain-ending \`OutputPass\`.
 
-Sphere B (\`toneMapped: false\`): the effective toneMapping $=$ \`false ? ... : NoToneMapping\` $=$ \`NoToneMapping\`. \`#if defined(TONE_MAPPING)\` is false for that specific material, so there's no saturate step — the luminance $2.4$ goes straight into the HalfFloat buffer untouched. \`UnrealBloomPass\` reads a luminance of $2.4 > 1.3$ (the threshold), so it DOES bloom.`,
+(Y) Straight to the screen: the render target is \`null\`, so the condition reduces to each material's flag. A (\`toneMapped: true\`) runs through \`ACESFilmicToneMapping(color)\` ending in \`saturate()\` — displayed at $\\approx 1.0$, dimmer. B (\`toneMapped: false\`) skips tone mapping — the raw $2.4$ lands directly, blowing out to white. And nothing blooms at all: bloom is a composer pass, and (Y) has no composer.`,
     },
   },
   {
     id: "write-emitter-vs-surface-materials",
     kind: "code",
     prompt: {
-      vi: `Viết hai hàm helper bằng \`three\`: \`makeEmitterMaterial(color, intensity)\` trả về một \`MeshStandardMaterial\` thật sự đóng góp vào bloom HDR (giữ nguyên cường độ linear, không bị tonemapping kẹp), và \`makeSurfaceMaterial(color)\` cho vật thể thường (được tonemap bình thường như mọi vật khác trong cảnh).`,
-      en: `Write two helper functions using \`three\`: \`makeEmitterMaterial(color, intensity)\` returning a \`MeshStandardMaterial\` that genuinely contributes to HDR bloom (keeps its raw linear intensity, never clamped by tonemapping), and \`makeSurfaceMaterial(color)\` for an ordinary object (tonemapped normally like everything else in the scene).`,
+      vi: `Viết hai hàm helper bằng \`three\`: \`makeEmitterMaterial(color, intensity)\` trả về một \`MeshStandardMaterial\` thật sự đóng góp HDR cho bloom trong một chuỗi composer (điểm mấu chốt: emissive vượt 1.0 — buffer composer vốn linear nên KHÔNG cần cờ nào để "giữ HDR"), và \`makeSurfaceMaterial(color)\` cho vật thể thường. Khác biệt duy nhất giữa hai helper là emissive, không phải tonemapping.`,
+      en: `Write two helper functions using \`three\`: \`makeEmitterMaterial(color, intensity)\` returning a \`MeshStandardMaterial\` that genuinely contributes HDR to bloom inside a composer chain (the key: emissive above 1.0 — composer buffers are linear by construction, so NO flag is needed to "keep HDR"), and \`makeSurfaceMaterial(color)\` for an ordinary object. The only difference between the two helpers is emissive, not tonemapping.`,
     },
     starterCode: `import * as THREE from "three";
 
 function makeEmitterMaterial(color: THREE.ColorRepresentation, intensity: number) {
   // TODO: base color can stay black/dim — the glow comes entirely from emissive
   // TODO: set emissive + emissiveIntensity so raw luminance can exceed 1.0
-  // TODO: opt this material OUT of the renderer's tonemapping clamp
+  // NOTE (not a TODO): no tonemapping opt-out needed — composer buffers
+  // are linear HDR by construction; toneMapped only matters for
+  // direct-to-screen rendering, where there is no bloom anyway
   return new THREE.MeshStandardMaterial({ color });
 }
 
@@ -72,25 +78,26 @@ function makeEmitterMaterial(color: THREE.ColorRepresentation, intensity: number
     color: 0x000000, // no diffuse contribution — the glow is entirely emissive
     emissive: color,
     emissiveIntensity: intensity, // can exceed 1.0 — that's the point
-    toneMapped: false, // opts OUT of renderer.toneMapping's saturate() clamp
+    // No toneMapped flag: inside a composer, RenderPass targets a render
+    // target and three skips material tone mapping there anyway.
   });
 }
 
 function makeSurfaceMaterial(color: THREE.ColorRepresentation) {
   return new THREE.MeshStandardMaterial({
     color,
-    // toneMapped defaults to true — tonemapped and clamped like the rest
-    // of the scene, exactly as it should be for a non-emitting surface.
+    // Nothing special: in-composer, neither material is tone-mapped at
+    // draw time — the whole frame is tone-mapped once, in OutputPass.
   });
 }`,
     hints: [
       {
-        vi: "emissiveIntensity không có giới hạn trên trong API — giá trị >1.0 hợp lệ, chỉ là bình thường bị tonemapping kẹp lại nếu không set toneMapped: false.",
-        en: "emissiveIntensity has no upper bound in the API — values above 1.0 are valid, they just get clamped by tonemapping unless you set toneMapped: false.",
+        vi: "emissiveIntensity không có giới hạn trên trong API — giá trị > 1.0 đi thẳng vào buffer composer (vốn linear), và threshold > 1.0 của bloom bắt đúng nó.",
+        en: "emissiveIntensity has no upper bound in the API — values above 1.0 flow straight into the composer buffer (linear by construction), and a bloom threshold above 1.0 catches exactly them.",
       },
       {
-        vi: "makeSurfaceMaterial không cần đổi gì đặc biệt — toneMapped mặc định đã đúng là true, đó chính là điểm khác biệt cần thể hiện so với makeEmitterMaterial.",
-        en: "makeSurfaceMaterial doesn't need anything special — toneMapped already defaults to true, and that default IS the contrast this exercise wants you to show against makeEmitterMaterial.",
+        vi: "makeSurfaceMaterial không cần gì đặc biệt — điểm khác biệt duy nhất giữa hai helper là bộ emissive (màu + cường độ), không phải cờ tonemapping nào.",
+        en: "makeSurfaceMaterial needs nothing special — the only difference between the two helpers is the emissive setup (color + intensity), not any tonemapping flag.",
       },
     ],
     checklist: [

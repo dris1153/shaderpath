@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { BokehPass } from "three/addons/postprocessing/BokehPass.js";
 import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
@@ -86,6 +87,11 @@ function PostFx() {
     composer.addPass(renderPass);
     composer.addPass(bokehPass);
     composer.addPass(motionBlurPass);
+    // The lesson-1 rule applies here too: without OutputPass the canvas
+    // receives raw linear values (no tone map, no sRGB encode) and reads
+    // visibly darker than every other demo.
+    const outputPass = new OutputPass();
+    composer.addPass(outputPass);
     composer.setSize(size.width, size.height);
     composer.setPixelRatio(gl.getPixelRatio());
 
@@ -96,6 +102,7 @@ function PostFx() {
       renderPass.dispose();
       bokehPass.dispose();
       motionBlurPass.dispose();
+      outputPass.dispose();
       stateRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- size read once at construction, resized separately below

@@ -5,20 +5,20 @@ export const exercises: Exercise[] = [
     id: "build-cinematic-scene",
     kind: "build",
     prompt: {
-      vi: `Dựng một component \`CinematicScene\` bằng React Three Fiber: một cảnh still-life có sẵn (bình gốm, quả cam, chồng sách, và một "bóng đèn" phát sáng) trong starter — việc của bạn là hoàn thành chuỗi \`EffectComposer\` gồm đúng năm pass, theo đúng thứ tự: \`RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass\`.
+      vi: `Dựng một component \`CinematicScene\` bằng React Three Fiber: một cảnh still-life tự dựng bằng primitive (bình gốm, quả cam, chồng sách, và một "bóng đèn" emissive phát sáng — solution đặt chủ thể tại (0, 0.55, 0) và đèn tại (-1.15, 1.25, -0.35)), cộng chuỗi \`EffectComposer\` gồm đúng năm pass, theo đúng thứ tự: \`RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass\`.
 
 SSAO phải làm cảnh "bám đất" (bóng tiếp xúc dưới bình/sách) mà không quầng viền ở rìa mặt đất. Bloom chỉ được nở ở bóng đèn — threshold trên $1.0$ để chỉ giá trị HDR chưa tonemap của bóng đèn vượt ngưỡng, còn mọi bề mặt chiếu sáng bình thường thì không. DOF (Bokeh) phải lấy nét đúng cái bình (chủ thể), làm mờ nền phía sau — \`focus\` tính từ khoảng cách camera thật tới chủ thể, không phải một số cố định.
 
 Đo frame time của \`composer.render()\` bằng \`performance.now()\`, EMA-smoothed, khi \`passChainEnabled\` bật (chạy cả chuỗi) và tắt (chỉ \`gl.render(scene, camera)\` làm baseline) — log ra định kỳ để so sánh chênh lệch.
 
-Phần cảnh JSX (still-life + ánh sáng) và khung component đã đầy đủ trong starter — việc của bạn là hoàn thành đúng 8 TODO bên trong \`PostFx\`.`,
-      en: `Build a \`CinematicScene\` component with React Three Fiber: a provided still-life scene (a ceramic vase, an orange, a stack of books, and a glowing "lamp") is already in the starter — your job is to complete an \`EffectComposer\` chain of exactly five passes, in this exact order: \`RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass\`.
+Bài dạng build tự dựng từ đầu (không có starter hiển thị): cả phần cảnh JSX lẫn component \`PostFx\` chạy composer — cờ bật/tắt chuỗi (kiểu \`passChainEnabled\`) do bạn tự định nghĩa làm prop/state để đo được baseline.`,
+      en: `Build a \`CinematicScene\` component with React Three Fiber: a still-life you build from primitives (a ceramic vase, an orange, a stack of books, and a glowing emissive "lamp" — the solution places the subject at (0, 0.55, 0) and the lamp at (-1.15, 1.25, -0.35)), plus an \`EffectComposer\` chain of exactly five passes, in this exact order: \`RenderPass → SSAOPass → UnrealBloomPass → BokehPass → OutputPass\`.
 
 SSAO must ground the scene (contact shadows under the vase/books) without a visible halo at the ground plane's edge. Bloom must bloom ONLY the lamp — a threshold above $1.0$ so only the lamp's un-tonemapped HDR value crosses it, while every normally-lit surface stays under it. DOF (Bokeh) must keep the vase (the subject) sharp and melt the background behind it — \`focus\` computed from the camera's real distance to the subject, not a hardcoded number.
 
 Measure \`composer.render()\`'s frame time with \`performance.now()\`, EMA-smoothed, with \`passChainEnabled\` on (the full chain runs) and off (a plain \`gl.render(scene, camera)\` baseline) — log it periodically to compare the delta.
 
-The scene JSX (still-life + lighting) and the component scaffold are already complete in the starter — your job is to finish exactly 8 TODOs inside \`PostFx\`.`,
+Build exercises start from scratch (no visible starter): you write both the scene JSX and the composer-driving \`PostFx\` component — define the chain on/off flag (something like \`passChainEnabled\`) yourself as a prop/state so the baseline can be measured.`,
     },
     starterCode: `"use client";
 
@@ -120,10 +120,9 @@ function PostFx({ passChainEnabled = true }: { passChainEnabled?: boolean }) {
 
   useEffect(() => {
     // TODO 7: on size change, call composer.setSize(size.width, size.height)
-    // — this internally resizes EVERY pass's buffers — and separately
-    // resync bokeh.materialBokeh.uniforms.aspect.value to the camera's
-    // current aspect (BokehPass reads camera.aspect once at construction,
-    // never again on its own).
+    // — this internally resizes EVERY pass's buffers, and BokehPass's own
+    // setSize also recomputes its aspect uniform from width/height, so no
+    // separate aspect resync is needed.
   }, [size, camera]);
 
   useFrame(() => {
@@ -272,10 +271,8 @@ function PostFx({ passChainEnabled = true }: { passChainEnabled?: boolean }) {
     const st = stateRef.current;
     if (!st) return;
     st.composer.setSize(size.width, size.height);
-    // BokehPass reads camera.aspect once at construction time and never
-    // again — resizing without this resync leaves DOF using a stale aspect
-    // ratio after a container resize or orientation change.
-    st.bokeh.materialBokeh.uniforms.aspect.value = (camera as THREE.PerspectiveCamera).aspect;
+    // composer.setSize calls every pass's setSize — BokehPass recomputes
+    // its aspect uniform there (width / height), so no manual resync.
   }, [size, camera]);
 
   useFrame(() => {
@@ -316,8 +313,8 @@ export function CinematicScene({ passChainEnabled = true }: { passChainEnabled?:
         en: "Pass order: SSAO must run BEFORE bloom. SSAO multiplies contact shadows onto whatever is currently in the composer's buffer at the moment it runs — run bloom first and the lamp's glow is already sitting in that buffer, partially darkened by SSAO.",
       },
       {
-        vi: "Threshold của UnrealBloomPass phải lớn hơn $1.0$. Buffer bên trong composer giữ giá trị linear HDR chưa tonemap (Three tự tắt tonemapping khi render target khác null — xem WebGLRenderer.js), nên chỉ bóng đèn (emissiveIntensity > 1) mới vượt ngưỡng, còn mọi bề mặt chiếu sáng bình thường thì không.",
-        en: "UnrealBloomPass's threshold must be greater than $1.0$. The composer's internal buffer holds linear, un-tonemapped HDR values (Three automatically skips tone mapping whenever the active render target isn't null — see WebGLRenderer.js), so only the lamp (emissiveIntensity > 1) crosses that threshold, while every normally-lit surface stays under it.",
+        vi: "Threshold của UnrealBloomPass phải lớn hơn $1.0$. Buffer bên trong composer giữ giá trị linear HDR chưa tonemap (Three tự tắt tonemapping khi render target khác null — xem WebGLPrograms.js), nên chỉ bóng đèn (emissiveIntensity > 1) mới vượt ngưỡng, còn mọi bề mặt chiếu sáng bình thường thì không.",
+        en: "UnrealBloomPass's threshold must be greater than $1.0$. The composer's internal buffer holds linear, un-tonemapped HDR values (Three automatically skips tone mapping whenever the active render target isn't null — see WebGLPrograms.js), so only the lamp (emissiveIntensity > 1) crosses that threshold, while every normally-lit surface stays under it.",
       },
       {
         vi: "focus của BokehPass phải bằng khoảng cách thật từ camera đến chủ thể — \`camera.position.distanceTo(SUBJECT)\` — chứ không phải một số cố định đoán mò. Đổi vị trí camera, focus phải tự đổi theo.",
