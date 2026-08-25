@@ -9,12 +9,12 @@ export const exercises: Exercise[] = [
 
 Bám theo năm mốc gợi ý: (1) dựng skeleton site — layout và trang nội dung thuần Server Component, chưa đụng WebGL, đạt điểm 95+; (2) tích hợp hero 3D qua một hòn đảo canvas duy nhất — \`next/dynamic({ ssr: false })\` gọi từ Client Component, giữ chỗ layout bằng aspect-ratio cố định trước khi mount; (3) thêm tier thích nghi cho hero — độ chi tiết geometry và DPR giảm theo thiết bị, tôn trọng \`prefers-reduced-motion\`, dừng render loop khi ẩn; (4) xác nhận disposal qua nhiều lần điều hướng route bằng \`<Link>\`, không chỉ một lần mount/unmount; (5) hoàn thiện và tổng hợp một bảng audit Lighthouse đầy đủ, theo đúng phương pháp luận chính thức (mobile preset, throttled).
 
-\`starterCode\` bên dưới dựng sẵn khung sườn sáu module — layout, trang nội dung, hero island, hook tier thiết bị, scene 3D, và verification — với TODO cho từng mốc; \`solutionCode\` gộp cả sáu module vào một file, ranh giới đánh dấu rõ bằng comment, vì đây là kiến trúc tham khảo chứ không phải cấu trúc thư mục thật.`,
+Bài dạng build tự dựng từ đầu (không có starter hiển thị). Kiến trúc gồm sáu module: (1) layout, (2) trang nội dung, (3) hero island, (4) hook tier thiết bị, (5) scene 3D, (6) verification; \`solutionCode\` gộp cả sáu vào một file, ranh giới đánh dấu rõ bằng comment, vì đây là kiến trúc tham khảo chứ không phải cấu trúc thư mục thật.`,
       en: `Build a real 3D portfolio site with the Next.js App Router: score above 90 on Lighthouse Performance for every non-canvas page, and run smoothly on a mid-range mobile device.
 
 Follow five suggested milestones: (1) build the site skeleton — a pure Server Component layout and content pages, no WebGL yet, hitting 95+; (2) integrate the 3D hero through a single canvas island — \`next/dynamic({ ssr: false })\` called from a Client Component, with layout space reserved via a fixed aspect-ratio before it mounts; (3) add adaptive tiers to the hero — geometry detail and DPR drop per device, \`prefers-reduced-motion\` respected, render loop stopped when hidden; (4) verify disposal across repeated \`<Link>\` route navigations, not just a single mount/unmount; (5) polish and assemble a complete Lighthouse audit table, following the official methodology (mobile preset, throttled).
 
-The \`starterCode\` below scaffolds six modules — layout, content page, hero island, device-tier hook, 3D scene, and verification — with a TODO per milestone; \`solutionCode\` folds all six modules into one file with boundaries clearly marked by comments, since this is a reference architecture, not an actual folder structure.`,
+Build exercises start from scratch (no visible starter). The architecture spans six modules: (1) layout, (2) content page, (3) hero island, (4) device-tier hook, (5) 3D scene, (6) verification; \`solutionCode\` folds all six into one file with boundaries clearly marked by comments, since this is a reference architecture, not an actual folder structure.`,
     },
     starterCode: `// ============================================================
 // SIX-MODULE SCAFFOLD for the 3D portfolio capstone. In a real repo
@@ -50,7 +50,8 @@ The \`starterCode\` below scaffolds six modules — layout, content page, hero i
 
 // TODO Milestone 3 — MODULE 5: components/hero-scene.tsx
 // R3F <Canvas frameloop="demand"> with useVisibleFrameloop pumping
-// invalidate() only while visible, useDisposable for geometry/material,
+// invalidate() only while visible, geometry/material created and
+// disposed inside effects,
 // mesh detail + dpr driven by the tier hook, spin animation gated by
 // !reducedMotion.
 
@@ -82,6 +83,8 @@ export const metadata: Metadata = {
   openGraph: { title: "Jane Doe — 3D Frontend Engineer", type: "website" },
 };
 
+// Named export only because six modules share this file — a real
+// app/layout.tsx must \`export default\` this component.
 export function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
@@ -102,8 +105,12 @@ export function RootLayout({ children }: { children: ReactNode }) {
 // FIRST HTML response: indexable with zero client JS, and none of it
 // blocks on \`three\` loading.
 // ============================================================
+// Sibling paths because everything lives in this one file — in the real
+// layout use the path each MODULE header declares (e.g. @/components/...).
 import { HeroIsland } from "./hero-island";
 
+// Named export only because six modules share this file — a real
+// app/page.tsx must \`export default\` this component.
 export function HomePage() {
   return (
     <>
@@ -194,11 +201,10 @@ export function useDeviceProfile(): DeviceProfile {
 // hero's own chunk, never in the shared or page chunk.
 // ============================================================
 "use client"; // first line of this module's real file
-import { useMemo, useRef, type RefObject } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { useDeviceProfile, type Tier } from "./use-device-tier";
-import { useDisposable } from "@/lib/hooks/use-disposable";
 import { useVisibleFrameloop } from "@/lib/hooks/use-visible-frameloop";
 
 const TIER_DETAIL: Record<Tier, number> = { low: 0, mid: 1, high: 2 };
@@ -208,22 +214,35 @@ const TIER_DPR: Record<Tier, [number, number]> = {
   high: [1, 2],
 };
 
-// Reuses this platform's own useDisposable/useVisibleFrameloop — the
+// Reuses this platform's own useVisibleFrameloop — the
 // "battery-respect visibility pause" the brief asks for IS the same
 // demand-frameloop contract every lesson demo already follows, not a
 // separate mechanism invented for the portfolio.
 function HeroMesh({ detail, spin }: { detail: number; spin: boolean }) {
-  const disposables = useDisposable();
   const meshRef = useRef<THREE.Mesh>(null);
 
-  const geometry = useMemo(
-    () => disposables.register(new THREE.IcosahedronGeometry(1.2, detail)),
-    [detail, disposables],
-  );
-  const material = useMemo(
-    () => disposables.register(new THREE.MeshStandardMaterial({ color: "#7aa2f7", roughness: 0.3 })),
-    [disposables],
-  );
+  // Created inside effects, not useMemo: a tier change disposes the old
+  // geometry immediately, and Strict Mode's simulated unmount can't leave
+  // a memoized object dead-then-reused.
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+  useEffect(() => {
+    const geo = new THREE.IcosahedronGeometry(1.2, detail);
+    setGeometry(geo);
+    return () => {
+      geo.dispose();
+      setGeometry(null);
+    };
+  }, [detail]);
+
+  const [material, setMaterial] = useState<THREE.MeshStandardMaterial | null>(null);
+  useEffect(() => {
+    const mat = new THREE.MeshStandardMaterial({ color: "#7aa2f7", roughness: 0.3 });
+    setMaterial(mat);
+    return () => {
+      mat.dispose();
+      setMaterial(null);
+    };
+  }, []);
 
   useFrame((_state, delta) => {
     if (spin && meshRef.current) meshRef.current.rotation.y += delta * 0.3;
@@ -264,8 +283,8 @@ export function HeroScene() {
 // "/", "/work/[slug]"); the hero mounts on "/" and must fully
 // unmount+dispose when a <Link> navigates to "/work/foo", then remount
 // cleanly on the way back. App Router does client-side navigation without
-// a full page reload, so React unmount/mount — and therefore
-// useDisposable's cleanup — is the ONLY thing that frees the
+// a full page reload, so React unmount/mount — and therefore the
+// effect cleanups that dispose GPU objects — is the ONLY thing that frees the
 // WebGLRenderer/geometries/materials. Keeping the hero as a page-scoped
 // component (mounted from MODULE 2's app/page.tsx, never hoisted into
 // MODULE 1's persistent layout) is what makes this teardown happen at all.
@@ -311,8 +330,8 @@ export function HeroScene() {
         en: "Reserving layout space doesn't stop at 'before the chunk loads' — the `next/dynamic` `loading:` fallback and the container mounting the real `<Canvas>` must be the SAME size (`aspect-video` applied to both). Skip this and CLS still happens right at the fallback-to-real-canvas transition, even though nothing shifted before that.",
       },
       {
-        vi: "Hero phải là component gắn theo TRANG (`app/page.tsx`), không phải theo layout — nếu hoisting nó lên `app/layout.tsx` để \"tránh phải remount mỗi lần điều hướng\", nó sẽ không bao giờ unmount khi chuyển route, và một component không bao giờ unmount thì cleanup của `useDisposable` cũng không bao giờ chạy. Kiểm tra disposal qua route navigation (MODULE 6) sẽ luôn \"pass giả\" nếu mắc lỗi này, vì đơn giản là không có unmount nào xảy ra để mà leak.",
-        en: "The hero must be a PAGE-scoped component (`app/page.tsx`), not a layout-scoped one — hoisting it into `app/layout.tsx` to 'avoid remounting on every navigation' means it never unmounts on a route change, and a component that never unmounts never runs `useDisposable`'s cleanup either. The route-navigation disposal check (MODULE 6) will falsely 'pass' under this mistake, simply because no unmount ever happens for anything to leak from.",
+        vi: "Hero phải là component gắn theo TRANG (`app/page.tsx`), không phải theo layout — nếu hoisting nó lên `app/layout.tsx` để \"tránh phải remount mỗi lần điều hướng\", nó sẽ không bao giờ unmount khi chuyển route, và một component không bao giờ unmount thì các effect cleanup dispose GPU object cũng không bao giờ chạy. Kiểm tra disposal qua route navigation (MODULE 6) sẽ luôn \"pass giả\" nếu mắc lỗi này, vì đơn giản là không có unmount nào xảy ra để mà leak.",
+        en: "The hero must be a PAGE-scoped component (`app/page.tsx`), not a layout-scoped one — hoisting it into `app/layout.tsx` to 'avoid remounting on every navigation' means it never unmounts on a route change, and a component that never unmounts never runs the effect cleanups that dispose its GPU objects either. The route-navigation disposal check (MODULE 6) will falsely 'pass' under this mistake, simply because no unmount ever happens for anything to leak from.",
       },
     ],
     checklist: [

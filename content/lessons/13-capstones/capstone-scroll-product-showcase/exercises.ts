@@ -5,14 +5,14 @@ export const exercises: Exercise[] = [
     id: "build-scroll-product-showcase",
     kind: "build",
     prompt: {
-      vi: `Dựng \`ScrollProductShowcase\`, một trang giới thiệu sản phẩm cuộn trang hoàn chỉnh tổng hợp GLTF/asset pipeline, ScrollTrigger đồng bộ R3F và một chuỗi post-processing tiết chế. \`starterCode\` đã dựng khung: một component load model GLTF nhúng (đại diện cho asset thật đã qua Draco/KTX2), một proxy object \`{ dolly, turntable, spotlight }\`, và khung composer hậu kỳ — việc của bạn là lấp 6 TODO theo đúng 6 mốc của dự án.
+      vi: `Dựng \`ScrollProductShowcase\`, một trang giới thiệu sản phẩm cuộn trang hoàn chỉnh tổng hợp GLTF/asset pipeline, ScrollTrigger đồng bộ R3F và một chuỗi post-processing tiết chế. Bài dạng build tự dựng từ đầu (không có starter hiển thị). Khung cần dựng: một GLTF nhúng nhỏ tự sinh làm model sản phẩm (đại diện cho asset thật đã qua Draco/KTX2), một proxy object \`{ dolly, turntable, spotlight }\` cho ScrollTrigger ghi vào, một cầu invalidate (component nhỏ trong Canvas ghi \`useThree((s) => s.invalidate)\` vào một ref cho code ngoài Canvas gọi), và một component hậu kỳ chạy composer thủ công — đi theo đúng 6 mốc của dự án.
 
-Mốc 1 (TODO 1): parse \`buildProductGltf()\` bằng \`GLTFLoader.parse()\`, đăng ký geometry/material qua \`useDisposable\`, add vào scene. Mốc 2 (TODO 2): camera đọc \`progress.dolly\` trong \`useFrame\`, và một \`ScrollTrigger\` scrub đầu tiên ghi vào đúng field đó rồi gọi \`invalidate()\`. Mốc 3 (TODO 3): thêm hai ScrollTrigger scrub còn lại (turntable, spotlight) cộng một vòng lặp \`toggleActions\` cho mọi \`.chapter-copy\`. Mốc 4 (TODO 4): ánh sáng + material cho cảm giác sản phẩm cao cấp. Mốc 5 (TODO 5): composer thủ công — \`RenderPass\` → \`UnrealBloomPass\` (ngưỡng cao, chỉ bloom vành emissive) → \`OutputPass\` → vignette \`ShaderPass\`, đo \`composer.render()\` bằng EMA so với một ngân sách cụ thể. Mốc 6 (TODO 6): nhánh \`prefers-reduced-motion: reduce\` set thẳng một pose tĩnh, cộng dispose composer/pass khi unmount.
+Mốc 1: parse \`buildProductGltf()\` bằng \`GLTFLoader.parse()\`, đăng ký geometry/material qua \`useDisposable\`, add vào scene. Mốc 2: camera đọc \`progress.dolly\` trong \`useFrame\`, và một \`ScrollTrigger\` scrub đầu tiên ghi vào đúng field đó rồi gọi \`invalidate()\`. Mốc 3: thêm hai ScrollTrigger scrub còn lại (turntable, spotlight) cộng một vòng lặp \`toggleActions\` cho mọi \`.chapter-copy\`. Mốc 4: ánh sáng + material cho cảm giác sản phẩm cao cấp. Mốc 5: composer thủ công — \`RenderPass\` → \`UnrealBloomPass\` (ngưỡng cao, chỉ bloom vành emissive) → \`OutputPass\` → vignette \`ShaderPass\`, đo \`composer.render()\` bằng EMA so với một ngân sách cụ thể. Mốc 6: nhánh \`prefers-reduced-motion: reduce\` set thẳng một pose tĩnh, cộng dispose composer/pass khi unmount.
 
 Layout giữ tối giản có chủ đích: canvas \`position: sticky\` phủ toàn bộ trong lúc ba \`section\` cao \`150vh\` cuộn qua bên dưới. Một trang thật sẽ chia lưới canvas/text thành hai cột để copy không bao giờ nằm dưới model — phần đó nằm ngoài phạm vi \`solutionCode\` này, vốn tập trung vào phần biên đạo cuộn + render.`,
-      en: `Build \`ScrollProductShowcase\`, a complete scroll-driven product page synthesizing the GLTF/asset pipeline, ScrollTrigger synced to R3F, and a restrained post-processing chain. The \`starterCode\` already scaffolds it: a component loading an embedded GLTF model (standing in for a real Draco/KTX2-compressed asset), a proxy object \`{ dolly, turntable, spotlight }\`, and a post-processing composer frame — your job is filling 6 TODOs matching the project's 6 milestones.
+      en: `Build \`ScrollProductShowcase\`, a complete scroll-driven product page synthesizing the GLTF/asset pipeline, ScrollTrigger synced to R3F, and a restrained post-processing chain. Build exercises start from scratch (no visible starter). Scaffolding to build: a small self-generated embedded GLTF as the product model (standing in for a real Draco/KTX2-compressed asset), a proxy object \`{ dolly, turntable, spotlight }\` for ScrollTrigger to write into, an invalidate bridge (a tiny component inside the Canvas writing \`useThree((s) => s.invalidate)\` into a ref for code outside the Canvas to call), and a post-FX component driving a manual composer — following the project's 6 milestones.
 
-Milestone 1 (TODO 1): parse \`buildProductGltf()\` with \`GLTFLoader.parse()\`, register the geometry/material through \`useDisposable\`, add it to the scene. Milestone 2 (TODO 2): the camera reads \`progress.dolly\` inside \`useFrame\`, and a first scrub \`ScrollTrigger\` writes into that exact field then calls \`invalidate()\`. Milestone 3 (TODO 3): add the two remaining scrub triggers (turntable, spotlight) plus a \`toggleActions\` loop over every \`.chapter-copy\`. Milestone 4 (TODO 4): lighting + material for a premium-product feel. Milestone 5 (TODO 5): a manual composer — \`RenderPass\` → \`UnrealBloomPass\` (high threshold, bloom only the emissive rim) → \`OutputPass\` → a vignette \`ShaderPass\`, measuring \`composer.render()\` with an EMA against a stated budget. Milestone 6 (TODO 6): a \`prefers-reduced-motion: reduce\` branch setting a static pose directly, plus disposing the composer/passes on unmount.
+Milestone 1: parse \`buildProductGltf()\` with \`GLTFLoader.parse()\`, register the geometry/material through \`useDisposable\`, add it to the scene. Milestone 2: the camera reads \`progress.dolly\` inside \`useFrame\`, and a first scrub \`ScrollTrigger\` writes into that exact field then calls \`invalidate()\`. Milestone 3: add the two remaining scrub triggers (turntable, spotlight) plus a \`toggleActions\` loop over every \`.chapter-copy\`. Milestone 4: lighting + material for a premium-product feel. Milestone 5: a manual composer — \`RenderPass\` → \`UnrealBloomPass\` (high threshold, bloom only the emissive rim) → \`OutputPass\` → a vignette \`ShaderPass\`, measuring \`composer.render()\` with an EMA against a stated budget. Milestone 6: a \`prefers-reduced-motion: reduce\` branch setting a static pose directly, plus disposing the composer/passes on unmount.
 
 The layout stays deliberately minimal: a \`position: sticky\` canvas covers the viewport while three \`150vh\` sections scroll past underneath. A real page would grid the canvas against a text column so copy never sits under the model — that's out of scope for this \`solutionCode\`, which focuses on the scroll choreography and render wiring.`,
     },
@@ -124,13 +124,16 @@ function ProductScene({ progressRef }: { progressRef: RefObject<ChapterProgress>
   const modelRef = useRef<THREE.Group | null>(null);
   const spotRef = useRef<THREE.Mesh>(null);
   const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
 
   useEffect(() => {
     // TODO 1: new GLTFLoader().parse(JSON.stringify(buildProductGltf()), "",
     // onLoad, onError) -- inside onLoad, traverse the model, register every
     // Mesh's geometry/material via disposables.register(), scene.add(model),
-    // store it in modelRef.current. Remove it from the scene on cleanup.
-  }, [scene, disposables]);
+    // store it in modelRef.current, then call invalidate() -- parse() is
+    // async and frameloop="demand" already painted its first frame.
+    // Remove the model from the scene on cleanup.
+  }, [scene, disposables, invalidate]);
 
   useFrame(({ camera }) => {
     const p = progressRef.current;
@@ -175,12 +178,15 @@ function ShowcasePostFX() {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
 
-  const passes = useMemo(() => {
+  // Created inside an effect, not useMemo: Strict Mode's simulated unmount
+  // disposes the chain, and a memoized composer would come back dead.
+  const passesRef = useRef<{ composer: EffectComposer } | null>(null);
+  useEffect(() => {
     const composer = new EffectComposer(gl);
     const renderPass = new RenderPass(scene, camera);
     // TODO 5: threshold (4th constructor arg) needs to be HIGH so only the
     // emissive spotlight ring blooms, not the whole lit product.
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(size.width, size.height), 0.9, 0.5, 0.2);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.5, 0.2);
     const outputPass = new OutputPass();
     const vignettePass = new ShaderPass({
       uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.65 } },
@@ -189,22 +195,24 @@ function ShowcasePostFX() {
     });
     // TODO 5: composer.addPass() all four in the canonical order --
     // scene -> bloom -> tone map -> stylistic (vignette).
-    return { composer, renderPass, bloomPass, outputPass, vignettePass };
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    composer.setSize(gl.domElement.width, gl.domElement.height);
+    passesRef.current = { composer };
+    return () => {
+      passesRef.current = null;
+      // TODO 6: dispose the composer + every pass created above
+      // (renderPass included)
+    };
   }, [gl, scene, camera]);
 
   useEffect(() => {
-    passes.composer.setSize(size.width, size.height);
-  }, [passes, size.width, size.height]);
-
-  useEffect(() => {
-    gl.toneMapping = THREE.ACESFilmicToneMapping;
-    return () => {
-      // TODO 6: dispose composer + every pass created above
-    };
-  }, [passes, gl]);
+    passesRef.current?.composer.setSize(size.width, size.height);
+  }, [size.width, size.height]);
 
   const emaRef = useRef(0);
   useFrame(() => {
+    const passes = passesRef.current;
+    if (!passes) return;
     const t0 = performance.now();
     passes.composer.render();
     const dt = performance.now() - t0;
@@ -383,6 +391,7 @@ function ProductScene({ progressRef }: { progressRef: RefObject<ChapterProgress>
   const modelRef = useRef<THREE.Group | null>(null);
   const spotRef = useRef<THREE.Mesh>(null);
   const scene = useThree((s) => s.scene);
+  const invalidate = useThree((s) => s.invalidate);
 
   useEffect(() => {
     const loader = new GLTFLoader();
@@ -401,6 +410,10 @@ function ProductScene({ progressRef }: { progressRef: RefObject<ChapterProgress>
         });
         scene.add(model);
         modelRef.current = model;
+        // parse() is async under frameloop="demand": without this the model
+        // stays invisible until the first scroll (or forever under
+        // prefers-reduced-motion, whose branch only invalidates at setup).
+        invalidate();
       },
       (err) => console.error("Product GLTF failed to load", err),
     );
@@ -408,7 +421,7 @@ function ProductScene({ progressRef }: { progressRef: RefObject<ChapterProgress>
       cancelled = true;
       if (modelRef.current) scene.remove(modelRef.current);
     };
-  }, [scene, disposables]);
+  }, [scene, disposables, invalidate]);
 
   // Single-render-loop rule (spec §8.4): useFrame ONLY reads progressRef.
   // ScrollTrigger (below) is the sole writer, and never calls render itself.
@@ -466,13 +479,16 @@ function ShowcasePostFX() {
   const camera = useThree((s) => s.camera);
   const size = useThree((s) => s.size);
 
-  const passes = useMemo(() => {
+  // Created inside an effect, not useMemo: Strict Mode's simulated unmount
+  // disposes the chain, and a memoized composer would come back dead.
+  const passesRef = useRef<{ composer: EffectComposer } | null>(null);
+  useEffect(() => {
     const composer = new EffectComposer(gl);
     const renderPass = new RenderPass(scene, camera);
     // Restraint doctrine (Track 10): a HIGH threshold keeps bloom limited to
     // the emissive spotlight ring, not the whole lit product -- one
     // deliberate accent, not five stacked filters.
-    const bloomPass = new UnrealBloomPass(new THREE.Vector2(size.width, size.height), 0.9, 0.5, 0.85);
+    const bloomPass = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.9, 0.5, 0.85);
     const outputPass = new OutputPass(); // tone map (ACES) + sRGB encode
     const vignettePass = new ShaderPass({
       uniforms: { tDiffuse: { value: null }, uStrength: { value: 0.65 } },
@@ -484,26 +500,27 @@ function ShowcasePostFX() {
     composer.addPass(bloomPass);
     composer.addPass(outputPass);
     composer.addPass(vignettePass);
-    return { composer, bloomPass, outputPass, vignettePass };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    gl.toneMapping = THREE.ACESFilmicToneMapping;
+    composer.setSize(gl.domElement.width, gl.domElement.height);
+    passesRef.current = { composer };
+    return () => {
+      passesRef.current = null;
+      composer.dispose();
+      renderPass.dispose();
+      bloomPass.dispose();
+      outputPass.dispose();
+      vignettePass.dispose();
+    };
   }, [gl, scene, camera]);
 
   useEffect(() => {
-    passes.composer.setSize(size.width, size.height);
-  }, [passes, size.width, size.height]);
-
-  useEffect(() => {
-    gl.toneMapping = THREE.ACESFilmicToneMapping;
-    return () => {
-      passes.composer.dispose();
-      passes.bloomPass.dispose();
-      passes.outputPass.dispose();
-      passes.vignettePass.dispose();
-    };
-  }, [passes, gl]);
+    passesRef.current?.composer.setSize(size.width, size.height);
+  }, [size.width, size.height]);
 
   const emaRef = useRef(0);
   useFrame(() => {
+    const passes = passesRef.current;
+    if (!passes) return;
     const t0 = performance.now();
     passes.composer.render();
     const dt = performance.now() - t0;

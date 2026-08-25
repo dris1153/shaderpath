@@ -5,12 +5,12 @@ export const exercises: Exercise[] = [
     id: "build-raymarched-landscape",
     kind: "build",
     prompt: {
-      vi: `Dựng \`RaymarchedLandscapeApp\`: một địa hình vô hạn hoàn toàn bằng fullscreen fragment shader — FBM heightfield, bầu trời + sương mù, camera bay, và một hệ thống quality tier là công dân hạng nhất chứ không phải thêm sau cùng. \`starterCode\` đã dựng khung: thư viện hash/noise/fbm, các hàm \`terrainHeight\`/\`raymarchTerrain\`/\`terrainNormal\`/\`skyColor\` dạng placeholder, một camera tĩnh, và một component R3F rỗng — việc của bạn là lấp 6 TODO theo đúng 6 mốc.
+      vi: `Dựng \`RaymarchedLandscapeApp\`: một địa hình vô hạn hoàn toàn bằng fullscreen fragment shader — FBM heightfield, bầu trời + sương mù, camera bay, và một hệ thống quality tier là công dân hạng nhất chứ không phải thêm sau cùng. Bài dạng build tự dựng từ đầu (không có starter hiển thị): tự viết thư viện hash/noise/fbm (theo track Procedural), bốn hàm \`terrainHeight\`/\`raymarchTerrain\`/\`terrainNormal\`/\`skyColor\`, camera, và component R3F bao quanh — đi theo đúng 6 mốc dưới đây, mỗi mốc chạy được rồi mới sang mốc kế.
 
-Mốc 1 (TODO 1): xác nhận ray setup đúng bằng march thử — \`terrainHeight\` placeholder trả về hằng số 0 nên \`raymarchTerrain\` lúc này chỉ cần tìm đúng giao điểm với mặt phẳng \`y = 0\`. Mốc 2 (TODO 2): thay \`terrainHeight\` bằng FBM thật, cài đặt \`raymarchTerrain\` theo kỹ thuật terrain-marching (bước tăng dần rồi nhị phân tinh chỉnh — KHÔNG phải sphere tracing), \`terrainNormal\` bằng gradient, và Lambertian shading cơ bản. Mốc 3 (TODO 3): \`skyColor\` thật cộng sương mù hàm mũ. Mốc 4 (TODO 4): thay camera tĩnh bằng một quỹ đạo bay (gợi ý: đường tròn cộng bob nhẹ, không phải đường thẳng đơn thuần). Mốc 5 (TODO 5): một object \`TIERS\` (\`low\`/\`mid\`/\`high\`) điều khiển \`uMaxSteps\`/\`uOctaves\`/độ phân giải (qua \`dpr\` của \`Canvas\`) — mọi nơi khác trong file chỉ đọc config, không rẽ nhánh theo tên tier. Mốc 6 (TODO 6): \`TierWatchdog\` — benchmark \`PROBE_FRAMES\` khung hình đầu bằng chính shader này để chọn tier khởi điểm, rồi một watchdog EMA có hysteresis (\`HYSTERESIS_SAMPLES\` mẫu liên tiếp mới đổi tier) — cộng viết quy trình xác nhận bằng CPU throttle ngay trong comment.`,
-      en: `Build \`RaymarchedLandscapeApp\`: a fully infinite landscape in a single fullscreen fragment shader — an FBM heightfield, sky + fog, a flying camera, and a quality-tier system as a first-class citizen, not bolted on at the end. \`starterCode\` already scaffolds it: the hash/noise/fbm library, placeholder \`terrainHeight\`/\`raymarchTerrain\`/\`terrainNormal\`/\`skyColor\` functions, a static camera, and an empty R3F component — your job is filling 6 TODOs matching the 6 milestones.
+Mốc 1: xác nhận ray setup đúng bằng march thử — \`terrainHeight\` placeholder trả về hằng số 0 nên \`raymarchTerrain\` lúc này chỉ cần tìm đúng giao điểm với mặt phẳng \`y = 0\`. Mốc 2: thay \`terrainHeight\` bằng FBM thật, cài đặt \`raymarchTerrain\` theo kỹ thuật terrain-marching (bước tăng dần rồi nhị phân tinh chỉnh — KHÔNG phải sphere tracing), \`terrainNormal\` bằng gradient, và Lambertian shading cơ bản. Mốc 3: \`skyColor\` thật cộng sương mù hàm mũ. Mốc 4: thay camera tĩnh bằng một quỹ đạo bay (gợi ý: đường tròn cộng bob nhẹ, không phải đường thẳng đơn thuần). Mốc 5: một object \`TIERS\` (\`low\`/\`mid\`/\`high\`) điều khiển \`uMaxSteps\`/\`uOctaves\`/độ phân giải (qua \`dpr\` của \`Canvas\`) — mọi nơi khác trong file chỉ đọc config, không rẽ nhánh theo tên tier. Mốc 6: \`TierWatchdog\` — benchmark \`PROBE_FRAMES\` khung hình đầu bằng chính shader này để chọn tier khởi điểm, rồi một watchdog EMA có hysteresis (\`HYSTERESIS_SAMPLES\` mẫu liên tiếp mới đổi tier) — cộng viết quy trình xác nhận bằng CPU throttle ngay trong comment.`,
+      en: `Build \`RaymarchedLandscapeApp\`: a fully infinite landscape in a single fullscreen fragment shader — an FBM heightfield, sky + fog, a flying camera, and a quality-tier system as a first-class citizen, not bolted on at the end. Build exercises start from scratch (no visible starter): write the hash/noise/fbm library yourself (as in the Procedural track), the four functions \`terrainHeight\`/\`raymarchTerrain\`/\`terrainNormal\`/\`skyColor\`, the camera, and the wrapping R3F component — following the 6 milestones below, each one running before the next begins.
 
-Milestone 1 (TODO 1): confirm the ray setup is correct with a test march — the \`terrainHeight\` placeholder returns a constant 0, so \`raymarchTerrain\` only needs to find the correct intersection with the \`y = 0\` plane for now. Milestone 2 (TODO 2): swap \`terrainHeight\` for real FBM, implement \`raymarchTerrain\` with the terrain-marching technique (growing steps then bisection refine — NOT sphere tracing), \`terrainNormal\` via gradient, and basic Lambertian shading. Milestone 3 (TODO 3): a real \`skyColor\` plus exponential fog. Milestone 4 (TODO 4): replace the static camera with a flight path (hint: a circular orbit plus a gentle bob, not a plain straight line). Milestone 5 (TODO 5): a \`TIERS\` object (\`low\`/\`mid\`/\`high\`) driving \`uMaxSteps\`/\`uOctaves\`/resolution (via \`Canvas\`'s \`dpr\`) — everywhere else in the file only reads the config, never branches by tier name. Milestone 6 (TODO 6): \`TierWatchdog\` — benchmark the first \`PROBE_FRAMES\` frames on this actual shader to pick a starting tier, then an EMA watchdog with hysteresis (\`HYSTERESIS_SAMPLES\` consecutive samples required before switching) — plus writing the CPU-throttle verification procedure directly as a comment.`,
+Milestone 1: confirm the ray setup is correct with a test march — the \`terrainHeight\` placeholder returns a constant 0, so \`raymarchTerrain\` only needs to find the correct intersection with the \`y = 0\` plane for now. Milestone 2: swap \`terrainHeight\` for real FBM, implement \`raymarchTerrain\` with the terrain-marching technique (growing steps then bisection refine — NOT sphere tracing), \`terrainNormal\` via gradient, and basic Lambertian shading. Milestone 3: a real \`skyColor\` plus exponential fog. Milestone 4: replace the static camera with a flight path (hint: a circular orbit plus a gentle bob, not a plain straight line). Milestone 5: a \`TIERS\` object (\`low\`/\`mid\`/\`high\`) driving \`uMaxSteps\`/\`uOctaves\`/resolution (via \`Canvas\`'s \`dpr\`) — everywhere else in the file only reads the config, never branches by tier name. Milestone 6: \`TierWatchdog\` — benchmark the first \`PROBE_FRAMES\` frames on this actual shader to pick a starting tier, then an EMA watchdog with hysteresis (\`HYSTERESIS_SAMPLES\` consecutive samples required before switching) — plus writing the CPU-throttle verification procedure directly as a comment.`,
     },
     starterCode: `"use client";
 // SCAFFOLD -- 6 milestones, 6 TODOs. Fill each one in order; the shader
@@ -18,6 +18,7 @@ Milestone 1 (TODO 1): confirm the ray setup is correct with a test march — the
 // the R3F side only gets a tier system once the shader itself works.
 
 import { useMemo, useRef } from "react";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 
@@ -141,6 +142,10 @@ function LandscapeScene() {
     [],
   );
 
+  // Bind by ref: the uniforms JSX prop copies entries into the material's
+  // own map — scalar mutations (uTime, tier steps/octaves) would freeze.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime;
     uniforms.uResolution.value.set(state.gl.domElement.width, state.gl.domElement.height);
@@ -149,7 +154,11 @@ function LandscapeScene() {
   return (
     <mesh>
       <planeGeometry args={[2, 2]} />
-      <shaderMaterial vertexShader={vertexShader} fragmentShader={fragmentShader} uniforms={uniforms} />
+      <shaderMaterial
+        ref={bindUniforms}
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+      />
     </mesh>
   );
 }
@@ -187,6 +196,7 @@ export function RaymarchedLandscapeApp() {
     solutionCode: `"use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 
@@ -381,6 +391,10 @@ function LandscapeScene({ tier }: { tier: Tier }) {
     uniforms.uOctaves.value = config.octaves;
   }, [uniforms, config]);
 
+  // Bind by ref: the uniforms JSX prop copies entries into the material's
+  // own map — scalar mutations (uTime, tier steps/octaves) would freeze.
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime;
     uniforms.uResolution.value.set(state.gl.domElement.width, state.gl.domElement.height);
@@ -389,7 +403,11 @@ function LandscapeScene({ tier }: { tier: Tier }) {
   return (
     <mesh>
       <planeGeometry args={[2, 2]} />
-      <shaderMaterial vertexShader={vertexShader} fragmentShader={fragmentShader} uniforms={uniforms} />
+      <shaderMaterial
+        ref={bindUniforms}
+        vertexShader={vertexShader}
+        fragmentShader={fragmentShader}
+      />
     </mesh>
   );
 }
@@ -489,8 +507,8 @@ export function RaymarchedLandscapeApp() {
         en: "The terrain marches correctly with no holes along the mountain silhouette at normal marching speed",
       },
       {
-        vi: "Bầu trời phía trên độ cao tối đa của địa hình bỏ qua march hoàn toàn nhờ \`canHit\` — không giật hình khi camera hướng lên",
-        en: "The sky above the terrain's max height skips marching entirely thanks to \`canHit\` — no stutter when the camera points upward",
+        vi: "Tia nhìn lên trời từ phía trên độ cao tối đa của địa hình bỏ qua march hoàn toàn (early-out khi ro.y vượt MAX_HEIGHT và rd.y không hướng xuống) — không giật hình khi camera hướng lên",
+        en: "Rays looking up from above the terrain's max height skip marching entirely (early-out when ro.y exceeds MAX_HEIGHT and rd.y does not point down) — no stutter when the camera points upward",
       },
       {
         vi: "Sương mù hàm mũ bán được cảm giác chiều sâu — địa hình xa mờ dần vào màu ấm gần mặt trời, không phải lớp mù đều toàn cảnh",

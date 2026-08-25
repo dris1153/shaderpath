@@ -9,12 +9,12 @@ export const exercises: Exercise[] = [
 
 Bám theo sáu mốc gợi ý: (1) dựng pipeline state-texture ở lưới $256 \\times 256$ (~65k particle) với mô phỏng nhìn thấy được; (2) thêm curl-noise flow field và lifecycle tuổi thọ — particle chết và hồi sinh ở vị trí ngẫu nhiên khi vượt tuổi tối đa; (3) thêm lực tương tác chuột ba chế độ, chế độ xoáy cần một lực TIẾP TUYẾN quanh con trỏ chứ không chỉ xuyên tâm; (4) scale lên lưới $1024 \\times 1024$ (~1 triệu particle) và hoàn thiện render — glow cộng dồn, color ramp theo tuổi; (5) thêm tier fallback ($1024^2 \\to 512^2 \\to 256^2$) cùng bằng chứng \`renderer.info.render.calls\` không đổi theo grid size, texture kiểu \`HalfFloatType\`, DPR giới hạn theo tier; (6) tinh chỉnh cảm giác tương tác — falloff, cường độ, damping giữa ba chế độ lực.
 
-\`starterCode\` bên dưới dựng sẵn khung sườn — hằng số tier, chữ ký hàm, hook lấy vị trí con trỏ trên mặt phẳng — với một TODO cho mỗi mốc; việc của bạn là lấp đầy compute shader, logic lực ba chế độ, lifecycle, và component render theo đúng khung đó. Kiến trúc trong \`solutionCode\` là MỘT cách hợp lệ, không phải cách duy nhất — miễn luật zero-CPU-per-frame và disposal được tôn trọng.`,
+Bài dạng build tự dựng từ đầu (không có starter hiển thị). Khung sườn cần dựng: bảng hằng số tier (\`grid\`/\`dpr\` cho low/mid/high), một hook lấy vị trí con trỏ trên mặt phẳng z=0 (raycast từ sự kiện pointer, ghi vào ref), rồi lấp đầy compute shader, logic lực ba chế độ, lifecycle theo tuổi, và component render. Kiến trúc trong \`solutionCode\` là MỘT cách hợp lệ, không phải cách duy nhất — miễn luật zero-CPU-per-frame và disposal được tôn trọng.`,
       en: `Build a large-scale interactive GPU particle system: one million particles simulated entirely on the GPU through \`GPUComputationRenderer\`, moving along a curl-noise flow field, carrying a finite lifespan that makes them die and respawn, responding to three mouse force modes — attract, repel, vortex — and rendered with \`THREE.Points\` under additive glow, colored by each particle's age.
 
 Follow six suggested milestones: (1) build the state-texture pipeline at a $256 \\times 256$ grid (~65k particles) with a visible simulation; (2) add the curl-noise flow field and an age-based lifecycle — particles die and respawn at a random position once past a maximum age; (3) add the three-mode mouse force, the vortex mode needs a TANGENTIAL force around the pointer, not just radial; (4) scale up to a $1024 \\times 1024$ grid (~1 million particles) and finish the render — additive glow, an age color ramp; (5) add tier fallback ($1024^2 \\to 512^2 \\to 256^2$) with proof that \`renderer.info.render.calls\` stays constant regardless of grid size, \`HalfFloatType\` textures, DPR capped per tier; (6) tune interaction feel — falloff, strength, damping across the three force modes.
 
-The \`starterCode\` below scaffolds the shell — tier constants, function signatures, the pointer-on-plane hook — with one TODO per milestone; your job is to fill in the compute shader, the three-mode force logic, the lifecycle, and the render component inside that shape. The architecture in \`solutionCode\` is ONE valid approach, not the only one — as long as the zero-CPU-per-frame law and disposal are respected.`,
+Build exercises start from scratch (no visible starter). The shell to build: a tier constant table (\`grid\`/\`dpr\` for low/mid/high), a pointer-on-plane hook (a ray from pointer events onto the z=0 plane, written into a ref), then fill in the compute shader, the three-mode force logic, the age-based lifecycle, and the render component. The architecture in \`solutionCode\` is ONE valid approach, not the only one — as long as the zero-CPU-per-frame law and disposal are respected.`,
     },
     starterCode: `"use client";
 // Capstone scaffold — six milestones, one TODO block each. Architecture:
@@ -28,7 +28,6 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
-import { useDisposable } from "@/lib/hooks/use-disposable";
 
 type Tier = "low" | "mid" | "high";
 type Mode = "attract" | "repel" | "vortex";
@@ -228,15 +227,15 @@ function usePointerOnPlane() {
 
 function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
   const { gl } = useThree();
-  const disposables = useDisposable();
   const grid = TIERS[tier].grid;
   const pointerRef = usePointerOnPlane();
   const computeRef = useRef<ParticleCompute | null>(null);
 
   // TODO Milestone 1: geometry (position attribute required by Three, plus
   // an aUv BufferAttribute mapping vertex index -> texel UV) and a
-  // ShaderMaterial uniforms object (texturePosition, uMaxAge, uPixelRatio),
-  // both registered through \`disposables\` and keyed on \`grid\`.
+  // ShaderMaterial (uniforms: texturePosition, uMaxAge, uPixelRatio) —
+  // create BOTH inside effects (geometry keyed on \`grid\`) and dispose
+  // them in the effect cleanups, so a tier switch frees the old set.
 
   useEffect(() => {
     // TODO Milestone 1 + 5: create compute here, keyed on [gl, grid] — a
@@ -290,7 +289,6 @@ import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import { GPUComputationRenderer } from "three/addons/misc/GPUComputationRenderer.js";
-import { useDisposable } from "@/lib/hooks/use-disposable";
 
 type Tier = "low" | "mid" | "high";
 type Mode = "attract" | "repel" | "vortex";
@@ -303,7 +301,8 @@ interface TierConfig {
 }
 
 // Grid resolution IS the particle budget: 256\xb2 = 65,536; 512\xb2 = 262,144;
-// 1024\xb2 = 1,048,576. Caller's <Canvas dpr={TIERS[tier].dpr}> applies the cap.
+// 1024\xb2 = 1,048,576. dpr reaches the Canvas through onTierChange below —
+// tier state lives here, the Canvas lives with the caller.
 const TIERS: Record<Tier, TierConfig> = {
   low: { grid: 256, dpr: [1, 1] },
   mid: { grid: 512, dpr: [1, 1.5] },
@@ -574,7 +573,6 @@ function usePointerOnPlane() {
 
 function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
   const { gl } = useThree();
-  const disposables = useDisposable();
   const grid = TIERS[tier].grid;
   const pointerRef = usePointerOnPlane();
   const computeRef = useRef<ParticleCompute | null>(null);
@@ -588,10 +586,11 @@ function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
     [gl],
   );
 
-  // Keyed on \`grid\`: a tier switch means a different particle count, which
-  // means a different vertex count — this geometry must be torn down and
-  // rebuilt, not resized in place.
-  const geometry = useMemo(() => {
+  // Created inside effects, not useMemo: each tier switch must dispose the
+  // OLD geometry immediately (not at unmount), and Strict Mode's simulated
+  // unmount would leave memoized objects dead-then-reused.
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+  useEffect(() => {
     const count = grid * grid;
     const positions = new Float32Array(count * 3); // required by Three; values unused
     const uvs = new Float32Array(count * 2);
@@ -602,23 +601,29 @@ function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
     geo.setAttribute("aUv", new THREE.BufferAttribute(uvs, 2));
-    return disposables.register(geo);
-  }, [grid, disposables]);
+    setGeometry(geo);
+    return () => {
+      geo.dispose();
+      setGeometry(null);
+    };
+  }, [grid]);
 
-  const material = useMemo(
-    () =>
-      disposables.register(
-        new THREE.ShaderMaterial({
-          vertexShader: particleVertex,
-          fragmentShader: particleFragment,
-          uniforms,
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        }),
-      ),
-    [uniforms, disposables],
-  );
+  const [material, setMaterial] = useState<THREE.ShaderMaterial | null>(null);
+  useEffect(() => {
+    const mat = new THREE.ShaderMaterial({
+      vertexShader: particleVertex,
+      fragmentShader: particleFragment,
+      uniforms,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    setMaterial(mat);
+    return () => {
+      mat.dispose();
+      setMaterial(null);
+    };
+  }, [uniforms]);
 
   // Grid size determines the GPUComputationRenderer's internal render
   // targets AND the geometry's vertex count. This is the #1 leak in this
@@ -645,6 +650,7 @@ function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
     u.uMode.value = MODE_INDEX[mode];
 
     uniforms.texturePosition.value = compute.step();
+    uniforms.uPixelRatio.value = state.gl.getPixelRatio(); // dpr shifts with tier
 
     // Zero-CPU-per-frame proof: this callback never touches a per-particle
     // array. One compute() pass + one points draw call, both fixed cost
@@ -653,9 +659,12 @@ function GpuParticleSystem({ tier, mode }: { tier: Tier; mode: Mode }) {
     // and 1024.
   });
 
+  if (!geometry || !material) return null;
   return <points geometry={geometry} material={material} frustumCulled={false} />;
 }
 
+// Static-API guess for the FIRST frame only — PerformanceMonitor measures
+// real frame times at runtime and immediately corrects a wrong guess.
 function detectStartingTier(): Tier {
   if (typeof navigator === "undefined") return "mid";
   const cores = navigator.hardwareConcurrency ?? 4;
@@ -665,15 +674,29 @@ function detectStartingTier(): Tier {
   return "high";
 }
 
-export function InteractiveParticleCloud({ mode = "attract" }: { mode?: Mode }) {
+export function InteractiveParticleCloud({
+  mode = "attract",
+  onTierChange,
+}: {
+  mode?: Mode;
+  // The Canvas owner applies TIERS[tier].dpr — without this callback the
+  // per-tier DPR cap would be dead config (this component renders no Canvas).
+  onTierChange?: (tier: Tier) => void;
+}) {
   const [tier, setTier] = useState<Tier>(detectStartingTier);
+
+  useEffect(() => {
+    onTierChange?.(tier);
+  }, [tier, onTierChange]);
 
   return (
     <>
-      {/* flipflops absorbs short frame-time noise so tier doesn't
-          flip-flop every time the grid resizes mid-transition. */}
+      {/* Hysteresis comes from PerformanceMonitor's iterations/threshold
+          averaging (10-sample mean by default); flipflops only counts
+          direction flips before onFallback fires as a last resort. */}
       <PerformanceMonitor
         flipflops={3}
+        onFallback={() => setTier("low")}
         onDecline={() => setTier((t) => (t === "high" ? "mid" : "low"))}
         onIncline={() => setTier((t) => (t === "low" ? "mid" : "high"))}
       />
