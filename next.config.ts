@@ -26,8 +26,12 @@ const withMDX = createMDX({
   options: {
     remarkPlugins: [["remark-gfm"], ["remark-math"]],
     rehypePlugins: [
-      ["rehype-katex"],
+      // slug BEFORE katex: both this and gen-lesson-registry then slug the raw
+      // heading text with github-slugger, so TOC/mind-map anchors match. With
+      // katex first, math-bearing headings got ids derived from rendered KaTeX
+      // DOM that nothing else can reproduce (5 dead anchors).
       ["rehype-slug"],
+      ["rehype-katex"],
       [
         "@shikijs/rehype",
         // high-contrast variants: plain github-light/dark fail WCAG AA color-contrast

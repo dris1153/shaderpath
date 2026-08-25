@@ -41,9 +41,8 @@ export function ensureContainer(): void {
       });
       return;
     } catch {
-      execSync(process.platform === "win32" ? "timeout /t 1 /nobreak" : "sleep 1", {
-        stdio: "ignore",
-      });
+      // In-process sleep: Windows `timeout` errors whenever stdin is redirected
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 1000);
     }
   }
   throw new Error(`${CONTAINER} did not become ready`);
