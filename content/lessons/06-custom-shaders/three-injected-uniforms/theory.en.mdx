@@ -33,18 +33,20 @@ $$
 
 — the inverse-transpose, exactly what `Matrix3.getNormalMatrix()` implements (`setFromMatrix4(m).invert().transpose()`). Under a pure rotation/uniform scale, $M^{-1} = M^{\mathsf T}$, so $N = M$ — this is exactly why the bug slips past eyeball testing (a uniformly-scaled mesh looks right either way). The problem only surfaces with **non-uniform scale**: $M = \mathrm{diag}(2, 1, 1)$ (stretched 2× along X), $\vec n = (\tfrac{1}{\sqrt2}, \tfrac{1}{\sqrt2}, 0)$. Applying $M$ directly gives $M\vec n = (\sqrt2, \tfrac{1}{\sqrt2}, 0)$ — leaning FURTHER toward the stretched axis, backwards (a surface stretched along X should flatten out along X, leaning AWAY from it). Since $M$ is diagonal, $M^{-1} = \mathrm{diag}(0.5, 1, 1)$ and its transpose is itself, so $N = \mathrm{diag}(0.5, 1, 1)$: $N\vec n = (\tfrac{1}{2\sqrt2}, \tfrac{1}{\sqrt2}, 0)$, which after renormalizing leans toward Y as expected — away from the stretched axis, matching intuition.
 
-## Declaring Custom Uniforms: The House Pattern — Memoize Once, Mutate .value Every Frame
+## Declaring Custom Uniforms: The House Pattern — Memoize Once, Bind by Reference, Mutate .value Every Frame
 
-A custom uniform is declared exactly like a built-in one — `uniform float uTime;` in GLSL, with the JS side passing an object shaped like `{ uTime: { value: 0 } }` into the `uniforms` prop. The standard R3F pattern (it repeats across every shader demo since Track 2): create that object exactly ONCE with `useMemo(() => ({ uTime: { value: 0 } }), [])`, then every frame only overwrite `.value`, never recreate the whole object:
+A custom uniform is declared exactly like a built-in one — `uniform float uTime;` in GLSL, with a JS object shaped like `{ uTime: { value: 0 } }`. This platform's standard pattern (every shader demo since Track 2 uses it): create that object exactly ONCE with `useMemo`, attach it to the material BY REFERENCE via the house hook `useSharedUniforms` (`lib/hooks/use-shared-uniforms.ts`), then every frame only overwrite `.value`:
 
 ```ts
 const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+const bindUniforms = useSharedUniforms(uniforms); // material.uniforms = uniforms
 useFrame((state) => {
   uniforms.uTime.value = state.clock.elapsedTime; // direct write, no setState
 });
+// JSX: <shaderMaterial ref={bindUniforms} ... /> — NO uniforms prop
 ```
 
-Why "mutate, not setState": calling `setState` every frame forces a React re-render, dragging the entire subtree through reconciliation (the exact anti-pattern the Track 4 `useFrame` hooks lesson measured with a render counter) — while writing `.value` directly is a plain JS assignment that never touches React. R3F itself handles this exact prop with care: `applyProps` in `@react-three/fiber@9.7.0`'s source doesn't overwrite `material.uniforms` wholesale when the prop changes — it merges each field with `Object.assign`, with a comment right in the code: "ShaderMaterial uniforms must keep a stable target reference," because `WebGLPrograms.getUniforms()` only re-reads `material.uniforms` when the shader needs a fresh compile; swapping that object for a different one after it's already compiled leaves Three reading the OLD object until the next recompile.
+Why "mutate, not setState": calling `setState` every frame forces a React re-render, dragging the entire subtree through reconciliation (the exact anti-pattern the Track 4 `useFrame` hooks lesson measured with a render counter) — while writing `.value` directly is a plain JS assignment that never touches React. And why bind by ref instead of the `uniforms` prop: `applyProps` in `@react-three/fiber@9.7.0` COPIES each prop entry into the material's own map (`uniforms[name] = {...uniform}` at mount, `Object.assign` into that same map on later prop changes) — the source comment "ShaderMaterial uniforms must keep a stable target reference" is about the MATERIAL's map, not your object. Your memoized object is never installed through the prop route, so every later `.value` write lands in a void — the uniform freezes at its mount-time value. `useSharedUniforms` sidesteps exactly that: it assigns `material.uniforms = uniforms` by reference in a callback ref, so the object you mutate IS the object the GPU reads.
 
 ## Textures Are Uniforms Too: A Procedural DataTexture as an Example
 
@@ -73,7 +75,7 @@ The next lesson in this module (Custom Geometry Attributes) extends the exact sa
 The three most common mistakes when working with built-in and custom uniforms:
 
 1. **Using modelViewMatrix's 3×3 instead of `normalMatrix` on a non-uniformly scaled mesh.** It looks correct on every uniformly-scaled mesh (an undistorted sphere, an undistorted cube), and only breaks once someone calls `scale.set(2, 1, 1)` — normals lean the wrong way, lighting/rim looks off, and it's hard to spot unless you know exactly which symptom to look for.
-2. **Recreating the `uniforms` object on every component render instead of mutating `.value`.** Even though R3F safely merges it via `applyProps`, driving the update through state/props forces a React re-render and reconciliation of the whole subtree every frame — while a direct mutation is a plain JS assignment that never touches React.
+2. **Passing uniforms via the `uniforms={...}` prop and mutating `.value` later.** `applyProps` copies each entry into the material's own map at mount — your original object is never installed on the material, so every later `.value` write silently misses the GPU: the uniform freezes at its initial value, with no error. Bind with `ref={useSharedUniforms(uniforms)}`; driving updates through state/props both hits the copy trap and forces a full-subtree React re-render every frame.
 3. **Naming a custom uniform after a built-in (`color`, `normal`, `position`, `modelMatrix`, …).** The resulting redefinition error is hard to guess at unless you know the prelude already injected that name; the `u`-prefix convention (uTime, uColor) all but eliminates this risk.
 
 </Callout>

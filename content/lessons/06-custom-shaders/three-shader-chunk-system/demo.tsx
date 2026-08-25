@@ -81,10 +81,14 @@ function AnatomyMesh() {
 
   const timeUniform = useMemo(() => ({ value: 0 }), []);
   const groupRef = useRef<THREE.Group>(null);
+  const matRef = useRef<THREE.MeshStandardMaterial>(null);
 
-  // Runs once per program-cache miss. customProgramCacheKey below forces a
-  // miss (and this to re-run) every time the selected site changes — without
-  // it Three reuses the first compiled program and the select does nothing.
+  // Runs once per program-cache miss. customProgramCacheKey alone is NOT
+  // enough to re-trigger this: cache keys are only consulted when the
+  // renderer decides a program change is needed, and a changed key return
+  // value is not on that list — the site-change effect below must also set
+  // material.needsUpdate so getProgram runs again (the distinct key then
+  // yields a distinct cached program per site).
   const handleCompile = useCallback(
     (shader: THREE.WebGLProgramParametersWithUniforms) => {
       const active = SITES.find((s) => s.key === siteRef.current) ?? SITES[0];
@@ -106,6 +110,7 @@ function AnatomyMesh() {
   const cacheKey = useCallback(() => siteRef.current, []);
 
   useEffect(() => {
+    if (matRef.current) matRef.current.needsUpdate = true;
     invalidate();
   }, [site, invalidate]);
 
@@ -119,6 +124,7 @@ function AnatomyMesh() {
       <mesh>
         <icosahedronGeometry args={[1, 4]} />
         <meshStandardMaterial
+          ref={matRef}
           color="#c9c9d6"
           roughness={0.45}
           metalness={0.05}

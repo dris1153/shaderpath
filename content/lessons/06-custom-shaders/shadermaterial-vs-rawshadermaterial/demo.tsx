@@ -8,6 +8,7 @@ import { Demo } from "@/components/viz/demo";
 import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { stringOf } from "@/components/viz/control-schema";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./torus-knot-visualizer.frag";
 import vertexShader from "./torus-knot-visualizer.vert";
 
@@ -61,13 +62,15 @@ function ShaderKnot() {
     meshRef.current.rotation.y += delta * 0.4;
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh ref={meshRef}>
       <torusKnotGeometry args={[1, 0.32, 180, 24]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

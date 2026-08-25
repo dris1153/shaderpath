@@ -55,10 +55,10 @@ function InstancedField({ count, animate }: { count: number; animate: boolean })
     for (let i = 0; i < count; i++) phases[i] = Math.random() * Math.PI * 2;
     geometry.setAttribute("aPhase", new THREE.InstancedBufferAttribute(phases, 1));
 
-    // vertexColors: true is required for the built-in color_fragment chunk
-    // to actually multiply diffuseColor by the instanceColor setColorAt below.
+    // No vertexColors flag: in r185 instanceColor alone enables USE_COLOR
+    // in the fragment stage; vertexColors:true would make the vertex stage
+    // read a color attribute this geometry doesn't have (renders black).
     const material = new THREE.MeshStandardMaterial({
-      vertexColors: true,
       roughness: 0.55,
     });
     material.onBeforeCompile = (shader) => {

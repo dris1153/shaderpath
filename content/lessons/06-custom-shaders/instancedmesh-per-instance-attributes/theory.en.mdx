@@ -20,7 +20,7 @@ mesh.instanceMatrix.needsUpdate = true; // ONCE, after the loop
 
 ## Coloring Each Copy: instanceColor
 
-`setColorAt(i, color)` works exactly like `setMatrixAt` but for color — calling it for the first time lazily creates `this.instanceColor` (a 3-channel `InstancedBufferAttribute`), and it also needs `mesh.instanceColor.needsUpdate = true` after the loop. The easiest part to miss: reading `color_fragment.glsl.js` inside `meshphysical.glsl.js` (three@0.185.1) directly shows it only multiplies `diffuseColor *= vColor` when `USE_COLOR`/`USE_COLOR_ALPHA` is defined — that condition only turns on when you set `material.vertexColors = true`, it does NOT turn on automatically just because `instanceColor` exists. Skip that line and `setColorAt` still runs, the buffer still holds correct data, but the vertex shader writes `vColor` that the fragment shader never reads — every copy still renders in the same flat `material.color`.
+`setColorAt(i, color)` works exactly like `setMatrixAt` but for color — calling it for the first time lazily creates `this.instanceColor` (a 3-channel `InstancedBufferAttribute`), and it also needs `mesh.instanceColor.needsUpdate = true` after the loop. The noteworthy part in three@0.185.1: `instanceColor` merely existing is enough — the fragment prefix defines `USE_COLOR` when `vertexColors || instancingColor`, and `instancingColor` is set from `object.instanceColor !== null`, so `color_fragment` multiplies `diffuseColor *= vColor` WITHOUT `material.vertexColors = true` (that requirement belongs to older three releases). Flipping `vertexColors: true` on "just in case" is the actual current trap — see the common-mistakes callout below.
 
 ## Going Further: InstancedBufferAttribute for Arbitrary Data
 
@@ -51,7 +51,7 @@ The module's closing checkpoint (Enhanced Standard Material) can combine this le
 The three most common InstancedMesh mistakes:
 
 1. **Forgetting `instanceMatrix.needsUpdate = true` after the `setMatrixAt` loop.** The mesh compiles cleanly, the console reports nothing, but every copy sits frozen at the origin (identity matrix) because the GPU never received the new buffer.
-2. **Setting `instanceColor` while forgetting `material.vertexColors = true`.** The color buffer holds correct data, the vertex shader even writes `vColor` correctly, but the fragment shader never reads it because `USE_COLOR` was never enabled — every copy still renders in the same flat `material.color`.
+2. **Flipping `material.vertexColors = true` on "just in case" when only `instanceColor` is used.** That flag defines `USE_COLOR` in the vertex stage, making `color_vertex` read a `color` attribute the geometry doesn't have — an unbound attribute returns the generic default (0,0,0,1), `vColor` gets multiplied to zero before `instanceColor` is applied, and the whole instanced field renders BLACK instead of the colors `setColorAt` wrote. In current three, `instanceColor` alone is sufficient.
 3. **Updating the entire `instanceMatrix` every frame for thousands of instances without considering `addUpdateRange`.** The result is still correct, but every frame re-uploads the whole buffer to the GPU even when most instances didn't change — an easy CPU-to-GPU bottleneck before the GPU itself is even busy.
 
 </Callout>

@@ -18,8 +18,8 @@ Then answer: if this exact node graph runs on two browsers — one compiling to 
         en: "Substitute directly into sin: the argument is $u \\cdot f + \\tau = 0.25 \\times 6 + 1.0 = 2.5$ (radians) — work it out by hand first, use a calculator only to double-check.",
       },
       {
-        vi: "TSL biên dịch MỘT node graph ra hai đích khác nhau, không phải hai thuật toán khác nhau — sin, mul, add trong WGSL và GLSL đều tuân theo cùng chuẩn số học IEEE 754 cho các phép toán này.",
-        en: "TSL compiles ONE node graph to two different targets, not two different algorithms — sin, mul and add follow the same IEEE 754 arithmetic in both WGSL and GLSL.",
+        vi: "TSL biên dịch MỘT node graph ra hai đích khác nhau, không phải hai thuật toán khác nhau — mul/add là số học IEEE 754 ở cả WGSL lẫn GLSL, còn sin cùng giá trị toán học nhưng độ chính xác bit cuối tuỳ GPU/driver.",
+        en: "TSL compiles ONE node graph to two different targets, not two different algorithms — mul/add are IEEE 754 arithmetic in both WGSL and GLSL, and sin has the same mathematical value with last-bit precision left to the GPU/driver.",
       },
     ],
     checklist: [
@@ -39,10 +39,10 @@ Then answer: if this exact node graph runs on two browsers — one compiling to 
     solutionNote: {
       vi: `Đối số của sin là $0.25 \\times 6 + 1.0 = 2.5$ radian, nên $t = \\sin(2.5) \\times 0.5 + 0.5 \\approx 0.5985 \\times 0.5 + 0.5 \\approx 0.7993$ — màu nghiêng hẳn về \`colorB\` (0xf59e0b, hổ phách).
 
-$t$ không đổi giữa WGSL và GLSL: TSL biên dịch CÙNG một node graph ra hai ngôn ngữ đích, và \`sin\`/\`mul\`/\`add\` đều là số học IEEE 754 chuẩn ở cả hai. Đổi đầu vào thì $t$ đổi; đổi riêng backend thì không bao giờ đổi kết quả toán học.`,
+$t$ không đổi giữa WGSL và GLSL: TSL biên dịch CÙNG một node graph ra hai ngôn ngữ đích — cùng công thức, cùng giá trị toán học. Đổi đầu vào thì $t$ đổi; đổi riêng backend thì kết quả chỉ có thể lệch trong sai số dấu phẩy động của hàm \`sin\` trên GPU (transcendental không bị chuẩn nào ép bit-exact), không bao giờ lệch về mặt toán học.`,
       en: `The argument to sin is $0.25 \\times 6 + 1.0 = 2.5$ radians, so $t = \\sin(2.5) \\times 0.5 + 0.5 \\approx 0.5985 \\times 0.5 + 0.5 \\approx 0.7993$ — the colour leans heavily toward \`colorB\` (0xf59e0b, amber).
 
-$t$ does not change between WGSL and GLSL: TSL compiles the SAME node graph to two target languages, and \`sin\`/\`mul\`/\`add\` are standard IEEE 754 arithmetic in both. A different input changes $t$; a different backend alone never changes the maths.`,
+$t$ does not change between WGSL and GLSL: TSL compiles the SAME node graph to two target languages — same formula, same mathematical value. A different input changes $t$; a different backend alone can only drift within the floating-point tolerance of the GPU sin (no spec forces transcendentals to be bit-exact), never in the mathematics.`,
     },
   },
   {

@@ -20,7 +20,7 @@ mesh.instanceMatrix.needsUpdate = true; // MỘT lần, sau vòng lặp
 
 ## Tô riêng từng bản sao: instanceColor
 
-`setColorAt(i, color)` hoạt động y hệt `setMatrixAt` nhưng cho màu — gọi lần đầu tự tạo `this.instanceColor` (một `InstancedBufferAttribute` 3 kênh), cũng cần `mesh.instanceColor.needsUpdate = true` sau vòng lặp. Điểm dễ bỏ sót nhất: đọc thẳng `color_fragment.glsl.js` trong `meshphysical.glsl.js` (three@0.185.1) cho thấy nó chỉ nhân `diffuseColor *= vColor` khi `USE_COLOR`/`USE_COLOR_ALPHA` được định nghĩa — điều kiện đó chỉ bật khi bạn set `material.vertexColors = true`, KHÔNG tự bật chỉ vì `instanceColor` tồn tại. Thiếu dòng đó, `setColorAt` vẫn chạy, buffer vẫn có dữ liệu đúng, nhưng vertex shader ghi `vColor` mà fragment shader không bao giờ đọc — mọi bản sao vẫn hiện cùng một màu `material.color`.
+`setColorAt(i, color)` hoạt động y hệt `setMatrixAt` nhưng cho màu — gọi lần đầu tự tạo `this.instanceColor` (một `InstancedBufferAttribute` 3 kênh), cũng cần `mesh.instanceColor.needsUpdate = true` sau vòng lặp. Điểm đáng chú ý trong three@0.185.1: chỉ riêng việc `instanceColor` tồn tại đã đủ — prefix fragment định nghĩa `USE_COLOR` khi `vertexColors || instancingColor`, và `instancingColor` được set từ `object.instanceColor !== null`, nên `color_fragment` nhân `diffuseColor *= vColor` mà KHÔNG cần `material.vertexColors = true` (yêu cầu đó thuộc các bản three cũ). Ngược lại, bật `vertexColors: true` "cho chắc" mới là bẫy hiện tại — xem mục lỗi thường gặp bên dưới.
 
 ## Đi xa hơn: InstancedBufferAttribute cho dữ liệu tuỳ ý
 
@@ -51,7 +51,7 @@ Checkpoint cuối module (MeshStandardMaterial nâng cấp) có thể kết hợ
 Ba lỗi hay gặp nhất với InstancedMesh:
 
 1. **Quên `instanceMatrix.needsUpdate = true` sau vòng lặp `setMatrixAt`.** Mesh compile sạch, console không báo lỗi gì, nhưng mọi bản sao đứng yên ở gốc toạ độ (ma trận identity) vì GPU chưa từng nhận buffer mới.
-2. **Set `instanceColor` mà quên `material.vertexColors = true`.** Buffer màu có dữ liệu đúng, vertex shader thậm chí ghi `vColor` đúng, nhưng fragment shader không bao giờ đọc nó vì `USE_COLOR` chưa bật — mọi bản sao vẫn hiện đúng một màu `material.color`.
+2. **Bật `material.vertexColors = true` "cho chắc" khi chỉ dùng `instanceColor`.** Cờ đó định nghĩa `USE_COLOR` ở vertex stage, khiến `color_vertex` đọc attribute `color` mà geometry không hề có — attribute không gắn trả về giá trị generic mặc định (0,0,0,1), `vColor` bị nhân về 0 trước khi nhân `instanceColor`, và cả trường instance render ĐEN thay vì màu `setColorAt` đã ghi. Trong three hiện tại, `instanceColor` một mình là đủ.
 3. **Update toàn bộ `instanceMatrix` mỗi frame cho hàng nghìn instance mà không cân nhắc `addUpdateRange`.** Kết quả vẫn đúng, nhưng mỗi frame re-upload nguyên buffer lên GPU dù phần lớn instance không đổi — dễ thành bottleneck CPU→GPU trước cả khi bản thân GPU bận.
 
 </Callout>

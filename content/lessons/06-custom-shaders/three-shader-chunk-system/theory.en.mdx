@@ -18,7 +18,7 @@ Open `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.glsl.js` d
 
 ## Finding Your Anchor: Dump the Real Shader, Look Up the Chunk on GitHub
 
-The most reliable lookup technique isn't guessing — it's printing exactly what Three sees: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. What prints is the raw `ShaderLib.meshphysical.vertex` string after Three has already added the feature `#define`s in play (`USE_MAP`, `USE_INSTANCING`, ...) but BEFORE `resolveIncludes` runs — exactly what you need to pick the right marker. Once you've spotted the marker, look up the real chunk content on GitHub at the exact tag matching the installed version (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<name>.glsl.js`), never the `dev`/`master` branch — variable names or the chunk itself may have changed between versions.
+The most reliable lookup technique isn't guessing — it's printing exactly what Three sees: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. What prints is the raw `ShaderLib.meshphysical.vertex` string — BEFORE `resolveIncludes` runs, and also before any feature `#define`s (`USE_MAP`, `USE_INSTANCING`, ...) are added: those live in the prefix `WebGLProgram` assembles later, at compile time — exactly what you need to pick the right marker. Once you've spotted the marker, look up the real chunk content on GitHub at the exact tag matching the installed version (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<name>.glsl.js`), never the `dev`/`master` branch — variable names or the chunk itself may have changed between versions.
 
 ## Overriding Globally via THREE.ShaderChunk — and the Restore Discipline
 

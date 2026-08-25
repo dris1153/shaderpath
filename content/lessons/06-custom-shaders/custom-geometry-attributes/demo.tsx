@@ -10,6 +10,7 @@ import { useDemoContext } from "@/components/viz/demo-context";
 import { Button } from "@/components/ui/button";
 import { booleanOf, numberOf, stringOf } from "@/components/viz/control-schema";
 import { useDisposable } from "@/lib/hooks/use-disposable";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./attribute-sphere.frag";
 import vertexShader from "./attribute-sphere.vert";
 
@@ -131,12 +132,14 @@ function AttributeSphere({ ref }: { ref: Ref<SphereHandle> }) {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.15;
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh ref={meshRef} geometry={geometry}>
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

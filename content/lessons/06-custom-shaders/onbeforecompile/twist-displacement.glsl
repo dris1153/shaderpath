@@ -4,5 +4,5 @@
 float twistAngle = uTwist * transformed.y;
 float twistCos = cos(twistAngle);
 float twistSin = sin(twistAngle);
-transformed.xz = mat2(twistCos, -twistSin, twistSin, twistCos) * transformed.xz;
+transformed.xz = mat2(twistCos, twistSin, -twistSin, twistCos) * transformed.xz;
 vBand = transformed.y;

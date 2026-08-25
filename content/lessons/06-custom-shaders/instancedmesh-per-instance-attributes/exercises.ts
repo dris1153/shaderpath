@@ -24,12 +24,12 @@ Then: the player selects $5$ of those $3000$ rocks as targets, and the selected 
     ],
     checklist: [
       {
-        vi: "Tôi nêu đúng: 3000 Mesh riêng = 3000 draw call/frame; InstancedMesh = 1 draw call/frame",
-        en: "I correctly stated: 3000 separate Meshes = 3000 draw calls/frame; InstancedMesh = 1 draw call/frame",
+        vi: "Tôi đếm được số draw call mỗi frame cho từng phương án và giải thích được vì sao chúng chênh nhau đúng như vậy",
+        en: "I counted the per-frame draw calls for each approach and can explain exactly why they differ the way they do",
       },
       {
-        vi: "Tôi đề xuất dùng setColorAt cho đúng 5 index được chọn, rồi instanceColor.needsUpdate = true",
-        en: "I proposed using setColorAt on exactly the 5 selected indices, then instanceColor.needsUpdate = true",
+        vi: "Cách highlight của tôi chỉ ghi dữ liệu per-instance cho các index được chọn và đánh dấu buffer cần upload lại — không tạo thêm object hay material nào",
+        en: "My highlight approach writes per-instance data only for the selected indices and flags the buffer for re-upload — no extra objects or materials created",
       },
       {
         vi: "Tôi giải thích được vì sao đây vẫn là 1 draw call: cùng một lệnh gl.drawElementsInstanced đọc buffer màu đã cập nhật, không có lệnh vẽ nào được thêm vào",
@@ -37,7 +37,6 @@ Then: the player selects $5$ of those $3000$ rocks as targets, and the selected 
       },
     ],
     solutionCode: `function highlightSelected(mesh, selectedIndices, normalColor, hitColor) {
-  const color = new THREE.Color();
   for (let i = 0; i < mesh.count; i++) {
     const isSelected = selectedIndices.includes(i);
     mesh.setColorAt(i, isSelected ? hitColor : normalColor);

@@ -30,8 +30,8 @@ Then: if you move these exact five lines into a RawShaderMaterial instead, does 
     },
     hints: [
       {
-        vi: "Chỉ so khớp với đúng sáu uniform + ba attribute liệt kê ở trên — `uTime` và `varying vec2 vUv;` không nằm trong danh sách đó.",
-        en: "Only match against the exact six uniforms + three attributes listed above — `uTime` and `varying vec2 vUv;` aren't on that list.",
+        vi: "Đối chiếu TỪNG tên với danh sách sáu uniform + ba attribute ở trên — đừng phân loại theo cảm giác \"trông giống built-in\"; chỉ tên có mặt trong danh sách mới trùng.",
+        en: "Check EACH name against the exact six uniforms + three attributes listed above — don't classify by \"looks like a built-in\"; only names on that list collide.",
       },
       {
         vi: "RawShaderMaterial không có prelude nào cả — không tên nào trong shader của bạn có thể 'trùng' với một khai báo mà Three chưa từng thêm.",
@@ -40,12 +40,12 @@ Then: if you move these exact five lines into a RawShaderMaterial instead, does 
     ],
     checklist: [
       {
-        vi: "Tôi xác định đúng `uniform vec3 cameraPosition;`, `attribute vec3 normal;` và `uniform mat3 normalMatrix;` sẽ gây redefinition trên ShaderMaterial thường",
-        en: "I correctly identified `uniform vec3 cameraPosition;`, `attribute vec3 normal;` and `uniform mat3 normalMatrix;` as causing redefinition on a regular ShaderMaterial",
+        vi: "Tôi phân loại đủ cả năm khai báo trên ShaderMaterial thường và biện luận được từng dòng bằng cách đối chiếu với danh sách prelude",
+        en: "I classified all five declarations for a regular ShaderMaterial, justifying each one against the prelude list",
       },
       {
-        vi: "Tôi xác định đúng `uniform float uTime;` và `varying vec2 vUv;` biên dịch bình thường (không trùng built-in nào)",
-        en: "I correctly identified `uniform float uTime;` and `varying vec2 vUv;` as compiling fine (no built-in collision)",
+        vi: "Với những dòng biên dịch bình thường, tôi chỉ ra được lý do là tên không xuất hiện trong prelude",
+        en: "For the lines that compile fine, I can point to the reason: their names never appear in the prelude",
       },
       {
         vi: "Tôi giải thích được vì sao cả năm dòng đều an toàn trên RawShaderMaterial (prelude rỗng, không có gì để trùng)",

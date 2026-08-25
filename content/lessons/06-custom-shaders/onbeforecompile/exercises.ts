@@ -24,16 +24,16 @@ Predict: the first time you flip the toggle from one material to the other, what
     ],
     checklist: [
       {
-        vi: "Nêu đúng hậu quả: hai material dùng chung một cache key mặc định, nên Three tái sử dụng đúng MỘT chương trình đã compile — material thứ hai bị \"lộ\" đúng hiệu ứng của material thứ nhất, đổi qua đổi lại không thấy khác biệt",
-        en: "States the correct consequence: both materials land on the same default cache key, so Three reuses ONE compiled program — the second material silently gets the first one's effect, and toggling shows no visible difference",
+        vi: "Tôi suy ra được trên màn hình thấy gì khi bật/tắt effectOn, và truy được hậu quả đó về số chương trình thực sự được compile",
+        en: "I derived what the screen shows when toggling effectOn, and traced that consequence back to how many programs actually get compiled",
       },
       {
-        vi: "Giải thích đúng cơ chế: \`customProgramCacheKey()\` mặc định gọi \`.toString()\` lên hàm \`onBeforeCompile\`, và văn bản hàm giống hệt nhau dù \`effectOn\` khác nhau",
-        en: "Correctly explains the mechanism: the default `customProgramCacheKey()` calls `.toString()` on the `onBeforeCompile` function, and the function text is identical regardless of `effectOn`",
+        vi: "Tôi giải thích được cơ chế bằng cách chỉ ra cache key mặc định được sinh từ đâu, và vì sao hai biến thể effectOn cho ra cùng một key",
+        en: "I explained the mechanism by pointing at where the default cache key comes from, and why both effectOn variants produce the same key",
       },
       {
-        vi: "Đưa ra đúng bản sửa: \`m.customProgramCacheKey = () => String(effectOn);\` (hoặc tương đương) — trả về chuỗi phân biệt theo biến thể thực tế, không phụ thuộc văn bản hàm",
-        en: "Provides the correct fix: `m.customProgramCacheKey = () => String(effectOn);` (or equivalent) — returning a string that varies with the actual variant, not the function's text",
+        vi: "Bản sửa của tôi trả về một cache key phân biệt theo biến thể thực tế (không phụ thuộc văn bản hàm), và tôi giải thích được vì sao nó tách được hai chương trình",
+        en: "My fix returns a cache key that varies with the actual variant (not the function text), and I can explain why it separates the two programs",
       },
     ],
     solutionCode: `// Both makeMaterial(true) and makeMaterial(false) assign the SAME arrow

@@ -10,6 +10,7 @@ import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { numberOf } from "@/components/viz/control-schema";
 import { useDisposable } from "@/lib/hooks/use-disposable";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 import fragmentShader from "./injected-uniforms-orb.frag";
 import vertexShader from "./injected-uniforms-orb.vert";
 
@@ -84,13 +85,15 @@ function InjectedUniformsOrb() {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.3;
   });
 
+  const bindUniforms = useSharedUniforms(uniforms);
+
   return (
     <mesh ref={meshRef}>
       <icosahedronGeometry args={[1.1, 4]} />
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
+        ref={bindUniforms}
       />
     </mesh>
   );

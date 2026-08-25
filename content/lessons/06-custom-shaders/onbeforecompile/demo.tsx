@@ -70,7 +70,7 @@ function createTwistMaterial(
   return material;
 }
 
-function TwistedSphere({ shadowsOn }: { shadowsOn: boolean }) {
+function TwistedKnot({ shadowsOn }: { shadowsOn: boolean }) {
   const { values } = useDemoContext();
   const invalidate = useThree((s) => s.invalidate);
   const disposables = useDisposable();
@@ -80,7 +80,11 @@ function TwistedSphere({ shadowsOn }: { shadowsOn: boolean }) {
   const twistUniform = useMemo(() => ({ value: 1.2 }), []);
 
   const geometry = useMemo(
-    () => disposables.register(new THREE.SphereGeometry(1, 96, 64)),
+    // A sphere maps onto itself under a per-slice Y twist (nothing visibly
+    // moves) — a torus knot has no such symmetry, so the twist reads.
+    // Normals are NOT counter-rotated by the chunk, so shading swims
+    // slightly at high twist — the classic displacement caveat.
+    () => disposables.register(new THREE.TorusKnotGeometry(0.62, 0.24, 220, 40)),
     [disposables],
   );
   const materialOn = useMemo(
@@ -127,7 +131,7 @@ function Scene() {
         shadow-camera-bottom={-3}
         shadow-bias={-0.0015}
       />
-      <TwistedSphere shadowsOn={shadowsOn} />
+      <TwistedKnot shadowsOn={shadowsOn} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} receiveShadow={shadowsOn}>
         <planeGeometry args={[10, 10]} />
         <meshStandardMaterial color="#3a3f4a" roughness={0.95} />

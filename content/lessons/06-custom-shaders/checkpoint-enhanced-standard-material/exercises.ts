@@ -211,7 +211,10 @@ function createDissolveMaterial({
         \`#include <alphatest_fragment>
         float dissolveN = dissolveSample(vDissolvePos);
         if (dissolveN < uProgress) discard;
-        dissolveEdge = 1.0 - smoothstep(uProgress, uProgress + 0.08, dissolveN);\`,
+        dissolveEdge = 1.0 - smoothstep(uProgress, uProgress + 0.08, dissolveN);
+        // At uProgress = 0 the band would glow wherever noise < 0.08 —
+        // gate it so a fully intact mesh shows no stray edge specks.
+        dissolveEdge *= step(0.0001, uProgress);\`,
       )
       .replace(
         "#include <emissivemap_fragment>",

@@ -44,16 +44,16 @@ At the moment your \`material.onBeforeCompile\` runs, is \`shader.vertexShader\`
     ],
     checklist: [
       {
-        vi: "Tôi chỉ đúng: onBeforeCompile chạy TRƯỚC resolveIncludes, nên shader.vertexShader lúc đó vẫn là #include thô, chưa lắp ráp",
-        en: "I correctly identified that onBeforeCompile runs BEFORE resolveIncludes, so shader.vertexShader at that point is still the raw #include text, not yet assembled",
+        vi: "Tôi xác định được onBeforeCompile chạy trước hay sau resolveIncludes, và suy ra từ đó shader.vertexShader lúc callback trông như thế nào",
+        en: "I determined whether onBeforeCompile runs before or after resolveIncludes, and derived from that what shader.vertexShader looks like at callback time",
       },
       {
         vi: "Tôi giải thích được .replace() nhắm sai chuỗi không báo lỗi, chỉ âm thầm không có tác dụng gì",
         en: "I can explain that .replace() targeting the wrong string throws no error — it just silently has no effect",
       },
       {
-        vi: "Tôi nêu được cách sửa đúng: nhắm .replace() vào chính marker #include <begin_vertex>, giữ nguyên marker và nối thêm code sau nó",
-        en: "I can state the correct fix: target .replace() at the #include <begin_vertex> marker itself, keeping the marker intact and appending code after it",
+        vi: "Bản sửa của tôi nhắm .replace() vào một chuỗi thật sự tồn tại trong shader tại thời điểm callback, giữ marker nguyên vẹn",
+        en: "My fix targets .replace() at a string that actually exists in the shader at callback time, keeping the marker intact",
       },
     ],
     solutionCode: `shader.vertexShader = shader.vertexShader.replace(

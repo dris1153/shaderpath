@@ -22,8 +22,8 @@ export const exercises: Exercise[] = [
     },
     hints: [
       {
-        vi: "65 × 65 chỉ là phép nhân trực tiếp — đừng nhầm với số tam giác (khác công thức, dùng widthSegments × heightSegments × 2).",
-        en: "65 × 65 is a direct multiplication — don't confuse it with the triangle count (a different formula: widthSegments × heightSegments × 2).",
+        vi: "65 × 65 chỉ là phép nhân trực tiếp — đừng nhầm với số tam giác: với SphereGeometry, hai hàng cực chỉ phát một tam giác mỗi ô nên sphere đầy đủ có 2·w·h − 2·w tam giác, không phải w·h·2 như PlaneGeometry.",
+        en: "65 × 65 is a direct multiplication — don't confuse it with the triangle count: on SphereGeometry the two pole rows emit one triangle per quad, so a full sphere has 2·w·h − 2·w triangles, not PlaneGeometry's w·h·2.",
       },
       {
         vi: "Mỗi hàng (mỗi giá trị iy từ 0 đến heightSegments) đóng góp đúng một cặp trùng vị trí ở cột đầu/cuối — đếm số hàng, không phải số cột.",
@@ -32,16 +32,16 @@ export const exercises: Exercise[] = [
     ],
     checklist: [
       {
-        vi: "Tôi tính đúng 4225 vertex (65 × 65)",
-        en: "I correctly computed 4225 vertices (65 × 65)",
+        vi: "Tôi tính được số vertex từ công thức lưới (widthSegments + 1) × (heightSegments + 1)",
+        en: "I derived the vertex count from the grid formula (widthSegments + 1) × (heightSegments + 1)",
       },
       {
-        vi: "Tôi trả lời đúng: uniform = 1 giá trị cho cả draw call, attribute = tối đa 4225 giá trị khác nhau",
-        en: "I correctly answered: uniform = 1 value for the whole draw call, attribute = up to 4225 different values",
+        vi: "Tôi nêu được số giá trị tối đa mà uniform và attribute mỗi loại có thể mang trong một draw call, gắn với số vertex vừa tính",
+        en: "I stated how many distinct values a uniform vs. an attribute can carry per draw call, tied to the vertex count I computed",
       },
       {
-        vi: "Tôi trả lời đúng 65 cặp vertex trùng vị trí dọc đường nối (một cặp mỗi hàng, heightSegments + 1 hàng)",
-        en: "I correctly answered 65 position-matching pairs along the seam (one pair per row, heightSegments + 1 rows)",
+        vi: "Tôi đếm số cặp trùng vị trí dọc đường nối theo HÀNG và giải thích được vì sao mỗi hàng góp đúng một cặp",
+        en: "I counted the seam's position-matching pairs by ROW and can explain why each row contributes exactly one pair",
       },
     ],
     solutionNote: {

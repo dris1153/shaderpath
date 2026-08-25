@@ -24,16 +24,16 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
     ],
     checklist: [
       {
-        vi: "Tôi tính đúng $M\\vec n = (\\sqrt2, \\tfrac{1}{\\sqrt2}, 0)$ — nghiêng THÊM về trục X (sai)",
-        en: "I correctly computed $M\\vec n = (\\sqrt2, \\tfrac{1}{\\sqrt2}, 0)$ — leaning FURTHER toward X (wrong)",
+        vi: "Tôi tự tính $M\\vec n$ và mô tả được nó nghiêng về phía trục nào — và vì sao đó là hướng sai",
+        en: "I computed $M\\vec n$ myself and can describe which axis it leans toward — and why that direction is wrong",
       },
       {
-        vi: "Tôi tính đúng $N\\vec n = (\\tfrac{1}{2\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0)$ — nghiêng về trục Y sau khi normalize (đúng)",
-        en: "I correctly computed $N\\vec n = (\\tfrac{1}{2\\sqrt2}, \\tfrac{1}{\\sqrt2}, 0)$ — leaning toward Y after normalizing (correct)",
+        vi: "Tôi tự tính $N\\vec n$, normalize xong so với $M\\vec n$ và giải thích được khác biệt giữa hai kết quả",
+        en: "I computed $N\\vec n$ myself, normalized it, compared it against $M\\vec n$ and can explain the difference",
       },
       {
-        vi: "Tôi xác định đúng chỉ `uniform mat4 modelMatrix;` và `uniform vec3 cameraPosition;` gây redefinition; `uNormalHelper` không trùng tên built-in nào nên biên dịch bình thường",
-        en: "I correctly identified that only `uniform mat4 modelMatrix;` and `uniform vec3 cameraPosition;` cause redefinition; `uNormalHelper` doesn't collide with any built-in name so it compiles fine",
+        vi: "Tôi phân loại cả ba khai báo redefinition-hay-không bằng cách đối chiếu từng tên với prelude, không đoán theo hình thức",
+        en: "I classified all three declarations as redefinition-or-not by checking each name against the prelude, not by guessing from their shape",
       },
     ],
     solutionNote: {
@@ -53,8 +53,8 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
     id: "fix-uniform-recreate-antipattern",
     kind: "code",
     prompt: {
-      vi: `Component R3F dưới đây cập nhật \`uTime\` bằng cách gọi \`setTime\` (React state) mỗi frame trong \`useFrame\`, rồi truyền một object \`uniforms\` MỚI vào \`<shaderMaterial>\` ở mỗi lần render — đúng anti-pattern bài học vừa nói (buộc React re-render toàn bộ subtree hàng chục lần/giây, chỉ để ghi một con số). Viết lại theo đúng "mẫu nhà": tạo object uniforms một lần bằng \`useMemo\`, cập nhật \`.value\` trực tiếp trong \`useFrame\`, không dùng \`useState\` cho giá trị animate theo thời gian.`,
-      en: `The R3F component below updates \`uTime\` by calling \`setTime\` (React state) every frame inside \`useFrame\`, then passes a NEW \`uniforms\` object into \`<shaderMaterial>\` on every render — exactly the anti-pattern this lesson just covered (forcing a full subtree React re-render dozens of times per second, just to write one number). Rewrite it using the "house pattern": create the uniforms object once with \`useMemo\`, update \`.value\` directly inside \`useFrame\`, and drop \`useState\` for the time-animated value.`,
+      vi: `Component R3F dưới đây cập nhật \`uTime\` bằng cách gọi \`setTime\` (React state) mỗi frame trong \`useFrame\`, rồi truyền một object \`uniforms\` MỚI vào \`<shaderMaterial>\` ở mỗi lần render — đúng anti-pattern bài học vừa nói (buộc React re-render toàn bộ subtree hàng chục lần/giây, chỉ để ghi một con số). Viết lại theo đúng "mẫu nhà": tạo object uniforms một lần bằng \`useMemo\`, cập nhật \`.value\` trực tiếp trong \`useFrame\`, không dùng \`useState\` cho giá trị animate theo thời gian — và bind object đó vào material qua ref bằng hook nhà \`useSharedUniforms\` (\`lib/hooks/use-shared-uniforms.ts\`), KHÔNG truyền qua prop \`uniforms\`: R3F copy từng entry của prop vào map riêng của material lúc mount, nên mutate object gốc qua đường prop sẽ không bao giờ tới GPU.`,
+      en: `The R3F component below updates \`uTime\` by calling \`setTime\` (React state) every frame inside \`useFrame\`, then passes a NEW \`uniforms\` object into \`<shaderMaterial>\` on every render — exactly the anti-pattern this lesson just covered (forcing a full subtree React re-render dozens of times per second, just to write one number). Rewrite it using the "house pattern": create the uniforms object once with \`useMemo\`, update \`.value\` directly inside \`useFrame\`, drop \`useState\` for the time-animated value — and bind the object to the material by ref with the house hook \`useSharedUniforms\` (\`lib/hooks/use-shared-uniforms.ts\`), NOT via the \`uniforms\` prop: R3F copies each prop entry into the material's own map at mount, so mutating the original through the prop route never reaches the GPU.`,
     },
     starterCode: `function GlowMesh() {
   const [time, setTime] = useState(0);
@@ -69,13 +69,16 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
       <shaderMaterial
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={{ uTime: { value: time } }} // TODO: a new object every render
+        uniforms={{ uTime: { value: time } }} // TODO: new object every render — and the prop itself copies entries away from you
       />
     </mesh>
   );
 }`,
     solutionCode: `function GlowMesh() {
   const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  // Assigns material.uniforms = uniforms BY REFERENCE — the uniforms prop
+  // would copy each entry into the material's own map, freezing them.
+  const bindUniforms = useSharedUniforms(uniforms);
 
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime; // write directly, no setState
@@ -85,9 +88,9 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
     <mesh>
       <icosahedronGeometry args={[1, 2]} />
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
       />
     </mesh>
   );
@@ -101,6 +104,10 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
         vi: "`useFrame` chạy ngoài chu kỳ render của React — ghi thẳng `uniforms.uTime.value = ...` trong đó không kích hoạt re-render nào, khác hẳn `setState`.",
         en: "`useFrame` runs outside React's render cycle — writing `uniforms.uTime.value = ...` directly inside it triggers no re-render at all, unlike `setState`.",
       },
+      {
+        vi: "`useSharedUniforms(uniforms)` trả về một callback ref: gắn vào `<shaderMaterial ref={...}>` là material dùng CHÍNH object bạn mutate, thay vì bản copy mà prop `uniforms` tạo ra.",
+        en: "`useSharedUniforms(uniforms)` returns a callback ref: attach it as `<shaderMaterial ref={...}>` and the material uses the VERY object you mutate, instead of the copy the `uniforms` prop creates.",
+      },
     ],
     checklist: [
       {
@@ -112,8 +119,8 @@ Then: among these three declarations — \`uniform mat4 modelMatrix;\`, \`unifor
         en: "The `uniforms` object is created exactly once (useMemo, empty deps), not a fresh literal every render",
       },
       {
-        vi: "`<shaderMaterial>` nhận thẳng biến `uniforms` đã memo, không phải object literal inline",
-        en: "`<shaderMaterial>` receives the memoized `uniforms` variable directly, not an inline object literal",
+        vi: "`<shaderMaterial>` bind qua `ref={useSharedUniforms(uniforms)}` — không còn prop `uniforms` nào nữa",
+        en: "`<shaderMaterial>` binds via `ref={useSharedUniforms(uniforms)}` — no `uniforms` prop remains",
       },
     ],
   },

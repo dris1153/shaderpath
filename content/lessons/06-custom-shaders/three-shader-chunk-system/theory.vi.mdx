@@ -18,7 +18,7 @@ Mở thẳng `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.gl
 
 ## Tìm đúng anchor: dump shader thật, tra chunk trên GitHub
 
-Cách tra cứu đáng tin cậy nhất không phải đoán mà là in ra chính xác những gì Three đang thấy: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. Chuỗi in ra là bản RAW của `ShaderLib.meshphysical.vertex` sau khi Three đã thêm các `#define` theo tính năng đang bật (`USE_MAP`, `USE_INSTANCING`, ...) nhưng TRƯỚC khi `resolveIncludes` chạy — đúng những gì bạn cần để chọn marker chính xác. Sau khi thấy marker, tra nội dung chunk thật trên GitHub theo đúng tag phiên bản đang cài (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<tên>.glsl.js`), không phải branch `dev`/`master` — tên biến hay tên chunk có thể đã đổi giữa các phiên bản.
+Cách tra cứu đáng tin cậy nhất không phải đoán mà là in ra chính xác những gì Three đang thấy: `onBeforeCompile: (shader) => console.log(shader.vertexShader)`. Chuỗi in ra là bản RAW của `ShaderLib.meshphysical.vertex` — TRƯỚC khi `resolveIncludes` chạy và cũng trước khi các `#define` tính năng (`USE_MAP`, `USE_INSTANCING`, ...) được thêm: đám define đó nằm trong prefix mà `WebGLProgram` lắp sau, lúc compile — đúng những gì bạn cần để chọn marker chính xác. Sau khi thấy marker, tra nội dung chunk thật trên GitHub theo đúng tag phiên bản đang cài (`github.com/mrdoob/three.js/blob/r185/src/renderers/shaders/ShaderChunk/<tên>.glsl.js`), không phải branch `dev`/`master` — tên biến hay tên chunk có thể đã đổi giữa các phiên bản.
 
 ## Ghi đè toàn cục qua THREE.ShaderChunk — và kỷ luật khôi phục
 

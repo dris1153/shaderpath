@@ -25,6 +25,7 @@ Uniforms must update by mutating \`.value\` inside \`useFrame\`/an effect, never
 import { useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const vertexShader = /* glsl */ \`
   uniform float uTime;
@@ -98,6 +99,10 @@ export function WavingFlag() {
     [],
   );
 
+  // Bind by ref: the uniforms prop would COPY entries into the material's
+  // own map, freezing uTime at 0 (see the three-injected-uniforms lesson).
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime;
   });
@@ -105,9 +110,9 @@ export function WavingFlag() {
   return (
     <mesh geometry={geometry}>
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
         side={THREE.DoubleSide}
       />
     </mesh>
@@ -118,6 +123,7 @@ export function WavingFlag() {
 import { useMemo } from "react";
 import * as THREE from "three";
 import { useFrame } from "@react-three/fiber";
+import { useSharedUniforms } from "@/lib/hooks/use-shared-uniforms";
 
 const vertexShader = /* glsl */ \`
   uniform float uTime;
@@ -203,6 +209,10 @@ export function WavingFlag() {
     [],
   );
 
+  // Bind by ref: the uniforms prop would COPY entries into the material's
+  // own map, freezing uTime at 0 (see the three-injected-uniforms lesson).
+  const bindUniforms = useSharedUniforms(uniforms);
+
   useFrame((state) => {
     uniforms.uTime.value = state.clock.elapsedTime;
   });
@@ -210,9 +220,9 @@ export function WavingFlag() {
   return (
     <mesh geometry={geometry}>
       <shaderMaterial
+        ref={bindUniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        uniforms={uniforms}
         side={THREE.DoubleSide}
       />
     </mesh>
@@ -224,8 +234,8 @@ export function WavingFlag() {
         en: "`uv.x` runs 0→1 along the plane's width — multiplying displacement by `uv.x` pins the pole edge (mask=0) while the free edge (mask=1) gets full motion. Only mask the z-displacement, don't touch `position.x`.",
       },
       {
-        vi: "Không cần `dFdx`/`normalize` để giả shading: vì `z = mask * amplitude * (sin(phase1)*0.6 + sin(phase2)*0.4)`, đạo hàm theo x chính là biểu thức đó với `sin` đổi thành `cos`, mỗi số hạng nhân thêm tần số của nó (đạo hàm chuỗi) — đưa slope đó vào fragment và dùng `cos(slope)` trực tiếp, không có phép chia nào cả.",
-        en: "You don't need `dFdx`/`normalize()` to fake shading: since `z = mask * amplitude * (sin(phase1)*0.6 + sin(phase2)*0.4)`, its slope w.r.t. x is that same expression with `sin` swapped for `cos`, each term scaled by its own frequency (chain rule) — pass that slope to the fragment shader and use `cos(slope)` directly, no division involved.",
+        vi: "Không cần `dFdx`/`normalize` để giả shading: vì `z = mask * amplitude * (sin(phase1)*0.6 + sin(phase2)*0.4)`, đạo hàm theo x chính là biểu thức đó với `sin` đổi thành `cos`, mỗi số hạng nhân thêm tần số của nó (đạo hàm chuỗi; số hạng đạo-hàm-của-mask được cố ý bỏ qua — chỉ phục vụ shading và nhỏ ở gần cột cờ) — đưa slope đó vào fragment và dùng `cos(slope)` trực tiếp, không có phép chia nào cả.",
+        en: "You don't need `dFdx`/`normalize()` to fake shading: since `z = mask * amplitude * (sin(phase1)*0.6 + sin(phase2)*0.4)`, its slope w.r.t. x is that same expression with `sin` swapped for `cos`, each term scaled by its own frequency (chain rule; the mask's own d/dx term is deliberately dropped — it's shading-only and small near the pole) — pass that slope to the fragment shader and use `cos(slope)` directly, no division involved.",
       },
       {
         vi: "Thêm `attribute float aFlutter;` vào source vertex shader, rồi bên ngoài gọi `geometry.setAttribute(\"aFlutter\", new THREE.BufferAttribute(...))` với đúng một float cho mỗi vertex (bằng `position.count`) — Three khớp attribute theo TÊN, không theo thứ tự khai báo.",
