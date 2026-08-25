@@ -1,3 +1,5 @@
+import { withUser } from "@/db/client";
+import { getUser } from "@/lib/auth";
 import {
   closeStudySession,
   saveReadingProgress,
@@ -19,15 +21,25 @@ export async function POST(req: Request) {
     return new Response(null, { status: 400 });
   }
 
+  // A beacon from a signed-out reader has nowhere to land. 204 rather than 401:
+  // sendBeacon cannot react to a status, and this is an expected state on a
+  // public lesson page, not an error worth logging.
+  // A beacon cannot react to a status, so an unreachable auth service is
+  // reported the same way as signed out: drop it quietly.
+  const user = await getUser().catch(() => null);
+  if (!user) return new Response(null, { status: 204 });
+
   try {
-    await saveReadingProgress({
-      slug: body.slug,
-      scrollPercent: Number(body.scrollPercent) || 0,
-      deltaSeconds: Number(body.deltaSeconds) || 0,
+    await withUser(user.id, async () => {
+      await saveReadingProgress({
+        slug: body.slug as string,
+        scrollPercent: Number(body.scrollPercent) || 0,
+        deltaSeconds: Number(body.deltaSeconds) || 0,
+      });
+      if (typeof body.sessionId === "number") {
+        await closeStudySession(body.sessionId, Number(body.sessionSeconds) || 0);
+      }
     });
-    if (typeof body.sessionId === "number") {
-      await closeStudySession(body.sessionId, Number(body.sessionSeconds) || 0);
-    }
   } catch {
     return new Response(null, { status: 400 });
   }

@@ -15,4 +15,10 @@ export interface LessonState {
   attempts: Record<string, AttemptVM>;
   /** The whole map: the sidebar needs sibling lessons, not just this one. */
   progress: ProgressMap;
+  /**
+   * False for a signed-out reader. The lesson itself is public, so empty
+   * markers are expected rather than an error — but they must not be shown as
+   * "you have completed nothing", which is a different claim.
+   */
+  authenticated: boolean;
 }

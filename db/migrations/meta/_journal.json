@@ -8,6 +8,13 @@
       "when": 1786792343712,
       "tag": "0000_dry_morgan_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1787793600000,
+      "tag": "0001_multi_user_rls",
+      "breakpoints": true
     }
   ]
 }

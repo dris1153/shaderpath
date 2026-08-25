@@ -10,7 +10,6 @@ import {
   notes,
   playgroundSnippets,
   reviewQueue,
-  settings,
   studySessions,
 } from "@/db/schema";
 import { applyPayload } from "./export-import-apply";
@@ -25,35 +24,54 @@ export {
   type ImportTables,
 } from "./export-import-schema";
 
+type Owned<T> = Omit<T, "userId" | "id">;
+
 export interface ExportPayload {
   schemaVersion: number;
   exportedAt: string;
   tables: {
-    lessonProgress: (typeof lessonProgress.$inferSelect)[];
-    exerciseAttempts: (typeof exerciseAttempts.$inferSelect)[];
-    notes: (typeof notes.$inferSelect)[];
-    bookmarks: (typeof bookmarks.$inferSelect)[];
-    studySessions: (typeof studySessions.$inferSelect)[];
-    reviewQueue: (typeof reviewQueue.$inferSelect)[];
-    playgroundSnippets: (typeof playgroundSnippets.$inferSelect)[];
-    settings: (typeof settings.$inferSelect)[];
+    lessonProgress: Owned<typeof lessonProgress.$inferSelect>[];
+    exerciseAttempts: Owned<typeof exerciseAttempts.$inferSelect>[];
+    notes: Owned<typeof notes.$inferSelect>[];
+    bookmarks: Owned<typeof bookmarks.$inferSelect>[];
+    studySessions: Owned<typeof studySessions.$inferSelect>[];
+    reviewQueue: Owned<typeof reviewQueue.$inferSelect>[];
+    playgroundSnippets: Owned<typeof playgroundSnippets.$inferSelect>[];
   };
 }
 
-/** Reads every progress table for export — no filtering, single-user app. */
+// Neither ownership nor surrogate keys enter the file.
+//
+// user_id: on the way back in it comes from the column's `DEFAULT auth.uid()`,
+// so an imported row belongs to whoever imported it — correct by construction
+// rather than by remembering to override a field an attacker controls.
+//
+// id: `serial` is global across accounts, so it stopped being a natural key the
+// moment a second user existed. Carrying it would make a restore collide with
+// whichever account happens to hold that number today. Rows are matched by
+// their real keys instead (lesson slug, or slug + exercise id).
+function strip<T extends { userId: string; id: number }>(rows: T[]): Owned<T>[] {
+  return rows.map((row) => {
+    const copy = { ...row } as Owned<T> & { userId?: string; id?: number };
+    delete copy.userId;
+    delete copy.id;
+    return copy;
+  });
+}
+
+/** Reads every progress table for export. RLS scopes it to the caller. */
 export async function serialize(): Promise<ExportPayload> {
   return {
     schemaVersion: SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     tables: {
-      lessonProgress: await db.select().from(lessonProgress),
-      exerciseAttempts: await db.select().from(exerciseAttempts),
-      notes: await db.select().from(notes),
-      bookmarks: await db.select().from(bookmarks),
-      studySessions: await db.select().from(studySessions),
-      reviewQueue: await db.select().from(reviewQueue),
-      playgroundSnippets: await db.select().from(playgroundSnippets),
-      settings: await db.select().from(settings),
+      lessonProgress: strip(await db.select().from(lessonProgress)),
+      exerciseAttempts: strip(await db.select().from(exerciseAttempts)),
+      notes: strip(await db.select().from(notes)),
+      bookmarks: strip(await db.select().from(bookmarks)),
+      studySessions: strip(await db.select().from(studySessions)),
+      reviewQueue: strip(await db.select().from(reviewQueue)),
+      playgroundSnippets: strip(await db.select().from(playgroundSnippets)),
     },
   };
 }

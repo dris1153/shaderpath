@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { withUser } from "@/db/client";
+import { getUser } from "@/lib/auth";
 import {
   apply,
   validate,
@@ -23,6 +25,15 @@ function isSameOrigin(req: Request): boolean {
 }
 
 export async function POST(req: Request) {
+  let user;
+  try {
+    user = await getUser();
+  } catch {
+    return NextResponse.json({ error: "Auth unavailable" }, { status: 503 });
+  }
+  if (!user) {
+    return NextResponse.json({ error: "auth_required" }, { status: 401 });
+  }
   if (!isSameOrigin(req)) {
     return NextResponse.json(
       { error: "Cross-origin requests are not allowed" },
@@ -65,7 +76,9 @@ export async function POST(req: Request) {
 
   try {
     const payload = validate(bodyObj?.data);
-    const counts = apply(payload, mode);
+    // await, not a bare call: without it the promise escaped this try block, so
+    // a failed import answered 200 and `counts` serialised as {}.
+    const counts = await withUser(user.id, () => apply(payload, mode));
     return NextResponse.json({ counts });
   } catch (err) {
     if (err instanceof SchemaVersionError) {

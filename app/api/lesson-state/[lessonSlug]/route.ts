@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { withUser } from "@/db/client";
+import { getUser } from "@/lib/auth";
 import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
 import { getAttemptsForLesson } from "@/lib/exercises-read";
 import type { LessonState } from "@/lib/lesson-state";
@@ -22,6 +24,18 @@ export async function GET(
   const slug = lessonSlug as LessonSlug;
 
   try {
+    const user = await getUser();
+    if (!user) {
+      // The lesson itself is public; only the markers need an account.
+      return NextResponse.json({
+        row: null,
+        bookmarked: false,
+        attempts: {},
+        progress: {},
+        authenticated: false,
+      } satisfies LessonState);
+    }
+    return await withUser(user.id, async () => {
     // Sequential, not Promise.all: the pool holds a single connection against
     // Supabase's transaction pooler, and concurrent queries on it wedge that
     // connection permanently — the whole instance stops answering afterwards.
@@ -41,19 +55,21 @@ export async function GET(
       };
     }
 
-    const body: LessonState = {
-      row: row
-        ? {
-            status: row.status,
-            confidence: row.confidence,
-            scrollPercent: row.scrollPercent,
-          }
-        : null,
-      bookmarked,
-      attempts,
-      progress,
-    };
-    return NextResponse.json(body);
+      const body: LessonState = {
+        row: row
+          ? {
+              status: row.status,
+              confidence: row.confidence,
+              scrollPercent: row.scrollPercent,
+            }
+          : null,
+        bookmarked,
+        attempts,
+        progress,
+        authenticated: true,
+      };
+      return NextResponse.json(body);
+    });
   } catch (err) {
     // Fail loudly on purpose. Returning an empty 200 would be indistinguishable
     // from a reader who has never opened this lesson, and every consumer needs

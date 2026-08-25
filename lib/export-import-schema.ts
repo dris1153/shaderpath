@@ -6,7 +6,11 @@
 import { validateTables } from "./export-import-rules";
 import type { ImportPayload } from "./export-import-types";
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
+
+// v1 files carried a `settings` table that no longer exists (quality tier moved
+// to localStorage). They are still accepted: the array is dropped on the way in.
+const SUPPORTED_VERSIONS = new Set([1, SCHEMA_VERSION]);
 
 export { TABLE_NAMES, validateTables } from "./export-import-rules";
 export type { ImportPayload, ImportTables } from "./export-import-types";
@@ -14,7 +18,7 @@ export type { ImportPayload, ImportTables } from "./export-import-types";
 export class SchemaVersionError extends Error {
   constructor(public readonly fileVersion: unknown) {
     super(
-      `Unsupported schema version ${JSON.stringify(fileVersion)} — this app expects ${SCHEMA_VERSION}`,
+      `Unsupported schema version ${JSON.stringify(fileVersion)} — this app expects ${SCHEMA_VERSION} (v1 also accepted)`,
     );
     this.name = "SchemaVersionError";
   }
@@ -37,7 +41,7 @@ export function validate(data: unknown): ImportPayload {
   if (typeof obj.schemaVersion !== "number") {
     throw new ValidationError(["schemaVersion: expected a number"]);
   }
-  if (obj.schemaVersion !== SCHEMA_VERSION) {
+  if (!SUPPORTED_VERSIONS.has(obj.schemaVersion)) {
     throw new SchemaVersionError(obj.schemaVersion);
   }
 
@@ -45,7 +49,16 @@ export function validate(data: unknown): ImportPayload {
   if (typeof obj.exportedAt !== "string") {
     issues.push("exportedAt: expected a string");
   }
-  const tables = validateTables(obj.tables, issues);
+  // Upgrade v1 in memory rather than rejecting a reader's own backup.
+  const rawTables =
+    typeof obj.tables === "object" && obj.tables !== null
+      ? (() => {
+          const rest = { ...(obj.tables as Record<string, unknown>) };
+          delete rest.settings;
+          return rest;
+        })()
+      : obj.tables;
+  const tables = validateTables(rawTables, issues);
   if (issues.length > 0 || !tables) throw new ValidationError(issues);
 
   return {

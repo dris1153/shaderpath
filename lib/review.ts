@@ -1,5 +1,7 @@
 "use server";
 
+import { asUser } from "@/lib/auth";
+
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { reviewQueue } from "@/db/schema";
@@ -13,7 +15,7 @@ import {
 const VALID_SLUGS = new Set<string>(LESSON_SLUGS);
 const QUALITIES: ReviewQuality[] = ["again", "hard", "good", "easy"];
 
-export async function gradeReview(slug: string, quality: ReviewQuality) {
+export const gradeReview = asUser(async (slug: string, quality: ReviewQuality) => {
   if (!VALID_SLUGS.has(slug)) throw new Error(`Unknown lesson slug: ${slug}`);
   if (!QUALITIES.includes(quality)) throw new Error(`Bad quality: ${quality}`);
 
@@ -41,4 +43,4 @@ export async function gradeReview(slug: string, quality: ReviewQuality) {
       dueAt: nextDueDate(next.intervalDays, new Date()),
     })
     .where(eq(reviewQueue.id, row.id));
-}
+});

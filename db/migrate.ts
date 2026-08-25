@@ -17,7 +17,14 @@ export async function runMigrations() {
   if (!url) throw new Error("DIRECT_URL or DATABASE_URL must be set to migrate");
 
   // max: 1 — the migrator runs statements in order on one connection.
-  const sql = postgres(url, { max: 1 });
+  const sql = postgres(url, {
+    max: 1,
+    // 0001 claims pre-auth rows for this account. It must be a connection-level
+    // setting, not a statement: the migration reads it via current_setting.
+    connection: process.env.BACKFILL_USER_ID
+      ? { "app.backfill_user_id": process.env.BACKFILL_USER_ID }
+      : undefined,
+  });
   try {
     await migrate(drizzle(sql), {
       migrationsFolder: path.join(process.cwd(), "db", "migrations"),

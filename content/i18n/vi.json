@@ -10,6 +10,25 @@
     "stats": "Thống kê",
     "settings": "Cài đặt"
   },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "signOut": "Đăng xuất",
+    "account": "Tài khoản",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "working": "Đang xử lý…",
+    "loginTitle": "Đăng nhập",
+    "loginSubtitle": "Đăng nhập để lưu tiến độ học của bạn.",
+    "registerTitle": "Tạo tài khoản",
+    "registerSubtitle": "Tạo tài khoản để lưu tiến độ trên mọi thiết bị.",
+    "loginFailed": "Email hoặc mật khẩu không đúng.",
+    "registerFailed": "Không tạo được tài khoản. Có thể email này đã được dùng.",
+    "passwordTooShort": "Mật khẩu cần ít nhất {min} ký tự.",
+    "passwordHint": "Ít nhất {min} ký tự.",
+    "haveAccount": "Đã có tài khoản?",
+    "noAccount": "Chưa có tài khoản?"
+  },
   "notes": {
     "title": "Ghi chú & Bookmark",
     "subtitle": "{notes} ghi chú · {bookmarks} bookmark",

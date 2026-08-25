@@ -1,5 +1,7 @@
 "use server";
 
+import { asUser } from "@/lib/auth";
+
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db/client";
 import { bookmarks, notes } from "@/db/schema";
@@ -19,12 +21,12 @@ function assertSlug(slug: string) {
 const trimTo = (v: string | null | undefined, max: number) =>
   v ? v.slice(0, max) : null;
 
-export async function createNote(input: {
+export const createNote = asUser(async (input: {
   lessonSlug: string;
   anchorId?: string | null;
   selectedText?: string | null;
   body: string;
-}): Promise<number> {
+}): Promise<number> => {
   assertSlug(input.lessonSlug);
   const body = input.body.trim();
   if (!body || body.length > MAX_BODY) throw new Error("Bad note body");
@@ -42,27 +44,27 @@ export async function createNote(input: {
     .then((r) => r[0]);
   if (!row) throw new Error("insert returned no row");
   return row.id;
-}
+});
 
-export async function updateNote(id: number, body: string) {
+export const updateNote = asUser(async (id: number, body: string) => {
   const trimmed = body.trim();
   if (!Number.isInteger(id) || !trimmed || trimmed.length > MAX_BODY) {
     throw new Error("Bad note update");
   }
   await db.update(notes).set({ body: trimmed }).where(eq(notes.id, id));
-}
+});
 
-export async function deleteNote(id: number) {
+export const deleteNote = asUser(async (id: number) => {
   if (!Number.isInteger(id)) throw new Error("Bad note id");
   await db.delete(notes).where(eq(notes.id, id));
-}
+});
 
 /** Toggle; returns the new state. anchorId=null means the whole lesson. */
-export async function toggleBookmark(input: {
+export const toggleBookmark = asUser(async (input: {
   lessonSlug: string;
   anchorId?: string | null;
   label?: string | null;
-}): Promise<boolean> {
+}): Promise<boolean> => {
   assertSlug(input.lessonSlug);
   const anchorId = trimTo(input.anchorId, MAX_META);
 
@@ -83,9 +85,9 @@ export async function toggleBookmark(input: {
       createdAt: new Date(),
     });
   return true;
-}
+});
 
-export async function deleteBookmark(id: number) {
+export const deleteBookmark = asUser(async (id: number) => {
   if (!Number.isInteger(id)) throw new Error("Bad bookmark id");
   await db.delete(bookmarks).where(eq(bookmarks.id, id));
-}
+});

@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { withUser } from "@/db/client";
+import { getUser } from "@/lib/auth";
 import type { SnippetSummary } from "@/lib/api-payloads";
 import { listSnippets } from "@/lib/playground";
 
@@ -8,15 +10,24 @@ import { listSnippets } from "@/lib/playground";
 
 export async function GET() {
   try {
-    const snippets = await listSnippets();
-    return NextResponse.json({
+    // Inside the try on purpose: getUser throws when the auth service cannot be
+    // reached, and that must answer 503 like any other unavailable read — never
+    // an empty 200, which reads as "you have done nothing".
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: "auth_required" }, { status: 401 });
+    }
+    return await withUser(user.id, async () => {
+      const snippets = await listSnippets();
+      return NextResponse.json({
       snippets: snippets.map((s) => ({
         id: s.id,
         title: s.title,
         fragmentShader: s.fragmentShader,
         forkedFromLesson: s.forkedFromLesson,
       })),
-    } satisfies { snippets: SnippetSummary[] });
+      } satisfies { snippets: SnippetSummary[] });
+    });
   } catch (err) {
     console.warn("snippets read failed:", err);
     return NextResponse.json({ error: "Snippets unavailable" }, { status: 503 });

@@ -10,6 +10,25 @@
     "stats": "Stats",
     "settings": "Settings"
   },
+  "auth": {
+    "login": "Sign in",
+    "register": "Sign up",
+    "signOut": "Sign out",
+    "account": "Account",
+    "email": "Email",
+    "password": "Password",
+    "working": "Working…",
+    "loginTitle": "Sign in",
+    "loginSubtitle": "Sign in to keep your progress.",
+    "registerTitle": "Create an account",
+    "registerSubtitle": "Create an account to keep your progress across devices.",
+    "loginFailed": "Wrong email or password.",
+    "registerFailed": "Could not create the account. That email may already be in use.",
+    "passwordTooShort": "Password must be at least {min} characters.",
+    "passwordHint": "At least {min} characters.",
+    "haveAccount": "Already have an account?",
+    "noAccount": "No account yet?"
+  },
   "notes": {
     "title": "Notes & Bookmarks",
     "subtitle": "{notes} notes · {bookmarks} bookmarks",

@@ -1,5 +1,7 @@
 "use server";
 
+import { asUser } from "@/lib/auth";
+
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { playgroundSnippets } from "@/db/schema";
@@ -22,19 +24,19 @@ function validate(title: string, fragmentShader: string) {
   return trimmed;
 }
 
-export async function listSnippets(): Promise<Snippet[]> {
+export const listSnippets = asUser(async (): Promise<Snippet[]> => {
   return db
     .select()
     .from(playgroundSnippets)
     .orderBy(desc(playgroundSnippets.createdAt));
-}
+});
 
-export async function saveSnippet(input: {
+export const saveSnippet = asUser(async (input: {
   id?: number;
   title: string;
   fragmentShader: string;
   forkedFromLesson?: string | null;
-}): Promise<Snippet[]> {
+}): Promise<Snippet[]> => {
   const title = validate(input.title, input.fragmentShader);
   const forked =
     input.forkedFromLesson && VALID_SLUGS.has(input.forkedFromLesson)
@@ -58,10 +60,10 @@ export async function saveSnippet(input: {
       });
   }
   return listSnippets();
-}
+});
 
-export async function deleteSnippet(id: number): Promise<Snippet[]> {
+export const deleteSnippet = asUser(async (id: number): Promise<Snippet[]> => {
   if (!Number.isInteger(id)) throw new Error("Bad snippet id");
   await db.delete(playgroundSnippets).where(eq(playgroundSnippets.id, id));
   return listSnippets();
-}
+});

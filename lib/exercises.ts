@@ -1,5 +1,7 @@
 "use server";
 
+import { asUser } from "@/lib/auth";
+
 import { sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { exerciseAttempts } from "@/db/schema";
@@ -43,7 +45,11 @@ async function upsert(
       ...insertValues,
     })
     .onConflictDoUpdate({
-      target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
+      target: [
+        exerciseAttempts.userId,
+        exerciseAttempts.lessonSlug,
+        exerciseAttempts.exerciseId,
+      ],
       set: { ...(updateSet ?? insertValues), updatedAt: new Date() },
     });
 }
@@ -52,21 +58,21 @@ async function upsert(
 // but never downgrades completed/skipped.
 const BUMP_TO_ATTEMPTED = sql`CASE WHEN ${exerciseAttempts.status} = 'not_started' THEN 'attempted' ELSE ${exerciseAttempts.status} END`;
 
-export async function setExerciseStatus(
+export const setExerciseStatus = asUser(async (
   slug: string,
   exerciseId: string,
   status: AttemptStatus,
-) {
+) => {
   await assertExercise(slug, exerciseId);
   if (!STATUSES.includes(status)) throw new Error(`Bad status: ${status}`);
   await upsert(slug, exerciseId, { status });
-}
+});
 
 /** Monotonic reveal; returns the persisted count (capped at hints.length). */
-export async function revealHint(
+export const revealHint = asUser(async (
   slug: string,
   exerciseId: string,
-): Promise<number> {
+): Promise<number> => {
   const exercise = await assertExercise(slug, exerciseId);
   const max = exercise.hints.length;
   await db.insert(exerciseAttempts)
@@ -78,7 +84,11 @@ export async function revealHint(
       updatedAt: new Date(),
     })
     .onConflictDoUpdate({
-      target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
+      target: [
+        exerciseAttempts.userId,
+        exerciseAttempts.lessonSlug,
+        exerciseAttempts.exerciseId,
+      ],
       set: {
         // LEAST, not MIN: two-argument MIN is a SQLite scalar; in Postgres
         // MIN is an aggregate and rejects a second argument.
@@ -95,9 +105,9 @@ export async function revealHint(
     )
     .then((r) => r[0]);
   return row?.hintsRevealed ?? Math.min(1, max);
-}
+});
 
-export async function revealSolution(slug: string, exerciseId: string) {
+export const revealSolution = asUser(async (slug: string, exerciseId: string) => {
   await assertExercise(slug, exerciseId);
   await upsert(
     slug,
@@ -105,13 +115,13 @@ export async function revealSolution(slug: string, exerciseId: string) {
     { solutionRevealed: true, status: "attempted" },
     { solutionRevealed: true, status: BUMP_TO_ATTEMPTED },
   );
-}
+});
 
-export async function saveUserCode(
+export const saveUserCode = asUser(async (
   slug: string,
   exerciseId: string,
   code: string,
-) {
+) => {
   await assertExercise(slug, exerciseId);
   if (new TextEncoder().encode(code).length > MAX_CODE_BYTES) {
     throw new Error("Code too large");
@@ -122,13 +132,13 @@ export async function saveUserCode(
     { userCode: code, status: "attempted" },
     { userCode: code, status: BUMP_TO_ATTEMPTED },
   );
-}
+});
 
-export async function saveChecklist(
+export const saveChecklist = asUser(async (
   slug: string,
   exerciseId: string,
   state: unknown,
-) {
+) => {
   const exercise = await assertExercise(slug, exerciseId);
   if (
     !Array.isArray(state) ||
@@ -144,4 +154,4 @@ export async function saveChecklist(
     { checklistState: state as boolean[], status: "attempted" },
     { checklistState: state as boolean[], status: BUMP_TO_ATTEMPTED },
   );
-}
+});

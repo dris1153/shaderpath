@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { withUser } from "@/db/client";
+import { getUser } from "@/lib/auth";
 import type { NotesPayload } from "@/lib/api-payloads";
 import { getAllBookmarks, getAllNotes } from "@/lib/notes-read";
 
@@ -8,6 +10,14 @@ import { getAllBookmarks, getAllNotes } from "@/lib/notes-read";
 
 export async function GET() {
   try {
+    // Inside the try on purpose: getUser throws when the auth service cannot be
+    // reached, and that must answer 503 like any other unavailable read — never
+    // an empty 200, which reads as "you have done nothing".
+    const user = await getUser();
+    if (!user) {
+      return NextResponse.json({ error: "auth_required" }, { status: 401 });
+    }
+    return await withUser(user.id, async () => {
     // Sequential, not Promise.all: against Supabase's transaction pooler the
     // pool holds a single connection, and issuing concurrent queries on it
     // wedges that connection for the lifetime of the process — every later
@@ -28,7 +38,8 @@ export async function GET() {
         anchorId: b.anchorId,
         label: b.label,
       })),
-    } satisfies NotesPayload);
+      } satisfies NotesPayload);
+    });
   } catch (err) {
     // An empty 200 would render "no notes yet" to a reader who has plenty.
     console.warn("notes read failed:", err);

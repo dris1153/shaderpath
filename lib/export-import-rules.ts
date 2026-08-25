@@ -51,7 +51,6 @@ const jsonMaxOrNull =
 
 const RULES: Record<keyof ImportTables, Record<string, Rule>> = {
   lessonProgress: {
-    id: int,
     lessonSlug: strMax(MAX_STR),
     status: enumOf(["locked", "not_started", "in_progress", "completed"]),
     startedAt: isoDateOrNull,
@@ -61,7 +60,6 @@ const RULES: Record<keyof ImportTables, Record<string, Rule>> = {
     confidence: numOrNull,
   },
   exerciseAttempts: {
-    id: int,
     lessonSlug: strMax(MAX_STR),
     exerciseId: strMax(MAX_STR),
     status: enumOf(["not_started", "attempted", "completed", "skipped"]),
@@ -72,7 +70,6 @@ const RULES: Record<keyof ImportTables, Record<string, Rule>> = {
     updatedAt: isoDate,
   },
   notes: {
-    id: int,
     lessonSlug: strMax(MAX_STR),
     anchorId: strMaxOrNull(MAX_STR),
     selectedText: strMaxOrNull(MAX_STR),
@@ -80,21 +77,18 @@ const RULES: Record<keyof ImportTables, Record<string, Rule>> = {
     createdAt: isoDate,
   },
   bookmarks: {
-    id: int,
     lessonSlug: strMax(MAX_STR),
     anchorId: strMaxOrNull(MAX_STR),
     label: strMaxOrNull(MAX_STR),
     createdAt: isoDate,
   },
   studySessions: {
-    id: int,
     lessonSlug: strMaxOrNull(MAX_STR),
     startedAt: isoDate,
     endedAt: isoDateOrNull,
     durationSeconds: int,
   },
   reviewQueue: {
-    id: int,
     lessonSlug: strMax(MAX_STR),
     intervalDays: int,
     easeFactor: num,
@@ -102,17 +96,12 @@ const RULES: Record<keyof ImportTables, Record<string, Rule>> = {
     reviewCount: int,
   },
   playgroundSnippets: {
-    id: int,
     title: strMax(MAX_STR),
     vertexShader: strMaxOrNull(MAX_SHADER_STR),
     fragmentShader: strMax(MAX_SHADER_STR),
     uniformsJson: jsonMaxOrNull(MAX_STR),
     forkedFromLesson: strMaxOrNull(MAX_STR),
     createdAt: isoDate,
-  },
-  settings: {
-    key: strMax(MAX_STR),
-    value: strMax(MAX_STR),
   },
 };
 

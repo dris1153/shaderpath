@@ -113,7 +113,7 @@ export function probeFrameTime(sampleFrames = 15): Promise<number> {
   });
 }
 
-/** Runs the full heuristic once; callers persist the result (see lib/settings.ts). */
+/** Runs the full heuristic once; QualityProvider persists the result. */
 export async function detect(): Promise<QualityTier> {
   const rendererTier = classifyRenderer(getGpuRendererString());
   const memoryTier = classifyDeviceMemory(getDeviceMemoryGb());

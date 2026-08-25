@@ -11,7 +11,6 @@ import {
   notes,
   playgroundSnippets,
   reviewQueue,
-  settings,
   studySessions,
 } from "@/db/schema";
 import type { ImportTables } from "./export-import-types";
@@ -20,6 +19,10 @@ export type Tx = Parameters<
   Parameters<PostgresJsDatabase<typeof schema>["transaction"]>[0]
 >[0];
 
+// Rows carry no `id`: the column is a per-database serial, so an import must
+// let Postgres mint fresh ones. Tables with a natural key (lesson slug, or slug
+// + exercise id) upsert on it; the rest simply insert, since "the same note
+// twice" has no meaning to match on.
 const toDate = (v: string) => new Date(v);
 const toDateOrNull = (v: string | null) => (v === null ? null : new Date(v));
 
@@ -31,7 +34,6 @@ const ALL_TABLES = [
   studySessions,
   reviewQueue,
   playgroundSnippets,
-  settings,
 ] as const;
 
 async function deleteAllRows(tx: Tx) {
@@ -43,7 +45,6 @@ async function deleteAllRows(tx: Tx) {
 async function upsertLessonProgress(tx: Tx, rows: ImportTables["lessonProgress"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       status: r.status,
       startedAt: toDateOrNull(r.startedAt),
@@ -54,14 +55,13 @@ async function upsertLessonProgress(tx: Tx, rows: ImportTables["lessonProgress"]
     };
     await tx.insert(lessonProgress)
       .values(values)
-      .onConflictDoUpdate({ target: lessonProgress.lessonSlug, set: values });
+      .onConflictDoUpdate({ target: [lessonProgress.userId, lessonProgress.lessonSlug], set: values });
   }
 }
 
 async function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttempts"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       exerciseId: r.exerciseId,
       status: r.status,
@@ -74,7 +74,11 @@ async function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttemp
     await tx.insert(exerciseAttempts)
       .values(values)
       .onConflictDoUpdate({
-        target: [exerciseAttempts.lessonSlug, exerciseAttempts.exerciseId],
+        target: [
+          exerciseAttempts.userId,
+          exerciseAttempts.lessonSlug,
+          exerciseAttempts.exerciseId,
+        ],
         set: values,
       });
   }
@@ -83,51 +87,43 @@ async function upsertExerciseAttempts(tx: Tx, rows: ImportTables["exerciseAttemp
 async function upsertNotes(tx: Tx, rows: ImportTables["notes"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       anchorId: r.anchorId,
       selectedText: r.selectedText,
       body: r.body,
       createdAt: toDate(r.createdAt),
     };
-    await tx.insert(notes).values(values).onConflictDoUpdate({ target: notes.id, set: values });
+    await tx.insert(notes).values(values);
   }
 }
 
 async function upsertBookmarks(tx: Tx, rows: ImportTables["bookmarks"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       anchorId: r.anchorId,
       label: r.label,
       createdAt: toDate(r.createdAt),
     };
-    await tx.insert(bookmarks)
-      .values(values)
-      .onConflictDoUpdate({ target: bookmarks.id, set: values });
+    await tx.insert(bookmarks).values(values);
   }
 }
 
 async function upsertStudySessions(tx: Tx, rows: ImportTables["studySessions"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       startedAt: toDate(r.startedAt),
       endedAt: toDateOrNull(r.endedAt),
       durationSeconds: r.durationSeconds,
     };
-    await tx.insert(studySessions)
-      .values(values)
-      .onConflictDoUpdate({ target: studySessions.id, set: values });
+    await tx.insert(studySessions).values(values);
   }
 }
 
 async function upsertReviewQueue(tx: Tx, rows: ImportTables["reviewQueue"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       lessonSlug: r.lessonSlug,
       intervalDays: r.intervalDays,
       easeFactor: r.easeFactor,
@@ -136,14 +132,13 @@ async function upsertReviewQueue(tx: Tx, rows: ImportTables["reviewQueue"]) {
     };
     await tx.insert(reviewQueue)
       .values(values)
-      .onConflictDoUpdate({ target: reviewQueue.lessonSlug, set: values });
+      .onConflictDoUpdate({ target: [reviewQueue.userId, reviewQueue.lessonSlug], set: values });
   }
 }
 
 async function upsertSnippets(tx: Tx, rows: ImportTables["playgroundSnippets"]) {
   for (const r of rows) {
     const values = {
-      id: r.id,
       title: r.title,
       vertexShader: r.vertexShader,
       fragmentShader: r.fragmentShader,
@@ -151,17 +146,7 @@ async function upsertSnippets(tx: Tx, rows: ImportTables["playgroundSnippets"]) 
       forkedFromLesson: r.forkedFromLesson,
       createdAt: toDate(r.createdAt),
     };
-    await tx.insert(playgroundSnippets)
-      .values(values)
-      .onConflictDoUpdate({ target: playgroundSnippets.id, set: values });
-  }
-}
-
-async function upsertSettings(tx: Tx, rows: ImportTables["settings"]) {
-  for (const r of rows) {
-    await tx.insert(settings)
-      .values({ key: r.key, value: r.value })
-      .onConflictDoUpdate({ target: settings.key, set: { value: r.value } });
+    await tx.insert(playgroundSnippets).values(values);
   }
 }
 
@@ -179,7 +164,6 @@ export async function applyPayload(
   await upsertStudySessions(tx, tables.studySessions);
   await upsertReviewQueue(tx, tables.reviewQueue);
   await upsertSnippets(tx, tables.playgroundSnippets);
-  await upsertSettings(tx, tables.settings);
 
   return {
     lessonProgress: tables.lessonProgress.length,
@@ -189,6 +173,5 @@ export async function applyPayload(
     studySessions: tables.studySessions.length,
     reviewQueue: tables.reviewQueue.length,
     playgroundSnippets: tables.playgroundSnippets.length,
-    settings: tables.settings.length,
   };
 }

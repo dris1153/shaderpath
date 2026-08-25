@@ -12,7 +12,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
 import { SkipLink } from "@/components/shell/skip-link";
 import { CommandProvider } from "@/components/command/command-provider";
-import { getQualityTierSetting } from "@/lib/settings-read";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
@@ -54,7 +53,6 @@ export default async function LocaleLayout({
   // Without this, next-intl's server APIs read headers() and opt the whole
   // subtree back into dynamic rendering, generateStaticParams or not.
   setRequestLocale(locale);
-  const initialTier = await getQualityTierSetting();
 
   return (
     <html
@@ -71,7 +69,7 @@ export default async function LocaleLayout({
             disableTransitionOnChange
           >
             <QueryProvider>
-              <QualityProvider initialTier={initialTier}>
+              <QualityProvider>
                 <TooltipProvider>
                   <SkipLink />
                   <AppHeader />

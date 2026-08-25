@@ -11,6 +11,44 @@ export const TEST_DATABASE_URL =
 
 const CONTAINER = "shaderpath-pg";
 
+// Plain postgres:17-alpine has none of what RLS needs: no `auth` schema, no
+// auth.uid(), no `authenticated` role — and it connects as a real superuser,
+// which BYPASSRLS even when FORCE is set. Without this shim the policies are
+// untestable and a green suite would say nothing about production.
+//
+// auth.uid() mirrors Supabase's own definition (the `sub` claim of
+// request.jwt.claims), so withUser() exercises the same code path locally as
+// it does against Supabase.
+const AUTH_SHIM_SQL = `
+CREATE SCHEMA IF NOT EXISTS auth;
+
+CREATE TABLE IF NOT EXISTS auth.users (
+  id uuid PRIMARY KEY,
+  email text
+);
+
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid
+LANGUAGE sql STABLE
+AS $fn$
+  SELECT nullif(current_setting('request.jwt.claims', true)::json->>'sub', '')::uuid;
+$fn$;
+
+DO $role$
+BEGIN
+  CREATE ROLE authenticated NOSUPERUSER NOINHERIT NOLOGIN;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END
+$role$;
+
+GRANT USAGE ON SCHEMA public, auth TO authenticated;
+GRANT SELECT ON auth.users TO authenticated;
+-- The migrator has not run yet, so grant on future objects too.
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT USAGE, SELECT ON SEQUENCES TO authenticated;
+`;
+
 
 function containerRunning(): boolean {
   try {
@@ -77,6 +115,7 @@ export async function resetTestDatabase(
     await sql.unsafe(
       "DROP SCHEMA IF EXISTS public CASCADE; DROP SCHEMA IF EXISTS drizzle CASCADE; CREATE SCHEMA public;",
     );
+    await sql.unsafe(AUTH_SHIM_SQL);
   } finally {
     await sql.end();
   }

@@ -1,5 +1,7 @@
 "use server";
 
+import { asUser } from "@/lib/auth";
+
 import { eq, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { lessonProgress, reviewQueue, studySessions } from "@/db/schema";
@@ -17,11 +19,11 @@ function assertSlug(slug: string): asserts slug is LessonSlug {
 const clamp = (v: number, min: number, max: number) =>
   Math.min(max, Math.max(min, v));
 
-export async function saveReadingProgress(input: {
+export const saveReadingProgress = asUser(async (input: {
   slug: string;
   scrollPercent: number;
   deltaSeconds: number;
-}) {
+}) => {
   assertSlug(input.slug);
   const scrollPercent = clamp(input.scrollPercent, 0, 1);
   const deltaSeconds = Math.round(
@@ -37,7 +39,7 @@ export async function saveReadingProgress(input: {
       timeSpentSeconds: deltaSeconds,
     })
     .onConflictDoUpdate({
-      target: lessonProgress.lessonSlug,
+      target: [lessonProgress.userId, lessonProgress.lessonSlug],
       set: {
         scrollPercent,
         timeSpentSeconds: sql`${lessonProgress.timeSpentSeconds} + ${deltaSeconds}`,
@@ -48,9 +50,9 @@ export async function saveReadingProgress(input: {
         startedAt: sql`COALESCE(${lessonProgress.startedAt}, now())`,
       },
     });
-}
+});
 
-export async function markComplete(slug: string, confidence?: number) {
+export const markComplete = asUser(async (slug: string, confidence?: number) => {
   assertSlug(slug);
   const conf =
     confidence === undefined ? null : Math.round(clamp(confidence, 1, 5));
@@ -64,7 +66,7 @@ export async function markComplete(slug: string, confidence?: number) {
       confidence: conf,
     })
     .onConflictDoUpdate({
-      target: lessonProgress.lessonSlug,
+      target: [lessonProgress.userId, lessonProgress.lessonSlug],
       set: {
         status: "completed",
         completedAt: new Date(),
@@ -85,10 +87,12 @@ export async function markComplete(slug: string, confidence?: number) {
       dueAt: nextDueDate(1, new Date()),
       reviewCount: 0,
     })
-    .onConflictDoNothing({ target: reviewQueue.lessonSlug });
-}
+    .onConflictDoNothing({
+      target: [reviewQueue.userId, reviewQueue.lessonSlug],
+    });
+});
 
-export async function openStudySession(slug: string): Promise<number> {
+export const openStudySession = asUser(async (slug: string): Promise<number> => {
   assertSlug(slug);
   const row = await db
     .insert(studySessions)
@@ -97,9 +101,9 @@ export async function openStudySession(slug: string): Promise<number> {
     .then((r) => r[0]);
   if (!row) throw new Error("insert returned no row");
   return row.id;
-}
+});
 
-export async function closeStudySession(id: number, durationSeconds: number) {
+export const closeStudySession = asUser(async (id: number, durationSeconds: number) => {
   if (!Number.isInteger(id) || id <= 0) return;
   await db.update(studySessions)
     .set({
@@ -107,4 +111,4 @@ export async function closeStudySession(id: number, durationSeconds: number) {
       durationSeconds: Math.round(clamp(durationSeconds, 0, 60 * 60 * 12)),
     })
     .where(eq(studySessions.id, id));
-}
+});

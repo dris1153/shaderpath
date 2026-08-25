@@ -9,78 +9,98 @@ import {
   closeStudySession,
 } from "@/lib/progress";
 import { getProgressRow } from "@/lib/progress-read";
-import { db } from "@/db/client";
+import { db, withUser } from "@/db/client";
 import { studySessions } from "@/db/schema";
 
 import { truncateAll } from "../setup/reset-tables";
+import { createTestUser } from "../setup/test-users";
 
-beforeAll(truncateAll);
+let ownerId: string;
+
+beforeAll(async () => {
+  await truncateAll();
+  ownerId = await createTestUser();
+});
+
+// RLS scopes every query to the signed-in owner; withUser supplies that
+// identity the same way a route handler does in production.
+const asOwner = <T>(fn: () => Promise<T>) => withUser(ownerId, fn);
 
 
 describe("progress server actions", () => {
   it("rejects unknown slugs", async () => {
-    await expect(
-      saveReadingProgress({
-        slug: "not-a-lesson",
-        scrollPercent: 0.5,
-        deltaSeconds: 5,
-      }),
-    ).rejects.toThrow(/Unknown lesson slug/);
-    await expect(markComplete("also-not-a-lesson")).rejects.toThrow();
+    await asOwner(async () => {
+      await expect(
+        saveReadingProgress({
+          slug: "not-a-lesson",
+          scrollPercent: 0.5,
+          deltaSeconds: 5,
+        }),
+      ).rejects.toThrow(/Unknown lesson slug/);
+      await expect(markComplete("also-not-a-lesson")).rejects.toThrow();
+    });
   });
 
   it("clamps scroll percent and time deltas", async () => {
-    await saveReadingProgress({
-      slug: "vector-basics",
-      scrollPercent: 7,
-      deltaSeconds: 99999,
+    await asOwner(async () => {
+      await saveReadingProgress({
+        slug: "vector-basics",
+        scrollPercent: 7,
+        deltaSeconds: 99999,
+      });
+      const row = await getProgressRow("vector-basics");
+      expect(row?.scrollPercent).toBe(1);
+      expect(row?.timeSpentSeconds).toBe(120); // MAX_DELTA_SECONDS cap
+      expect(row?.status).toBe("in_progress");
+      expect(row?.startedAt).toBeInstanceOf(Date);
     });
-    const row = await getProgressRow("vector-basics");
-    expect(row?.scrollPercent).toBe(1);
-    expect(row?.timeSpentSeconds).toBe(120); // MAX_DELTA_SECONDS cap
-    expect(row?.status).toBe("in_progress");
-    expect(row?.startedAt).toBeInstanceOf(Date);
   });
 
   it("accumulates time and updates scroll position", async () => {
-    await saveReadingProgress({
-      slug: "matrix-basics",
-      scrollPercent: 0.4,
-      deltaSeconds: 10,
+    await asOwner(async () => {
+      await saveReadingProgress({
+        slug: "matrix-basics",
+        scrollPercent: 0.4,
+        deltaSeconds: 10,
+      });
+      await saveReadingProgress({
+        slug: "matrix-basics",
+        scrollPercent: 0.2,
+        deltaSeconds: 20,
+      });
+      const row = await getProgressRow("matrix-basics");
+      expect(row?.timeSpentSeconds).toBe(30);
+      expect(row?.scrollPercent).toBe(0.2); // latest position wins (resume where you left)
     });
-    await saveReadingProgress({
-      slug: "matrix-basics",
-      scrollPercent: 0.2,
-      deltaSeconds: 20,
-    });
-    const row = await getProgressRow("matrix-basics");
-    expect(row?.timeSpentSeconds).toBe(30);
-    expect(row?.scrollPercent).toBe(0.2); // latest position wins (resume where you left)
   });
 
   it("keeps completed status across later reading saves", async () => {
-    await markComplete("cartesian-and-uv-space", 7);
-    let row = await getProgressRow("cartesian-and-uv-space");
-    expect(row?.status).toBe("completed");
-    expect(row?.confidence).toBe(5); // clamped 1–5
-    expect(row?.completedAt).toBeInstanceOf(Date);
+    await asOwner(async () => {
+      await markComplete("cartesian-and-uv-space", 7);
+      let row = await getProgressRow("cartesian-and-uv-space");
+      expect(row?.status).toBe("completed");
+      expect(row?.confidence).toBe(5); // clamped 1–5
+      expect(row?.completedAt).toBeInstanceOf(Date);
 
-    await saveReadingProgress({
-      slug: "cartesian-and-uv-space",
-      scrollPercent: 0.9,
-      deltaSeconds: 15,
+      await saveReadingProgress({
+        slug: "cartesian-and-uv-space",
+        scrollPercent: 0.9,
+        deltaSeconds: 15,
+      });
+      row = await getProgressRow("cartesian-and-uv-space");
+      expect(row?.status).toBe("completed");
+      expect(row?.scrollPercent).toBe(0.9);
     });
-    row = await getProgressRow("cartesian-and-uv-space");
-    expect(row?.status).toBe("completed");
-    expect(row?.scrollPercent).toBe(0.9);
   });
 
   it("opens and closes study sessions", async () => {
-    const id = await openStudySession("vector-basics");
-    expect(id).toBeGreaterThan(0);
-    await closeStudySession(id, 42);
-    const session = (await db.select().from(studySessions)).at(-1);
-    expect(session?.durationSeconds).toBe(42);
-    expect(session?.endedAt).toBeInstanceOf(Date);
+    await asOwner(async () => {
+      const id = await openStudySession("vector-basics");
+      expect(id).toBeGreaterThan(0);
+      await closeStudySession(id, 42);
+      const session = (await db.select().from(studySessions)).at(-1);
+      expect(session?.durationSeconds).toBe(42);
+      expect(session?.endedAt).toBeInstanceOf(Date);
+    });
   });
 });

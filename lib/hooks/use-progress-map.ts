@@ -15,9 +15,11 @@ import { fetchJson } from "./fetch-json";
  * looks exactly like a reader who has done nothing.
  */
 export function useProgressMap() {
-  return useQuery<{ progress: ProgressMap }>({
+  return useQuery<{ progress: ProgressMap; authenticated: boolean }>({
     queryKey: ["progress-map"],
-    queryFn: () => fetchJson<{ progress: ProgressMap }>("/api/progress-map"),
+    queryFn: () => fetchJson<{ progress: ProgressMap; authenticated: boolean }>(
+        "/api/progress-map",
+      ),
     // QueryProvider builds a bare QueryClient, whose default staleTime of 0
     // would refetch on every mount — including each card on this page.
     staleTime: 30_000,

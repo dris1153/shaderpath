@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { IconSettings } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/auth/user-menu";
 import { LocaleSwitcher } from "./locale-switcher";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -50,6 +51,7 @@ export async function AppHeader() {
         <div className="flex items-center gap-1">
           <LocaleSwitcher />
           <ThemeToggle />
+          <UserMenu />
           <Button
             variant="ghost"
             size="icon"

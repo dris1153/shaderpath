@@ -2,7 +2,6 @@
 // unlike the DB-native drizzle select types which use `Date` objects.
 
 export interface LessonProgressJson {
-  id: number;
   lessonSlug: string;
   status: "locked" | "not_started" | "in_progress" | "completed";
   startedAt: string | null;
@@ -13,7 +12,6 @@ export interface LessonProgressJson {
 }
 
 export interface ExerciseAttemptJson {
-  id: number;
   lessonSlug: string;
   exerciseId: string;
   status: "not_started" | "attempted" | "completed" | "skipped";
@@ -25,7 +23,6 @@ export interface ExerciseAttemptJson {
 }
 
 export interface NoteJson {
-  id: number;
   lessonSlug: string;
   anchorId: string | null;
   selectedText: string | null;
@@ -34,7 +31,6 @@ export interface NoteJson {
 }
 
 export interface BookmarkJson {
-  id: number;
   lessonSlug: string;
   anchorId: string | null;
   label: string | null;
@@ -42,7 +38,6 @@ export interface BookmarkJson {
 }
 
 export interface StudySessionJson {
-  id: number;
   lessonSlug: string | null;
   startedAt: string;
   endedAt: string | null;
@@ -50,7 +45,6 @@ export interface StudySessionJson {
 }
 
 export interface ReviewQueueJson {
-  id: number;
   lessonSlug: string;
   intervalDays: number;
   easeFactor: number;
@@ -59,7 +53,6 @@ export interface ReviewQueueJson {
 }
 
 export interface SnippetJson {
-  id: number;
   title: string;
   vertexShader: string | null;
   fragmentShader: string;
@@ -68,10 +61,6 @@ export interface SnippetJson {
   createdAt: string;
 }
 
-export interface SettingJson {
-  key: string;
-  value: string;
-}
 
 export interface ImportTables {
   lessonProgress: LessonProgressJson[];
@@ -81,7 +70,6 @@ export interface ImportTables {
   studySessions: StudySessionJson[];
   reviewQueue: ReviewQueueJson[];
   playgroundSnippets: SnippetJson[];
-  settings: SettingJson[];
 }
 
 export interface ImportPayload {
