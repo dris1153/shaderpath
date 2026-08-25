@@ -4,7 +4,7 @@ A heavy `.glb` file is usually heavy for two independent reasons, and each one n
 
 ## Compressing Geometry with Draco: Quantize, Then Entropy-Code
 
-Draco (Google, open source) does two things in sequence. First, quantization: instead of storing `position` as `float32` (32 bits per component), Draco stores it with far fewer fixed bits (commonly 11–14 bits for position, 7–10 for normal, 10–12 for uv by default — configurable via `quantization bits`, cited: the Draco README). Second, entropy coding: the mesh's connectivity graph (which vertices form which triangles) gets compressed with an Edgebreaker variant — an algorithm that exploits the fact that most meshes are one connected surface, encoding a few bits per triangle instead of storing raw indices. The combined result: dense-polygon meshes typically shrink geometry size by over 90% (source: the Draco project's README), equivalent to a compression ratio of
+Draco (Google, open source) does two things in sequence. First, quantization: instead of storing `position` as `float32` (32 bits per component), Draco stores it with far fewer fixed bits (commonly 11–14 bits for position, 7–10 for normal, 10–12 for uv by default — configurable via `quantization bits`, cited: the Draco README). Second, entropy coding: the mesh's connectivity graph (which vertices form which triangles) gets compressed with an Edgebreaker variant — an algorithm that exploits the fact that most meshes are one connected surface, encoding a few bits per triangle instead of storing raw indices. The combined result: dense-polygon meshes can shrink geometry size by up to over 90% (source: the Draco project's README), equivalent to a compression ratio of
 
 $$
 \text{ratio} = 1 - \frac{\text{size}_{\text{compressed}}}{\text{size}_{\text{raw}}} \approx 0.9
@@ -54,7 +54,7 @@ const loader = new GLTFLoader()
 loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
 ```
 
-The order is mandatory: all three `set*Loader` calls must run **before** `load()`/`parse()` — calling them afterward has no effect, since `GLTFLoader` only looks these auxiliary loaders up while parsing the matching extension.
+The order is mandatory: all three `set*Loader` calls must run **before** `load()`/`parse()` — calling them afterward means `GLTFLoader` throws an explicit error while parsing the matching extension ("setKTX2Loader must be called before loading KTX2 textures").
 
 ## Automating It with gltf-transform
 
@@ -112,7 +112,7 @@ This repo carries no real binary assets (a rule running through Track 3) — so 
 
 The three most common mistakes when building an asset compression pipeline:
 
-1. **Calling `setKTX2Loader`/`setDRACOLoader` after `load()` has already run.** All three methods just attach a reference to the auxiliary loader on the instance — `GLTFLoader` looks them up while parsing the matching extension, so registering late does nothing; the most common symptom is `KTX2Loader: Missing initialization with .detectSupport()` (source: the actual error message in `KTX2Loader.js`) from forgetting to call `detectSupport(renderer)` before `load()`.
+1. **Calling `setKTX2Loader`/`setDRACOLoader` after `load()` has already run.** All three methods just attach a reference to the auxiliary loader on the instance — `GLTFLoader` looks them up while parsing the matching extension, so registering late makes GLTFLoader throw an explicit error ("setKTX2Loader must be called before loading KTX2 textures"); the other common symptom is `KTX2Loader: Missing initialization with .detectSupport()` (source: the actual error message in `KTX2Loader.js`) from forgetting to call `detectSupport(renderer)` before `load()`.
 2. **Using ETC1S for every texture type, including normal maps.** ETC1S compresses aggressively but loses high-frequency detail — fine for base color, but visibly grainy on normal/roughness maps; UASTC preserves detail better at a lower compression ratio, the right choice for data maps.
 3. **Compressing a small model by reflex without measuring first.** The one-time cost of fetching the WASM decoder (a few hundred KB, plus init time) can easily outweigh the bytes saved on a mesh with a few thousand vertices — always measure `network time` vs. `decode time` before adding a compression step to the pipeline.
 

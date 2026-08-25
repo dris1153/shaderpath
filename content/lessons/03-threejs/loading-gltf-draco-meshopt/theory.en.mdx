@@ -55,7 +55,7 @@ dracoLoader.setDecoderPath("/draco/"); // folder hosting draco_decoder.wasm/js
 loader.setDRACOLoader(dracoLoader);
 ```
 
-`setDecoderPath` has to point at a folder that actually hosts the decoder files (copied from `three/examples/jsm/libs/draco/`) — a wrong path doesn't fail loudly; it just makes the request for the `.wasm` file return 404 and the load fails silently in the console.
+With a bundler (this course's Next.js), DRACOLoader resolves the decoder from the package itself via `import.meta.url` — `setDecoderPath` is for self-hosting/CDN, and has to point at a folder that actually hosts the decoder files (copied from `three/examples/jsm/libs/draco/`) — a wrong path doesn't fail loudly; it just makes the request for the `.wasm` file return 404 and the load fails silently in the console.
 
 ### meshopt: Faster to Decode, the gltfpack Pipeline
 

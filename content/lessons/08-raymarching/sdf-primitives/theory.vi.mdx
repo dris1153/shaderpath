@@ -58,7 +58,7 @@ float sdTorus(vec3 p, vec2 t) {
 
 ## Capsule: khoảng cách đến một đoạn thẳng bị kẹp
 
-Capsule là đoạn thẳng từ $a$ đến $b$ "thổi phồng" bán kính $r$. Cần giải trước: khoảng cách từ $p$ đến điểm GẦN NHẤT trên đoạn $[a, b]$ — chính là phép chiếu (projection) ở bài `dot-and-cross-products` (Track 0), tham số hoá bằng $h \in [0,1]$ rồi kẹp hệ số chiếu vào khoảng đó.
+Capsule là đoạn thẳng từ $a$ đến $b$ "thổi phồng" bán kính $r$. Cần giải trước: khoảng cách từ $p$ đến điểm GẦN NHẤT trên đoạn $[a, b]$ — chính là phép chiếu (projection) ở bài `dot-and-cross-products` (Track 0), tham số hoá bằng $h \in [0, 1]$ rồi kẹp hệ số chiếu vào khoảng đó.
 
 $$
 h = \operatorname{clamp}\!\left(\frac{(p-a)\cdot(b-a)}{\|b-a\|^2},\ 0,\ 1\right), \qquad d_{\text{capsule}}(p) = \big\|(p-a) - h\,(b-a)\big\| - r

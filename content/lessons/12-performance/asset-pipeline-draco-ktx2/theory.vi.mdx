@@ -54,7 +54,7 @@ const loader = new GLTFLoader()
 loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
 ```
 
-Thứ tự bắt buộc: cả ba `set*Loader` phải chạy **trước** `load()`/`parse()` — gọi sau khi đã load xong không có tác dụng, vì `GLTFLoader` chỉ tra cứu các loader phụ này khi gặp extension tương ứng trong lúc parse.
+Thứ tự bắt buộc: cả ba `set*Loader` phải chạy **trước** `load()`/`parse()` — gọi sau khi đã load xong khiến `GLTFLoader` ném lỗi rõ ràng khi gặp extension tương ứng trong lúc parse ("setKTX2Loader must be called before loading KTX2 textures").
 
 ## Tự động hoá bằng gltf-transform
 

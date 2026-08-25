@@ -48,7 +48,7 @@ Precision sits silently underneath every `uniform`/`varying` declared in the bui
 
 The three most common precision-qualifier mistakes:
 
-1. **Forgetting to declare `precision ... float;` in a fragment shader.** Compiles fine on desktop Chrome because the driver silently picks a default, but fails hard on many mobile/strict WebGL drivers — a "works on my machine" bug that only shows up on a real device.
+1. **Forgetting to declare `precision ... float;` in a fragment shader.** In WebGL this is the same hard compile error on every machine ("No precision specified for (float)"). The real "works on desktop, breaks on mobile" story has a different root: at the same `mediump`, desktop grants 32-bit while many mobile GPUs grant 16-bit — a syntactically valid shader still falls apart visually on the phone.
 2. **Using `mediump` for world-space position or a long-accumulating time phase.** `uTime` multiplied by a large frequency and stored in `mediump` causes jitter that grows the longer the app has been running, not an immediate failure, so it easily slips past a quick few-second test.
 3. **Treating `lowp` as a "safe, cheap" default for anything in 0..1.** An intermediate calculation (like summing several bloom layers before tone-mapping) can exceed the $[-2, 2]$ range even though the final displayed value stays within $0..1$ — `lowp` clips incorrectly mid-calculation, before the value ever reaches the final normalization step.
 

@@ -111,7 +111,7 @@ Công thức này hội tụ cùng tốc độ **thực** (giây) bất kể fra
 
 Ba lỗi hay gặp nhất với lerp và easing:
 
-1. **Quên `clamp` sau `remap`/`invLerp` khi input có thể vượt biên.** Thanh máu hay alpha fade nhận giá trị âm hoặc lớn hơn 1 từ ngoại suy không mong muốn — UI vẽ lố khung hoặc alpha ngoài $[0,1]$ bị GPU lặng lẽ clamp (với framebuffer thường) — thanh vẽ lố khung, bug bị che mất thay vì báo lỗi. Luôn `clamp(t, 0, 1)` trước khi dùng $t$ làm alpha.
+1. **Quên `clamp` sau `remap`/`invLerp` khi input có thể vượt biên.** Thanh máu hay alpha fade nhận giá trị âm hoặc lớn hơn 1 từ ngoại suy không mong muốn — UI vẽ lố khung hoặc alpha ngoài $[0, 1]$ bị GPU lặng lẽ clamp (với framebuffer thường) — thanh vẽ lố khung, bug bị che mất thay vì báo lỗi. Luôn `clamp(t, 0, 1)` trước khi dùng $t$ làm alpha.
 2. **Nhầm thứ tự tham số `smoothstep` trong GLSL.** `smoothstep(edge0, edge1, x)` — hai tham số đầu là biên, thứ ba là giá trị cần đánh giá; viết nhầm `smoothstep(x, edge0, edge1)` (thói quen từ `clamp`) compile được nhưng cho gradient sai hoàn toàn.
 3. **Dùng `value += (target - value) * k` mỗi frame mà không nhân theo `dt`.** Cùng `k` chạy nhanh chậm khác nhau tuỳ frame rate máy người chơi. Dùng $1 - e^{-\lambda \Delta t}$ để tách tốc độ hội tụ mong muốn khỏi frame rate thực tế.
 
