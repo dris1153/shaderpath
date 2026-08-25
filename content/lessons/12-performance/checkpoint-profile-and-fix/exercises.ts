@@ -5,12 +5,12 @@ export const exercises: Exercise[] = [
     id: "build-profile-and-fix",
     kind: "build",
     prompt: {
-      vi: `\`starterCode\` bên dưới là một cảnh R3F **cố tình dựng chậm** với đúng 3 bottleneck cài sẵn. Nhiệm vụ: dùng \`PerfMeter\` (đã hoàn chỉnh — đừng viết lại) để đo trước, xác định đúng cả 3 bottleneck bằng số liệu chứ không phải đọc code rồi đoán, sửa từng cái bằng kỹ thuật đã học ở hai bài trước, rồi viết bảng before/after ngay trong comment ở cuối file.
+      vi: `Bài dạng build tự dựng từ đầu (không có starter hiển thị). Bước 1: DỰNG một cảnh R3F **cố tình chậm** với đúng 3 bottleneck theo spec bên dưới, kèm một \`PerfMeter\` nhỏ tự viết — mỗi ~0.25s đọc \`renderer.info.render.calls\`, \`renderer.info.memory.geometries/.textures\` và frame time EMA rồi báo ra overlay/console. Bước 2: đo trước, xác định đúng cả 3 bottleneck bằng số liệu chứ không phải đọc code rồi đoán, sửa từng cái bằng kỹ thuật đã học ở hai bài trước, rồi viết bảng before/after ngay trong comment ở cuối file.
 
 Ba bottleneck (không nói trước bottleneck nào ứng với đoạn code nào — tự tìm bằng \`renderer.info\`): 800 mesh riêng lẻ mỗi cái tự \`.clone()\` material của nó; một khối cầu build lại toàn bộ \`geometry\` mỗi frame chỉ để phập phồng; một ánh sáng phụ mang shadow map $4096 \\times 4096$.
 
 Yêu cầu kỹ thuật: draw call sau khi sửa phải còn khoảng 5; không còn phép \`new\`/dispose geometry nào lặp lại bên trong \`useFrame\`; shadow map của ánh sáng phụ phải được giảm kích thước hoặc tắt hẳn, có lý do; hình ảnh cuối cùng (vị trí, màu, hiệu ứng phập phồng, bóng đổ từ key light) giữ nguyên.`,
-      en: `The \`starterCode\` below is an R3F scene **deliberately built slow** with exactly 3 planted bottlenecks. Task: use \`PerfMeter\` (already complete — don't rebuild it) to measure first, identify all 3 bottlenecks from the numbers rather than reading the code and guessing, fix each with techniques from the two previous lessons, then write a before/after table right in a comment at the end of the file.
+      en: `Build exercises start from scratch (no visible starter). Step 1: BUILD an R3F scene **deliberately slow** with exactly the 3 bottlenecks specced below, plus a small hand-written \`PerfMeter\` — every ~0.25s read \`renderer.info.render.calls\`, \`renderer.info.memory.geometries/.textures\` and an EMA frame time, reporting to an overlay/console. Step 2: measure first, identify all 3 bottlenecks from the numbers rather than reading the code and guessing, fix each with techniques from the two previous lessons, then write a before/after table right in a comment at the end of the file.
 
 Three bottlenecks (deliberately not telling you which code maps to which — find them with \`renderer.info\`): 800 individual meshes each \`.clone()\`-ing its own material; a sphere that rebuilds its entire \`geometry\` every frame just to throb; a secondary light carrying a $4096 \\times 4096$ shadow map.
 
@@ -82,6 +82,7 @@ function SlowField() {
           geometry={boxGeometry}
           material={materials[i]}
           position={[((i % 40) - 20) * 0.4, Math.floor(i / 40) * 0.4 - 4, 0]}
+          castShadow
         />
       ))}
     </>
@@ -108,7 +109,7 @@ function ThrobbingBlob() {
   });
 
   return (
-    <mesh ref={meshRef} position={[0, 3.2, 0]}>
+    <mesh ref={meshRef} position={[0, 3.2, 0]} castShadow>
       <sphereGeometry args={[1.1, 32, 32]} />
       <meshStandardMaterial color="#f97316" />
     </mesh>
@@ -131,6 +132,12 @@ export function SlowScene({ onStats }: { onStats: (s: Stats) => void }) {
   return (
     <>
       <Lights />
+      {/* Shadow receiver: without a floor the key light's shadows land on
+          nothing and the "shadows stay unchanged" requirement is untestable. */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, -4.6, 0]} receiveShadow>
+        <planeGeometry args={[40, 40]} />
+        <meshStandardMaterial color="#1c2130" />
+      </mesh>
       <SlowField />
       <ThrobbingBlob />
       <PerfMeter onStats={onStats} />
@@ -151,7 +158,7 @@ export function SlowScene({ onStats }: { onStats: (s: Stats) => void }) {
 // techniques from draw-calls-batching-instancing (Track 12). Measurement
 // table at the end of the file.
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree } from "@react-three/fiber";
 
@@ -208,9 +215,12 @@ function InstancedField() {
   }, []);
 
   return (
-    <instancedMesh ref={meshRef} args={[undefined, undefined, COUNT]}>
+    <instancedMesh ref={meshRef} args={[undefined, undefined, COUNT]} castShadow>
       <boxGeometry args={[0.16, 0.16, 0.16]} />
-      <meshStandardMaterial roughness={0.55} vertexColors />
+      {/* No vertexColors flag: setColorAt's instanceColor alone enables
+          USE_COLOR in r185; vertexColors would read a color attribute this
+          geometry doesn't have and paint every box black. */}
+      <meshStandardMaterial roughness={0.55} />
     </instancedMesh>
   );
 }
@@ -219,15 +229,27 @@ function InstancedField() {
 // the position attribute in place from the saved base coordinates — no new,
 // no dispose, no GC pressure.
 function ThrobbingBlob() {
-  const geometry = useMemo(() => new THREE.SphereGeometry(1.1, 32, 32), []);
-  const basePositions = useMemo(
-    () => Float32Array.from(geometry.attributes.position.array),
-    [geometry],
-  );
-
-  useEffect(() => () => geometry.dispose(), [geometry]);
+  // Created inside an effect (not useMemo): Strict Mode's simulated unmount
+  // would dispose a memoized geometry and then reuse it dead.
+  const [blob, setBlob] = useState<{
+    geometry: THREE.SphereGeometry;
+    basePositions: Float32Array;
+  } | null>(null);
+  useEffect(() => {
+    const geometry = new THREE.SphereGeometry(1.1, 32, 32);
+    setBlob({
+      geometry,
+      basePositions: Float32Array.from(geometry.attributes.position.array),
+    });
+    return () => {
+      geometry.dispose();
+      setBlob(null);
+    };
+  }, []);
 
   useFrame((state) => {
+    if (!blob) return;
+    const { geometry, basePositions } = blob;
     const pos = geometry.attributes.position as THREE.BufferAttribute;
     const t = state.clock.elapsedTime;
     for (let i = 0; i < pos.count; i++) {
@@ -242,8 +264,9 @@ function ThrobbingBlob() {
     pos.needsUpdate = true;
   });
 
+  if (!blob) return null;
   return (
-    <mesh geometry={geometry} position={[0, 3.2, 0]}>
+    <mesh geometry={blob.geometry} position={[0, 3.2, 0]} castShadow>
       <meshStandardMaterial color="#f97316" />
     </mesh>
   );
@@ -266,6 +289,12 @@ export function FixedScene({ onStats }: { onStats: (s: Stats) => void }) {
   return (
     <>
       <Lights />
+      {/* Shadow receiver: without a floor the key light's shadows land on
+          nothing and the "shadows stay unchanged" requirement is untestable. */}
+      <mesh rotation-x={-Math.PI / 2} position={[0, -4.6, 0]} receiveShadow>
+        <planeGeometry args={[40, 40]} />
+        <meshStandardMaterial color="#1c2130" />
+      </mesh>
       <InstancedField />
       <ThrobbingBlob />
       <PerfMeter onStats={onStats} />

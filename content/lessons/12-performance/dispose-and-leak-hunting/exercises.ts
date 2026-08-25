@@ -83,14 +83,17 @@ function LeakyPreviewPanel() {
     [],
   );
 
-  // TODO: use useDisposable() to register geometry, texture, material, and
-  // previewTarget so they're all disposed when LeakyPreviewPanel unmounts.
+  // TODO: move the creation of all four objects into a useEffect that owns
+  // a createDisposableRegistry() — register each at its new THREE.X() site
+  // and dispose the registry in the effect cleanup (memo + register would
+  // break under Strict Mode: the simulated unmount disposes, then the
+  // memoized objects come back dead).
 
   return <primitive object={mesh} />;
 }`,
-    solutionCode: `import { useMemo } from "react";
+    solutionCode: `import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { useDisposable } from "@/lib/hooks/use-disposable";
+import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 function makeSwatchTexture(): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
@@ -103,29 +106,38 @@ function makeSwatchTexture(): THREE.CanvasTexture {
 }
 
 function CleanPreviewPanel() {
-  const disposables = useDisposable();
+  // Effect-owned registry: each effect run creates AND registers its own
+  // objects, the cleanup disposes them — Strict Mode's simulated unmount
+  // then just builds a fresh set instead of reviving disposed ones.
+  const [mesh, setMesh] = useState<THREE.Mesh | null>(null);
+  const previewTargetRef = useRef<THREE.WebGLRenderTarget | null>(null);
 
-  const mesh = useMemo(() => {
-    const geometry = disposables.register(new THREE.PlaneGeometry(1.5, 1.5));
-    const texture = disposables.register(makeSwatchTexture());
-    const material = disposables.register(
+  useEffect(() => {
+    const registry = createDisposableRegistry();
+    const geometry = registry.register(new THREE.PlaneGeometry(1.5, 1.5));
+    const texture = registry.register(makeSwatchTexture());
+    const material = registry.register(
       new THREE.MeshBasicMaterial({ map: texture }),
     );
-    return new THREE.Mesh(geometry, material);
-  }, [disposables]);
+    setMesh(new THREE.Mesh(geometry, material));
+    // Used by the off-screen preview pass elsewhere in the real component.
+    previewTargetRef.current = registry.register(
+      new THREE.WebGLRenderTarget(256, 256),
+    );
+    return () => {
+      registry.disposeAll();
+      previewTargetRef.current = null;
+      setMesh(null);
+    };
+  }, []);
 
-  const previewTarget = useMemo(
-    () => disposables.register(new THREE.WebGLRenderTarget(256, 256)),
-    [disposables],
-  );
-  void previewTarget; // used by the off-screen pass elsewhere in the real component
-
+  if (!mesh) return null;
   return <primitive object={mesh} />;
 }`,
     hints: [
       {
-        vi: "register() không đổi kiểu hay hành vi runtime của object — gọi nó ngay tại chỗ new THREE.X() và dùng giá trị trả về y như trước, cho cả 4 object.",
-        en: "register() doesn't change an object's type or runtime behavior — call it right at the new THREE.X() site and use the returned value exactly as before, for all 4 objects.",
+        vi: "Mỗi lần effect chạy tự tạo createDisposableRegistry() riêng; register() không đổi kiểu hay hành vi runtime — gọi nó ngay tại chỗ new THREE.X() cho cả 4 object, cleanup gọi registry.disposeAll().",
+        en: "Each effect run creates its own createDisposableRegistry(); register() doesn't change an object's type or runtime behavior — call it right at each new THREE.X() site for all 4 objects, with registry.disposeAll() in the cleanup.",
       },
       {
         vi: "Texture là một object độc lập với material dù được gán vào material.map — nó cần register() riêng, không tự động đi theo khi material được register.",
@@ -134,12 +146,12 @@ function CleanPreviewPanel() {
     ],
     checklist: [
       {
-        vi: "Cả 4 object (geometry, texture, material, previewTarget) đều được bọc qua disposables.register(...)",
-        en: "All 4 objects (geometry, texture, material, previewTarget) are wrapped through disposables.register(...)",
+        vi: "Cả 4 object (geometry, texture, material, previewTarget) đều được bọc qua registry.register(...)",
+        en: "All 4 objects (geometry, texture, material, previewTarget) are wrapped through registry.register(...)",
       },
       {
-        vi: "disposables nằm trong dependency array của cả hai useMemo liên quan",
-        en: "disposables is included in the dependency array of both relevant useMemo calls",
+        vi: "Cả 4 object được TẠO bên trong effect (không còn useMemo giữ disposable nào), cleanup gọi registry.disposeAll()",
+        en: "All 4 objects are CREATED inside the effect (no useMemo holds a disposable anymore), with registry.disposeAll() in the cleanup",
       },
       {
         vi: "Component vẫn render đúng tấm plane màu xanh như trước khi sửa, chỉ khác ở việc dispose khi unmount",

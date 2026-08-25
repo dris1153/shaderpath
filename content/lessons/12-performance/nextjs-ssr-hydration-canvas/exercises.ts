@@ -61,15 +61,19 @@ C: COMPLETELY FINE. The entire effect body only runs after the component has act
     id: "gate-client-only-quality-badge",
     kind: "code",
     prompt: {
-      vi: `Component \`QualityBadge\` bên dưới hiển thị tier chất lượng đọc từ \`localStorage\` (chỉ tồn tại trên client) — bản hiện tại đọc \`localStorage\` ngay trong thân component nên giá trị server render (luôn \`null\`) khác giá trị client render (giá trị lưu thật), gây hydration mismatch. Sửa bằng pattern **mounted-state gate**: lần render đầu trên client phải khớp hệt server, giá trị thật chỉ hiện sau khi \`mounted === true\`.`,
-      en: `The \`QualityBadge\` component below reads a quality tier from \`localStorage\` (which only exists on the client) — as written, it reads \`localStorage\` directly in the component body, so the server-rendered value (always \`null\`) differs from the client-rendered value (the real stored one), causing a hydration mismatch. Fix it with the **mounted-state gate** pattern: the client's first render must match the server exactly, with the real value only appearing after \`mounted === true\`.`,
+      vi: `Component \`QualityBadge\` bên dưới hiển thị tier chất lượng đọc từ \`localStorage\` (chỉ tồn tại trên client) — bản hiện tại đọc \`localStorage\` qua guard \`typeof window\` ngay trong thân component: server render ra giá trị mặc định, client render ra giá trị lưu thật — hai HTML khác nhau, hydration mismatch. (Lưu ý: đọc \`localStorage\` TRẦN không guard còn tệ hơn — server ném thẳng \`ReferenceError: localStorage is not defined\` và sập request, đúng như Snippet A ở bài trên.) Sửa bằng pattern **mounted-state gate**: lần render đầu trên client phải khớp hệt server, giá trị thật chỉ hiện sau khi \`mounted === true\`.`,
+      en: `The \`QualityBadge\` component below reads a quality tier from \`localStorage\` (which only exists on the client) — as written, it reads \`localStorage\` through a \`typeof window\` guard right in the component body: the server renders the default value, the client renders the real stored one — two different HTMLs, a hydration mismatch. (Note: a BARE unguarded \`localStorage\` read is worse still — the server throws \`ReferenceError: localStorage is not defined\` and crashes the request, exactly as Snippet A above showed.) Fix it with the **mounted-state gate** pattern: the client's first render must match the server exactly, with the real value only appearing after \`mounted === true\`.`,
     },
     starterCode: `"use client";
 
-// BUG: reads localStorage directly during render — server always sees
-// \`null\`, client sees the real stored tier, React flags a mismatch.
+// BUG: reads localStorage during render (guarded so the server doesn't
+// crash) — the server renders "auto", the client renders the stored tier,
+// React flags a hydration mismatch.
 export function QualityBadge() {
-  const tier = localStorage.getItem("quality-tier") ?? "auto";
+  const tier =
+    typeof window === "undefined"
+      ? "auto"
+      : (localStorage.getItem("quality-tier") ?? "auto");
   return <span className="rounded border px-2 py-0.5 text-xs">{tier}</span>;
 }`,
     solutionCode: `"use client";

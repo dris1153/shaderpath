@@ -9,13 +9,13 @@ import { DemoCanvas } from "@/components/viz/demo-canvas";
 import { useDemoContext } from "@/components/viz/demo-context";
 import { stringOf } from "@/components/viz/control-schema";
 import { Button } from "@/components/ui/button";
-import { useDisposable } from "@/lib/hooks/use-disposable";
+import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
     title: "Phòng thí nghiệm leak: mount/unmount, xem VRAM có quay về 0",
     mode: "Chế độ",
-    modeClean: "Sạch — useDisposable",
+    modeClean: "Sạch — registry trong effect",
     modeLeakySkip: "Rò rỉ — bỏ qua dispose",
     modeLeakyRaf: "Rò rỉ — RAF sống sót",
     mount: "Mount",
@@ -29,7 +29,7 @@ const LABELS = {
   en: {
     title: "Leak lab: mount/unmount, watch whether VRAM returns to 0",
     mode: "Mode",
-    modeClean: "Clean — useDisposable",
+    modeClean: "Clean — effect-owned registry",
     modeLeakySkip: "Leaky — skip disposal",
     modeLeakyRaf: "Leaky — surviving RAF",
     mount: "Mount",
@@ -56,15 +56,22 @@ function makeSwatchTexture(hue: number): THREE.CanvasTexture {
 }
 
 // Only the texture is built with `new` here — geometry/material come from
-// JSX tags, so R3F auto-disposes them on unmount. The texture is the exact
-// gap useDisposable exists to fill (§case study in theory).
+// JSX tags, so R3F auto-disposes them on unmount. The texture is created
+// inside an effect (not useMemo): Strict Mode's simulated unmount disposes
+// the registry, and a memoized texture would come back dead — the exact
+// Strict-Mode-safe pattern the 04-r3f disposal lesson teaches.
 function CleanBox() {
-  const disposables = useDisposable();
   const meshRef = useRef<THREE.Mesh>(null);
-  const texture = useMemo(
-    () => disposables.register(makeSwatchTexture(150)),
-    [disposables],
-  );
+  const [texture, setTexture] = useState<THREE.Texture | null>(null);
+  useEffect(() => {
+    const registry = createDisposableRegistry();
+    const tex = registry.register(makeSwatchTexture(150));
+    setTexture(tex);
+    return () => {
+      registry.disposeAll();
+      setTexture(null);
+    };
+  }, []);
 
   useFrame((_state, delta) => {
     if (meshRef.current) meshRef.current.rotation.y += delta * 0.6;

@@ -39,7 +39,7 @@ với $\alpha$ nhỏ (ví dụ $0.1$) để mượt hoá nhiễu từng frame đ
 
 ## R3F: những đòn bẩy thật để thi hành một tier
 
-Ba chỗ trong R3F trực tiếp thi hành config: prop `dpr` của `<Canvas>` (nhận số hoặc khoảng `[min, max]`, chính là nơi "DPR giới hạn 1.5" của tier medium trở thành sự thật); mount/unmount có điều kiện cho các component effect nặng (đừng chỉ set `enabled={false}` nếu component vẫn tốn chi phí dựng cây/uniform khi tắt — bỏ hẳn khỏi cây JSX nếu tier không cần); và prop số lượng particle truyền thẳng vào component sinh instance, chứ không phải một mảng cố định rồi ẩn bớt bằng `visible={false}` (instance ẩn vẫn tốn draw call).
+Ba chỗ trong R3F trực tiếp thi hành config: prop `dpr` của `<Canvas>` (nhận số hoặc khoảng `[min, max]`, chính là nơi "DPR giới hạn 1.5" của tier medium trở thành sự thật); mount/unmount có điều kiện cho các component effect nặng (đừng chỉ set `enabled={false}` nếu component vẫn tốn chi phí dựng cây/uniform khi tắt — bỏ hẳn khỏi cây JSX nếu tier không cần); và prop số lượng particle truyền thẳng vào component sinh instance, chứ không phải một mảng cố định rồi ẩn bớt bằng `visible={false}` (mesh ẩn không tốn draw call — `projectObject` bỏ qua nó ngay — nhưng VRAM của buffer cỡ lớn vẫn nằm nguyên đó).
 
 ## Tôn trọng lựa chọn thủ công của người dùng
 
@@ -51,6 +51,6 @@ Ba lỗi hay gặp nhất khi dựng adaptive quality:
 
 1. **Cho watchdog đổi tier ngay sau MỘT mẫu frame-time xấu.** Một lần giật hình do garbage collection hay asset đang tải không phản ánh hiệu năng thật của thiết bị — thiếu hysteresis khiến tier nhảy lên xuống liên tục, trải nghiệm còn tệ hơn giữ nguyên một tier hơi thấp suốt.
 2. **Tin `navigator.deviceMemory`/chuỗi GPU debug là tuyệt đối, quên rằng chúng có thể vắng mặt hoặc bị làm mờ.** Code phụ thuộc cứng vào các API này mà không có fallback (ví dụ mặc định về medium khi API trả `undefined`) sẽ crash hoặc chọn sai tier trên chính những trình duyệt tôn trọng privacy nhất.
-3. **Giữ mọi thứ ở tier cao rồi chỉ ẩn bằng `visible={false}` thay vì thật sự KHÔNG dựng nó.** Một mesh ẩn vẫn có trong scene graph, vẫn được traverse, và tuỳ trường hợp vẫn phát sinh draw call — tier thấp phải nghĩa là component đó không hề tồn tại trong cây React, không phải "có nhưng vô hình".
+3. **Giữ mọi thứ ở tier cao rồi chỉ ẩn bằng `visible={false}` thay vì thật sự KHÔNG dựng nó.** Mesh ẩn không tốn draw call — `projectObject` của renderer return ngay khi `visible === false`, bỏ cả subtree (đúng như bài culling đã dạy) — nhưng toàn bộ geometry/texture của nó vẫn chiếm VRAM, và cây React vẫn trả chi phí reconcile — tier thấp phải nghĩa là component đó không hề tồn tại trong cây React, không phải "có nhưng vô hình".
 
 </Callout>

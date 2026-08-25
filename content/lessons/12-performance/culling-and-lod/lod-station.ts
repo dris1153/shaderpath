@@ -96,7 +96,7 @@ const shadowMatrix = new THREE.Matrix4();
 const shadowFrustum = new THREE.Frustum();
 const testPoint = new THREE.Vector3();
 
-/** Same test WebGLRenderer runs per-mesh (Frustum.intersectsObject) — here applied to each station's anchor point. */
+/** Approximation of the renderer's per-mesh test: WebGLRenderer uses Frustum.intersectsObject (bounding SPHERE), this inset checks only the anchor POINT — near the frustum edge the two can disagree by up to the sphere radius. */
 export function testStationsCulled(dollyZ: number): boolean[] {
   shadowCamera.position.set(0, CAMERA_HEIGHT, dollyZ);
   shadowCamera.rotation.set(0, 0, 0);

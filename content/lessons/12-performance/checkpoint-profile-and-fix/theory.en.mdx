@@ -4,7 +4,7 @@ Track 12's first mini-build: no new theory, an R3F scene **deliberately built sl
 
 ## Requirements
 
-The `starterCode` in the Exercises section below ships a scene with 3 problems at once: 800 individual meshes each `.clone()`-ing its own material, a "throbbing" blob that rebuilds its entire geometry every frame, and a secondary fill light carrying a 4096×4096 shadow map despite barely contributing to the final image. The measurement tools — `renderer.info.render.calls`, `renderer.info.memory`, and a frame-time EMA clock — already exist and work correctly inside `PerfMeter`, no need to rebuild them. Your job: read the numbers, identify all 3 bottlenecks with evidence rather than reading the code and guessing, fix each one with the techniques already covered, and write a before/after table right in a comment at the end of the file.
+Build exercises start from scratch (no visible starter): the prompt has you build a scene carrying 3 problems at once: 800 individual meshes each `.clone()`-ing its own material, a "throbbing" blob that rebuilds its entire geometry every frame, and a secondary fill light carrying a 4096×4096 shadow map despite barely contributing to the final image. The measurement tools — `renderer.info.render.calls`, `renderer.info.memory`, and a frame-time EMA clock — you wrap into a small `PerfMeter` component yourself (spec in the prompt). Your job: read the numbers, identify all 3 bottlenecks with evidence rather than reading the code and guessing, fix each one with the techniques already covered, and write a before/after table right in a comment at the end of the file.
 
 ## What "Done" Looks Like
 

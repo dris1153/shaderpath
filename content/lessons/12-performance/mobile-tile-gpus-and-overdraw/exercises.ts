@@ -20,7 +20,7 @@ export const exercises: Exercise[] = [
     ],
     checklist: [
       {
-        vi: "Giải thích được HSR loại fragment mặt đất bị 4 lớp khói VÀ chính mặt đất tự che nhau (nếu có) trước khi tô màu, vì mặt đất opaque không phụ thuộc thứ tự vẽ",
+        vi: "Giải thích được HSR chỉ loại fragment mặt đất bị hình học OPAQUE khác che trước khi tô màu (khói transparent depthWrite:false không che được gì cho HSR), vì kết quả opaque không phụ thuộc thứ tự vẽ",
         en: "Explained that HSR rejects ground fragments occluded by other opaque geometry before shading, because opaque results don't depend on draw order",
       },
       {

@@ -53,8 +53,8 @@ const LABELS = {
 // Formula-driven estimates only (see theory.mdx for sourcing/derivation) --
 // this demo never runs real Draco/KTX2 compression (no binary assets in repo).
 const BYTES_PER_VERTEX_RAW = 32; // position(12) + normal(12) + uv(8), float32
-const INDEX_BYTES_PER_VERTEX = 3; // ~1.5 index/vertex * 2 bytes (uint16), typical closed mesh
-const DRACO_RATIO = 1 / 8; // midpoint of the 5-10x range cited in theory
+const INDEX_BYTES_PER_VERTEX = 3; // ~1.5 index/vertex * 2 bytes (uint16) — flat-shaded/duplicated-vertex meshes; smooth closed meshes run nearer 6 idx/vertex, so this estimate leans low
+const DRACO_RATIO = 1 / 8; // ~87.5% reduction — same order as the up-to->90% the theory quotes
 const KTX2_BITS_PER_PIXEL = 6; // midpoint of the 4-8 bpp range cited in theory
 const MIP_TAX = 4 / 3;
 

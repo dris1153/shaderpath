@@ -5,7 +5,7 @@ export const exercises: Exercise[] = [
     id: "build-asset-diet",
     kind: "build",
     prompt: {
-      vi: `Bạn nhận một cảnh Three.js thuần (không React) cố tình dựng "béo": ba prop nhỏ cỡ nắm tay, mỗi cái mang một \`CanvasTexture\` procedural $4096 \\times 4096$; một environment map dạng \`FloatType\` chưa nén ở độ phân giải đầy đủ, không qua PMREM; mười hai filler sphere dùng \`SphereGeometry(0.3, 128, 128)\` dù mỗi cái chỉ chiếm vài chục pixel trên màn hình; một hero \`TorusKnotGeometry(1, 0.35, 400, 64)\` luôn render ở độ chi tiết cao nhất bất kể camera đứng xa cỡ nào; và mọi mesh trong cảnh bị set \`frustumCulled = false\` không vì lý do gì.
+      vi: `Bài dạng build tự dựng từ đầu: dựng một cảnh Three.js thuần (không React) cố tình "béo" theo đúng spec sau — ba prop nhỏ cỡ nắm tay, mỗi cái mang một \`CanvasTexture\` procedural $4096 \\times 4096$; một environment map dạng \`FloatType\` chưa nén ở độ phân giải đầy đủ, không qua PMREM; mười hai filler sphere dùng \`SphereGeometry(0.3, 128, 128)\` dù mỗi cái chỉ chiếm vài chục pixel trên màn hình; một hero \`TorusKnotGeometry(1, 0.35, 400, 64)\` luôn render ở độ chi tiết cao nhất bất kể camera đứng xa cỡ nào; và mọi mesh trong cảnh bị set \`frustumCulled = false\` không vì lý do gì.
 
 Nhiệm vụ: đưa cảnh về đúng khẩu phần. Rightsize từng texture theo texel density thực tế trên màn hình chứ không theo phản xạ "cứ để to cho chắc" — prop cỡ nắm tay không cần hơn $512$; ghi rõ quyết định định dạng nén dưới dạng comment cho từng asset (repo này không có pipeline binary thật nên không nén file thật được, nhưng phải nêu đúng sẽ dùng gì, ví dụ KTX2 cho texture prop — xem bài \`asset-pipeline-draco-ktx2\`); giảm segment count của filler và giải thích bằng đúng lý do màn hình cần bao nhiêu, không phải một con số tuỳ tiện; dựng \`THREE.LOD\` cho hero với ít nhất hai mức chi tiết thấp hơn mức gốc; trả \`frustumCulled\` về mặc định; viết một hàm \`dispose()\` audit đầy đủ mọi geometry/material/texture đã tạo, kể cả environment map và mọi level của LOD.
 
@@ -226,7 +226,7 @@ for (let i = 0; i < 3; i++) {
 // Radius-0.3 sphere sitting ~10-15 units from the camera -- an estimated
 // under-15px screen radius at normal resolution. 16 longitude x 12 latitude
 // segments (192 quads) is already smooth enough for that size; 128x128
-// (16384 quads) is over 85x more vertices than the eye could ever tell apart
+// (16384 quads) is over 85x more faces than the eye could ever tell apart
 // at this distance.
 const FILLER_SEGMENTS = 16;
 const fillers: THREE.Mesh[] = [];

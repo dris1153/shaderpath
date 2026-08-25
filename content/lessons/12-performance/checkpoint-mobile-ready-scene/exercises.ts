@@ -5,12 +5,12 @@ export const exercises: Exercise[] = [
     id: "build-mobile-ready-scene",
     kind: "build",
     prompt: {
-      vi: `\`starterCode\` bên dưới là một cảnh R3F **desktop-maxed** với 4 vấn đề cài sẵn cùng lúc: 200.000 particle không tier hoá, blending cộng dồn (additive) trên toàn bộ particle gây overdraw nặng, ánh sáng mang shadow map $4096 \\times 4096$ cố định, và \`dpr={[1, 3]}\` không giới hạn.
+      vi: `Bài dạng build tự dựng từ đầu (không có starter hiển thị). Bước 1: dựng một cảnh R3F **desktop-maxed** mang đúng 4 vấn đề cùng lúc: 200.000 particle không tier hoá, blending cộng dồn (additive) trên toàn bộ particle gây overdraw nặng, ánh sáng mang shadow map $4096 \\times 4096$ cố định, và \`dpr={[1, 3]}\` không giới hạn.
 
-Nhiệm vụ: biến nó thành mobile-ready bằng đúng kỹ thuật đã học ở Track 12. Yêu cầu kỹ thuật: (1) một object config tier \`low\`/\`mid\`/\`high\` cùng benchmark phát hiện tier khởi điểm; (2) watchdog frame-time **có hysteresis** chuyển tier động lúc chạy mà không dao động qua lại liên tục; (3) particle geometry/material dispose đúng qua \`useDisposable\` — \`renderer.info.memory.geometries\` phải quay về đúng baseline sau mỗi chu kỳ mount/unmount; (4) DPR giới hạn theo tier; (5) overdraw giảm đo được ở tier thấp (opacity thấp hơn, tắt bloom); (6) quy trình xác nhận bằng DevTools CPU throttle 4× và 6× viết thành comment ngay trong code; (7) bảng đo before/after đầy đủ ở cuối file.`,
-      en: `The \`starterCode\` below is a **desktop-maxed** R3F scene with 4 problems planted at once: 200,000 untiered particles, additive blending across all of them causing heavy overdraw, a light carrying a fixed $4096 \\times 4096$ shadow map, and an uncapped \`dpr={[1, 3]}\`.
+Nhiệm vụ: biến nó thành mobile-ready bằng đúng kỹ thuật đã học ở Track 12. Yêu cầu kỹ thuật: (1) một object config tier \`low\`/\`mid\`/\`high\` cùng một ước lượng tier khởi điểm bằng API tĩnh (heuristic — số đo THẬT đến từ watchdog ở (2)); (2) watchdog frame-time **có hysteresis** chuyển tier động lúc chạy mà không dao động qua lại liên tục; (3) particle geometry/material tạo và dispose trong effect (theo đổi tier lẫn unmount) — \`renderer.info.memory.geometries\` phải quay về đúng baseline sau mỗi chu kỳ mount/unmount; (4) DPR giới hạn theo tier; (5) overdraw giảm đo được ở tier thấp (opacity thấp hơn, tắt bloom); (6) quy trình xác nhận bằng DevTools CPU throttle 4× và 6× viết thành comment ngay trong code; (7) bảng đo before/after đầy đủ ở cuối file.`,
+      en: `Build exercises start from scratch (no visible starter). Step 1: build a **desktop-maxed** R3F scene carrying exactly 4 problems at once: 200,000 untiered particles, additive blending across all of them causing heavy overdraw, a light carrying a fixed $4096 \\times 4096$ shadow map, and an uncapped \`dpr={[1, 3]}\`.
 
-Task: make it mobile-ready using Track 12's actual techniques. Technical requirements: (1) a tier config object \`low\`/\`mid\`/\`high\` plus a detection benchmark for the starting tier; (2) a frame-time watchdog **with hysteresis** that switches tiers at runtime without flip-flopping; (3) particle geometry/material disposed correctly through \`useDisposable\` — \`renderer.info.memory.geometries\` must return to baseline after every mount/unmount cycle; (4) DPR capped per tier; (5) measurably reduced overdraw at low tier (lower opacity, bloom disabled); (6) a verification procedure using DevTools CPU throttle 4× and 6×, written as a comment right in the code; (7) a complete before/after table at the end of the file.`,
+Task: make it mobile-ready using Track 12's actual techniques. Technical requirements: (1) a tier config object \`low\`/\`mid\`/\`high\` plus a static-API heuristic for the starting tier (the REAL measurement comes from the watchdog in (2)); (2) a frame-time watchdog **with hysteresis** that switches tiers at runtime without flip-flopping; (3) particle geometry/material created and disposed inside effects (on tier changes as well as unmount) — \`renderer.info.memory.geometries\` must return to baseline after every mount/unmount cycle; (4) DPR capped per tier; (5) measurably reduced overdraw at low tier (lower opacity, bloom disabled); (6) a verification procedure using DevTools CPU throttle 4× and 6×, written as a comment right in the code; (7) a complete before/after table at the end of the file.`,
     },
     starterCode: `"use client";
 // A "desktop-maxed" scene — runs smoothly on a dev machine, collapses on a
@@ -62,6 +62,7 @@ function ParticleField() {
     if (pointsRef.current) pointsRef.current.rotation.y += delta * 0.05;
   });
 
+  if (!geometry || !material) return null;
   return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
@@ -117,8 +118,8 @@ export function DesktopMaxedApp() {
 // | Effective DPR at the lowest tier                                  |        |       |
 // | renderer.info.memory.geometries after 10 mount/unmount cycles     |        |       |`,
     solutionCode: `"use client";
-// MOBILE-READY — same scene, tiered by device + a startup benchmark, a
-// frame-time watchdog with hysteresis, correct disposal via useDisposable,
+// MOBILE-READY — same scene, tiered by device + a startup heuristic, a
+// frame-time watchdog with hysteresis, effect-owned disposal,
 // DPR capped per tier, overdraw reduced at low tier. Verification procedure +
 // measurement table at the end of the file.
 
@@ -127,7 +128,6 @@ import * as THREE from "three";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { PerformanceMonitor } from "@react-three/drei";
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
-import { useDisposable } from "@/lib/hooks/use-disposable";
 
 // Fix 1: ONE single place defining "what gets cut for a weak device" — the
 // pattern from the adaptive-quality-tiers lesson, reused verbatim here.
@@ -147,7 +147,8 @@ const TIERS: Record<Tier, TierConfig> = {
   high: { particleCount: 200_000, dpr: [1, 2], shadowMapSize: 2048, bloom: true, opacity: 0.6 },
 };
 
-// Startup benchmark: a CHEAP heuristic run once before the heavy scene mounts
+// Startup guess: a CHEAP static heuristic run once before the heavy scene
+// mounts (no real frame measured yet — the watchdog corrects it at runtime)
 // — it doesn't measure real frame time (there's nothing to measure yet), it
 // only estimates a device bucket to pick a reasonable STARTING tier; the
 // watchdog below keeps adjusting at runtime based on real frame time.
@@ -160,15 +161,19 @@ function detectStartingTier(): Tier {
   return "high";
 }
 
-// Fix 5: geometry/material registered via useDisposable — disposed correctly
+// Fix 5: geometry/material created inside effects — disposed correctly
 // on unmount, renderer.info.memory returns to baseline every cycle. Changing
 // tier rebuilds the geometry (particleCount changes) so tier is also in the
 // dependency array.
 function ParticleField({ tier }: { tier: Tier }) {
-  const disposables = useDisposable();
   const config = TIERS[tier];
 
-  const geometry = useMemo(() => {
+  // Created inside effects, not useMemo: each tier switch must dispose the
+  // OLD geometry immediately (a memoized+registered one would linger in the
+  // registry until unmount), and Strict Mode's simulated unmount would
+  // otherwise leave memoized objects dead-then-reused.
+  const [geometry, setGeometry] = useState<THREE.BufferGeometry | null>(null);
+  useEffect(() => {
     const positions = new Float32Array(config.particleCount * 3);
     for (let i = 0; i < config.particleCount; i++) {
       positions[i * 3] = (Math.random() - 0.5) * 20;
@@ -177,31 +182,38 @@ function ParticleField({ tier }: { tier: Tier }) {
     }
     const geo = new THREE.BufferGeometry();
     geo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    return disposables.register(geo);
-  }, [config.particleCount, disposables]);
+    setGeometry(geo);
+    return () => {
+      geo.dispose();
+      setGeometry(null);
+    };
+  }, [config.particleCount]);
 
   // Fix 2: no more AdditiveBlending (cumulative multi-layer blending is
   // exactly the heaviest overdraw source here) — default (Normal) blending is
   // much cheaper on a tile-based GPU; opacity is also further reduced per tier.
-  const material = useMemo(
-    () =>
-      disposables.register(
-        new THREE.PointsMaterial({
-          size: 0.03,
-          color: "#7dd3fc",
-          transparent: true,
-          opacity: config.opacity,
-          depthWrite: false,
-        }),
-      ),
-    [config.opacity, disposables],
-  );
+  const [material, setMaterial] = useState<THREE.PointsMaterial | null>(null);
+  useEffect(() => {
+    const mat = new THREE.PointsMaterial({
+      size: 0.03,
+      color: "#7dd3fc",
+      transparent: true,
+      opacity: config.opacity,
+      depthWrite: false,
+    });
+    setMaterial(mat);
+    return () => {
+      mat.dispose();
+      setMaterial(null);
+    };
+  }, [config.opacity]);
 
   const pointsRef = useRef<THREE.Points>(null);
   useFrame((_state, delta) => {
     if (pointsRef.current) pointsRef.current.rotation.y += delta * 0.05;
   });
 
+  if (!geometry || !material) return null;
   return <points ref={pointsRef} geometry={geometry} material={material} />;
 }
 
@@ -222,10 +234,9 @@ function Lights({ tier }: { tier: Tier }) {
 }
 
 // Fix 6: frame-time watchdog WITH HYSTERESIS — drei's PerformanceMonitor
-// instead of a hand-rolled counter. flipflops={3} allows up to 3 direction
-// reversals before it's considered unstable and falls all the way to
-// onFallback — this prevents the tier from flip-flopping every time frame
-// time hovers near a threshold.
+// instead of a hand-rolled counter. The smoothing comes from its
+// iterations/threshold averaging (10-sample mean by default); flipflops={3}
+// only counts direction reversals before onFallback fires as a last resort.
 function TierWatchdog({
   tier,
   setTier,
@@ -277,11 +288,12 @@ export function MobileReadyApp() {
 // 3. Repeat step 2 at CPU: 6x slowdown.
 // 4. Mount/unmount MobileReadyApp 10 times in a row while watching
 //    renderer.info.memory.geometries — the number must return to exactly 1
-//    (baseline) after EVERY unmount, not creep up, thanks to useDisposable in
+//    (baseline) after EVERY unmount, not creep up, thanks to the effect cleanups in
 //    ParticleField.
 // 5. While throttled at 4x/6x, watch the tier: it must not flip-flop
-//    continuously — the PerformanceMonitor's flipflops={3} must absorb
-//    short-term noise before actually changing tier.
+//    continuously — PerformanceMonitor's 10-sample averaging absorbs
+//    short-term noise, and flipflops={3} caps repeated reversals via
+//    onFallback.
 
 // Before/After (measured on a dev machine — a mid-range laptop GPU;
 // "throttled" is CPU slowdown via DevTools, not a real mobile device):
@@ -316,8 +328,8 @@ export function MobileReadyApp() {
         en: "Stable FPS under 6× CPU throttle, even if lower than at 4×",
       },
       {
-        vi: "Tier chuyển bậc mượt nhờ hysteresis (flipflops) — không nhảy qua lại liên tục khi frame time dập dềnh quanh ngưỡng",
-        en: "Tiers switch smoothly thanks to hysteresis (flipflops) — no flip-flopping when frame time hovers near a threshold",
+        vi: "Tier chuyển bậc mượt nhờ hysteresis (trung bình 10 mẫu của PerformanceMonitor + onFallback qua flipflops) — không nhảy qua lại liên tục khi frame time dập dềnh quanh ngưỡng",
+        en: "Tiers switch smoothly thanks to hysteresis (PerformanceMonitor 10-sample averaging + onFallback via flipflops) — no flip-flopping when frame time hovers near a threshold",
       },
       {
         vi: "Không leak sau 10 chu kỳ mount/unmount — renderer.info.memory.geometries quay về đúng baseline mỗi lần",

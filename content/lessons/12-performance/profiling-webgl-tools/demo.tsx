@@ -136,7 +136,7 @@ function LoadScene({ count }: { count: number }) {
   );
 }
 
-// The "reduce resolution test" from the theory: halving DPR halves the pixel
+// The "reduce resolution test" from the theory: halving DPR quarters the pixel
 // count the fragment shader runs for, with zero effect on draw-call count or
 // JS work — if that alone fixes the jank, the bottleneck was the GPU/fill-rate.
 function DprController({ dpr }: { dpr: number }) {

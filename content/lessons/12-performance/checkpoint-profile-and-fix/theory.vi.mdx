@@ -4,7 +4,7 @@ Mini-build đầu tiên của Track 12: không lý thuyết mới, một cảnh 
 
 ## Yêu cầu
 
-`starterCode` trong phần Bài tập bên dưới dựng sẵn một scene với 3 vấn đề cùng lúc: 800 mesh riêng lẻ mỗi cái tự `.clone()` material của nó, một khối "phập phồng" build lại toàn bộ geometry mỗi frame, và một ánh sáng phụ (fill light) mang shadow map 4096×4096 dù gần như không đóng góp gì cho ảnh cuối. Công cụ đo — `renderer.info.render.calls`, `renderer.info.memory`, và một đồng hồ frame-time EMA — đã có sẵn và chạy đúng trong `PerfMeter`, không cần viết lại. Việc của bạn: đọc số đo, xác định đúng cả 3 bottleneck bằng bằng chứng chứ không phải đọc code rồi đoán, sửa từng cái bằng kỹ thuật đã học, và viết bảng before/after ngay trong comment ở cuối file.
+Bài build tự dựng từ đầu (không có starter hiển thị): đề bài yêu cầu bạn dựng một scene mang đúng 3 vấn đề cùng lúc: 800 mesh riêng lẻ mỗi cái tự `.clone()` material của nó, một khối "phập phồng" build lại toàn bộ geometry mỗi frame, và một ánh sáng phụ (fill light) mang shadow map 4096×4096 dù gần như không đóng góp gì cho ảnh cuối. Công cụ đo — `renderer.info.render.calls`, `renderer.info.memory`, và một đồng hồ frame-time EMA — bạn tự gói vào một component `PerfMeter` nhỏ (spec trong đề bài). Việc của bạn: đọc số đo, xác định đúng cả 3 bottleneck bằng bằng chứng chứ không phải đọc code rồi đoán, sửa từng cái bằng kỹ thuật đã học, và viết bảng before/after ngay trong comment ở cuối file.
 
 ## Thế nào là "xong"
 

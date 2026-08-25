@@ -14,8 +14,8 @@ Explain why the number is 900, not 300. Then: if you convert those 300 meshes in
     },
     hints: [
       {
-        vi: "Mỗi đèn đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn RIÊNG của nó, cộng thêm vào pass chính — 900 = 300 × (1 pass chính + 2 pass shadow).",
-        en: "Each shadow-casting light re-renders every shadow-casting object from ITS OWN view, on top of the main pass — 900 = 300 × (1 main pass + 2 shadow passes).",
+        vi: "Mỗi đèn đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn RIÊNG của nó, cộng thêm vào pass chính — đếm xem một mesh bị vẽ tổng cộng mấy lần mỗi frame rồi nhân lên.",
+        en: "Each shadow-casting light re-renders every shadow-casting object from ITS OWN view, on top of the main pass — count how many times one mesh gets drawn per frame, then scale up.",
       },
       {
         vi: "InstancedMesh gộp N mesh thành một draw call cho MỖI PASS nó tham gia — nhưng số pass (chính + shadow) không đổi, chỉ số draw call TRONG mỗi pass giảm.",
