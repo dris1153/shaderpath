@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 420" width="360" height="420" role="img">
-  <title>Three-pass render to texture with tint, vignette and overlay</title>
+  <title>Render to texture ba lượt, có tint, vignette và overlay</title>
   <style>
     :root {
       --muted: #64748b;
@@ -123,7 +123,7 @@
   <rect x="0" y="0" width="360" height="360" fill="url(#vignette)" />
   <rect x="90" y="252" width="180" height="72" fill="#1a99ff" fill-opacity="0.35" />
   <rect class="frame" x="0.5" y="0.5" width="359" height="359" />
-  <text x="0" y="382">One frame at t = 1.25 s, square canvas</text>
-  <text x="0" y="398">Tinted, vignetted FBO image; overlay blended on top</text>
-  <text x="0" y="414">The back quad stays occluded: depth test, not draw order</text>
+  <text x="0" y="382">Một khung tại t = 1.25 s, canvas vuông</text>
+  <text x="0" y="398">Ảnh FBO đã tint và vignette; overlay blend lên trên</text>
+  <text x="0" y="414">Quad phía sau vẫn bị che: do depth test, không do thứ tự vẽ</text>
 </svg>

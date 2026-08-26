@@ -52,8 +52,8 @@
     </marker>
   </defs>
 
-  <text class="title" x="40" y="22">Depth precision is not spread evenly from near to far</text>
-  <text class="note" x="40" y="40">Perspective depth with near n = 0.1 and far f = 1000, the pair used in the prose above.</text>
+  <text class="title" x="40" y="22">Độ chính xác depth không trải đều từ near tới far</text>
+  <text class="note" x="40" y="40">Depth phối cảnh với near n = 0.1 và far f = 1000, đúng cặp dùng ở phần trên.</text>
 
   <!-- ============ the curve ============ -->
   <path class="axis" d="M90,290 L372,290" marker-end="url(#head)" />
@@ -66,32 +66,32 @@
   <text class="tick" x="82" y="294" text-anchor="end">0</text>
   <text class="tick" x="82" y="174" text-anchor="end">0.5</text>
   <text class="tick" x="82" y="54" text-anchor="end">1.0</text>
-  <text class="note" x="230" y="328" text-anchor="middle">distance d from the camera</text>
-  <text class="note" x="52" y="172" text-anchor="middle" transform="rotate(-90 52 172)">stored depth</text>
+  <text class="note" x="230" y="328" text-anchor="middle">khoảng cách d tới camera</text>
+  <text class="note" x="52" y="172" text-anchor="middle" transform="rotate(-90 52 172)">depth đã lưu</text>
 
   <polyline class="curve" points="103.0,290.0 104.3,268.2 105.6,250.0 106.9,234.6 108.2,221.4 109.5,210.0 110.8,200.0 113.4,183.3 116.0,170.0 118.6,159.1 122.5,146.0 129.0,130.0 135.5,118.6 142.0,110.0 155.0,98.0 168.0,90.0 181.0,84.3 194.0,80.0 220.0,74.0 246.0,70.0 272.0,67.1 298.0,65.0 324.0,63.3 350.0,62.0" />
 
   <path class="guide" d="M116,290 L116,170 M90,170 L116,170" />
   <circle cx="116" cy="170" r="4" fill="var(--accent-stroke)" />
-  <text class="lbl ink-acc" x="128" y="164">half the range is gone by d = 0.2</text>
-  <text class="note" x="128" y="182">everything past 0.2 shares the rest</text>
+  <text class="lbl ink-acc" x="128" y="164">nửa dải đã hết ở d = 0.2</text>
+  <text class="note" x="128" y="182">mọi thứ sau 0.2 chia nhau phần còn lại</text>
 
   <!-- ============ the reference panel ============ -->
   <text class="lbl" x="392" y="76">depth(d) = f/(f - n) x (1 - n/d)</text>
-  <text class="note" x="392" y="98">Hyperbolic in d — the slope goes</text>
-  <text class="note" x="392" y="114">as 1/d<tspan class="sup" dy="-4">2</tspan><tspan dy="4">: steep at near, flat past 1.</tspan></text>
+  <text class="note" x="392" y="98">Hyperbol theo d — độ dốc đi</text>
+  <text class="note" x="392" y="114">as 1/d<tspan class="sup" dy="-4">2</tspan><tspan dy="4">: dốc ở gần, phẳng sau 1.</tspan></text>
 
   <text class="lbl" x="392" y="150">half-range point: d = 2nf/(n + f)</text>
-  <text class="note" x="392" y="172">About 2n whenever f is much larger</text>
-  <text class="note" x="392" y="188">than n — about 0.2 for this pair.</text>
+  <text class="note" x="392" y="172">Xấp xỉ 2n mỗi khi f lớn hơn nhiều</text>
+  <text class="note" x="392" y="188">so với n — khoảng 0.2 với cặp này.</text>
 
-  <text class="note" x="392" y="224">Drop near to 0.001 and that point</text>
-  <text class="note" x="392" y="240">slides to 0.002: the same half of</text>
-  <text class="note" x="392" y="256">the range now buys 1 mm of scene</text>
-  <text class="note" x="392" y="272">instead of 10 cm.</text>
+  <text class="note" x="392" y="224">Hạ near xuống 0.001 thì điểm đó</text>
+  <text class="note" x="392" y="240">trượt về 0.002: cùng một nửa</text>
+  <text class="note" x="392" y="256">dải đó giờ chỉ mua được 1 mm cảnh</text>
+  <text class="note" x="392" y="272">thay vì 10 cm.</text>
 
   <!-- ============ the band ============ -->
-  <text class="lbl" x="40" y="366">The stored [0, 1] range, split by the world distance each part pays for</text>
+  <text class="lbl" x="40" y="366">Dải [0, 1] đã lưu, chia theo khoảng cách thực mà mỗi phần trả cho</text>
 
   <rect class="seg-acc" x="40" y="378" width="280" height="34" />
   <rect class="seg" x="320" y="378" width="140" height="34" />
@@ -110,8 +110,8 @@
   <text class="note" x="569" y="428" text-anchor="middle">1 -&gt; 10</text>
 
   <path class="lead" d="M597,412 L597,448 L508,448" />
-  <text class="note ink-warn" x="502" y="452" text-anchor="end">1%: everything from d = 10 out to far</text>
+  <text class="note ink-warn" x="502" y="452" text-anchor="end">1%: mọi thứ từ d = 10 ra tới far</text>
 
-  <text class="note" x="40" y="482">The buffer cuts [0, 1] into 2^N even levels — N is usually 24, but read it rather than assume it.</text>
-  <text class="note" x="40" y="498">The steps are even. The distances they pay for are not, and that mismatch is what z-fighting exploits.</text>
+  <text class="note" x="40" y="482">Buffer chia [0, 1] thành 2^N mức đều nhau — N thường là 24, nhưng hãy đọc ra chứ đừng đoán.</text>
+  <text class="note" x="40" y="498">Các bước thì đều. Khoảng cách chúng trả cho thì không, và chính sự lệch đó là chỗ z-fighting khai thác.</text>
 </svg>

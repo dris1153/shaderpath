@@ -42,36 +42,36 @@
   <!-- sources -->
   <rect class="box" x="30" y="16" width="220" height="48" rx="8" />
   <text class="title" x="140" y="38" text-anchor="middle">VBO (buffer)</text>
-  <text class="note" x="140" y="55" text-anchor="middle">x, y, r, g, b per vertex</text>
+  <text class="note" x="140" y="55" text-anchor="middle">x, y, r, g, b mỗi đỉnh</text>
 
   <rect class="box" x="330" y="16" width="240" height="48" rx="8" />
   <text class="title" x="450" y="38" text-anchor="middle">JavaScript</text>
-  <text class="note" x="450" y="55" text-anchor="middle">gl.uniform3f(...) before the draw</text>
+  <text class="note" x="450" y="55" text-anchor="middle">gl.uniform3f(...) trước lệnh vẽ</text>
 
   <!-- attribute: buffer -&gt; vertex shader only -->
   <path class="arrow" d="M140,64 L140,136" marker-end="url(#head)" />
-  <text class="flow" x="152" y="106">attribute: a new value per vertex</text>
+  <text class="flow" x="152" y="106">attribute: mỗi đỉnh một giá trị mới</text>
 
   <!-- uniform spine: one value, read by both stages -->
   <path class="arrow" d="M450,64 L450,422" />
   <path class="arrow" d="M450,166 L376,166" marker-end="url(#head)" />
   <path class="arrow" d="M450,422 L376,422" marker-end="url(#head)" />
   <text class="flow" x="458" y="100">uniform</text>
-  <text class="flow" x="458" y="252">same value in</text>
-  <text class="flow" x="458" y="268">both shaders</text>
+  <text class="flow" x="458" y="252">cùng một giá trị ở</text>
+  <text class="flow" x="458" y="268">cả hai shader</text>
 
   <rect class="box-shader" x="90" y="140" width="280" height="52" rx="8" />
   <text class="title title-shader" x="230" y="164" text-anchor="middle">Vertex shader</text>
-  <text class="note" x="230" y="181" text-anchor="middle">runs once per vertex</text>
+  <text class="note" x="230" y="181" text-anchor="middle">chạy một lần mỗi đỉnh</text>
 
   <path class="arrow" d="M230,192 L230,246" marker-end="url(#head)" />
-  <text class="flow" x="242" y="224">out vColor (written per vertex)</text>
+  <text class="flow" x="242" y="224">out vColor (ghi mỗi đỉnh)</text>
 
   <!-- rasterizer: the interpolation step -->
   <rect class="box" x="90" y="250" width="280" height="112" rx="8" />
   <text class="title" x="230" y="274" text-anchor="middle">Rasterizer (fixed function)</text>
-  <text class="note" x="230" y="292" text-anchor="middle">3 vertex values in,</text>
-  <text class="note" x="230" y="308" text-anchor="middle">one blended value per fragment out</text>
+  <text class="note" x="230" y="292" text-anchor="middle">3 giá trị đỉnh vào,</text>
+  <text class="note" x="230" y="308" text-anchor="middle">mỗi fragment ra một giá trị đã trộn</text>
   <circle class="dot" cx="125" cy="336" r="6" />
   <circle class="dot" cx="150" cy="336" r="6" />
   <circle class="dot" cx="175" cy="336" r="6" />
@@ -89,11 +89,11 @@
   <circle class="dot" cx="338" cy="336" r="3" />
 
   <path class="arrow" d="M230,362 L230,392" marker-end="url(#head)" />
-  <text class="flow" x="242" y="384">in vColor (read per fragment)</text>
+  <text class="flow" x="242" y="384">in vColor (đọc mỗi fragment)</text>
 
   <rect class="box-shader" x="90" y="396" width="280" height="52" rx="8" />
   <text class="title title-shader" x="230" y="420" text-anchor="middle">Fragment shader</text>
-  <text class="note" x="230" y="437" text-anchor="middle">runs once per fragment</text>
+  <text class="note" x="230" y="437" text-anchor="middle">chạy một lần mỗi fragment</text>
 
-  <text class="note" x="230" y="470" text-anchor="middle">attributes never reach here: only uniforms and varyings do</text>
+  <text class="note" x="230" y="470" text-anchor="middle">attribute không bao giờ tới đây: chỉ uniform và varying tới được</text>
 </svg>

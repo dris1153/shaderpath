@@ -54,8 +54,8 @@
 
   <!-- the VAO: recorded pointer settings, no data -->
   <rect class="box" x="40" y="16" width="540" height="92" rx="8" />
-  <text class="title" x="58" y="40">VAO: a record of attribute pointers</text>
-  <text class="note" x="58" y="58">it stores no vertex data of its own</text>
+  <text class="title" x="58" y="40">VAO: bản ghi các attribute pointer</text>
+  <text class="note" x="58" y="58">nó không tự chứa dữ liệu đỉnh nào</text>
   <rect class="cell-pos" x="58" y="70" width="12" height="12" rx="3" />
   <text class="note" x="78" y="80">aPosition: size 2, FLOAT, stride 20, offset 0</text>
   <rect class="cell-col" x="58" y="88" width="12" height="12" rx="3" />
@@ -65,7 +65,7 @@
   <path class="wire-col" d="M165,108 L165,146" marker-end="url(#head-col)" />
 
   <!-- the VBO: one flat interleaved byte run -->
-  <text class="note" x="580" y="142" text-anchor="end">VBO: one interleaved Float32Array</text>
+  <text class="note" x="580" y="142" text-anchor="end">VBO: một Float32Array xen kẽ</text>
   <rect class="cell-pos" x="40" y="150" width="50" height="42" />
   <rect class="cell-pos" x="90" y="150" width="50" height="42" />
   <rect class="cell-col" x="140" y="150" width="50" height="42" />
@@ -100,14 +100,14 @@
   <text class="byte" x="440" y="208" text-anchor="middle">32</text>
   <text class="byte" x="490" y="208" text-anchor="middle">36</text>
   <text class="byte" x="540" y="208" text-anchor="middle">40</text>
-  <text class="byte" x="556" y="208">bytes</text>
+  <text class="byte" x="556" y="208">byte</text>
 
   <!-- measured spans -->
   <path class="span" d="M40,226 L40,238 M40,232 L140,232 M140,226 L140,238" />
-  <text class="note" x="150" y="236">offset 8: where aColor starts inside each vertex</text>
+  <text class="note" x="150" y="236">offset 8: nơi aColor bắt đầu trong mỗi đỉnh</text>
 
   <path class="span" d="M40,262 L40,274 M40,268 L290,268 M290,262 L290,274" />
-  <text class="note" x="300" y="272">stride 20: bytes to the next vertex</text>
+  <text class="note" x="300" y="272">stride 20: số byte tới đỉnh kế tiếp</text>
 
-  <text class="note" x="40" y="312">Off by 4 bytes and the GPU reads the wrong float as colour: no error, just wrong pixels.</text>
+  <text class="note" x="40" y="312">Lệch 4 byte là GPU đọc nhầm float thành màu: không báo lỗi, chỉ sai pixel.</text>
 </svg>

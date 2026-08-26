@@ -1,6 +1,6 @@
 {
-  "Rotating four-colour quad": null,
-  "One frame at t = 0.6 s, square canvas": null,
-  "Clear colour (0.06, 0.07, 0.1)": null,
-  "The two triangles crease along the shared diagonal": null
+  "Rotating four-colour quad": "Quad bốn màu đang quay",
+  "One frame at t = 0.6 s, square canvas": "Một khung tại t = 0.6 s, canvas vuông",
+  "Clear colour (0.06, 0.07, 0.1)": "Màu clear (0.06, 0.07, 0.1)",
+  "The two triangles crease along the shared diagonal": "Hai tam giác gấp theo đường chéo chung"
 }

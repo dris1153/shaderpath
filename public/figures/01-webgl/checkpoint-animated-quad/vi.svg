@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 400" width="340" height="400" role="img">
-  <title>Rotating four-colour quad</title>
+  <title>Quad bốn màu đang quay</title>
   <style>
     :root {
       --muted: #64748b;
@@ -109,7 +109,7 @@
     </g>
   </g>
   <rect class="frame" x="0.5" y="0.5" width="339" height="339" />
-  <text x="0" y="362">One frame at t = 0.6 s, square canvas</text>
-  <text x="0" y="378">Clear colour (0.06, 0.07, 0.1)</text>
-  <text x="0" y="394">The two triangles crease along the shared diagonal</text>
+  <text x="0" y="362">Một khung tại t = 0.6 s, canvas vuông</text>
+  <text x="0" y="378">Màu clear (0.06, 0.07, 0.1)</text>
+  <text x="0" y="394">Hai tam giác gấp theo đường chéo chung</text>
 </svg>

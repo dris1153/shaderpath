@@ -47,13 +47,13 @@
   <!-- 2 vertex shader -->
   <rect class="box-prog" x="120" y="86" width="320" height="46" rx="8" />
   <text class="stage stage-prog" x="280" y="108" text-anchor="middle">2. Vertex shader</text>
-  <text class="note" x="280" y="124" text-anchor="middle">writes gl_Position in clip space</text>
+  <text class="note" x="280" y="124" text-anchor="middle">ghi gl_Position trong clip space</text>
   <path class="arrow" d="M280,132 L280,154" marker-end="url(#head)" />
 
   <!-- 3 primitive assembly -->
   <rect class="box" x="120" y="156" width="320" height="46" rx="8" />
   <text class="stage" x="280" y="178" text-anchor="middle">3. Primitive assembly</text>
-  <text class="note" x="280" y="194" text-anchor="middle">vertices grouped into triangles</text>
+  <text class="note" x="280" y="194" text-anchor="middle">gom các đỉnh thành tam giác</text>
   <path class="arrow" d="M280,202 L280,224" marker-end="url(#head)" />
 
   <!-- 4 clipping + perspective divide -->
@@ -65,19 +65,19 @@
   <!-- 5 viewport transform -->
   <rect class="box" x="120" y="296" width="320" height="46" rx="8" />
   <text class="stage" x="280" y="318" text-anchor="middle">5. Viewport transform</text>
-  <text class="note" x="280" y="334" text-anchor="middle">NDC -&gt; pixel coordinates</text>
+  <text class="note" x="280" y="334" text-anchor="middle">NDC -&gt; toạ độ pixel</text>
   <path class="arrow" d="M280,342 L280,364" marker-end="url(#head)" />
 
   <!-- 6 rasterization -->
   <rect class="box" x="120" y="366" width="320" height="46" rx="8" />
   <text class="stage" x="280" y="388" text-anchor="middle">6. Rasterization</text>
-  <text class="note" x="280" y="404" text-anchor="middle">triangles -&gt; fragments, varyings interpolated</text>
+  <text class="note" x="280" y="404" text-anchor="middle">tam giác -&gt; fragment, varying được nội suy</text>
   <path class="arrow" d="M280,412 L280,434" marker-end="url(#head)" />
 
   <!-- 7 fragment shader -->
   <rect class="box-prog" x="120" y="436" width="320" height="46" rx="8" />
   <text class="stage stage-prog" x="280" y="458" text-anchor="middle">7. Fragment shader</text>
-  <text class="note" x="280" y="474" text-anchor="middle">runs once per fragment, writes a colour</text>
+  <text class="note" x="280" y="474" text-anchor="middle">chạy một lần mỗi fragment, ghi ra một màu</text>
   <path class="arrow" d="M280,482 L280,504" marker-end="url(#head)" />
 
   <!-- 8 per-fragment operations -->
@@ -92,7 +92,7 @@
 
   <!-- legend -->
   <rect class="box-prog" x="120" y="630" width="16" height="14" rx="3" />
-  <text class="legend" x="144" y="641">you write this (programmable)</text>
+  <text class="legend" x="144" y="641">bạn viết phần này (lập trình được)</text>
   <rect class="box" x="330" y="630" width="16" height="14" rx="3" />
   <text class="legend" x="354" y="641">fixed function</text>
 </svg>

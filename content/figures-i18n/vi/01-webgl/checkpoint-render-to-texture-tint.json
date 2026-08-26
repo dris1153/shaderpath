@@ -1,6 +1,6 @@
 {
-  "Three-pass render to texture with tint, vignette and overlay": null,
-  "One frame at t = 1.25 s, square canvas": null,
-  "Tinted, vignetted FBO image; overlay blended on top": null,
-  "The back quad stays occluded: depth test, not draw order": null
+  "Three-pass render to texture with tint, vignette and overlay": "Render to texture ba lượt, có tint, vignette và overlay",
+  "One frame at t = 1.25 s, square canvas": "Một khung tại t = 1.25 s, canvas vuông",
+  "Tinted, vignetted FBO image; overlay blended on top": "Ảnh FBO đã tint và vignette; overlay blend lên trên",
+  "The back quad stays occluded: depth test, not draw order": "Quad phía sau vẫn bị che: do depth test, không do thứ tự vẽ"
 }
