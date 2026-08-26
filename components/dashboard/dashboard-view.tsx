@@ -9,6 +9,7 @@ import { isAuthError } from "@/lib/hooks/fetch-json";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
+import { GuestHome } from "@/components/home/guest-home";
 import { ActionQueue, type QueueItemVM } from "./action-queue";
 import { TrackMap, type TrackStepVM } from "./track-map";
 
@@ -24,43 +25,16 @@ export function DashboardView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("dashboard");
   const { data, isError, error } = useDashboard();
-  const tAuth = useTranslations("auth");
 
-  // 401 is a guest, not an outage: the tracks below are the right thing to show
-  // either way, but the reason above them is completely different.
+  // 401 is a guest: this is the landing page, not a degraded dashboard.
   if (isAuthError(error)) {
-    return (
-      <>
-        <Alert className="mt-6">
-          <AlertTitle>{tAuth("guestTitle")}</AlertTitle>
-          <AlertDescription>
-            {tAuth("guestBody")}{" "}
-            <Link href="/login" className="text-primary underline underline-offset-4">
-              {tAuth("login")}
-            </Link>
-          </AlertDescription>
-        </Alert>
-
-        <h2 className="mt-8 text-lg font-semibold">{t("offlineTracks")}</h2>
-        <ul className="mt-3 space-y-3">
-          {TRACKS.map((track) => (
-            <li key={track.id}>
-              <Link
-                href={`/track/${track.id}`}
-                className="font-medium hover:underline"
-              >
-                {track.title[locale]}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </>
-    );
+    return <GuestHome />;
   }
 
   if (isError) {
     return (
       <>
+        <PageHeading />
         <Alert className="mt-6">
           <AlertTitle>{t("offlineTitle")}</AlertTitle>
           <AlertDescription>{t("offlineBody")}</AlertDescription>
@@ -88,14 +62,17 @@ export function DashboardView() {
 
   if (!data) {
     return (
-      <div className="mt-6 space-y-6">
-        <Skeleton className="h-48 w-full rounded-xl" />
-        <div className="space-y-3">
-          {[0, 1, 2].map((i) => (
-            <Skeleton key={i} className="h-16 w-full rounded-lg" />
-          ))}
+      <>
+        <PageHeading />
+        <div className="mt-6 space-y-6">
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <div className="space-y-3">
+            {[0, 1, 2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
@@ -131,6 +108,7 @@ export function DashboardView() {
 
   return (
     <>
+      <PageHeading />
       {map && track && (
         <TrackMap
           heading={t("trackHeading", {
@@ -167,6 +145,17 @@ export function DashboardView() {
             : undefined
         }
       />
+    </>
+  );
+}
+
+function PageHeading() {
+  const t = useTranslations("dashboard");
+  const tApp = useTranslations("app");
+  return (
+    <>
+      <h1 className="text-3xl font-semibold tracking-tight">{t("welcome")}</h1>
+      <p className="text-muted-foreground mt-2">{tApp("tagline")}</p>
     </>
   );
 }

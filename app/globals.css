@@ -87,6 +87,10 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* Track ladder heat scale: the landing page tints the 14 tracks along this
+     range so position encodes rising difficulty. Not a palette token. */
+  --track-cold: oklch(0.62 0.13 245);
+  --track-hot: oklch(0.68 0.16 45);
 }
 
 .dark {
@@ -121,6 +125,8 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --track-cold: oklch(0.7 0.14 245);
+  --track-hot: oklch(0.76 0.15 55);
 }
 
 @layer base {

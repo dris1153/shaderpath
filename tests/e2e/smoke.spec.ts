@@ -8,12 +8,12 @@ test("root redirects to default locale /vi", async ({ page }) => {
 test("vi and en shells render translated content", async ({ page }) => {
   await page.goto("/vi");
   await expect(
-    page.getByRole("heading", { name: "Chào mừng đến Shaderpath" }),
+    page.getByRole("heading", { name: "Cái đang chuyển động sau chữ này, bạn sẽ tự viết được." }),
   ).toBeVisible();
 
   await page.goto("/en");
   await expect(
-    page.getByRole("heading", { name: "Welcome to Shaderpath" }),
+    page.getByRole("heading", { name: "Whatever is moving behind this text, you will be able to write it." }),
   ).toBeVisible();
 });
 
@@ -23,7 +23,7 @@ test("locale switcher swaps locale and keeps the route", async ({ page }) => {
   await page.getByRole("menuitem", { name: "English" }).click();
   await expect(page).toHaveURL(/\/en$/);
   await expect(
-    page.getByRole("heading", { name: "Welcome to Shaderpath" }),
+    page.getByRole("heading", { name: "Whatever is moving behind this text, you will be able to write it." }),
   ).toBeVisible();
 });
 

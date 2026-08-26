@@ -27,9 +27,21 @@
     "passwordTooShort": "Mật khẩu cần ít nhất {min} ký tự.",
     "passwordHint": "Ít nhất {min} ký tự.",
     "haveAccount": "Đã có tài khoản?",
-    "noAccount": "Chưa có tài khoản?",
-    "guestTitle": "Bạn chưa đăng nhập",
-    "guestBody": "Mọi bài học đều mở, nhưng tiến độ chỉ được lưu khi có tài khoản."
+    "noAccount": "Chưa có tài khoản?"
+  },
+  "home": {
+    "headline": "Cái đang chuyển động sau chữ này, bạn sẽ tự viết được.",
+    "lede": "{lessons} bài từ tích vô hướng tới raymarching và GPGPU. Mỗi bài một mô hình tư duy, một demo chỉnh được ngay trong trang, và một bài tập có lời giải.",
+    "ctaStart": "Bắt đầu từ bài đầu tiên",
+    "ctaPlayground": "Mở playground",
+    "readFreely": "Đọc tự do — chỉ tiến độ mới cần tài khoản.",
+    "ladderTitle": "Toàn bộ lộ trình",
+    "ladderMeta": "{tracks} track · {modules} module · ~{hours} giờ",
+    "trackLessons": "{count} bài",
+    "legendFoundation": "nền tảng",
+    "legendIntermediate": "trung cấp",
+    "legendAdvanced": "nâng cao",
+    "legendCapstone": "capstone"
   },
   "notes": {
     "title": "Ghi chú & Bookmark",

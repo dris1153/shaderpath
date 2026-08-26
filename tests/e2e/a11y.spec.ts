@@ -30,7 +30,7 @@ async function scanBlocking(page: Page) {
 }
 
 const ROUTES: { name: string; path: string; heading: string }[] = [
-  { name: "dashboard", path: "/vi", heading: "Chào mừng đến Shaderpath" },
+  { name: "home (signed out)", path: "/vi", heading: "Cái đang chuyển động sau chữ này, bạn sẽ tự viết được." },
   { name: "roadmap", path: "/vi/roadmap", heading: "Lộ trình" },
   {
     name: "track",

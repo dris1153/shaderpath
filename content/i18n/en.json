@@ -27,9 +27,21 @@
     "passwordTooShort": "Password must be at least {min} characters.",
     "passwordHint": "At least {min} characters.",
     "haveAccount": "Already have an account?",
-    "noAccount": "No account yet?",
-    "guestTitle": "You are not signed in",
-    "guestBody": "Every lesson is open, but progress is only saved with an account."
+    "noAccount": "No account yet?"
+  },
+  "home": {
+    "headline": "Whatever is moving behind this text, you will be able to write it.",
+    "lede": "{lessons} lessons, from the dot product to raymarching and GPGPU. One mental model each, a demo you can adjust without leaving the page, and an exercise with a worked answer.",
+    "ctaStart": "Start with the first lesson",
+    "ctaPlayground": "Open the playground",
+    "readFreely": "Read freely — only progress needs an account.",
+    "ladderTitle": "The whole path",
+    "ladderMeta": "{tracks} tracks · {modules} modules · ~{hours} hours",
+    "trackLessons": "{count, plural, one {# lesson} other {# lessons}}",
+    "legendFoundation": "foundation",
+    "legendIntermediate": "intermediate",
+    "legendAdvanced": "advanced",
+    "legendCapstone": "capstone"
   },
   "notes": {
     "title": "Notes & Bookmarks",
