@@ -46,13 +46,13 @@
   </defs>
 
   <rect class="box" x="103" y="16" width="420" height="46" rx="8" />
-  <text class="title" x="313" y="38" text-anchor="middle">One requestAnimationFrame loop per canvas</text>
-  <text class="note" x="313" y="56" text-anchor="middle">delta = state.clock.getDelta(), shared by every callback</text>
+  <text class="title" x="313" y="38" text-anchor="middle">Mỗi canvas một vòng lặp requestAnimationFrame</text>
+  <text class="note" x="313" y="56" text-anchor="middle">delta = state.clock.getDelta(), mọi callback dùng chung</text>
   <path class="arrow" d="M313,62 L313,76" marker-end="url(#head)" />
 
   <rect class="box-accent" x="26" y="80" width="574" height="46" rx="8" />
-  <text class="title title-accent" x="313" y="102" text-anchor="middle">every useFrame in the tree runs here, sorted by priority</text>
-  <text class="note" x="313" y="120" text-anchor="middle">one shared list — depth in the component tree changes nothing</text>
+  <text class="title title-accent" x="313" y="102" text-anchor="middle">mọi useFrame trong cây chạy ở đây, sắp theo priority</text>
+  <text class="note" x="313" y="120" text-anchor="middle">một danh sách chung — nằm sâu bao nhiêu trong cây component cũng không đổi gì</text>
 
   <path class="arrow" d="M313,126 L313,140 M118,140 L508,140" />
   <path class="arrow" d="M118,138 L118,148" marker-end="url(#head)" />
@@ -62,17 +62,17 @@
   <rect class="box" x="26" y="152" width="184" height="66" rx="8" />
   <text class="title" x="118" y="174" text-anchor="middle">priority -1</text>
   <text class="note" x="118" y="192" text-anchor="middle">controls.update()</text>
-  <text class="note" x="118" y="210" text-anchor="middle">runs first</text>
+  <text class="note" x="118" y="210" text-anchor="middle">chạy đầu tiên</text>
 
   <rect class="box" x="221" y="152" width="184" height="66" rx="8" />
   <text class="title" x="313" y="174" text-anchor="middle">priority 0</text>
   <text class="note" x="313" y="192" text-anchor="middle">mesh.rotation.y += delta</text>
-  <text class="note" x="313" y="210" text-anchor="middle">the default</text>
+  <text class="note" x="313" y="210" text-anchor="middle">mặc định</text>
 
   <rect class="box" x="416" y="152" width="184" height="66" rx="8" />
   <text class="title" x="508" y="174" text-anchor="middle">priority 1</text>
   <text class="note" x="508" y="192" text-anchor="middle">composer.render()</text>
-  <text class="note" x="508" y="210" text-anchor="middle">runs last</text>
+  <text class="note" x="508" y="210" text-anchor="middle">chạy cuối cùng</text>
 
   <path class="arrow" d="M118,218 L118,232 M313,218 L313,232 M508,218 L508,232 M118,232 L508,232" />
   <path class="arrow" d="M313,232 L313,244 M167,244 L459,244" />
@@ -80,15 +80,15 @@
   <path class="arrow" d="M459,242 L459,252" marker-end="url(#head)" />
 
   <rect class="box-accent" x="26" y="256" width="282" height="78" rx="8" />
-  <text class="title title-accent" x="167" y="280" text-anchor="middle">No priority above 0</text>
-  <text class="note" x="167" y="300" text-anchor="middle">R3F renders for you, once:</text>
+  <text class="title title-accent" x="167" y="280" text-anchor="middle">Không có priority nào lớn hơn 0</text>
+  <text class="note" x="167" y="300" text-anchor="middle">R3F render hộ bạn, một lần:</text>
   <text class="note" x="167" y="320" text-anchor="middle">gl.render(scene, camera)</text>
 
   <rect class="box-warn" x="318" y="256" width="282" height="78" rx="8" />
-  <text class="title title-warn" x="459" y="280" text-anchor="middle">Any priority above 0</text>
-  <text class="note" x="459" y="300" text-anchor="middle">the automatic render is switched off</text>
-  <text class="note" x="459" y="320" text-anchor="middle">that callback must render itself</text>
+  <text class="title title-warn" x="459" y="280" text-anchor="middle">Có bất kỳ priority nào lớn hơn 0</text>
+  <text class="note" x="459" y="300" text-anchor="middle">phần render tự động bị tắt</text>
+  <text class="note" x="459" y="320" text-anchor="middle">callback đó phải tự render</text>
 
-  <text class="note" x="313" y="362" text-anchor="middle">The callback writes straight onto the Object3D, so a frame costs no React render at all.</text>
-  <text class="note" x="313" y="382" text-anchor="middle">The state argument is exactly what useThree() reads: camera, pointer, invalidate.</text>
+  <text class="note" x="313" y="362" text-anchor="middle">Callback ghi thẳng vào Object3D, nên một khung hình không tốn lần render React nào cả.</text>
+  <text class="note" x="313" y="382" text-anchor="middle">Tham số state chính là thứ useThree() đọc: camera, pointer, invalidate.</text>
 </svg>

@@ -39,27 +39,27 @@
     .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
   </style>
 
-  <text class="title" x="313" y="24" text-anchor="middle">On unmount, who calls .dispose()?</text>
+  <text class="title" x="313" y="24" text-anchor="middle">Khi unmount, ai gọi .dispose()?</text>
 
   <rect class="box-accent" x="26" y="40" width="282" height="150" rx="8" />
-  <text class="title title-accent" x="167" y="64" text-anchor="middle">R3F disposes it</text>
+  <text class="title title-accent" x="167" y="64" text-anchor="middle">R3F dispose hộ</text>
   <text class="note" x="42" y="90">&lt;boxGeometry args={[1, 1, 1]} /&gt;</text>
   <text class="note" x="42" y="112">&lt;meshStandardMaterial /&gt;</text>
-  <text class="note" x="42" y="134">any tag the reconciler built with new</text>
-  <text class="note" x="42" y="156">only if it has a .dispose() method</text>
-  <text class="note" x="42" y="178">opt out per tag with dispose={null}</text>
+  <text class="note" x="42" y="134">mọi tag mà reconciler dựng bằng new</text>
+  <text class="note" x="42" y="156">chỉ khi nó có phương thức .dispose()</text>
+  <text class="note" x="42" y="178">muốn loại trừ từng tag thì dùng dispose={null}</text>
 
   <rect class="box-warn" x="318" y="40" width="282" height="150" rx="8" />
-  <text class="title title-warn" x="459" y="64" text-anchor="middle">You dispose it — R3F never does</text>
-  <text class="note" x="334" y="90">&lt;primitive object={…} /&gt;, by design</text>
-  <text class="note" x="334" y="112">new THREE.X() in useMemo / useEffect</text>
-  <text class="note" x="334" y="134">geometry={…} and material={…} props</text>
+  <text class="title title-warn" x="459" y="64" text-anchor="middle">Bạn phải tự dispose — R3F không bao giờ làm</text>
+  <text class="note" x="334" y="90">&lt;primitive object={…} /&gt;, do thiết kế là vậy</text>
+  <text class="note" x="334" y="112">new THREE.X() trong useMemo / useEffect</text>
+  <text class="note" x="334" y="134">prop geometry={…} và material={…}</text>
   <text class="note" x="334" y="156">THREE.WebGLRenderTarget</text>
-  <text class="note" x="334" y="178">listeners and hand-rolled RAF loops</text>
+  <text class="note" x="334" y="178">listener và vòng lặp RAF tự viết</text>
 
   <rect class="box" x="26" y="206" width="574" height="60" rx="8" />
-  <text class="title" x="313" y="230" text-anchor="middle">R3F disposes a node only when all three hold</text>
+  <text class="title" x="313" y="230" text-anchor="middle">R3F chỉ dispose một nút khi cả ba điều này đúng</text>
   <text class="note" x="313" y="252" text-anchor="middle">props.dispose !== null  ·  type !== "primitive"  ·  object.type !== "Scene"</text>
 
-  <text class="note" x="313" y="292" text-anchor="middle">Everything on the right keeps its GPU buffer alive — the JS garbage collector cannot free VRAM.</text>
+  <text class="note" x="313" y="292" text-anchor="middle">Mọi thứ bên phải vẫn giữ buffer GPU sống — bộ gom rác JS không giải phóng được VRAM.</text>
 </svg>
