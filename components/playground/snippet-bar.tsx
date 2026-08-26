@@ -144,6 +144,10 @@ export function SnippetBar({
         onOpenChange={setPickerOpen}
         title={t("snippets")}
         description={t("searchPlaceholder")}
+        // Wider and taller than the primitive's defaults (sm:max-w-sm,
+        // max-h-72): seven groups of presets need room, and sitting nearer the
+        // top keeps the taller list clear of the bottom of the viewport.
+        className="top-[8vh] sm:max-w-2xl"
       >
         <Command shouldFilter={false}>
           <CommandInput
@@ -151,7 +155,7 @@ export function SnippetBar({
             value={query}
             onValueChange={setQuery}
           />
-          <CommandList>
+          <CommandList className="max-h-[70vh]">
             <CommandEmpty>{t("noMatch")}</CommandEmpty>
             {PRESET_GROUPS.map((group) => {
               const matches = group.presets.filter((p) =>
