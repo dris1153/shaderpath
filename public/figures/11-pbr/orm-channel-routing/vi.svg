@@ -42,18 +42,18 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="26">One image, three channels, three material slots</text>
+  <text class="title" x="24" y="26">Một ảnh, ba kênh, ba khe vật liệu</text>
 
   <!-- albedo -->
   <rect class="box-accent" x="24" y="56" width="150" height="76" rx="8" />
   <text class="label ink-you" x="38" y="80">albedo</text>
-  <text class="note" x="38" y="100">the only map that is</text>
-  <text class="note" x="38" y="118">colour: SRGBColorSpace</text>
+  <text class="note" x="38" y="100">map duy nhất mang</text>
+  <text class="note" x="38" y="118">màu: SRGBColorSpace</text>
   <path class="arrow" d="M174,94 L284,94" marker-end="url(#head)" />
 
   <!-- ORM -->
   <rect class="box" x="24" y="152" width="150" height="136" rx="8" />
-  <text class="label" x="38" y="176">ORM — one image</text>
+  <text class="label" x="38" y="176">ORM — một ảnh</text>
   <rect class="strip" x="38" y="188" width="122" height="26" rx="3" />
   <text class="note" x="48" y="205">R — occlusion</text>
   <rect class="strip" x="38" y="220" width="122" height="26" rx="3" />
@@ -68,19 +68,19 @@
   <!-- normal -->
   <rect class="box" x="24" y="308" width="150" height="76" rx="8" />
   <text class="label" x="38" y="332">normal</text>
-  <text class="note" x="38" y="352">vectors, not colour:</text>
+  <text class="note" x="38" y="352">vector, không phải màu:</text>
   <text class="note" x="38" y="370">NoColorSpace</text>
   <path class="arrow" d="M174,346 L284,346" marker-end="url(#head)" />
 
   <!-- material slots -->
   <rect class="box-accent" x="290" y="56" width="346" height="76" rx="8" />
   <text class="label ink-you" x="306" y="80">material.map</text>
-  <text class="note" x="306" y="102">forget SRGBColorSpace and lighting reads an already-</text>
-  <text class="note" x="306" y="120">encoded value as if it were linear: washed out, not darker</text>
+  <text class="note" x="306" y="102">quên SRGBColorSpace là chiếu sáng đọc một giá trị đã</text>
+  <text class="note" x="306" y="120">mã hoá như thể nó tuyến tính: bạc màu, chứ không tối đi</text>
 
   <rect class="box" x="290" y="152" width="346" height="40" rx="8" />
   <text class="label" x="306" y="170">material.aoMap</text>
-  <text class="mono" x="306" y="186">texture2D( aoMap, uv ).r → indirect light only</text>
+  <text class="mono" x="306" y="186">texture2D( aoMap, uv ).r → chỉ ánh sáng gián tiếp</text>
 
   <rect class="box" x="290" y="200" width="346" height="40" rx="8" />
   <text class="label" x="306" y="218">material.roughnessMap</text>
@@ -92,9 +92,9 @@
 
   <rect class="box" x="290" y="308" width="346" height="76" rx="8" />
   <text class="label" x="306" y="332">material.normalMap</text>
-  <text class="note" x="306" y="354">bends the shading normal only — the silhouette of the</text>
-  <text class="note" x="306" y="372">mesh never changes</text>
+  <text class="note" x="306" y="354">chỉ bẻ pháp tuyến tô bóng — đường viền của mesh</text>
+  <text class="note" x="306" y="372">không hề thay đổi</text>
 
-  <text class="note" x="24" y="410">One THREE.Texture object in all three ORM slots: one bind, three roles — three only reads the channel it needs.</text>
-  <text class="note" x="24" y="428">Those *= multiplies are why material.roughness and .metalness must sit at 1 while a map drives them.</text>
+  <text class="note" x="24" y="410">Một object THREE.Texture cho cả ba khe ORM: một lần bind, ba vai — three chỉ đọc đúng kênh nó cần.</text>
+  <text class="note" x="24" y="428">Chính các phép *= đó là lý do material.roughness và .metalness phải để bằng 1 khi có map điều khiển.</text>
 </svg>

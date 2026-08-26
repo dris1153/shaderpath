@@ -42,10 +42,10 @@
     .axis { fill: none; stroke: var(--line); stroke-width: 1.4; }
   </style>
 
-  <text class="title" x="24" y="26">After the depth compare: how the result gets filtered, and how one map becomes three</text>
+  <text class="title" x="24" y="26">Sau phép so depth: kết quả được lọc thế nào, và một map thành ba ra sao</text>
 
   <!-- ============ PCF ============ -->
-  <text class="label" x="24" y="60">PCF — filter the comparison, never the depth map</text>
+  <text class="label" x="24" y="60">PCF — lọc kết quả so sánh, không bao giờ lọc depth map</text>
 
   <g class="texel">
     <rect x="88" y="96" width="22" height="22" /><rect x="110" y="96" width="22" height="22" /><rect x="132" y="96" width="22" height="22" /><rect x="154" y="96" width="22" height="22" /><rect x="176" y="96" width="22" height="22" />
@@ -62,35 +62,35 @@
   <circle class="tap" cx="112" cy="182" r="4" />
   <rect class="quad" x="104" y="174" width="16" height="16" />
   <path class="guide" d="M84,192 L102,184" />
-  <text class="note" x="82" y="200" text-anchor="end">one tap =</text>
-  <text class="note" x="82" y="215" text-anchor="end">4 free taps</text>
-  <text class="note" x="204" y="140">radius =</text>
+  <text class="note" x="82" y="200" text-anchor="end">một mẫu =</text>
+  <text class="note" x="82" y="215" text-anchor="end">4 mẫu miễn phí</text>
+  <text class="note" x="204" y="140">bán kính =</text>
   <text class="note" x="204" y="155">shadow.radius</text>
-  <text class="note" x="204" y="170">× one texel</text>
+  <text class="note" x="204" y="170">× một texel</text>
 
-  <text class="note" x="24" y="238">5 Vogel-disk taps, the whole pattern rotated per pixel by</text>
-  <text class="note" x="24" y="256">Interleaved Gradient Noise, each one a hardware 4-tap compare:</text>
-  <text class="note" x="24" y="274">~20 binary results averaged into a percentage, not a 0/1 step.</text>
+  <text class="note" x="24" y="238">5 mẫu theo đĩa Vogel, cả mẫu hình xoay theo từng pixel bằng</text>
+  <text class="note" x="24" y="256">Interleaved Gradient Noise, mỗi mẫu là 1 phép so 4 điểm:</text>
+  <text class="note" x="24" y="274">~20 kết quả nhị phân thành một tỉ lệ, không phải bậc 0/1.</text>
 
   <!-- ============ VSM ============ -->
-  <text class="label" x="348" y="60">VSM — store two moments instead of a depth</text>
+  <text class="label" x="348" y="60">VSM — lưu hai mô-men thay vì một giá trị depth</text>
 
   <rect class="box" x="348" y="92" width="130" height="58" rx="4" />
   <rect class="box" x="478" y="92" width="130" height="58" rx="4" />
-  <text class="label ink-you" x="413" y="118" text-anchor="middle">R = mean μ</text>
-  <text class="note" x="413" y="138" text-anchor="middle">average depth</text>
-  <text class="label ink-you" x="543" y="118" text-anchor="middle">G = std-dev σ</text>
-  <text class="note" x="543" y="138" text-anchor="middle">how spread it is</text>
-  <text class="note" x="348" y="170">one RG16F texel, smoothed by two separable blur passes</text>
+  <text class="label ink-you" x="413" y="118" text-anchor="middle">R = trung bình μ</text>
+  <text class="note" x="413" y="138" text-anchor="middle">depth trung bình</text>
+  <text class="label ink-you" x="543" y="118" text-anchor="middle">G = độ lệch chuẩn σ</text>
+  <text class="note" x="543" y="138" text-anchor="middle">nó tản rộng cỡ nào</text>
+  <text class="note" x="348" y="170">một texel RG16F, làm mượt bằng hai lượt blur tách được</text>
 
   <text class="mono" x="348" y="198">p_max = σ² / (σ² + d²),   d = z − μ</text>
-  <text class="note" x="348" y="220">then clamp( (p_max − 0.3) / 0.65, 0, 1 ) holds back the</text>
-  <text class="note" x="348" y="238">grey bleed when two occluders share one texel</text>
-  <text class="note" x="348" y="262">Being ordinary colour data is the point: it blurs and</text>
-  <text class="note" x="348" y="280">mipmaps, which a depth-compare sampler cannot.</text>
+  <text class="note" x="348" y="220">rồi clamp( (p_max − 0.3) / 0.65, 0, 1 ) kìm lại phần</text>
+  <text class="note" x="348" y="238">loang xám khi hai vật che dùng chung một texel</text>
+  <text class="note" x="348" y="262">Là dữ liệu màu thông thường mới là mấu chốt: nó blur</text>
+  <text class="note" x="348" y="280">và mipmap được, thứ sampler so-depth không làm nổi.</text>
 
   <!-- ============ CSM ============ -->
-  <text class="label" x="24" y="324">CSM — split the CAMERA's frustum, not the light's</text>
+  <text class="label" x="24" y="324">CSM — chia frustum của CAMERA, không phải của đèn</text>
 
   <rect class="box" x="42" y="372" width="18" height="20" rx="3" />
   <text class="note" x="24" y="412">camera</text>
@@ -104,6 +104,6 @@
   <text class="note" x="240" y="484" text-anchor="middle">cascade 1</text>
   <text class="note" x="445" y="484" text-anchor="middle">cascade 2</text>
 
-  <text class="note" x="24" y="506">Each slice gets its own directional light and its own 2048² map, so texel footprint stays small where it matters.</text>
-  <text class="note" x="24" y="524">'practical' — the default of the four split modes — blends a uniform split with a logarithmic one; cascades defaults to 3.</text>
+  <text class="note" x="24" y="506">Mỗi lát có đèn định hướng riêng và map 2048² riêng, nên dấu chân texel vẫn nhỏ ở chỗ cần thiết.</text>
+  <text class="note" x="24" y="524">'practical' — mặc định trong bốn kiểu chia — trộn giữa chia đều và chia theo log; cascades mặc định là 3.</text>
 </svg>

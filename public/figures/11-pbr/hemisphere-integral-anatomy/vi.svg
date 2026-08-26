@@ -56,7 +56,7 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="26">The rendering equation, drawn at one point</text>
+  <text class="title" x="24" y="26">Phương trình render, vẽ tại một điểm</text>
 
   <!-- the surface -->
   <path class="rule" d="M60,262 L430,262" />
@@ -64,7 +64,7 @@
 
   <!-- hemisphere -->
   <path class="dome" d="M120,262 A120,120 0 0 1 360,262" />
-  <text class="label ink-you" x="240" y="132" text-anchor="middle">Ω — the hemisphere above x</text>
+  <text class="label ink-you" x="240" y="132" text-anchor="middle">Ω — bán cầu phía trên x</text>
 
   <!-- incoming directions -->
   <path class="arrow-in" d="M127,221 L223,256" marker-end="url(#head)" />
@@ -91,23 +91,23 @@
   <circle class="dot-you" cx="240" cy="262" r="5" />
   <text class="label ink-you" x="240" y="286" text-anchor="middle">x</text>
 
-  <text class="note" x="60" y="310">every direction in Ω delivers light at the same instant — the integral is their sum</text>
-  <text class="note" x="60" y="328">(n·ωi) = cos θ, because the same beam is spread over dA / cos θ of surface</text>
+  <text class="note" x="60" y="310">mọi hướng trong Ω đều mang ánh sáng tới cùng một khoảnh khắc — tích phân là tổng của chúng</text>
+  <text class="note" x="60" y="328">(n·ωi) = cos θ, vì cùng chùm tia đó trải trên dA / cos θ diện tích bề mặt</text>
 
   <!-- the two things a picture can say that the shaded sphere cannot -->
   <rect class="box" x="450" y="48" width="188" height="118" rx="8" />
   <text class="label" x="464" y="72">Li(x, ωi)</text>
-  <text class="note" x="464" y="92">is the Lo of whatever surface</text>
-  <text class="note" x="464" y="110">happens to sit in that direction</text>
-  <text class="note" x="464" y="134">the recursion is why no closed</text>
-  <text class="note" x="464" y="152">form exists for a real scene</text>
+  <text class="note" x="464" y="92">chính là Lo của bề mặt nào</text>
+  <text class="note" x="464" y="110">tình cờ nằm theo hướng đó</text>
+  <text class="note" x="464" y="134">chính đệ quy đó khiến cảnh thật</text>
+  <text class="note" x="464" y="152">không có dạng đóng nào cả</text>
 
   <rect class="box" x="450" y="182" width="188" height="100" rx="8" />
   <text class="label" x="464" y="206">A PointLight</text>
-  <text class="note" x="464" y="226">keeps one ωi and discards the</text>
-  <text class="note" x="464" y="244">rest of Ω, so the integral turns</text>
-  <text class="note" x="464" y="262">into a single evaluation</text>
+  <text class="note" x="464" y="226">giữ đúng một ωi và bỏ hết phần</text>
+  <text class="note" x="464" y="244">còn lại của Ω, nên tích phân thành</text>
+  <text class="note" x="464" y="262">một lần tính duy nhất</text>
 
-  <text class="note" x="24" y="352">Le adds on top of all this and needs no integral: it is read straight off the material.</text>
-  <text class="note" x="24" y="370">Every later lesson in the track sharpens exactly one symbol in this picture — fr, Li, or where Li is zero.</text>
+  <text class="note" x="24" y="352">Le cộng thêm lên trên tất cả và không cần tích phân: nó đọc thẳng từ vật liệu.</text>
+  <text class="note" x="24" y="370">Mọi bài sau trong track đều mài sắc đúng một ký hiệu trong hình này — fr, Li, hoặc chỗ Li bằng 0.</text>
 </svg>
