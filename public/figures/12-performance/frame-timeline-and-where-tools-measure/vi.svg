@@ -51,54 +51,54 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">One frame, two lanes — and what each tool can actually see</text>
+  <text class="title" x="24" y="24">Một khung hình, hai làn — và mỗi công cụ thật sự thấy được gì</text>
 
-  <text class="lane" x="24" y="52">CPU · main thread</text>
+  <text class="lane" x="24" y="52">CPU · luồng chính</text>
   <rect class="box" x="24" y="60" width="126" height="46" rx="8" />
-  <text class="head" x="36" y="82">your JS</text>
+  <text class="head" x="36" y="82">JS của bạn</text>
   <text class="note" x="36" y="98">useFrame, state, GC</text>
 
   <rect class="box-cost" x="154" y="60" width="248" height="46" rx="8" />
   <text class="head ink-cost" x="166" y="82">renderer.render()</text>
-  <text class="note" x="166" y="98">cull → sort → bind state → issue draw calls</text>
-  <text class="note" x="414" y="88">main thread idle again</text>
+  <text class="note" x="166" y="98">cull → sắp xếp → gắn trạng thái → phát lệnh vẽ</text>
+  <text class="note" x="414" y="88">luồng chính rảnh trở lại</text>
 
   <path class="arrow" d="M300,106 L300,130" marker-end="url(#head)" />
-  <text class="note" x="308" y="124">commands submitted</text>
+  <text class="note" x="308" y="124">lệnh đã nộp</text>
 
-  <text class="lane" x="24" y="152">GPU · its own queue</text>
+  <text class="lane" x="24" y="152">GPU · hàng đợi riêng của nó</text>
   <path class="mark" d="M402,46 L402,162" />
-  <text class="note ink-accent" x="410" y="44">rAF delta stops here</text>
+  <text class="note ink-accent" x="410" y="44">delta của rAF dừng ở đây</text>
   <rect class="box-accent" x="248" y="160" width="388" height="46" rx="8" />
-  <text class="head ink-accent" x="260" y="182">the GPU works through that command buffer</text>
-  <text class="note" x="260" y="198">still busy after the frame's JS already returned — asynchronous</text>
+  <text class="head ink-accent" x="260" y="182">GPU xử lý dần command buffer đó</text>
+  <text class="note" x="260" y="198">vẫn bận sau khi JS của khung đã trả về — bất đồng bộ</text>
 
   <path class="rule" d="M24,234 L636,234" />
-  <text class="note" x="24" y="252">tool</text>
-  <text class="note" x="250" y="252">what it reports</text>
-  <text class="note" x="500" y="252">the lane it reads</text>
+  <text class="note" x="24" y="252">công cụ</text>
+  <text class="note" x="250" y="252">nó báo cái gì</text>
+  <text class="note" x="500" y="252">làn nó đọc</text>
 
   <text class="row" x="24" y="276">renderer.info</text>
-  <text class="note" x="250" y="276">calls and triangles, reset every frame</text>
-  <text class="note" x="500" y="276">what the CPU issued</text>
+  <text class="note" x="250" y="276">số calls và triangles, reset mỗi khung</text>
+  <text class="note" x="500" y="276">thứ CPU đã phát ra</text>
 
-  <text class="row" x="24" y="298">inline frame-time meter</text>
-  <text class="note" x="250" y="298">wall-clock ms between rAF ticks</text>
-  <text class="note" x="500" y="298">the CPU lane, end to end</text>
+  <text class="row" x="24" y="298">đồng hồ thời gian khung tại chỗ</text>
+  <text class="note" x="250" y="298">số ms thực giữa hai nhịp rAF</text>
+  <text class="note" x="500" y="298">làn CPU, từ đầu tới cuối</text>
 
   <text class="row" x="24" y="320">DevTools Performance</text>
-  <text class="note" x="250" y="320">Main track vs GPU track, 50 ms Long Task flag</text>
-  <text class="note" x="500" y="320">both lanes, side by side</text>
+  <text class="note" x="250" y="320">track Main so với track GPU, cờ Long Task 50 ms</text>
+  <text class="note" x="500" y="320">cả hai làn, cạnh nhau</text>
 
   <text class="row" x="24" y="342">Spector.js</text>
-  <text class="note" x="250" y="342">every gl.* call and the state bound per draw</text>
-  <text class="note" x="500" y="342">the command buffer itself</text>
+  <text class="note" x="250" y="342">mọi lệnh gl.* và trạng thái gắn cho từng lệnh vẽ</text>
+  <text class="note" x="500" y="342">chính command buffer</text>
 
   <text class="row" x="24" y="364">RenderDoc</text>
-  <text class="note" x="250" y="364">native calls, after ANGLE has translated them</text>
-  <text class="note" x="500" y="364">below WebGL entirely</text>
+  <text class="note" x="250" y="364">lệnh gốc, sau khi ANGLE đã dịch</text>
+  <text class="note" x="500" y="364">nằm hẳn dưới WebGL</text>
 
-  <text class="foot" x="24" y="396">No number your JavaScript can read is GPU time — the meter times the top lane and then the frame ends.</text>
-  <text class="foot" x="24" y="414">That blind spot is what the DPR 0.5 test covers: same JS, same draw calls, a quarter of the pixels.</text>
-  <text class="foot" x="24" y="432">If that alone makes it smooth, the cost was in the bottom lane the whole time.</text>
+  <text class="foot" x="24" y="396">Không con số nào JavaScript đọc được là thời gian GPU — đồng hồ đo làn trên rồi khung kết thúc.</text>
+  <text class="foot" x="24" y="414">Phép thử DPR 0.5 sinh ra để bù điểm mù đó: cùng JS, cùng số lệnh vẽ, một phần tư số pixel.</text>
+  <text class="foot" x="24" y="432">Nếu chỉ vậy đã mượt, thì chi phí nằm ở làn dưới suốt từ đầu.</text>
 </svg>

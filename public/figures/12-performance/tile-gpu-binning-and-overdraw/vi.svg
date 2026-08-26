@@ -48,49 +48,49 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">Where the pixels actually live while a frame is drawn</text>
+  <text class="title" x="24" y="24">Pixel thật sự nằm ở đâu trong lúc một khung hình được vẽ</text>
 
-  <text class="col" x="24" y="50">IMMEDIATE MODE — DESKTOP</text>
+  <text class="col" x="24" y="50">CHẾ ĐỘ TỨC THỜI — DESKTOP</text>
   <rect class="box" x="24" y="58" width="286" height="44" rx="8" />
-  <text class="head" x="36" y="80">draw → raster → fragment shader</text>
-  <text class="note" x="36" y="96">in submission order, one draw at a time</text>
+  <text class="head" x="36" y="80">vẽ → raster → fragment shader</text>
+  <text class="note" x="36" y="96">theo thứ tự nộp, mỗi lần một lệnh vẽ</text>
   <path class="arrow" d="M167,102 L167,116" marker-end="url(#head)" />
 
   <rect class="box-cost" x="24" y="118" width="286" height="60" rx="8" />
-  <text class="head ink-cost" x="36" y="140">read-modify-write the framebuffer</text>
-  <text class="note" x="36" y="157">it sits in VRAM, off-chip</text>
-  <text class="note" x="36" y="172">one external round trip per fragment, per layer</text>
+  <text class="head ink-cost" x="36" y="140">đọc-sửa-ghi lên framebuffer</text>
+  <text class="note" x="36" y="157">nó nằm trong VRAM, ngoài chip</text>
+  <text class="note" x="36" y="172">mỗi fragment, mỗi lớp là một vòng đi-về ra ngoài</text>
 
   <rect class="box" x="24" y="194" width="286" height="60" rx="8" />
-  <text class="head" x="36" y="216">nothing is held back</text>
-  <text class="note" x="36" y="233">the GPU cannot know what will cover what,</text>
-  <text class="note" x="36" y="248">so it paints every layer it is handed</text>
+  <text class="head" x="36" y="216">không có gì bị giữ lại</text>
+  <text class="note" x="36" y="233">GPU không thể biết cái gì sẽ che cái gì,</text>
+  <text class="note" x="36" y="248">nên nó tô mọi lớp được đưa cho</text>
 
-  <text class="col ink-accent" x="350" y="50">TILE-BASED DEFERRED — MOBILE</text>
+  <text class="col ink-accent" x="350" y="50">TRÌ HOÃN THEO Ô — DI ĐỘNG</text>
   <rect class="box" x="350" y="58" width="286" height="60" rx="8" />
-  <text class="head" x="362" y="80">1 · binning pass</text>
-  <text class="note" x="362" y="97">nothing is shaded: it only records which</text>
-  <text class="note" x="362" y="112">triangle lands in which tile</text>
+  <text class="head" x="362" y="80">1 · lượt chia ô</text>
+  <text class="note" x="362" y="97">chưa tô gì cả: nó chỉ ghi lại tam giác</text>
+  <text class="note" x="362" y="112">nào rơi vào ô nào</text>
   <path class="arrow" d="M493,118 L493,132" marker-end="url(#head)" />
 
   <rect class="box-accent" x="350" y="134" width="286" height="76" rx="8" />
-  <text class="head ink-accent" x="362" y="156">2 · one tile at a time, fully on-chip</text>
-  <text class="note" x="362" y="173">16×16 px on Mali; colour and depth stay in SRAM</text>
-  <text class="note" x="362" y="188">opaque fragments hidden behind others are cut</text>
-  <text class="note" x="362" y="203">before the shader — HSR, or early-ZS plus FPK</text>
+  <text class="head ink-accent" x="362" y="156">2 · mỗi lần một ô, hoàn toàn trên chip</text>
+  <text class="note" x="362" y="173">16×16 px trên Mali; màu và depth nằm trong SRAM</text>
+  <text class="note" x="362" y="188">fragment đục bị che sau cái khác bị cắt</text>
+  <text class="note" x="362" y="203">trước shader — HSR, hoặc early-ZS cộng FPK</text>
   <path class="arrow" d="M493,210 L493,224" marker-end="url(#head)" />
 
   <rect class="box" x="350" y="226" width="286" height="46" rx="8" />
-  <text class="head" x="362" y="248">3 · resolve</text>
-  <text class="note" x="362" y="264">the finished tile is written out exactly once</text>
+  <text class="head" x="362" y="248">3 · kết xuất ra</text>
+  <text class="note" x="362" y="264">ô đã xong được ghi ra đúng một lần</text>
 
   <rect class="box-cost" x="24" y="292" width="612" height="106" rx="8" />
-  <text class="col ink-cost" x="38" y="314">WHAT TRANSPARENCY ESCAPES</text>
-  <text class="note" x="38" y="336">Blending is order-dependent, so nothing behind a transparent layer may be dropped: 5 stacked layers means the same</text>
-  <text class="note" x="38" y="352">pixel runs its fragment shader 5 times — on-chip or not, on the cheapest phone or the most expensive desktop card.</text>
-  <text class="note" x="38" y="372">discard / alphaTest is not early-Z either: the GPU only learns the fragment is dead after the shader has already run.</text>
-  <text class="note" x="38" y="388">Reading a render target still being drawn into forces an early tile flush — cheap on desktop, a real stall on a phone.</text>
+  <text class="col ink-cost" x="38" y="314">TRONG SUỐT THOÁT KHỎI CÁI GÌ</text>
+  <text class="note" x="38" y="336">Blend phụ thuộc thứ tự, nên không được bỏ thứ gì nằm sau một lớp trong suốt: 5 lớp chồng nhau nghĩa là cùng một</text>
+  <text class="note" x="38" y="352">pixel chạy fragment shader 5 lần — trên chip hay không, trên máy rẻ nhất hay card desktop đắt nhất cũng vậy.</text>
+  <text class="note" x="38" y="372">discard / alphaTest cũng không phải early-Z: GPU chỉ biết fragment đã chết sau khi shader chạy xong.</text>
+  <text class="note" x="38" y="388">Đọc một render target đang được vẽ vào buộc phải xả ô sớm — rẻ trên desktop, nghẽn thật trên điện thoại.</text>
 
-  <text class="foot" x="24" y="426">Three.js sorts the opaque list with painterSortStable — material.id first, z only as a tiebreaker — so front-to-back</text>
-  <text class="foot" x="24" y="444">is not guaranteed. Set renderOrder yourself on large near-camera objects to give early-Z something to reject.</text>
+  <text class="foot" x="24" y="426">Three.js sắp danh sách đục bằng painterSortStable — material.id trước, z chỉ để phân định — nên thứ tự gần-tới-xa</text>
+  <text class="foot" x="24" y="444">không được bảo đảm. Tự đặt renderOrder cho các object lớn gần camera để early-Z có cái mà loại.</text>
 </svg>
