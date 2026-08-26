@@ -52,12 +52,12 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="22">Each warp layer feeds the next one's coordinate, not its output</text>
+  <text class="title" x="24" y="22">Mỗi lớp warp nuôi toạ độ của lớp sau, không phải đầu ra của nó</text>
 
   <!-- layer 1 -->
   <rect class="box" x="24" y="42" width="100" height="46" rx="8" />
-  <text class="stage" x="38" y="62">warp layer 1</text>
-  <text class="note" x="38" y="79">builds q</text>
+  <text class="stage" x="38" y="62">lớp warp 1</text>
+  <text class="note" x="38" y="79">dựng q</text>
   <path class="arrow" d="M124,65 L138,65" marker-end="url(#head)" />
   <rect class="box" x="140" y="42" width="372" height="46" rx="8" />
   <text class="code" x="154" y="62">q.x = fbm(p)</text>
@@ -68,8 +68,8 @@
 
   <!-- layer 2 -->
   <rect class="box" x="24" y="112" width="100" height="46" rx="8" />
-  <text class="stage" x="38" y="132">warp layer 2</text>
-  <text class="note" x="38" y="149">builds r</text>
+  <text class="stage" x="38" y="132">lớp warp 2</text>
+  <text class="note" x="38" y="149">dựng r</text>
   <path class="arrow" d="M124,135 L138,135" marker-end="url(#head)" />
   <rect class="box" x="140" y="112" width="372" height="46" rx="8" />
   <text class="code" x="154" y="132">r.x = fbm(p + s&#183;q + vec2(1.7, 9.2))</text>
@@ -80,7 +80,7 @@
 
   <!-- final -->
   <rect class="box" x="24" y="182" width="100" height="40" rx="8" />
-  <text class="stage" x="38" y="207">final sample</text>
+  <text class="stage" x="38" y="207">lần lấy mẫu cuối</text>
   <path class="arrow" d="M124,202 L138,202" marker-end="url(#head)" />
   <rect class="box" x="140" y="182" width="372" height="40" rx="8" />
   <text class="code" x="154" y="207">f = fbm(p + s&#183;r)</text>
@@ -94,9 +94,9 @@
 
   <!-- cost ladder -->
   <line class="rule" x1="24" y1="244" x2="596" y2="244" />
-  <text class="head" x="38" y="262">warp layers</text>
+  <text class="head" x="38" y="262">số lớp warp</text>
   <text class="head" x="220" y="262" text-anchor="end">fbm() calls</text>
-  <text class="head" x="420" y="262" text-anchor="end">noise() calls at 5 octaves</text>
+  <text class="head" x="420" y="262" text-anchor="end">số lần gọi noise() ở 5 octave</text>
   <text class="cell" x="38" y="282">0 (raw fbm)</text>
   <text class="cell" x="220" y="282" text-anchor="end">1</text>
   <text class="cell" x="420" y="282" text-anchor="end">5</text>
@@ -106,10 +106,10 @@
   <text class="cell" x="38" y="318">2 (q then r)</text>
   <text class="cell" x="220" y="318" text-anchor="end">5</text>
   <text class="cell" x="420" y="318" text-anchor="end">25</text>
-  <text class="note" x="440" y="291">per pixel, every frame &#8212;</text>
-  <text class="note" x="440" y="309">each layer adds two full fbm</text>
-  <text class="note" x="440" y="327">evaluations (x3, x5 vs plain fbm)</text>
+  <text class="note" x="440" y="291">mỗi pixel, mỗi khung hình —</text>
+  <text class="note" x="440" y="309">mỗi lớp thêm hai lần fbm đầy đủ</text>
+  <text class="note" x="440" y="327">(x3, x5 so với fbm trần)</text>
 
-  <text class="foot" x="310" y="356" text-anchor="middle">Give q's two channels different offsets, or q.x = q.y everywhere and the warp only pulls along one diagonal.</text>
-  <text class="foot" x="310" y="374" text-anchor="middle">q and r are smooth fields too: colouring by them, not just by f, is what separates flat swirl from marble.</text>
+  <text class="foot" x="310" y="356" text-anchor="middle">Cho hai kênh của q offset khác nhau, không thì q.x = q.y ở mọi nơi và warp chỉ kéo theo một đường chéo.</text>
+  <text class="foot" x="310" y="374" text-anchor="middle">q và r cũng là trường trơn: tô màu theo chúng chứ không chỉ theo f mới là thứ tách xoáy phẳng khỏi vân đá.</text>
 </svg>

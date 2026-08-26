@@ -40,7 +40,7 @@
     .ink-acc { fill: var(--accent-ink); }
   </style>
 
-  <text class="title" x="24" y="22">Four octaves of the same noise, one accumulator</text>
+  <text class="title" x="24" y="22">Bốn octave của cùng một noise, một bộ cộng dồn</text>
 
   <text class="head" x="38" y="52">octave i</text>
   <text class="head" x="196" y="52" text-anchor="end">frequency l&#8305;</text>
@@ -74,15 +74,15 @@
 
   <line class="rule" x1="24" y1="228" x2="596" y2="228" />
 
-  <text class="sub ink-acc" x="38" y="252">sum, then normalise</text>
+  <text class="sub ink-acc" x="38" y="252">cộng lại, rồi chuẩn hoá</text>
   <text class="note" x="38" y="270">&#247; &#931; g&#8305; = (1 &#8722; g&#7482;)/(1 &#8722; g)</text>
   <text class="note" x="38" y="286">= 1.875 at N = 4, g = 0.5</text>
   <line class="axis" x1="300" y1="276" x2="588" y2="276" />
   <path class="wave-sum" d="M300,262.3 L302,259.5 L304,259.4 L306,260.6 L308,261.6 L310,262.9 L312,264.7 L314,265.9 L316,266.4 L318,267.9 L320,270.9 L322,273.5 L324,274.6 L326,275.0 L328,275.6 L330,275.6 L332,275.2 L334,276.0 L336,278.5 L338,280.9 L340,282.1 L342,283.1 L344,284.5 L346,285.1 L348,284.5 L350,284.1 L352,284.2 L354,283.5 L356,281.4 L358,279.4 L360,278.3 L362,277.2 L364,275.5 L366,274.6 L368,275.1 L370,275.8 L372,275.9 L374,276.8 L376,278.7 L378,280.0 L380,279.9 L382,279.7 L384,280.1 L386,280.3 L388,279.9 L390,280.1 L392,281.1 L394,281.1 L396,279.7 L398,278.2 L400,277.8 L402,277.6 L404,277.1 L406,277.0 L408,277.4 L410,276.4 L412,273.6 L414,270.9 L416,269.5 L418,268.8 L420,268.1 L422,268.0 L424,268.4 L426,267.6 L428,265.3 L430,263.7 L432,264.1 L434,265.5 L436,266.8 L438,268.5 L440,270.3 L442,271.0 L444,270.3 L446,270.6 L448,272.9 L450,275.9 L452,278.3 L454,280.2 L456,281.8 L458,281.8 L460,280.4 L462,279.7 L464,280.8 L466,282.2 L468,282.6 L470,282.6 L472,282.6 L474,281.8 L476,280.4 L478,280.2 L480,281.8 L482,283.5 L484,283.8 L486,283.5 L488,283.0 L490,281.6 L492,279.4 L494,277.9 L496,278.0 L498,277.9 L500,276.9 L502,276.0 L504,276.0 L506,276.0 L508,275.7 L510,276.2 L512,277.8 L514,278.9 L516,278.4 L518,277.7 L520,277.2 L522,276.0 L524,273.7 L526,271.6 L528,270.6 L530,269.6 L532,268.2 L534,267.7 L536,268.8 L538,269.9 L540,270.1 L542,270.6 L544,271.8 L546,272.8 L548,272.8 L550,272.9 L552,273.6 L554,273.2 L556,271.1 L558,269.1 L560,268.4 L562,268.6 L564,269.0 L566,270.7 L568,273.6 L570,275.8 L572,276.4 L574,276.9 L576,278.4 L578,280.0 L580,281.0 L582,281.8 L584,282.5 L586,281.7 L588,279.0" />
 
-  <text class="note" x="300" y="308">Without that divisor, changing N alone shifts the</text>
-  <text class="note" x="300" y="324">whole image brighter or darker.</text>
+  <text class="note" x="300" y="308">Thiếu số chia đó, chỉ đổi N thôi cũng làm cả</text>
+  <text class="note" x="300" y="324">ảnh sáng lên hoặc tối đi.</text>
 
-  <text class="foot" x="310" y="356" text-anchor="middle">g and l reshape the whole spectrum at once &#8212; an octave is a sample point on it, not a layer you design.</text>
-  <text class="foot" x="310" y="374" text-anchor="middle">Cost is linear in N, but an octave with a period under one pixel buys flicker, not detail &#8212; hence the 6&#8211;8 ceiling.</text>
+  <text class="foot" x="310" y="356" text-anchor="middle">g và l định hình lại cả phổ cùng lúc — một octave là một điểm lấy mẫu trên phổ đó, không phải lớp bạn tự thiết kế.</text>
+  <text class="foot" x="310" y="374" text-anchor="middle">Chi phí tuyến tính theo N, nhưng octave dưới một pixel cho nhiễu chớp, không phải chi tiết — trần 6–8.</text>
 </svg>

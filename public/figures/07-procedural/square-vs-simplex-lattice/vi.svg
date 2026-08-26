@@ -47,10 +47,10 @@
     .rule { stroke: var(--line); stroke-width: 1; }
   </style>
 
-  <text class="title" x="24" y="22">The lattice a single noise sample has to visit</text>
+  <text class="title" x="24" y="22">Cái lưới mà một lần lấy mẫu noise phải ghé qua</text>
 
   <!-- square lattice -->
-  <text class="sub ink-sq" x="24" y="50">Perlin &#8212; square lattice</text>
+  <text class="sub ink-sq" x="24" y="50">Perlin — lưới vuông</text>
   <path class="grid" d="M48,74 L219,74 M48,131 L219,131 M48,188 L219,188 M48,245 L219,245 M48,74 L48,245 M105,74 L105,245 M162,74 L162,245 M219,74 L219,245" />
   <rect class="hi-sq" x="105" y="131" width="57" height="57" />
   <circle class="dot-sq" cx="105" cy="131" r="4.5" />
@@ -58,10 +58,10 @@
   <circle class="dot-sq" cx="105" cy="188" r="4.5" />
   <circle class="dot-sq" cx="162" cy="188" r="4.5" />
   <circle cx="136" cy="162" r="3.5" fill="var(--ink)" />
-  <text class="cell ink-sq" x="180" y="166">4 corners</text>
+  <text class="cell ink-sq" x="180" y="166">4 góc</text>
 
   <!-- simplex lattice -->
-  <text class="sub ink-sx" x="330" y="50">Simplex &#8212; skewed triangular lattice</text>
+  <text class="sub ink-sx" x="330" y="50">Simplex — lưới tam giác đã xiên</text>
   <g transform="translate(0,10)">
     <path class="grid" d="M344,74 L572,74 M372.5,123.4 L543.5,123.4 M344,172.8 L572,172.8 M372.5,222.2 L543.5,222.2 M344,74 L372.5,123.4 M401,74 L372.5,123.4 M401,74 L429.5,123.4 M458,74 L429.5,123.4 M458,74 L486.5,123.4 M515,74 L486.5,123.4 M515,74 L543.5,123.4 M572,74 L543.5,123.4 M372.5,123.4 L344,172.8 M372.5,123.4 L401,172.8 M429.5,123.4 L401,172.8 M429.5,123.4 L458,172.8 M486.5,123.4 L458,172.8 M486.5,123.4 L515,172.8 M543.5,123.4 L515,172.8 M543.5,123.4 L572,172.8 M344,172.8 L372.5,222.2 M401,172.8 L372.5,222.2 M401,172.8 L429.5,222.2 M458,172.8 L429.5,222.2 M458,172.8 L486.5,222.2 M515,172.8 L486.5,222.2 M515,172.8 L543.5,222.2 M572,172.8 L543.5,222.2" />
     <path class="hi-sx" d="M401,172.8 L458,172.8 L429.5,123.4 Z" />
@@ -70,20 +70,20 @@
     <circle class="dot-sx" cx="458" cy="172.8" r="4.5" />
     <circle class="dot-sx" cx="429.5" cy="123.4" r="4.5" />
     <circle cx="431" cy="155" r="3.5" fill="var(--ink)" />
-    <text class="cell ink-sx" x="478" y="166">3 vertices</text>
+    <text class="cell ink-sx" x="478" y="166">3 đỉnh</text>
   </g>
 
-  <text class="note" x="24" y="272">All 4 corners get hashed and dotted with</text>
-  <text class="note" x="24" y="288">their own offset, then blended by u = fade(f).</text>
-  <text class="note" x="330" y="272">Skew p by F&#8322; = (&#8730;3&#8722;1)/2 &#8776; 0.366 so the</text>
-  <text class="note" x="330" y="288">triangles index like a square grid; each of</text>
-  <text class="note" x="330" y="304">the 3 vertices adds a radial (0.5&#8722;d&#178;)&#8308; falloff.</text>
+  <text class="note" x="24" y="272">Cả 4 góc đều được hash rồi nhân vô hướng</text>
+  <text class="note" x="24" y="288">với offset riêng, rồi trộn bằng u = fade(f).</text>
+  <text class="note" x="330" y="272">Xiên p đi F₂ = (√3−1)/2 ≈ 0.366 để các</text>
+  <text class="note" x="330" y="288">tam giác đánh chỉ số như lưới vuông; mỗi</text>
+  <text class="note" x="330" y="304">đỉnh trong 3 đỉnh thêm falloff (0.5−d²)⁴.</text>
 
   <!-- corner-count ladder -->
   <line class="rule" x1="24" y1="322" x2="596" y2="322" />
-  <text class="head" x="38" y="340">dimension</text>
-  <text class="head ink-sq" x="230" y="340" text-anchor="end">Perlin: 2&#8319; corners</text>
-  <text class="head ink-sx" x="430" y="340" text-anchor="end">Simplex: n+1 vertices</text>
+  <text class="head" x="38" y="340">số chiều</text>
+  <text class="head ink-sq" x="230" y="340" text-anchor="end">Perlin: 2ⁿ góc</text>
+  <text class="head ink-sx" x="430" y="340" text-anchor="end">Simplex: n+1 đỉnh</text>
   <text class="cell" x="38" y="362">2D</text>
   <text class="cell ink-sq" x="230" y="362" text-anchor="end">4</text>
   <text class="cell ink-sx" x="430" y="362" text-anchor="end">3</text>
@@ -93,9 +93,9 @@
   <text class="cell" x="38" y="398">4D</text>
   <text class="cell ink-sq" x="230" y="398" text-anchor="end">16</text>
   <text class="cell ink-sx" x="430" y="398" text-anchor="end">5</text>
-  <text class="note" x="452" y="362">one hash + one gradient</text>
-  <text class="note" x="452" y="380">per corner, so this ratio</text>
-  <text class="note" x="452" y="398">is the per-sample cost</text>
+  <text class="note" x="452" y="362">một hash + một gradient</text>
+  <text class="note" x="452" y="380">mỗi góc, nên tỉ lệ này</text>
+  <text class="note" x="452" y="398">chính là chi phí mỗi mẫu</text>
 
-  <text class="foot" x="310" y="426" text-anchor="middle">In 2D the two look alike; the gap only opens up in 3D and 4D, which is why animated noise reaches for Simplex.</text>
+  <text class="foot" x="310" y="426" text-anchor="middle">Ở 2D hai cái trông giống nhau; khoảng cách chỉ mở ra ở 3D và 4D, nên noise động mới tìm tới Simplex.</text>
 </svg>

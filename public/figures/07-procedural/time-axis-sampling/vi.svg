@@ -51,10 +51,10 @@
     </clipPath>
   </defs>
 
-  <text class="title" x="24" y="22">Where the sample actually travels when time advances</text>
+  <text class="title" x="24" y="22">Điểm lấy mẫu thật sự đi đâu khi thời gian trôi</text>
 
   <!-- scroll -->
-  <text class="sub" x="24" y="50">scroll &#183; 2D noise</text>
+  <text class="sub" x="24" y="50">cuộn · noise 2D</text>
   <text class="code" x="24" y="68">noise2(p + t&#183;dir)</text>
   <rect class="box" x="26" y="90" width="176" height="120" rx="4" />
   <g clip-path="url(#field)">
@@ -66,20 +66,20 @@
   <rect class="win" x="36" y="150" width="66" height="46" rx="3" />
   <rect class="win" x="94" y="117" width="66" height="46" rx="3" />
   <path class="move" d="M69,173 L124,141" marker-end="url(#mhead)" />
-  <text class="note" x="24" y="230">the field is fixed; the window moves</text>
+  <text class="note" x="24" y="230">trường đứng yên; khung nhìn di chuyển</text>
 
   <!-- slice -->
-  <text class="sub" x="220" y="50">slice &#183; 3D noise</text>
+  <text class="sub" x="220" y="50">lát cắt · noise 3D</text>
   <text class="code" x="220" y="68">noise3(p.x, p.y, t)</text>
   <rect class="slab" x="292" y="84" width="100" height="76" rx="4" />
   <rect class="slab-hi" x="264" y="112" width="100" height="76" rx="4" />
   <rect class="slab" x="236" y="140" width="100" height="76" rx="4" />
   <path class="move" d="M228,150 L282,96" marker-end="url(#mhead)" />
   <text class="sub" x="288" y="92">t</text>
-  <text class="note" x="220" y="230">every t is a different 2D field</text>
+  <text class="note" x="220" y="230">mỗi t là một trường 2D khác nhau</text>
 
   <!-- loop -->
-  <text class="sub" x="416" y="50">loop &#183; 4D noise</text>
+  <text class="sub" x="416" y="50">vòng lặp · noise 4D</text>
   <text class="code" x="416" y="68">noise4(p.x, p.y, R&#183;cos &#969;t, R&#183;sin &#969;t)</text>
   <path class="axis" d="M436,150 L566,150 M500,214 L500,86" />
   <text class="note" x="570" y="154">z</text>
@@ -89,19 +89,19 @@
   <path class="move" d="M552,150 A52,52 0 0,0 534,111" marker-end="url(#mhead)" />
   <circle class="dot-acc" cx="530" cy="107" r="4.5" />
   <text class="note" x="540" y="96">&#969;t</text>
-  <text class="note" x="416" y="230">t = 0 and t = T land on the same point</text>
+  <text class="note" x="416" y="230">t = 0 và t = T rơi vào đúng một điểm</text>
 
   <line class="rule" x1="24" y1="252" x2="596" y2="252" />
-  <text class="note" x="24" y="272">hash calls per sample, value noise:</text>
-  <text class="code" x="220" y="272">2&#178; = 4 corners</text>
-  <text class="code" x="330" y="272">2&#179; = 8 corners</text>
-  <text class="code" x="440" y="272">2&#8308; = 16 corners</text>
-  <text class="note" x="24" y="292">Simplex pays n+1 instead:</text>
+  <text class="note" x="24" y="272">số lần hash mỗi mẫu, value noise:</text>
+  <text class="code" x="220" y="272">2² = 4 góc</text>
+  <text class="code" x="330" y="272">2³ = 8 góc</text>
+  <text class="code" x="440" y="272">2⁴ = 16 góc</text>
+  <text class="note" x="24" y="292">Simplex chỉ trả n+1:</text>
   <text class="code" x="220" y="292">3</text>
   <text class="code" x="330" y="292">4</text>
   <text class="code" x="440" y="292">5</text>
 
-  <text class="foot" x="310" y="324" text-anchor="middle">Scroll moves the field rigidly: a blob keeps its shape forever.</text>
-  <text class="foot" x="310" y="342" text-anchor="middle">Only a real extra coordinate lets features grow, split and dissolve.</text>
-  <text class="foot" x="310" y="360" text-anchor="middle">Slice never visibly repeats but never closes; the 4D circle is what makes the last frame bit-identical to the first.</text>
+  <text class="foot" x="310" y="324" text-anchor="middle">Cuộn dịch cả trường một cách cứng nhắc: một vệt giữ nguyên hình dạng mãi mãi.</text>
+  <text class="foot" x="310" y="342" text-anchor="middle">Chỉ một toạ độ thật sự thêm vào mới cho các chi tiết lớn lên, tách ra và tan đi.</text>
+  <text class="foot" x="310" y="360" text-anchor="middle">Lát cắt không lặp thấy được nhưng không khép kín; vòng tròn 4D mới làm khung cuối giống hệt khung đầu.</text>
 </svg>

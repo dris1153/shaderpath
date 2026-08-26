@@ -54,10 +54,10 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="22">One lattice cell: 4 hash calls, whatever the pixel count inside</text>
+  <text class="title" x="24" y="22">Một ô lưới: 4 lần gọi hash, bên trong bao nhiêu pixel cũng vậy</text>
 
   <!-- panel A: value noise -->
-  <text class="sub ink-val" x="24" y="50">Value noise: the corner stores a number</text>
+  <text class="sub ink-val" x="24" y="50">Value noise: góc lưu một con số</text>
   <rect class="cell-val" x="66" y="78" width="176" height="176" rx="4" />
   <circle class="dot-val" cx="66" cy="254" r="5" />
   <circle class="dot-val" cx="242" cy="254" r="5" />
@@ -75,10 +75,10 @@
   <circle cx="154" cy="166" r="4" fill="var(--ink)" />
   <text class="code" x="162" y="162">p</text>
   <text class="note" x="104" y="242">f = fract(p)</text>
-  <text class="note" x="24" y="330">i = floor(p) is that bottom-left corner</text>
+  <text class="note" x="24" y="330">i = floor(p) chính là góc dưới-trái đó</text>
 
   <!-- panel B: gradient noise -->
-  <text class="sub ink-grad" x="330" y="50">Gradient noise: the corner stores a direction</text>
+  <text class="sub ink-grad" x="330" y="50">Gradient noise: góc lưu một hướng</text>
   <rect class="cell-grad" x="372" y="78" width="176" height="176" rx="4" />
   <circle class="dot-grad" cx="372" cy="254" r="5" />
   <circle class="dot-grad" cx="548" cy="254" r="5" />
@@ -94,16 +94,16 @@
   <path class="offset" d="M548,78 L460,166" marker-end="url(#ohead)" />
   <circle cx="460" cy="166" r="4" fill="var(--ink)" />
   <text class="code" x="468" y="160">p</text>
-  <text class="note" x="330" y="274">g = (cos&#160;&#952;, sin&#160;&#952;) with &#952; = 2&#960; &#183; hash21(corner)</text>
-  <text class="note" x="330" y="292">each corner contributes dot(g, f &#8722; its own offset):</text>
+  <text class="note" x="330" y="274">g = (cos θ, sin θ) with θ = 2π · hash21(corner)</text>
+  <text class="note" x="330" y="292">mỗi góc đóng góp dot(g, f − offset của chính nó):</text>
   <text class="code" x="330" y="310">dot(g&#8321;&#8321;, f &#8722; (1,1))  &#8800;  dot(g&#8321;&#8321;, f)</text>
-  <text class="note" x="330" y="330">at a corner the offset is (0,0), so the value there is 0</text>
+  <text class="note" x="330" y="330">tại một góc thì offset là (0,0), nên giá trị ở đó bằng 0</text>
 
   <!-- shared blend -->
   <rect class="box" x="24" y="346" width="572" height="46" rx="8" />
   <text class="code" x="38" y="366">n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f</text>
-  <text class="note" x="38" y="384">Both sides run this identical bilinear blend &#8212; only what the four corner numbers mean changes.</text>
+  <text class="note" x="38" y="384">Cả hai bên đều chạy đúng phép trộn song tuyến này — chỉ khác ý nghĩa của bốn con số ở góc.</text>
 
-  <text class="foot" x="310" y="412" text-anchor="middle">Linear u leaves the slope jumping at every cell edge &#8212; those are the diamond creases.</text>
-  <text class="foot" x="310" y="430" text-anchor="middle">Quintic 6t&#8309; &#8722; 15t&#8308; + 10t&#179; zeroes f&#8242; and f&#8243; at t = 0 and t = 1, so neighbouring cells agree in slope and curvature.</text>
+  <text class="foot" x="310" y="412" text-anchor="middle">u tuyến tính làm độ dốc nhảy ở mọi cạnh ô — đó chính là các nếp gấp hình thoi.</text>
+  <text class="foot" x="310" y="430" text-anchor="middle">Quintic 6t⁵ − 15t⁴ + 10t³ triệt tiêu f′ và f″ tại t = 0 và t = 1, nên hai ô kề nhau khớp cả độ dốc lẫn độ cong.</text>
 </svg>
