@@ -331,6 +331,16 @@ async function lintLesson(trackDir: string, slug: string) {
   if (!meta.hasDemo && hasDemoFile) {
     warnings.push(`${at}: demo.tsx exists but curriculum hasDemo=false`);
   }
+  // A demo with 3 sliders and no line saying what to watch is a toy. tsc
+  // already catches a hint present in one locale's LABELS but not the other
+  // (L is the union of both), so coverage is the only thing left to check.
+  if (hasDemoFile) {
+    const src = fs.readFileSync(path.join(dir, "demo.tsx"), "utf8");
+    if (!/hint=\{/.test(src)) {
+      // Warning until every demo has one; flipped to report() once coverage is complete.
+      warnings.push(`${at}: demo.tsx passes no hint - say what to look for, not just what can be changed`);
+    }
+  }
 }
 
 async function main() {

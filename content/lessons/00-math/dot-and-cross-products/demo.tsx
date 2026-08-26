@@ -10,6 +10,7 @@ import { booleanOf, numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Xoay b qua mốc vuông góc với a và bám lấy số a·b: nó đi qua 0 đúng lúc mũi tên chiếu lật sang phía bên kia.",
     title: "Dot product & phép chiếu",
     angleA: "Góc a (°)",
     lenA: "Độ dài a",
@@ -19,6 +20,7 @@ const LABELS = {
     projOnB: "chiếu lên b",
   },
   en: {
+    hint: "Rotate b through perpendicular with a and watch the a·b readout: it crosses zero at exactly the moment the projection arrow flips to the other side.",
     title: "Dot Product & Projection",
     angleA: "a angle (°)",
     lenA: "a length",
@@ -140,6 +142,7 @@ export default function DotCrossDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "angleA", label: L.angleA, min: -180, max: 180, step: 1, defaultValue: 40 },

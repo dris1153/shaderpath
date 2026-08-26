@@ -10,6 +10,7 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Kéo tx và ty hết cỡ, rồi bám lấy hai mũi tên xanh: chúng đứng im tuyệt đối trong khi các điểm đỏ trượt đi.",
     title: "w=1 là điểm, w=0 là hướng",
     tx: "tx (dịch ngang)",
     ty: "ty (dịch dọc)",
@@ -17,6 +18,7 @@ const LABELS = {
     dirLegend: "→ Hướng (w=0) — không đổi",
   },
   en: {
+    hint: "Drag tx and ty to their extremes and watch the blue arrows: they hold absolutely still while the red points slide away.",
     title: "w=1 Is a Point, w=0 Is a Direction",
     tx: "tx (horizontal shift)",
     ty: "ty (vertical shift)",
@@ -145,6 +147,7 @@ export default function HomogeneousCoordsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "tx", label: L.tx, min: -70, max: 70, step: 1, defaultValue: 0 },

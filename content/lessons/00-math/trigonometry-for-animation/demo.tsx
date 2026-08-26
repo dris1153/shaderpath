@@ -12,6 +12,7 @@ import { booleanOf, numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Bật chế độ ngắm rồi rê chuột sang bên trái vòng tròn — số atan chuyển sang đỏ và lệch đúng 180° so với atan2.",
     title: "Vòng tròn đơn vị & sóng sin/cos",
     amplitude: "Biên độ sóng A",
     frequency: "Tần số góc ω (rad/s)",
@@ -23,6 +24,7 @@ const LABELS = {
     quadrantWarn: "sai góc phần tư!",
   },
   en: {
+    hint: "Turn on aim mode and move the pointer to the left of the circle — the atan readout turns red and sits exactly 180° away from atan2.",
     title: "Unit Circle & sin/cos Waves",
     amplitude: "Wave amplitude A",
     frequency: "Angular frequency ω (rad/s)",
@@ -248,6 +250,7 @@ export default function TrigonometryDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "amplitude", label: L.amplitude, min: 0.3, max: 1.5, step: 0.1, defaultValue: 1 },

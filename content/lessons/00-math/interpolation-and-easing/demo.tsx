@@ -14,6 +14,7 @@ type EaseKind = "linear" | "smoothstep" | "easeIn" | "easeOut" | "easeInOut" | "
 
 const LABELS = {
   vi: {
+    hint: "So easeIn với easeOut trên cùng một duration: cả hai về đích cùng lúc, chỉ khác chỗ dồn tốc độ — đầu hay cuối.",
     title: "Đồ thị easing & chuyển động trên track",
     ease: "Kiểu easing",
     duration: "Thời lượng (giây)",
@@ -25,6 +26,7 @@ const LABELS = {
     expDecay: "Suy giảm mũ (lerp mỗi frame)",
   },
   en: {
+    hint: "Compare easeIn against easeOut at the same duration: both arrive together, and differ only in where the speed is spent — the start or the end.",
     title: "Easing Graph & Track Motion",
     ease: "Easing kind",
     duration: "Duration (seconds)",
@@ -196,6 +198,7 @@ export default function InterpolationEasingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

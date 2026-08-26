@@ -13,6 +13,7 @@ import vertexShader from "./srgb-blend.vert";
 
 const LABELS = {
   vi: {
+    hint: "Chỉ nhìn đúng dải giữa: hai nửa tách nhau rõ nhất ở chính giữa và khít lại ở hai đầu, vì hai đầu là màu nguyên chưa qua phép trộn nào.",
     title: "So sánh trộn màu: sRGB vs Linear",
     pair: "Cặp màu",
     swap: "Đảo nửa trên/dưới",
@@ -22,6 +23,7 @@ const LABELS = {
     pairMagentaYellow: "Cánh sen ↔ Vàng",
   },
   en: {
+    hint: "Look only at the middle band: the two halves differ most at the centre and close up at both ends, because the ends are pure colours no blend has touched.",
     title: "Color Blend Comparison: sRGB vs Linear",
     pair: "Color pair",
     swap: "Swap top/bottom",
@@ -84,6 +86,7 @@ export default function SrgbLinearGammaDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         {

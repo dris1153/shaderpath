@@ -11,12 +11,14 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Kéo khoảng cách và fov ngược chiều nhau để giữ khối giữa nguyên kích thước — hậu cảnh vẫn dãn ra hoặc bóp lại. Đó là cú dolly zoom.",
     title: "MVP: camera thật & mặt cắt frustum nhìn từ trên",
     fov: "Field of view (°)",
     distance: "Khoảng cách camera",
     near: "Near plane",
   },
   en: {
+    hint: "Drag distance and fov in opposite directions to hold the centre cube at a fixed size — the background still stretches or compresses. That is the dolly zoom.",
     title: "MVP: Real Camera & Top-down Frustum Cross-section",
     fov: "Field of view (°)",
     distance: "Camera distance",
@@ -148,6 +150,7 @@ export default function ModelViewProjectionDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         { kind: "number", key: "fov", label: L.fov, min: 20, max: 70, step: 1, defaultValue: 50 },

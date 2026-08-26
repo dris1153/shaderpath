@@ -10,6 +10,7 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Thử a=1, b=2, c=2, d=4 — hai mũi tên cột nằm chồng lên một đường và hình vuông đơn vị bẹp thành đoạn thẳng. Ma trận suy biến trông là như vậy.",
     title: "Ma trận 2×2: đọc theo cột",
     a: "a (î.x)",
     b: "b (ĵ.x)",
@@ -17,6 +18,7 @@ const LABELS = {
     d: "d (ĵ.y)",
   },
   en: {
+    hint: "Try a=1, b=2, c=2, d=4 — the two column arrows lie along one line and the unit square flattens into a segment. That is what a singular matrix looks like.",
     title: "2×2 Matrix: Reading by Columns",
     a: "a (î.x)",
     b: "b (ĵ.x)",
@@ -135,6 +137,7 @@ export default function MatrixBasicsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "a", label: L.a, min: -2, max: 2, step: 0.1, defaultValue: 1 },

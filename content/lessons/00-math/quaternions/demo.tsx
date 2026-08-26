@@ -11,12 +11,14 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Kéo t thật chậm và chỉ nhìn mũi tên đỏ của hai object: bên slerp quay đều một nhịp, bên lerp Euler có đoạn vội đoạn chùng.",
     title: "Euler lerp vs quaternion slerp",
     t: "t (nội suy)",
     euler: "Lerp Euler (từng góc)",
     quat: "Slerp quaternion",
   },
   en: {
+    hint: "Drag t slowly and watch only the red arrow on each object: the slerp side turns at one steady rate, while the Euler lerp side rushes and dawdles.",
     title: "Euler Lerp vs Quaternion Slerp",
     t: "t (interpolation)",
     euler: "Euler lerp (per angle)",
@@ -100,6 +102,7 @@ export default function QuaternionsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "t", label: L.t, min: 0, max: 1, step: 0.01, defaultValue: 0 },
       ]}

@@ -13,12 +13,14 @@ import vertexShader from "./uv-explorer.vert";
 
 const LABELS = {
   vi: {
+    hint: "Màu chính là toạ độ: đỏ = u, lục = v. Kéo u và v rồi bám lấy vòng tròn đánh dấu — nó luôn rơi đúng vào ô có màu tương ứng.",
     title: "Khám phá UV space",
     u: "u (ngang)",
     v: "v (dọc)",
     flip: "Đảo trục v (ảnh ↔ WebGL)",
   },
   en: {
+    hint: "The colour is the coordinate: red = u, green = v. Drag u and v and follow the ring marker — it always lands on the patch whose colour matches.",
     title: "UV Space Explorer",
     u: "u (horizontal)",
     v: "v (vertical)",
@@ -67,6 +69,7 @@ export default function CartesianUvDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

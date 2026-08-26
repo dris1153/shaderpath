@@ -9,6 +9,7 @@ import {
   Card,
   CardAction,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -26,11 +27,15 @@ import { DemoErrorBoundary } from "./demo-error-boundary";
 // AspectRatio, a Skeleton while loading, and a shadcn control panel.
 export function Demo({
   title,
+  hint,
   controls = [],
   ratio = 16 / 9,
   children,
 }: {
   title: string;
+  /** One thing to watch for. Controls say what you can change; this says
+   * what the change is worth looking at. */
+  hint?: string;
   controls?: ControlDef[];
   ratio?: number;
   children: ReactNode;
@@ -46,6 +51,7 @@ export function Demo({
     <Card className="mt-8 overflow-hidden">
       <CardHeader>
         <CardTitle className="text-base">{title}</CardTitle>
+        {hint && <CardDescription>{hint}</CardDescription>}
         {controls.length > 0 && (
           <CardAction>
             <Button

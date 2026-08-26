@@ -10,6 +10,7 @@ import { booleanOf, numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Chỉnh b về gần ngược hướng a — mũi tên tổng co lại sát gốc trong khi hai vector thành phần vẫn dài nguyên.",
     title: "Cộng vector: tip-to-tail",
     ax: "a.x",
     ay: "a.y",
@@ -18,6 +19,7 @@ const LABELS = {
     tipToTail: "Vẽ tip-to-tail",
   },
   en: {
+    hint: "Set b to point nearly opposite a — the sum arrow collapses towards the origin while both parts stay full length.",
     title: "Vector Addition: Tip-to-Tail",
     ax: "a.x",
     ay: "a.y",
@@ -113,6 +115,7 @@ export default function VectorBasicsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "ax", label: L.ax, min: -100, max: 100, step: 1, defaultValue: 80 },

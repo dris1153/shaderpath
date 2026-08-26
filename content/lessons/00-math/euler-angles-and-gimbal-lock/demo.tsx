@@ -9,6 +9,7 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Đưa pitch tới 90°, rồi kéo yaw và kéo roll: vòng ngoài cùng và vòng trong cùng quay quanh đúng một trục, và nhãn khoá bật lên đúng lúc đó.",
     title: "Gimbal 3 vòng: khoá khi pitch chạm 90°",
     yaw: "Yaw (Z)",
     pitch: "Pitch (Y)",
@@ -16,6 +17,7 @@ const LABELS = {
     locked: "Khoá! (gimbal lock)",
   },
   en: {
+    hint: "Take pitch to 90°, then drag yaw and drag roll: the outermost and innermost rings turn about the very same axis, and the lock badge lights up right there.",
     title: "3-Ring Gimbal: Locks When Pitch Hits 90°",
     yaw: "Yaw (Z)",
     pitch: "Pitch (Y)",
@@ -116,6 +118,7 @@ export default function EulerGimbalLockDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "yaw", label: L.yaw, min: -180, max: 180, step: 1, defaultValue: 0 },
