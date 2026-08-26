@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 
 const LABELS = {
   vi: {
+    hint: "Bấm gây spike rồi nhìn hai số: fps trung bình gần như không nhúc nhích, còn đỉnh gần nhất thì bắt trọn. Đó là lý do fps trung bình giấu được giật.",
     title: "Bảng điều khiển profiling: renderer.info + frame-time meter",
     count: "Số vật thể",
     dpr: "Device Pixel Ratio",
@@ -32,6 +33,7 @@ const LABELS = {
     budgetHint: "vạch trắng = ngân sách 16.67ms",
   },
   en: {
+    hint: "Trigger the spike and watch both numbers: the averaged fps barely flinches while the recent peak catches all of it. That is how an fps average hides a stutter.",
     title: "Profiling dashboard: renderer.info + frame-time meter",
     count: "Object count",
     dpr: "Device Pixel Ratio",
@@ -277,6 +279,7 @@ export default function ProfilingWebglToolsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         { kind: "number", key: "count", label: L.count, min: 50, max: 2000, step: 50, defaultValue: 300 },

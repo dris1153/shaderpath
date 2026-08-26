@@ -13,6 +13,7 @@ import { numberOf, stringOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Chọn environment màu đơn sắc: mọi quả cầu vẫn sáng, nhưng không quả nào còn phản chiếu ra hình thù gì. Ánh sáng vẫn tới, chỉ là không mang thông tin.",
     title: "IBL: từ prefiltered environment ra ánh sáng trên từng quả cầu",
     environment: "Environment",
     envRoom: "RoomEnvironment (PMREM.fromScene)",
@@ -27,6 +28,7 @@ const LABELS = {
       "Mỗi quả cầu đọc một mip khác trong CÙNG một prefiltered atlas — trái (roughness=0) đọc mip 0 sắc nét, phải (roughness=1) đọc mip mờ nhất, đúng mip mà getIBLIrradiance() cũng dùng cho diffuse.",
   },
   en: {
+    hint: "Pick the solid colour environment: every sphere is still lit, but none reflects anything recognisable. The light still arrives, it just carries no information.",
     title: "IBL: from a prefiltered environment to light on every sphere",
     environment: "Environment",
     envRoom: "RoomEnvironment (PMREM.fromScene)",
@@ -191,6 +193,7 @@ export default function IblIrradianceAndPrefilterDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         {

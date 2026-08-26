@@ -17,6 +17,7 @@ import { Corridor } from "./corridor";
 
 const LABELS = {
   vi: {
+    hint: "Bấm lấy nét vào cột xa nhất: các cột gần hoá nhoè. Nhoè ở đây do khoảng cách quyết định, không phải do vật nào quan trọng hơn.",
     title: "Hành lang: Depth of Field & Camera Motion Blur",
     focus: "Khoảng cách lấy nét",
     aperture: "Aperture (BokehPass)",
@@ -26,6 +27,7 @@ const LABELS = {
     overlay: "Click vào một cột để lấy nét đúng tại đó",
   },
   en: {
+    hint: "Focus on the furthest column: the near ones go soft. The blur here is decided by distance, not by which object matters.",
     title: "Corridor: Depth of Field & Camera Motion Blur",
     focus: "Focus distance",
     aperture: "Aperture (BokehPass)",
@@ -162,6 +164,7 @@ export default function DepthOfFieldMotionBlurDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "focus", label: L.focus, min: 2, max: 28, step: 0.5, defaultValue: 8 },

@@ -14,6 +14,7 @@ import vertexShader from "./cook-torrance-explorer.vert";
 
 const LABELS = {
   vi: {
+    hint: "Cô lập số hạng G rồi kéo roughness: nó tối đi ở góc sượt. Đó là các vi diện tự che nhau, và nó chỉ đáng kể khi bề mặt nhám.",
     title: "BRDF explorer: Cook-Torrance từ đầu",
     roughness: "Roughness",
     metalness: "Metalness",
@@ -25,6 +26,7 @@ const LABELS = {
     lightAngle: "Hướng đèn (độ, quay quanh)",
   },
   en: {
+    hint: "Isolate the G term and drag roughness: it darkens at grazing angles. That is microfacets shadowing each other, and it only matters once the surface is rough.",
     title: "BRDF Explorer: Cook-Torrance from Scratch",
     roughness: "Roughness",
     metalness: "Metalness",
@@ -103,6 +105,7 @@ export default function BrdfAndMicrofacetsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

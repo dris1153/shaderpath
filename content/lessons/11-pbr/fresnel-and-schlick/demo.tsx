@@ -14,6 +14,7 @@ import fresnelFrag from "./fresnel-object.frag";
 
 const LABELS = {
   vi: {
+    hint: "Tắt Schlick để F0 thành hằng số rồi hạ góc nhìn xuống sát mặt nước: mặt nước mất hẳn vẻ phản chiếu. Mọi vật liệu đều thành gương ở góc sượt.",
     title: "Bể nước & dãy vật liệu — Fresnel theo góc nhìn",
     viewAngle: "Góc nhìn (độ, 90° = nhìn thẳng xuống)",
     material: "Vật liệu nổi bật (đường cong F(θ))",
@@ -21,6 +22,7 @@ const LABELS = {
     curveTitle: "F(θ) — vật liệu nổi bật",
   },
   en: {
+    hint: "Turn Schlick off so F0 is constant, then lower the view angle to graze the water: the surface loses its reflection entirely. Every material becomes a mirror at grazing angles.",
     title: "Water & Material Row — Fresnel by Viewing Angle",
     viewAngle: "View angle (degrees, 90° = looking straight down)",
     material: "Highlighted material (F(θ) curve)",
@@ -32,6 +34,7 @@ const LABELS = {
 type Vec3 = [number, number, number];
 
 interface Labels {
+  hint: string;
   title: string;
   viewAngle: string;
   material: string;
@@ -272,6 +275,7 @@ export default function FresnelAndSchlickDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

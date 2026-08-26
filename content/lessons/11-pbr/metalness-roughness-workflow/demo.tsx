@@ -13,6 +13,7 @@ import { useDisposable } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
+    hint: "Bật lỗi sai color space Albedo: hình không sai màu mà sai độ sáng — map dữ liệu bị giải mã như thể nó là ảnh nhìn được.",
     title: "Material Lab — metal/rust sphere, bộ map ORM procedural",
     albedo: "Map Albedo",
     metalnessMap: "Map Metalness (kênh B)",
@@ -24,6 +25,7 @@ const LABELS = {
     wrongColorSpace: "Sai color space Albedo (bug minh hoạ)",
   },
   en: {
+    hint: "Turn on the wrong albedo colour space: the result is not the wrong hue but the wrong brightness — a data map decoded as if it were a viewable image.",
     title: "Material Lab — Metal/Rust Sphere, Procedural ORM Set",
     albedo: "Albedo map",
     metalnessMap: "Metalness map (B channel)",
@@ -241,6 +243,7 @@ export default function MetalnessRoughnessWorkflowDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         { kind: "boolean", key: "albedo", label: L.albedo, defaultValue: true },

@@ -18,6 +18,7 @@ import stylisticFragment from "./stylistic-pass.frag";
 
 const LABELS = {
   vi: {
+    hint: "Tắt grain động: nhiễu đóng băng thành một lớp vân cố định dán lên màn hình. Chính chuyển động là thứ khiến mắt đọc nó ra film.",
     title: "Grain, Vignette & Chromatic Aberration — một pass duy nhất",
     grain: "Grain",
     animate: "Grain động theo thời gian",
@@ -30,6 +31,7 @@ const LABELS = {
     presetOverdone: "Quá tay",
   },
   en: {
+    hint: "Turn off animated grain: the noise freezes into a fixed texture pasted on the screen. It is the movement that makes the eye read it as film.",
     title: "Grain, Vignette & Chromatic Aberration — a Single Pass",
     grain: "Grain",
     animate: "Animate grain over time",
@@ -192,6 +194,7 @@ export default function StylisticEffectsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "grain", label: L.grain, min: 0, max: 0.25, step: 0.005, defaultValue: PRESETS.tasteful.grain },
         { kind: "boolean", key: "animate", label: L.animate, defaultValue: true },

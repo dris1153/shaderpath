@@ -14,6 +14,7 @@ import { bytesToMB, textureFootprintBytes, type TextureFormat } from "./texture-
 
 const LABELS = {
   vi: {
+    hint: "Bật mipmap rồi thêm cùng một texture: tổng tăng thêm khoảng một phần ba. Chuỗi mip cộng thêm 33%, và đó là con số không bao giờ hiện trong tên file.",
     title: "VRAM Ledger — spawn texture, xem ngân sách sống",
     size: "Kích thước",
     format: "Định dạng",
@@ -27,6 +28,7 @@ const LABELS = {
     overBudget: "> ngân sách minh hoạ",
   },
   en: {
+    hint: "Turn mipmaps on and add the same texture: the total grows by about a third. A mip chain adds 33%, and that number never shows up in a file size.",
     title: "VRAM Ledger — Spawn Textures, Watch a Live Budget",
     size: "Size",
     format: "Format",
@@ -247,6 +249,7 @@ export default function TextureMemoryBudgetDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={4 / 3}
       controls={[
         {

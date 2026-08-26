@@ -278,6 +278,7 @@ export default function CullingAndLodDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

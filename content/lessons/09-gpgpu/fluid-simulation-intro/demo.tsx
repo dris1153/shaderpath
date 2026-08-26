@@ -14,6 +14,7 @@ import { FluidSim } from "./fluid-sim";
 
 const LABELS = {
   vi: {
+    hint: "Hạ số vòng lặp áp suất xuống thấp rồi bơm màu: dòng chảy bắt đầu nở ra và co lại như đang bơm phồng. Chính bước project là thứ ép chất lỏng không nén được.",
     title: "Stable Fluids lưới 2D — advect, splat, project",
     dissipation: "Độ lưu vệt màu",
     iterations: "Số vòng lặp áp suất",
@@ -21,6 +22,7 @@ const LABELS = {
     overlay: "Kéo chuột để bơm màu + lực",
   },
   en: {
+    hint: "Lower the pressure iterations and inject some dye: the flow starts to swell and shrink as if being pumped. The project step is what forces the fluid to be incompressible.",
     title: "2D Stable Fluids — advect, splat, project",
     dissipation: "Dye persistence",
     iterations: "Pressure iterations",
@@ -157,6 +159,7 @@ export default function FluidSimulationIntroDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "dissipation", label: L.dissipation, min: 0.9, max: 0.999, step: 0.001, defaultValue: 0.98 },

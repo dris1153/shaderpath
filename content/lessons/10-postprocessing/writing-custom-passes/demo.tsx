@@ -15,6 +15,7 @@ import { HeatShimmerPass } from "./heat-shimmer-pass";
 
 const LABELS = {
   vi: {
+    hint: "Kéo tần số sóng lên cao: vân bắt đầu nhấp nháy. Pass này lấy mẫu texture của pass trước tại một toạ độ lệch đi, và toạ độ lệch quá nhanh thì sinh aliasing.",
     title: "Custom Pass: Heat Shimmer",
     enabled: "Bật pass",
     strength: "Cường độ (uStrength)",
@@ -22,6 +23,7 @@ const LABELS = {
     speed: "Tốc độ thời gian (uSpeed)",
   },
   en: {
+    hint: "Push the wave frequency up: the ripples start to shimmer. This pass samples the previous one at an offset coordinate, and an offset that changes too fast aliases.",
     title: "Custom Pass: Heat Shimmer",
     enabled: "Pass enabled",
     strength: "Strength (uStrength)",
@@ -110,6 +112,7 @@ export default function WritingCustomPassesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "enabled", label: L.enabled, defaultValue: true },
         {

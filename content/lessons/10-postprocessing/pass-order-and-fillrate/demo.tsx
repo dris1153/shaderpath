@@ -14,6 +14,7 @@ import { OrderCompare } from "./order-compare";
 
 const LABELS = {
   vi: {
+    hint: "Đặt bloom sau tone map: quầng sáng nhợt hẳn đi. Tone map đã nén hết vùng sáng trước khi bloom kịp tìm thấy chúng.",
     title: "Chuỗi 5-pass: bật/tắt, đổi thứ tự, đổi DPR",
     ao: "AO (xấp xỉ)",
     bloom: "Bloom",
@@ -27,6 +28,7 @@ const LABELS = {
     frameTime: "Frame time (EMA)",
   },
   en: {
+    hint: "Put bloom after tone mapping: the glow goes washed out. Tone mapping already compressed the highlights before bloom could find them.",
     title: "5-Pass Chain: Toggle, Reorder, Change DPR",
     ao: "AO (approx)",
     bloom: "Bloom",
@@ -123,6 +125,7 @@ export default function PassOrderAndFillrateDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "ao", label: L.ao, defaultValue: true },

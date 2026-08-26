@@ -23,6 +23,7 @@ const LIFETIME = 4.5; // seconds
 
 const LABELS = {
   vi: {
+    hint: "Đổi tô màu sang theo tuổi: hạt sinh ra và chết đi liên tục, và đó là lý do vệt chuyển động không bao giờ đóng băng thành một hình cố định.",
     title: "Flow field particles: curl noise trong compute shader",
     fieldScale: "Field scale",
     strength: "Cường độ",
@@ -33,6 +34,7 @@ const LABELS = {
     colorAge: "Tuổi",
   },
   en: {
+    hint: "Switch the colouring to age: particles are constantly born and retired, and that is why the streaks never freeze into one fixed shape.",
     title: "Flow Field Particles: Curl Noise Inside the Compute Shader",
     fieldScale: "Field scale",
     strength: "Strength",
@@ -219,6 +221,7 @@ export default function FlowFieldParticlesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

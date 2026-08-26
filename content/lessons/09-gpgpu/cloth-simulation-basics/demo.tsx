@@ -22,6 +22,7 @@ type PinPattern = "top" | "corners";
 
 const LABELS = {
   vi: {
+    hint: "Hạ số vòng constraint xuống 1 rồi thổi gió mạnh: vải giãn ra như cao su. Mỗi vòng lặp kéo các ràng buộc về gần đúng thêm một chút, không vòng nào giải chính xác cả.",
     title: "Vải GPU: mass-spring + Verlet, ghim mép trên",
     wind: "Cường độ gió",
     iterations: "Số vòng constraint",
@@ -31,6 +32,7 @@ const LABELS = {
     reset: "Đặt lại mô phỏng",
   },
   en: {
+    hint: "Drop the constraint iterations to 1 and turn the wind up: the cloth stretches like rubber. Each pass nudges the constraints closer to satisfied; no single pass ever solves them exactly.",
     title: "GPU Cloth: Mass-Spring + Verlet, Top-Pinned",
     wind: "Wind strength",
     iterations: "Constraint iterations",
@@ -257,6 +259,7 @@ export default function ClothSimulationBasicsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "wind", label: L.wind, min: 0, max: 4, step: 0.1, defaultValue: 1.2 },

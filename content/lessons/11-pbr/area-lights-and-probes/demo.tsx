@@ -10,6 +10,7 @@ import { ProbeCorner } from "./probe-corner";
 
 const LABELS = {
   vi: {
+    hint: "Tắt nội suy probe: vùng khuất sáng bẹt thành một màu ambient duy nhất. Probe là thứ cho các góc khác nhau nhận ánh sáng khác nhau.",
     title: "Showroom: RectAreaLight & Light Probe",
     lightWidth: "Bề rộng panel",
     lightHeight: "Chiều cao panel",
@@ -18,6 +19,7 @@ const LABELS = {
     useProbes: "Nội suy probe (tắt = ambient phẳng)",
   },
   en: {
+    hint: "Turn probe interpolation off: the shadowed side flattens into one ambient colour. Probes are what let different corners receive different light.",
     title: "Showroom: RectAreaLight & Light Probes",
     lightWidth: "Panel width",
     lightHeight: "Panel height",
@@ -55,6 +57,7 @@ export default function AreaLightsAndProbesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "lightWidth", label: L.lightWidth, min: 0.6, max: 5, step: 0.1, defaultValue: 3 },
         { kind: "number", key: "lightHeight", label: L.lightHeight, min: 0.4, max: 3, step: 0.1, defaultValue: 1.6 },

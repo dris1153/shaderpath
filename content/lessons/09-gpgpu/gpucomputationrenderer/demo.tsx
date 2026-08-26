@@ -24,12 +24,14 @@ const SIZE = 128;
 
 const LABELS = {
   vi: {
+    hint: "Bấm reset rồi nhìn ngay khoảnh khắc đầu tiên: mọi hạt xuất phát từ một texture khởi tạo, không phải từ một vòng lặp JS nào.",
     title: "GPUComputationRenderer: xoáy particle qua cặp biến compute",
     force: "Lực xoáy",
     damping: "Damping",
     reset: "Reset",
   },
   en: {
+    hint: "Hit reset and watch the very first instant: every particle starts from an initialisation texture, not from any JS loop.",
     title: "GPUComputationRenderer: a Swirling Pair of Compute Variables",
     force: "Swirl force",
     damping: "Damping",
@@ -245,6 +247,7 @@ export default function GpuComputationRendererDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",

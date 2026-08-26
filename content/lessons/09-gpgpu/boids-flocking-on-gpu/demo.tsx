@@ -27,6 +27,7 @@ const BOUNDS = 5;
 
 const LABELS = {
   vi: {
+    hint: "Đưa cohesion về 0 và giữ hai trọng số kia: đàn vẫn bay cùng hướng nhưng tản dần ra mãi. Không có luật nào ra lệnh cho cả đàn, mỗi boid chỉ nhìn hàng xóm của nó.",
     title: "Boids flocking trên GPU (4.096 boid)",
     separation: "Trọng số separation",
     alignment: "Trọng số alignment",
@@ -35,6 +36,7 @@ const LABELS = {
     speed: "Giới hạn tốc độ",
   },
   en: {
+    hint: "Take cohesion to 0 and leave the other two: the flock still flies as one heading but drifts apart forever. No rule commands the flock; each boid only ever looks at its neighbours.",
     title: "GPU Boids Flocking (4,096 Boids)",
     separation: "Separation weight",
     alignment: "Alignment weight",
@@ -230,6 +232,7 @@ export default function BoidsFlockingOnGpuDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

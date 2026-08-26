@@ -13,6 +13,7 @@ import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
+    hint: "Chọn chế độ RAF sống sót rồi unmount: bộ đếm geo về 0 nhưng frame vẫn tiếp tục chạy. Có hai loại rò rỉ ở đây, và dispose chỉ chữa được một.",
     title: "Phòng thí nghiệm leak: mount/unmount, xem VRAM có quay về 0",
     mode: "Chế độ",
     modeClean: "Sạch — registry trong effect",
@@ -27,6 +28,7 @@ const LABELS = {
     cycles: "chu kỳ",
   },
   en: {
+    hint: "Pick the surviving-RAF mode and unmount: the geo counter reaches 0 but frames keep ticking. There are two kinds of leak here, and dispose only cures one of them.",
     title: "Leak lab: mount/unmount, watch whether VRAM returns to 0",
     mode: "Mode",
     modeClean: "Clean — effect-owned registry",
@@ -251,6 +253,7 @@ export default function DisposeAndLeakHuntingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

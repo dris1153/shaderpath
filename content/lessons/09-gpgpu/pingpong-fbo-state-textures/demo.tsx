@@ -20,12 +20,14 @@ import { BOUNDS, PARTICLE_COUNT, PingPongSimulation, STATE_SIZE } from "./simula
 
 const LABELS = {
   vi: {
+    hint: "Bật hiện texture trạng thái rồi tạm dừng: mỗi pixel trong đó là một hạt. Vị trí được lưu thành màu, và đó là toàn bộ mẹo của kỹ thuật này.",
     title: "Ping-pong FBO thủ công: 16.384 particle sống trong texture",
     paused: "Tạm dừng",
     showState: "Hiện texture trạng thái",
     reset: "Khởi tạo lại",
   },
   en: {
+    hint: "Show the state texture and pause: every pixel in it is one particle. Positions are stored as colour, and that is the entire trick.",
     title: "Manual Ping-Pong FBO: 16,384 Particles Living in a Texture",
     paused: "Paused",
     showState: "Show state texture",
@@ -137,6 +139,7 @@ export default function PingpongFboStateTexturesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "paused", label: L.paused, defaultValue: false },
         { kind: "boolean", key: "showState", label: L.showState, defaultValue: false },

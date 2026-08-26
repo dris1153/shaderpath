@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 
 const LABELS = {
   vi: {
+    hint: "Chọn Deferred rồi cuộn chậm: chỗ giữ layout đã có sẵn kích thước đúng trước khi canvas kịp tồn tại — nên không có cú nhảy nào khi nó xuất hiện.",
     title: "Meta-demo: chính bạn đang xem thứ được next/dynamic tải",
     meta: "Demo này được nạp qua registry đúng cách mô tả trong bài:",
     strategy: "Chiến lược mount",
@@ -32,6 +33,7 @@ const LABELS = {
     px: "px",
   },
   en: {
+    hint: "Pick Deferred and scroll slowly: the layout placeholder already holds the right size before the canvas exists — which is why nothing jumps when it arrives.",
     title: "Meta-demo: you're watching what next/dynamic loaded",
     meta: "This demo itself was loaded through the registry described in the lesson:",
     strategy: "Mount strategy",
@@ -236,6 +238,7 @@ export default function NextjsSsrHydrationCanvasDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={4 / 3}
       controls={[
         {

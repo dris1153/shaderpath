@@ -337,8 +337,7 @@ async function lintLesson(trackDir: string, slug: string) {
   if (hasDemoFile) {
     const src = fs.readFileSync(path.join(dir, "demo.tsx"), "utf8");
     if (!/hint=\{/.test(src)) {
-      // Warning until every demo has one; flipped to report() once coverage is complete.
-      warnings.push(`${at}: demo.tsx passes no hint - say what to look for, not just what can be changed`);
+      report(`${at}: demo.tsx passes no hint - say what to look for, not just what can be changed`);
     }
   }
 }

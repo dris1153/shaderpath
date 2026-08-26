@@ -18,12 +18,14 @@ import tintVertexShader from "./tint-pass.vert";
 
 const LABELS = {
   vi: {
+    hint: "Tắt pass tint rồi bám lấy số ms: nó không về 0. RenderPass và OutputPass vẫn chạy — composer luôn tốn ít nhất một lần chép toàn màn hình.",
     title: "EffectComposer: RenderPass → ShaderPass → OutputPass",
     effectEnabled: "Bật pass tint",
     mix: "Cường độ tint",
     readout: (ms: number) => `composer.render(): ${ms.toFixed(2)} ms/frame`,
   },
   en: {
+    hint: "Turn the tint pass off and watch the millisecond readout: it does not drop to zero. RenderPass and OutputPass still run — a composer always costs at least one full-screen copy.",
     title: "EffectComposer: RenderPass → ShaderPass → OutputPass",
     effectEnabled: "Enable tint pass",
     mix: "Tint mix",
@@ -157,6 +159,7 @@ export default function EffectcomposerAndPassesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "boolean",

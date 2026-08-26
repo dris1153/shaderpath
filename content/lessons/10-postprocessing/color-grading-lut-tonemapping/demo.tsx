@@ -13,6 +13,7 @@ import type { LutKind } from "./lut-generator";
 
 const LABELS = {
   vi: {
+    hint: "Bật so sánh trước/sau rồi chọn None: vùng sáng bẹt thành mảng trắng không còn chi tiết. ACES giữ lại đúng phần chi tiết đó.",
     title: "Tone mapping + LUT color grading",
     toneMapping: "Tone mapping",
     exposure: "Exposure",
@@ -28,6 +29,7 @@ const LABELS = {
     lutBleach: "Bleach bypass",
   },
   en: {
+    hint: "Turn on the split view and pick None: the highlights flatten into featureless white. ACES is what keeps that detail alive.",
     title: "Tone Mapping + LUT Color Grading",
     toneMapping: "Tone mapping",
     exposure: "Exposure",
@@ -123,6 +125,7 @@ export default function ColorGradingLutTonemappingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

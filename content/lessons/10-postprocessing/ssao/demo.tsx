@@ -16,6 +16,7 @@ import { Scene } from "./scene";
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang chế độ chỉ AO rồi kéo kernelRadius: bóng tiếp xúc lan rộng ra khỏi chỗ hai mặt thật sự chạm nhau — đó là lúc bán kính vượt quá hình học.",
     title: "SSAO: bậc thang & mái vòm — bóng tiếp xúc từ depth buffer",
     radius: "kernelRadius (view-space)",
     bias: "minDistance (bias chống acne)",
@@ -25,6 +26,7 @@ const LABELS = {
     enabled: "Bật SSAO",
   },
   en: {
+    hint: "Switch to AO-only and drag kernelRadius: the contact shading spreads beyond where surfaces actually meet — that is the radius outgrowing the geometry.",
     title: "SSAO: Steps & Arches — Contact Shadows From a Depth Buffer",
     radius: "kernelRadius (view-space)",
     bias: "minDistance (anti-acne bias)",
@@ -121,6 +123,7 @@ export default function SsaoDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "radius", label: L.radius, min: 0.05, max: 2, step: 0.05, defaultValue: 0.6 },

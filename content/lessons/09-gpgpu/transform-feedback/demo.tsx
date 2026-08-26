@@ -14,12 +14,14 @@ import renderFragmentSource from "./render.frag";
 
 const LABELS = {
   vi: {
+    hint: "Tạm dừng rồi chạy lại: quỹ đạo tiếp nối liền mạch dù không có texture trạng thái nào. Vertex shader ghi thẳng ngược vào buffer.",
     title: "Transform feedback: quỹ đạo particle không qua texture nào cả",
     strength: "Lực hút",
     count: "Số particle",
     paused: "Tạm dừng",
   },
   en: {
+    hint: "Pause and resume: the trajectories continue seamlessly with no state texture anywhere. The vertex shader writes straight back into a buffer.",
     title: "Transform Feedback: Particle Orbits With No Texture at All",
     strength: "Attractor strength",
     count: "Particle count",
@@ -287,6 +289,7 @@ export default function TransformFeedbackDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",

@@ -22,6 +22,7 @@ import {
 
 const LABELS = {
   vi: {
+    hint: "Tăng số particle rồi bám lấy số JS/frame ở cột CPU: nó leo tuyến tính, còn cột GPU thì gần như không nhúc nhích.",
     title: "CPU chạm tay mỗi frame, so với GPU không chạm tay",
     count: "Số particle",
     cpu: "CPU — vòng lặp JS + needsUpdate",
@@ -29,6 +30,7 @@ const LABELS = {
     jsTime: "JS/frame",
   },
   en: {
+    hint: "Raise the particle count and watch the JS/frame figure on the CPU side: it climbs linearly, while the GPU side barely moves.",
     title: "CPU Touches Every Frame, vs. GPU Touches Never",
     count: "Particle count",
     cpu: "CPU — JS loop + needsUpdate",
@@ -195,6 +197,7 @@ export default function WhyParticlesLiveOnGpuDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         {

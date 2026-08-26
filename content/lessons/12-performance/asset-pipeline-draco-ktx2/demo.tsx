@@ -17,6 +17,7 @@ import {
 
 const LABELS = {
   vi: {
+    hint: "Đẩy kích thước texture lên: cột texture nuốt trọn cột hình học. Draco nén thứ thường đã là phần nhỏ nhất trong tổng.",
     title: "Máy tính pipeline nén: Draco + KTX2",
     vertexCount: "Số vertex",
     textureCount: "Số texture",
@@ -33,6 +34,7 @@ const LABELS = {
     errorPrefix: "Lỗi parse glTF",
   },
   en: {
+    hint: "Push the texture size up: the texture column swallows the geometry column. Draco compresses what is usually already the smaller half of the total.",
     title: "Compression Pipeline Calculator: Draco + KTX2",
     vertexCount: "Vertex count",
     textureCount: "Texture count",
@@ -276,6 +278,7 @@ export default function AssetPipelineDracoKtx2Demo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

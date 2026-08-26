@@ -9,6 +9,7 @@ import { PlasticScene, type PlasticToggles } from "./plastic-scene";
 
 const LABELS = {
   vi: {
+    hint: "Bật riêng từng cách sửa theo thứ tự: cách đầu tiên đã ăn phần lớn cảm giác nhựa. Đó thường là biến thiên roughness, không phải IBL.",
     title: "Chẩn đoán cảnh 'nhựa'",
     preset: "Preset",
     presetCustom: "Tuỳ chỉnh (theo từng toggle)",
@@ -23,6 +24,7 @@ const LABELS = {
     tonemapFix: "7. Tone mapping",
   },
   en: {
+    hint: "Enable the fixes one at a time in order: the first one already takes most of the plastic look away. That is usually roughness variation, not IBL.",
     title: "Diagnose the 'Plastic' Scene",
     preset: "Preset",
     presetCustom: "Custom (per toggle)",
@@ -86,6 +88,7 @@ export default function WhyAssetsLookLikePlasticDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

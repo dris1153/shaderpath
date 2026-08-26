@@ -27,6 +27,7 @@ const CPU_COMPARE_COUNT = 4096;
 
 const LABELS = {
   vi: {
+    hint: "Bật so sánh CPU: đường GPU giữ nguyên fps khi tăng số instance, còn đường CPU thì tụt dù số instance của nó bị giữ cố định.",
     title: "Instancing GPGPU: đọc texture trạng thái ngay trong vertex shader",
     count: "Số instance (đường GPU)",
     orient: "Xoay theo hướng vận tốc",
@@ -39,6 +40,7 @@ const LABELS = {
       `${n.toLocaleString("vi-VN")} instance · ${Math.round(fps)} fps · CPU update: ${cpuMs.toFixed(2)} ms/frame`,
   },
   en: {
+    hint: "Turn on the CPU comparison: the GPU path holds its fps as the instance count climbs, while the CPU path sags even with its own count pinned.",
     title: "GPGPU Instancing: Reading the State Texture Right in the Vertex Shader",
     count: "Instance count (GPU path)",
     orient: "Orient along velocity",
@@ -334,6 +336,7 @@ export default function InstancingAMillionObjectsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

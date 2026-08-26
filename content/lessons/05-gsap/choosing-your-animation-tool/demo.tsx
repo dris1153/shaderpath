@@ -39,7 +39,6 @@ function ToolStage() {
   const { values } = useDemoContext();
   const locale = useLocale();
   const loc: "vi" | "en" = locale === "en" ? "en" : "vi";
-  const L = pick(LABELS, loc);
   const tool = stringOf(values, "tool", "css") as ToolKind;
   const cardLabels = pick(CARD_LABELS, loc);
 

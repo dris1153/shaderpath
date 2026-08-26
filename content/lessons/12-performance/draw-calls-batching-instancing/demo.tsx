@@ -12,6 +12,7 @@ import { numberOf, stringOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "So merged với instanced ở cùng số object: số tam giác y hệt nhau, số render.calls thì không. Draw call mới là thứ tính tiền, không phải tam giác.",
     title: "Cùng một cảnh, 3 cách vẽ: individual / merged / instanced",
     mode: "Cách vẽ",
     modeOptions: [
@@ -26,6 +27,7 @@ const LABELS = {
     fps: "fps",
   },
   en: {
+    hint: "Compare merged against instanced at the same object count: the triangle totals match, the render.calls do not. Draw calls are what you pay for, not triangles.",
     title: "Same Scene, 3 Ways: Individual / Merged / Instanced",
     mode: "Draw mode",
     modeOptions: [
@@ -238,6 +240,7 @@ export default function DrawCallsBatchingInstancingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

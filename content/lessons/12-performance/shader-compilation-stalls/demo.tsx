@@ -15,6 +15,7 @@ import { createVariantMaterial } from "./variant-material";
 
 const LABELS = {
   vi: {
+    hint: "Thêm mesh khi chưa pre-warm rồi nhìn hitch gần nhất: cú khựng rơi đúng vào frame đầu tiên mà biến thể đó được vẽ, không phải lúc bạn tạo material.",
     title: "Stall Theater — thêm biến thể shader chưa từng compile",
     poolSize: "Kích thước pool biến thể",
     prewarm: "Pre-warm trước (renderer.compile)",
@@ -23,6 +24,7 @@ const LABELS = {
     programs: "renderer.info.programs",
   },
   en: {
+    hint: "Add a mesh without pre-warming and watch the last hitch: the stall lands on the first frame that variant is drawn, not when you created the material.",
     title: "Stall Theater — Adding a Never-Before-Compiled Shader Variant",
     poolSize: "Variant pool size",
     prewarm: "Pre-warm ahead (renderer.compile)",
@@ -252,6 +254,7 @@ export default function ShaderCompilationStallsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

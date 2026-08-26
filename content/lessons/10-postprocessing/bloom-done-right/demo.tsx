@@ -16,6 +16,7 @@ import { useDisposable } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
+    hint: "Tắt buffer HDR rồi kéo threshold: mọi vùng sáng đều bị kẹp về đúng 1.0, nên bloom không còn phân biệt được đèn với tờ giấy trắng.",
     title: "Bloom đúng cách: HDR, threshold, và bloom bị lạm dụng",
     threshold: "Threshold (ngưỡng đủ sáng)",
     strength: "Strength (cường độ)",
@@ -23,6 +24,7 @@ const LABELS = {
     hdr: "Buffer HDR (half-float) — tắt để xem bị clip",
   },
   en: {
+    hint: "Turn the HDR buffer off and drag the threshold: every bright area clips at exactly 1.0, so bloom can no longer tell a lamp from a sheet of white paper.",
     title: "Bloom Done Right: HDR, Threshold, and Overused Glow",
     threshold: "Threshold (bright-enough cutoff)",
     strength: "Strength (intensity)",
@@ -189,6 +191,7 @@ export default function BloomDoneRightDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",

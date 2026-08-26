@@ -21,6 +21,7 @@ type Term = "emission" | "diffuse" | "specular" | "combined";
 
 const LABELS = {
   vi: {
+    hint: "Cô lập Le rồi tăng số đèn mẫu: nó không đổi chút nào. Phát xạ là số hạng duy nhất trong phương trình không phải một tích phân.",
     title: "Giải phẫu phương trình: cô lập từng số hạng của Lo",
     term: "Số hạng cô lập",
     optEmission: "Le — chỉ phát xạ",
@@ -38,6 +39,7 @@ const LABELS = {
             : `Lo = Le + ∫Ω fr·Li·(n·ωi) dωi   (≈ tổng N=${n} mẫu)`,
   },
   en: {
+    hint: "Isolate Le and raise the sample light count: nothing changes at all. Emission is the one term in the equation that is not an integral.",
     title: "Equation Anatomy: Isolating Each Term of Lo",
     term: "Isolated term",
     optEmission: "Le — emission only",
@@ -155,6 +157,7 @@ export default function RenderingEquationIntuitionDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

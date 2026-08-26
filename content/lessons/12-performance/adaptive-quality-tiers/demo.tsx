@@ -20,6 +20,7 @@ const HOLD_SAMPLES = 3; // consecutive ~250ms samples required before switching
 
 const LABELS = {
   vi: {
+    hint: "Chọn Auto rồi đẩy tải giả lập lên: watchdog hạ tier xuống rồi nâng lại. Nó phản ứng theo frame time đo được, không theo tên thiết bị.",
     title: "Phòng Quality Tier",
     mode: "Tier",
     low: "Thấp",
@@ -34,6 +35,7 @@ const LABELS = {
     autoTag: " (auto)",
   },
   en: {
+    hint: "Pick Auto and push the simulated load up: the watchdog steps the tier down and later back up. It reacts to measured frame time, never to a device name.",
     title: "Quality Tier Lab",
     mode: "Tier",
     low: "Low",
@@ -135,6 +137,7 @@ export default function AdaptiveQualityTiersDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

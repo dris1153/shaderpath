@@ -7,6 +7,7 @@ import { ParticleQuadComparePanel } from "./particle-quad-compare";
 
 const LABELS = {
   vi: {
+    hint: "Bật overdraw visualization rồi đổi quad sang Loose: vùng trắng nở ra dù hạt trông y như cũ. Phần bạn vừa trả tiền là phần trong suốt hoàn toàn.",
     title: "Phòng thí nghiệm Overdraw",
     count: "Số lớp trong suốt",
     viz: "Overdraw visualization (additive-white)",
@@ -17,6 +18,7 @@ const LABELS = {
       "Đo trên máy dev — desktop giấu đi cái mà một điện thoại tầm trung sẽ CẢM NHẬN thật (nhiệt, tụt khung hình, hao pin). Đây không phải benchmark mobile, chỉ là cách nhìn thấy cơ chế bằng mắt trên máy bạn đang có.",
   },
   en: {
+    hint: "Turn on the overdraw visualisation and switch the quad to Loose: the white areas swell though the particles look identical. What you just paid for is fully transparent.",
     title: "Overdraw Laboratory",
     count: "Transparent layer count",
     viz: "Overdraw visualization (additive-white)",
@@ -35,6 +37,7 @@ export default function MobileTileGpusAndOverdrawDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={4 / 3}
       controls={[
         { kind: "number", key: "count", label: L.count, min: 1, max: 40, step: 1, defaultValue: 8 },
