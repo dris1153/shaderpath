@@ -142,7 +142,9 @@ void main() {
 
   float shape = smoothstep(0.02, 0.0, abs(folded.x - 0.18) - 0.05 * sin(folded.y * 14.0 + uTime));
   vec3 color = 0.5 + 0.5 * cos(r * 6.0 - uTime + vec3(0.0, 2.0, 4.0));
-  fragColor = vec4(color * shape + 0.03, 1.0);
+  // @polarBackdrop
+  vec3 bg = 0.05 + 0.05 * cos(r * 5.0 + vec3(0.0, 2.0, 4.0));
+  fragColor = vec4(mix(bg, color, shape), 1.0);
 }
 `,
   },

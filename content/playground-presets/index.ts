@@ -3,8 +3,10 @@ import { BASICS_PRESETS } from "./basics";
 import { COLOR_PRESETS } from "./color";
 import { localizeSource } from "./comments";
 import { FEEDBACK_PRESETS } from "./feedback";
+import { FRACTAL_PRESETS } from "./fractal";
 import { IMAGE_FX_PRESETS } from "./image-fx";
 import { NOISE_PRESETS } from "./noise";
+import { RAYMARCH_LIT_PRESETS } from "./raymarch-lit";
 import { RAYMARCH_PRESETS } from "./raymarch";
 import type { PlaygroundPreset, PlaygroundPresetGroup } from "./types";
 
@@ -43,7 +45,14 @@ export const PRESET_GROUPS: PlaygroundPresetGroup[] = [
   {
     id: "raymarching",
     label: { vi: "Raymarching 3D", en: "3D Raymarching" },
-    presets: RAYMARCH_PRESETS,
+    // Two files, one group: raymarch.ts covers the marching itself,
+    // raymarch-lit.ts what you do once a ray has landed.
+    presets: [...RAYMARCH_PRESETS, ...RAYMARCH_LIT_PRESETS],
+  },
+  {
+    id: "fractal",
+    label: { vi: "Fractal", en: "Fractals" },
+    presets: FRACTAL_PRESETS,
   },
 ];
 

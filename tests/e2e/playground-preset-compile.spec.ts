@@ -16,6 +16,15 @@ import { applyShader, BROKEN } from "./playground-helpers";
 /** Widest span between the darkest and brightest sample, per channel.
  *  A compile-clean shader that paints one flat colour scores 0 here. */
 async function colourSpread(page: import("@playwright/test").Page) {
+  // compile-ok fires when the program links, which can be a frame or two
+  // before the loop has drawn with it. Screenshotting straight away caught the
+  // clear colour and failed a preset that renders perfectly well.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  );
   const shot = await page.getByTestId("shader-canvas").screenshot();
   // Decoding in the browser rather than in Node: the canvas has no
   // preserveDrawingBuffer, so readback has to go through a real screenshot,
