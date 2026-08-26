@@ -30,11 +30,14 @@
     "noAccount": "No account yet?"
   },
   "home": {
+    "heroBadge": "Raw WebGL · hand-written shader",
     "headline": "Whatever is moving behind this text, you will be able to write it.",
     "lede": "{lessons} lessons, from the dot product to raymarching and GPGPU. One mental model each, a demo you can adjust without leaving the page, and an exercise with a worked answer.",
     "ctaStart": "Start with the first lesson",
     "ctaPlayground": "Open the playground",
     "readFreely": "Read freely — only progress needs an account.",
+    "demosLabel": "A few things you will build",
+    "thumbMeta": "track {track} · {count, plural, one {# lesson} other {# lessons}}",
     "ladderTitle": "The whole path",
     "ladderMeta": "{tracks} tracks · {modules} modules · ~{hours} hours",
     "trackLessons": "{count, plural, one {# lesson} other {# lessons}}",
