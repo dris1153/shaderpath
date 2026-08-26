@@ -24,6 +24,7 @@ const FADE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Đặt fade về tuyến tính: các cạnh ô lộ ra thành nếp gấp rõ. Chính hàm fade, không phải noise, quyết định chuyện đó.",
     title: "Value noise vs Gradient noise",
     field: "Loại noise",
     value: "Value noise",
@@ -36,6 +37,7 @@ const LABELS = {
     gridLines: "Hiện đường lưới",
   },
   en: {
+    hint: "Set the fade to linear: the cell edges show up as visible creases. It is the fade function, not the noise, that decides this.",
     title: "Value Noise vs Gradient Noise",
     field: "Noise type",
     value: "Value noise",
@@ -93,6 +95,7 @@ export default function ValueAndGradientNoiseDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

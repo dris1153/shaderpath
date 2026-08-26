@@ -18,6 +18,7 @@ const HASH_TYPE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Đẩy phóng toạ độ lên cao với hash sin/fract: hoa văn lặp lại lộ ra. Đó không còn là noise, mà là giới hạn độ chính xác của sin.",
     title: "So sánh hash: sin/fract vs không dùng sin",
     hashType: "Kiểu hash",
     sin: "sin/fract (kinh điển)",
@@ -26,6 +27,7 @@ const LABELS = {
     seed: "Seed",
   },
   en: {
+    hint: "Push the coordinate zoom up with the sin/fract hash: repeating patterns surface. That is no longer noise, that is sin running out of precision.",
     title: "Hash Comparison: sin/fract vs Sine-Free",
     hashType: "Hash type",
     sin: "sin/fract (classic)",
@@ -78,6 +80,7 @@ export default function HashFunctionsOnGpuDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

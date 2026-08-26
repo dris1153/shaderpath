@@ -19,6 +19,7 @@ const MODE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Mở chế độ so sánh phân kỳ: dòng curl không hề dồn đống hay để lại lỗ trống, còn dòng thường thì có. Đó là ý nghĩa của phân kỳ bằng 0.",
     title: "Curl noise & flow field",
     mode: "Chế độ",
     potential: "Trường tiềm năng (FBM)",
@@ -29,6 +30,7 @@ const LABELS = {
     animate: "Chuyển động theo thời gian",
   },
   en: {
+    hint: "Open the divergence comparison: the curl field never piles up or leaves holes, while a plain field does. That is what zero divergence buys you.",
     title: "Curl Noise & Flow Field",
     mode: "Mode",
     potential: "Potential field (FBM)",
@@ -90,6 +92,7 @@ export default function CurlNoiseFlowFieldsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

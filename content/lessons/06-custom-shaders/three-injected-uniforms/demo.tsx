@@ -16,12 +16,14 @@ import vertexShader from "./injected-uniforms-orb.vert";
 
 const LABELS = {
   vi: {
+    hint: "Tắt hết chỉ chừa rim: viền vẫn sáng theo góc nhìn dù bạn không khai báo uniform nào cho camera — three tự bơm cameraPosition vào.",
     title: "Ba nguồn màu trên một orb: rim + pulse + texture",
     rim: "Rim (cameraPosition, built-in)",
     pulse: "Pulse (uTime, tự khai báo)",
     tex: "Texture (uNoiseMap, tự khai báo)",
   },
   en: {
+    hint: "Turn everything off but rim: the edge still lights up as you orbit, though you declared no camera uniform — three injects cameraPosition for you.",
     title: "Three Color Sources on One Orb: Rim + Pulse + Texture",
     rim: "Rim (cameraPosition, built-in)",
     pulse: "Pulse (uTime, custom)",
@@ -106,6 +108,7 @@ export default function ThreeInjectedUniformsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "rim", label: L.rim, min: 0, max: 2, step: 0.1, defaultValue: 1 },

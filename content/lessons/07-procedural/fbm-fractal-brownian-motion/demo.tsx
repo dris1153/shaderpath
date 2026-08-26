@@ -17,6 +17,7 @@ import vertexShader from "./fbm.vert";
 
 const LABELS = {
   vi: {
+    hint: "Giữ nguyên số octave rồi chỉ kéo gain: chi tiết vẫn nằm nguyên chỗ cũ, chỉ đậm nhạt đi. Lacunarity mới là thứ dời chúng.",
     title: "FBM explorer",
     octaves: "Số octave",
     lacunarity: "Lacunarity",
@@ -28,6 +29,7 @@ const LABELS = {
     animate: "Chuyển động theo thời gian",
   },
   en: {
+    hint: "Hold the octave count and drag only gain: the detail stays exactly where it was, just louder or quieter. Lacunarity is what moves it.",
     title: "FBM Explorer",
     octaves: "Octaves",
     lacunarity: "Lacunarity",
@@ -93,6 +95,7 @@ export default function FbmDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

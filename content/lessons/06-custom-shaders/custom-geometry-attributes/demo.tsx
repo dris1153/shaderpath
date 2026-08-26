@@ -16,6 +16,7 @@ import vertexShader from "./attribute-sphere.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật tô màu theo attribute: mỗi đỉnh mang sẵn con số riêng của nó, và số đó có mặt từ trước khi shader chạy — không phải tính ra trong shader.",
     title: "Attribute tuỳ biến trên mặt cầu",
     amplitude: "Biên độ dịch chuyển",
     mode: "Hướng dịch chuyển",
@@ -25,6 +26,7 @@ const LABELS = {
     regenerate: "Đổi seed ngẫu nhiên",
   },
   en: {
+    hint: "Turn on colour-by-attribute: every vertex already carries its own number, and that number existed before the shader ran — it was not computed there.",
     title: "Custom Attributes on a Sphere",
     amplitude: "Displacement amplitude",
     mode: "Displacement direction",
@@ -153,6 +155,7 @@ export default function CustomGeometryAttributesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

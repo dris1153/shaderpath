@@ -16,6 +16,7 @@ import vertexShader from "./wave.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đổi màu sóng rồi so hai bên: cùng một kết quả, nhưng bên drei không cần ref nào cả — uniform đã thành prop React.",
     title: "ShaderMaterial thuần vs helper shaderMaterial của drei",
     plainLabel: "Thuần — ref + useFrame",
     dreiLabel: "drei — uniform là prop",
@@ -25,6 +26,7 @@ const LABELS = {
     green: "Xanh lá",
   },
   en: {
+    hint: "Change the wave colour and compare the two sides: identical result, but the drei side needs no ref at all — the uniform became a React prop.",
     title: "Plain ShaderMaterial vs drei's shaderMaterial Helper",
     plainLabel: "Plain — ref + useFrame",
     dreiLabel: "drei — uniform as a prop",
@@ -170,6 +172,7 @@ export default function DreiShaderMaterialHelperDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         {

@@ -13,6 +13,7 @@ import vertexShader from "./cloud-volume.vert";
 
 const LABELS = {
   vi: {
+    hint: "Hạ số bước march xuống rồi tắt jitter: banding hiện thành từng lớp vỏ hành. Bật jitter lại — cùng số bước đó, nhiễu thay cho vân.",
     title: "Cơ bản render thể tích",
     steps: "Số bước march",
     densityMul: "Mật độ mây",
@@ -20,6 +21,7 @@ const LABELS = {
     jitter: "Jitter chống banding",
   },
   en: {
+    hint: "Lower the march steps and turn jitter off: the banding shows up as onion shells. Turn jitter back on — same step count, noise instead of rings.",
     title: "Volumetric Rendering Basics",
     steps: "Step count",
     densityMul: "Cloud density",
@@ -76,6 +78,7 @@ export default function VolumetricRenderingBasicsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

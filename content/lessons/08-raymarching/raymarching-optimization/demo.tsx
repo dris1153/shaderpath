@@ -14,6 +14,7 @@ import vertexShader from "./raymarch-optimize.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật heatmap rồi bật bounding volume: vùng nóng nhất không phải bề mặt, mà là khoảng trống sát rìa vật thể — đó là chỗ tia phải đi từng bước tí một.",
     title: "Bounding volume, relaxation & epsilon: đo chi phí thật",
     bounding: "Bounding volume (ray-box early-out)",
     relax: "Hệ số over-relaxation",
@@ -25,6 +26,7 @@ const LABELS = {
         : `~${avg.toFixed(1)} bước/pixel (ước lượng) · ${fps.toFixed(0)} fps`,
   },
   en: {
+    hint: "Turn on the heatmap, then the bounding volume: the hottest region is not the surface but the empty space grazing the silhouette — that is where rays creep.",
     title: "Bounding Volumes, Relaxation & Epsilon: Real Cost",
     bounding: "Bounding volume (ray-box early-out)",
     relax: "Over-relaxation factor",
@@ -176,6 +178,7 @@ export default function RaymarchingOptimizationDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "bounding", label: L.bounding, defaultValue: true },
         { kind: "number", key: "relax", label: L.relax, min: 1, max: 2.2, step: 0.05, defaultValue: 1 },

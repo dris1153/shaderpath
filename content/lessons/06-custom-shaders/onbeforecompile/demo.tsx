@@ -14,12 +14,14 @@ import colorBand from "./color-band.glsl";
 
 const LABELS = {
   vi: {
+    hint: "Kéo độ xoắn lên cao trong khi vẫn bật đổ bóng: hình vặn đi mà bóng vặn theo đúng như vậy. Lighting gốc của three vẫn lo phần đó, bạn không hề viết lại.",
     title: "onBeforeCompile — vặn xoắn MeshStandardMaterial, giữ nguyên lighting/shadow",
     twist: "Độ xoắn (uTwist)",
     effect: "Hiệu ứng onBeforeCompile",
     shadows: "Đổ bóng",
   },
   en: {
+    hint: "Crank the twist up with shadows still on: the shape distorts and its shadow distorts with it. The original three lighting still handles that; you never rewrote it.",
     title: "onBeforeCompile — Twisting MeshStandardMaterial Without Losing Lighting/Shadows",
     twist: "Twist amount (uTwist)",
     effect: "onBeforeCompile effect",
@@ -147,6 +149,7 @@ export default function OnBeforeCompileDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 10}
       controls={[
         {

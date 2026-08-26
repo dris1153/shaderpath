@@ -17,6 +17,7 @@ type VisMode = (typeof VIS_MODES)[number];
 
 const LABELS = {
   vi: {
+    hint: "Chọn chế độ normal: mặt hướng lên ra xanh lá, hướng sang phải ra đỏ. Phép *0.5+0.5 đưa khoảng [-1,1] về [0,1] để nhìn được.",
     title: "ShaderMaterial trên torus knot: tô theo uv / normal / mix",
     mode: "Chế độ hiển thị",
     modeUv: "uv (vUv làm r, g)",
@@ -24,6 +25,7 @@ const LABELS = {
     modeMix: "mix (uv + normal + ánh sáng giả)",
   },
   en: {
+    hint: "Pick normal mode: faces pointing up come out green, faces pointing right come out red. The *0.5+0.5 maps [-1,1] into [0,1] so you can see it.",
     title: "ShaderMaterial on a Torus Knot: Coloring by uv / normal / mix",
     mode: "Visualization mode",
     modeUv: "uv (vUv as r, g)",
@@ -83,6 +85,7 @@ export default function ShaderMaterialVsRawDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

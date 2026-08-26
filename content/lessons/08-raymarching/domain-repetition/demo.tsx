@@ -23,6 +23,7 @@ const AXIS_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang lặp hữu hạn: cảnh không hề nặng thêm dù có bao nhiêu bản sao — chúng chưa bao giờ tồn tại, chỉ là toạ độ bị gấp lại.",
     title: "Lặp không gian (domain repetition)",
     mode: "Chế độ lặp",
     infinite: "Vô hạn (mod)",
@@ -35,6 +36,7 @@ const LABELS = {
     xyz: "Toàn bộ xyz (khối)",
   },
   en: {
+    hint: "Switch to finite repetition: the scene costs no more however many copies there are — they never existed, the coordinates were just folded.",
     title: "Domain Repetition",
     mode: "Repeat mode",
     infinite: "Infinite (mod)",
@@ -100,6 +102,7 @@ export default function DomainRepetitionDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

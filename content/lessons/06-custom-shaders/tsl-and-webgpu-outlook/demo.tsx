@@ -13,6 +13,7 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Xem dòng backend: cùng đúng đoạn TSL đó, tuỳ máy mà nó biên dịch ra WGSL hay rơi về GLSL. Bạn chỉ viết một lần.",
     title: "TSL trực tiếp: một colorNode, hai backend",
     freq: "Tần số sọc",
     sourceHeading: "TSL source đang chạy (material.colorNode)",
@@ -24,6 +25,7 @@ const LABELS = {
       "WebGPURenderer không khởi tạo được ở trình duyệt này — hiển thị màu tĩnh thay thế",
   },
   en: {
+    hint: "Read the backend line: that same piece of TSL compiles to WGSL or falls back to GLSL depending on the machine. You wrote it once.",
     title: "TSL live: one colorNode, two backends",
     freq: "Stripe frequency",
     sourceHeading: "Live TSL source (material.colorNode)",
@@ -175,6 +177,7 @@ export default function TslWebgpuOutlookDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

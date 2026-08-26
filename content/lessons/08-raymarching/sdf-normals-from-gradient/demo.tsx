@@ -24,6 +24,7 @@ const SHADING_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Kéo epsilon xuống thật nhỏ: normal bắt đầu lấm tấm nhiễu. Đây là phép sai phân số học, và nó có đáy sàn về độ chính xác.",
     title: "Normal từ gradient SDF",
     technique: "Kỹ thuật tính normal",
     central: "Central diff (6 mẫu)",
@@ -35,6 +36,7 @@ const LABELS = {
     full: "Rig 3 đèn (Lambert + Blinn-Phong + fill)",
   },
   en: {
+    hint: "Drag epsilon down very small: the normals start to speckle. This is a numeric difference, and it has a precision floor.",
     title: "SDF Normals from the Gradient",
     technique: "Normal technique",
     central: "Central diff (6 taps)",
@@ -95,6 +97,7 @@ export default function SdfNormalsFromGradientDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

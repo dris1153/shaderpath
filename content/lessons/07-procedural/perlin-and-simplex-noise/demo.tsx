@@ -17,6 +17,7 @@ import vertexShader from "./perlin-simplex.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đổi qua lại giữa Perlin và Simplex ở cùng tỉ lệ: Perlin để lộ hơi hướng lưới vuông theo trục, Simplex thì không.",
     title: "Perlin vs Simplex noise",
     variant: "Thuật toán",
     perlin: "Perlin",
@@ -25,6 +26,7 @@ const LABELS = {
     animate: "Chuyển động theo thời gian",
   },
   en: {
+    hint: "Flip between Perlin and Simplex at the same scale: Perlin leaks a faint square grid along the axes; Simplex does not.",
     title: "Perlin vs Simplex Noise",
     variant: "Algorithm",
     perlin: "Perlin",
@@ -82,6 +84,7 @@ export default function PerlinSimplexNoiseDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

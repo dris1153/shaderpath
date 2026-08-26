@@ -19,6 +19,7 @@ const MODE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "So scroll với slice trong khung song song: scroll trượt cả hoa văn đi một hướng, slice thì đứng yên tại chỗ mà biến hoá.",
     title: "Scroll vs slice vs loop: 3 cách animate noise",
     mode: "Chế độ",
     scroll: "Scroll (noise 2D)",
@@ -29,6 +30,7 @@ const LABELS = {
     sideBySide: "So sánh song song: scroll | slice",
   },
   en: {
+    hint: "Compare scroll against slice in the side-by-side pane: scroll drags the whole pattern one way, slice stays put and morphs in place.",
     title: "Scroll vs Slice vs Loop: 3 Ways to Animate Noise",
     mode: "Mode",
     scroll: "Scroll (2D noise)",
@@ -90,6 +92,7 @@ export default function NoiseIn3d4dTimeDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

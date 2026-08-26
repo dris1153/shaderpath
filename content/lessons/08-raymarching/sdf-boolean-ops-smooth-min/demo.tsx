@@ -20,6 +20,7 @@ const OP_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Kéo k từ 0 lên: chỗ nối chuyển từ cạnh gãy sang khối liền. Không hình nào bị sửa cả — chỉ phép min được làm mượt.",
     title: "Boolean ops trên SDF: union, subtract, intersect, smooth min",
     op: "Phép toán",
     union: "Union (min)",
@@ -31,6 +32,7 @@ const LABELS = {
     showSeparately: "Hiện riêng từng hình (bỏ qua phép toán)",
   },
   en: {
+    hint: "Drag k up from 0: the joint goes from a hard crease to one continuous mass. Neither shape was edited — only the min was smoothed.",
     title: "SDF Boolean Ops: Union, Subtract, Intersect, Smooth Min",
     op: "Operation",
     union: "Union (min)",
@@ -94,6 +96,7 @@ export default function SdfBooleanOpsSmoothMinDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

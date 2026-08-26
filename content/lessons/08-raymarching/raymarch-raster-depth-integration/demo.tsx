@@ -15,11 +15,13 @@ import vertexShader from "./sdf-object.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật naive overlay: hình raymarch nổi đè lên mesh dù rõ ràng đang ở phía sau. Không ghi gl_FragDepth thì depth buffer không hề biết nó tồn tại.",
     title: "Raymarch + rasterized depth: occlusion hai chiều",
     naive: "Naive overlay (bỏ qua depth mesh)",
     writeDepth: "Ghi gl_FragDepth từ điểm chạm SDF",
   },
   en: {
+    hint: "Turn on the naive overlay: the raymarched shape floats over the mesh even when it is clearly behind it. Without writing gl_FragDepth the depth buffer never knew it was there.",
     title: "Raymarch + Rasterized Depth: Two-Way Occlusion",
     naive: "Naive overlay (ignore mesh depth)",
     writeDepth: "Write gl_FragDepth from the SDF hit",
@@ -131,6 +133,7 @@ export default function RaymarchRasterDepthIntegrationDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "naive", label: L.naive, defaultValue: false },
         { kind: "boolean", key: "writeDepth", label: L.writeDepth, defaultValue: true },

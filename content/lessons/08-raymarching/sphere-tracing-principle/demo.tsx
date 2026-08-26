@@ -13,6 +13,7 @@ import vertexShader from "./sphere-tracing.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật heatmap rồi hạ số bước tối đa: đường bao vật thể tối đi trước tiên, vì tia lướt sát rìa mới là tia cần nhiều bước nhất.",
     title: "Vòng lặp sphere tracing",
     maxSteps: "Số bước tối đa (maxSteps)",
     epsilon: "Ngưỡng dừng (epsilon)",
@@ -20,6 +21,7 @@ const LABELS = {
     orbit: "Góc camera quanh cảnh",
   },
   en: {
+    hint: "Turn on the heatmap and lower the max steps: the silhouette darkens first, because rays grazing the edge are the ones that need the most steps.",
     title: "The Sphere Tracing Loop",
     maxSteps: "Max steps",
     epsilon: "Stopping threshold (epsilon)",
@@ -72,6 +74,7 @@ export default function SphereTracingPrincipleDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

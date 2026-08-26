@@ -20,6 +20,7 @@ const PRIMITIVE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Bật contour mặt cắt: các vòng đồng mức cho thấy hàm trả về khoảng cách ở khắp mọi nơi, không riêng gì trên bề mặt.",
     title: "SDF nguyên thuỷ & phép biến đổi",
     primitive: "Hình nguyên thuỷ",
     sphere: "Sphere",
@@ -31,6 +32,7 @@ const LABELS = {
     rotation: "Xoay quanh trục Y",
   },
   en: {
+    hint: "Turn on the contour slice: the level rings show the function returns a distance everywhere, not only on the surface.",
     title: "SDF Primitives & Transforms",
     primitive: "Primitive",
     sphere: "Sphere",
@@ -88,6 +90,7 @@ export default function SdfPrimitivesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

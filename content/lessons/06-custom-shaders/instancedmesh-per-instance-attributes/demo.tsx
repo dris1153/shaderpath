@@ -16,6 +16,7 @@ const SPREAD = 6;
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang vẽ dạng mesh riêng lẻ rồi bám lấy số draw call: nó nhảy từ 1 lên bằng số object, còn fps thì rơi theo.",
     title: "Field 2000 instance: InstancedMesh vs mesh riêng lẻ",
     count: "Số lượng",
     animate: "Animate (bob theo aPhase)",
@@ -23,6 +24,7 @@ const LABELS = {
     readout: (calls: number, fps: number) => `${calls} draw call · ${Math.round(fps)} fps`,
   },
   en: {
+    hint: "Switch to individual meshes and watch the draw call count: it jumps from 1 to one per object, and the fps follows it down.",
     title: "2000-Instance Field: InstancedMesh vs. Individual Meshes",
     count: "Count",
     animate: "Animate (bob by aPhase)",
@@ -197,6 +199,7 @@ export default function InstancedMeshPerInstanceAttributesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

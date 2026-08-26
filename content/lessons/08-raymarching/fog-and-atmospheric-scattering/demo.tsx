@@ -13,6 +13,7 @@ import vertexShader from "./fog-terrain.vert";
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang fog theo độ cao rồi kéo độ giảm: đỉnh núi ló ra khỏi lớp mù trong khi chân núi vẫn chìm — fog đều không làm được vậy.",
     title: "Fog & tán xạ khí quyển",
     density: "Mật độ fog",
     heightFalloff: "Độ giảm theo độ cao (height fog)",
@@ -22,6 +23,7 @@ const LABELS = {
     height: "Theo độ cao",
   },
   en: {
+    hint: "Switch to height fog and drag the falloff: peaks break out of the haze while their bases stay buried — uniform fog can never do that.",
     title: "Fog & Atmospheric Scattering",
     density: "Fog density",
     heightFalloff: "Height falloff (height fog)",
@@ -82,6 +84,7 @@ export default function FogAndAtmosphericScatteringDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

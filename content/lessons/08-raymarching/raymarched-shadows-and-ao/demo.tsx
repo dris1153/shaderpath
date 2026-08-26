@@ -19,6 +19,7 @@ const SHADOW_MODE_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Đổi từ bóng cứng sang bóng mềm rồi kéo k: độ mềm thay đổi theo khoảng cách tới vật cản, chứ không phải một lượng làm mờ cố định.",
     title: "Bóng mềm & AO trong raymarch",
     shadowMode: "Kiểu bóng",
     none: "Không bóng",
@@ -30,6 +31,7 @@ const LABELS = {
     lightAngle: "Góc mặt trời",
   },
   en: {
+    hint: "Move from hard to soft shadows and drag k: the softness scales with distance to the occluder, rather than being one fixed amount of blur.",
     title: "Raymarched Soft Shadows & AO",
     shadowMode: "Shadow mode",
     none: "None",
@@ -94,6 +96,7 @@ export default function RaymarchedShadowsAndAoDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

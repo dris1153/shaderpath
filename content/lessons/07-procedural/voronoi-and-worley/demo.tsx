@@ -26,6 +26,7 @@ const METRIC_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Đưa jitter về 0: mọi ô thành lưới đều tăm tắp. Toàn bộ vẻ hữu cơ của Voronoi nằm ở chỗ điểm được xê dịch ngẫu nhiên trong ô.",
     title: "Voronoi & Worley noise",
     mode: "Chế độ",
     f1: "F1 (gần nhất)",
@@ -40,6 +41,7 @@ const LABELS = {
     animate: "Điểm chuyển động theo thời gian",
   },
   en: {
+    hint: "Take jitter to 0: every cell snaps into a perfect grid. The entire organic look of Voronoi comes from nudging that point around inside its cell.",
     title: "Voronoi & Worley Noise",
     mode: "Mode",
     f1: "F1 (nearest)",
@@ -106,6 +108,7 @@ export default function VoronoiAndWorleyDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

@@ -19,6 +19,7 @@ const LAYERS_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Bật tô màu theo giá trị trung gian: hình cuối cùng là kết quả của việc lấy mẫu noise ở một chỗ khác, chứ bản thân noise không hề đổi.",
     title: "Domain warping: méo toạ độ trước khi lấy mẫu",
     warpStrength: "Cường độ warp",
     layers: "Số lớp warp",
@@ -29,6 +30,7 @@ const LABELS = {
     animate: "Animate (drift theo thời gian)",
   },
   en: {
+    hint: "Turn on the intermediate colouring: the final shape comes from sampling the noise somewhere else, while the noise itself never changed at all.",
     title: "Domain Warping: Distort Coordinates Before Sampling",
     warpStrength: "Warp strength",
     layers: "Warp layers",
@@ -90,6 +92,7 @@ export default function DomainWarpingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

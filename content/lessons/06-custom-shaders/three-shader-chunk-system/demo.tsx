@@ -46,6 +46,7 @@ const DEFAULT_SITE: SiteKey = "begin_vertex";
 
 const LABELS = {
   vi: {
+    hint: "Đi qua từng anchor rồi đọc dòng bị thay thế: bạn không viết lại shader, chỉ chen vào giữa hai dòng vốn đã có sẵn của three.",
     title: "Anatomy viewer: chọn anchor, xem hiệu ứng",
     site: "Chèn tại",
     panelTitle: "Dòng bị thay thế",
@@ -57,6 +58,7 @@ const LABELS = {
     },
   },
   en: {
+    hint: "Step through the anchors and read the replaced line: you are not rewriting the shader, only wedging in between two lines three already had.",
     title: "Anatomy Viewer: Pick an Anchor, See the Effect",
     site: "Inject at",
     panelTitle: "Replaced line",
@@ -143,6 +145,7 @@ export default function ThreeShaderChunkSystemDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {
