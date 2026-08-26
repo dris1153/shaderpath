@@ -1,12 +1,12 @@
 {
-  "Circle of radius A": null,
-  "A sin θ": null,
-  "θ = ωt + φ": null,
-  "y = A sin(ωt + φ)": null,
-  "t": null,
-  "A": null,
-  "T = 2π/ω": null,
-  "φ/ω": null,
-  "t = 0": null,
-  "One motion, two pictures: the wave is the green dot’s height, unrolled along time.": null
+  "Circle of radius A": "Vòng tròn bán kính A",
+  "A sin θ": "A sin θ",
+  "θ = ωt + φ": "θ = ωt + φ",
+  "y = A sin(ωt + φ)": "y = A sin(ωt + φ)",
+  "t": "t",
+  "A": "A",
+  "T = 2π/ω": "T = 2π/ω",
+  "φ/ω": "φ/ω",
+  "t = 0": "t = 0",
+  "One motion, two pictures: the wave is the green dot’s height, unrolled along time.": "Một chuyển động, hai cách nhìn: sóng chính là độ cao của chấm xanh, trải theo thời gian."
 }

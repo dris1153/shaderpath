@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 364" width="320" height="364" role="img">
-  <title>Analog clock rendered from vector math</title>
+  <title>Đồng hồ kim vẽ bằng toán vector</title>
   <style>
     :root {
       --muted: #64748b;
@@ -37,6 +37,6 @@
   <line x1="160" y1="160" x2="248.65" y2="103.74" stroke="#7dd3fc" stroke-width="2" />
   <line x1="160" y1="160" x2="90.05" y2="256.27" stroke="#7dd3fc" stroke-width="1" />
   <rect class="frame" x="0.5" y="0.5" width="319" height="319" />
-  <text x="0" y="342">One frame at 10:09:36 — ticks and hands only</text>
-  <text x="0" y="358">Strokes #7dd3fc over the dark page; no face circle</text>
+  <text x="0" y="342">Một khung lúc 10:09:36 — chỉ vạch và kim</text>
+  <text x="0" y="358">Nét vẽ #7dd3fc trên nền tối; không vẽ vòng mặt</text>
 </svg>

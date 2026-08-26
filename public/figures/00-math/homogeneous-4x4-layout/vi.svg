@@ -62,19 +62,19 @@
 
   <!-- legend -->
   <rect class="block-a" x="248" y="62" width="14" height="14" rx="3" />
-  <text class="legend" x="272" y="73">3×3 block: rotate and scale</text>
+  <text class="legend" x="272" y="73">khối 3×3: quay và co giãn</text>
   <rect class="block-b" x="248" y="98" width="14" height="14" rx="3" />
-  <text class="legend" x="272" y="109">4th column: translation (tx, ty, tz)</text>
+  <text class="legend" x="272" y="109">cột 4: tịnh tiến (tx, ty, tz)</text>
   <rect class="block-c" x="248" y="134" width="14" height="14" rx="3" />
-  <text class="legend" x="272" y="145">bottom row 0 0 0 1: leaves w unchanged</text>
+  <text class="legend" x="272" y="145">hàng cuối 0 0 0 1: giữ nguyên w</text>
 
   <!-- what w selects -->
-  <text class="note" x="44" y="230"><tspan class="key">(x, y, z, 1)</tspan> is a point — the translation column is added in</text>
-  <text class="note" x="44" y="252"><tspan class="key">(x, y, z, 0)</tspan> is a direction — added with weight 0, so it never moves</text>
+  <text class="note" x="44" y="230"><tspan class="key">(x, y, z, 1)</tspan> là một điểm — cột tịnh tiến được cộng vào</text>
+  <text class="note" x="44" y="252"><tspan class="key">(x, y, z, 0)</tspan> là một hướng — cộng với trọng số 0 nên không dịch</text>
 
   <path class="rule" d="M44,274 L516,274" />
 
   <!-- perspective divide -->
-  <text class="note" x="44" y="298">A projection matrix breaks that bottom row: it writes w = -z of view space,</text>
-  <text class="note" x="44" y="318">then the GPU divides every vertex: (x/w, y/w, z/w) -&gt; NDC.</text>
+  <text class="note" x="44" y="298">Ma trận projection phá hàng cuối đó: nó ghi w = -z của view space,</text>
+  <text class="note" x="44" y="318">rồi GPU chia mọi vertex: (x/w, y/w, z/w) -&gt; NDC.</text>
 </svg>

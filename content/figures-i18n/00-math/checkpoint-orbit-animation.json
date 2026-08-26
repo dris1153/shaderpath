@@ -1,5 +1,5 @@
 {
-  "Orbiting bodies with a pointer-tracking aim line": null,
-  "One frame at t = 2.0 s — four bodies, no orbit rings": null,
-  "The white aim line follows the pointer": null
+  "Orbiting bodies with a pointer-tracking aim line": "Các vật thể quay quanh, kèm đường ngắm bám con trỏ",
+  "One frame at t = 2.0 s — four bodies, no orbit rings": "Một khung tại t = 2.0 s — bốn vật thể, không vẽ quỹ đạo",
+  "The white aim line follows the pointer": "Đường ngắm trắng bám theo con trỏ"
 }

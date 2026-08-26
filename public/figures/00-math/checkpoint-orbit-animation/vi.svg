@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 344" width="400" height="344" role="img">
-  <title>Orbiting bodies with a pointer-tracking aim line</title>
+  <title>Các vật thể quay quanh, kèm đường ngắm bám con trỏ</title>
   <style>
     :root {
       --muted: #64748b;
@@ -25,6 +25,6 @@
   <circle cx="170.05" cy="176.52" r="5" fill="rgb(106, 176, 223)" />
   <line x1="200" y1="150" x2="315.55" y2="70.95" stroke="#ffffff" stroke-width="2" />
   <rect class="frame" x="0.5" y="0.5" width="399" height="299" />
-  <text x="0" y="322">One frame at t = 2.0 s — four bodies, no orbit rings</text>
-  <text x="0" y="338">The white aim line follows the pointer</text>
+  <text x="0" y="322">Một khung tại t = 2.0 s — bốn vật thể, không vẽ quỹ đạo</text>
+  <text x="0" y="338">Đường ngắm trắng bám theo con trỏ</text>
 </svg>

@@ -1,11 +1,11 @@
 {
-  "Middle ring at 0°": null,
-  "three axes pointing three different ways": null,
-  "Middle ring at 90°": null,
-  "the inner ring folds into the outer ring’s plane": null,
-  "one shared axis": null,
-  "outer ring: yaw (Z)": null,
-  "middle ring: pitch (Y)": null,
-  "inner ring: roll (X)": null,
-  "Yaw and roll still have their own dial, but both now turn the object about the same line: three inputs, two outcomes.": null
+  "Middle ring at 0°": "Vòng giữa ở 0°",
+  "three axes pointing three different ways": "ba trục hướng ba phía khác nhau",
+  "Middle ring at 90°": "Vòng giữa ở 90°",
+  "the inner ring folds into the outer ring’s plane": "vòng trong gập vào mặt phẳng vòng ngoài",
+  "one shared axis": "một trục dùng chung",
+  "outer ring: yaw (Z)": "vòng ngoài: yaw (Z)",
+  "middle ring: pitch (Y)": "vòng giữa: pitch (Y)",
+  "inner ring: roll (X)": "vòng trong: roll (X)",
+  "Yaw and roll still have their own dial, but both now turn the object about the same line: three inputs, two outcomes.": "Yaw và roll vẫn có núm riêng, nhưng giờ cả hai quay vật quanh cùng một đường: ba đầu vào, hai kết quả."
 }

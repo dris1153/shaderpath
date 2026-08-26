@@ -1,14 +1,14 @@
 {
-  "0": null,
-  "0.5": null,
-  "1.0": null,
-  "0.21": null,
-  "sRGB code value (what a PNG or a hex colour stores)": null,
-  "linear light energy": null,
-  "ideal linear (y = x)": null,
-  "sRGB transfer curve": null,
-  "code value -> linear light": null,
-  "sRGB 0.5 carries only 21% of the light": null,
-  "Lighting, blending and averaging are only correct on the linear axis.": null,
-  "Encode back to sRGB exactly once, when writing to the screen.": null
+  "0": "0",
+  "0.5": "0.5",
+  "1.0": "1.0",
+  "0.21": "0.21",
+  "sRGB code value (what a PNG or a hex colour stores)": "giá trị mã sRGB (thứ PNG hay mã hex lưu lại)",
+  "linear light energy": "năng lượng sáng tuyến tính",
+  "ideal linear (y = x)": "tuyến tính lý tưởng (y = x)",
+  "sRGB transfer curve": "đường truyền sRGB",
+  "code value -> linear light": "giá trị mã -> ánh sáng tuyến tính",
+  "sRGB 0.5 carries only 21% of the light": "sRGB 0.5 chỉ mang 21% lượng sáng",
+  "Lighting, blending and averaging are only correct on the linear axis.": "Chiếu sáng, blend và lấy trung bình chỉ đúng trên trục tuyến tính.",
+  "Encode back to sRGB exactly once, when writing to the screen.": "Mã hoá ngược về sRGB đúng một lần, khi ghi ra màn hình."
 }

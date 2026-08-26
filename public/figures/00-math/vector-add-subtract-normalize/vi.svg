@@ -50,8 +50,8 @@
   </defs>
 
   <!-- ===== Addition: a = (3,1), b = (-2,4), sum = (1,5); 1 unit = 24px ===== -->
-  <text class="stage" x="16" y="18">Addition</text>
-  <text class="note" x="16" y="36">b starts where a ends</text>
+  <text class="stage" x="16" y="18">Phép cộng</text>
+  <text class="note" x="16" y="36">b bắt đầu ở nơi a kết thúc</text>
   <path class="axis" d="M16,196 L172,196 M76,212 L76,72" />
   <path class="ghost" d="M76,196 L28,100 L100,76" />
   <path class="vec-a" d="M76,196 L148,172" marker-end="url(#ha)" />
@@ -62,8 +62,8 @@
   <text class="tag tag-r" x="100" y="64" text-anchor="middle">a + b</text>
 
   <!-- ===== Subtraction: the arrow from b's tip to a's tip ===== -->
-  <text class="stage" x="228" y="18">Subtraction</text>
-  <text class="note" x="228" y="36">the arrow from b to a</text>
+  <text class="stage" x="228" y="18">Phép trừ</text>
+  <text class="note" x="228" y="36">mũi tên từ b tới a</text>
   <path class="axis" d="M228,196 L384,196 M288,212 L288,84" />
   <path class="vec-a" d="M288,196 L360,172" marker-end="url(#ha)" />
   <path class="vec-b" d="M288,196 L240,100" marker-end="url(#hb)" />
@@ -73,15 +73,15 @@
   <text class="tag tag-r" x="304" y="124">a &#8722; b</text>
 
   <!-- ===== Normalize: v = (3,4), length 5, unit vector on the radius-1 circle ===== -->
-  <text class="stage" x="440" y="18">Normalize</text>
-  <text class="note" x="440" y="36">direction kept, length forced to 1</text>
+  <text class="stage" x="440" y="18">Chuẩn hoá</text>
+  <text class="note" x="440" y="36">giữ hướng, ép độ dài về 1</text>
   <path class="axis" d="M440,196 L600,196 M500,212 L500,84" />
   <circle class="circle" cx="500" cy="196" r="24" />
   <path class="vec-a" d="M500,196 L572,100" marker-end="url(#ha)" />
   <path class="vec-r" d="M500,196 L514,177" marker-end="url(#hr)" />
   <text class="tag tag-a" x="524" y="138" text-anchor="end">v</text>
   <text class="tag tag-r" x="530" y="176">v&#770;</text>
-  <text class="note" x="440" y="224">v = (3, 4), &#8214;v&#8214; = 5, so v&#770; = (0.6, 0.8)</text>
+  <text class="note" x="440" y="224">v = (3, 4), ‖v‖ = 5, nên v̂ = (0.6, 0.8)</text>
 
-  <text class="note" x="16" y="240">Add to step forward, subtract to aim from one point at another, normalize before multiplying by a speed.</text>
+  <text class="note" x="16" y="240">Cộng để bước tới, trừ để ngắm từ điểm này sang điểm kia, chuẩn hoá trước khi nhân với tốc độ.</text>
 </svg>

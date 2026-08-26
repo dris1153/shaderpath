@@ -39,46 +39,46 @@
   <!-- local / object space -->
   <rect class="box" x="120" y="16" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="38" text-anchor="middle">Local / object space</text>
-  <text class="note" x="270" y="54" text-anchor="middle">mesh coordinates, origin at its own pivot</text>
+  <text class="note" x="270" y="54" text-anchor="middle">toạ độ của mesh, gốc tại pivot của chính nó</text>
   <path class="arrow" d="M270,62 L270,104" marker-end="url(#head)" />
-  <text class="hop" x="282" y="87">× model matrix M</text>
+  <text class="hop" x="282" y="87">× ma trận model M</text>
 
   <!-- world space -->
   <rect class="box" x="120" y="104" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="126" text-anchor="middle">World space</text>
-  <text class="note" x="270" y="142" text-anchor="middle">objects, lights and camera share one frame</text>
+  <text class="note" x="270" y="142" text-anchor="middle">vật thể, đèn và camera dùng chung một hệ quy chiếu</text>
   <path class="arrow" d="M270,150 L270,192" marker-end="url(#head)" />
-  <text class="hop" x="282" y="175">× view matrix V</text>
+  <text class="hop" x="282" y="175">× ma trận view V</text>
 
   <!-- view / camera space -->
   <rect class="box" x="120" y="192" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="214" text-anchor="middle">View / camera space</text>
-  <text class="note" x="270" y="230" text-anchor="middle">camera at the origin, looking down -z</text>
+  <text class="note" x="270" y="230" text-anchor="middle">camera tại gốc, nhìn dọc trục -z</text>
   <path class="arrow" d="M270,238 L270,280" marker-end="url(#head)" />
-  <text class="hop" x="282" y="263">× projection matrix P</text>
+  <text class="hop" x="282" y="263">× ma trận projection P</text>
 
   <!-- clip space -->
   <rect class="box" x="120" y="280" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="302" text-anchor="middle">Clip space</text>
-  <text class="note" x="270" y="318" text-anchor="middle">GPU clips here, against |x, y, z| &lt;= w</text>
+  <text class="note" x="270" y="318" text-anchor="middle">GPU cắt ngay tại đây, theo |x, y, z| &lt;= w</text>
   <path class="arrow" d="M270,326 L270,368" marker-end="url(#head)" />
-  <text class="hop-auto" x="282" y="351">÷ w (perspective divide)</text>
+  <text class="hop-auto" x="282" y="351">÷ w (phép chia phối cảnh)</text>
 
   <!-- ndc -->
   <rect class="box" x="120" y="368" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="390" text-anchor="middle">NDC</text>
-  <text class="note" x="270" y="406" text-anchor="middle">a [-1, 1] cube on all three axes</text>
+  <text class="note" x="270" y="406" text-anchor="middle">một khối lập phương [-1, 1] trên cả ba trục</text>
   <path class="arrow" d="M270,414 L270,456" marker-end="url(#head)" />
-  <text class="hop-auto" x="282" y="439">viewport transform</text>
+  <text class="hop-auto" x="282" y="439">phép biến đổi viewport</text>
 
   <!-- screen space -->
   <rect class="box" x="120" y="456" width="300" height="46" rx="8" />
   <text class="stage" x="270" y="478" text-anchor="middle">Screen space</text>
-  <text class="note" x="270" y="494" text-anchor="middle">pixels in the render target, y up (gl_FragCoord)</text>
+  <text class="note" x="270" y="494" text-anchor="middle">pixel trong render target, y hướng lên (gl_FragCoord)</text>
 
   <!-- legend -->
   <circle cx="126" cy="520" r="5" fill="var(--accent-stroke)" />
-  <text class="legend" x="138" y="524">matrix you supply (M, V, P)</text>
+  <text class="legend" x="138" y="524">ma trận bạn cung cấp (M, V, P)</text>
   <circle cx="330" cy="520" r="5" fill="var(--line)" />
-  <text class="legend" x="342" y="524">automatic GPU step</text>
+  <text class="legend" x="342" y="524">bước GPU tự động</text>
 </svg>

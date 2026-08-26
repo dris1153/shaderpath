@@ -38,8 +38,8 @@
   </defs>
 
   <!-- left: WebGL texture space, origin bottom-left -->
-  <text class="stage" x="170" y="20" text-anchor="middle">WebGL / OpenGL texture</text>
-  <text class="note" x="170" y="38" text-anchor="middle">origin bottom-left, v points up</text>
+  <text class="stage" x="170" y="20" text-anchor="middle">Texture WebGL / OpenGL</text>
+  <text class="note" x="170" y="38" text-anchor="middle">gốc ở dưới-trái, v hướng lên</text>
   <rect class="quad" x="70" y="72" width="200" height="200" rx="4" />
   <path class="axis" d="M54,272 L54,168" marker-end="url(#head)" />
   <text class="axis-label" x="46" y="226" text-anchor="end">v</text>
@@ -54,8 +54,8 @@
   <text class="mark" x="140" y="118">(0.3, 0.75)</text>
 
   <!-- right: image / canvas space, origin top-left -->
-  <text class="stage" x="450" y="20" text-anchor="middle">Image / 2D canvas</text>
-  <text class="note" x="450" y="38" text-anchor="middle">origin top-left, v points down</text>
+  <text class="stage" x="450" y="20" text-anchor="middle">Ảnh / canvas 2D</text>
+  <text class="note" x="450" y="38" text-anchor="middle">gốc ở trên-trái, v hướng xuống</text>
   <rect class="quad" x="350" y="72" width="200" height="200" rx="4" />
   <path class="axis" d="M334,72 L334,176" marker-end="url(#head)" />
   <text class="axis-label" x="326" y="130" text-anchor="end">v</text>
@@ -70,6 +70,6 @@
   <text class="mark" x="420" y="118">(0.3, 0.25)</text>
 
   <!-- takeaway -->
-  <text class="note" x="310" y="316" text-anchor="middle">Same texel, same u — only v flips: v_gl = 1 - v_image.</text>
-  <text class="note" x="310" y="334" text-anchor="middle">Upload an image into a GL texture without that flip and it renders upside down.</text>
+  <text class="note" x="310" y="316" text-anchor="middle">Cùng texel, cùng u — chỉ v lật: v_gl = 1 - v_image.</text>
+  <text class="note" x="310" y="334" text-anchor="middle">Nạp ảnh vào texture GL mà quên lật thì hình sẽ ngược đầu.</text>
 </svg>

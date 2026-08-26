@@ -1,6 +1,6 @@
 {
-  "Spinning wireframe cube": null,
-  "One frame at t = 1.0 s (rotation angle 0.6 rad), canvas 520 x 292": null,
-  "Transparent canvas over a dark page; all 12 edges stroke #7dd3fc": null,
-  "A wireframe hides nothing: the far edges are drawn too": null
+  "Spinning wireframe cube": "Khối lập phương wireframe đang quay",
+  "One frame at t = 1.0 s (rotation angle 0.6 rad), canvas 520 x 292": "Một khung tại t = 1.0 s (góc quay 0.6 rad), canvas 520 x 292",
+  "Transparent canvas over a dark page; all 12 edges stroke #7dd3fc": "Canvas trong suốt trên nền tối; cả 12 cạnh vẽ nét #7dd3fc",
+  "A wireframe hides nothing: the far edges are drawn too": "Wireframe không giấu gì: cạnh phía xa cũng được vẽ"
 }

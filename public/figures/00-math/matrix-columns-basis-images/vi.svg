@@ -72,7 +72,7 @@
   </defs>
 
   <!-- ===== 2x2: one column per basis vector ===== -->
-  <text class="stage" x="16" y="20">A 2&#215;2 matrix stores two vectors, one per column</text>
+  <text class="stage" x="16" y="20">Ma trận 2×2 chứa hai vector, mỗi cột một cái</text>
   <path class="bracket" d="M46,44 L38,44 L38,124 L46,124" />
   <path class="bracket" d="M178,44 L186,44 L186,124 L178,124" />
   <rect class="col-x" x="50" y="44" width="62" height="80" rx="4" />
@@ -87,14 +87,14 @@
   <path class="after" d="M420,132 L498,111 L471,42 L393,63 Z" />
   <path class="arm-x" d="M420,132 L498,111" marker-end="url(#hx)" />
   <path class="arm-y" d="M420,132 L393,63" marker-end="url(#hy)" />
-  <text class="note" x="450" y="150" text-anchor="middle">dashed: before</text>
+  <text class="note" x="450" y="150" text-anchor="middle">nét đứt: trạng thái trước</text>
 
-  <text class="note" x="16" y="172"><tspan class="key-x">column 1 = (a, c)</tspan> is where &#238; lands &#183; <tspan class="key-y">column 2 = (b, d)</tspan> is where &#309; lands</text>
+  <text class="note" x="16" y="172"><tspan class="key-x">cột 1 = (a, c)</tspan> là nơi î rơi vào · <tspan class="key-y">cột 2 = (b, d)</tspan> là nơi ĵ rơi vào</text>
 
   <path class="rule" d="M16,190 L624,190" />
 
   <!-- ===== 4x4: one column per axis, plus the translation column ===== -->
-  <text class="stage" x="16" y="216">The same reading in 3D &#8212; here, a 90&#176; turn about z</text>
+  <text class="stage" x="16" y="216">Vẫn cách đọc đó trong 3D — ở đây là phép quay 90° quanh z</text>
   <path class="bracket" d="M46,240 L38,240 L38,368 L46,368" />
   <path class="bracket" d="M230,240 L238,240 L238,368 L230,368" />
   <rect class="col-x" x="50" y="240" width="44" height="128" rx="4" />
@@ -127,6 +127,6 @@
   <path class="arm-y" d="M450,300 L372.3,284.5" marker-end="url(#hy)" />
   <path class="arm-x" d="M450,300 L450,218.4" marker-end="url(#hx)" />
 
-  <text class="note" x="16" y="386"><tspan class="key-x">column 1</tspan>, <tspan class="key-y">column 2</tspan> and <tspan class="key-z">column 3</tspan> are where x&#770;, y&#770; and z&#770; land &#183; column 4 carries the translation (next lesson)</text>
-  <text class="note" x="16" y="406">Read down a column, never across a row: a column is the vector one axis turns into.</text>
+  <text class="note" x="16" y="386"><tspan class="key-x">cột 1</tspan>, <tspan class="key-y">cột 2</tspan> và <tspan class="key-z">cột 3</tspan> là nơi x̂, ŷ và ẑ rơi vào · cột 4 mang phần tịnh tiến (bài sau)</text>
+  <text class="note" x="16" y="406">Đọc dọc theo cột, đừng đọc ngang hàng: một cột là vector mà một trục biến thành.</text>
 </svg>

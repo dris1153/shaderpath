@@ -45,10 +45,10 @@
   </defs>
 
   <!-- ===== Panel 1: which axis points up ===== -->
-  <text class="panel" x="16" y="20">Which axis points up?</text>
+  <text class="panel" x="16" y="20">Trục nào hướng lên?</text>
 
   <!-- Y-up: ground is the xz plane, so the grid lies flat and +z comes toward us -->
-  <text class="who" x="60" y="42">Y-up — Three.js, glTF</text>
+  <text class="who" x="60" y="42">Y hướng lên — Three.js, glTF</text>
   <g transform="translate(120,158)">
     <path class="grid" d="M-70,26 L34,-16 L104,10 L0,52 z" />
     <path class="grid" d="M-18,6 L86,-36 M-44,16 L60,-26 M-35,42 L69,0 M-9,32 L95,-10" />
@@ -58,11 +58,11 @@
     <text class="axis" x="96" y="5">x</text>
     <path class="arrow" d="M0,0 L-52,42" marker-end="url(#h)" />
     <text class="axis" x="-66" y="52">z</text>
-    <text class="note" x="0" y="78" text-anchor="middle">ground = xz plane</text>
+    <text class="note" x="0" y="78" text-anchor="middle">mặt đất = mặt phẳng xz</text>
   </g>
 
   <!-- Z-up: ground is xy, and +y necessarily runs AWAY from the viewer -->
-  <text class="who" x="392" y="42">Z-up — Blender, CAD</text>
+  <text class="who" x="392" y="42">Z hướng lên — Blender, CAD</text>
   <g transform="translate(452,158)">
     <path class="grid" d="M-70,26 L34,-16 L104,10 L0,52 z" />
     <path class="grid" d="M-18,6 L86,-36 M-44,16 L60,-26 M-35,42 L69,0 M-9,32 L95,-10" />
@@ -72,20 +72,20 @@
     <text class="axis" x="96" y="5">x</text>
     <path class="arrow" d="M0,0 L52,-42" marker-end="url(#h)" />
     <text class="axis" x="60" y="-48">y</text>
-    <text class="note" x="0" y="78" text-anchor="middle">ground = xy plane</text>
+    <text class="note" x="0" y="78" text-anchor="middle">mặt đất = mặt phẳng xy</text>
   </g>
 
   <!-- The exact operation Blender's glTF exporter performs -->
   <path class="arrow" d="M356,138 C320,114 280,114 232,138" marker-end="url(#h)" />
-  <text class="note" x="294" y="108" text-anchor="middle">rotate &#8722;90&#176; about x</text>
-  <text class="note" x="294" y="152" text-anchor="middle">Blender's glTF export</text>
+  <text class="note" x="294" y="108" text-anchor="middle">quay −90° quanh x</text>
+  <text class="note" x="294" y="152" text-anchor="middle">Blender xuất glTF</text>
 
   <line class="rule" x1="16" y1="252" x2="584" y2="252" />
 
   <!-- ===== Panel 2: which way the third axis goes ===== -->
-  <text class="panel" x="16" y="282">Which way does z point? Same x, same y — only z differs</text>
+  <text class="panel" x="16" y="282">z hướng về đâu? Cùng x, cùng y — chỉ z khác</text>
 
-  <text class="who" x="60" y="306">Right-handed — Three.js, OpenGL</text>
+  <text class="who" x="60" y="306">Thuận tay phải — Three.js, OpenGL</text>
   <g transform="translate(150,392)">
     <path class="arrow-up" d="M0,0 L0,-58" marker-end="url(#hu)" />
     <text class="axis up" x="-4" y="-66" text-anchor="middle">y</text>
@@ -93,10 +93,10 @@
     <text class="axis" x="84" y="5">x</text>
     <circle class="glyph" cx="0" cy="0" r="9" />
     <circle cx="0" cy="0" r="2.6" fill="var(--line)" />
-    <text class="note" x="0" y="34" text-anchor="middle">z toward you</text>
+    <text class="note" x="0" y="34" text-anchor="middle">z hướng về bạn</text>
   </g>
 
-  <text class="who" x="392" y="306">Left-handed — DirectX, Unity</text>
+  <text class="who" x="392" y="306">Thuận tay trái — DirectX, Unity</text>
   <g transform="translate(482,392)">
     <path class="arrow-up" d="M0,0 L0,-58" marker-end="url(#hu)" />
     <text class="axis up" x="-4" y="-66" text-anchor="middle">y</text>
@@ -104,8 +104,8 @@
     <text class="axis" x="84" y="5">x</text>
     <circle class="glyph" cx="0" cy="0" r="9" />
     <path class="glyph" d="M-6.4,-6.4 L6.4,6.4 M6.4,-6.4 L-6.4,6.4" />
-    <text class="note" x="0" y="34" text-anchor="middle">z away from you</text>
+    <text class="note" x="0" y="34" text-anchor="middle">z hướng ra xa</text>
   </g>
 
-  <text class="note" x="300" y="452" text-anchor="middle">Swapping handedness flips the sign of every cross product — an import with the wrong one renders inside-out.</text>
+  <text class="note" x="300" y="452" text-anchor="middle">Đổi chiều tay làm đảo dấu mọi tích có hướng — import sai chiều sẽ render lộn từ trong ra.</text>
 </svg>

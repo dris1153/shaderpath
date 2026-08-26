@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 352" width="520" height="352" role="img">
-  <title>Spinning wireframe cube</title>
+  <title>Khối lập phương wireframe đang quay</title>
   <style>
     :root {
       --muted: #64748b;
@@ -34,7 +34,7 @@
     <line x1="177.5" y1="86.65" x2="234.74" y2="49.11" />
   </g>
   <rect class="frame" x="0.5" y="0.5" width="519" height="291" />
-  <text x="0" y="314">One frame at t = 1.0 s (rotation angle 0.6 rad), canvas 520 x 292</text>
-  <text x="0" y="330">Transparent canvas over a dark page; all 12 edges stroke #7dd3fc</text>
-  <text x="0" y="346">A wireframe hides nothing: the far edges are drawn too</text>
+  <text x="0" y="314">Một khung tại t = 1.0 s (góc quay 0.6 rad), canvas 520 x 292</text>
+  <text x="0" y="330">Canvas trong suốt trên nền tối; cả 12 cạnh vẽ nét #7dd3fc</text>
+  <text x="0" y="346">Wireframe không giấu gì: cạnh phía xa cũng được vẽ</text>
 </svg>

@@ -1,14 +1,14 @@
 {
-  "WebGL / OpenGL texture": null,
-  "origin bottom-left, v points up": null,
-  "v": null,
-  "u": null,
-  "(0, 0)": null,
-  "(1, 1)": null,
-  "(0.3, 0.75)": null,
-  "Image / 2D canvas": null,
-  "origin top-left, v points down": null,
-  "(0.3, 0.25)": null,
-  "Same texel, same u — only v flips: v_gl = 1 - v_image.": null,
-  "Upload an image into a GL texture without that flip and it renders upside down.": null
+  "WebGL / OpenGL texture": "Texture WebGL / OpenGL",
+  "origin bottom-left, v points up": "gốc ở dưới-trái, v hướng lên",
+  "v": "v",
+  "u": "u",
+  "(0, 0)": "(0, 0)",
+  "(1, 1)": "(1, 1)",
+  "(0.3, 0.75)": "(0.3, 0.75)",
+  "Image / 2D canvas": "Ảnh / canvas 2D",
+  "origin top-left, v points down": "gốc ở trên-trái, v hướng xuống",
+  "(0.3, 0.25)": "(0.3, 0.25)",
+  "Same texel, same u — only v flips: v_gl = 1 - v_image.": "Cùng texel, cùng u — chỉ v lật: v_gl = 1 - v_image.",
+  "Upload an image into a GL texture without that flip and it renders upside down.": "Nạp ảnh vào texture GL mà quên lật thì hình sẽ ngược đầu."
 }
