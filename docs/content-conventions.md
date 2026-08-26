@@ -86,6 +86,21 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
 - A build exercise may still keep a `starterCode` field as author-side
   scaffolding; nothing user-facing may reference it.
 
+## Demo hints
+
+- Every `demo.tsx` must pass `hint` to `<Demo>`; `pnpm lint:content` fails
+  otherwise. It renders as the Card description, under the title.
+- The hint says **what to look for**, not what can be changed — the control
+  labels already cover that, and the title already names the demo. "Drag the
+  sliders to explore" is the failure case, not the shape.
+- Prefer one concrete observation the controls do not imply: a specific
+  setting to try, a counter that moves the wrong way, two things that agree
+  where you expect them to differ.
+- Author it in the demo's own `LABELS`, beside `title`. `L` is the union of
+  both locale branches, so tsc rejects a hint added to only one.
+- Interaction affordances ("drag to inject dye") are not hints. Those stay as
+  an overlay on the canvas, where the pointer is, under a different key.
+
 ## Mind maps
 
 - Every lesson renders a mind map above the theory, **auto-generated** from
