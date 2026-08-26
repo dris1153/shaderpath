@@ -51,20 +51,20 @@
   <rect class="container" x="24" y="24" width="290" height="116" rx="8" />
   <text class="title" x="169" y="46" text-anchor="middle">.gltf</text>
   <rect class="box" x="38" y="54" width="262" height="24" rx="5" />
-  <text class="item" x="169" y="70" text-anchor="middle">model.gltf — the JSON document</text>
+  <text class="item" x="169" y="70" text-anchor="middle">model.gltf — tài liệu JSON</text>
   <rect class="box" x="38" y="82" width="262" height="24" rx="5" />
-  <text class="item" x="169" y="98" text-anchor="middle">model.bin — the binary buffer</text>
+  <text class="item" x="169" y="98" text-anchor="middle">model.bin — buffer nhị phân</text>
   <rect class="box" x="38" y="110" width="262" height="24" rx="5" />
-  <text class="item" x="169" y="126" text-anchor="middle">textures/*.png — images</text>
+  <text class="item" x="169" y="126" text-anchor="middle">textures/*.png — ảnh</text>
 
   <rect class="box" x="350" y="24" width="266" height="116" rx="8" />
   <text class="title" x="483" y="48" text-anchor="middle">.glb</text>
-  <text class="note" x="483" y="72" text-anchor="middle">the same content in one binary file:</text>
-  <text class="note" x="483" y="90" text-anchor="middle">a JSON chunk, then a BIN chunk</text>
-  <text class="note" x="483" y="114" text-anchor="middle">one HTTP request instead of three</text>
+  <text class="note" x="483" y="72" text-anchor="middle">cùng nội dung đó trong một file nhị phân:</text>
+  <text class="note" x="483" y="90" text-anchor="middle">một chunk JSON, rồi một chunk BIN</text>
+  <text class="note" x="483" y="114" text-anchor="middle">một request HTTP thay vì ba</text>
 
   <!-- the indirection chain -->
-  <text class="title" x="24" y="176">Bytes to a typed attribute: the indirection chain</text>
+  <text class="title" x="24" y="176">Từ byte tới attribute có kiểu: chuỗi gián tiếp</text>
   <text class="note" x="24" y="198">meshes[0].primitives[0].attributes.POSITION: 0</text>
   <path class="arrow" d="M60,204 L60,214" marker-end="url(#head)" />
 
@@ -72,38 +72,38 @@
   <text class="title" x="114" y="240" text-anchor="middle">accessors[0]</text>
   <text class="note" x="114" y="258" text-anchor="middle">VEC3, FLOAT (5126)</text>
   <text class="note" x="114" y="275" text-anchor="middle">count 24</text>
-  <text class="note" x="114" y="296" text-anchor="middle">what the bytes mean</text>
+  <text class="note" x="114" y="296" text-anchor="middle">các byte đó nghĩa là gì</text>
   <path class="arrow" d="M204,261 L220,261" marker-end="url(#head)" />
 
   <rect class="box" x="224" y="216" width="180" height="90" rx="8" />
   <text class="title" x="314" y="240" text-anchor="middle">bufferViews[0]</text>
   <text class="note" x="314" y="258" text-anchor="middle">buffer 0, ARRAY_BUFFER</text>
   <text class="note" x="314" y="275" text-anchor="middle">byteOffset 0, length 288</text>
-  <text class="note" x="314" y="296" text-anchor="middle">which slice of it</text>
+  <text class="note" x="314" y="296" text-anchor="middle">lát cắt nào của nó</text>
   <path class="arrow" d="M404,261 L420,261" marker-end="url(#head)" />
 
   <rect class="box" x="424" y="216" width="180" height="90" rx="8" />
   <text class="title" x="514" y="240" text-anchor="middle">buffers[0]</text>
   <text class="note" x="514" y="258" text-anchor="middle">byteLength 936</text>
-  <text class="note" x="514" y="275" text-anchor="middle">.bin file, .glb BIN chunk</text>
-  <text class="note" x="514" y="296" text-anchor="middle">or an inline data: URI</text>
+  <text class="note" x="514" y="275" text-anchor="middle">file .bin, chunk BIN của .glb</text>
+  <text class="note" x="514" y="296" text-anchor="middle">hoặc một data: URI nội tuyến</text>
 
   <path class="arrow" d="M514,306 L514,322 L320,322 L320,336" marker-end="url(#head)" />
 
   <rect class="box-accent" x="24" y="338" width="592" height="58" rx="8" />
   <text class="title title-accent" x="320" y="364" text-anchor="middle">THREE.BufferAttribute — geometry.attributes.position</text>
-  <text class="note" x="320" y="383" text-anchor="middle">GLTFLoader copies that byte slice straight in; no per-vertex parsing</text>
+  <text class="note" x="320" y="383" text-anchor="middle">GLTFLoader chép thẳng lát byte đó vào; không phân tích từng đỉnh</text>
 
   <!-- where the two compression extensions attach -->
   <rect class="box-ext" x="24" y="420" width="290" height="82" rx="8" />
   <text class="title title-ext" x="169" y="444" text-anchor="middle">Draco</text>
   <text class="note" x="169" y="462" text-anchor="middle">KHR_draco_mesh_compression</text>
-  <text class="note" x="169" y="479" text-anchor="middle">on mesh.primitives[i]: one encoded</text>
-  <text class="note" x="169" y="496" text-anchor="middle">bufferView replaces the attributes</text>
+  <text class="note" x="169" y="479" text-anchor="middle">trên mesh.primitives[i]: một</text>
+  <text class="note" x="169" y="496" text-anchor="middle">bufferView mã hoá thay cho các attribute</text>
 
   <rect class="box-ext" x="326" y="420" width="290" height="82" rx="8" />
   <text class="title title-ext" x="471" y="444" text-anchor="middle">meshopt</text>
   <text class="note" x="471" y="462" text-anchor="middle">EXT_meshopt_compression</text>
-  <text class="note" x="471" y="479" text-anchor="middle">on bufferViews[i]: the byte stream</text>
-  <text class="note" x="471" y="496" text-anchor="middle">is expanded before an accessor reads it</text>
+  <text class="note" x="471" y="479" text-anchor="middle">trên bufferViews[i]: luồng byte</text>
+  <text class="note" x="471" y="496" text-anchor="middle">được bung ra trước khi accessor đọc</text>
 </svg>

@@ -40,7 +40,7 @@
   </defs>
 
   <!-- the mip chain, drawn to scale on a shared baseline -->
-  <text class="title" x="24" y="26">The mip pyramid</text>
+  <text class="title" x="24" y="26">Kim tự tháp mip</text>
 
   <rect class="mip" x="40" y="76" width="104" height="104" rx="3" />
   <rect class="mip" x="164" y="128" width="52" height="52" rx="3" />
@@ -52,38 +52,38 @@
   <text class="note" x="92" y="198" text-anchor="middle">2048²</text>
   <text class="note" x="190" y="198" text-anchor="middle">1024²</text>
   <text class="note" x="249" y="198" text-anchor="middle">512²</text>
-  <text class="note" x="24" y="222">each level halves the width, so it holds a quarter of the area</text>
+  <text class="note" x="24" y="222">mỗi cấp giảm nửa bề rộng, nên chỉ chứa một phần tư diện tích</text>
 
   <rect class="box-accent" x="400" y="76" width="216" height="104" rx="8" />
   <text class="formula title-accent" x="508" y="106" text-anchor="middle">1 + 1/4 + 1/16 + … = 4/3</text>
-  <text class="note" x="508" y="126" text-anchor="middle">the whole chain adds +33%</text>
-  <text class="note" x="508" y="143" text-anchor="middle">over level 0 alone</text>
+  <text class="note" x="508" y="126" text-anchor="middle">cả chuỗi cộng thêm +33%</text>
+  <text class="note" x="508" y="143" text-anchor="middle">so với riêng cấp 0</text>
   <text class="note" x="508" y="164" text-anchor="middle">2048² RGBA8: 16 MB -&gt; 21.3 MB</text>
 
   <!-- what the two encodings leave in VRAM -->
-  <text class="title" x="24" y="258">What actually sits in VRAM</text>
+  <text class="title" x="24" y="258">Thứ thật sự nằm trong VRAM</text>
 
   <rect class="box" x="24" y="274" width="140" height="70" rx="8" />
   <text class="title" x="94" y="302" text-anchor="middle">PNG / JPEG</text>
-  <text class="note" x="94" y="320" text-anchor="middle">400 KB on disk</text>
+  <text class="note" x="94" y="320" text-anchor="middle">400 KB trên đĩa</text>
   <path class="arrow" d="M164,309 L312,309" marker-end="url(#head)" />
-  <text class="note" x="240" y="301" text-anchor="middle">decoded on load</text>
+  <text class="note" x="240" y="301" text-anchor="middle">giải mã khi nạp</text>
 
   <rect class="box" x="316" y="274" width="300" height="70" rx="8" />
-  <text class="title" x="466" y="298" text-anchor="middle">Raw RGBA8 in VRAM</text>
-  <text class="note" x="466" y="316" text-anchor="middle">32 bits/pixel — the file's compression is gone</text>
-  <text class="note" x="466" y="333" text-anchor="middle">2048² with mips ≈ 21.3 MB</text>
+  <text class="title" x="466" y="298" text-anchor="middle">RGBA8 thô trong VRAM</text>
+  <text class="note" x="466" y="316" text-anchor="middle">32 bit/pixel — phần nén của file đã mất</text>
+  <text class="note" x="466" y="333" text-anchor="middle">2048² kèm mip ≈ 21.3 MB</text>
 
   <rect class="box" x="24" y="360" width="140" height="70" rx="8" />
   <text class="title" x="94" y="388" text-anchor="middle">KTX2 / BasisU</text>
-  <text class="note" x="94" y="406" text-anchor="middle">one file, any GPU</text>
+  <text class="note" x="94" y="406" text-anchor="middle">một file, mọi GPU</text>
   <path class="arrow" d="M164,395 L312,395" marker-end="url(#head)" />
-  <text class="note" x="240" y="387" text-anchor="middle">transcoded on load</text>
+  <text class="note" x="240" y="387" text-anchor="middle">chuyển mã khi nạp</text>
 
   <rect class="box-accent" x="316" y="360" width="300" height="70" rx="8" />
-  <text class="title title-accent" x="466" y="384" text-anchor="middle">BCn / ASTC / ETC2 in VRAM</text>
-  <text class="note" x="466" y="402" text-anchor="middle">4–8 bits/pixel, still compressed</text>
-  <text class="note" x="466" y="419" text-anchor="middle">the sampler decodes on each fetch</text>
+  <text class="title title-accent" x="466" y="384" text-anchor="middle">BCn / ASTC / ETC2 trong VRAM</text>
+  <text class="note" x="466" y="402" text-anchor="middle">4–8 bit/pixel, vẫn đang nén</text>
+  <text class="note" x="466" y="419" text-anchor="middle">sampler giải mã ở mỗi lần lấy mẫu</text>
 
-  <text class="note" x="24" y="454">KTX2Loader.detectSupport(renderer) picks the target format for the device</text>
+  <text class="note" x="24" y="454">KTX2Loader.detectSupport(renderer) chọn định dạng đích cho thiết bị</text>
 </svg>

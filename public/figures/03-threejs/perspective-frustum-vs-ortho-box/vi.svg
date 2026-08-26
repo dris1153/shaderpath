@@ -47,13 +47,13 @@
     </marker>
   </defs>
 
-  <text class="title" x="40" y="22">The shape of what the camera can see</text>
-  <text class="note" x="40" y="40">Side view, camera looking right; the vertical axis is the camera's up. One box, drawn at two distances.</text>
+  <text class="title" x="40" y="22">Hình dạng của vùng camera nhìn thấy</text>
+  <text class="note" x="40" y="40">Nhìn từ bên, camera hướng sang phải; trục dọc là up của camera. Một khối, vẽ ở hai khoảng cách.</text>
 
-  <text class="head" x="180" y="72" text-anchor="middle">PerspectiveCamera — a frustum</text>
+  <text class="head" x="180" y="72" text-anchor="middle">PerspectiveCamera — một frustum</text>
   <text class="note" x="180" y="90" text-anchor="middle">(fov, aspect, near, far)</text>
 
-  <text class="head" x="447" y="72" text-anchor="middle">OrthographicCamera — a box</text>
+  <text class="head" x="447" y="72" text-anchor="middle">OrthographicCamera — một khối hộp</text>
   <text class="note" x="447" y="90" text-anchor="middle">(left, right, top, bottom, near, far)</text>
 
   <!-- ============ perspective ============ -->
@@ -82,22 +82,22 @@
   <rect class="obj" x="477" y="179" width="26" height="26" />
 
   <!-- ============ what lands on screen ============ -->
-  <text class="note" x="70" y="294">what the screen shows</text>
+  <text class="note" x="70" y="294">thứ màn hình hiển thị</text>
   <rect class="screen" x="70" y="300" width="220" height="64" />
   <rect class="obj" x="120" y="319" width="26" height="26" />
   <rect class="obj" x="215" y="325" width="13" height="13" />
-  <text class="lbl" x="180" y="386" text-anchor="middle">twice as far, half as big</text>
+  <text class="lbl" x="180" y="386" text-anchor="middle">xa gấp đôi, nhỏ đi một nửa</text>
 
   <rect class="screen" x="350" y="300" width="195" height="64" />
   <rect class="obj" x="400" y="326" width="13" height="13" />
   <rect class="obj" x="490" y="326" width="13" height="13" />
-  <text class="lbl" x="447" y="386" text-anchor="middle">same size at any distance</text>
+  <text class="lbl" x="447" y="386" text-anchor="middle">cùng kích thước ở mọi khoảng cách</text>
 
-  <text class="note" x="70" y="416">fov is the vertical angle, in degrees</text>
-  <text class="note" x="70" y="434">aspect is width / height</text>
+  <text class="note" x="70" y="416">fov là góc dọc, tính bằng độ</text>
+  <text class="note" x="70" y="434">aspect là width / height</text>
 
-  <text class="note" x="350" y="416">no aspect property exists here</text>
-  <text class="note" x="350" y="434">recompute left / right yourself on resize</text>
+  <text class="note" x="350" y="416">ở đây không có thuộc tính aspect</text>
+  <text class="note" x="350" y="434">tự tính lại left / right khi đổi kích thước</text>
 
-  <text class="note" x="40" y="464">Both cache the result in camera.projectionMatrix — change a value and call updateProjectionMatrix().</text>
+  <text class="note" x="40" y="464">Cả hai lưu kết quả vào camera.projectionMatrix — đổi giá trị thì gọi updateProjectionMatrix().</text>
 </svg>
