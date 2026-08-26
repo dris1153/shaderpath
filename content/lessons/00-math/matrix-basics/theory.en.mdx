@@ -77,3 +77,15 @@ The three most common mistakes when starting out with transformation matrices:
 3. **Mistaking shear for a mild rotation.** Both make a shape "lean," but only rotation preserves every edge's length; reaching for a shear matrix where a rotation was needed (or vice versa) silently stretches the object along one axis — a bug that only shows up when checking proportions carefully, never in a console log.
 
 </Callout>
+
+<Predict
+  question="In the demo below, drag only the b slider (the matrix's top-right entry) and leave a, c and d alone. How do the two basis vectors move?"
+  options={[
+    "î slides sideways, ĵ stays put — b shares the top row with a, so it belongs to the x axis",
+    "ĵ slides sideways, î stays put",
+    "Both slide sideways by the same amount",
+    "î slides sideways and ĵ slides vertically",
+  ]}
+  answer={1}
+  reveal="b is the top half of column 2, and column 2 is where ĵ lands — so only ĵ slides sideways, while î = (a, c) contains no b at all. Reading by rows makes b look like it belongs to the x axis because it sits next to a; reading by columns gives the answer immediately. Dragging b alone is exactly how you build a horizontal shear: the unit square leans over while its base never budges."
+/>

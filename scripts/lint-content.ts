@@ -12,6 +12,7 @@ import {
 } from "../content/types";
 import { extractToc } from "../lib/mdx-toc";
 import { lintMindMapOverride } from "../lib/mind-map-lint";
+import { lintPredict } from "../lib/predict-lint";
 
 // A3: mechanical gate for the content rules (spec §3.2/§10/§11, amended by D9).
 // Usage: pnpm lint:content [--require math,webgl]
@@ -137,6 +138,7 @@ async function lintLesson(trackDir: string, slug: string) {
     }
 
     if (!isCheckpoint) {
+      for (const error of lintPredict({ at, vi, en }).errors) report(error);
       if (!/<Callout\s+variant="mistake"/.test(vi)) {
         report(`${at}: theory.vi missing the mistake Callout (spec 10)`);
       }

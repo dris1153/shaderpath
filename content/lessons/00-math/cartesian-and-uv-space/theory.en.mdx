@@ -104,3 +104,15 @@ The three most common pixel/UV mistakes when starting out:
 3. **Confusing an image's UV origin with a WebGL texture's UV origin.** Bitmap images (canvas, `<img>`, PNG/JPEG) always store their first pixel row at the top ($v=0$ = top). Classic WebGL/OpenGL textures instead treat $v=0$ as the **bottom**. Uploading an image straight into a texture without setting `UNPACK_FLIP_Y_WEBGL` (or flipping manually) renders the texture upside down — a classic bug that shows up in Track 1's very first texture lesson.
 
 </Callout>
+
+<Predict
+  question="The demo below colours every point with exactly color = vec3(u, v, 0.25). Which corner of the square comes out yellowest (red and green both high)?"
+  options={[
+    "Bottom-right, because images put v = 0 at the top, so v = 1 is at the bottom",
+    "Top-right",
+    "Top-left, because u runs right to left",
+    "It depends on the flip-v switch in the control panel",
+  ]}
+  answer={1}
+  reveal="Yellow needs u = 1 and v = 1, so the real question is where v = 1 lives. vUv comes from the geometry, not from an image: Three.js PlaneGeometry puts v = 0 on the bottom edge, so (1, 1) is the top-right corner. The v = 0 at the top convention only applies when uploading an image into a texture, and the demo's flip-v switch only moves the marker — it never touches the background gradient."
+/>

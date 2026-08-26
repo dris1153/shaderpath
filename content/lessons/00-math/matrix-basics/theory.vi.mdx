@@ -77,3 +77,15 @@ Ba lỗi hay gặp nhất khi mới làm việc với ma trận biến đổi:
 3. **Tưởng shear là một dạng xoay nhẹ.** Cả hai đều làm hình "nghiêng", nhưng chỉ xoay bảo toàn độ dài mọi cạnh; dùng nhầm ma trận shear ở chỗ cần rotate (hoặc ngược lại) khiến object bị kéo dài âm thầm theo một trục, lỗi chỉ lộ rõ khi nhìn kỹ tỉ lệ cạnh chứ không phải qua console log.
 
 </Callout>
+
+<Predict
+  question="Trong demo dưới, chỉ kéo thanh b (ô góc trên-phải của ma trận) và để yên a, c, d. Hai vector cơ sở sẽ nhúc nhích thế nào?"
+  options={[
+    "î trượt ngang, ĵ đứng yên — b nằm cùng hàng trên với a nên thuộc về trục x",
+    "ĵ trượt ngang, î đứng yên",
+    "Cả hai cùng trượt ngang một lượng như nhau",
+    "î trượt ngang và ĵ trượt dọc",
+  ]}
+  answer={1}
+  reveal="b là nửa trên của cột 2, mà cột 2 chính là ảnh của ĵ — nên chỉ ĵ trượt ngang, còn î = (a, c) không chứa b ở đâu cả. Đọc theo hàng làm b trông như thuộc về trục x vì nó nằm cạnh a; đọc theo cột thì câu trả lời hiện ra ngay. Kéo b một mình đúng bằng dựng một phép shear ngang: hình vuông đơn vị đổ nghiêng nhưng cạnh đáy không suy suyển."
+/>

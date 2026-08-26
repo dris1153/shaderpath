@@ -3,6 +3,7 @@ import type { MDXComponents } from "mdx/types";
 import { Callout } from "@/components/lesson/callout";
 import { CodeBlock } from "@/components/lesson/code-block";
 import { Figure } from "@/components/lesson/figure";
+import { Predict } from "@/components/lesson/predict";
 import { PlaygroundEmbed } from "@/components/playground/playground-embed";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
@@ -110,6 +111,7 @@ const components: MDXComponents = {
   ),
   Callout,
   Figure,
+  Predict,
   // Embedded playground for hasPlayground lessons: <Playground source={"..."} />
   Playground: ({ source }: { source?: string }) => (
     <PlaygroundEmbed compact initialSource={source} />

@@ -180,6 +180,12 @@
     "copyCode": "Sao chép",
     "copiedCode": "Đã sao chép"
   },
+  "predict": {
+    "label": "Đoán thử",
+    "placeholder": "Chọn một đáp án để xem giải thích.",
+    "right": "Đúng.",
+    "wrong": "Chưa đúng."
+  },
   "mindMap": {
     "title": "Sơ đồ tư duy",
     "objectives": "Mục tiêu",

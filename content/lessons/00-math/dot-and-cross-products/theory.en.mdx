@@ -117,3 +117,15 @@ The three most common mistakes with dot and cross products:
 3. **Swapping the cross product's operand order without noticing the normal flipped.** `cross(ab, ac)` and `cross(ac, ab)` produce two vectors pointing in exactly opposite directions — getting the order wrong while building a triangle normal makes a face look unexpectedly dark (normal pointing inward instead of outward) or get incorrectly discarded by backface culling.
 
 </Callout>
+
+<Predict
+  question="In the demo below, hold both angles fixed and drag the 'length of b' slider up. What happens to the orange projection arrow of a onto b, and to the a·b readout?"
+  options={[
+    "The orange arrow grows with b, and a·b grows too",
+    "The orange arrow does not move, but a·b still grows",
+    "Neither one changes",
+    "The orange arrow shrinks, because |b|² grows faster than the numerator",
+  ]}
+  answer={1}
+  reveal="The projection depends only on a and the direction of b: you take the ratio (a·b)/|b|² and multiply it back by b, so one factor of |b| in the numerator cancels exactly one in the denominator, leaving |a|cos θ — a's shadow does not care how long b is. But a·b on its own is proportional to |b|, so the readout keeps climbing while the orange arrow sits still. This is exactly why lighting normalizes before taking a dot product: the dot mixes lengths in, the projection does not."
+/>

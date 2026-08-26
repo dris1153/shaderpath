@@ -117,3 +117,15 @@ Ba lỗi hay gặp nhất với dot và cross product:
 3. **Đổi thứ tự tham số cross mà không nhận ra pháp tuyến đã đảo dấu.** `cross(ab, ac)` và `cross(ac, ab)` cho hai vector ngược hướng nhau hoàn toàn — nhầm thứ tự khi dựng pháp tuyến tam giác làm mặt bị tối bất thường (pháp tuyến chỉ vào trong thay vì ra ngoài) hoặc bị backface culling loại bỏ nhầm.
 
 </Callout>
+
+<Predict
+  question="Trong demo dưới, giữ nguyên cả hai góc và chỉ kéo thanh 'độ dài b' lên. Mũi tên hình chiếu của a lên b (màu cam) và con số a·b sẽ thế nào?"
+  options={[
+    "Mũi tên cam dài ra theo b, a·b cũng tăng",
+    "Mũi tên cam đứng yên, nhưng a·b vẫn tăng",
+    "Cả hai đều đứng yên",
+    "Mũi tên cam ngắn lại, vì mẫu số |b|² lớn nhanh hơn tử số",
+  ]}
+  answer={1}
+  reveal="Hình chiếu chỉ phụ thuộc vào a và hướng của b: lấy tỉ số (a·b)/|b|² rồi nhân lại với chính b, nên một thừa số |b| ở tử triệt tiêu đúng một thừa số ở mẫu, còn lại đúng |a|cos θ — cái bóng của a không quan tâm b dài bao nhiêu. Nhưng a·b tự nó tỉ lệ thuận với |b|, nên con số hiển thị cứ tăng đều trong khi mũi tên cam không nhúc nhích. Đây chính là lý do lighting phải normalize trước khi lấy dot: dot trộn cả độ dài vào, còn hình chiếu thì không."
+/>

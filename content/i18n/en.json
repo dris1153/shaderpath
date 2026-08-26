@@ -180,6 +180,12 @@
     "copyCode": "Copy",
     "copiedCode": "Copied"
   },
+  "predict": {
+    "label": "Predict",
+    "placeholder": "Pick an answer to see the explanation.",
+    "right": "Correct.",
+    "wrong": "Not quite."
+  },
   "mindMap": {
     "title": "Mind map",
     "objectives": "Objectives",

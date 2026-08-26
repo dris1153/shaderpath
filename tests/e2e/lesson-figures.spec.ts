@@ -56,3 +56,28 @@ test("a build exercise shows its reference output without revealing the solution
   await reveal.click();
   await expect(image).toHaveCount(1);
 });
+
+// Predictions are for everyone, including guests — nothing is stored and no
+// server action fires, so a signed-out reader must get the whole flow.
+test("a signed-out reader can answer a prediction and see the reveal", async ({
+  page,
+}) => {
+  await page.goto("/vi/lesson/matrix-basics");
+
+  const predict = page.getByRole("radiogroup", { name: /chỉ kéo thanh b/i });
+  await expect(predict).toBeVisible();
+
+  const status = page.getByRole("status").filter({ hasText: /cột 2/ });
+  // Present but hidden before answering, so answering shifts nothing below it.
+  await expect(status).toBeHidden();
+
+  const right = predict.getByRole("radio").nth(1);
+  await right.check();
+  await expect(right).toBeChecked();
+  await expect(status).toBeVisible();
+  await expect(status).toContainText("Đúng.");
+
+  // Changing the answer is allowed, and the verdict follows.
+  await predict.getByRole("radio").first().check();
+  await expect(status).toContainText("Chưa đúng.");
+});

@@ -104,3 +104,15 @@ Ba lỗi hay gặp nhất với pixel và UV:
 3. **Nhầm gốc UV của ảnh với gốc UV của texture WebGL.** Ảnh bitmap (canvas, `<img>`, PNG/JPEG) luôn lưu hàng pixel đầu ở trên cùng ($v=0$ là trên). Texture WebGL/OpenGL cổ điển lại coi $v=0$ là **dưới cùng**. Upload thẳng ảnh vào texture mà không set `UNPACK_FLIP_Y_WEBGL` khiến texture hiện lộn ngược — lỗi kinh điển ngay bài texture đầu tiên ở Track 1.
 
 </Callout>
+
+<Predict
+  question="Demo dưới tô màu mỗi điểm đúng bằng công thức color = vec3(u, v, 0.25). Góc nào của ô vuông sẽ vàng nhất (đỏ và lục cùng cao)?"
+  options={[
+    "Góc dưới-phải, vì ảnh có v = 0 ở trên nên v = 1 nằm ở dưới",
+    "Góc trên-phải",
+    "Góc trên-trái, vì u chạy từ phải sang trái",
+    "Tuỳ vào công tắc đảo trục v ở panel điều khiển",
+  ]}
+  answer={1}
+  reveal="Vàng cần u = 1 và v = 1, nên câu hỏi thật sự là v = 1 nằm ở đâu. vUv đến từ hình học chứ không phải từ một tấm ảnh: PlaneGeometry của Three.js đặt v = 0 ở cạnh dưới, nên (1, 1) là góc trên-phải. Quy ước v = 0 ở trên chỉ áp dụng khi upload ảnh vào texture, và công tắc đảo v trong demo chỉ dời điểm đánh dấu chứ không đụng tới dải màu nền."
+/>
