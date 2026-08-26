@@ -1,6 +1,7 @@
 import type { Locale } from "@/content/types";
 import { BASICS_PRESETS } from "./basics";
 import { localizeSource } from "./comments";
+import { FEEDBACK_PRESETS } from "./feedback";
 import { NOISE_PRESETS } from "./noise";
 import { RAYMARCH_PRESETS } from "./raymarch";
 import type { PlaygroundPreset, PlaygroundPresetGroup } from "./types";
@@ -21,6 +22,11 @@ export const PRESET_GROUPS: PlaygroundPresetGroup[] = [
     id: "procedural",
     label: { vi: "Noise & thủ tục", en: "Noise & Procedural" },
     presets: NOISE_PRESETS,
+  },
+  {
+    id: "feedback",
+    label: { vi: "Mô phỏng phản hồi", en: "Feedback Simulations" },
+    presets: FEEDBACK_PRESETS,
   },
   {
     id: "raymarching",

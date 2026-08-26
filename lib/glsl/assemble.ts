@@ -1,11 +1,19 @@
 // Single source of truth for the fragment prelude AND the error-line offset.
 // §11.5 depends on PRELUDE_LINES being derived, never hardcoded.
 
+// `precision highp sampler2D` is not decoration: ES 3.00 defaults samplers to
+// lowp in fragment shaders, which would quantise uPrev to ~8 bits and defeat
+// the float ping-pong target. uPrev's buffers are allocated only when a shader
+// actually reads it; uFrame is 0 on the first frame after a compile or resize,
+// which is how a feedback shader seeds itself.
 export const FRAG_PRELUDE = `#version 300 es
 precision highp float;
+precision highp sampler2D;
 uniform float uTime;
 uniform vec2 uResolution;
 uniform vec2 uMouse;
+uniform sampler2D uPrev;
+uniform int uFrame;
 out vec4 fragColor;
 `;
 

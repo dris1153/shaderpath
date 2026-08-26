@@ -1,67 +1,18 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import {
   ALL_PRESETS,
   PRESET_COMMENTS,
   PRESET_GROUPS,
   presetSource,
 } from "../../content/playground-presets";
+import { editorValue } from "./playground-helpers";
 import { requiresAuth, signIn } from "./requires-auth";
-
-// The built-in presets are static GLSL that nothing else compiles: without a
-// test they rot silently the first time the prelude or a uniform changes.
-// Importing the registry means new presets are covered automatically.
-
-// Monaco fights typed input (auto-closing pairs) and setValue can race the
-// React change listener attaching — same applyShader pattern as the other
-// playground specs: set via the API and retry until compile state reacts.
-async function applyShader(
-  page: Page,
-  source: string,
-  expected: "compile-ok" | "compile-errors",
-) {
-  await page.waitForFunction(
-    () => {
-      const w = window as unknown as {
-        monaco?: { editor: { getEditors(): unknown[] } };
-      };
-      return (w.monaco?.editor.getEditors().length ?? 0) > 0;
-    },
-    { timeout: 20_000 },
-  );
-
-  await expect(async () => {
-    await page.evaluate((src) => {
-      const w = window as unknown as {
-        monaco?: { editor: { getEditors(): { setValue(v: string): void }[] } };
-      };
-      for (const ed of w.monaco?.editor.getEditors() ?? []) {
-        try {
-          ed.setValue(src);
-        } catch {
-          // disposed editor (Strict Mode leftovers)
-        }
-      }
-    }, source);
-    await expect(page.getByTestId(expected)).toBeVisible({ timeout: 3_000 });
-  }).toPass({ timeout: 25_000 });
-}
-
-const editorValue = (page: Page) =>
-  page.evaluate(() => {
-    const w = window as unknown as {
-      monaco?: { editor: { getEditors(): { getValue(): string }[] } };
-    };
-    return w.monaco?.editor.getEditors()[0]?.getValue() ?? "";
-  });
-
-// A shader that can never compile: used to force the state away from
-// compile-ok between presets, so each preset must flip it back itself.
-const BROKEN = "void main() {\n  fragColor = neverDeclaredXyz;\n}";
 
 test.describe.configure({ mode: "serial" });
 
-// Writes user data, so it needs an account: RLS shows a signed-out
-// visitor nothing, and the account-only endpoints answer 401.
+// Both tests here drive the snippet dropdown, and that only renders for a
+// signed-in visitor. The compile sweep needs no account and lives in
+// playground-preset-compile.spec.ts so that it actually runs.
 requiresAuth();
 test.beforeEach(async ({ page }) => {
   await signIn(page);
@@ -96,9 +47,7 @@ test("picking a preset from the dropdown loads its exact source", async ({
 });
 
 test("preset comments follow the active locale", async ({ page }) => {
-  const preset = ALL_PRESETS.find((p) =>
-    /\/\/\s*@\w/.test(p.source),
-  );
+  const preset = ALL_PRESETS.find((p) => /\/\/\s*@\w/.test(p.source));
   if (!preset) throw new Error("no preset uses a comment marker");
   const key = /\/\/\s*@(\w+)/.exec(preset.source)?.[1] ?? "";
   const viText = PRESET_COMMENTS.vi[key] ?? "";
@@ -114,21 +63,4 @@ test("preset comments follow the active locale", async ({ page }) => {
     .poll(async () => await editorValue(page), { timeout: 10_000 })
     .toContain(enText);
   expect(await editorValue(page)).not.toContain(viText);
-});
-
-test("every built-in preset compiles without errors", async ({ page }) => {
-  await page.goto("/vi/playground");
-  await expect(page.getByTestId("compile-ok")).toBeVisible({ timeout: 15_000 });
-
-  expect(ALL_PRESETS.length).toBeGreaterThan(0);
-  for (const preset of ALL_PRESETS) {
-    // Without this the next assertion would just re-observe the PREVIOUS
-    // preset's compile-ok badge and pass without compiling anything.
-    await applyShader(page, BROKEN, "compile-errors");
-    await applyShader(page, presetSource(preset, "vi"), "compile-ok");
-    await expect(
-      page.getByTestId("compile-errors"),
-      `preset "${preset.slug}" must compile cleanly`,
-    ).toHaveCount(0);
-  }
 });
