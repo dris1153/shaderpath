@@ -38,19 +38,20 @@ async function heapUsedBytes(cdp: CDPSession): Promise<number> {
 async function visitLesson(page: Page, slug: string) {
   await page.goto(`/vi/lesson/${slug}`);
   const container = page.locator("[data-demo-container]");
-  // The demo is a React.lazy boundary: the container appears when its chunk
-  // resolves, and acting on the locator before that races the Suspense swap —
-  // the element resolves, then detaches under the action. Wait for it to be
-  // attached and settled first.
-  await container.waitFor({ state: "visible", timeout: 30_000 });
-  await container.scrollIntoViewIfNeeded();
-  // Let the demo mount and tick a few real frames before moving on.
-  await expect
-    .poll(
-      async () => Number(await container.getAttribute("data-frames")) || 0,
-      { timeout: 10_000 },
-    )
-    .toBeGreaterThan(0);
+
+  // Retry the whole scroll-and-wait, rather than each step. Under `next dev`
+  // the route's subtree is replaced once shortly after hydration (measured:
+  // the node holding the demo leaves the DOM around 850ms and returns ~140ms
+  // later, with no console error — streaming, not a hydration failure). A
+  // locator resolved just before that swap detaches under the action. Only dev
+  // does this; the production build serves these pages statically.
+  await expect(async () => {
+    await container.scrollIntoViewIfNeeded({ timeout: 5_000 });
+    // Frames only advance while the demo is in view, so this has to follow the
+    // scroll — and it proves the element survived long enough to render.
+    const frames = Number(await container.getAttribute("data-frames")) || 0;
+    expect(frames).toBeGreaterThan(0);
+  }).toPass({ timeout: 30_000 });
 }
 
 test("navigating 12 lesson demos does not grow the heap superlinearly (§11.3)", async ({

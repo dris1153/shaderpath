@@ -26,6 +26,18 @@ const RY = [0, 120, 215, 300];
 const BOX_W = 180;
 const BOX_H = 60;
 
+// IEEE 754 guarantees bit-identical results for + - * / but NOT for sin/cos:
+// V8-in-Node (SSR) and V8-in-Chrome can differ by one ULP. That is enough to
+// make the rendered `style="top:…"` differ between the server HTML and the
+// hydrating client, and React answers a mismatch by discarding the server tree
+// and re-rendering the whole subtree — which throws away the static render for
+// that page and detaches every element inside it.
+//
+// Snapping right after the trigonometry kills the divergence at the source;
+// everything downstream (edge midpoints, extents) is plain arithmetic and so is
+// already deterministic. 0.01px is far below one device pixel.
+const snap = (v: number) => Math.round(v * 100) / 100;
+
 function leafCount(node: MindMapNode): number {
   if (!node.children || node.children.length === 0) return 1;
   return node.children.reduce((n, c) => n + leafCount(c), 0);
@@ -43,8 +55,8 @@ function place(
 ): void {
   const rx = RX[Math.min(depth, RX.length - 1)] ?? 0;
   const ry = RY[Math.min(depth, RY.length - 1)] ?? 0;
-  const x = depth === 0 ? 0 : Math.cos(angle) * rx;
-  const y = depth === 0 ? 0 : Math.sin(angle) * ry;
+  const x = depth === 0 ? 0 : snap(Math.cos(angle) * rx);
+  const y = depth === 0 ? 0 : snap(Math.sin(angle) * ry);
   const children = node.children ?? [];
   out.nodes.push({
     node,

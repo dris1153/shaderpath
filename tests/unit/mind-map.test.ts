@@ -166,6 +166,26 @@ describe("layoutMindMap", () => {
     expect(layout.height).toBeGreaterThan(0);
   });
 
+  it("snaps every coordinate, so SSR and the client agree bit for bit", () => {
+    // sin/cos are not bit-identical across V8 builds, so an unsnapped
+    // coordinate renders as `top:149.90528800979624` on the server and
+    // `…627` in the browser. React answers that mismatch by throwing away the
+    // server tree and re-rendering the whole subtree — the static render for
+    // that page is lost and every element inside it is replaced.
+    for (const layout of [layoutMindMap(tree, "content"), layoutMindMapExpanded(tree)]) {
+      for (const p of layout.nodes) {
+        expect(
+          Math.abs(p.x * 100 - Math.round(p.x * 100)),
+          `${p.node.id}: x=${p.x} is not snapped to 0.01`,
+        ).toBeLessThan(1e-9);
+        expect(
+          Math.abs(p.y * 100 - Math.round(p.y * 100)),
+          `${p.node.id}: y=${p.y} is not snapped to 0.01`,
+        ).toBeLessThan(1e-9);
+      }
+    }
+  });
+
   it("every edge references placed nodes", () => {
     const layout = layoutMindMap(tree, "content");
     const ids = new Set(layout.nodes.map((p) => p.node.id));
