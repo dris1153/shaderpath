@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { PRESET_GROUPS } from "../../content/playground-presets";
 import { requiresAuth, signIn } from "./requires-auth";
 
 test.describe.configure({ mode: "serial" });
@@ -103,4 +104,39 @@ test.describe("saved snippets", () => {
   await page.getByRole("option", { name: "e2e-snippet" }).click();
   await expect(page.locator(".monaco-editor")).toContainText("0.8");
 });
+
+  // The reason preset values are namespaced "p:<slug>" and snippets "u:<id>".
+  // If loading a preset rebound the current snippet id, this Save would
+  // silently overwrite e2e-snippet instead of forking — data loss that looks
+  // like a UI quirk.
+  test("saving while a preset is open forks instead of overwriting", async ({
+    page,
+  }) => {
+    await page.goto("/vi/playground");
+    await expect(page.getByTestId("compile-ok")).toBeVisible({ timeout: 15_000 });
+    await applyShader(page, "void broken(", "compile-errors");
+    await applyShader(
+      page,
+      "void main() {\n  fragColor = vec4(0.11, 0.22, 0.33, 1.0);\n}",
+      "compile-ok",
+    );
+    await page.getByRole("button", { name: "Lưu" }).click();
+    await page.getByLabel("Tên snippet").fill("fork-origin");
+    await page.getByRole("dialog").getByRole("button", { name: "Lưu" }).click();
+    await expect(page.getByText("Đã lưu snippet")).toBeVisible();
+
+    await page.getByLabel("Snippet đã lưu").click();
+    await page.getByRole("option", { name: PRESET_GROUPS[0]!.presets[0]!.title.vi }).click();
+    await expect(page.getByTestId("compile-ok")).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("button", { name: "Lưu" }).click();
+    await page.getByLabel("Tên snippet").fill("fork-copy");
+    await page.getByRole("dialog").getByRole("button", { name: "Lưu" }).click();
+    await expect(page.getByText("Đã lưu snippet")).toBeVisible();
+
+    // The original must still hold its own source, untouched by either step.
+    await page.getByLabel("Snippet đã lưu").click();
+    await page.getByRole("option", { name: "fork-origin" }).click();
+    await expect(page.locator(".monaco-editor")).toContainText("0.11");
+  });
 });

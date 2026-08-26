@@ -10,6 +10,7 @@ import {
 import { DEFAULT_FRAGMENT } from "@/lib/glsl/assemble";
 import type { GlslError } from "@/lib/glsl/parse-error";
 import type { SnippetSummary } from "@/lib/api-payloads";
+import { isAuthError } from "@/lib/hooks/fetch-json";
 import { useSnippets } from "@/lib/hooks/use-snippets";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorList } from "./error-list";
@@ -30,11 +31,16 @@ export function PlaygroundClient({
   onSourceChange?: (source: string) => void;
 }) {
   const tA11y = useTranslations("a11y");
-  const { data } = useSnippets(!compact);
+  const { data, error } = useSnippets(!compact);
   // Save and delete are server actions that hand back the whole fresh list, so
   // once one has run it, not the query, is the truth.
   const [saved, setSaved] = useState<SnippetSummary[] | null>(null);
-  const snippets = saved ?? data?.snippets;
+  // /api/snippets answers 401 to a guest. That is "no account", not "could not
+  // read": the presets are static content and a signed-out visitor must still
+  // be able to browse them. Anything else — a 503, a dead network — keeps the
+  // skeleton, because then we genuinely do not know what they have saved.
+  const guest = isAuthError(error);
+  const snippets = saved ?? data?.snippets ?? (guest ? [] : undefined);
   // One selection string drives the dropdown: "" (unsaved), "u:<id>" or
   // "p:<slug>". Keeping presets out of the snippet id is what stops "Save"
   // from overwriting a user snippet after loading a preset.
@@ -62,6 +68,7 @@ export function PlaygroundClient({
       {!compact && snippets && (
         <SnippetBar
           snippets={snippets}
+          canSave={!guest}
           selection={selection}
           source={source}
           onSnippets={setSaved}

@@ -1,8 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { IconDeviceFloppy, IconFilePlus, IconTrash } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconDeviceFloppy,
+  IconFilePlus,
+  IconTrash,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,15 +20,15 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { fold } from "@/components/command/search-match";
 import type { SnippetSummary } from "@/lib/api-payloads";
 import { deleteSnippet, saveSnippet } from "@/lib/playground";
 import {
@@ -33,10 +38,16 @@ import {
 } from "@/content/playground-presets";
 import { pick, type Locale } from "@/content/types";
 
-// Select values are namespaced because presets and snippets share one list:
-// "u:<id>" is a saved snippet, "p:<slug>" is a built-in preset.
+// Values stay namespaced because presets and snippets share one list: "u:<id>"
+// is a saved snippet, "p:<slug>" is a built-in preset. Losing that distinction
+// would let Save overwrite a user snippet after a preset was loaded, which is
+// data loss wearing a UI bug's clothes.
+//
+// A searchable dialog rather than a dropdown: the preset library is heading for
+// ~36 entries, and a <select> that long is a list nobody reads.
 export function SnippetBar({
   snippets,
+  canSave,
   selection,
   source,
   onSnippets,
@@ -44,6 +55,8 @@ export function SnippetBar({
   onNew,
 }: {
   snippets: SnippetSummary[];
+  /** False for a guest: presets are browsable, saving needs an account. */
+  canSave: boolean;
   selection: string;
   source: string;
   onSnippets: (s: SnippetSummary[]) => void;
@@ -56,19 +69,35 @@ export function SnippetBar({
     ? Number(selection.slice(2))
     : null;
 
-  const selectItems: Record<string, string> = {};
-  for (const group of PRESET_GROUPS) {
-    for (const p of group.presets) {
-      selectItems[`p:${p.slug}`] = pick(p.title, locale);
-    }
-  }
-  for (const s of snippets) selectItems[`u:${s.id}`] = s.title;
   const [pending, startTransition] = useTransition();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const [saveOpen, setSaveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [title, setTitle] = useState("");
 
   const current = snippets.find((s) => s.id === currentId);
+
+  // fold() is the same diacritic-insensitive match the command palette uses,
+  // so "vet son" finds "Vệt sơn" here too.
+  const hit = useMemo(() => {
+    const q = fold(query.trim());
+    return (title: string) => q === "" || fold(title).includes(q);
+  }, [query]);
+
+  const triggerLabel =
+    (selection.startsWith("p:")
+      ? (() => {
+          const p = findPreset(selection.slice(2));
+          return p ? pick(p.title, locale) : null;
+        })()
+      : current?.title) ?? t("snippetPlaceholder");
+
+  function choose(value: string, loaded: { title: string; source: string }) {
+    onSelect(value, loaded);
+    setPickerOpen(false);
+    setQuery("");
+  }
 
   function submitSave() {
     const finalTitle = title.trim() || current?.title || t("defaultTitle");
@@ -98,66 +127,88 @@ export function SnippetBar({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Select
-        value={selection}
-        // Base UI resolves the trigger label from `items`; without it the
-        // trigger renders the raw value ("p:shaping-functions").
-        items={selectItems}
-        onValueChange={(v) => {
-          if (!v) return;
-          if (v.startsWith("p:")) {
-            const preset = findPreset(v.slice(2));
-            if (preset) {
-              onSelect(v, {
-                title: pick(preset.title, locale),
-                source: presetSource(preset, locale),
-              });
-            }
-            return;
-          }
-          const snippet = snippets.find((s) => `u:${s.id}` === v);
-          if (snippet) {
-            onSelect(v, {
-              title: snippet.title,
-              source: snippet.fragmentShader,
-            });
-          }
-        }}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-64 justify-between font-normal"
+        aria-haspopup="dialog"
+        aria-label={t("snippets")}
+        onClick={() => setPickerOpen(true)}
       >
-        <SelectTrigger size="sm" className="w-64" aria-label={t("snippets")}>
-          <SelectValue placeholder={t("snippetPlaceholder")} />
-        </SelectTrigger>
-        <SelectContent>
-          {PRESET_GROUPS.map((group) => (
-            <SelectGroup key={group.id}>
-              <SelectLabel>{pick(group.label, locale)}</SelectLabel>
-              {group.presets.map((p) => (
-                <SelectItem key={p.slug} value={`p:${p.slug}`}>
-                  {pick(p.title, locale)}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          ))}
-          {snippets.length > 0 && (
-            <>
-              <SelectSeparator />
-              <SelectGroup>
-                <SelectLabel>{t("yourSnippets")}</SelectLabel>
-                {snippets.map((s) => (
-                  <SelectItem key={s.id} value={`u:${s.id}`}>
-                    {s.title}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </>
-          )}
-        </SelectContent>
-      </Select>
+        <span className="truncate">{triggerLabel}</span>
+        <IconChevronDown className="opacity-60" />
+      </Button>
+
+      <CommandDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        title={t("snippets")}
+        description={t("searchPlaceholder")}
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder={t("searchPlaceholder")}
+            value={query}
+            onValueChange={setQuery}
+          />
+          <CommandList>
+            <CommandEmpty>{t("noMatch")}</CommandEmpty>
+            {PRESET_GROUPS.map((group) => {
+              const matches = group.presets.filter((p) =>
+                hit(pick(p.title, locale)),
+              );
+              if (matches.length === 0) return null;
+              return (
+                <CommandGroup
+                  key={group.id}
+                  heading={pick(group.label, locale)}
+                >
+                  {matches.map((p) => (
+                    <CommandItem
+                      key={p.slug}
+                      value={`p:${p.slug}`}
+                      onSelect={() =>
+                        choose(`p:${p.slug}`, {
+                          title: pick(p.title, locale),
+                          source: presetSource(p, locale),
+                        })
+                      }
+                    >
+                      {pick(p.title, locale)}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              );
+            })}
+            {snippets.filter((snip) => hit(snip.title)).length > 0 && (
+              <CommandGroup heading={t("yourSnippets")}>
+                {snippets
+                  .filter((snip) => hit(snip.title))
+                  .map((snip) => (
+                    <CommandItem
+                      key={snip.id}
+                      value={`u:${snip.id}`}
+                      onSelect={() =>
+                        choose(`u:${snip.id}`, {
+                          title: snip.title,
+                          source: snip.fragmentShader,
+                        })
+                      }
+                    >
+                      {snip.title}
+                    </CommandItem>
+                  ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </CommandDialog>
 
       <Button variant="outline" size="sm" onClick={onNew}>
         <IconFilePlus /> {t("new")}
       </Button>
 
+      {canSave && (
       <Dialog open={saveOpen} onOpenChange={setSaveOpen}>
         <DialogTrigger
           render={
@@ -187,8 +238,9 @@ export function SnippetBar({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
 
-      {current && (
+      {canSave && current && (
         <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
           <DialogTrigger
             render={

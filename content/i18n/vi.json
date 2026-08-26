@@ -247,7 +247,9 @@
     "savedToast": "Đã lưu snippet",
     "saveFailedToast": "Lưu thất bại — kiểm tra tên và độ dài shader",
     "deletedToast": "Đã xoá snippet",
-    "contextLost": "GPU context bị mất — tải lại trang để tiếp tục."
+    "contextLost": "GPU context bị mất — tải lại trang để tiếp tục.",
+    "searchPlaceholder": "Tìm preset hoặc snippet…",
+    "noMatch": "Không có mục nào khớp."
   },
   "demo": {
     "reset": "Đặt lại tham số",

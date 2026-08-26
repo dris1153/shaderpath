@@ -247,7 +247,9 @@
     "savedToast": "Snippet saved",
     "saveFailedToast": "Save failed — check the name and shader size",
     "deletedToast": "Snippet deleted",
-    "contextLost": "GPU context lost — reload the page to continue."
+    "contextLost": "GPU context lost — reload the page to continue.",
+    "searchPlaceholder": "Search presets and snippets…",
+    "noMatch": "Nothing matches."
   },
   "demo": {
     "reset": "Reset parameters",
