@@ -40,10 +40,10 @@
   </style>
 
   <!-- ============ part 1: bit anatomy ============ -->
-  <text class="title" x="40" y="22">Anatomy of a float: what each field buys you</text>
-  <text class="note" x="40" y="40">Field widths drawn to scale — one tick per bit.</text>
+  <text class="title" x="40" y="22">Giải phẫu một float: mỗi trường mua được gì</text>
+  <text class="note" x="40" y="40">Bề rộng các trường vẽ đúng tỉ lệ — mỗi vạch một bit.</text>
 
-  <text class="lbl" x="40" y="64">highp — GLSL ES 3.00 requires this storage format: IEEE-754 binary32 (32 bits)</text>
+  <text class="lbl" x="40" y="64">highp — GLSL ES 3.00 yêu cầu định dạng lưu này: IEEE-754 binary32 (32 bit)</text>
   <rect class="box" x="40" y="72" width="15" height="28" />
   <rect class="box" x="55" y="72" width="120" height="28" />
   <rect class="box-acc" x="175" y="72" width="345" height="28" />
@@ -53,10 +53,10 @@
   <text class="field" x="115" y="92" text-anchor="middle">exponent</text>
   <text class="field ink-acc" x="347" y="92" text-anchor="middle">mantissa</text>
   <text class="count" x="40" y="116">1 bit</text>
-  <text class="count" x="115" y="116" text-anchor="middle">8 bits</text>
-  <text class="count" x="347" y="116" text-anchor="middle">23 bits</text>
+  <text class="count" x="115" y="116" text-anchor="middle">8 bit</text>
+  <text class="count" x="347" y="116" text-anchor="middle">23 bit</text>
 
-  <text class="lbl" x="40" y="144">mediump — often implemented as IEEE-754 binary16, the half float (16 bits)</text>
+  <text class="lbl" x="40" y="144">mediump — thường hiện thực bằng IEEE-754 binary16, tức half float (16 bit)</text>
   <rect class="box" x="40" y="152" width="15" height="28" />
   <rect class="box" x="55" y="152" width="75" height="28" />
   <rect class="box-acc" x="130" y="152" width="150" height="28" />
@@ -66,42 +66,42 @@
   <text class="field" x="92" y="172" text-anchor="middle">exponent</text>
   <text class="field ink-acc" x="205" y="172" text-anchor="middle">mantissa</text>
   <text class="count" x="40" y="196">1 bit</text>
-  <text class="count" x="92" y="196" text-anchor="middle">5 bits</text>
-  <text class="count" x="205" y="196" text-anchor="middle">10 bits</text>
-  <text class="note" x="300" y="164">Same tick size as the strip above —</text>
-  <text class="note" x="300" y="182">13 mantissa and 3 exponent bits gone.</text>
+  <text class="count" x="92" y="196" text-anchor="middle">5 bit</text>
+  <text class="count" x="205" y="196" text-anchor="middle">10 bit</text>
+  <text class="note" x="300" y="164">Cùng cỡ vạch với dải phía trên —</text>
+  <text class="note" x="300" y="182">mất 13 bit mantissa và 3 bit exponent.</text>
 
-  <text class="note" x="40" y="224">The exponent field sets the range: how large or small a value can get.</text>
-  <text class="note" x="40" y="242">The mantissa field sets the relative precision: the gap between neighbouring values.</text>
+  <text class="note" x="40" y="224">Trường exponent quyết định dải: giá trị lớn hay nhỏ tới đâu.</text>
+  <text class="note" x="40" y="242">Trường mantissa quyết định độ chính xác tương đối: khoảng cách giữa hai giá trị kề nhau.</text>
 
   <path class="rule" d="M40,264 L580,264" />
 
   <!-- ============ part 2: what the spec floor actually is ============ -->
-  <text class="title" x="40" y="292">GLSL ES 3.00 minimum guarantees (§4.5.1)</text>
-  <text class="note" x="40" y="310">A conforming driver must meet these floors. Hardware may exceed them; it may never fall below.</text>
+  <text class="title" x="40" y="292">Bảo đảm tối thiểu của GLSL ES 3.00 (§4.5.1)</text>
+  <text class="note" x="40" y="310">Driver tuân thủ phải đạt các mức sàn này. Phần cứng có thể vượt; không được phép thấp hơn.</text>
 
   <text class="note" x="40" y="336">qualifier</text>
-  <text class="note" x="170" y="336">minimum range</text>
-  <text class="note" x="380" y="336">minimum precision</text>
+  <text class="note" x="170" y="336">dải tối thiểu</text>
+  <text class="note" x="380" y="336">độ chính xác tối thiểu</text>
   <path class="rule" d="M40,344 L580,344" />
 
   <text class="key" x="40" y="368">highp</text>
-  <text class="cell" x="170" y="368">as IEEE-754: (-2<tspan class="sup" dy="-5">126</tspan><tspan dy="5">, 2</tspan><tspan class="sup" dy="-5">127</tspan><tspan dy="5">)</tspan></text>
-  <text class="cell" x="380" y="368">relative 2<tspan class="sup" dy="-5">-24</tspan></text>
+  <text class="cell" x="170" y="368">theo IEEE-754: (-2<tspan class="sup" dy="-5">126</tspan><tspan dy="5">, 2</tspan><tspan class="sup" dy="-5">127</tspan><tspan dy="5">)</tspan></text>
+  <text class="cell" x="380" y="368">tương đối 2<tspan class="sup" dy="-5">-24</tspan></text>
   <path class="rule" d="M40,378 L580,378" />
 
   <text class="key" x="40" y="402">mediump</text>
   <text class="cell" x="170" y="402">(-2<tspan class="sup" dy="-5">14</tspan><tspan dy="5">, 2</tspan><tspan class="sup" dy="-5">14</tspan><tspan dy="5">)</tspan></text>
-  <text class="cell" x="380" y="402">relative 2<tspan class="sup" dy="-5">-10</tspan></text>
+  <text class="cell" x="380" y="402">tương đối 2<tspan class="sup" dy="-5">-10</tspan></text>
   <path class="rule" d="M40,412 L580,412" />
 
   <text class="key" x="40" y="436">lowp</text>
   <text class="cell" x="170" y="436">(-2, 2)</text>
-  <text class="cell" x="380" y="436">absolute 2<tspan class="sup" dy="-5">-8</tspan></text>
+  <text class="cell" x="380" y="436">tuyệt đối 2<tspan class="sup" dy="-5">-8</tspan></text>
   <path class="rule" d="M40,446 L580,446" />
 
-  <text class="note" x="40" y="470">binary32's 23 stored mantissa bits + 1 implicit bit give exactly the relative 2<tspan class="sup" dy="-4">-24</tspan><tspan dy="4"> above;</tspan></text>
-  <text class="note" x="40" y="488">binary16's 10 stored bits clear the mediump floor of relative 2<tspan class="sup" dy="-4">-10</tspan><tspan dy="4">.</tspan></text>
-  <text class="note" x="40" y="510">lowp's floor is absolute, not relative: even steps of 2<tspan class="sup" dy="-4">-8</tspan><tspan dy="4"> across the whole [-2, 2] range.</tspan></text>
-  <text class="note" x="40" y="532">GLSL ES 1.00 (WebGL 1) set a far lower highp floor: (-2<tspan class="sup" dy="-4">62</tspan><tspan dy="4">, 2</tspan><tspan class="sup" dy="-4">62</tspan><tspan dy="4">) at relative 2</tspan><tspan class="sup" dy="-4">-16</tspan><tspan dy="4">.</tspan></text>
+  <text class="note" x="40" y="470">23 bit mantissa lưu của binary32 + 1 bit ngầm cho đúng mức tương đối 2<tspan class="sup" dy="-4">-24</tspan><tspan dy="4"> ở trên;</tspan></text>
+  <text class="note" x="40" y="488">10 bit lưu của binary16 vượt sàn mediump là tương đối 2<tspan class="sup" dy="-4">-10</tspan><tspan dy="4">.</tspan></text>
+  <text class="note" x="40" y="510">sàn của lowp là tuyệt đối, không phải tương đối: các bước đều 2<tspan class="sup" dy="-4">-8</tspan><tspan dy="4"> trên toàn dải [-2, 2].</tspan></text>
+  <text class="note" x="40" y="532">GLSL ES 1.00 (WebGL 1) đặt sàn highp thấp hơn nhiều: (-2<tspan class="sup" dy="-4">62</tspan><tspan dy="4">, 2</tspan><tspan class="sup" dy="-4">62</tspan><tspan dy="4">) ở mức tương đối 2</tspan><tspan class="sup" dy="-4">-16</tspan><tspan dy="4">.</tspan></text>
 </svg>

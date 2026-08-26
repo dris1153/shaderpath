@@ -46,10 +46,10 @@
   </defs>
 
   <!-- ============ section 1: divergent ============ -->
-  <text class="title" x="40" y="22">Divergent branch: lanes in one warp disagree</text>
-  <text class="note" x="40" y="40">8 lanes drawn here; real hardware locks 32 (warp) or 64 (wavefront) lanes into lockstep.</text>
+  <text class="title" x="40" y="22">Nhánh phân kỳ: các lane trong cùng warp không đồng ý nhau</text>
+  <text class="note" x="40" y="40">Vẽ 8 lane; phần cứng thật khoá 32 (warp) hoặc 64 (wavefront) lane vào lockstep.</text>
 
-  <text class="code" x="40" y="64">if (x &gt; 0.5) evaluated per lane:</text>
+  <text class="code" x="40" y="64">if (x &gt; 0.5) tính cho từng lane:</text>
 
   <!-- row A: arrival -->
   <rect class="lane-idle" x="40" y="72" width="30" height="24" rx="4" />
@@ -68,13 +68,13 @@
   <text class="lane" x="230" y="89" text-anchor="middle">T</text>
   <text class="lane" x="265" y="89" text-anchor="middle">T</text>
   <text class="lane" x="300" y="89" text-anchor="middle">F</text>
-  <text class="note" x="350" y="84">5 lanes true, 3 lanes false —</text>
-  <text class="note" x="350" y="100">one instruction stream, two answers.</text>
+  <text class="note" x="350" y="84">5 lane true, 3 lane false —</text>
+  <text class="note" x="350" y="100">một luồng lệnh, hai câu trả lời.</text>
 
   <path class="arrow" d="M178,104 L178,124" marker-end="url(#head)" />
 
   <!-- row B: pass 1, then branch -->
-  <text class="stage" x="40" y="142">Pass 1 — then branch</text>
+  <text class="stage" x="40" y="142">Lượt 1 — nhánh then</text>
   <rect class="lane-on" x="40" y="150" width="30" height="24" rx="4" />
   <rect class="lane-off" x="75" y="150" width="30" height="24" rx="4" />
   <rect class="lane-on" x="110" y="150" width="30" height="24" rx="4" />
@@ -91,13 +91,13 @@
   <text class="lane ink-on" x="230" y="167" text-anchor="middle">T</text>
   <text class="lane ink-on" x="265" y="167" text-anchor="middle">T</text>
   <text class="lane ink-off" x="300" y="167" text-anchor="middle">F</text>
-  <text class="note" x="350" y="162">all 8 lanes issue the then code;</text>
-  <text class="note" x="350" y="178">the 3 false lanes commit nothing.</text>
+  <text class="note" x="350" y="162">cả 8 lane đều phát code nhánh then;</text>
+  <text class="note" x="350" y="178">3 lane false không ghi lại gì.</text>
 
   <path class="arrow" d="M178,182 L178,202" marker-end="url(#head)" />
 
   <!-- row C: pass 2, else branch -->
-  <text class="stage" x="40" y="220">Pass 2 — else branch</text>
+  <text class="stage" x="40" y="220">Lượt 2 — nhánh else</text>
   <rect class="lane-off" x="40" y="228" width="30" height="24" rx="4" />
   <rect class="lane-on" x="75" y="228" width="30" height="24" rx="4" />
   <rect class="lane-off" x="110" y="228" width="30" height="24" rx="4" />
@@ -114,8 +114,8 @@
   <text class="lane ink-off" x="230" y="245" text-anchor="middle">T</text>
   <text class="lane ink-off" x="265" y="245" text-anchor="middle">T</text>
   <text class="lane ink-on" x="300" y="245" text-anchor="middle">F</text>
-  <text class="note" x="350" y="240">same lockstep, opposite mask:</text>
-  <text class="note" x="350" y="256">the 5 true lanes are masked now.</text>
+  <text class="note" x="350" y="240">vẫn lockstep đó, mask ngược lại:</text>
+  <text class="note" x="350" y="256">giờ 5 lane true bị mask.</text>
 
   <path class="arrow" d="M178,260 L178,280" marker-end="url(#head)" />
 
@@ -137,7 +137,7 @@
   <text class="lane ink-on" x="230" y="323" text-anchor="middle">T</text>
   <text class="lane ink-on" x="265" y="323" text-anchor="middle">T</text>
   <text class="lane ink-on" x="300" y="323" text-anchor="middle">F</text>
-  <text class="note" x="350" y="323">mask cleared, whole warp active.</text>
+  <text class="note" x="350" y="323">mask được xoá, cả warp hoạt động.</text>
 
   <!-- cost bar: both sides paid -->
   <text class="note" x="40" y="388">warp time</text>
@@ -146,15 +146,15 @@
   <text class="lane ink-on" x="185" y="388" text-anchor="middle">cost(then)</text>
   <text class="lane ink-on" x="315" y="388" text-anchor="middle">cost(else)</text>
 
-  <text class="eq" x="40" y="420">time = cost(then) + cost(else) — not the max, not just the side a lane took.</text>
+  <text class="eq" x="40" y="420">thời gian = cost(then) + cost(else) — không phải max, cũng không phải riêng nhánh mà lane đi.</text>
 
   <path class="rule" d="M40,446 L580,446" />
 
   <!-- ============ section 2: non-divergent ============ -->
-  <text class="title" x="40" y="474">Non-divergent: every lane in the warp agrees</text>
-  <text class="note" x="40" y="492">The condition reads a uniform, so it holds the same value in every lane of the warp.</text>
+  <text class="title" x="40" y="474">Không phân kỳ: mọi lane trong warp đều đồng ý</text>
+  <text class="note" x="40" y="492">Điều kiện đọc một uniform, nên nó mang cùng giá trị ở mọi lane của warp.</text>
 
-  <text class="code" x="40" y="516">if (uUseB &gt; 0.5) evaluated per lane:</text>
+  <text class="code" x="40" y="516">if (uUseB &gt; 0.5) tính cho từng lane:</text>
 
   <!-- row A2: arrival, all true -->
   <rect class="lane-idle" x="40" y="524" width="30" height="24" rx="4" />
@@ -173,12 +173,12 @@
   <text class="lane" x="230" y="541" text-anchor="middle">T</text>
   <text class="lane" x="265" y="541" text-anchor="middle">T</text>
   <text class="lane" x="300" y="541" text-anchor="middle">T</text>
-  <text class="note" x="350" y="541">8 of 8 lanes true — nothing to split.</text>
+  <text class="note" x="350" y="541">8/8 lane true — không có gì để tách.</text>
 
   <path class="arrow" d="M178,556 L178,576" marker-end="url(#head)" />
 
   <!-- row B2: single pass -->
-  <text class="stage" x="40" y="594">One pass — then branch only</text>
+  <text class="stage" x="40" y="594">Một lượt — chỉ nhánh then</text>
   <rect class="lane-on" x="40" y="602" width="30" height="24" rx="4" />
   <rect class="lane-on" x="75" y="602" width="30" height="24" rx="4" />
   <rect class="lane-on" x="110" y="602" width="30" height="24" rx="4" />
@@ -195,23 +195,23 @@
   <text class="lane ink-on" x="230" y="619" text-anchor="middle">T</text>
   <text class="lane ink-on" x="265" y="619" text-anchor="middle">T</text>
   <text class="lane ink-on" x="300" y="619" text-anchor="middle">T</text>
-  <text class="note" x="350" y="614">no lane is masked, and the else</text>
-  <text class="note" x="350" y="630">side is never fetched or issued.</text>
+  <text class="note" x="350" y="614">không lane nào bị mask, và nhánh</text>
+  <text class="note" x="350" y="630">else không hề được nạp hay phát.</text>
 
   <!-- cost bar: one side only, ghost shows the divergent total -->
   <text class="note" x="40" y="672">warp time</text>
   <rect class="ghost" x="110" y="658" width="260" height="20" rx="4" />
   <rect class="lane-on" x="110" y="658" width="150" height="20" rx="4" />
   <text class="lane ink-on" x="185" y="672" text-anchor="middle">cost(then)</text>
-  <text class="note" x="382" y="672">dashed: the divergent total</text>
+  <text class="note" x="382" y="672">nét đứt: tổng của trường hợp phân kỳ</text>
 
-  <text class="eq" x="40" y="704">time = cost(then) — the branch nobody took costs nothing at all.</text>
+  <text class="eq" x="40" y="704">thời gian = cost(then) — nhánh không ai đi thì không tốn gì cả.</text>
 
   <!-- legend -->
   <rect class="lane-idle" x="40" y="728" width="16" height="14" rx="3" />
-  <text class="note" x="62" y="739">lane before the branch</text>
+  <text class="note" x="62" y="739">lane trước khi rẽ nhánh</text>
   <rect class="lane-on" x="204" y="728" width="16" height="14" rx="3" />
-  <text class="note" x="226" y="739">active: commits results</text>
+  <text class="note" x="226" y="739">hoạt động: ghi lại kết quả</text>
   <rect class="lane-off" x="376" y="728" width="16" height="14" rx="3" />
-  <text class="note" x="398" y="739">masked: runs, commits nothing</text>
+  <text class="note" x="398" y="739">bị mask: vẫn chạy, không ghi gì</text>
 </svg>

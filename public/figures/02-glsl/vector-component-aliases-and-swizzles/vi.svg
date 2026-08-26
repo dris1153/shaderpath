@@ -43,8 +43,8 @@
     .rule { stroke: var(--line); stroke-width: 1; }
   </style>
 
-  <text class="title" x="40" y="22">Four slots, three name sets, one length rule</text>
-  <text class="note" x="40" y="40">vec4 v = vec4(0.2, 0.4, 0.6, 1.0); every name below points at the same memory.</text>
+  <text class="title" x="40" y="22">Bốn slot, ba bộ tên, một quy tắc độ dài</text>
+  <text class="note" x="40" y="40">vec4 v = vec4(0.2, 0.4, 0.6, 1.0); mọi tên bên dưới đều trỏ vào cùng vùng nhớ.</text>
 
   <!-- ============ the four slots ============ -->
   <text class="slot" x="185" y="68" text-anchor="middle">slot 0</text>
@@ -68,29 +68,29 @@
   <text class="alias" x="275" y="146" text-anchor="middle">y</text>
   <text class="alias" x="365" y="146" text-anchor="middle">z</text>
   <text class="alias" x="455" y="146" text-anchor="middle">w</text>
-  <text class="note" x="510" y="146">positions</text>
+  <text class="note" x="510" y="146">vị trí</text>
 
   <text class="set" x="130" y="174" text-anchor="end">.rgba</text>
   <text class="alias" x="185" y="174" text-anchor="middle">r</text>
   <text class="alias" x="275" y="174" text-anchor="middle">g</text>
   <text class="alias" x="365" y="174" text-anchor="middle">b</text>
   <text class="alias" x="455" y="174" text-anchor="middle">a</text>
-  <text class="note" x="510" y="174">colours</text>
+  <text class="note" x="510" y="174">màu</text>
 
   <text class="set" x="130" y="202" text-anchor="end">.stpq</text>
   <text class="alias" x="185" y="202" text-anchor="middle">s</text>
   <text class="alias" x="275" y="202" text-anchor="middle">t</text>
   <text class="alias" x="365" y="202" text-anchor="middle">p</text>
   <text class="alias" x="455" y="202" text-anchor="middle">q</text>
-  <text class="note" x="510" y="202">texture uv</text>
+  <text class="note" x="510" y="202">uv texture</text>
 
-  <text class="note" x="40" y="222">Three vocabularies for the same four slots — vec2 and vec3 use the same names, just fewer of them.</text>
-  <text class="note" x="40" y="240">Never mix two sets in one expression — v.xg is a compile error.</text>
+  <text class="note" x="40" y="222">Ba bộ từ vựng cho cùng bốn slot — vec2 và vec3 dùng đúng các tên đó, chỉ ít hơn.</text>
+  <text class="note" x="40" y="240">Đừng bao giờ trộn hai bộ trong một biểu thức — v.xg là lỗi biên dịch.</text>
 
   <path class="rule" d="M40,256 L580,256" />
 
   <!-- ============ reading ============ -->
-  <text class="lbl" x="40" y="282">Reading: any subset, in any order, repeats allowed</text>
+  <text class="lbl" x="40" y="282">Đọc: lấy tập con bất kỳ, thứ tự bất kỳ, được lặp lại</text>
 
   <text class="lbl" x="40" y="322">v.bgr</text>
   <text class="slot" x="245" y="304" text-anchor="middle">b</text>
@@ -102,7 +102,7 @@
   <text class="cell" x="245" y="331" text-anchor="middle">0.6</text>
   <text class="cell" x="315" y="331" text-anchor="middle">0.4</text>
   <text class="cell" x="385" y="331" text-anchor="middle">0.2</text>
-  <text class="note" x="434" y="331">a vec3, reversed</text>
+  <text class="note" x="434" y="331">một vec3, đảo ngược</text>
 
   <text class="lbl" x="40" y="378">v.xyx</text>
   <text class="slot" x="245" y="360" text-anchor="middle">x</text>
@@ -114,18 +114,18 @@
   <text class="cell" x="245" y="387" text-anchor="middle">0.2</text>
   <text class="cell" x="315" y="387" text-anchor="middle">0.4</text>
   <text class="cell" x="385" y="387" text-anchor="middle">0.2</text>
-  <text class="note" x="434" y="387">a vec3, slot 0 reused</text>
+  <text class="note" x="434" y="387">một vec3, dùng lại slot 0</text>
 
-  <text class="note" x="40" y="416">The result size is the count of letters you write, never the size of the source.</text>
+  <text class="note" x="40" y="416">Kích thước kết quả là số chữ cái bạn viết, không phải kích thước của nguồn.</text>
 
   <path class="rule" d="M40,438 L580,438" />
 
   <!-- ============ writing ============ -->
-  <text class="lbl" x="40" y="464">Writing to a swizzle: the same names, minus one freedom the read side has</text>
+  <text class="lbl" x="40" y="464">Ghi vào swizzle: vẫn các tên đó, mất đi một tự do mà bên đọc có</text>
 
   <text class="lbl ink-acc" x="40" y="488">v.rg = uv;</text>
-  <text class="note" x="230" y="488">legal — fills slots 0 and 1, leaves b and a alone</text>
+  <text class="note" x="230" y="488">hợp lệ — điền slot 0 và 1, không đụng b và a</text>
 
   <text class="lbl ink-bad" x="40" y="508">v.xx = vec2(1.0, 2.0);</text>
-  <text class="note" x="230" y="508">error — which of the two values would land in x?</text>
+  <text class="note" x="230" y="508">lỗi — trong hai giá trị đó, cái nào vào x?</text>
 </svg>
