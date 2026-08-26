@@ -5,6 +5,7 @@ import {
   PRESET_GROUPS,
   presetSource,
 } from "../../content/playground-presets";
+import { requiresAuth, signIn } from "./requires-auth";
 
 // The built-in presets are static GLSL that nothing else compiles: without a
 // test they rot silently the first time the prelude or a uniform changes.
@@ -58,6 +59,13 @@ const editorValue = (page: Page) =>
 const BROKEN = "void main() {\n  fragColor = neverDeclaredXyz;\n}";
 
 test.describe.configure({ mode: "serial" });
+
+// Writes user data, so it needs an account: RLS shows a signed-out
+// visitor nothing, and the account-only endpoints answer 401.
+requiresAuth();
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
 
 test("picking a preset from the dropdown loads its exact source", async ({
   page,

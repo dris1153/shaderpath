@@ -53,7 +53,10 @@ export function MindMapCanvas({
           onClick={() => onToggleBranch(node.id)}
         >
           {node.label}
-          <span className="text-muted-foreground ml-1 tabular-nums">
+          {/* Inherits the button's own foreground: muted-foreground on
+              bg-secondary fails WCAG AA (axe color-contrast, serious). The
+              count reads as secondary through weight, not through colour. */}
+          <span className="ml-1 font-normal tabular-nums">
             {hiddenCount > 0 ? `+${hiddenCount}` : ""}
           </span>
         </button>

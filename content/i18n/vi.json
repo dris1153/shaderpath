@@ -27,7 +27,9 @@
     "passwordTooShort": "Mật khẩu cần ít nhất {min} ký tự.",
     "passwordHint": "Ít nhất {min} ký tự.",
     "haveAccount": "Đã có tài khoản?",
-    "noAccount": "Chưa có tài khoản?"
+    "noAccount": "Chưa có tài khoản?",
+    "guestTitle": "Bạn chưa đăng nhập",
+    "guestBody": "Mọi bài học đều mở, nhưng tiến độ chỉ được lưu khi có tài khoản."
   },
   "notes": {
     "title": "Ghi chú & Bookmark",
@@ -138,7 +140,9 @@
     "mapLegendCompleted": "Đã hoàn thành",
     "mapLegendUnlocked": "Sẵn sàng học",
     "mapLegendLocked": "Chưa mở khoá theo lộ trình",
-    "mapA11y": "Sơ đồ thiên về chuột/cảm ứng — chế độ Danh sách đầy đủ hơn cho bàn phím và trình đọc màn hình."
+    "mapA11y": "Sơ đồ thiên về chuột/cảm ứng — chế độ Danh sách đầy đủ hơn cho bàn phím và trình đọc màn hình.",
+    "signedOut": "Bạn đang xem với tư cách khách — tiến độ không được lưu.",
+    "signedOutCta": "Đăng nhập để lưu"
   },
   "lesson": {
     "backToTrack": "Về track",
@@ -291,6 +295,13 @@
     "table_studySessions": "Phiên học",
     "table_reviewQueue": "Hàng đợi ôn tập",
     "table_playgroundSnippets": "Snippet playground",
-    "table_settings": "Cài đặt"
+    "table_settings": "Cài đặt",
+    "deleteAccount": "Xoá tài khoản",
+    "deleteAccountTitle": "Xoá tài khoản",
+    "deleteAccountBody": "Xoá vĩnh viễn tài khoản và toàn bộ tiến độ, ghi chú, bài tập, snippet. Không khôi phục được — không có xác thực email nên cũng không có đường lấy lại.",
+    "deleteAccountExportFirst": "Tải bản sao lưu trước",
+    "deleteAccountConfirmLabel": "Nhập {email} để xác nhận",
+    "deleteAccountWorking": "Đang xoá…",
+    "deleteAccountError": "Không xoá được — thử lại"
   }
 }

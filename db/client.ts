@@ -37,8 +37,13 @@ function getDb(): Db {
   return (globalForDb.__shaderpathDb ??= createDb());
 }
 
-// The ambient owner-scoped transaction, if withUser() opened one.
-const userTx = new AsyncLocalStorage<Tx>();
+// The ambient owner-scoped transaction, if withUser() opened one, plus whose
+// it is — an inherited scope is only safe if you can tell who you inherited.
+interface UserScope {
+  tx: Tx;
+  userId: string;
+}
+const userTx = new AsyncLocalStorage<UserScope>();
 
 // Resolves to the ambient transaction opened by withUser(). This indirection is
 // the whole reason RLS was chosen over manual scoping: every existing
@@ -57,14 +62,14 @@ const userTx = new AsyncLocalStorage<Tx>();
 // long before any request needs a connection.
 export const db = new Proxy({} as Db, {
   get: (_target, prop, receiver) => {
-    const tx = userTx.getStore();
-    if (!tx) {
+    const scope = userTx.getStore();
+    if (!scope) {
       throw new Error(
         "db was accessed outside withUser(). Wrap the handler in withUser(userId, ...), " +
           "or use adminDb() for setup/migration code that must not be owner-scoped.",
       );
     }
-    return Reflect.get(tx, prop, receiver);
+    return Reflect.get(scope.tx, prop, receiver);
   },
 });
 
@@ -77,9 +82,9 @@ export function adminDb(): Db {
   return getDb();
 }
 
-/** True while running inside withUser(). */
-export function hasUserContext(): boolean {
-  return userTx.getStore() !== undefined;
+/** The owner of the ambient scope, or null outside withUser(). */
+export function currentUserId(): string | null {
+  return userTx.getStore()?.userId ?? null;
 }
 
 /**
@@ -92,6 +97,11 @@ export function hasUserContext(): boolean {
  * Keep the body short and database-only: under the transaction pooler this
  * holds the single connection, so an HTTP call in here blocks everything else
  * on this instance.
+ *
+ * ALWAYS await inside the callback. Drizzle's builders resolve the session when
+ * the promise is awaited, so `withUser(id, () => db.execute(...))` runs the
+ * query after this scope has closed and throws "accessed outside withUser".
+ * Write `async () => { await db.execute(...) }`.
  */
 export async function withUser<T>(
   userId: string,
@@ -105,6 +115,6 @@ export async function withUser<T>(
         role: "authenticated",
       })}, true)`,
     );
-    return userTx.run(tx, fn);
+    return userTx.run({ tx, userId }, fn);
   });
 }

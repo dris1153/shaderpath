@@ -5,6 +5,7 @@ import { LESSONS, TRACKS } from "@/content/curriculum";
 import type { Locale } from "@/content/types";
 import { getLesson, getTrack } from "@/lib/curriculum";
 import { useDashboard } from "@/lib/hooks/use-dashboard";
+import { isAuthError } from "@/lib/hooks/fetch-json";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
@@ -22,7 +23,40 @@ import { TrackMap, type TrackStepVM } from "./track-map";
 export function DashboardView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("dashboard");
-  const { data, isError } = useDashboard();
+  const { data, isError, error } = useDashboard();
+  const tAuth = useTranslations("auth");
+
+  // 401 is a guest, not an outage: the tracks below are the right thing to show
+  // either way, but the reason above them is completely different.
+  if (isAuthError(error)) {
+    return (
+      <>
+        <Alert className="mt-6">
+          <AlertTitle>{tAuth("guestTitle")}</AlertTitle>
+          <AlertDescription>
+            {tAuth("guestBody")}{" "}
+            <Link href="/login" className="text-primary underline underline-offset-4">
+              {tAuth("login")}
+            </Link>
+          </AlertDescription>
+        </Alert>
+
+        <h2 className="mt-8 text-lg font-semibold">{t("offlineTracks")}</h2>
+        <ul className="mt-3 space-y-3">
+          {TRACKS.map((track) => (
+            <li key={track.id}>
+              <Link
+                href={`/track/${track.id}`}
+                className="font-medium hover:underline"
+              >
+                {track.title[locale]}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </>
+    );
+  }
 
   if (isError) {
     return (

@@ -37,6 +37,21 @@ export default defineConfig({
     url: "http://localhost:3100/vi",
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { DATABASE_URL: E2E_DATABASE_URL },
+    // No NEXT_PUBLIC_SUPABASE_* on purpose: a placeholder host makes every
+    // session lookup wait for a DNS/TCP timeout, and navigating away mid-request
+    // aborts it — which surfaced as an uncaught exception in the dev server and
+    // detached elements in the demo specs. Unconfigured means "everyone is a
+    // guest", answered instantly. Specs that need an account supply the real
+    // values themselves (tests/e2e/requires-auth.ts).
+    env: {
+      DATABASE_URL: E2E_DATABASE_URL,
+      ...(process.env.E2E_SUPABASE_EMAIL
+        ? {
+            NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+            NEXT_PUBLIC_SUPABASE_ANON_KEY:
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+          }
+        : {}),
+    },
   },
 });

@@ -27,7 +27,9 @@
     "passwordTooShort": "Password must be at least {min} characters.",
     "passwordHint": "At least {min} characters.",
     "haveAccount": "Already have an account?",
-    "noAccount": "No account yet?"
+    "noAccount": "No account yet?",
+    "guestTitle": "You are not signed in",
+    "guestBody": "Every lesson is open, but progress is only saved with an account."
   },
   "notes": {
     "title": "Notes & Bookmarks",
@@ -138,7 +140,9 @@
     "mapLegendCompleted": "Completed",
     "mapLegendUnlocked": "Ready to learn",
     "mapLegendLocked": "Not yet unlocked",
-    "mapA11y": "The map favors mouse and touch — List view is the fuller experience for keyboard and screen readers."
+    "mapA11y": "The map favors mouse and touch — List view is the fuller experience for keyboard and screen readers.",
+    "signedOut": "You are browsing as a guest — nothing is being saved.",
+    "signedOutCta": "Sign in to save progress"
   },
   "lesson": {
     "backToTrack": "Back to track",
@@ -291,6 +295,13 @@
     "table_studySessions": "Study sessions",
     "table_reviewQueue": "Review queue",
     "table_playgroundSnippets": "Playground snippets",
-    "table_settings": "Settings"
+    "table_settings": "Settings",
+    "deleteAccount": "Delete account",
+    "deleteAccountTitle": "Delete account",
+    "deleteAccountBody": "Permanently deletes the account and every trace of progress, notes, exercises and snippets. There is no undo — and with no email verification, no way to reclaim it.",
+    "deleteAccountExportFirst": "Download a backup first",
+    "deleteAccountConfirmLabel": "Type {email} to confirm",
+    "deleteAccountWorking": "Deleting…",
+    "deleteAccountError": "Deletion failed — try again"
   }
 }

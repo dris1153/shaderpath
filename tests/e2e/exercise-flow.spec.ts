@@ -1,9 +1,17 @@
 import { expect, test } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
 
 // A concept answer lives in `solutionNote` (bilingual prose), not in
 // `solutionCode`. Two things regress easily: the reveal button used to be gated
 // on solutionCode alone, so a note-only exercise could never be opened; and the
 // note must render as prose, never as a syntax-highlighted code block.
+// Writes user data, so it needs an account: RLS shows a signed-out
+// visitor nothing, and the account-only endpoints answer 401.
+requiresAuth();
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
+
 test("a note-only solution reveals and renders as prose in both locales", async ({
   page,
 }) => {

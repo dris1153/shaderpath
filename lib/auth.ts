@@ -1,5 +1,5 @@
-import { hasUserContext, withUser } from "@/db/client";
-import { createClient } from "@/lib/supabase/server";
+import { currentUserId, withUser } from "@/db/client";
+import { createClient, supabaseEnv } from "@/lib/supabase/server";
 
 // The single identity gate. `getUser()` is deliberately the only way the rest of
 // the app learns who is signed in, so every data path funnels through the same
@@ -30,11 +30,17 @@ export class AuthUnavailableError extends Error {
  * the data routes are built to avoid.
  */
 export async function getUser(): Promise<AuthUser | null> {
+  // No auth configured at all: every reader is a guest. Distinct from an
+  // unreachable auth server — this state is obvious in the UI (nobody can sign
+  // in) rather than silently mistaking a signed-in reader for an empty account,
+  // and it keeps environments without Supabase (e2e) from waiting on a network
+  // round-trip per request.
+  if (!supabaseEnv()) return null;
+
   let supabase;
   try {
     supabase = await createClient();
   } catch (err) {
-    // Missing env: a configuration fault, not a signed-out reader.
     throw new AuthUnavailableError(err);
   }
 
@@ -78,7 +84,24 @@ export function asUser<A extends unknown[], R>(
     // Already scoped by the caller (a route handler that opened withUser):
     // inherit it rather than re-verifying with the auth server and nesting a
     // second transaction.
-    if (hasUserContext()) return fn(...args);
+    //
+    // Nothing today opens a scope for anyone but the caller, so inheriting is
+    // correct and saves an auth round-trip per action — the flush beacon runs
+    // two of these. Outside production the assumption is checked anyway, so a
+    // future admin or import path that scoped to someone else fails in
+    // development rather than writing under the wrong account in production.
+    const ambient = currentUserId();
+    if (ambient !== null) {
+      if (process.env.NODE_ENV !== "production") {
+        const signedIn = await getUser().catch(() => null);
+        if (signedIn && signedIn.id !== ambient) {
+          throw new Error(
+            `Refusing to run a user action inside another user's database scope (signed in as ${signedIn.id}, scope belongs to ${ambient})`,
+          );
+        }
+      }
+      return fn(...args);
+    }
     const user = await requireUser();
     return withUser(user.id, () => fn(...args));
   };

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
 
 test.describe.configure({ mode: "serial" });
 
@@ -72,7 +73,14 @@ test("a syntax error shows the correct user line and the app survives (§11.5)",
   );
 });
 
-test("snippets persist across reload", async ({ page }) => {
+test.describe("saved snippets", () => {
+  // Saving a snippet writes a row, so it needs an account.
+  requiresAuth();
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
+  test("snippets persist across reload", async ({ page }) => {
   await page.goto("/vi/playground");
   await expect(page.getByTestId("compile-ok")).toBeVisible({ timeout: 15_000 });
 
@@ -94,4 +102,5 @@ test("snippets persist across reload", async ({ page }) => {
   await page.getByLabel("Snippet đã lưu").click();
   await page.getByRole("option", { name: "e2e-snippet" }).click();
   await expect(page.locator(".monaco-editor")).toContainText("0.8");
+});
 });

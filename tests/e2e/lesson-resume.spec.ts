@@ -1,8 +1,16 @@
 import { expect, test } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
 
 const LESSON_URL = "/vi/lesson/cartesian-and-uv-space";
 
 test.describe.configure({ mode: "serial" });
+
+// Writes user data, so it needs an account: RLS shows a signed-out
+// visitor nothing, and the account-only endpoints answer 401.
+requiresAuth();
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
 
 test("lesson renders theory, TOC and references", async ({ page }) => {
   await page.goto(LESSON_URL);

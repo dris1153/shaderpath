@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
 
 // §11.2: start from an empty database, migrations have run, the app works.
 //
@@ -13,6 +14,13 @@ import { expect, test } from "@playwright/test";
 // Alphabetically "fresh-db-boot" sorts early enough for that.
 
 test.describe.configure({ mode: "serial" });
+
+// Writes user data, so it needs an account: RLS shows a signed-out
+// visitor nothing, and the account-only endpoints answer 401.
+requiresAuth();
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
 
 test("dashboard renders against the freshly migrated database", async ({
   page,

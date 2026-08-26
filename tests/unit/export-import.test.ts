@@ -213,4 +213,76 @@ describe("export-import round trip", () => {
     expect(mine).toHaveLength(1);
     expect(mine[0]?.timeSpentSeconds).toBe(60);
   });
+
+  it("refuses a file that names an owner or a row id", async () => {
+    // The import format carries neither, so a hand-edited file trying to plant
+    // rows under someone else is rejected at validation rather than reaching
+    // the database. RLS would stop the write anyway; this makes it a 400 with
+    // a reason instead of a constraint violation.
+    const json = roundTripThroughJson(await asOwner(() => serialize())) as {
+      tables: Record<string, unknown>;
+    };
+    json.tables.notes = [
+      {
+        userId: otherId,
+        lessonSlug: "vector-basics",
+        anchorId: null,
+        selectedText: null,
+        body: "planted",
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    expect(() => validate(json)).toThrow(ValidationError);
+
+    const withId = roundTripThroughJson(await asOwner(() => serialize())) as {
+      tables: Record<string, unknown>;
+    };
+    withId.tables.notes = [
+      {
+        id: 1,
+        lessonSlug: "vector-basics",
+        anchorId: null,
+        selectedText: null,
+        body: "targets an existing row",
+        createdAt: new Date().toISOString(),
+      },
+    ];
+    expect(() => validate(withId)).toThrow(ValidationError);
+  });
+
+  it("accepts a v1 file, dropping the settings table it carried", async () => {
+    // Readers may still hold backups taken before the settings table was
+    // dropped. Rejecting those would strand the only recovery path a
+    // forgotten password leaves them.
+    const v1 = {
+      schemaVersion: 1,
+      exportedAt: new Date().toISOString(),
+      tables: {
+        lessonProgress: [
+          {
+            lessonSlug: "quaternions",
+            status: "completed",
+            startedAt: null,
+            completedAt: null,
+            timeSpentSeconds: 30,
+            scrollPercent: 1,
+            confidence: null,
+          },
+        ],
+        exerciseAttempts: [],
+        notes: [],
+        bookmarks: [],
+        studySessions: [],
+        reviewQueue: [],
+        playgroundSnippets: [],
+        settings: [{ key: "quality_tier", value: "high" }],
+      },
+    };
+    const payload = validate(v1);
+    await asOwner(async () => {
+      await apply(payload, "merge");
+      const rows = await db.select().from(lessonProgress);
+      expect(rows.some((r) => r.lessonSlug === "quaternions")).toBe(true);
+    });
+  });
 });

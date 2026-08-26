@@ -10,6 +10,7 @@ import { LocaleSwitcher } from "@/components/shell/locale-switcher";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { QualitySelect } from "@/components/settings/quality-select";
 import { DataPanel } from "@/components/settings/data-panel";
+import { DeleteAccount } from "@/components/settings/delete-account";
 
 export default async function SettingsPage({
   params,
@@ -54,6 +55,7 @@ export default async function SettingsPage({
       </Card>
 
       <DataPanel />
+      <DeleteAccount />
     </main>
   );
 }

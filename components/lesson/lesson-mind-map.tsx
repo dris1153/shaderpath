@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { IconArrowsMaximize } from "@tabler/icons-react";
 import type { MindMapNode } from "@/content/types";
@@ -46,7 +46,11 @@ export function LessonMindMap({
   const toggle = (id: string) =>
     setExpandedId((prev) => (prev === id ? null : id));
 
-  useEffect(() => {
+  // useLayoutEffect, not useEffect: this sets the frame's height, and doing it
+  // after paint shifts everything below the map on every lesson load. Measuring
+  // before the browser paints makes the correction invisible — and keeps the
+  // page still enough for Playwright to consider the demo below it stable.
+  useLayoutEffect(() => {
     const measure = () => {
       const w = frameRef.current?.clientWidth;
       if (w) setFit(Math.min(1, w / layout.width));

@@ -8,20 +8,18 @@ import { cookies } from "next/headers";
 // Next allows to write cookies, which is what token refresh needs. The root
 // layout deliberately does NOT read auth, so lesson pages stay static.
 
-export function supabaseEnv() {
+/** null when auth is not configured at all — distinct from "cannot reach it". */
+export function supabaseEnv(): { url: string; key: string } | null {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set",
-    );
-  }
-  return { url, key };
+  return url && key ? { url, key } : null;
 }
 
 export async function createClient() {
   const cookieStore = await cookies();
-  const { url, key } = supabaseEnv();
+  const env = supabaseEnv();
+  if (!env) throw new Error("Supabase auth is not configured");
+  const { url, key } = env;
 
   return createServerClient(url, key, {
     cookies: {

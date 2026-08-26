@@ -126,6 +126,15 @@ function validateRows(tableName: keyof ImportTables, raw: unknown, issues: strin
     for (const [col, rule] of Object.entries(rules)) {
       if (!rule(obj[col])) issues.push(`${tableName}[${i}].${col}: invalid value`);
     }
+    // Unknown columns are rejected, not ignored. `user_id` and `id` are the
+    // ones that matter: neither belongs in an export, and a file offering them
+    // is trying to choose an owner or overwrite a specific row. Silently
+    // dropping them works only until someone spreads the row into an insert.
+    for (const col of Object.keys(obj)) {
+      if (!(col in rules)) {
+        issues.push(`${tableName}[${i}].${col}: unknown column`);
+      }
+    }
   });
 }
 

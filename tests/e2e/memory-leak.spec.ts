@@ -38,6 +38,11 @@ async function heapUsedBytes(cdp: CDPSession): Promise<number> {
 async function visitLesson(page: Page, slug: string) {
   await page.goto(`/vi/lesson/${slug}`);
   const container = page.locator("[data-demo-container]");
+  // The demo is a React.lazy boundary: the container appears when its chunk
+  // resolves, and acting on the locator before that races the Suspense swap —
+  // the element resolves, then detaches under the action. Wait for it to be
+  // attached and settled first.
+  await container.waitFor({ state: "visible", timeout: 30_000 });
   await container.scrollIntoViewIfNeeded();
   // Let the demo mount and tick a few real frames before moving on.
   await expect

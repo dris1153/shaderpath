@@ -1,4 +1,12 @@
 import { expect, test } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
+
+// Writes user data, so it needs an account: RLS shows a signed-out
+// visitor nothing, and the account-only endpoints answer 401.
+requiresAuth();
+test.beforeEach(async ({ page }) => {
+  await signIn(page);
+});
 
 test("command palette searches lessons and navigates", async ({ page }) => {
   await page.goto("/vi");

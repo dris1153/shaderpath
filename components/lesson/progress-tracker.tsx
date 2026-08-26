@@ -39,7 +39,13 @@ export function ProgressTracker({ slug }: { slug: string }) {
     );
   }, [savedPercent]);
 
+  // A guest reading a public lesson has nowhere to record anything: every write
+  // action would throw "Not signed in" on the server, once per page view. Wait
+  // until the session is known, then only track for an account.
+  const authenticated = data?.authenticated ?? null;
+
   useEffect(() => {
+    if (authenticated !== true) return;
     const s = {
       percent: 0,
       lastSavedPercent: -1,
@@ -135,7 +141,7 @@ export function ProgressTracker({ slug }: { slug: string }) {
       }
     };
     // saveMutate identity is stable in TanStack Query v5
-  }, [slug, saveMutate]);
+  }, [slug, saveMutate, authenticated]);
 
   return null;
 }

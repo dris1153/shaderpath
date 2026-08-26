@@ -2,8 +2,10 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -76,19 +78,26 @@ export function QualityProvider({ children }: { children: ReactNode }) {
     };
   }, [stored, detected]);
 
-  function setTier(next: QualityTier) {
+  const setTier = useCallback((next: QualityTier) => {
     setOverride(next);
     writeStored(next);
-  }
+  }, []);
 
-  const config = TIER_CONFIG[tier];
+  // Memoised: this provider wraps the whole app, so a fresh object here
+  // re-renders every consumer — including the demo canvases — each time
+  // detection resolves.
+  const value = useMemo(() => {
+    const config = TIER_CONFIG[tier];
+    return {
+      tier,
+      dpr: config.dpr,
+      effectBudget: config.effectBudget,
+      setTier,
+    };
+  }, [tier, setTier]);
 
   return (
-    <QualityContext.Provider
-      value={{ tier, dpr: config.dpr, effectBudget: config.effectBudget, setTier }}
-    >
-      {children}
-    </QualityContext.Provider>
+    <QualityContext.Provider value={value}>{children}</QualityContext.Provider>
   );
 }
 

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { requiresAuth, signIn } from "./requires-auth";
 
 // §11.6: entire app navigable by keyboard. Runs after fresh-db-boot.spec.ts
 // alphabetically, so state writes here (if any) don't disturb its
@@ -45,7 +46,14 @@ test("command palette: Ctrl+K opens, arrow selects an option, ESC closes and res
   await expect(roadmapLink).toBeFocused();
 });
 
-test("dialog: save-snippet dialog traps focus and ESC restores focus to its trigger", async ({
+test.describe("save-snippet dialog", () => {
+  // The dialog only opens for an account: saving writes a row.
+  requiresAuth();
+  test.beforeEach(async ({ page }) => {
+    await signIn(page);
+  });
+
+  test("dialog: save-snippet dialog traps focus and ESC restores focus to its trigger", async ({
   page,
 }) => {
   await page.goto("/vi/playground");
@@ -69,6 +77,7 @@ test("dialog: save-snippet dialog traps focus and ESC restores focus to its trig
   await page.keyboard.press("Escape");
   await expect(dialogContent).toBeHidden();
   await expect(trigger).toBeFocused();
+});
 });
 
 test("lesson page: TOC links and demo controls are keyboard-reachable and labelled", async ({

@@ -186,4 +186,45 @@ describe("RLS isolation between accounts", () => {
     expect(aliceNotes).toHaveLength(1);
     expect(aliceNotes[0]?.body).toBe("alice's private note");
   });
+
+  it("deletes only the caller's account, and cascades to every table", async () => {
+    // delete_own_account takes no argument on purpose: even a wrong handler
+    // cannot name someone else. The FK cascades then do the sweep, so no
+    // per-table delete list can fall behind the schema.
+    const doomed = await createTestUser("doomed@test.local");
+    await withUser(doomed, async () => {
+      await db.insert(lessonProgress).values({
+        lessonSlug: "quaternions",
+        status: "completed",
+      });
+      await db.insert(notes).values({
+        lessonSlug: "quaternions",
+        body: "gone soon",
+        createdAt: new Date(),
+      });
+    });
+
+    const before = await adminDb()
+      .select()
+      .from(lessonProgress)
+      .then((r) => r.filter((x) => x.userId === doomed));
+    expect(before).toHaveLength(1);
+
+    await withUser(doomed, async () => {
+      await db.execute(sql`SELECT public.delete_own_account()`);
+    });
+
+    const [remaining] = (await adminDb().execute(
+      sql`SELECT (
+        (SELECT count(*) FROM lesson_progress WHERE user_id = ${doomed}::uuid) +
+        (SELECT count(*) FROM notes          WHERE user_id = ${doomed}::uuid) +
+        (SELECT count(*) FROM auth.users     WHERE id      = ${doomed}::uuid)
+      )::text AS n`,
+    )) as unknown as { n: string }[];
+    expect(remaining?.n).toBe("0");
+
+    // Alice, who did nothing, still has hers.
+    const aliceNotes = await withUser(alice, () => db.select().from(notes));
+    expect(aliceNotes.length).toBeGreaterThan(0);
+  });
 });
