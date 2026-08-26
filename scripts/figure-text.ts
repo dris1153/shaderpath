@@ -111,9 +111,15 @@ export function svgPath(figure: Figure, locale: Locale): string {
   return path.join(figure.dir, `${locale}.svg`);
 }
 
-/** content/figures-i18n/<track>/<name>.<locale>.json */
+/**
+ * content/figures-i18n/<locale>/<track>/<name>.json
+ *
+ * Locale first: adding a language is one new directory, and a translator's
+ * whole scope is one tree rather than their files interleaved with everyone
+ * else's. The track level stays so no directory holds more than a dozen files.
+ */
 export function stringsPath(figure: Figure, locale: Locale): string {
-  return path.join(STRINGS_DIR, figure.track, `${figure.name}.${locale}.json`);
+  return path.join(STRINGS_DIR, locale, figure.track, `${figure.name}.json`);
 }
 
 export const sourcePath = (figure: Figure) => svgPath(figure, SOURCE_LOCALE);
