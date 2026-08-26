@@ -49,52 +49,52 @@
     </marker>
   </defs>
 
-  <text class="note" x="320" y="22" text-anchor="middle">One compute pass per frame: it reads one target and writes the other, and the two roles trade places every frame.</text>
+  <text class="note" x="320" y="22" text-anchor="middle">Mỗi khung hình một lượt compute: nó đọc một target và ghi vào target kia, và hai vai đổi chỗ mỗi khung.</text>
 
-  <text class="frame" x="186" y="50" text-anchor="middle">frame N</text>
-  <text class="frame" x="350" y="50" text-anchor="middle">frame N+1</text>
-  <text class="frame" x="514" y="50" text-anchor="middle">frame N+2</text>
+  <text class="frame" x="186" y="50" text-anchor="middle">khung N</text>
+  <text class="frame" x="350" y="50" text-anchor="middle">khung N+1</text>
+  <text class="frame" x="514" y="50" text-anchor="middle">khung N+2</text>
 
   <text class="row" x="24" y="90">Target A</text>
   <text class="row" x="24" y="198">Target B</text>
 
   <rect class="cell-read" x="110" y="62" width="152" height="48" rx="8" />
-  <text class="role ink-read" x="124" y="84">read</text>
-  <text class="note" x="124" y="101">state from N-1</text>
+  <text class="role ink-read" x="124" y="84">đọc</text>
+  <text class="note" x="124" y="101">trạng thái từ N-1</text>
   <path class="arrow" d="M186,110 L186,166" marker-end="url(#head)" />
   <rect class="cell-write" x="110" y="168" width="152" height="48" rx="8" />
-  <text class="role ink-write" x="124" y="190">write</text>
-  <text class="note" x="124" y="207">state at N</text>
+  <text class="role ink-write" x="124" y="190">ghi</text>
+  <text class="note" x="124" y="207">trạng thái tại N</text>
 
   <rect class="cell-write" x="274" y="62" width="152" height="48" rx="8" />
-  <text class="role ink-write" x="288" y="84">write</text>
-  <text class="note" x="288" y="101">state at N+1</text>
+  <text class="role ink-write" x="288" y="84">ghi</text>
+  <text class="note" x="288" y="101">trạng thái tại N+1</text>
   <path class="arrow" d="M350,166 L350,110" marker-end="url(#head)" />
   <rect class="cell-read" x="274" y="168" width="152" height="48" rx="8" />
-  <text class="role ink-read" x="288" y="190">read</text>
-  <text class="note" x="288" y="207">state at N</text>
+  <text class="role ink-read" x="288" y="190">đọc</text>
+  <text class="note" x="288" y="207">trạng thái tại N</text>
 
   <rect class="cell-read" x="438" y="62" width="152" height="48" rx="8" />
-  <text class="role ink-read" x="452" y="84">read</text>
-  <text class="note" x="452" y="101">state at N+1</text>
+  <text class="role ink-read" x="452" y="84">đọc</text>
+  <text class="note" x="452" y="101">trạng thái tại N+1</text>
   <path class="arrow" d="M514,110 L514,166" marker-end="url(#head)" />
   <rect class="cell-write" x="438" y="168" width="152" height="48" rx="8" />
-  <text class="role ink-write" x="452" y="190">write</text>
-  <text class="note" x="452" y="207">state at N+2</text>
+  <text class="role ink-write" x="452" y="190">ghi</text>
+  <text class="note" x="452" y="207">trạng thái tại N+2</text>
 
   <rect class="box" x="24" y="248" width="290" height="120" rx="8" />
-  <text class="title" x="38" y="272">Why two targets and not one</text>
-  <text class="note" x="38" y="294">Sampling a texture that is also the colour</text>
-  <text class="note" x="38" y="311">attachment of the same draw call is a feedback</text>
-  <text class="note" x="38" y="328">loop: WebGL skips the draw with</text>
-  <text class="note" x="38" y="345">INVALID_OPERATION and a console warning;</text>
-  <text class="note" x="38" y="362">native GL leaves the order undefined.</text>
+  <text class="title" x="38" y="272">Vì sao hai target chứ không phải một</text>
+  <text class="note" x="38" y="294">Lấy mẫu một texture đồng thời là colour</text>
+  <text class="note" x="38" y="311">attachment của cùng lệnh vẽ là một vòng</text>
+  <text class="note" x="38" y="328">phản hồi: WebGL bỏ qua lệnh vẽ với</text>
+  <text class="note" x="38" y="345">INVALID_OPERATION và một cảnh báo console;</text>
+  <text class="note" x="38" y="362">GL gốc thì để thứ tự không xác định.</text>
 
   <rect class="box" x="330" y="248" width="286" height="120" rx="8" />
-  <text class="title" x="344" y="272">What the swap actually costs</text>
+  <text class="title" x="344" y="272">Phép hoán vị thật sự tốn gì</text>
   <text class="note" x="344" y="294">[read, write] = [write, read]</text>
-  <text class="note" x="344" y="311">Two references move; not one texel is copied,</text>
-  <text class="note" x="344" y="328">and neither texture leaves VRAM. The chain of</text>
-  <text class="note" x="344" y="345">"state at N" labels above is the whole causal</text>
-  <text class="note" x="344" y="362">order the technique has to preserve.</text>
+  <text class="note" x="344" y="311">Hai tham chiếu đổi chỗ; không một texel nào bị chép,</text>
+  <text class="note" x="344" y="328">và không texture nào rời VRAM. Chuỗi nhãn</text>
+  <text class="note" x="344" y="345">"trạng thái tại N" ở trên chính là toàn bộ</text>
+  <text class="note" x="344" y="362">thứ tự nhân quả mà kỹ thuật này phải giữ.</text>
 </svg>

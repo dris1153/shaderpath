@@ -49,11 +49,11 @@
     </marker>
   </defs>
 
-  <text class="note" x="320" y="22" text-anchor="middle">Each compute variable owns one render target pair; addVariable() gives it a fragment shader and a seed texture.</text>
+  <text class="note" x="320" y="22" text-anchor="middle">Mỗi compute variable sở hữu một cặp render target; addVariable() cấp cho nó một fragment shader và một texture mầm.</text>
 
   <rect class="box-var" x="24" y="36" width="236" height="112" rx="8" />
   <text class="title ink-accent" x="38" y="60">textureVelocity</text>
-  <text class="note" x="38" y="78">velocity.frag, run once per compute()</text>
+  <text class="note" x="38" y="78">velocity.frag, chạy một lần mỗi compute()</text>
   <rect class="chip-box" x="38" y="94" width="102" height="36" rx="6" />
   <text class="chip" x="89" y="117" text-anchor="middle">targets[0]</text>
   <rect class="chip-box" x="148" y="94" width="102" height="36" rx="6" />
@@ -61,7 +61,7 @@
 
   <rect class="box-var" x="380" y="36" width="236" height="112" rx="8" />
   <text class="title ink-accent" x="394" y="60">texturePosition</text>
-  <text class="note" x="394" y="78">position.frag, run once per compute()</text>
+  <text class="note" x="394" y="78">position.frag, chạy một lần mỗi compute()</text>
   <rect class="chip-box" x="394" y="94" width="102" height="36" rx="6" />
   <text class="chip" x="445" y="117" text-anchor="middle">targets[0]</text>
   <rect class="chip-box" x="504" y="94" width="102" height="36" rx="6" />
@@ -75,15 +75,15 @@
   <rect class="box" x="24" y="164" width="592" height="104" rx="8" />
   <text class="code" x="38" y="188">setVariableDependencies(velVar, [velVar, posVar]);</text>
   <text class="code" x="38" y="206">setVariableDependencies(posVar, [velVar, posVar]);</text>
-  <text class="note" x="38" y="230">init() prepends one line onto each shader, one per dependency — the variable&#39;s own name included:</text>
+  <text class="note" x="38" y="230">init() nối lên đầu mỗi shader một dòng cho mỗi phụ thuộc — kể cả tên của chính biến đó:</text>
   <text class="code ink-accent" x="38" y="252">uniform sampler2D textureVelocity;</text>
   <text class="code ink-accent" x="330" y="252">uniform sampler2D texturePosition;</text>
 
   <rect class="box-warn" x="24" y="284" width="592" height="98" rx="8" />
-  <text class="title ink-warn" x="38" y="308">One currentTextureIndex for the whole renderer, not one per variable</text>
-  <text class="note" x="38" y="330">compute() walks the variables in the order they were added, reads every dependency from targets[i],</text>
-  <text class="note" x="38" y="348">writes each result into targets[1-i], then flips i exactly once, after the last variable. So the position</text>
-  <text class="note" x="38" y="366">pass reads the velocity of the PREVIOUS frame — never the velocity written moments earlier this frame.</text>
+  <text class="title ink-warn" x="38" y="308">Một currentTextureIndex cho cả renderer, không phải mỗi biến một cái</text>
+  <text class="note" x="38" y="330">compute() duyệt các biến theo thứ tự được thêm vào, đọc mọi phụ thuộc từ targets[i],</text>
+  <text class="note" x="38" y="348">ghi từng kết quả vào targets[1-i], rồi lật i đúng một lần, sau biến cuối cùng. Nên lượt position</text>
+  <text class="note" x="38" y="366">đọc velocity của khung TRƯỚC — không bao giờ là velocity vừa ghi trong chính khung này.</text>
 
-  <text class="foot" x="320" y="404" text-anchor="middle">Writing either uniform line yourself is a redefinition error: init() already wrote it for you.</text>
+  <text class="foot" x="320" y="404" text-anchor="middle">Tự viết một trong hai dòng uniform đó là lỗi định nghĩa lại: init() đã viết hộ bạn rồi.</text>
 </svg>

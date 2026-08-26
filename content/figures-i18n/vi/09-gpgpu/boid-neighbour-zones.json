@@ -1,15 +1,15 @@
 {
-  "One boid's neighbourhood: three rules, three nested radii cut from the single perception radius R.": null,
-  "separation, inside 0.4 R": null,
-  "push away, strength ~ 1 / d²": null,
-  "alignment, inside 0.7 R": null,
-  "steer toward the neighbours' mean velocity": null,
-  "cohesion, the full R": null,
-  "steer toward their mean position": null,
-  "The nesting is the whole balance: separation": null,
-  "has to win up close, or alignment and cohesion": null,
-  "pull the flock into one overlapping clump.": null,
-  "No boid knows the flock's shape: each one sums these three local vectors and nothing else.": null,
-  "To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel": null,
-  "neighbours are not spatial neighbours, so the only cheap cut is striding (k = 8 leaves an eighth).": null
+  "One boid's neighbourhood: three rules, three nested radii cut from the single perception radius R.": "Vùng lân cận của một boid: ba luật, ba bán kính lồng nhau cắt ra từ bán kính cảm nhận R duy nhất.",
+  "separation, inside 0.4 R": "tách đàn, trong 0.4 R",
+  "push away, strength ~ 1 / d²": "đẩy ra, cường độ ~ 1 / d²",
+  "alignment, inside 0.7 R": "canh hướng, trong 0.7 R",
+  "steer toward the neighbours' mean velocity": "lái về vận tốc trung bình của lân cận",
+  "cohesion, the full R": "gắn kết, trọn R",
+  "steer toward their mean position": "lái về vị trí trung bình của chúng",
+  "The nesting is the whole balance: separation": "Chuyện lồng nhau chính là cả thế cân bằng: tách",
+  "has to win up close, or alignment and cohesion": "đàn phải thắng khi ở sát, không thì canh hướng",
+  "pull the flock into one overlapping clump.": "và gắn kết kéo đàn thành một cục chồng nhau.",
+  "No boid knows the flock's shape: each one sums these three local vectors and nothing else.": "Không boid nào biết hình dạng cả đàn: mỗi con chỉ cộng ba vector cục bộ này, không gì khác.",
+  "To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel": "Để tìm ra chúng, nó quét cả 4.096 texel của texture trạng thái mỗi khung — 16.8 triệu lần đọc. Lân cận",
+  "neighbours are not spatial neighbours, so the only cheap cut is striding (k = 8 leaves an eighth).": "theo texel không phải lân cận trong không gian, nên cách cắt rẻ duy nhất là nhảy bước (k = 8 còn một phần tám)."
 }

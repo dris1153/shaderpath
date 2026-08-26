@@ -48,49 +48,49 @@
     </marker>
   </defs>
 
-  <text class="note" x="24" y="24">One cloth frame, in order — and why the constraint loop cannot be a compute variable.</text>
+  <text class="note" x="24" y="24">Một khung vải, theo thứ tự — và vì sao vòng ràng buộc không thể là một compute variable.</text>
 
   <rect class="box-accent" x="24" y="42" width="336" height="96" rx="8" />
-  <text class="title ink-accent" x="38" y="64">1. gpu.compute() — one pass per variable</text>
+  <text class="title ink-accent" x="38" y="64">1. gpu.compute() — mỗi biến một lượt</text>
   <rect class="chip-box" x="38" y="74" width="308" height="26" rx="5" />
-  <text class="chip" x="50" y="92">texturePositionPrev &#8592; last frame&#39;s texturePosition</text>
+  <text class="chip" x="50" y="92">texturePositionPrev ← texturePosition của khung trước</text>
   <rect class="chip-box" x="38" y="104" width="308" height="26" rx="5" />
   <text class="chip" x="50" y="122">texturePosition &#8592; Verlet step + gravity + wind</text>
   <path class="arrow" d="M192,138 L192,156" marker-end="url(#head)" />
 
   <rect class="box-loop" x="24" y="158" width="336" height="98" rx="8" />
-  <text class="title ink-loop" x="38" y="180">2. relax x N — doRenderTarget, by hand</text>
-  <text class="note" x="38" y="200">a variable runs its shader once per compute(), and</text>
-  <text class="note" x="38" y="218">stiff cloth needs 4-8 full-grid passes to hold shape</text>
-  <text class="note" x="38" y="236">Jacobi: one pass moves a correction exactly one texel</text>
+  <text class="title ink-loop" x="38" y="180">2. relax x N — doRenderTarget, làm tay</text>
+  <text class="note" x="38" y="200">một biến chỉ chạy shader của nó một lần mỗi compute(), mà</text>
+  <text class="note" x="38" y="218">vải cứng cần 4-8 lượt quét cả lưới mới giữ được hình</text>
+  <text class="note" x="38" y="236">Jacobi: một lượt đẩy phần hiệu chỉnh đi đúng một texel</text>
   <path class="arrow" d="M192,256 L192,274" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="276" width="336" height="64" rx="8" />
   <text class="title" x="38" y="298">3. renderTexture(relaxed, texturePosition)</text>
-  <text class="note" x="38" y="318">next frame&#39;s x - x_prev then measures the relaxed shape</text>
+  <text class="note" x="38" y="318">x - x_prev của khung sau khi đó đo đúng hình đã relax</text>
   <path class="arrow" d="M192,340 L192,358" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="360" width="336" height="56" rx="8" />
-  <text class="title" x="38" y="382">4. render pass samples texturePosition</text>
-  <text class="note" x="38" y="402">the same texture the whole frame just rewrote</text>
+  <text class="title" x="38" y="382">4. lượt render lấy mẫu texturePosition</text>
+  <text class="note" x="38" y="402">đúng texture mà cả khung vừa ghi lại</text>
 
   <rect class="box" x="384" y="42" width="232" height="250" rx="8" />
-  <text class="title" x="398" y="66">There is no velocity texture</text>
-  <text class="note" x="398" y="88">Verlet keeps two positions instead:</text>
+  <text class="title" x="398" y="66">Không có texture vận tốc</text>
+  <text class="note" x="398" y="88">Verlet giữ hai vị trí thay cho nó:</text>
   <text class="formula ink-accent" x="398" y="112">x&#39; = x + (x - x_prev) d + a dt&#178;</text>
-  <text class="note" x="398" y="138">so velocity is only the gap between</text>
-  <text class="note" x="398" y="156">the two textures. When step 2 nudges</text>
-  <text class="note" x="398" y="174">a point, the velocity it implies is</text>
-  <text class="note" x="398" y="192">corrected in the same move — which</text>
-  <text class="note" x="398" y="210">is exactly what step 3 protects.</text>
-  <text class="note" x="398" y="240">The alpha channel carries the pin</text>
-  <text class="note" x="398" y="258">mask: a pinned point skips both step 1</text>
-  <text class="note" x="398" y="276">and step 2 and rewrites its rest spot.</text>
+  <text class="note" x="398" y="138">nên vận tốc chỉ là khoảng cách giữa</text>
+  <text class="note" x="398" y="156">hai texture. Khi bước 2 đẩy nhẹ một</text>
+  <text class="note" x="398" y="174">điểm, vận tốc nó hàm ý cũng được</text>
+  <text class="note" x="398" y="192">sửa trong cùng động tác đó — và đó</text>
+  <text class="note" x="398" y="210">đúng là thứ bước 3 bảo vệ.</text>
+  <text class="note" x="398" y="240">Kênh alpha mang mặt nạ ghim: điểm</text>
+  <text class="note" x="398" y="258">bị ghim bỏ qua cả bước 1 lẫn bước 2</text>
+  <text class="note" x="398" y="276">và ghi lại đúng chỗ nghỉ của nó.</text>
 
   <rect class="box" x="384" y="306" width="232" height="110" rx="8" />
-  <text class="title" x="398" y="330">Scratch targets, not variables</text>
-  <text class="note" x="398" y="352">The relax loop ping-pongs a pair of its</text>
-  <text class="note" x="398" y="370">own scratch targets, outside both</text>
-  <text class="note" x="398" y="388">variables — which is exactly why its</text>
-  <text class="note" x="398" y="406">result has to be copied back in step 3.</text>
+  <text class="title" x="398" y="330">Target nháp, không phải biến</text>
+  <text class="note" x="398" y="352">Vòng relax ping-pong một cặp target</text>
+  <text class="note" x="398" y="370">nháp của riêng nó, nằm ngoài cả hai</text>
+  <text class="note" x="398" y="388">biến — và đó chính là lý do kết quả</text>
+  <text class="note" x="398" y="406">của nó phải được chép ngược ở bước 3.</text>
 </svg>

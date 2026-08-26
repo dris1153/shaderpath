@@ -47,51 +47,51 @@
     </marker>
   </defs>
 
-  <text class="col" x="167" y="26" text-anchor="middle">State in RAM — the CPU loop</text>
-  <text class="col ink-accent" x="473" y="26" text-anchor="middle">State in VRAM — the GPGPU inversion</text>
+  <text class="col" x="167" y="26" text-anchor="middle">Trạng thái trong RAM — vòng lặp CPU</text>
+  <text class="col ink-accent" x="473" y="26" text-anchor="middle">Trạng thái trong VRAM — cú lật ngược của GPGPU</text>
 
   <rect class="box" x="24" y="42" width="286" height="50" rx="8" />
   <text class="title" x="38" y="64">Float32Array positions</text>
-  <text class="note" x="38" y="82">N x 3 floats, system RAM</text>
+  <text class="note" x="38" y="82">N x 3 float, RAM hệ thống</text>
   <path class="arrow" d="M167,92 L167,110" marker-end="url(#head)" />
-  <text class="note" x="176" y="106">every frame</text>
+  <text class="note" x="176" y="106">mỗi khung hình</text>
 
   <rect class="box-cost" x="24" y="112" width="286" height="50" rx="8" />
-  <text class="title ink-cost" x="38" y="134">JS loop over all N particles</text>
-  <text class="note" x="38" y="152">one temporary per particle = a GC pause</text>
+  <text class="title ink-cost" x="38" y="134">vòng lặp JS qua cả N hạt</text>
+  <text class="note" x="38" y="152">mỗi hạt một biến tạm = một lần GC dừng</text>
   <path class="arrow" d="M167,162 L167,180" marker-end="url(#head)" />
 
   <rect class="box-cost" x="24" y="182" width="286" height="50" rx="8" />
-  <text class="title ink-cost" x="38" y="204">bufferSubData(the whole buffer)</text>
-  <text class="note" x="38" y="222">fixed per-call driver sync, re-paid every frame</text>
+  <text class="title ink-cost" x="38" y="204">bufferSubData(cả buffer)</text>
+  <text class="note" x="38" y="222">đồng bộ driver cố định mỗi lần gọi, trả lại mỗi khung</text>
   <path class="arrow" d="M167,232 L167,250" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="252" width="286" height="50" rx="8" />
-  <text class="title" x="38" y="274">VBO in VRAM, then draw</text>
-  <text class="note" x="38" y="292">the GPU only replays what JS just wrote</text>
+  <text class="title" x="38" y="274">VBO trong VRAM, rồi vẽ</text>
+  <text class="note" x="38" y="292">GPU chỉ phát lại thứ JS vừa ghi</text>
 
   <rect class="box" x="330" y="42" width="286" height="50" rx="8" />
-  <text class="title" x="344" y="64">Position texture, W x H</text>
-  <text class="note" x="344" y="82">1 texel = 1 particle, RGBA = x, y, z, life</text>
+  <text class="title" x="344" y="64">Texture vị trí, W x H</text>
+  <text class="note" x="344" y="82">1 texel = 1 hạt, RGBA = x, y, z, life</text>
   <path class="arrow" d="M473,92 L473,110" marker-end="url(#head)" />
-  <text class="note" x="482" y="106">every frame</text>
+  <text class="note" x="482" y="106">mỗi khung hình</text>
 
   <rect class="box-accent" x="330" y="112" width="286" height="50" rx="8" />
-  <text class="title ink-accent" x="344" y="134">Compute pass, one fragment shader</text>
-  <text class="note" x="344" y="152">a parallel map: read own texel, write the new one</text>
+  <text class="title ink-accent" x="344" y="134">Lượt compute, một fragment shader</text>
+  <text class="note" x="344" y="152">một phép map song song: đọc texel của mình, ghi ra cái mới</text>
   <path class="arrow" d="M473,162 L473,180" marker-end="url(#head)" />
 
   <rect class="box-accent" x="330" y="182" width="286" height="50" rx="8" />
-  <text class="title ink-accent" x="344" y="204">Vertex shader samples that texture</text>
-  <text class="note" x="344" y="222">a UV per particle stands in for the position</text>
+  <text class="title ink-accent" x="344" y="204">Vertex shader lấy mẫu texture đó</text>
+  <text class="note" x="344" y="222">mỗi hạt một UV, thay cho vị trí</text>
   <path class="arrow" d="M473,232 L473,250" marker-end="url(#head)" />
 
   <rect class="box" x="330" y="252" width="286" height="50" rx="8" />
-  <text class="title" x="344" y="274">All JS does: set one dt uniform</text>
-  <text class="note" x="344" y="292">the same single write whatever N is</text>
+  <text class="title" x="344" y="274">JS chỉ làm mỗi việc: đặt một uniform dt</text>
+  <text class="note" x="344" y="292">vẫn đúng một lần ghi đó, N bao nhiêu cũng vậy</text>
 
-  <text class="foot" x="320" y="336" text-anchor="middle">100,000 particles is 1.2 MB per frame, about 72 MB/s — under 0.5% of a ~16 GB/s PCIe 3.0 x16 link.</text>
-  <text class="foot" x="320" y="356" text-anchor="middle">The bus was never the bottleneck. The JS loop, the GC pauses it triggers, and the per-call upload</text>
-  <text class="foot" x="320" y="376" text-anchor="middle">overhead all spend the same 16.6 ms main-thread budget — the right column spends none of it,</text>
-  <text class="foot" x="320" y="396" text-anchor="middle">which is why its cost stops scaling with the particle count.</text>
+  <text class="foot" x="320" y="336" text-anchor="middle">100.000 hạt là 1.2 MB mỗi khung, khoảng 72 MB/s — dưới 0.5% của đường PCIe 3.0 x16 ~16 GB/s.</text>
+  <text class="foot" x="320" y="356" text-anchor="middle">Bus chưa bao giờ là nút thắt. Vòng lặp JS, các lần GC dừng nó gây ra, và chi phí upload mỗi lần gọi</text>
+  <text class="foot" x="320" y="376" text-anchor="middle">đều tiêu vào cùng ngân sách 16.6 ms của luồng chính — cột bên phải không tiêu chút nào,</text>
+  <text class="foot" x="320" y="396" text-anchor="middle">nên chi phí của nó thôi tăng theo số hạt.</text>
 </svg>
