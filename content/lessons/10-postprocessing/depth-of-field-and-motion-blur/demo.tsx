@@ -23,7 +23,7 @@ const LABELS = {
     maxblur: "Maxblur",
     orbit: "Camera tự xoay",
     blur: "Cường độ motion blur",
-    hint: "Click vào một cột để lấy nét đúng tại đó",
+    overlay: "Click vào một cột để lấy nét đúng tại đó",
   },
   en: {
     title: "Corridor: Depth of Field & Camera Motion Blur",
@@ -32,7 +32,7 @@ const LABELS = {
     maxblur: "Maxblur",
     orbit: "Auto-orbit camera",
     blur: "Motion blur strength",
-    hint: "Click a column to focus right on it",
+    overlay: "Click a column to focus right on it",
   },
 } as const;
 
@@ -176,7 +176,7 @@ export default function DepthOfFieldMotionBlurDemo() {
           <PostFx />
         </DemoCanvas>
         <div className="text-muted-foreground pointer-events-none absolute bottom-2 left-2 rounded bg-background/80 px-2 py-1 text-xs font-medium">
-          {L.hint}
+          {L.overlay}
         </div>
       </div>
     </Demo>

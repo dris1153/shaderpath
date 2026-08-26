@@ -12,6 +12,7 @@ import { booleanOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Bấm tải mà không preload: khối 'luôn hiện' vẫn đứng yên tại chỗ. Suspense chỉ treo đúng nhánh đang chờ, không treo cả cây.",
     title: "Suspense: tải exhibit nặng kèm placeholder",
     load: "Tải exhibit nặng",
     preload: "Preload trước",
@@ -19,6 +20,7 @@ const LABELS = {
     staticLabel: "Luôn hiện — không suspend",
   },
   en: {
+    hint: "Load without preloading: the always-visible block never flinches. Suspense only suspends the branch that is waiting, not the whole tree.",
     title: "Suspense: Loading a Heavy Exhibit with a Placeholder",
     load: "Load heavy exhibit",
     preload: "Preload ahead of time",
@@ -130,6 +132,7 @@ export default function SuspenseAssetLoadingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "preload", label: L.preload, defaultValue: false },

@@ -14,6 +14,7 @@ gsap.registerPlugin(SplitText);
 
 const LABELS = {
   vi: {
+    hint: "Đổi từ chars sang lines với cùng stagger: số phần tử tụt hẳn, nên cả câu reveal xong nhanh hơn nhiều dù mỗi bước vẫn cách nhau chừng ấy.",
     title: "SplitText: reveal theo char / word / line",
     mode: "Kiểu split",
     modeChars: "Ký tự (chars)",
@@ -25,6 +26,7 @@ const LABELS = {
     headline: "GSAP tách chữ, bạn animate từng mảnh",
   },
   en: {
+    hint: "Switch from chars to lines at the same stagger: the element count drops sharply, so the whole line finishes far sooner even though each step is still the same distance apart.",
     title: "SplitText: Char / Word / Line Reveal",
     mode: "Split mode",
     modeChars: "Characters (chars)",
@@ -122,6 +124,7 @@ export default function SplitTextTypographyDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={3}
       controls={[
         {

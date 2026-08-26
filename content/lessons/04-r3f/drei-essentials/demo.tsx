@@ -9,6 +9,7 @@ import { booleanOf, numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Bật occlude rồi xoay cho nhãn ra sau quả cầu: chữ HTML mờ đi đúng lúc bị che, dù nó nằm hẳn ngoài canvas WebGL.",
     title: "drei essentials trực tiếp: Html, Text, Center",
     occlude: "Html: ẩn sau vật cản (occlude)",
     textSize: "Text: cỡ chữ (fontSize)",
@@ -18,6 +19,7 @@ const LABELS = {
     labelText: "phía sau quả cầu",
   },
   en: {
+    hint: "Turn occlude on and orbit until the label goes behind the sphere: the HTML text fades exactly when it should be hidden, even though it lives outside the WebGL canvas entirely.",
     title: "drei Essentials Live: Html, Text, Center",
     occlude: "Html: hide behind occluder",
     textSize: "Text: font size",
@@ -145,6 +147,7 @@ export default function DreiEssentialsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={2}
       controls={[
         { kind: "boolean", key: "occlude", label: L.occlude, defaultValue: true },

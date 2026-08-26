@@ -12,6 +12,7 @@ import { booleanOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Tắt material dùng chung: số mesh y nguyên 200, nhưng số program và chi phí cấp phát nhảy vọt. Cùng một cảnh, khác hẳn cái giá phải trả.",
     title: "200 mesh: material dùng chung vs material riêng",
     shared: "Material dùng chung (module scope)",
     meshes: "mesh",
@@ -21,6 +22,7 @@ const LABELS = {
     sharedNote: "0.00 ms — không cấp phát gì, dùng lại 2 object có sẵn",
   },
   en: {
+    hint: "Turn shared materials off: the mesh count stays at 200, but the program count and the allocation cost jump. Same scene, entirely different bill.",
     title: "200 Meshes: Shared vs Per-Mesh Material",
     shared: "Shared material (module scope)",
     meshes: "meshes",
@@ -173,6 +175,7 @@ export default function MemoizingGeometryDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "shared", label: L.shared, defaultValue: true },

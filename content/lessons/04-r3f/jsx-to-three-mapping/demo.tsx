@@ -11,6 +11,7 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Kéo size qua args rồi qua scale, và bám lấy bộ đếm dựng lại geometry: chỉ một trong hai đường làm nó nhích lên.",
     title: "args vs prop vs pierced prop — cùng một mesh, ba đường dẫn",
     sizeArgs: "size (qua args)",
     sizeScale: "size (qua scale)",
@@ -21,6 +22,7 @@ const LABELS = {
     constructCount: "Số lần geometry dựng lại",
   },
   en: {
+    hint: "Change the size through args, then through scale, and watch the geometry rebuild counter: only one of the two paths moves it.",
     title: "args vs. Property vs. Pierced Prop — Same Mesh, Three Paths",
     sizeArgs: "size (via args)",
     sizeScale: "size (via scale)",
@@ -126,6 +128,7 @@ export default function JsxToThreeMappingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "sizeArgs", label: L.sizeArgs, min: 0.5, max: 2.5, step: 0.1, defaultValue: 1 },

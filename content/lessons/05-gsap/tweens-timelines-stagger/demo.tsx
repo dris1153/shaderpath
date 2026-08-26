@@ -10,6 +10,7 @@ import { useGsapContext } from "@/lib/hooks/use-gsap-context";
 
 const LABELS = {
   vi: {
+    hint: "Đổi stagger sang 'hai mép': hai đầu hàng xuất phát trước và gặp nhau ở giữa. Cùng một tween, chỉ đổi thứ tự phát.",
     title: "Timeline + stagger: một hàng box được đạo diễn",
     playing: "Đang chạy",
     timeScale: "Tốc độ",
@@ -20,6 +21,7 @@ const LABELS = {
     fromRandom: "Ngẫu nhiên (random)",
   },
   en: {
+    hint: "Switch the stagger to edges: both ends of the row leave first and meet in the middle. Same tween, only the running order changed.",
     title: "Timeline + stagger: a directed row of boxes",
     playing: "Playing",
     timeScale: "Time scale",
@@ -105,6 +107,7 @@ export default function TweensTimelinesStaggerDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "playing", label: L.playing, defaultValue: true },
         {

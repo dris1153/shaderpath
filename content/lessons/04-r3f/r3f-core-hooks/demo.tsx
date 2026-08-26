@@ -12,6 +12,7 @@ import { stringOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang setState mỗi frame và bám lấy bộ đếm render: nó chạy bằng đúng frame rate. Chuyển động trông y hệt, cái giá thì không.",
     title: "useFrame: mutate ref vs setState mỗi frame",
     mode: "Chế độ animate quỹ đạo",
     modeRef: "Mutate ref (đúng)",
@@ -19,6 +20,7 @@ const LABELS = {
     renders: "render component quỹ đạo",
   },
   en: {
+    hint: "Switch to setState every frame and watch the render counter: it climbs at exactly the frame rate. The motion looks identical; the cost does not.",
     title: "useFrame: Ref Mutation vs setState Per Frame",
     mode: "Orbit animation mode",
     modeRef: "Mutate ref (correct)",
@@ -157,6 +159,7 @@ export default function R3fCoreHooksDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

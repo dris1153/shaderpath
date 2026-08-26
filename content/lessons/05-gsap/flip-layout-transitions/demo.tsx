@@ -14,20 +14,22 @@ gsap.registerPlugin(Flip);
 
 const LABELS = {
   vi: {
+    hint: "Tắt position: absolute khi flip rồi bấm một thẻ: các thẻ còn lại giật nảy sang chỗ mới thay vì trượt, vì chúng vẫn còn chiếm chỗ trong layout.",
     title: "Flip: lưới thẻ ↔ thẻ nổi bật",
     duration: "Thời lượng (s)",
     ease: "Ease",
     absolute: "position: absolute khi flip",
     shuffle: "Xáo trộn thứ tự",
-    hint: "Nhấn một thẻ để phóng to, nhấn lại để thu nhỏ",
+    overlay: "Nhấn một thẻ để phóng to, nhấn lại để thu nhỏ",
   },
   en: {
+    hint: "Turn off position: absolute during the flip, then tap a card: the other cards jump to their new places instead of sliding, because they still take up space in the layout.",
     title: "Flip: Card Grid ↔ Featured Card",
     duration: "Duration (s)",
     ease: "Ease",
     absolute: "position: absolute while flipping",
     shuffle: "Shuffle order",
-    hint: "Click a card to feature it, click again to shrink it back",
+    overlay: "Click a card to feature it, click again to shrink it back",
   },
 } as const;
 
@@ -154,7 +156,7 @@ function FlipGrid() {
         })}
       </div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-muted-foreground text-xs">{L.hint}</span>
+        <span className="text-muted-foreground text-xs">{L.overlay}</span>
         <Button size="sm" variant="outline" onClick={shuffle}>
           {L.shuffle}
         </Button>
@@ -170,6 +172,7 @@ export default function FlipLayoutTransitionsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

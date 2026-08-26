@@ -11,6 +11,7 @@ import { createDisposableRegistry } from "@/lib/hooks/use-disposable";
 
 const LABELS = {
   vi: {
+    hint: "Bấm mount/unmount vài chục lần ở cột leaky và bám lấy bộ đếm geo/tex: chúng chỉ tăng, không bao giờ giảm. Component đã biến mất nhưng GPU vẫn giữ nguyên.",
     title: "Mount/unmount stress test: leak vs không leak",
     leakyTitle: "Leaky — new THREE.X(), không dispose",
     cleanTitle: "Clean — JSX auto-dispose + disposable registry",
@@ -21,6 +22,7 @@ const LABELS = {
     cycles: "chu kỳ",
   },
   en: {
+    hint: "Cycle mount/unmount a few dozen times on the leaky side and watch the geo/tex counters: they only climb, never fall. The component is gone; the GPU still holds everything.",
     title: "Mount/Unmount Stress Test: Leaky vs Clean",
     leakyTitle: "Leaky — new THREE.X(), never disposed",
     cleanTitle: "Clean — JSX auto-dispose + disposable registry",
@@ -191,7 +193,8 @@ export default function DisposalMemoryLeaksDemo() {
   const L = LABELS[locale as keyof typeof LABELS] ?? LABELS.vi;
 
   return (
-    <Demo title={L.title} ratio={2}>
+    <Demo title={L.title}
+ hint={L.hint} ratio={2}>
       <div className="divide-border flex size-full divide-x">
         <MemorySide variant="leaky" L={L} />
         <MemorySide variant="clean" L={L} />

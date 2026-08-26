@@ -14,6 +14,7 @@ import { numberOf, stringOf } from "@/components/viz/control-schema";
 // platform's own controls — grouped labels + a leva-style readout panel).
 const LABELS = {
   vi: {
+    hint: "Kéo nhám và kim loại cùng lúc: một mình metalness gần bằng 1 làm vật gần như đen tuyền, vì kim loại không có ánh sáng khuếch tán để phản chiếu môi trường.",
     title: "Workflow tinh chỉnh vật liệu — panel kiểu leva",
     color: "Material · Màu",
     roughness: "Material · Nhám",
@@ -22,6 +23,7 @@ const LABELS = {
     colorNames: { orange: "Cam", sky: "Xanh da trời", lime: "Xanh chanh", pink: "Hồng" },
   },
   en: {
+    hint: "Drag roughness and metalness together: metalness near 1 on its own leaves the object nearly black, because metal has no diffuse light and nothing here to reflect.",
     title: "Material Tuning Workflow — a leva-style Panel",
     color: "Material · Color",
     roughness: "Material · Roughness",
@@ -107,6 +109,7 @@ export default function LevaDebugUiDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

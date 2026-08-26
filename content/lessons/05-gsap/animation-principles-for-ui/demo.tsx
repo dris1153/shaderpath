@@ -7,8 +7,16 @@ import { PrincipleStage } from "./principle-stage";
 import { PRINCIPLE_OPTIONS, type PrincipleKind } from "./principle-labels";
 
 const LABELS = {
-  vi: { title: "Sân khấu nguyên tắc animation", principle: "Nguyên tắc" },
-  en: { title: "Animation Principle Stage", principle: "Principle" },
+  vi: {
+    hint: "Xem panel 'chưa áp dụng' trước rồi mới xem panel kia: cùng một quãng đường, cùng một thời lượng — khác biệt nằm hết ở phần đầu và cuối chuyển động.",
+    title: "Sân khấu nguyên tắc animation",
+    principle: "Nguyên tắc",
+  },
+  en: {
+    hint: "Watch the unapplied panel first, then the other: same distance, same duration — the whole difference lives in how the motion starts and stops.",
+    title: "Animation Principle Stage",
+    principle: "Principle",
+  },
 } as const;
 
 export default function AnimationPrinciplesForUiDemo() {
@@ -21,6 +29,7 @@ export default function AnimationPrinciplesForUiDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

@@ -29,6 +29,7 @@ const CARD_COLORS = [
 ];
 
 interface Labels {
+  hint: string;
   title: string;
   wheelPane: string;
   wheelHint: string;
@@ -41,6 +42,7 @@ interface Labels {
 
 const LABELS: Record<"vi" | "en", Labels> = {
   vi: {
+    hint: "Bật quán tính rồi thả knob khi đang xoay nhanh: nó chạy tiếp rồi mới dừng, còn snap thì kéo nó về mốc gần nhất sau đó.",
     title: "Observer & Draggable",
     wheelPane: "Observer — cuộn/vuốt để chuyển thẻ",
     wheelHint: "Cuộn hoặc vuốt trong khung này",
@@ -51,6 +53,7 @@ const LABELS: Record<"vi" | "en", Labels> = {
     snapNone: "Không snap",
   },
   en: {
+    hint: "Turn inertia on and release the knob mid-spin: it keeps going before it settles, and snap then pulls it to the nearest notch afterwards.",
     title: "Observer & Draggable",
     wheelPane: "Observer — scroll/swipe to cycle cards",
     wheelHint: "Scroll or swipe inside this box",
@@ -223,6 +226,7 @@ export default function ObserverDraggableDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

@@ -11,6 +11,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Tăng số box lên rồi chuyển sang đường layout: chuyển động bắt đầu giật, trong khi đường compositor vẫn mượt với đúng chừng ấy box.",
     title: "Layout path vs compositor path",
     mode: "Đường chạy",
     modeCompositor: "Compositor (transform)",
@@ -19,6 +20,7 @@ const LABELS = {
     boxCount: "Số lượng box",
   },
   en: {
+    hint: "Raise the box count, then switch to the layout path: the motion starts to stutter, while the compositor path stays smooth at the same count.",
     title: "Layout Path vs Compositor Path",
     mode: "Path",
     modeCompositor: "Compositor (transform)",
@@ -132,6 +134,7 @@ export default function CompositorFriendlyAnimationDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

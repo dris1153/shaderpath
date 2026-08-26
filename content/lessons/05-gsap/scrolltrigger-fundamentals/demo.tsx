@@ -13,6 +13,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const LABELS = {
   vi: {
+    hint: "Bật markers rồi cuộn chậm: animation bắt đầu đúng lúc vạch start của trigger gặp vạch của viewport, không phải lúc phần tử vừa ló ra.",
     title: "Sân chơi ScrollTrigger: scrub, pin & toggleActions",
     smoothing: "Độ mượt (s)",
     markers: "Markers debug",
@@ -28,6 +29,7 @@ const LABELS = {
       "Thẻ này KHÔNG scrub — nó chỉ play/reverse theo 4 verb onEnter/onLeave/onEnterBack/onLeaveBack.",
   },
   en: {
+    hint: "Turn markers on and scroll slowly: the animation starts exactly when the trigger's start line meets the viewport's, not when the element first peeks into view.",
     title: "ScrollTrigger Playground: scrub, pin & toggleActions",
     smoothing: "Smoothing (s)",
     markers: "Debug markers",
@@ -203,6 +205,7 @@ export default function ScrollTriggerFundamentalsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={4 / 3}
       controls={[
         {

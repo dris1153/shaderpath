@@ -18,14 +18,14 @@ const LABELS = {
     dissipation: "Độ lưu vệt màu",
     iterations: "Số vòng lặp áp suất",
     clear: "Xoá",
-    hint: "Kéo chuột để bơm màu + lực",
+    overlay: "Kéo chuột để bơm màu + lực",
   },
   en: {
     title: "2D Stable Fluids — advect, splat, project",
     dissipation: "Dye persistence",
     iterations: "Pressure iterations",
     clear: "Clear",
-    hint: "Drag to inject dye + force",
+    overlay: "Drag to inject dye + force",
   },
 } as const;
 
@@ -181,7 +181,7 @@ export default function FluidSimulationIntroDemo() {
         </DemoCanvas>
         <div className="pointer-events-none absolute top-2 right-2 left-2 flex items-center justify-between gap-2">
           <span className="bg-background/80 text-muted-foreground rounded px-2 py-1 text-xs">
-            {L.hint}
+            {L.overlay}
           </span>
           <Button
             size="sm"

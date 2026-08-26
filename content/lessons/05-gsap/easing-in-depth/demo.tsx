@@ -38,6 +38,7 @@ const EASE_VALUES: { value: string; vi: string; en: string }[] = [
 
 const LABELS = {
   vi: {
+    hint: "Bật so sánh với linear: hai quả bóng xuất phát và về đích cùng lúc. Ease không đổi thời lượng, chỉ đổi chỗ tiêu tốc độ.",
     title: "Ease explorer: đường cong, quả bóng, và so sánh với linear",
     easeLabel: "Ease",
     durationLabel: "Thời lượng (s)",
@@ -47,6 +48,7 @@ const LABELS = {
     linearLabel: "Linear (đối chứng)",
   },
   en: {
+    hint: "Turn on the linear comparison: both balls leave and arrive together. An ease never changes the duration, only where the speed is spent.",
     title: "Ease explorer: the curve, the ball, and a linear compare",
     easeLabel: "Ease",
     durationLabel: "Duration (s)",
@@ -269,6 +271,7 @@ export default function EasingInDepthDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

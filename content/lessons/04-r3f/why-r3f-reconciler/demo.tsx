@@ -11,12 +11,14 @@ import { booleanOf, numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Giảm số mesh rồi bám lấy scene.children.length: React tự gỡ đúng những object thừa, không cần bạn gọi remove() lần nào.",
     title: "Danh sách mesh do React state điều khiển",
     count: "Số mesh",
     shuffle: "Xáo màu (bật/tắt để đổi)",
     sceneCount: "scene.children.length",
   },
   en: {
+    hint: "Lower the mesh count and watch scene.children.length: React removes exactly the surplus objects, without you calling remove() once.",
     title: "A Mesh List Driven by React State",
     count: "Mesh count",
     shuffle: "Shuffle colors (toggle)",
@@ -103,6 +105,7 @@ export default function WhyR3fReconcilerDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "count", label: L.count, min: 1, max: 14, step: 1, defaultValue: 6 },

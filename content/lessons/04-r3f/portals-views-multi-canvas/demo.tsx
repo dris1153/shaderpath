@@ -12,10 +12,12 @@ import { numberOf } from "@/components/viz/control-schema";
 
 const LABELS = {
   vi: {
+    hint: "Kéo vị trí X: cả hai viewport cùng nhúc nhích vì chúng nhìn chung một scene — chỉ có một canvas WebGL duy nhất ở đây.",
     title: "Hai viewport, một canvas — cộng một HUD qua createPortal",
     x: "Vị trí X",
   },
   en: {
+    hint: "Drag the X position: both viewports move because they look at one shared scene — there is only ever a single WebGL canvas here.",
     title: "Two Viewports, One Canvas — Plus a createPortal HUD",
     x: "X position",
   },
@@ -172,6 +174,7 @@ export default function PortalsViewsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "number", key: "x", label: L.x, min: -RANGE, max: RANGE, step: 0.1, defaultValue: 0 },

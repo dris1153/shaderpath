@@ -15,6 +15,7 @@ import { useGsapContext } from "@/lib/hooks/use-gsap-context";
 gsap.registerPlugin(ScrollTrigger);
 
 interface Labels {
+  hint: string;
   title: string;
   broken: string;
   scrollHint: string;
@@ -26,6 +27,7 @@ interface Labels {
 
 const LABELS: Record<"vi" | "en", Labels> = {
   vi: {
+    hint: "Bật chế độ lỗi và bám lấy bộ đếm render thừa: cảnh vẫn chạy, chỉ là mỗi khung hình bị vẽ hai lần bởi hai vòng lặp không biết nhau.",
     title: "ScrollTrigger + R3F: một render loop",
     broken: "Chế độ lỗi (2 loop cạnh tranh)",
     scrollHint: "Cuộn khu vực này",
@@ -35,6 +37,7 @@ const LABELS: Record<"vi" | "en", Labels> = {
     extraFrames: "Render thừa từ ticker (lỗi)",
   },
   en: {
+    hint: "Turn on the broken mode and watch the extra-frame counter: the scene still runs, it just paints every frame twice from two loops that do not know about each other.",
     title: "ScrollTrigger + R3F: One Render Loop",
     broken: "Broken mode (2 competing loops)",
     scrollHint: "Scroll this area",
@@ -239,6 +242,7 @@ export default function ScrollTriggerR3fSingleLoopDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {
