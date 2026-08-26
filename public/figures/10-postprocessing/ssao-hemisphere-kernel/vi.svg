@@ -49,12 +49,12 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="26">One SSAO sample decision</text>
+  <text class="title" x="24" y="26">Một quyết định lấy mẫu của SSAO</text>
 
-  <text class="note" x="368" y="100" text-anchor="middle">nearer surface</text>
+  <text class="note" x="368" y="100" text-anchor="middle">bề mặt gần hơn</text>
   <rect class="solid" x="340" y="110" width="56" height="140" />
   <path class="rule" d="M40,250 L340,250" />
-  <text class="note" x="40" y="270">the surface being shaded</text>
+  <text class="note" x="40" y="270">bề mặt đang được tô bóng</text>
 
   <path class="dome" d="M210,250 A90,90 0 0 1 390,250" />
 
@@ -62,7 +62,7 @@
   <text class="note" x="228" y="180" text-anchor="end">kernelRadius</text>
 
   <path class="arrow-you" d="M300,250 L300,178" marker-end="url(#head-you)" />
-  <text class="note" x="300" y="150" text-anchor="middle">view-space normal</text>
+  <text class="note" x="300" y="150" text-anchor="middle">pháp tuyến trong view space</text>
 
   <circle class="free" cx="286" cy="234" r="4" />
   <circle class="free" cx="316" cy="228" r="4" />
@@ -80,20 +80,20 @@
   <text class="label ink-you" x="300" y="272" text-anchor="middle">p</text>
 
   <rect class="box" x="430" y="44" width="206" height="136" rx="8" />
-  <text class="label" x="444" y="68">the test, per sample</text>
-  <text class="note" x="444" y="90">project it back to screen</text>
-  <text class="note" x="444" y="108">compare its depth with the</text>
-  <text class="note" x="444" y="126">depth already stored there</text>
-  <text class="note" x="444" y="148">occluded when the gap sits</text>
-  <text class="note" x="444" y="166">between min and maxDistance</text>
+  <text class="label" x="444" y="68">phép kiểm, cho từng mẫu</text>
+  <text class="note" x="444" y="90">chiếu nó ngược về màn hình</text>
+  <text class="note" x="444" y="108">so depth của nó với depth</text>
+  <text class="note" x="444" y="126">đã lưu sẵn ở chỗ đó</text>
+  <text class="note" x="444" y="148">bị che khi khoảng chênh nằm</text>
+  <text class="note" x="444" y="166">giữa min và maxDistance</text>
 
   <circle class="occl" cx="440" cy="214" r="4" />
-  <text class="note" x="454" y="218">counted as occluded</text>
+  <text class="note" x="454" y="218">tính là bị che</text>
   <circle class="free" cx="440" cy="240" r="4" />
-  <text class="note" x="454" y="244">counted as open sky</text>
+  <text class="note" x="454" y="244">tính là trời trống</text>
 
-  <text class="note" x="24" y="306">kernelRadius is in view-space units, not pixels, and sample lengths are rescaled by</text>
-  <text class="note" x="24" y="324">lerp(0.1, 1, (i/N)²) — most of the 32 land close to p.</text>
-  <text class="note" x="24" y="348">A 4×4 noise texture rotates the whole kernel per pixel, so the leftover error reads as noise rather</text>
-  <text class="note" x="24" y="366">than banding — which is exactly why SSAOPass runs a 5×5 blur straight after.</text>
+  <text class="note" x="24" y="306">kernelRadius tính theo đơn vị view space chứ không phải pixel, và độ dài mẫu được co lại bằng</text>
+  <text class="note" x="24" y="324">lerp(0.1, 1, (i/N)²) — phần lớn trong 32 mẫu rơi gần p.</text>
+  <text class="note" x="24" y="348">Một texture nhiễu 4×4 xoay cả kernel theo từng pixel, nên sai số còn lại hiện ra như nhiễu chứ không</text>
+  <text class="note" x="24" y="366">phải dải sọc — và đó đúng là lý do SSAOPass chạy ngay một lượt blur 5×5 sau đó.</text>
 </svg>

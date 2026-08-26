@@ -39,27 +39,27 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="26">Inside UnrealBloomPass.render()</text>
+  <text class="title" x="24" y="26">Bên trong UnrealBloomPass.render()</text>
 
   <rect class="box" x="24" y="44" width="170" height="52" rx="8" />
   <text class="stage" x="38" y="68">readBuffer</text>
-  <text class="note" x="38" y="86">HDR scene, above 1.0 allowed</text>
+  <text class="note" x="38" y="86">cảnh HDR, cho phép vượt 1.0</text>
 
   <path class="arrow" d="M194,70 L220,70" marker-end="url(#head)" />
 
   <rect class="box" x="224" y="44" width="196" height="52" rx="8" />
-  <text class="stage" x="238" y="68">1. luminance high-pass</text>
+  <text class="stage" x="238" y="68">1. lọc thông cao theo độ chói</text>
   <text class="note" x="238" y="86">smoothstep(threshold, +0.01)</text>
 
   <path class="arrow" d="M420,70 L446,70" marker-end="url(#head)" />
 
   <rect class="box" x="450" y="44" width="186" height="52" rx="8" />
   <text class="stage" x="464" y="68">renderTargetBright</text>
-  <text class="note" x="464" y="86">half resolution already</text>
+  <text class="note" x="464" y="86">đã ở nửa độ phân giải</text>
 
   <path class="arrow" d="M543,96 L543,114 L72,114 L72,140" marker-end="url(#head)" />
 
-  <text class="note" x="118" y="136">2. five mips, each blurred H then V, each fed by the one before</text>
+  <text class="note" x="118" y="136">2. năm mip, mỗi cái blur ngang rồi dọc, cái sau ăn từ cái trước</text>
 
   <rect class="box" x="30" y="144" width="104" height="62" rx="6" />
   <text class="mip-label" x="82" y="168" text-anchor="middle">res / 2</text>
@@ -94,24 +94,24 @@
   <text class="note" x="578" y="185" text-anchor="middle">kernel 22</text>
   <text class="note ink-you" x="578" y="201" text-anchor="middle">weight 0.2</text>
 
-  <text class="note" x="30" y="228">each mip blurs the previous one, so the widest halo is also the cheapest to compute</text>
+  <text class="note" x="30" y="228">mỗi mip blur cái trước đó, nên quầng rộng nhất cũng là cái rẻ nhất để tính</text>
 
   <path class="arrow" d="M205,236 L205,250" marker-end="url(#head)" />
 
   <rect class="box" x="30" y="252" width="350" height="70" rx="8" />
-  <text class="stage" x="44" y="276">3. composite the five mips</text>
-  <text class="note" x="44" y="294">radius lerps each weight toward 1.2 − weight</text>
-  <text class="note" x="44" y="311">then the sum is scaled by 3.0 × strength</text>
+  <text class="stage" x="44" y="276">3. ghép năm mip lại</text>
+  <text class="note" x="44" y="294">radius nội suy từng trọng số về phía 1.2 − weight</text>
+  <text class="note" x="44" y="311">rồi tổng được nhân với 3.0 × strength</text>
 
   <path class="arrow" d="M380,287 L406,287" marker-end="url(#head)" />
 
   <rect class="box-you" x="410" y="252" width="220" height="70" rx="8" />
-  <text class="stage ink-you" x="424" y="276">4. add into readBuffer</text>
-  <text class="note" x="424" y="294">additive blend, written in place</text>
+  <text class="stage ink-you" x="424" y="276">4. cộng vào readBuffer</text>
+  <text class="note" x="424" y="294">blend cộng, ghi ngay tại chỗ</text>
   <text class="note" x="424" y="311">needsSwap = false</text>
 
-  <text class="note" x="30" y="352">Only step 1 ever looks at threshold. Everything after it is a fixed blur, so a surface</text>
-  <text class="note" x="30" y="370">that already cleared the cutoff keeps glowing however you tune strength or radius.</text>
-  <text class="note" x="30" y="396">RenderPass renders into a render target, where three skips material tone mapping —</text>
-  <text class="note" x="30" y="414">so the buffer step 1 reads is linear HDR by construction; values above 1.0 survive.</text>
+  <text class="note" x="30" y="352">Chỉ bước 1 mới nhìn tới threshold. Mọi thứ sau đó là blur cố định, nên bề mặt nào</text>
+  <text class="note" x="30" y="370">đã vượt ngưỡng thì vẫn phát sáng dù bạn chỉnh strength hay radius kiểu gì.</text>
+  <text class="note" x="30" y="396">RenderPass render vào một render target, ở đó three bỏ qua tone mapping của vật liệu —</text>
+  <text class="note" x="30" y="414">nên buffer mà bước 1 đọc vốn dĩ là HDR tuyến tính; giá trị trên 1.0 sống sót.</text>
 </svg>

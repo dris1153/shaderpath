@@ -42,11 +42,11 @@
     .dot-b { fill: #2563eb; }
   </style>
 
-  <text class="title" x="20" y="22">Three effects, and what separates a dose from a disaster</text>
-  <text class="note" x="20" y="40">Every curve is the shader&#8217;s own formula; both doses are the demo&#8217;s presets.</text>
+  <text class="title" x="20" y="22">Ba hiệu ứng, và thứ ngăn cách một liều dùng với một thảm hoạ</text>
+  <text class="note" x="20" y="40">Mỗi đường cong là công thức của chính shader; cả hai liều đều là preset của demo.</text>
 
   <!-- ============ panel 1: grain falloff ============ -->
-  <text class="panel" x="20" y="70">Grain lives in the shadows</text>
+  <text class="panel" x="20" y="70">Grain sống ở vùng tối</text>
   <text class="note" x="20" y="88">1 &#8722; smoothstep(0, 0.6, lum)</text>
   <path class="axis" d="M50,100 L50,250 L200,250" />
   <text class="note" x="30" y="104">1</text>
@@ -54,45 +54,45 @@
   <path class="grid" d="M140,100 L140,250" />
   <text class="note" x="132" y="264">0.6</text>
   <text class="note" x="192" y="264">1</text>
-  <text class="note" x="92" y="282">luminance</text>
+  <text class="note" x="92" y="282">độ chói</text>
   <path class="curve-a" d="M50,100 L61,106 L72,123 L84,148 L95,175 L106,203 L118,227 L129,244 L140,250 L200,250" />
-  <text class="note" x="150" y="140">none left in</text>
-  <text class="note" x="150" y="154">the highlights</text>
+  <text class="note" x="150" y="140">không còn chút nào</text>
+  <text class="note" x="150" y="154">ở vùng sáng</text>
 
   <!-- amplitude gets its own scale: it is not the falloff axis -->
-  <text class="note" x="20" y="306">amplitude at full falloff</text>
+  <text class="note" x="20" y="306">biên độ ở mức suy giảm tối đa</text>
   <rect class="bar-a" x="20" y="316" width="27" height="8" rx="2" />
-  <text class="tag-a" x="54" y="324">0.045 tasteful</text>
+  <text class="tag-a" x="54" y="324">0.045 vừa phải</text>
   <rect class="bar-b" x="20" y="338" width="132" height="8" rx="2" />
-  <text class="tag-b" x="20" y="360">0.22 overdone &#8212; noise, not film</text>
+  <text class="tag-b" x="20" y="360">0.22 quá tay — nhiễu, không phải phim</text>
 
   <!-- ============ panel 2: vignette ============ -->
-  <text class="panel" x="230" y="70">Vignette: where darkening starts</text>
+  <text class="panel" x="230" y="70">Vignette: chỗ bắt đầu tối đi</text>
   <text class="note" x="230" y="88">1 &#8722; d &#183; smoothstep(r, 1, dist)</text>
   <path class="axis" d="M260,100 L260,250 L410,250" />
   <text class="note" x="240" y="104">1</text>
   <text class="note" x="240" y="264">0</text>
   <text class="note" x="402" y="264">1</text>
-  <text class="note" x="286" y="282">distance from centre</text>
+  <text class="note" x="286" y="282">khoảng cách tới tâm</text>
   <path class="curve-a" d="M260,100 L312,100 L335,107 L361,126 L388,145 L410,153" />
   <path class="curve-b" d="M260,100 L278,100 L311,118 L344,156 L377,195 L410,213" />
-  <text class="tag-a" x="230" y="306">tasteful &#183; r 0.35 &#183; d 0.35</text>
-  <text class="tag-b" x="230" y="324">overdone &#183; r 0.12 &#183; d 0.75</text>
-  <text class="note" x="230" y="346">smoothstep, not a linear ramp:</text>
-  <text class="note" x="230" y="360">no visible ring at the onset.</text>
+  <text class="tag-a" x="230" y="306">vừa phải · r 0.35 · d 0.35</text>
+  <text class="tag-b" x="230" y="324">quá tay · r 0.12 · d 0.75</text>
+  <text class="note" x="230" y="346">smoothstep, không phải dốc tuyến tính:</text>
+  <text class="note" x="230" y="360">không thấy vòng ở chỗ khởi đầu.</text>
 
   <!-- ============ panel 3: chromatic aberration ============ -->
-  <text class="panel" x="440" y="70">Aberration grows with radius</text>
+  <text class="panel" x="440" y="70">Aberration tăng theo bán kính</text>
   <text class="note" x="440" y="88">offset = dir &#183; (px / width) &#183; dist</text>
 
-  <text class="note" x="440" y="122">near the centre</text>
+  <text class="note" x="440" y="122">gần tâm</text>
   <path class="axis" d="M450,138 L630,138" />
   <circle class="dot-b" cx="533" cy="138" r="4" />
   <circle class="dot-g" cx="540" cy="138" r="4" />
   <circle class="dot-r" cx="547" cy="138" r="4" />
-  <text class="note" x="556" y="128">barely split</text>
+  <text class="note" x="556" y="128">gần như không tách</text>
 
-  <text class="note" x="440" y="180">near the edge</text>
+  <text class="note" x="440" y="180">gần mép</text>
   <path class="axis" d="M450,196 L630,196" />
   <circle class="dot-b" cx="500" cy="196" r="4" />
   <circle class="dot-g" cx="540" cy="196" r="4" />
@@ -101,8 +101,8 @@
   <text class="note" x="536" y="214">G</text>
   <text class="note" x="576" y="214">R</text>
 
-  <text class="note" x="440" y="240">R and B sample one source at</text>
-  <text class="note" x="440" y="254">opposite offsets; G never moves.</text>
-  <text class="tag-a" x="440" y="306">1 px reads as a lens.</text>
-  <text class="tag-b" x="440" y="324">6 px reads as a broken render.</text>
+  <text class="note" x="440" y="240">R và B lấy mẫu cùng một nguồn ở</text>
+  <text class="note" x="440" y="254">hai offset đối nhau; G không hề dịch.</text>
+  <text class="tag-a" x="440" y="306">1 px đọc ra như một ống kính.</text>
+  <text class="tag-b" x="440" y="324">6 px đọc ra như một bản render lỗi.</text>
 </svg>
