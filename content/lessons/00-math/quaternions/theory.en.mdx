@@ -82,3 +82,15 @@ The three most common quaternion mistakes:
 3. **Treating quaternion multiplication as commutative like real-number multiplication.** $q_1 q_2 \neq q_2 q_1$ in general — swapping the multiplication order flips whether a rotation is applied in local space first or world space first, leaving the object rotated by the right angle but facing entirely the wrong way once several rotations are chained together.
 
 </Callout>
+
+<Predict
+  question="The demo below puts a per-angle Euler lerp beside a quaternion slerp, both travelling between the same two poses. Drag t from 0 to 1 — where do the two objects disagree?"
+  options={[
+    "Most at the ends, t=0 and t=1, and they agree in the middle",
+    "The gap grows steadily as error accumulates, so it is largest at t=1",
+    "They match exactly at t=0 and t=1, and diverge most somewhere around the middle",
+    "They never disagree — slerp only changes the pacing, not the path",
+  ]}
+  answer={2}
+  reveal="Both methods are forced to agree at the ends, because both interpolate between exactly those two poses: t=0 gives the first, t=1 gives the last, no room for anything else. The entire error lives in the middle. That is precisely why an Euler lerp survives review: inspect the keyframes and nothing looks wrong — you have to watch the animation back to see the object twist off the shortest path. Slerp travels the shortest arc on the unit sphere; lerping three Euler angles travels straight through angle space, and the map from there to actual rotations is nowhere near linear."
+/>

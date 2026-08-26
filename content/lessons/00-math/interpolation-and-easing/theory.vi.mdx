@@ -120,3 +120,15 @@ Ba lỗi hay gặp nhất với lerp và easing:
 ## Kết nối về sau: easing curve trở thành API, smoothstep trở thành công cụ shader
 
 Track 5 (GSAP) đóng gói easeIn/easeOut/easeInOut vừa học thành tên gọi (`power2.out`, `back.inOut`...) và vài dạng bổ sung (elastic, bounce) dựng từ cùng nguyên lý "remap $t$ trước khi lerp". Track 2 (GLSL) và Track 7 (Procedural) dùng `smoothstep` liên tục — không để animate theo thời gian, mà để tạo cạnh mượt trong không gian (anti-aliasing thủ công, blend hai vùng màu) — cùng đa thức, khác trục áp dụng. Bài mini-build tiếp theo ghép lượng giác và nội suy vào một cảnh chuyển động hoàn chỉnh.
+
+<Predict
+  question="Trong demo dưới, chọn easing 'expDecay' rồi để chạy hết trọn duration. Object dừng ở đâu, so với khi chọn linear hay smoothstep?"
+  options={[
+    "Đúng đích, y hệt mọi easing khác — easing chỉ đổi đường đi chứ không đổi hai đầu",
+    "Ngắn hơn đích một chút, hụt khoảng 5%",
+    "Vượt qua đích rồi lùi lại, kiểu nảy",
+    "Đúng đích, nhưng mất gấp đôi duration mới tới nơi",
+  ]}
+  answer={1}
+  reveal="linear, smoothstep, easeIn/Out đều là các đường cong trên đoạn [0,1] với f(0)=0 và f(1)=1 — chúng thật sự chỉ đổi đường đi. expDecay là loài khác: 1 − e^(−λt) tiệm cận đích chứ không bao giờ chạm, với λ=3 thì t=1 mới tới 0.95. Nó không phải easing cho tween có thời lượng cố định; nó là bộ làm mượt để bám một mục tiêu đang di chuyển, nơi 'không bao giờ tới đích' lại đúng là hành vi mong muốn. Cần đúng điểm dừng thì phải chọn một đường cong bằng 0 và 1 chính xác ở hai đầu."
+/>

@@ -120,3 +120,15 @@ The three most common lerp and easing mistakes:
 ## Where This Leads: Easing Becomes an API, Smoothstep Becomes a Shader Tool
 
 Track 5 (GSAP) packages easeIn/easeOut/easeInOut into named strings (`power2.out`, `back.inOut`...) plus extra families (elastic, bounce) built from the same "remap $t$ before you lerp" principle. Track 2 (GLSL) and Track 7 (Procedural) reach for `smoothstep` constantly — not to animate over time, but to build smooth edges in space (manual anti-aliasing, blending two color regions) — the same polynomial, a different axis. This track's next mini-build combines trigonometry and interpolation into one complete moving scene.
+
+<Predict
+  question="In the demo below, pick the 'expDecay' easing and let it run the full duration. Where does the object stop, compared to linear or smoothstep?"
+  options={[
+    "Exactly on target, like every other easing — easing changes the path, not the endpoints",
+    "A little short of the target, missing by roughly 5%",
+    "Past the target, then back, with a bounce",
+    "On target, but it takes twice the duration to get there",
+  ]}
+  answer={1}
+  reveal="linear, smoothstep and the easeIn/Out family are all curves on [0,1] with f(0)=0 and f(1)=1 — those really do only change the path. expDecay is a different animal: 1 − e^(−λt) approaches the target asymptotically and never arrives, and with λ=3 it has only reached 0.95 at t=1. It is not an easing for a fixed-duration tween; it is a smoother for chasing a moving target, where never quite arriving is the desired behaviour. When you need an exact landing, pick a curve that is exactly 0 and 1 at the ends."
+/>

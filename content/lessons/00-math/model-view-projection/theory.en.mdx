@@ -102,3 +102,15 @@ The three most common mistakes with the model-view-projection chain:
 3. **Using the camera's own transform matrix ($C$) as the view matrix instead of $C^{-1}$.** The camera moves right, and the code sees the whole world drift right too, in the same direction, instead of the opposite one — a bug that's hard to spot by eye because the scene still "moves," just in the wrong direction.
 
 </Callout>
+
+<Predict
+  question="In the demo below, hold fov and distance fixed and drag near from 0.3 up to 3.0. What happens to the cubes on screen?"
+  options={[
+    "They all shrink, because the frustum got shorter",
+    "They all grow, as if zooming in",
+    "No cube changes size or position — until near passes the nearest cube and slices it away",
+    "Only the nearest cube shrinks; the far ones stay put",
+  ]}
+  answer={2}
+  reveal="near and far do not appear anywhere in the projection's x and y formulas: x_ndc depends only on fov and -z_view. They decide exactly two other things — what gets clipped, and how the depth buffer spends its precision (a near plane set too small is the number one cause of z-fighting). Watch the top-down frustum diagram: dragging near only slides the near plane back and forth, while the wedge's opening angle never moves."
+/>

@@ -102,3 +102,15 @@ Ba lỗi hay gặp nhất với chuỗi model-view-projection:
 3. **Dùng thẳng ma trận transform của camera ($C$) làm view matrix thay vì $C^{-1}$.** Camera di chuyển sang phải, code lại thấy cả thế giới cũng trôi sang phải theo đúng hướng thay vì ngược lại — lỗi khó phát hiện bằng mắt vì hình vẫn "chạy," chỉ sai chiều điều khiển.
 
 </Callout>
+
+<Predict
+  question="Trong demo dưới, giữ nguyên fov và khoảng cách, chỉ kéo near từ 0.3 lên 3.0. Các khối trên màn hình đổi thế nào?"
+  options={[
+    "Tất cả nhỏ lại, vì frustum bị cắt ngắn đi",
+    "Tất cả to ra, như đang zoom vào",
+    "Không khối nào đổi kích thước hay vị trí — cho tới khi near vượt qua khối gần nhất và cắt phăng nó",
+    "Chỉ khối gần nhất nhỏ lại, các khối ở xa giữ nguyên",
+  ]}
+  answer={2}
+  reveal="near và far không hề xuất hiện trong công thức tính x, y của phép chiếu: x_ndc chỉ phụ thuộc fov và -z_view. Chúng quyết định đúng hai việc khác — cắt cái gì, và depth buffer phân bổ độ chính xác ra sao (near đặt quá nhỏ là nguyên nhân số một của z-fighting). Nhìn sơ đồ frustum từ trên mà xem: kéo near chỉ dời mặt phẳng gần lên xuống, độ mở của hình nêm không nhúc nhích."
+/>

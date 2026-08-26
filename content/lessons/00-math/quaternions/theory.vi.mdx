@@ -82,3 +82,15 @@ Ba lỗi hay gặp nhất với quaternion:
 3. **Coi phép nhân quaternion giao hoán như nhân số thực.** $q_1 q_2 \neq q_2 q_1$ nói chung — nhầm thứ tự nhân đổi hẳn ý nghĩa "xoay theo hệ local trước hay hệ world trước", khiến object xoay đúng góc nhưng sai hẳn hướng tổng thể khi ghép nhiều phép xoay liên tiếp.
 
 </Callout>
+
+<Predict
+  question="Demo dưới đặt cạnh nhau một object lerp từng góc Euler và một object slerp quaternion, cùng đi giữa đúng hai pose. Kéo t từ 0 lên 1, hai object lệch nhau ở đâu?"
+  options={[
+    "Lệch nhất ở hai đầu t=0 và t=1, khớp nhau ở giữa",
+    "Lệch dần đều, sai số tích luỹ nên lớn nhất tại t=1",
+    "Trùng khít tại t=0 và t=1, lệch nhiều nhất quanh khoảng giữa",
+    "Không bao giờ lệch — slerp chỉ đổi tốc độ đi chứ không đổi đường đi",
+  ]}
+  answer={2}
+  reveal="Hai cách bắt buộc trùng nhau ở hai đầu, vì cả hai đều nội suy giữa đúng hai pose đó: t=0 cho pose đầu, t=1 cho pose cuối, không cách nào khác. Toàn bộ sai lệch nằm gọn trong khoảng giữa. Đó chính là lý do lerp Euler qua mặt được review: soi keyframe thì không thấy gì sai, phải xem lại đoạn animation mới thấy object vặn ra ngoài đường ngắn nhất. Slerp đi cung ngắn nhất trên mặt cầu đơn vị; lerp ba góc Euler đi thẳng trong không gian ba góc, mà ánh xạ từ đó sang phép xoay thật không hề tuyến tính."
+/>
