@@ -95,7 +95,7 @@
   <!-- cost ladder -->
   <line class="rule" x1="24" y1="244" x2="596" y2="244" />
   <text class="head" x="38" y="262">số lớp warp</text>
-  <text class="head" x="220" y="262" text-anchor="end">fbm() calls</text>
+  <text class="head" x="220" y="262" text-anchor="end">số lần gọi fbm()</text>
   <text class="head" x="420" y="262" text-anchor="end">số lần gọi noise() ở 5 octave</text>
   <text class="cell" x="38" y="282">0 (raw fbm)</text>
   <text class="cell" x="220" y="282" text-anchor="end">1</text>

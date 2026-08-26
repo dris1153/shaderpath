@@ -55,8 +55,8 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">Occlusion has to be settled per pixel, in both directions, by exchanging depth</text>
-  <text class="note" x="24" y="42">Draw order cannot decide this: along one ray the mesh is nearer, along the next the SDF surface is.</text>
+  <text class="title" x="24" y="24">Che khuất phải giải quyết theo từng pixel, cả hai chiều, bằng cách trao đổi depth</text>
+  <text class="note" x="24" y="42">Thứ tự vẽ không quyết được: dọc tia này thì mesh gần hơn, dọc tia kế thì bề mặt SDF gần hơn.</text>
 
   <!-- ============ ray geometry ============ -->
   <path class="cam" d="M40,178 L74,164 L74,216 L40,202 Z" />
@@ -71,44 +71,44 @@
   <circle class="dot" cx="314" cy="250" r="4" />
   <path class="bound" d="M368.2,238 L368.2,262" />
 
-  <text class="note" x="204" y="112" text-anchor="end">mesh, rasterised</text>
+  <text class="note" x="204" y="112" text-anchor="end">mesh, đã rasterise</text>
   <path class="leader" d="M208,109 L250,124" />
-  <text class="note" x="452" y="176">SDF surface,</text>
-  <text class="note" x="452" y="192">raymarched</text>
+  <text class="note" x="452" y="176">bề mặt SDF,</text>
+  <text class="note" x="452" y="192">đã raymarch</text>
   <path class="leader" d="M448,182 L418,186" />
 
-  <text class="warn" x="300" y="100">tMax = tBound: the march is cut off</text>
-  <text class="note" x="300" y="116">before the SDF, reports nothing, discards</text>
+  <text class="warn" x="300" y="100">tMax = tBound: vòng march bị cắt</text>
+  <text class="note" x="300" y="116">trước SDF, không báo gì, bị discard</text>
   <path class="leader" d="M296,106 L272,140" />
 
-  <text class="warn" x="376" y="292">tBound from the mesh</text>
+  <text class="warn" x="376" y="292">tBound lấy từ mesh</text>
   <path class="leader" d="M374,288 L368,264" />
-  <text class="label" x="146" y="292">hit at t &lt; tBound, so the depth it writes</text>
-  <text class="note" x="146" y="308">takes the pixel from the mesh</text>
+  <text class="label" x="146" y="292">trúng tại t &lt; tBound, nên depth nó ghi</text>
+  <text class="note" x="146" y="308">giành pixel đó khỏi mesh</text>
   <path class="leader" d="M186,282 L310,256" />
 
   <path class="rule" d="M24,336 L616,336" />
 
   <!-- ============ the two passes ============ -->
   <rect class="box" x="24" y="360" width="186" height="80" rx="8" />
-  <text class="stage" x="38" y="382">1 · mesh only, off-screen</text>
-  <text class="note" x="38" y="402">into a render target whose</text>
-  <text class="note" x="38" y="418">depth texture can be sampled</text>
+  <text class="stage" x="38" y="382">1 · chỉ mesh, vẽ ngoài màn</text>
+  <text class="note" x="38" y="402">vào một render target có</text>
+  <text class="note" x="38" y="418">depth texture lấy mẫu được</text>
 
   <path class="arrow" d="M210,400 L226,400" marker-end="url(#ah)" />
 
   <rect class="box" x="228" y="360" width="186" height="80" rx="8" />
-  <text class="stage" x="242" y="382">2 · the raymarch</text>
+  <text class="stage" x="242" y="382">2 · vòng raymarch</text>
   <text class="note" x="242" y="402">tBound = eyeDepth / (−rd_view.z)</text>
   <text class="note" x="242" y="418">tMax = min(MAX_DIST, tBound)</text>
 
   <path class="arrow" d="M414,400 L430,400" marker-end="url(#ah)" />
 
   <rect class="box" x="432" y="360" width="184" height="80" rx="8" />
-  <text class="stage" x="446" y="382">3 · the ordinary depth test</text>
+  <text class="stage" x="446" y="382">3 · phép depth test thông thường</text>
   <text class="note" x="446" y="402">gl_FragDepth = (z_ndc + 1) / 2</text>
-  <text class="note" x="446" y="418">settles the other direction</text>
+  <text class="note" x="446" y="418">giải quyết chiều còn lại</text>
 
-  <text class="note" x="24" y="466">A shader cannot sample the depth attachment it is currently writing — that is the entire reason pass 1 exists.</text>
-  <text class="note" x="24" y="484">Writing gl_FragDepth also gives up early-Z: the real depth only exists once the fragment shader has finished.</text>
+  <text class="note" x="24" y="466">Shader không lấy mẫu được depth attachment mà chính nó đang ghi — đó là toàn bộ lý do lượt 1 tồn tại.</text>
+  <text class="note" x="24" y="484">Ghi gl_FragDepth cũng là từ bỏ early-Z: depth thật chỉ có sau khi fragment shader chạy xong.</text>
 </svg>

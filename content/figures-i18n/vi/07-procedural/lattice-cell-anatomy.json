@@ -15,7 +15,7 @@
   "each corner contributes dot(g, f − its own offset):": "mỗi góc đóng góp dot(g, f − offset của chính nó):",
   "dot(g₁₁, f − (1,1))  ≠  dot(g₁₁, f)": "dot(g₁₁, f − (1,1))  ≠  dot(g₁₁, f)",
   "at a corner the offset is (0,0), so the value there is 0": "tại một góc thì offset là (0,0), nên giá trị ở đó bằng 0",
-  "n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f": "n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f",
+  "n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f": "n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   với   u = fade(f), không phải f thô",
   "Both sides run this identical bilinear blend — only what the four corner numbers mean changes.": "Cả hai bên đều chạy đúng phép trộn song tuyến này — chỉ khác ý nghĩa của bốn con số ở góc.",
   "Linear u leaves the slope jumping at every cell edge — those are the diamond creases.": "u tuyến tính làm độ dốc nhảy ở mọi cạnh ô — đó chính là các nếp gấp hình thoi.",
   "Quintic 6t⁵ − 15t⁴ + 10t³ zeroes f′ and f″ at t = 0 and t = 1, so neighbouring cells agree in slope and curvature.": "Quintic 6t⁵ − 15t⁴ + 10t³ triệt tiêu f′ và f″ tại t = 0 và t = 1, nên hai ô kề nhau khớp cả độ dốc lẫn độ cong."

@@ -48,12 +48,12 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">The normal is the gradient, and the gradient is a sampling pattern around the hit point</text>
-  <text class="note" x="24" y="42">Both patterns live on the same cube of side 2ε centred on p. Neither one ever appears on screen — but the</text>
-  <text class="note" x="24" y="58">number of dots in it is the per-pixel cost of every shaded fragment.</text>
+  <text class="title" x="24" y="24">Pháp tuyến chính là gradient, và gradient là một mẫu lấy mẫu quanh điểm trúng</text>
+  <text class="note" x="24" y="42">Cả hai mẫu đều nằm trên cùng khối lập phương cạnh 2ε tâm tại p. Không mẫu nào hiện lên màn hình — nhưng</text>
+  <text class="note" x="24" y="58">số chấm trong đó là chi phí mỗi pixel của mọi fragment được tô bóng.</text>
 
   <!-- ============ left: central differences ============ -->
-  <text class="head" x="168" y="96" text-anchor="middle">central differences — 6 taps</text>
+  <text class="head" x="168" y="96" text-anchor="middle">sai phân trung tâm — 6 lần lấy mẫu</text>
   <path class="cube" d="M161.6,175.8 L94.7,157.9 M161.6,175.8 L161.6,277.1 M161.6,175.8 L241.3,160.8 M241.3,160.8 L174.4,142.9 M241.3,160.8 L241.3,262.1 M161.6,277.1 L94.7,259.2 M161.6,277.1 L241.3,262.1 M241.3,262.1 L174.4,244.2 M94.7,157.9 L94.7,259.2 M94.7,157.9 L174.4,142.9 M174.4,142.9 L174.4,244.2 M94.7,259.2 L174.4,244.2" />
 
   <path class="spoke" d="M134.6,201 L201.4,219 M168,159.3 L168,260.7 M128.2,217.5 L207.8,202.5" />
@@ -71,7 +71,7 @@
   <path class="leader" d="M64,203 L162,209" />
 
   <!-- ============ right: tetrahedron ============ -->
-  <text class="head-w" x="472" y="96" text-anchor="middle">tetrahedron — 4 taps</text>
+  <text class="head-w" x="472" y="96" text-anchor="middle">tứ diện — 4 lần lấy mẫu</text>
   <path class="cube" d="M465.6,175.8 L398.7,157.9 M465.6,175.8 L465.6,277.1 M465.6,175.8 L545.3,160.8 M545.3,160.8 L478.4,142.9 M545.3,160.8 L545.3,262.1 M465.6,277.1 L398.7,259.2 M465.6,277.1 L545.3,262.1 M545.3,262.1 L478.4,244.2 M398.7,157.9 L398.7,259.2 M398.7,157.9 L478.4,142.9 M478.4,142.9 L478.4,244.2 M398.7,259.2 L478.4,244.2" />
   <path class="tet" d="M545.3,262.1 L398.7,259.2 M545.3,262.1 L478.4,142.9 M545.3,262.1 L465.6,175.8 M398.7,259.2 L478.4,142.9 M398.7,259.2 L465.6,175.8 M478.4,142.9 L465.6,175.8" />
   <circle class="tap-w" cx="545.3" cy="262.1" r="4" />
@@ -81,14 +81,14 @@
   <circle class="p" cx="472" cy="210" r="4.5" />
 
   <!-- shared caption row -->
-  <text class="note" x="168" y="308" text-anchor="middle">±ε along each axis, differenced pairwise</text>
-  <text class="note" x="168" y="324" text-anchor="middle">the shared 2ε factor cancels in normalize()</text>
-  <text class="note" x="168" y="340" text-anchor="middle">6 map() calls</text>
-  <text class="note" x="464" y="308" text-anchor="middle">(1,−1,−1), (−1,−1,1), (−1,1,−1), (1,1,1), all ×ε</text>
-  <text class="note" x="472" y="324" text-anchor="middle">each direction doubles as its own weight</text>
-  <text class="note" x="472" y="340" text-anchor="middle">4 map() calls — cheaper, slightly less exact</text>
+  <text class="note" x="168" y="308" text-anchor="middle">±ε dọc mỗi trục, lấy hiệu theo từng cặp</text>
+  <text class="note" x="168" y="324" text-anchor="middle">thừa số 2ε chung bị triệt tiêu trong normalize()</text>
+  <text class="note" x="168" y="340" text-anchor="middle">6 lần gọi map()</text>
+  <text class="note" x="464" y="308" text-anchor="middle">(1,−1,−1), (−1,−1,1), (−1,1,−1), (1,1,1), đều ×ε</text>
+  <text class="note" x="472" y="324" text-anchor="middle">mỗi hướng kiêm luôn trọng số của chính nó</text>
+  <text class="note" x="472" y="340" text-anchor="middle">4 lần gọi map() — rẻ hơn, chính xác kém hơn chút</text>
 
   <path class="rule" d="M24,364 L616,364" />
-  <text class="note" x="24" y="390">One third fewer calls, for the same normal. That saving is only worth having because the normal is evaluated</text>
-  <text class="note" x="24" y="408">exactly once per pixel, at the hit point — put it inside the march loop and it is multiplied by the step count.</text>
+  <text class="note" x="24" y="390">Ít hơn một phần ba số lần gọi, cùng ra một pháp tuyến. Khoản tiết kiệm đó chỉ đáng vì pháp tuyến chỉ được tính</text>
+  <text class="note" x="24" y="408">đúng một lần mỗi pixel, tại điểm trúng — đặt nó trong vòng march là nhân lên theo số bước.</text>
 </svg>

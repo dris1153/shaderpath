@@ -14,7 +14,7 @@
   "mesh.material.color.set(\"pink\")": "mesh.material.color.set(\"pink\")",
   "The dash splits into successive property lookups, to any depth.": "Dấu gạch tách thành các lần tra thuộc tính liên tiếp, sâu bao nhiêu cũng được.",
   "attach — where a child lands on its parent": "attach — con gắn vào chỗ nào của cha",
-  "<boxGeometry /> inside <mesh>": "<boxGeometry /> inside <mesh>",
+  "<boxGeometry /> inside <mesh>": "<boxGeometry /> trong <mesh>",
   "mesh.geometry = boxGeometry": "mesh.geometry = boxGeometry",
   "Implicit for geometry and material; spell it out elsewhere, e.g. attach=\"attributes-position\".": "Ngầm định với geometry và material; chỗ khác phải ghi rõ, ví dụ attach=\"attributes-position\".",
   "args, attach, dispose, object and onUpdate are reserved — they never reach the object as properties.": "args, attach, dispose, object và onUpdate là tên dành riêng — chúng không tới object như thuộc tính."

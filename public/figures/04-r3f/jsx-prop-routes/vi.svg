@@ -68,7 +68,7 @@
 
   <text class="route" x="26" y="358">attach — con gắn vào chỗ nào của cha</text>
   <rect class="box" x="26" y="366" width="250" height="34" rx="6" />
-  <text class="code" x="151" y="387" text-anchor="middle">&lt;boxGeometry /&gt; inside &lt;mesh&gt;</text>
+  <text class="code" x="151" y="387" text-anchor="middle">&lt;boxGeometry /&gt; trong &lt;mesh&gt;</text>
   <path class="arrow" d="M280,383 L302,383" marker-end="url(#head)" />
   <rect class="box-accent" x="306" y="366" width="288" height="34" rx="6" />
   <text class="code" x="450" y="387" text-anchor="middle">mesh.geometry = boxGeometry</text>

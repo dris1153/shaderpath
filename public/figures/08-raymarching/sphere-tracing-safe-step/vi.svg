@@ -49,13 +49,13 @@
   </defs>
 
   <!-- ===================== panel A: a direct hit ===================== -->
-  <text class="title" x="24" y="24">One step is exactly f(p) long, so it can never cross a surface</text>
-  <text class="note" x="24" y="42">Each dashed circle is the region f(p) proves empty; the step ends on that circle, never past it.</text>
+  <text class="title" x="24" y="24">Mỗi bước dài đúng f(p), nên không bao giờ vượt qua bề mặt</text>
+  <text class="note" x="24" y="42">Mỗi vòng nét đứt là vùng f(p) chứng minh là rỗng; bước đi dừng ngay trên vòng đó, không quá.</text>
 
   <circle class="solid" cx="180" cy="112" r="30" />
   <circle class="solid" cx="460" cy="160" r="55" />
-  <text class="note" x="180" y="72" text-anchor="middle">another surface nearby</text>
-  <text class="note" x="470" y="86" text-anchor="middle">the surface ahead</text>
+  <text class="note" x="180" y="72" text-anchor="middle">một bề mặt khác ở gần</text>
+  <text class="note" x="470" y="86" text-anchor="middle">bề mặt phía trước</text>
 
   <circle class="safe" cx="105" cy="180" r="71.2" />
   <circle class="safe" cx="176.2" cy="180" r="38.1" />
@@ -75,19 +75,19 @@
   <text class="label" x="96" y="200">p₀</text>
 
   <path class="leader" d="M406,182 L418,244" />
-  <text class="label" x="422" y="248">hit: f(p) &lt; ε, 6 steps in</text>
-  <text class="note" x="422" y="266">long strides in open space,</text>
-  <text class="note" x="422" y="282">short ones near a surface</text>
+  <text class="label" x="422" y="248">trúng: f(p) &lt; ε, sau 6 bước</text>
+  <text class="note" x="422" y="266">sải dài ở chỗ trống,</text>
+  <text class="note" x="422" y="282">bước ngắn khi gần bề mặt</text>
 
-  <text class="note" x="24" y="264">Any surface can shorten the step:</text>
-  <text class="note" x="24" y="280">the second one is cut short by the</text>
-  <text class="note" x="24" y="296">small shape, not by the target.</text>
+  <text class="note" x="24" y="264">Bề mặt nào cũng rút ngắn bước được:</text>
+  <text class="note" x="24" y="280">bước thứ hai bị hình nhỏ cắt ngắn,</text>
+  <text class="note" x="24" y="296">không phải do đích.</text>
 
   <path class="rule" d="M24,320 L616,320" />
 
   <!-- ===================== panel B: the grazing ray ===================== -->
-  <text class="title" x="24" y="352">A grazing ray runs the same loop and never arrives</text>
-  <text class="note" x="24" y="370">Here the nearest surface sits beside the ray, not ahead of it: f(p) stays small while t barely advances.</text>
+  <text class="title" x="24" y="352">Tia lướt sát chạy đúng vòng lặp đó mà không bao giờ tới nơi</text>
+  <text class="note" x="24" y="370">Ở đây bề mặt gần nhất nằm cạnh tia chứ không ở trước: f(p) luôn nhỏ trong khi t nhích được rất ít.</text>
 
   <circle class="solid" cx="330" cy="455" r="52" />
   <circle class="safe-warn" cx="282" cy="499" r="13.1" />
@@ -101,14 +101,14 @@
   <circle class="dot-warn" cx="301.7" cy="499" r="2.6" />
 
   <text class="note" x="86" y="486">p₀</text>
-  <text class="note" x="150" y="486">one long step, as before</text>
+  <text class="note" x="150" y="486">một bước dài, như trước</text>
 
   <path class="brace" d="M292,509 L292,517 L306,517 L306,509" />
   <path class="leader" d="M299,517 L314,529" />
-  <text class="warn" x="318" y="533">every step after the second lands in here</text>
-  <text class="note" x="318" y="549">the budget runs out, the pixel is reported as a</text>
-  <text class="note" x="318" y="565">miss — that is the hole along the silhouette</text>
+  <text class="warn" x="318" y="533">mọi bước sau bước thứ hai đều rơi vào đây</text>
+  <text class="note" x="318" y="549">hết ngân sách, pixel bị báo là</text>
+  <text class="note" x="318" y="565">trượt — đó là lỗ dọc theo đường viền</text>
 
   <path class="leader" d="M302.3,497 L268,462" />
-  <text class="note" x="264" y="458" text-anchor="end">the hit it would have reached</text>
+  <text class="note" x="264" y="458" text-anchor="end">điểm trúng lẽ ra nó tới được</text>
 </svg>

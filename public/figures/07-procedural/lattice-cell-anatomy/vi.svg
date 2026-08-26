@@ -101,7 +101,7 @@
 
   <!-- shared blend -->
   <rect class="box" x="24" y="346" width="572" height="46" rx="8" />
-  <text class="code" x="38" y="366">n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f</text>
+  <text class="code" x="38" y="366">n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   với   u = fade(f), không phải f thô</text>
   <text class="note" x="38" y="384">Cả hai bên đều chạy đúng phép trộn song tuyến này — chỉ khác ý nghĩa của bốn con số ở góc.</text>
 
   <text class="foot" x="310" y="412" text-anchor="middle">u tuyến tính làm độ dốc nhảy ở mọi cạnh ô — đó chính là các nếp gấp hình thoi.</text>

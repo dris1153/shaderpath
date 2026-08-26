@@ -51,9 +51,9 @@
   </defs>
 
   <!-- ================= top: the three hard ops on one slice ================= -->
-  <text class="title" x="24" y="24">A boolean op is one comparison between two distance fields</text>
-  <text class="note" x="24" y="42">One slice through both shapes. Dashed = each shape on its own (dA, dB); blue = the combined field.</text>
-  <text class="note" x="24" y="58">Shading marks where the result came out negative — that, and only that, is solid.</text>
+  <text class="title" x="24" y="24">Một phép boolean là một lần so sánh giữa hai trường khoảng cách</text>
+  <text class="note" x="24" y="42">Một lát cắt qua cả hai hình. Nét đứt = từng hình riêng (dA, dB); xanh = trường đã gộp.</text>
+  <text class="note" x="24" y="58">Phần tô đánh dấu chỗ kết quả ra âm — đúng chỗ đó, và chỉ chỗ đó, là đặc.</text>
 
   <!-- union -->
   <text class="op" x="40" y="84">union  min(dA, dB)</text>
@@ -79,16 +79,16 @@
   <path class="res-fill" d="M481.7,130 L504.3,150.8 L511.3,144.4 L516.5,139.6 L527.0,130 Z" />
   <polyline class="res" points="442.2,93.2 504.3,150.8 511.3,144.4 516.5,139.6 551.3,107.6 563.5,118.8 591.3,93.2" />
 
-  <text class="note" x="120" y="188" text-anchor="middle">both lobes survive</text>
-  <text class="note" x="320" y="188" text-anchor="middle">only where both are negative</text>
-  <text class="note" x="520" y="188" text-anchor="middle">−dB turns B inside out first</text>
+  <text class="note" x="120" y="188" text-anchor="middle">cả hai thuỳ đều còn</text>
+  <text class="note" x="320" y="188" text-anchor="middle">chỉ ở chỗ cả hai cùng âm</text>
+  <text class="note" x="520" y="188" text-anchor="middle">−dB lộn B từ trong ra trước đã</text>
 
   <path class="rule" d="M24,210 L616,210" />
 
   <!-- ================= bottom: smooth min ================= -->
-  <text class="title" x="24" y="240">Smooth min replaces the crease with a dip of depth k/4</text>
-  <text class="note" x="24" y="258">The union above, zoomed in. k is a blend radius in world units, so it also fixes how wide a band</text>
-  <text class="note" x="24" y="274">the blend touches: outside it h saturates to 0 or 1 and smin returns plain min, unchanged.</text>
+  <text class="title" x="24" y="240">Smooth min thay nếp gấp bằng một chỗ lõm sâu k/4</text>
+  <text class="note" x="24" y="258">Phép union ở trên, phóng to. k là bán kính blend theo đơn vị thế giới, nên nó cũng định luôn bề rộng dải</text>
+  <text class="note" x="24" y="274">mà blend chạm tới: ngoài dải đó h bão hoà về 0 hoặc 1 và smin trả lại đúng min thường.</text>
 
   <rect class="band" x="280" y="296" width="95" height="159" />
   <path class="axis" d="M90,370 L546,370" />
@@ -107,16 +107,16 @@
   <path class="gap" d="M327.5,399.8 L327.5,408.4" marker-end="url(#tip)" />
 
   <path class="leader" d="M280,308 L280,418 M375,308 L375,418" />
-  <text class="label" x="327.5" y="292" text-anchor="middle">band of width k, centred where dA = dB</text>
+  <text class="label" x="327.5" y="292" text-anchor="middle">dải rộng k, tâm ở chỗ dA = dB</text>
 
   <path class="leader" d="M262,398 L322,399.8" />
-  <text class="note" x="258" y="388" text-anchor="end">plain min: a corner,</text>
-  <text class="note" x="258" y="404" text-anchor="end">so the normal jumps</text>
+  <text class="note" x="258" y="388" text-anchor="end">min thường: một góc nhọn,</text>
+  <text class="note" x="258" y="404" text-anchor="end">nên pháp tuyến nhảy</text>
 
   <path class="leader" d="M400,444 L344,414" />
-  <text class="warn" x="404" y="448">smin: k/4 deeper here,</text>
-  <text class="warn" x="404" y="464">smooth through the seam</text>
+  <text class="warn" x="404" y="448">smin: sâu thêm k/4 ở đây,</text>
+  <text class="warn" x="404" y="464">trơn qua đường nối</text>
 
-  <text class="note" x="24" y="486">That dip is the material the weld adds — the whole difference between a visible crease and a fillet.</text>
-  <text class="note" x="24" y="504">The same h also has to drive the material mix, or a hard colour seam cuts across the smooth surface.</text>
+  <text class="note" x="24" y="486">Chỗ lõm đó chính là phần vật liệu mối hàn thêm vào — khác biệt trọn vẹn giữa nếp gấp lộ và một góc lượn.</text>
+  <text class="note" x="24" y="504">Chính h đó cũng phải điều khiển phần trộn vật liệu, không thì một đường màu gắt cắt ngang bề mặt trơn.</text>
 </svg>

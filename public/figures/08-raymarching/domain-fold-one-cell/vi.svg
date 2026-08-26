@@ -63,9 +63,9 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">Nothing is duplicated — the query coordinate is folded before map() sees it</text>
-  <text class="note" x="24" y="42">Every cell hands its points to the same canonical cell, so one SDF call answers for all the copies at once. No</text>
-  <text class="note" x="24" y="58">buffer, no instance count, no upper bound on how many copies exist.</text>
+  <text class="title" x="24" y="24">Không có gì được nhân bản — toạ độ truy vấn bị gấp lại trước khi map() thấy nó</text>
+  <text class="note" x="24" y="42">Mọi ô giao điểm của mình cho cùng một ô chuẩn, nên một lần gọi SDF trả lời cho mọi bản sao. Không</text>
+  <text class="note" x="24" y="58">buffer, không instance count, không giới hạn trên về số bản sao.</text>
 
   <!-- ================= the repeated world ================= -->
   <path class="ground" d="M50,132 L590,132" />
@@ -80,7 +80,7 @@
   <text class="id" x="320" y="162" text-anchor="middle">0</text>
   <text class="id" x="428" y="162" text-anchor="middle">1</text>
   <text class="id" x="536" y="162" text-anchor="middle">2</text>
-  <text class="note" x="24" y="90">what you see</text>
+  <text class="note" x="24" y="90">thứ bạn nhìn thấy</text>
   <text class="note" x="24" y="162">cellId</text>
 
   <!-- fold arrows -->
@@ -95,22 +95,22 @@
   <rect class="obj-home" x="306" y="238" width="28" height="34" rx="4" />
   <text class="note" x="266" y="290" text-anchor="middle">−c/2</text>
   <text class="note" x="374" y="290" text-anchor="middle">+c/2</text>
-  <text class="note" x="24" y="250">what map() sees</text>
+  <text class="note" x="24" y="250">thứ map() nhìn thấy</text>
 
   <text class="label" x="394" y="234">q = mod(p + 0.5c, c) − 0.5c</text>
   <text class="note" x="394" y="252">same fold as p − c·round(p / c)</text>
-  <text class="note" x="394" y="270">cellId = round(p / c) holds still</text>
-  <text class="note" x="394" y="286">across a cell — hash that, not q</text>
+  <text class="note" x="394" y="270">cellId = round(p / c) đứng yên</text>
+  <text class="note" x="394" y="286">trong một ô — hash cái đó, đừng hash q</text>
 
   <path class="rule" d="M24,314 L616,314" />
 
   <!-- ================= the catch ================= -->
-  <text class="title" x="24" y="342">One copy per query is also the trap: an off-centre object breaks the safe step</text>
-  <text class="note" x="24" y="360">The fold is only honest while the object sits centred inside half a cell. Push it off-centre and the copy next</text>
-  <text class="note" x="24" y="376">door can be nearer than the one map() was handed — and the returned distance is then too large to be safe.</text>
+  <text class="title" x="24" y="342">Một bản sao mỗi truy vấn cũng là cái bẫy: vật lệch tâm làm hỏng bước đi an toàn</text>
+  <text class="note" x="24" y="360">Phép gấp chỉ trung thực khi vật nằm chính giữa nửa ô. Đẩy nó lệch tâm thì bản sao ở ô</text>
+  <text class="note" x="24" y="376">bên cạnh có thể gần hơn cái map() được đưa — và khoảng cách trả về khi đó lớn quá mức an toàn.</text>
 
-  <text class="warn" x="280" y="396" text-anchor="middle">the surface truly nearest</text>
-  <text class="label" x="462" y="396" text-anchor="middle">the distance map() returns</text>
+  <text class="warn" x="280" y="396" text-anchor="middle">bề mặt thật sự gần nhất</text>
+  <text class="label" x="462" y="396" text-anchor="middle">khoảng cách map() trả về</text>
   <path class="leader" d="M285,401 L278,428" />
   <path class="leader" d="M400,402 L352,430" />
 
@@ -124,8 +124,8 @@
   <path class="measure" d="M302,432 L302,444" />
   <circle class="dot" cx="302" cy="438" r="4" />
 
-  <text class="id" x="215" y="480" text-anchor="middle">cell −1</text>
-  <text class="id" x="365" y="480" text-anchor="middle">cell 0, the one p folds into</text>
+  <text class="id" x="215" y="480" text-anchor="middle">ô −1</text>
+  <text class="id" x="365" y="480" text-anchor="middle">ô 0, ô mà p gấp vào</text>
 
-  <text class="note" x="24" y="506">A step that long lands inside the neighbour — the holes it punches line up exactly on the grid.</text>
+  <text class="note" x="24" y="506">Bước dài như vậy rơi vào bên trong ô kề — các lỗ nó đục ra nằm đúng theo lưới.</text>
 </svg>

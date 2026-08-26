@@ -19,7 +19,7 @@
   "f = fbm(p + s·r)": "f = fbm(p + s·r)",
   "f": "f",
   "warp layers": "số lớp warp",
-  "fbm() calls": "fbm() calls",
+  "fbm() calls": "số lần gọi fbm()",
   "noise() calls at 5 octaves": "số lần gọi noise() ở 5 octave",
   "0 (raw fbm)": "0 (raw fbm)",
   "1 (q only)": "1 (q only)",

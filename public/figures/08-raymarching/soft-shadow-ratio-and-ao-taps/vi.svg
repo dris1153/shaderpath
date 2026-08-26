@@ -50,11 +50,11 @@
     </marker>
   </defs>
 
-  <text class="title" x="24" y="24">Two marches a rasteriser has no way to make: one toward the light, five along the normal</text>
-  <text class="note" x="24" y="42">No second render pass, no depth texture, no bias to tune — both are only more calls to the same map().</text>
+  <text class="title" x="24" y="24">Hai vòng march mà rasteriser không cách nào làm: một hướng về đèn, năm dọc theo pháp tuyến</text>
+  <text class="note" x="24" y="42">Không lượt render thứ hai, không depth texture, không bias phải chỉnh — cả hai chỉ là thêm lần gọi cùng map() đó.</text>
 
   <!-- ==================== soft shadow ==================== -->
-  <text class="head" x="24" y="76">Soft shadow: march from the hit point toward the light</text>
+  <text class="head" x="24" y="76">Bóng mềm: march từ điểm trúng hướng về đèn</text>
 
   <circle class="sun" cx="80" cy="128" r="11" />
   <path class="sun" d="M80,108 L80,114 M80,142 L80,148 M60,128 L66,128 M94,128 L100,128 M66,114 L70,118 M90,138 L94,142" />
@@ -89,22 +89,22 @@
   <text class="warn" x="230" y="330" text-anchor="middle">0</text>
   <text class="label" x="272" y="330" text-anchor="middle">min k·d / t</text>
   <text class="label" x="332" y="330" text-anchor="middle">1</text>
-  <text class="note" x="40" y="330">shadow value</text>
+  <text class="note" x="40" y="330">giá trị bóng</text>
 
-  <text class="note" x="414" y="120">The ray has to start at p + n·ε: from p</text>
-  <text class="note" x="414" y="136">itself the very first step reads f ≈ 0.</text>
-  <text class="note" x="414" y="164">Hit anything on the way and the</text>
-  <text class="note" x="414" y="180">answer is 0, with no gradient at all.</text>
-  <text class="note" x="414" y="208">Otherwise it is the SMALLEST k·d/t</text>
-  <text class="note" x="414" y="224">found anywhere along the ray — one</text>
-  <text class="note" x="414" y="240">brief near miss darkens the point.</text>
-  <text class="note" x="414" y="268">The dashed circle is that closest gap:</text>
-  <text class="note" x="414" y="284">a narrower gap, a deeper penumbra.</text>
+  <text class="note" x="414" y="120">Tia phải khởi từ p + n·ε: xuất phát từ</text>
+  <text class="note" x="414" y="136">chính p thì bước đầu đã đọc f ≈ 0.</text>
+  <text class="note" x="414" y="164">Chạm bất cứ gì trên đường là kết</text>
+  <text class="note" x="414" y="180">quả bằng 0, không có chuyển sắc nào.</text>
+  <text class="note" x="414" y="208">Nếu không, đó là k·d/t NHỎ NHẤT</text>
+  <text class="note" x="414" y="224">tìm được dọc tia — một lần lướt sát</text>
+  <text class="note" x="414" y="240">thoáng qua cũng làm điểm đó tối đi.</text>
+  <text class="note" x="414" y="268">Vòng nét đứt là khe hẹp nhất đó:</text>
+  <text class="note" x="414" y="284">khe càng hẹp, nửa tối càng sâu.</text>
 
   <path class="rule" d="M24,368 L616,368" />
 
   <!-- ==================== ambient occlusion ==================== -->
-  <text class="head" x="24" y="396">Ambient occlusion: five taps straight along n</text>
+  <text class="head" x="24" y="396">Ambient occlusion: năm lần lấy mẫu thẳng dọc n</text>
 
   <path class="ground" d="M60,530 L200,530" />
   <rect class="solid" x="200" y="420" width="52" height="110" rx="4" />
@@ -123,11 +123,11 @@
   <text class="note" x="170" y="548" text-anchor="middle">p</text>
   <text class="note" x="162" y="452" text-anchor="end">n</text>
 
-  <text class="note" x="290" y="424">h = 0.01 + 0.12·i/4, for i = 0…4</text>
+  <text class="note" x="290" y="424">h = 0.01 + 0.12·i/4, với i = 0…4</text>
   <text class="note" x="290" y="442">occ += (h − d) · 0.95ⁱ</text>
   <text class="note" x="290" y="460">ao = clamp(1 − 2.5·occ, 0, 1)</text>
-  <text class="note" x="290" y="492">The two lowest taps still see open ground below them:</text>
-  <text class="note" x="290" y="508">they read back exactly h and add nothing. The upper three</text>
-  <text class="note" x="290" y="524">run into the wall first, and that shortfall, decayed by 0.95ⁱ,</text>
-  <text class="note" x="290" y="540">is the whole contact shadow.</text>
+  <text class="note" x="290" y="492">Hai mẫu thấp nhất vẫn thấy khoảng trống bên dưới:</text>
+  <text class="note" x="290" y="508">chúng đọc về đúng h và không cộng gì. Ba mẫu trên</text>
+  <text class="note" x="290" y="524">đụng tường trước, và phần hụt đó, suy giảm theo 0.95ⁱ,</text>
+  <text class="note" x="290" y="540">chính là toàn bộ bóng tiếp xúc.</text>
 </svg>
