@@ -70,10 +70,10 @@
   <text class="note" x="338" y="116">length = instanceCount, divisor 1</text>
 
   <!-- how one instanced draw walks them -->
-  <text class="title" x="310" y="152" text-anchor="middle">one gl.drawElementsInstanced( ... , instanceCount = 3 )</text>
+  <text class="title" x="310" y="152" text-anchor="middle">một lệnh gl.drawElementsInstanced( ... , instanceCount = 3 )</text>
 
-  <text class="note" x="200" y="174" text-anchor="middle">per-vertex, re-read every instance</text>
-  <text class="note" x="352" y="174" text-anchor="middle">per-instance</text>
+  <text class="note" x="200" y="174" text-anchor="middle">theo đỉnh, đọc lại ở mỗi instance</text>
+  <text class="note" x="352" y="174" text-anchor="middle">theo instance</text>
 
   <rect class="cell-vert" x="110" y="182" width="44" height="30" rx="3" />
   <rect class="cell-vert" x="158" y="182" width="44" height="30" rx="3" />
@@ -112,12 +112,12 @@
   <text class="cell-label ink-inst" x="352" y="282" text-anchor="middle">i2</text>
 
   <rect class="box" x="398" y="190" width="198" height="110" rx="8" />
-  <text class="title" x="412" y="212">Both look the same</text>
-  <text class="title" x="412" y="230">in the shader:</text>
+  <text class="title" x="412" y="212">Cả hai trông giống hệt</text>
+  <text class="title" x="412" y="230">khi ở trong shader:</text>
   <text class="code" x="412" y="252">attribute float aWeight;</text>
   <text class="code" x="412" y="270">attribute float aPhase;</text>
-  <text class="note" x="412" y="292">the buffer type sets the rate</text>
+  <text class="note" x="412" y="292">kiểu buffer mới quyết định nhịp</text>
 
-  <text class="foot" x="310" y="326" text-anchor="middle">instanceMatrix is the same mechanism: an InstancedBufferAttribute of 16 floats per copy.</text>
-  <text class="foot" x="310" y="344" text-anchor="middle">Only the length differs: position.count rows for one, instanceCount rows for the other.</text>
+  <text class="foot" x="310" y="326" text-anchor="middle">instanceMatrix cũng đúng cơ chế đó: một InstancedBufferAttribute 16 float mỗi bản.</text>
+  <text class="foot" x="310" y="344" text-anchor="middle">Chỉ khác độ dài: một bên position.count hàng, bên kia instanceCount hàng.</text>
 </svg>

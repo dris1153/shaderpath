@@ -44,28 +44,28 @@
   </style>
 
   <rect class="box-cam" x="24" y="16" width="252" height="162" rx="8" />
-  <text class="title ink-cam" x="40" y="40">Once per camera switch</text>
-  <text class="note" x="40" y="60">only when refreshProgram or the</text>
-  <text class="note" x="40" y="76">active camera actually changed</text>
+  <text class="title ink-cam" x="40" y="40">Một lần mỗi khi đổi camera</text>
+  <text class="note" x="40" y="60">chỉ khi refreshProgram hoặc camera</text>
+  <text class="note" x="40" y="76">đang dùng thật sự đã thay đổi</text>
   <text class="code ink-cam" x="40" y="104">projectionMatrix</text>
   <text class="code ink-cam" x="40" y="126">viewMatrix</text>
   <text class="code ink-cam" x="40" y="148">cameraPosition</text>
   <text class="code ink-cam" x="40" y="170">isOrthographic</text>
 
   <rect class="box-obj" x="324" y="16" width="252" height="162" rx="8" />
-  <text class="title ink-obj" x="340" y="40">Every object, every frame</text>
-  <text class="note" x="340" y="60">written unconditionally — there is</text>
-  <text class="note" x="340" y="76">no &quot;did it change&quot; check at all</text>
+  <text class="title ink-obj" x="340" y="40">Mọi object, mọi khung hình</text>
+  <text class="note" x="340" y="60">ghi vô điều kiện — không hề có</text>
+  <text class="note" x="340" y="76">phép kiểm "có đổi không" nào cả</text>
   <text class="code ink-obj" x="340" y="104">modelMatrix</text>
   <text class="code ink-obj" x="340" y="126">modelViewMatrix</text>
   <text class="code ink-obj" x="340" y="148">normalMatrix</text>
 
   <!-- one frame, one camera, N meshes -->
-  <text class="title" x="24" y="220">Inside one frame: one camera, N meshes</text>
+  <text class="title" x="24" y="220">Trong một khung hình: một camera, N mesh</text>
 
   <path class="rail" d="M28,254 L300,254" />
   <rect class="tick-cam" x="28" y="246" width="14" height="16" rx="3" />
-  <text class="note" x="312" y="259">camera block runs 1x</text>
+  <text class="note" x="312" y="259">khối camera chạy 1 lần</text>
 
   <path class="rail" d="M28,292 L300,292" />
   <rect class="tick-obj" x="28" y="284" width="8" height="16" rx="2" />
@@ -85,8 +85,8 @@
   <rect class="tick-obj" x="252" y="284" width="8" height="16" rx="2" />
   <rect class="tick-obj" x="268" y="284" width="8" height="16" rx="2" />
   <rect class="tick-obj" x="284" y="284" width="8" height="16" rx="2" />
-  <text class="note" x="312" y="297">object block runs N times</text>
+  <text class="note" x="312" y="297">khối object chạy N lần</text>
 
-  <text class="foot" x="300" y="336" text-anchor="middle">modelViewMatrix and normalMatrix depend on the camera AND the object at once —</text>
-  <text class="foot" x="300" y="354" text-anchor="middle">no two meshes can ever share them, so there is nothing to cache.</text>
+  <text class="foot" x="300" y="336" text-anchor="middle">modelViewMatrix và normalMatrix phụ thuộc cả camera LẪN object cùng lúc —</text>
+  <text class="foot" x="300" y="354" text-anchor="middle">không hai mesh nào dùng chung được, nên chẳng có gì để cache.</text>
 </svg>

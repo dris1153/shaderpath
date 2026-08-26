@@ -42,32 +42,32 @@
   </defs>
 
   <rect class="box-node" x="150" y="16" width="300" height="70" rx="8" />
-  <text class="head ink-node" x="300" y="40" text-anchor="middle">One TSL node graph</text>
+  <text class="head ink-node" x="300" y="40" text-anchor="middle">Một đồ thị node TSL</text>
   <text class="code ink-node" x="300" y="60" text-anchor="middle">sin(uv().x.mul(uFreq).add(time))</text>
-  <text class="note" x="300" y="78" text-anchor="middle">plain JS objects, not shader text</text>
+  <text class="note" x="300" y="78" text-anchor="middle">object JS thuần, không phải chuỗi shader</text>
 
   <path class="arrow" d="M300,86 L300,100" marker-end="url(#head)" />
 
   <rect class="box" x="170" y="102" width="260" height="46" rx="8" />
   <text class="title" x="300" y="124" text-anchor="middle">WebGPURenderer.init()</text>
-  <text class="note" x="300" y="140" text-anchor="middle">chooses a backend at runtime</text>
+  <text class="note" x="300" y="140" text-anchor="middle">chọn backend lúc chạy</text>
 
   <path class="arrow" d="M300,148 L300,166 L150,166 L150,182" marker-end="url(#head)" />
   <path class="arrow" d="M300,166 L450,166 L450,182" marker-end="url(#head)" />
 
   <rect class="box-node" x="24" y="186" width="252" height="94" rx="8" />
   <text class="title ink-node" x="38" y="208">WGSLNodeBuilder</text>
-  <text class="code" x="38" y="228">generates WGSL</text>
-  <text class="label" x="38" y="252">WebGPU backend</text>
-  <text class="note" x="38" y="270">compute pipelines are first-class</text>
+  <text class="code" x="38" y="228">sinh ra WGSL</text>
+  <text class="label" x="38" y="252">backend WebGPU</text>
+  <text class="note" x="38" y="270">compute pipeline là công dân hạng nhất</text>
 
   <rect class="box-node" x="324" y="186" width="252" height="94" rx="8" />
   <text class="title ink-node" x="338" y="208">GLSLNodeBuilder</text>
-  <text class="code" x="338" y="228">generates GLSL ES 3.00</text>
-  <text class="label" x="338" y="252">WebGL2 backend</text>
-  <text class="note" x="338" y="270">the transparent fallback</text>
+  <text class="code" x="338" y="228">sinh ra GLSL ES 3.00</text>
+  <text class="label" x="338" y="252">backend WebGL2</text>
+  <text class="note" x="338" y="270">đường lùi trong suốt</text>
 
   <rect class="box-out" x="24" y="308" width="552" height="60" rx="8" />
-  <text class="label" x="42" y="332">The classic WebGLRenderer is not on this diagram</text>
-  <text class="note" x="42" y="354">it only understands GLSL strings assembled from #include, and ignores .colorNode without a word</text>
+  <text class="label" x="42" y="332">WebGLRenderer cổ điển không có trên sơ đồ này</text>
+  <text class="note" x="42" y="354">nó chỉ hiểu chuỗi GLSL ghép từ #include, và bỏ qua .colorNode không nói một lời</text>
 </svg>

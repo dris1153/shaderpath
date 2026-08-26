@@ -48,51 +48,51 @@
 
   <rect class="box" x="24" y="20" width="252" height="48" rx="8" />
   <text class="stage" x="38" y="42">1. ShaderLib.meshphysical</text>
-  <text class="note" x="38" y="60">#include &lt;...&gt; lines, unresolved</text>
+  <text class="note" x="38" y="60">các dòng #include &lt;...&gt;, chưa được giải</text>
   <path class="arrow" d="M150,68 L150,82" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="84" width="252" height="48" rx="8" />
   <text class="stage" x="38" y="106">2. WebGLPrograms</text>
-  <text class="note" x="38" y="124">adds feature #defines, builds cacheKey</text>
+  <text class="note" x="38" y="124">thêm #define tính năng, dựng cacheKey</text>
   <path class="arrow" d="M150,132 L150,146" marker-end="url(#head)" />
 
   <rect class="box-you" x="24" y="148" width="252" height="48" rx="8" />
   <text class="stage ink-you" x="38" y="170">3. onBeforeCompile(shader)</text>
-  <text class="note" x="38" y="188">your .replace() runs here</text>
+  <text class="note" x="38" y="188">.replace() của bạn chạy ở đây</text>
   <path class="arrow" d="M150,196 L150,210" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="212" width="252" height="48" rx="8" />
   <text class="stage" x="38" y="234">4. resolveIncludes()</text>
-  <text class="note" x="38" y="252">markers swapped for ShaderChunk text</text>
+  <text class="note" x="38" y="252">marker được thay bằng nội dung ShaderChunk</text>
   <path class="arrow" d="M150,260 L150,274" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="276" width="252" height="48" rx="8" />
   <text class="stage" x="38" y="298">5. prefix + #version prepended</text>
-  <text class="note" x="38" y="316">the prelude, concatenated on top</text>
+  <text class="note" x="38" y="316">phần mở đầu, nối lên trên cùng</text>
   <path class="arrow" d="M150,324 L150,338" marker-end="url(#head)" />
 
   <rect class="box" x="24" y="340" width="252" height="48" rx="8" />
   <text class="stage" x="38" y="362">6. compileShader / linkProgram</text>
-  <text class="note" x="38" y="380">the GPU finally sees the text</text>
+  <text class="note" x="38" y="380">GPU cuối cùng mới thấy đoạn text</text>
 
   <!-- what the string looks like at step 3 and step 4 -->
   <path class="leader" d="M276,172 L300,172" />
   <rect class="box" x="300" y="122" width="296" height="100" rx="8" />
-  <text class="label" x="314" y="142">At step 3 the marker is still intact</text>
+  <text class="label" x="314" y="142">Ở bước 3 marker vẫn còn nguyên</text>
   <text class="code" x="314" y="162">#include &lt;begin_vertex&gt;</text>
-  <text class="note" x="314" y="182">your replace keeps it and appends:</text>
+  <text class="note" x="314" y="182">replace của bạn giữ nó lại và nối thêm:</text>
   <text class="code" x="314" y="200">#include &lt;begin_vertex&gt;</text>
   <text class="code ink-inj" x="314" y="216">transformed.y += wave;</text>
 
   <path class="leader" d="M276,236 L300,266" />
   <rect class="box" x="300" y="234" width="296" height="76" rx="8" />
-  <text class="label" x="314" y="254">At step 4 the marker is gone</text>
+  <text class="label" x="314" y="254">Ở bước 4 marker đã biến mất</text>
   <text class="code" x="314" y="276">vec3 transformed = vec3( position );</text>
   <text class="code ink-inj" x="314" y="296">transformed.y += wave;</text>
 
-  <text class="note" x="300" y="336">Replacing the assembled line instead of the marker</text>
-  <text class="note" x="300" y="352">matches nothing — silently, with no error.</text>
+  <text class="note" x="300" y="336">Thay dòng đã ghép thay vì thay marker</text>
+  <text class="note" x="300" y="352">sẽ không khớp gì cả — âm thầm, không báo lỗi.</text>
 
-  <text class="foot" x="310" y="420" text-anchor="middle">programCacheKey plus customProgramCacheKey() are computed at step 2, before step 3 —</text>
-  <text class="foot" x="310" y="438" text-anchor="middle">on a cache hit the whole chain is skipped and your callback never runs again.</text>
+  <text class="foot" x="310" y="420" text-anchor="middle">programCacheKey cùng customProgramCacheKey() được tính ở bước 2, trước bước 3 —</text>
+  <text class="foot" x="310" y="438" text-anchor="middle">trúng cache là cả chuỗi bị bỏ qua và callback của bạn không chạy lại lần nào.</text>
 </svg>

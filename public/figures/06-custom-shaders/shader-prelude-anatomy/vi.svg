@@ -51,7 +51,7 @@
   <text class="code ink-pre" x="36" y="84">#define SHADER_TYPE / SHADER_NAME</text>
 
   <rect class="box-pre" x="24" y="106" width="272" height="78" rx="8" />
-  <text class="label ink-pre" x="36" y="124">6 built-in uniforms, always</text>
+  <text class="label ink-pre" x="36" y="124">6 uniform dựng sẵn, luôn có</text>
   <text class="code ink-pre" x="36" y="142">modelMatrix</text>
   <text class="code ink-pre" x="36" y="158">modelViewMatrix</text>
   <text class="code ink-pre" x="36" y="174">projectionMatrix</text>
@@ -61,26 +61,26 @@
 
   <rect class="box-pre" x="24" y="194" width="272" height="46" rx="8" />
   <text class="code ink-pre" x="36" y="212">attribute position, normal, uv</text>
-  <text class="note" x="36" y="230">uv1 / tangent / color: only behind #ifdef</text>
+  <text class="note" x="36" y="230">uv1 / tangent / color: chỉ có sau #ifdef</text>
 
   <rect class="box" x="24" y="250" width="272" height="54" rx="8" />
-  <text class="label" x="36" y="270">your vertexShader string</text>
-  <text class="note" x="36" y="290">the body only, no declarations</text>
+  <text class="label" x="36" y="270">chuỗi vertexShader của bạn</text>
+  <text class="note" x="36" y="290">chỉ phần thân, không có khai báo</text>
 
   <!-- right: almost nothing prepended -->
   <rect class="box-pre" x="324" y="34" width="272" height="62" rx="8" />
-  <text class="code ink-pre" x="336" y="52">#version only if glslVersion is set</text>
+  <text class="code ink-pre" x="336" y="52">#version chỉ khi có đặt glslVersion</text>
   <text class="code ink-pre" x="336" y="68">#define SHADER_TYPE / SHADER_NAME</text>
-  <text class="code ink-pre" x="336" y="84">plus your own material.defines</text>
+  <text class="code ink-pre" x="336" y="84">cộng thêm material.defines của bạn</text>
 
   <rect class="box-empty" x="324" y="106" width="272" height="134" rx="8" />
-  <text class="label" x="460" y="164" text-anchor="middle">nothing else</text>
-  <text class="note" x="460" y="184" text-anchor="middle">no precision, no uniforms,</text>
-  <text class="note" x="460" y="200" text-anchor="middle">no attributes</text>
+  <text class="label" x="460" y="164" text-anchor="middle">không gì khác</text>
+  <text class="note" x="460" y="184" text-anchor="middle">không precision, không uniform,</text>
+  <text class="note" x="460" y="200" text-anchor="middle">không attribute</text>
 
   <rect class="box" x="324" y="250" width="272" height="54" rx="8" />
-  <text class="label" x="336" y="270">your vertexShader string</text>
-  <text class="note" x="336" y="290">plus every declaration, by hand</text>
+  <text class="label" x="336" y="270">chuỗi vertexShader của bạn</text>
+  <text class="note" x="336" y="290">cộng mọi khai báo, tự viết tay</text>
 
   <!-- both feed the same compiler -->
   <path class="arrow" d="M160,304 L160,316 L460,316 L460,304" />
@@ -88,5 +88,5 @@
   <rect class="box" x="190" y="334" width="240" height="34" rx="8" />
   <text class="label" x="310" y="356" text-anchor="middle">gl.compileShader / linkProgram</text>
 
-  <text class="foot" x="310" y="390" text-anchor="middle">Raw changes only what gets prepended: the same body fails the moment it names something nobody declared.</text>
+  <text class="foot" x="310" y="390" text-anchor="middle">Raw chỉ đổi phần được nối lên trước: cùng thân đó sẽ hỏng ngay khi nó gọi tên thứ chưa ai khai báo.</text>
 </svg>
