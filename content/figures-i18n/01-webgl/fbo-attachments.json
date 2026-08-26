@@ -1,0 +1,17 @@
+{
+  "Pass 1: bindFramebuffer(fbo)": null,
+  "draw the scene into the FBO, not the canvas": null,
+  "Framebuffer object": null,
+  "attachment points only, no pixels of its own": null,
+  "COLOR_ATTACHMENT0": null,
+  "DEPTH_ATTACHMENT": null,
+  "renderbuffer: the depth test writes here": null,
+  "Texture (RGBA8)": null,
+  "256 x 256, created empty": null,
+  "framebufferTexture2D": null,
+  "sampled as uniform sampler2D": null,
+  "Pass 2: bindFramebuffer(null)": null,
+  "fullscreen quad samples that texture": null,
+  "Default framebuffer (the canvas)": null,
+  "what the user finally sees": null
+}

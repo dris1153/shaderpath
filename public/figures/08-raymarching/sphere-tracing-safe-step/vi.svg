@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 578" width="640" height="578" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .solid { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .ray { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .ray-warn { stroke: var(--warn-stroke); stroke-width: 2; fill: none; }
+    .safe { fill: none; stroke: var(--accent-stroke); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+    .safe-warn { fill: none; stroke: var(--warn-stroke); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0.6; }
+    .radius { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .brace { stroke: var(--warn-stroke); stroke-width: 1.5; fill: none; }
+    .dot { fill: var(--accent-stroke); }
+    .dot-warn { fill: var(--warn-stroke); }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- ===================== panel A: a direct hit ===================== -->
+  <text class="title" x="24" y="24">One step is exactly f(p) long, so it can never cross a surface</text>
+  <text class="note" x="24" y="42">Each dashed circle is the region f(p) proves empty; the step ends on that circle, never past it.</text>
+
+  <circle class="solid" cx="180" cy="112" r="30" />
+  <circle class="solid" cx="460" cy="160" r="55" />
+  <text class="note" x="180" y="72" text-anchor="middle">another surface nearby</text>
+  <text class="note" x="470" y="86" text-anchor="middle">the surface ahead</text>
+
+  <circle class="safe" cx="105" cy="180" r="71.2" />
+  <circle class="safe" cx="176.2" cy="180" r="38.1" />
+  <circle class="safe" cx="214.3" cy="180" r="46.2" />
+  <circle class="safe" cx="260.5" cy="180" r="75.4" />
+  <circle class="safe" cx="335.9" cy="180" r="70.7" />
+
+  <path class="ray" d="M105,180 L406,180" marker-end="url(#head)" />
+  <circle class="dot" cx="105" cy="180" r="3.5" />
+  <circle class="dot" cx="176.2" cy="180" r="3.5" />
+  <circle class="dot" cx="214.3" cy="180" r="3.5" />
+  <circle class="dot" cx="260.5" cy="180" r="3.5" />
+  <circle class="dot" cx="335.9" cy="180" r="3.5" />
+
+  <path class="radius" d="M105,180 L157.8,132.2" />
+  <text class="label" x="92" y="146">f(p₀)</text>
+  <text class="label" x="96" y="200">p₀</text>
+
+  <path class="leader" d="M406,182 L418,244" />
+  <text class="label" x="422" y="248">hit: f(p) &lt; ε, 6 steps in</text>
+  <text class="note" x="422" y="266">long strides in open space,</text>
+  <text class="note" x="422" y="282">short ones near a surface</text>
+
+  <text class="note" x="24" y="264">Any surface can shorten the step:</text>
+  <text class="note" x="24" y="280">the second one is cut short by the</text>
+  <text class="note" x="24" y="296">small shape, not by the target.</text>
+
+  <path class="rule" d="M24,320 L616,320" />
+
+  <!-- ===================== panel B: the grazing ray ===================== -->
+  <text class="title" x="24" y="352">A grazing ray runs the same loop and never arrives</text>
+  <text class="note" x="24" y="370">Here the nearest surface sits beside the ray, not ahead of it: f(p) stays small while t barely advances.</text>
+
+  <circle class="solid" cx="330" cy="455" r="52" />
+  <circle class="safe-warn" cx="282" cy="499" r="13.1" />
+
+  <path class="ray-warn" d="M90,499 L302.3,499" />
+  <circle class="dot-warn" cx="90" cy="499" r="3.5" />
+  <circle class="dot-warn" cx="282" cy="499" r="3.5" />
+  <circle class="dot-warn" cx="295.1" cy="499" r="2.6" />
+  <circle class="dot-warn" cx="299.3" cy="499" r="2.6" />
+  <circle class="dot-warn" cx="300.9" cy="499" r="2.6" />
+  <circle class="dot-warn" cx="301.7" cy="499" r="2.6" />
+
+  <text class="note" x="86" y="486">p₀</text>
+  <text class="note" x="150" y="486">one long step, as before</text>
+
+  <path class="brace" d="M292,509 L292,517 L306,517 L306,509" />
+  <path class="leader" d="M299,517 L314,529" />
+  <text class="warn" x="318" y="533">every step after the second lands in here</text>
+  <text class="note" x="318" y="549">the budget runs out, the pixel is reported as a</text>
+  <text class="note" x="318" y="565">miss — that is the hole along the silhouette</text>
+
+  <path class="leader" d="M302.3,497 L268,462" />
+  <text class="note" x="264" y="458" text-anchor="end">the hit it would have reached</text>
+</svg>

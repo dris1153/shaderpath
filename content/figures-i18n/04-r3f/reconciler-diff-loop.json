@@ -1,0 +1,20 @@
+{
+  "React state changes": null,
+  "setCount(5) -> setCount(8)": null,
+  "Component re-renders, new JSX tree": null,
+  "the tree is a description, not the objects themselves": null,
+  "react-reconciler diffs it against the previous fiber tree": null,
+  "nodes are matched by key when present, otherwise by position": null,
+  "New node": null,
+  "new THREE.Mesh(...args)": null,
+  "parent.add(object)": null,
+  "Same node, new props": null,
+  "applyProps mutates it": null,
+  "mesh.position.set(1, 0, 0)": null,
+  "Node gone": null,
+  "parent.remove(object)": null,
+  "object.dispose()": null,
+  "THREE.Scene — the same instances, mutated in place": null,
+  "surviving nodes keep their identity and their GPU buffers across renders": null,
+  "Every later state change runs the same three decisions — the scene is never rebuilt.": null
+}

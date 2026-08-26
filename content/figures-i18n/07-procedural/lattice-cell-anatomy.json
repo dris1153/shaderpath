@@ -1,0 +1,22 @@
+{
+  "One lattice cell: 4 hash calls, whatever the pixel count inside": null,
+  "Value noise: the corner stores a number": null,
+  "a": null,
+  "b": null,
+  "c": null,
+  "d": null,
+  "a = hash21(i), b = hash21(i + (1,0)),": null,
+  "c = hash21(i + (0,1)), d = hash21(i + (1,1))": null,
+  "p": null,
+  "f = fract(p)": null,
+  "i = floor(p) is that bottom-left corner": null,
+  "Gradient noise: the corner stores a direction": null,
+  "g = (cos θ, sin θ) with θ = 2π · hash21(corner)": null,
+  "each corner contributes dot(g, f − its own offset):": null,
+  "dot(g₁₁, f − (1,1))  ≠  dot(g₁₁, f)": null,
+  "at a corner the offset is (0,0), so the value there is 0": null,
+  "n = mix( mix(a, b, u.x), mix(c, d, u.x), u.y )   with   u = fade(f), never raw f": null,
+  "Both sides run this identical bilinear blend — only what the four corner numbers mean changes.": null,
+  "Linear u leaves the slope jumping at every cell edge — those are the diamond creases.": null,
+  "Quintic 6t⁵ − 15t⁴ + 10t³ zeroes f′ and f″ at t = 0 and t = 1, so neighbouring cells agree in slope and curvature.": null
+}

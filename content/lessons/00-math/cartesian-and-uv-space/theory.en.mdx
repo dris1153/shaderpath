@@ -14,7 +14,7 @@ Pure math doesn't care which axis is "up" — but graphics software does, becaus
 The second question is whether a coordinate system is **right-handed** or **left-handed**. The right-hand rule: fingers curl from $+x$ toward $+y$; the thumb points along $+z$ if the system is right-handed. Three.js is right-handed; DirectX and Unity are traditionally left-handed. Not trivia — the cross product, the tool you'll use a few lessons from now to build surface normals, flips sign when handedness switches, and a model imported without conversion ends up with normals pointing inward instead of outward.
 
 <Figure
-  src="/figures/00-math/axis-conventions.svg"
+  src="/figures/00-math/axis-conventions/en.svg"
   alt="Two diagrams comparing Y-up with Z-up over a grid ground plane, and two axis triads comparing right-handed with left-handed where only the z direction differs"
   caption="These are two separate questions: which axis points up, and which way the third axis runs — a Z-up system can still be right-handed, as Blender's is."
 />
@@ -37,7 +37,7 @@ function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
 UV space is a 2D coordinate system for referencing a position on a surface — usually a texture image — independent of that surface's actual pixel dimensions. $u$ is the horizontal axis, $v$ the vertical one (named differently from $x, y$ specifically so they're never confused with a vertex's 3D position). The convention is $u, v \in [0, 1]$: one corner of the texture is always $(0,0)$, the opposite corner always $(1,1)$, whether the underlying image is $16\times16$ or $8192\times8192$ pixels.
 
 <Figure
-  src="/figures/00-math/uv-origin-conventions.svg"
+  src="/figures/00-math/uv-origin-conventions/en.svg"
   alt="Two unit squares side by side: GL texture space with its origin bottom-left and image space with its origin top-left, the same texel labelled in both"
   caption="A texel's u is identical under both conventions and only v differs, which is why a wrongly-flipped texture always looks mirrored vertically, never horizontally."
 />

@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 392" width="660" height="392" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --cost-fill: #fef3c7;
+      --cost-stroke: #d97706;
+      --cost-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --cost-fill: #422006;
+        --cost-stroke: #fbbf24;
+        --cost-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .col { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .head { font-size: 13px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-cost { fill: var(--cost-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-cost { fill: var(--cost-fill); stroke: var(--cost-stroke); stroke-width: 2; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">From a server render to a live WebGL context</text>
+
+  <rect class="box" x="24" y="46" width="380" height="58" rx="8" />
+  <text class="head" x="36" y="68">1 · the server renders (Node)</text>
+  <text class="note" x="36" y="84">Client Components are prerendered to HTML too</text>
+  <text class="note" x="36" y="99">no window, no canvas, no GPU — module-scope window.* throws</text>
+  <path class="arrow" d="M214,104 L214,116" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="24" y="118" width="380" height="58" rx="8" />
+  <text class="head ink-accent" x="36" y="140">2 · that HTML paints</text>
+  <text class="note" x="36" y="156">headings and copy are on screen and indexable already</text>
+  <text class="note" x="36" y="171">the canvas slot is an empty box the CSS has already sized</text>
+  <path class="arrow" d="M214,176 L214,188" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="190" width="380" height="58" rx="8" />
+  <text class="head" x="36" y="212">3 · hydration</text>
+  <text class="note" x="36" y="228">React matches its own tree against that server DOM</text>
+  <text class="note" x="36" y="243">a typeof window branch in JSX here = mismatch, re-render from scratch</text>
+  <path class="arrow" d="M214,248 L214,260" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="24" y="262" width="380" height="58" rx="8" />
+  <text class="head ink-accent" x="36" y="284">4 · the first client effect</text>
+  <text class="note" x="36" y="300">Canvas runs useIsomorphicLayoutEffect → new WebGLRenderer()</text>
+  <text class="note" x="36" y="315">this is the first moment a GL context exists at all</text>
+
+  <rect class="box-cost" x="424" y="46" width="212" height="130" rx="8" />
+  <text class="col ink-cost" x="436" y="66">ssr: false CHANGES ONE THING</text>
+  <text class="note" x="436" y="86">next/dynamic(…, { ssr: false })</text>
+  <text class="note" x="436" y="104">skips step 1 for that island only —</text>
+  <text class="note" x="436" y="119">its chunk downloads between 2 and 4.</text>
+  <text class="note" x="436" y="140">Valid only inside a "use client" file;</text>
+  <text class="note" x="436" y="155">a Server Component passing it is an</text>
+  <text class="note" x="436" y="170">outright build error.</text>
+
+  <rect class="box" x="424" y="190" width="212" height="130" rx="8" />
+  <text class="col" x="436" y="210">RESERVE THE HEIGHT AT STEP 2</text>
+  <text class="note" x="436" y="230">AspectRatio locks the box from the</text>
+  <text class="note" x="436" y="245">server HTML and Skeleton fills it,</text>
+  <text class="note" x="436" y="260">so step 4 swaps the contents without</text>
+  <text class="note" x="436" y="275">moving anything below it.</text>
+  <text class="note" x="436" y="296">Miss it and the page jumps exactly</text>
+  <text class="note" x="436" y="311">when the canvas appears.</text>
+
+  <text class="foot" x="24" y="352">R3F's Canvas needs none of this to survive SSR: on the server it is a plain nest of divs, and every WebGL</text>
+  <text class="foot" x="24" y="370">call it makes lives inside step 4. ssr: false is for libraries that touch window at module scope, not for canvases.</text>
+</svg>

@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 550" width="600" height="550" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .key { font-size: 14px; font-weight: 600; fill: var(--accent-ink); }
+    .verb { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .edge { font-size: 12px; font-weight: 600; }
+    .tag { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .guide { stroke: var(--accent-stroke); stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="20" y="22">start / end: one edge on the trigger, one on the scroller</text>
+
+  <!-- the scroller viewport, with the trigger crossing its lower edge -->
+  <text class="note" x="24" y="44">scroller viewport</text>
+  <rect class="box" x="24" y="52" width="180" height="200" rx="8" />
+  <path class="guide" d="M18,52 L212,52" />
+  <text class="tag" x="216" y="56">top</text>
+  <path class="guide" d="M18,212 L212,212" />
+  <text class="tag" x="216" y="216">80%</text>
+  <rect class="box-accent" x="52" y="212" width="110" height="104" rx="8" />
+  <text class="edge" x="107" y="262" text-anchor="middle">trigger</text>
+  <text class="edge" x="107" y="280" text-anchor="middle">element</text>
+
+  <text class="key" x="248" y="100">start: "top 80%"</text>
+  <text class="note" x="248" y="122">the trigger's TOP edge reaches</text>
+  <text class="note" x="248" y="140">the point 80% down the scroller</text>
+
+  <text class="key" x="248" y="184">end: "bottom top"</text>
+  <text class="note" x="248" y="206">the trigger's BOTTOM edge reaches</text>
+  <text class="note" x="248" y="224">the scroller's TOP edge — the</text>
+  <text class="note" x="248" y="242">trigger has scrolled fully past</text>
+
+  <!-- the active range between them -->
+  <text class="title" x="20" y="364">The active range, and the four toggleActions verbs</text>
+
+  <text class="note" x="20" y="388">scrolling down</text>
+  <path class="arrow" d="M120,384 L470,384" marker-end="url(#head)" />
+
+  <text class="verb" x="120" y="406" text-anchor="middle">onEnter</text>
+  <text class="verb" x="470" y="406" text-anchor="middle">onLeave</text>
+
+  <rect class="box-accent" x="120" y="414" width="350" height="20" rx="6" />
+  <text class="edge" x="295" y="429" text-anchor="middle">active range · progress 0 -&gt; 1</text>
+
+  <text class="edge" x="120" y="452" text-anchor="middle">start</text>
+  <text class="edge" x="470" y="452" text-anchor="middle">end</text>
+
+  <text class="verb" x="120" y="472" text-anchor="middle">onLeaveBack</text>
+  <text class="verb" x="470" y="472" text-anchor="middle">onEnterBack</text>
+
+  <path class="arrow" d="M470,488 L120,488" marker-end="url(#head)" />
+  <text class="note" x="486" y="492">scrolling up</text>
+
+  <text class="note" x="20" y="522">toggleActions: "onEnter onLeave onEnterBack onLeaveBack" — that order,</text>
+  <text class="note" x="20" y="540">always four slots; any slot you omit silently falls back to "none".</text>
+</svg>

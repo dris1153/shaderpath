@@ -29,7 +29,7 @@ export async function ExerciseSection({
         hints: ex.hints.map((h) => h[locale]),
         checklist: ex.checklist.map((c) => c[locale]),
         starterCode: ex.starterCode,
-        referenceImage: ex.referenceImage,
+        referenceImage: ex.referenceImage?.[locale],
       };
 
       return {

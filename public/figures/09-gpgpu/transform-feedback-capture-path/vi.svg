@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 412" width="640" height="412" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .chip { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-off { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .chip-box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .arrow-off { stroke: var(--line); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="note" x="320" y="24" text-anchor="middle">The update draw call never turns into pixels — the vertex shader&#39;s outputs go straight back into buffers.</text>
+
+  <rect class="box" x="24" y="42" width="180" height="118" rx="8" />
+  <text class="title" x="38" y="66">Buffer set A — one VAO</text>
+  <rect class="chip-box" x="38" y="78" width="152" height="32" rx="6" />
+  <text class="chip" x="114" y="99" text-anchor="middle">position buffer</text>
+  <rect class="chip-box" x="38" y="116" width="152" height="32" rx="6" />
+  <text class="chip" x="114" y="137" text-anchor="middle">velocity buffer</text>
+
+  <path class="arrow" d="M204,101 L232,101" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="236" y="42" width="180" height="118" rx="8" />
+  <text class="title ink-accent" x="250" y="66">Vertex shader</text>
+  <text class="note" x="250" y="88">in: aPosition, aVelocity</text>
+  <text class="note" x="250" y="108">computes the new state</text>
+  <text class="note" x="250" y="128">out: vPosition, vVelocity</text>
+  <text class="note" x="250" y="148">gl_Position is never used</text>
+
+  <path class="arrow" d="M416,101 L444,101" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="448" y="42" width="168" height="118" rx="8" />
+  <text class="title ink-accent" x="462" y="66">Transform feedback</text>
+  <text class="note" x="462" y="88">binding 0 &#8592; vPosition</text>
+  <text class="note" x="462" y="108">binding 1 &#8592; vVelocity</text>
+  <text class="note" x="462" y="134">bound by bindBufferBase</text>
+  <text class="note" x="462" y="152">before the draw call</text>
+
+  <path class="arrow" d="M326,160 L326,190" marker-end="url(#head)" />
+  <rect class="box-off" x="236" y="192" width="180" height="60" rx="8" />
+  <text class="title" x="250" y="216">Rasterizer + fragment</text>
+  <text class="note" x="250" y="238">RASTERIZER_DISCARD skips it</text>
+
+  <path class="arrow" d="M532,160 L532,190" marker-end="url(#head)" />
+  <rect class="box" x="448" y="192" width="168" height="60" rx="8" />
+  <text class="title" x="462" y="216">Buffer set B</text>
+  <text class="note" x="462" y="238">filled by that same draw call</text>
+
+  <path class="arrow-off" d="M532,252 C 532,352 114,352 114,164" marker-end="url(#head)" />
+  <text class="note" x="320" y="282" text-anchor="middle">next frame the two sets trade roles</text>
+
+  <text class="foot" x="320" y="356" text-anchor="middle">gl.transformFeedbackVaryings(program, [&quot;vPosition&quot;, &quot;vVelocity&quot;], SEPARATE_ATTRIBS) must run BEFORE</text>
+  <text class="foot" x="320" y="376" text-anchor="middle">linkProgram — the linker freezes the capture slots, so calling it afterwards does nothing at all. And one</text>
+  <text class="foot" x="320" y="396" text-anchor="middle">buffer can never be a VAO input and a capture destination in the same draw: that is why there are two sets.</text>
+</svg>

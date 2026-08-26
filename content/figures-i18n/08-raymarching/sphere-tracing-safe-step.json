@@ -1,0 +1,21 @@
+{
+  "One step is exactly f(p) long, so it can never cross a surface": null,
+  "Each dashed circle is the region f(p) proves empty; the step ends on that circle, never past it.": null,
+  "another surface nearby": null,
+  "the surface ahead": null,
+  "f(p₀)": null,
+  "p₀": null,
+  "hit: f(p) < ε, 6 steps in": null,
+  "long strides in open space,": null,
+  "short ones near a surface": null,
+  "Any surface can shorten the step:": null,
+  "the second one is cut short by the": null,
+  "small shape, not by the target.": null,
+  "A grazing ray runs the same loop and never arrives": null,
+  "Here the nearest surface sits beside the ray, not ahead of it: f(p) stays small while t barely advances.": null,
+  "one long step, as before": null,
+  "every step after the second lands in here": null,
+  "the budget runs out, the pixel is reported as a": null,
+  "miss — that is the hole along the silhouette": null,
+  "the hit it would have reached": null
+}

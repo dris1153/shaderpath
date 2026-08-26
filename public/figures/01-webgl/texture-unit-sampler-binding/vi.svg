@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 508" width="620" height="508" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .head { font-size: 13px; font-weight: 600; }
+    .lbl { font-size: 12px; font-weight: 600; }
+    .cell { font-size: 12px; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .num { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .ink-acc { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-acc { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .arrow-acc { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-acc" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="30" y="22">A sampler holds a unit number, never a texture</text>
+  <text class="note" x="30" y="40">Three calls stand between a WebGLTexture and the sampler2D that reads it.</text>
+
+  <!-- ============ column headers ============ -->
+  <text class="head" x="85" y="78" text-anchor="middle">Texture objects</text>
+  <text class="head" x="300" y="78" text-anchor="middle">Texture units</text>
+  <text class="head ink-acc" x="520" y="78" text-anchor="middle">Fragment shader</text>
+
+  <!-- ============ texture objects ============ -->
+  <rect class="box" x="30" y="94" width="110" height="36" rx="6" />
+  <text class="lbl" x="85" y="117" text-anchor="middle">texA</text>
+  <rect class="box-acc" x="30" y="152" width="110" height="36" rx="6" />
+  <text class="lbl ink-acc" x="85" y="175" text-anchor="middle">texB</text>
+  <text class="note" x="85" y="212" text-anchor="middle">createTexture + texImage2D</text>
+
+  <!-- ============ units ============ -->
+  <rect class="box" x="240" y="94" width="120" height="36" rx="6" />
+  <text class="lbl" x="300" y="117" text-anchor="middle">TEXTURE0</text>
+  <rect class="box-acc" x="240" y="152" width="120" height="36" rx="6" />
+  <text class="lbl ink-acc" x="300" y="175" text-anchor="middle">TEXTURE1</text>
+  <text class="note" x="300" y="212" text-anchor="middle">16 or more; ask MAX_TEXTURE_IMAGE_UNITS</text>
+
+  <!-- ============ shader ============ -->
+  <rect class="box-acc" x="450" y="94" width="140" height="102" rx="6" />
+  <text class="note" x="462" y="116">uniform sampler2D</text>
+  <text class="cell" x="462" y="140">uColor = 0</text>
+  <text class="lbl ink-acc" x="462" y="164">uMask = 1</text>
+  <text class="note" x="462" y="186">texture(uMask, uv)</text>
+
+  <!-- ============ wiring ============ -->
+  <path class="arrow" d="M140,112 L234,112" marker-end="url(#head)" />
+  <path class="arrow-acc" d="M140,170 L234,170" marker-end="url(#head-acc)" />
+  <text class="note" x="187" y="160" text-anchor="middle">bindTexture</text>
+
+  <path class="arrow" d="M360,112 L444,112" marker-end="url(#head)" />
+  <path class="arrow-acc" d="M360,170 L444,170" marker-end="url(#head-acc)" />
+  <text class="note" x="402" y="160" text-anchor="middle">reads unit 1</text>
+
+  <!-- ============ the three calls ============ -->
+  <text class="lbl" x="30" y="252">Order matters: the first two calls act on whichever unit is current</text>
+
+  <text class="num" x="30" y="278">1</text>
+  <text class="cell" x="46" y="278">gl.activeTexture(gl.TEXTURE1);</text>
+  <text class="note" x="330" y="278">makes unit 1 the current one</text>
+
+  <text class="num" x="30" y="300">2</text>
+  <text class="cell" x="46" y="300">gl.bindTexture(gl.TEXTURE_2D, texB);</text>
+  <text class="note" x="330" y="300">attaches texB to that unit's slot</text>
+
+  <text class="num" x="30" y="322">3</text>
+  <text class="cell" x="46" y="322">gl.uniform1i(uMaskLoc, 1);</text>
+  <text class="note" x="330" y="322">stores the integer 1 in uMask</text>
+
+  <!-- ============ side table ============ -->
+  <path class="rule" d="M30,348 L590,348" />
+  <text class="lbl" x="30" y="374">texParameteri knobs — they live on the texture object, not on the unit</text>
+  <path class="rule" d="M30,386 L590,386" />
+
+  <text class="cell" x="30" y="408">TEXTURE_WRAP_S / _T</text>
+  <text class="note" x="250" y="408">REPEAT · CLAMP_TO_EDGE · MIRRORED_REPEAT</text>
+  <path class="rule" d="M30,418 L590,418" />
+
+  <text class="cell" x="30" y="440">TEXTURE_MAG_FILTER</text>
+  <text class="note" x="250" y="440">NEAREST · LINEAR</text>
+  <path class="rule" d="M30,450 L590,450" />
+
+  <text class="cell" x="30" y="472">TEXTURE_MIN_FILTER</text>
+  <text class="note" x="250" y="472">NEAREST · LINEAR · the four *_MIPMAP_* modes</text>
+  <path class="rule" d="M30,482 L590,482" />
+
+  <text class="note" x="30" y="504">MIN_FILTER defaults to NEAREST_MIPMAP_LINEAR: a texture with no mipmaps samples black.</text>
+</svg>

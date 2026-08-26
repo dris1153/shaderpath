@@ -1,0 +1,20 @@
+{
+  "VBO (buffer)": null,
+  "x, y, r, g, b per vertex": null,
+  "JavaScript": null,
+  "gl.uniform3f(...) before the draw": null,
+  "attribute: a new value per vertex": null,
+  "uniform": null,
+  "same value in": null,
+  "both shaders": null,
+  "Vertex shader": null,
+  "runs once per vertex": null,
+  "out vColor (written per vertex)": null,
+  "Rasterizer (fixed function)": null,
+  "3 vertex values in,": null,
+  "one blended value per fragment out": null,
+  "in vColor (read per fragment)": null,
+  "Fragment shader": null,
+  "runs once per fragment": null,
+  "attributes never reach here: only uniforms and varyings do": null
+}

@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 506" width="640" height="506" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --accent-fill: #dbeafe;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #f1f5f9;
+      --mesh-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --accent-fill: #1e3a5f;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+        --mesh-fill: #334155;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .stage { font-size: 12px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .warn { font-size: 12px; font-weight: 600; fill: var(--warn-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .mesh { fill: var(--mesh-fill); fill-opacity: 0.6; stroke: var(--line); stroke-width: 1.5; }
+    .blob { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; opacity: 0.9; }
+    .cam { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .ray { stroke: var(--accent-stroke); stroke-width: 1.8; fill: none; }
+    .bound { stroke: var(--warn-stroke); stroke-width: 2; fill: none; }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .leader { stroke: var(--line); stroke-width: 1; fill: none; stroke-dasharray: 3 3; }
+    .dot { fill: var(--accent-stroke); }
+    .rule { stroke: var(--line); stroke-width: 1; opacity: 0.5; }
+  </style>
+  <defs>
+    <marker id="ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="rh" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">Occlusion has to be settled per pixel, in both directions, by exchanging depth</text>
+  <text class="note" x="24" y="42">Draw order cannot decide this: along one ray the mesh is nearer, along the next the SDF surface is.</text>
+
+  <!-- ============ ray geometry ============ -->
+  <path class="cam" d="M40,178 L74,164 L74,216 L40,202 Z" />
+  <text class="note" x="57" y="234" text-anchor="middle">camera</text>
+
+  <circle class="blob" cx="350" cy="190" r="70" />
+  <path class="mesh" d="M240,120 L290,120 L430,262 L380,262 Z" />
+
+  <path class="ray" d="M76,150 L262,150" marker-end="url(#rh)" />
+  <path class="bound" d="M269.6,138 L269.6,162" />
+  <path class="ray" d="M76,250 L308,250" marker-end="url(#rh)" />
+  <circle class="dot" cx="314" cy="250" r="4" />
+  <path class="bound" d="M368.2,238 L368.2,262" />
+
+  <text class="note" x="204" y="112" text-anchor="end">mesh, rasterised</text>
+  <path class="leader" d="M208,109 L250,124" />
+  <text class="note" x="452" y="176">SDF surface,</text>
+  <text class="note" x="452" y="192">raymarched</text>
+  <path class="leader" d="M448,182 L418,186" />
+
+  <text class="warn" x="300" y="100">tMax = tBound: the march is cut off</text>
+  <text class="note" x="300" y="116">before the SDF, reports nothing, discards</text>
+  <path class="leader" d="M296,106 L272,140" />
+
+  <text class="warn" x="376" y="292">tBound from the mesh</text>
+  <path class="leader" d="M374,288 L368,264" />
+  <text class="label" x="146" y="292">hit at t &lt; tBound, so the depth it writes</text>
+  <text class="note" x="146" y="308">takes the pixel from the mesh</text>
+  <path class="leader" d="M186,282 L310,256" />
+
+  <path class="rule" d="M24,336 L616,336" />
+
+  <!-- ============ the two passes ============ -->
+  <rect class="box" x="24" y="360" width="186" height="80" rx="8" />
+  <text class="stage" x="38" y="382">1 · mesh only, off-screen</text>
+  <text class="note" x="38" y="402">into a render target whose</text>
+  <text class="note" x="38" y="418">depth texture can be sampled</text>
+
+  <path class="arrow" d="M210,400 L226,400" marker-end="url(#ah)" />
+
+  <rect class="box" x="228" y="360" width="186" height="80" rx="8" />
+  <text class="stage" x="242" y="382">2 · the raymarch</text>
+  <text class="note" x="242" y="402">tBound = eyeDepth / (−rd_view.z)</text>
+  <text class="note" x="242" y="418">tMax = min(MAX_DIST, tBound)</text>
+
+  <path class="arrow" d="M414,400 L430,400" marker-end="url(#ah)" />
+
+  <rect class="box" x="432" y="360" width="184" height="80" rx="8" />
+  <text class="stage" x="446" y="382">3 · the ordinary depth test</text>
+  <text class="note" x="446" y="402">gl_FragDepth = (z_ndc + 1) / 2</text>
+  <text class="note" x="446" y="418">settles the other direction</text>
+
+  <text class="note" x="24" y="466">A shader cannot sample the depth attachment it is currently writing — that is the entire reason pass 1 exists.</text>
+  <text class="note" x="24" y="484">Writing gl_FragDepth also gives up early-Z: the real depth only exists once the fragment shader has finished.</text>
+</svg>

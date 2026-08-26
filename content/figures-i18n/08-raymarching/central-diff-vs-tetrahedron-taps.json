@@ -1,0 +1,18 @@
+{
+  "The normal is the gradient, and the gradient is a sampling pattern around the hit point": null,
+  "Both patterns live on the same cube of side 2ε centred on p. Neither one ever appears on screen — but the": null,
+  "number of dots in it is the per-pixel cost of every shaded fragment.": null,
+  "central differences — 6 taps": null,
+  "p + εŷ": null,
+  "p − εŷ": null,
+  "p": null,
+  "tetrahedron — 4 taps": null,
+  "±ε along each axis, differenced pairwise": null,
+  "the shared 2ε factor cancels in normalize()": null,
+  "6 map() calls": null,
+  "(1,−1,−1), (−1,−1,1), (−1,1,−1), (1,1,1), all ×ε": null,
+  "each direction doubles as its own weight": null,
+  "4 map() calls — cheaper, slightly less exact": null,
+  "One third fewer calls, for the same normal. That saving is only worth having because the normal is evaluated": null,
+  "exactly once per pixel, at the hit point — put it inside the march loop and it is multiplied by the step count.": null
+}

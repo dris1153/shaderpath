@@ -46,7 +46,7 @@ Hàm này **hyperbolic** theo $d$: đạo hàm tỉ lệ với $1/d^2$, nghĩa l
 Đặt $n = 0.001$ "cho chắc ăn" làm mọi thứ tệ hơn nhiều: $d \approx 0.002$ — nửa dải giá trị biến mất trong $0.001$ đơn vị đầu, để nửa còn lại gánh toàn bộ scene. Vật ở khoảng cách bình thường (5–50 đơn vị, nơi hầu hết scene thực tế nằm) giờ chỉ chia nhau phần cực nhỏ trong nửa "chật chội" đó — hai bề mặt cách nhau vài centimet dễ bị lượng tử hoá (quantize — gom về mức rời rạc gần nhất) về cùng một depth.
 
 <Figure
-  src="/figures/01-webgl/depth-precision-distribution.svg"
+  src="/figures/01-webgl/depth-precision-distribution/vi.svg"
   alt="Đường cong depth(d) hyperbolic với near 0.1 và far 1000, đánh dấu điểm nửa dải tại d = 0.2, cạnh một dải chia [0, 1] theo tỉ lệ 50/25/15/9/1 phần trăm cho các quãng khoảng cách 0.1-0.2, 0.2-0.4, 0.4-1, 1-10 và 10-1000"
   caption="Các mức lượng tử chia đều nhau, nhưng quãng khoảng cách mà mỗi mức phải gánh thì không — nửa dải giá trị tiêu hết trước khi đi tới 0.2 đơn vị."
 />

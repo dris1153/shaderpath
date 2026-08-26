@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 384" width="660" height="384" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --solid-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --solid-fill: #334155;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .solid { fill: var(--solid-fill); stroke: var(--line); stroke-width: 1.5; }
+    .rule { stroke: var(--line); stroke-width: 2; fill: none; }
+    .measure { stroke: var(--line); stroke-width: 1.2; fill: none; }
+    .arrow-you { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .dome { fill: none; stroke: var(--accent-stroke); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .free { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .occl { fill: var(--accent-stroke); }
+    .dot-you { fill: var(--accent-stroke); }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">One SSAO sample decision</text>
+
+  <text class="note" x="368" y="100" text-anchor="middle">nearer surface</text>
+  <rect class="solid" x="340" y="110" width="56" height="140" />
+  <path class="rule" d="M40,250 L340,250" />
+  <text class="note" x="40" y="270">the surface being shaded</text>
+
+  <path class="dome" d="M210,250 A90,90 0 0 1 390,250" />
+
+  <path class="measure" d="M300,250 L238,188" marker-end="url(#head)" />
+  <text class="note" x="228" y="180" text-anchor="end">kernelRadius</text>
+
+  <path class="arrow-you" d="M300,250 L300,178" marker-end="url(#head-you)" />
+  <text class="note" x="300" y="150" text-anchor="middle">view-space normal</text>
+
+  <circle class="free" cx="286" cy="234" r="4" />
+  <circle class="free" cx="316" cy="228" r="4" />
+  <circle class="free" cx="270" cy="218" r="4" />
+  <circle class="free" cx="330" cy="212" r="4" />
+  <circle class="free" cx="256" cy="240" r="4" />
+  <circle class="free" cx="334" cy="242" r="4" />
+  <circle class="free" cx="312" cy="188" r="4" />
+  <circle class="free" cx="240" cy="214" r="4" />
+  <circle class="occl" cx="350" cy="232" r="4" />
+  <circle class="occl" cx="362" cy="210" r="4" />
+  <circle class="occl" cx="346" cy="188" r="4" />
+
+  <circle class="dot-you" cx="300" cy="250" r="5" />
+  <text class="label ink-you" x="300" y="272" text-anchor="middle">p</text>
+
+  <rect class="box" x="430" y="44" width="206" height="136" rx="8" />
+  <text class="label" x="444" y="68">the test, per sample</text>
+  <text class="note" x="444" y="90">project it back to screen</text>
+  <text class="note" x="444" y="108">compare its depth with the</text>
+  <text class="note" x="444" y="126">depth already stored there</text>
+  <text class="note" x="444" y="148">occluded when the gap sits</text>
+  <text class="note" x="444" y="166">between min and maxDistance</text>
+
+  <circle class="occl" cx="440" cy="214" r="4" />
+  <text class="note" x="454" y="218">counted as occluded</text>
+  <circle class="free" cx="440" cy="240" r="4" />
+  <text class="note" x="454" y="244">counted as open sky</text>
+
+  <text class="note" x="24" y="306">kernelRadius is in view-space units, not pixels, and sample lengths are rescaled by</text>
+  <text class="note" x="24" y="324">lerp(0.1, 1, (i/N)²) — most of the 32 land close to p.</text>
+  <text class="note" x="24" y="348">A 4×4 noise texture rotates the whole kernel per pixel, so the leftover error reads as noise rather</text>
+  <text class="note" x="24" y="366">than banding — which is exactly why SSAOPass runs a 5×5 blur straight after.</text>
+</svg>

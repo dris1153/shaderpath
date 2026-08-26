@@ -90,5 +90,7 @@ export interface Exercise {
   solutionNote?: Localized<string>;
   hints: Localized<string>[];
   checklist: Localized<string>[];
-  referenceImage?: string;
+  /** Localized because SVG figures ship one file per locale; a rendered
+   *  screenshot simply names the same file twice. */
+  referenceImage?: Localized<string>;
 }

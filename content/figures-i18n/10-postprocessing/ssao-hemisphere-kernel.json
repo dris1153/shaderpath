@@ -1,0 +1,20 @@
+{
+  "One SSAO sample decision": null,
+  "nearer surface": null,
+  "the surface being shaded": null,
+  "kernelRadius": null,
+  "view-space normal": null,
+  "p": null,
+  "the test, per sample": null,
+  "project it back to screen": null,
+  "compare its depth with the": null,
+  "depth already stored there": null,
+  "occluded when the gap sits": null,
+  "between min and maxDistance": null,
+  "counted as occluded": null,
+  "counted as open sky": null,
+  "kernelRadius is in view-space units, not pixels, and sample lengths are rescaled by": null,
+  "lerp(0.1, 1, (i/N)²) — most of the 32 land close to p.": null,
+  "A 4×4 noise texture rotates the whole kernel per pixel, so the leftover error reads as noise rather": null,
+  "than banding — which is exactly why SSAOPass runs a 5×5 blur straight after.": null
+}

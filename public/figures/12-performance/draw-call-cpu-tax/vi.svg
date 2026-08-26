@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 396" width="640" height="396" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --cost-fill: #fef3c7;
+      --cost-stroke: #d97706;
+      --cost-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --cost-fill: #422006;
+        --cost-stroke: #fbbf24;
+        --cost-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .col { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .head { font-size: 13px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-cost { fill: var(--cost-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-cost { fill: var(--cost-fill); stroke: var(--cost-stroke); stroke-width: 2; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">The per-call tax: what the CPU pays before the GPU shades anything</text>
+
+  <text class="col" x="24" y="50">ONE gl.drawElements, step by step</text>
+
+  <rect class="box" x="24" y="58" width="288" height="42" rx="8" />
+  <text class="head" x="36" y="78">bind the pipeline state</text>
+  <text class="note" x="36" y="94">program, buffers / VAO, texture units, blend mode</text>
+  <path class="arrow" d="M168,100 L168,112" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="114" width="288" height="42" rx="8" />
+  <text class="head" x="36" y="134">upload this object's uniforms</text>
+  <text class="note" x="36" y="150">modelViewMatrix, normalMatrix, modelMatrix</text>
+  <path class="arrow" d="M168,156 L168,168" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="170" width="288" height="42" rx="8" />
+  <text class="head" x="36" y="190">the driver validates all of it</text>
+  <text class="note" x="36" y="206">then builds a command and crosses into the driver</text>
+  <path class="arrow" d="M168,212 L168,224" marker-end="url(#head)" />
+
+  <rect class="box-cost" x="24" y="226" width="288" height="46" rx="8" />
+  <text class="head ink-cost" x="36" y="248">≈ 0.01–0.05 ms of CPU, per call</text>
+  <text class="note" x="36" y="264">a fixed tax — the triangle count barely changes it</text>
+
+  <text class="col" x="352" y="50">Now multiply it out</text>
+
+  <rect class="box-cost" x="352" y="58" width="264" height="72" rx="8" />
+  <text class="head ink-cost" x="364" y="80">1000 meshes → 1000 calls</text>
+  <text class="note" x="364" y="98">10–50 ms spent before the GPU starts</text>
+  <text class="note" x="364" y="116">the 16.67 ms frame budget is already gone</text>
+
+  <rect class="box-accent" x="352" y="144" width="264" height="72" rx="8" />
+  <text class="head ink-accent" x="364" y="166">one InstancedMesh → 1 call</text>
+  <text class="note" x="364" y="184">the tax is paid once, whatever the count</text>
+  <text class="note" x="364" y="202">only render.triangles keeps scaling</text>
+
+  <rect class="box" x="352" y="226" width="264" height="46" rx="8" />
+  <text class="head" x="364" y="246">a shared material is not this</text>
+  <text class="note" x="364" y="264">it cuts useProgram switches, not the call count</text>
+
+  <text class="foot" x="24" y="308">Each mesh stays its own transform node, so it still needs its own draw command — that is why sharing</text>
+  <text class="foot" x="24" y="326">a material leaves render.calls exactly where it was, and why merging or instancing is what moves it.</text>
+  <text class="foot" x="24" y="352">render.calls is also not the mesh count: every shadow-casting light re-renders the casters from its own</text>
+  <text class="foot" x="24" y="370">view, so 50 meshes under 2 such lights is 50 + 50×2 = 150 calls. Read it right after render().</text>
+</svg>

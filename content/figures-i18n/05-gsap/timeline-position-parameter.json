@@ -1,0 +1,23 @@
+{
+  "Timeline position parameter: where each tween starts": null,
+  "settle": null,
+  "box-1 — no position": null,
+  "starts at 0": null,
+  "box-2 — \"<\"": null,
+  "with the previous start": null,
+  "box-3 — (default)": null,
+  "at the timeline end": null,
+  "box-4 — \"-=0.3\"": null,
+  "0.3 s before timeline end": null,
+  "box-5 — \"settle+=0.2\"": null,
+  "0.2 s past the label": null,
+  "0 s": null,
+  "1 s": null,
+  "2 s": null,
+  "3 s": null,
+  "A staggered tween is still one slot — stagger stretches it": null,
+  "stagger: { each: 0.2 }": null,
+  "4 targets · duration 0.5 s": null,
+  "duration + (n - 1) × each": null,
+  "= 0.5 + 3 × 0.2 = 1.1 s, not 0.5 s": null
+}

@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 492" width="660" height="492" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --solid-fill: #e2e8f0;
+      --warm-fill: #fef3c7;
+      --warm-stroke: #d97706;
+      --warm-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --solid-fill: #334155;
+        --warm-fill: #422006;
+        --warm-stroke: #f59e0b;
+        --warm-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .ink-warm { fill: var(--warm-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .surface { fill: none; stroke: var(--line); stroke-width: 1.6; stroke-linejoin: round; }
+    .facet-hit { fill: none; stroke: var(--accent-stroke); stroke-width: 4; stroke-linecap: round; }
+    .ray { stroke: var(--line); stroke-width: 1.6; fill: none; }
+    .ray-warm { stroke: var(--warm-stroke); stroke-width: 1.8; fill: none; }
+    .ray-ghost { stroke: var(--warm-stroke); stroke-width: 1.4; fill: none; stroke-dasharray: 4 4; opacity: 0.75; }
+    .arrow-you { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .micro-n { stroke: var(--accent-stroke); stroke-width: 1.6; fill: none; }
+    .blocked { stroke: var(--warm-stroke); stroke-width: 2; fill: none; stroke-linecap: round; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <marker id="head-warm" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--warm-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">Where D, G and F sit on a microfacet surface</text>
+
+  <!-- ================= D ================= -->
+  <text class="label" x="24" y="54">D — of millions of micro-mirrors, how many point exactly along h</text>
+
+  <path class="surface" d="M48,232 L64,240 L80,214 L96,238 L112,218 L128,242 L144,220 L160,213 L186,220 L196,242 L214,211 L240,218 L252,244 L268,216 L284,240 L300,212 L326,219 L338,242 L354,216 L370,238 L386,220 L400,232" />
+  <path class="facet-hit" d="M160,213 L186,220" />
+  <path class="facet-hit" d="M214,211 L240,218" />
+  <path class="facet-hit" d="M300,212 L326,219" />
+  <path class="micro-n" d="M173,217 L179,194" marker-end="url(#head-you)" />
+  <path class="micro-n" d="M313,216 L319,193" marker-end="url(#head-you)" />
+
+  <path class="ray" d="M163,123 L227,215" marker-end="url(#head)" />
+  <text class="label" x="158" y="118" text-anchor="end">ωi</text>
+  <path class="ray" d="M227,215 L334,165" marker-end="url(#head)" />
+  <text class="label" x="341" y="162">ωo</text>
+  <path class="arrow-you" d="M227,215 L227,141" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="219" y="136" text-anchor="end">n</text>
+  <path class="arrow-you" d="M227,215 L246,144" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="253" y="140">h</text>
+
+  <text class="note" x="48" y="264">only facets whose own normal is h can bounce ωi straight into ωo — D is their fraction</text>
+
+  <rect class="box" x="420" y="96" width="216" height="124" rx="8" />
+  <text class="label" x="434" y="120">roughness = that spread</text>
+  <text class="note" x="434" y="142">α = roughness² sets how wide</text>
+  <text class="note" x="434" y="160">the micro-normals scatter</text>
+  <text class="note" x="434" y="184">α → 0: they all already point</text>
+  <text class="note" x="434" y="202">along n, so D spikes to a dot</text>
+
+  <!-- ================= G ================= -->
+  <text class="label" x="24" y="296">G — and of those facets, how many actually see both ωi and ωo</text>
+
+  <path class="surface" d="M48,376 L70,352 L92,382 L118,340 L140,384 L162,356 L184,380 L206,348 L228,384 L250,358 L272,378 L296,340 L318,382 L340,364" />
+
+  <path class="ray-warm" d="M92,317 L114,347" marker-end="url(#head-warm)" />
+  <path class="ray-ghost" d="M114,347 L140,384" />
+  <path class="blocked" d="M108,342 L122,354 M122,342 L108,354" />
+  <text class="label ink-warm" x="128" y="406" text-anchor="middle">shadowing</text>
+
+  <path class="ray" d="M222,312 L261,368" marker-end="url(#head)" />
+  <path class="ray-warm" d="M261,368 L286,357" marker-end="url(#head-warm)" />
+  <path class="ray-ghost" d="M304,344 L342,326" marker-end="url(#head-warm)" />
+  <path class="blocked" d="M280,351 L294,363 M294,351 L280,363" />
+  <text class="label ink-warm" x="290" y="406" text-anchor="middle">masking</text>
+
+  <rect class="box" x="372" y="316" width="264" height="124" rx="8" />
+  <text class="label" x="386" y="340">G = G1(ωo) · G1(ωi)</text>
+  <text class="note" x="386" y="362">shadowing — ωi is blocked by a neighbour</text>
+  <text class="note" x="386" y="380">before it ever reaches the facet</text>
+  <text class="note" x="386" y="404">masking — ωo is blocked on the way back</text>
+  <text class="note" x="386" y="422">out toward the camera</text>
+
+  <text class="note" x="24" y="462">fr = D · G · F / (4 (n·ωo)(n·ωi)) — F(ωi, h) = F0 + (1 − F0)(1 − ωi·h)⁵ decides how much of that light reflects at all.</text>
+  <text class="note" x="24" y="482">three's own BRDF_GGX writes the same product as F · V · D: V_GGX_SmithCorrelated folds G in with that denominator.</text>
+</svg>

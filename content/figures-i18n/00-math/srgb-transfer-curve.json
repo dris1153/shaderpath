@@ -1,0 +1,14 @@
+{
+  "0": null,
+  "0.5": null,
+  "1.0": null,
+  "0.21": null,
+  "sRGB code value (what a PNG or a hex colour stores)": null,
+  "linear light energy": null,
+  "ideal linear (y = x)": null,
+  "sRGB transfer curve": null,
+  "code value -> linear light": null,
+  "sRGB 0.5 carries only 21% of the light": null,
+  "Lighting, blending and averaging are only correct on the linear axis.": null,
+  "Encode back to sRGB exactly once, when writing to the screen.": null
+}

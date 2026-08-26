@@ -1,0 +1,23 @@
+{
+  "One requestAnimationFrame loop per canvas": null,
+  "delta = state.clock.getDelta(), shared by every callback": null,
+  "every useFrame in the tree runs here, sorted by priority": null,
+  "one shared list — depth in the component tree changes nothing": null,
+  "priority -1": null,
+  "controls.update()": null,
+  "runs first": null,
+  "priority 0": null,
+  "mesh.rotation.y += delta": null,
+  "the default": null,
+  "priority 1": null,
+  "composer.render()": null,
+  "runs last": null,
+  "No priority above 0": null,
+  "R3F renders for you, once:": null,
+  "gl.render(scene, camera)": null,
+  "Any priority above 0": null,
+  "the automatic render is switched off": null,
+  "that callback must render itself": null,
+  "The callback writes straight onto the Object3D, so a frame costs no React render at all.": null,
+  "The state argument is exactly what useThree() reads: camera, pointer, invalidate.": null
+}

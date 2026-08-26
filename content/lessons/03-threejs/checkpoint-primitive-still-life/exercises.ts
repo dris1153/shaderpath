@@ -149,7 +149,7 @@ function dispose() {
   renderer.dispose();
 }
 window.addEventListener("beforeunload", dispose, { once: true });`,
-    referenceImage: "/figures/03-threejs/checkpoint-primitive-still-life.png",
+    referenceImage: { vi: "/figures/03-threejs/checkpoint-primitive-still-life.png", en: "/figures/03-threejs/checkpoint-primitive-still-life.png" },
     hints: [
       {
         vi: "Đặt object theo bố cục thật: dùng position.set khác nhau cho từng mesh, và chỉnh scale/rotation có chủ đích ở vài object — đừng để tất cả nằm ở gốc toạ độ như lúc mới tạo.",

@@ -11,7 +11,7 @@ Straight from the `@react-three/fiber` source: `useLoader(LoaderClass, url)` loo
 When `onLoad` fires (the asset finished loading), the Promise resolves, and the cache stores the RESOLVED VALUE (no longer a Promise) under that same `[loader, url]` key. React re-renders the suspended subtree — this time `useLoader` looks up the cache, finds the value already there, and returns it IMMEDIATELY, no throw at all — the component renders like any ordinary synchronous hook. drei's `useGLTF` is `useLoader` pre-wired for `GLTFLoader` (with Draco/meshopt configuration baked in) — same mechanism, just a specific loader.
 
 <Figure
-  src="/figures/04-r3f/suspense-throw-sequence.svg"
+  src="/figures/04-r3f/suspense-throw-sequence/en.svg"
   alt="The Suspense sequence for asset loading: a cache lookup keyed by loader and url, a miss throws the pending Promise, the nearest Suspense shows the fallback, onLoad writes the cache and retries, onError travels up to an Error Boundary"
   caption="Suspense understands exactly one signal, a throw — so the failure branch never stops there and always needs an Error Boundary outside it."
 />

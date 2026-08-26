@@ -14,7 +14,7 @@ Toán học không quan tâm trục nào "hướng lên" — phần mềm đồ 
 Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị lộn mặt.
 
 <Figure
-  src="/figures/00-math/axis-conventions.svg"
+  src="/figures/00-math/axis-conventions/vi.svg"
   alt="Hai sơ đồ so Y-up với Z-up kèm mặt đất dạng lưới, và hai bộ trục so hệ thuận tay phải với thuận tay trái, khác nhau duy nhất ở chiều trục z"
   caption="Đây là hai câu hỏi tách rời nhau: trục nào hướng lên, và trục thứ ba đi về phía nào — một hệ Z-up vẫn có thể thuận tay phải, đúng như Blender."
 />
@@ -37,7 +37,7 @@ function cartesianToCanvasPixel(x, y, canvasWidth, canvasHeight) {
 UV space là hệ toạ độ 2D tham chiếu vị trí trên một bề mặt — thường là texture (ảnh) — độc lập với kích thước pixel thực tế của bề mặt đó. $u$ là trục ngang, $v$ trục dọc (đặt tên khác $x, y$ để không nhầm toạ độ 3D của vertex). Quy ước $u, v \in [0, 1]$: một góc texture luôn là $(0,0)$, góc đối diện luôn là $(1,1)$, dù ảnh gốc $16\times16$ hay $8192\times8192$ pixel.
 
 <Figure
-  src="/figures/00-math/uv-origin-conventions.svg"
+  src="/figures/00-math/uv-origin-conventions/vi.svg"
   alt="Hai hình vuông đơn vị đặt cạnh nhau: texture space của GL gốc dưới-trái và image space gốc trên-trái, cùng một texel (một ô pixel của texture) được ghi toạ độ ở cả hai"
   caption="Toạ độ u của một texel giống hệt nhau ở cả hai quy ước, chỉ v khác — nên texture lật sai luôn lộn theo chiều dọc chứ không bao giờ lộn ngang."
 />

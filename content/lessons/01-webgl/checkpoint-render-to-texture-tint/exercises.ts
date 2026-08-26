@@ -467,7 +467,10 @@ function render(timeMs: number) {
   requestAnimationFrame(render);
 }
 requestAnimationFrame(render);`,
-    referenceImage: "/figures/01-webgl/checkpoint-render-to-texture-tint.svg",
+    referenceImage: {
+      vi: "/figures/01-webgl/checkpoint-render-to-texture-tint/vi.svg",
+      en: "/figures/01-webgl/checkpoint-render-to-texture-tint/en.svg",
+    },
     hints: [
       {
         vi: "Tạo FBO đúng thứ tự: framebufferTexture2D cho COLOR_ATTACHMENT0, framebufferRenderbuffer cho DEPTH_ATTACHMENT, rồi mới gọi checkFramebufferStatus một lần ở cuối — status giữa chừng mô tả FBO đang dựng dở, không phải FBO bạn sẽ render. Công thức renderbuffer (API chưa gặp trong track): createRenderbuffer → bindRenderbuffer(RENDERBUFFER, rb) → renderbufferStorage(RENDERBUFFER, DEPTH_COMPONENT16, w, h) → framebufferRenderbuffer(FRAMEBUFFER, DEPTH_ATTACHMENT, RENDERBUFFER, rb).",

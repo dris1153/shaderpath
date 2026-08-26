@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warn-fill: #422006;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .title-warn { fill: var(--warn-ink); }
+    .title-accent { fill: var(--accent-ink); }
+    .name { font-size: 13px; font-weight: 600; }
+    .name-warn { fill: var(--warn-ink); }
+    .name-accent { fill: var(--accent-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title title-warn" x="20" y="22">Anti-pattern: two loops draw the same canvas</text>
+
+  <rect class="box-warn" x="20" y="36" width="280" height="58" rx="8" />
+  <text class="name name-warn" x="160" y="60" text-anchor="middle">gsap.ticker.add(...)</text>
+  <text class="note" x="160" y="79" text-anchor="middle">calls renderer.render() itself</text>
+
+  <rect class="box-warn" x="340" y="36" width="280" height="58" rx="8" />
+  <text class="name name-warn" x="480" y="60" text-anchor="middle">&lt;Canvas&gt; frame loop</text>
+  <text class="note" x="480" y="79" text-anchor="middle">R3F already renders every frame</text>
+
+  <path class="arrow" d="M160,94 L160,110 L320,110" />
+  <path class="arrow" d="M480,94 L480,110 L320,110" />
+  <path class="arrow" d="M320,110 L320,120" marker-end="url(#head)" />
+
+  <rect class="box" x="200" y="124" width="240" height="48" rx="8" />
+  <text class="name" x="320" y="146" text-anchor="middle">WebGLRenderer</text>
+  <text class="note" x="320" y="164" text-anchor="middle">same image, drawn twice per frame</text>
+
+  <text class="note" x="320" y="192" text-anchor="middle">frameloop="demand" is defeated too: the extra ticker runs at full rate</text>
+
+  <text class="title title-accent" x="20" y="222">Correct: one writer, one reader, one renderer</text>
+
+  <text class="note" x="215" y="248" text-anchor="middle">writes</text>
+  <text class="note" x="425" y="248" text-anchor="middle">reads</text>
+
+  <rect class="box-accent" x="20" y="254" width="180" height="70" rx="8" />
+  <text class="name name-accent" x="110" y="278" text-anchor="middle">ScrollTrigger</text>
+  <text class="note" x="110" y="296" text-anchor="middle">onUpdate(self) writes</text>
+  <text class="note" x="110" y="313" text-anchor="middle">progress.value</text>
+
+  <path class="arrow" d="M200,289 L228,289" marker-end="url(#head)" />
+
+  <rect class="box" x="230" y="254" width="180" height="70" rx="8" />
+  <text class="name" x="320" y="278" text-anchor="middle">progress</text>
+  <text class="note" x="320" y="296" text-anchor="middle">a plain object, never</text>
+  <text class="note" x="320" y="313" text-anchor="middle">React state</text>
+
+  <path class="arrow" d="M410,289 L438,289" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="440" y="254" width="180" height="70" rx="8" />
+  <text class="name name-accent" x="530" y="278" text-anchor="middle">useFrame</text>
+  <text class="note" x="530" y="296" text-anchor="middle">reads progress.value,</text>
+  <text class="note" x="530" y="313" text-anchor="middle">writes mesh + camera</text>
+
+  <path class="arrow" d="M110,324 L110,348 L530,348 L530,326" marker-end="url(#head)" />
+  <text class="note" x="320" y="366" text-anchor="middle">invalidate() — asks R3F for exactly one frame</text>
+
+  <text class="note" x="20" y="392">Your code never calls renderer.render(): R3F owns the only render in the frame.</text>
+</svg>

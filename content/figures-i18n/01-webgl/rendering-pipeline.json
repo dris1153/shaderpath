@@ -1,0 +1,21 @@
+{
+  "1. Vertex specification": null,
+  "VBO / VAO / attribute pointers": null,
+  "2. Vertex shader": null,
+  "writes gl_Position in clip space": null,
+  "3. Primitive assembly": null,
+  "vertices grouped into triangles": null,
+  "4. Clipping + perspective divide": null,
+  "clip space -> NDC, xyz / w": null,
+  "5. Viewport transform": null,
+  "NDC -> pixel coordinates": null,
+  "6. Rasterization": null,
+  "triangles -> fragments, varyings interpolated": null,
+  "7. Fragment shader": null,
+  "runs once per fragment, writes a colour": null,
+  "8. Per-fragment operations": null,
+  "depth test, blending, write mask": null,
+  "Framebuffer": null,
+  "you write this (programmable)": null,
+  "fixed function": null
+}

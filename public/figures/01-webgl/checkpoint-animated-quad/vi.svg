@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 400" width="340" height="400" role="img">
+  <title>Rotating four-colour quad</title>
+  <style>
+    :root {
+      --muted: #64748b;
+      --line: #94a3b8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #94a3b8;
+        --line: #64748b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 12px;
+      fill: var(--muted);
+    }
+    .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  </style>
+  <defs>
+    <linearGradient id="q0" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#fffd4d" /><stop offset="0.9875" stop-color="#4f4dfd" /><stop offset="1" stop-color="#4d4ffd" /></linearGradient>
+    <linearGradient id="q1" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#fff84d" /><stop offset="0.9625" stop-color="#534df8" /><stop offset="1" stop-color="#4d53f8" /></linearGradient>
+    <linearGradient id="q2" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#fff44d" /><stop offset="0.9375" stop-color="#584df4" /><stop offset="1" stop-color="#4d58f4" /></linearGradient>
+    <linearGradient id="q3" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffef4d" /><stop offset="0.9125" stop-color="#5c4def" /><stop offset="1" stop-color="#4d5cef" /></linearGradient>
+    <linearGradient id="q4" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffeb4d" /><stop offset="0.8875" stop-color="#614deb" /><stop offset="1" stop-color="#4d61eb" /></linearGradient>
+    <linearGradient id="q5" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffe64d" /><stop offset="0.8625" stop-color="#654de6" /><stop offset="1" stop-color="#4d65e6" /></linearGradient>
+    <linearGradient id="q6" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffe24d" /><stop offset="0.8375" stop-color="#6a4de2" /><stop offset="1" stop-color="#4d6ae2" /></linearGradient>
+    <linearGradient id="q7" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffde4d" /><stop offset="0.8125" stop-color="#6e4dde" /><stop offset="1" stop-color="#4d6ede" /></linearGradient>
+    <linearGradient id="q8" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffd94d" /><stop offset="0.7875" stop-color="#724dd9" /><stop offset="1" stop-color="#4d72d9" /></linearGradient>
+    <linearGradient id="q9" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffd54d" /><stop offset="0.7625" stop-color="#774dd5" /><stop offset="1" stop-color="#4d77d5" /></linearGradient>
+    <linearGradient id="q10" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffd04d" /><stop offset="0.7375" stop-color="#7b4dd0" /><stop offset="1" stop-color="#4d7bd0" /></linearGradient>
+    <linearGradient id="q11" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffcc4d" /><stop offset="0.7125" stop-color="#804dcc" /><stop offset="1" stop-color="#4d80cc" /></linearGradient>
+    <linearGradient id="q12" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffc74d" /><stop offset="0.6875" stop-color="#844dc7" /><stop offset="1" stop-color="#4d84c7" /></linearGradient>
+    <linearGradient id="q13" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffc34d" /><stop offset="0.6625" stop-color="#894dc3" /><stop offset="1" stop-color="#4d89c3" /></linearGradient>
+    <linearGradient id="q14" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffbe4d" /><stop offset="0.6375" stop-color="#8d4dbe" /><stop offset="1" stop-color="#4d8dbe" /></linearGradient>
+    <linearGradient id="q15" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffba4d" /><stop offset="0.6125" stop-color="#924dba" /><stop offset="1" stop-color="#4d92ba" /></linearGradient>
+    <linearGradient id="q16" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffb54d" /><stop offset="0.5875" stop-color="#964db5" /><stop offset="1" stop-color="#4d96b5" /></linearGradient>
+    <linearGradient id="q17" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffb14d" /><stop offset="0.5625" stop-color="#9b4db1" /><stop offset="1" stop-color="#4d9bb1" /></linearGradient>
+    <linearGradient id="q18" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffac4d" /><stop offset="0.5375" stop-color="#9f4dac" /><stop offset="1" stop-color="#4d9fac" /></linearGradient>
+    <linearGradient id="q19" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffa84d" /><stop offset="0.5125" stop-color="#a44da8" /><stop offset="1" stop-color="#4da4a8" /></linearGradient>
+    <linearGradient id="q20" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ffa44d" /><stop offset="0.4875" stop-color="#a84da4" /><stop offset="1" stop-color="#4da8a4" /></linearGradient>
+    <linearGradient id="q21" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff9f4d" /><stop offset="0.4625" stop-color="#ac4d9f" /><stop offset="1" stop-color="#4dac9f" /></linearGradient>
+    <linearGradient id="q22" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff9b4d" /><stop offset="0.4375" stop-color="#b14d9b" /><stop offset="1" stop-color="#4db19b" /></linearGradient>
+    <linearGradient id="q23" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff964d" /><stop offset="0.4125" stop-color="#b54d96" /><stop offset="1" stop-color="#4db596" /></linearGradient>
+    <linearGradient id="q24" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff924d" /><stop offset="0.3875" stop-color="#ba4d92" /><stop offset="1" stop-color="#4dba92" /></linearGradient>
+    <linearGradient id="q25" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff8d4d" /><stop offset="0.3625" stop-color="#be4d8d" /><stop offset="1" stop-color="#4dbe8d" /></linearGradient>
+    <linearGradient id="q26" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff894d" /><stop offset="0.3375" stop-color="#c34d89" /><stop offset="1" stop-color="#4dc389" /></linearGradient>
+    <linearGradient id="q27" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff844d" /><stop offset="0.3125" stop-color="#c74d84" /><stop offset="1" stop-color="#4dc784" /></linearGradient>
+    <linearGradient id="q28" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff804d" /><stop offset="0.2875" stop-color="#cc4d80" /><stop offset="1" stop-color="#4dcc80" /></linearGradient>
+    <linearGradient id="q29" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff7b4d" /><stop offset="0.2625" stop-color="#d04d7b" /><stop offset="1" stop-color="#4dd07b" /></linearGradient>
+    <linearGradient id="q30" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff774d" /><stop offset="0.2375" stop-color="#d54d77" /><stop offset="1" stop-color="#4dd577" /></linearGradient>
+    <linearGradient id="q31" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff724d" /><stop offset="0.2125" stop-color="#d94d72" /><stop offset="1" stop-color="#4dd972" /></linearGradient>
+    <linearGradient id="q32" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff6e4d" /><stop offset="0.1875" stop-color="#de4d6e" /><stop offset="1" stop-color="#4dde6e" /></linearGradient>
+    <linearGradient id="q33" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff6a4d" /><stop offset="0.1625" stop-color="#e24d6a" /><stop offset="1" stop-color="#4de26a" /></linearGradient>
+    <linearGradient id="q34" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff654d" /><stop offset="0.1375" stop-color="#e64d65" /><stop offset="1" stop-color="#4de665" /></linearGradient>
+    <linearGradient id="q35" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff614d" /><stop offset="0.1125" stop-color="#eb4d61" /><stop offset="1" stop-color="#4deb61" /></linearGradient>
+    <linearGradient id="q36" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff5c4d" /><stop offset="0.0875" stop-color="#ef4d5c" /><stop offset="1" stop-color="#4def5c" /></linearGradient>
+    <linearGradient id="q37" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff584d" /><stop offset="0.0625" stop-color="#f44d58" /><stop offset="1" stop-color="#4df458" /></linearGradient>
+    <linearGradient id="q38" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff534d" /><stop offset="0.0375" stop-color="#f84d53" /><stop offset="1" stop-color="#4df853" /></linearGradient>
+    <linearGradient id="q39" gradientUnits="userSpaceOnUse" x1="-85" y1="0" x2="85" y2="0"><stop offset="0" stop-color="#ff4f4d" /><stop offset="0.0125" stop-color="#fd4d4f" /><stop offset="1" stop-color="#4dfd4f" /></linearGradient>
+    <clipPath id="qclip" clipPathUnits="userSpaceOnUse">
+      <rect x="-85" y="-85" width="170" height="170" />
+    </clipPath>
+  </defs>
+  <rect x="0" y="0" width="340" height="340" fill="#0f121a" />
+  <g transform="translate(170 170) rotate(-34.38)">
+    <g clip-path="url(#qclip)">
+      <rect x="-85" y="80.5" width="170" height="4.76" fill="url(#q0)" />
+      <rect x="-85" y="76.24" width="170" height="4.76" fill="url(#q1)" />
+      <rect x="-85" y="72" width="170" height="4.76" fill="url(#q2)" />
+      <rect x="-85" y="67.75" width="170" height="4.76" fill="url(#q3)" />
+      <rect x="-85" y="63.5" width="170" height="4.76" fill="url(#q4)" />
+      <rect x="-85" y="59.24" width="170" height="4.76" fill="url(#q5)" />
+      <rect x="-85" y="54.99" width="170" height="4.76" fill="url(#q6)" />
+      <rect x="-85" y="50.74" width="170" height="4.76" fill="url(#q7)" />
+      <rect x="-85" y="46.49" width="170" height="4.76" fill="url(#q8)" />
+      <rect x="-85" y="42.25" width="170" height="4.76" fill="url(#q9)" />
+      <rect x="-85" y="37.99" width="170" height="4.76" fill="url(#q10)" />
+      <rect x="-85" y="33.74" width="170" height="4.76" fill="url(#q11)" />
+      <rect x="-85" y="29.49" width="170" height="4.76" fill="url(#q12)" />
+      <rect x="-85" y="25.25" width="170" height="4.76" fill="url(#q13)" />
+      <rect x="-85" y="20.99" width="170" height="4.76" fill="url(#q14)" />
+      <rect x="-85" y="16.75" width="170" height="4.76" fill="url(#q15)" />
+      <rect x="-85" y="12.49" width="170" height="4.76" fill="url(#q16)" />
+      <rect x="-85" y="8.24" width="170" height="4.76" fill="url(#q17)" />
+      <rect x="-85" y="3.99" width="170" height="4.76" fill="url(#q18)" />
+      <rect x="-85" y="-0.26" width="170" height="4.76" fill="url(#q19)" />
+      <rect x="-85" y="-4.5" width="170" height="4.76" fill="url(#q20)" />
+      <rect x="-85" y="-8.76" width="170" height="4.76" fill="url(#q21)" />
+      <rect x="-85" y="-13.01" width="170" height="4.76" fill="url(#q22)" />
+      <rect x="-85" y="-17.26" width="170" height="4.76" fill="url(#q23)" />
+      <rect x="-85" y="-21.51" width="170" height="4.76" fill="url(#q24)" />
+      <rect x="-85" y="-25.75" width="170" height="4.76" fill="url(#q25)" />
+      <rect x="-85" y="-30.01" width="170" height="4.76" fill="url(#q26)" />
+      <rect x="-85" y="-34.26" width="170" height="4.76" fill="url(#q27)" />
+      <rect x="-85" y="-38.51" width="170" height="4.76" fill="url(#q28)" />
+      <rect x="-85" y="-42.76" width="170" height="4.76" fill="url(#q29)" />
+      <rect x="-85" y="-47.01" width="170" height="4.76" fill="url(#q30)" />
+      <rect x="-85" y="-51.26" width="170" height="4.76" fill="url(#q31)" />
+      <rect x="-85" y="-55.51" width="170" height="4.76" fill="url(#q32)" />
+      <rect x="-85" y="-59.76" width="170" height="4.76" fill="url(#q33)" />
+      <rect x="-85" y="-64.01" width="170" height="4.76" fill="url(#q34)" />
+      <rect x="-85" y="-68.25" width="170" height="4.76" fill="url(#q35)" />
+      <rect x="-85" y="-72.51" width="170" height="4.76" fill="url(#q36)" />
+      <rect x="-85" y="-76.76" width="170" height="4.76" fill="url(#q37)" />
+      <rect x="-85" y="-81.01" width="170" height="4.76" fill="url(#q38)" />
+      <rect x="-85" y="-85.26" width="170" height="4.76" fill="url(#q39)" />
+    </g>
+  </g>
+  <rect class="frame" x="0.5" y="0.5" width="339" height="339" />
+  <text x="0" y="362">One frame at t = 0.6 s, square canvas</text>
+  <text x="0" y="378">Clear colour (0.06, 0.07, 0.1)</text>
+  <text x="0" y="394">The two triangles crease along the shared diagonal</text>
+</svg>

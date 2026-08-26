@@ -1,0 +1,22 @@
+{
+  "one <canvas>, one WebGL context": null,
+  "index 1": null,
+  "perspective": null,
+  "index 2": null,
+  "top-down": null,
+  "portal": null,
+  "HUD scene": null,
+  "each box is a plain <div> whose rect is read every frame": null,
+  "DOM rect -> scissor rect": null,
+  "getBoundingClientRect(), every frame": null,
+  "left = rect.left - canvas.left": null,
+  "bottom = canvas.bottom - rect.bottom": null,
+  "DOM counts down, WebGL counts up": null,
+  "one context for all of them": null,
+  "shaders, textures, geometry shared": null,
+  "per View, once a frame, in index order": null,
+  "gl.autoClear = false  ·  gl.setViewport(l, b, w, h)  ·  gl.setScissor(l, b, w, h)": null,
+  "gl.setScissorTest(true)  ->  gl.render(virtualScene, camera)": null,
+  "index is the useFrame priority — a higher one draws later, over the top": null,
+  "An orthographic camera needs manual, or View overwrites its frustum every frame.": null
+}

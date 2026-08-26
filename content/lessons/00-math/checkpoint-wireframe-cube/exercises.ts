@@ -180,7 +180,10 @@ function draw(t: number) {
   requestAnimationFrame(draw);
 }
 requestAnimationFrame(draw);`,
-    referenceImage: "/figures/00-math/checkpoint-wireframe-cube.svg",
+    referenceImage: {
+      vi: "/figures/00-math/checkpoint-wireframe-cube/vi.svg",
+      en: "/figures/00-math/checkpoint-wireframe-cube/en.svg",
+    },
     hints: [
       {
         vi: "Thứ tự nhân: multiplyMat4(proj, multiplyMat4(view, model)) — không phải ngược lại. Với lưu trữ column-major: out[col*4+row] = Σ_k a[k*4+row] * b[col*4+k].",

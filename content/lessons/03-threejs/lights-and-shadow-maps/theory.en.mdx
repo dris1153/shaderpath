@@ -18,7 +18,7 @@ ground.receiveShadow = true; // 4. another mesh: this mesh READS the shadow map 
 The four flags are independent because they serve two different pipeline stages. `castShadow` decides whether an object gets rendered in a **secondary pass** — a full re-render of the scene from the light's point of view into a depth texture, the shadow map. `receiveShadow` decides whether an object **samples** that shadow map while computing its color in the main pass. A sphere with `castShadow = true` but a ground plane with `receiveShadow = false` will cast a perfectly correct shadow into the shadow map, yet the ground renders completely shadow-free because it never looks the shadow map up while shading.
 
 <Figure
-  src="/figures/03-threejs/shadow-map-two-pass.svg"
+  src="/figures/03-threejs/shadow-map-two-pass/en.svg"
   alt="The two shadow-map passes: pass 1 renders depth from the light into a depth texture, pass 2 projects each fragment into light space and compares depth, with both bias insertion points marked"
   caption="A shadow is not a geometric projection but a depth comparison — which is why every acne or peter-panning artifact traces back to the two marked places where bias is added."
 />

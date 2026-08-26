@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 390" width="640" height="390" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warn-fill: #422006;
+        --warn-stroke: #f59e0b;
+        --warn-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .title-warn { fill: var(--warn-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
+    .canvas { fill: none; stroke: var(--line); stroke-width: 1.5; }
+  </style>
+
+  
+  <text class="title" x="26" y="28">one &lt;canvas&gt;, one WebGL context</text>
+  <rect class="canvas" x="26" y="36" width="300" height="186" rx="8" />
+
+  <rect class="box-accent" x="38" y="48" width="180" height="162" rx="6" />
+  <text class="title title-accent" x="128" y="122" text-anchor="middle">index 1</text>
+  <text class="note" x="128" y="140" text-anchor="middle">perspective</text>
+
+  <rect class="box-accent" x="232" y="48" width="82" height="78" rx="6" />
+  <text class="title title-accent" x="273" y="82" text-anchor="middle">index 2</text>
+  <text class="note" x="273" y="100" text-anchor="middle">top-down</text>
+
+  <rect class="box-warn" x="232" y="140" width="82" height="70" rx="6" />
+  <text class="title title-warn" x="273" y="174" text-anchor="middle">portal</text>
+  <text class="note" x="273" y="192" text-anchor="middle">HUD scene</text>
+
+  <text class="note" x="26" y="240">each box is a plain &lt;div&gt; whose rect is read every frame</text>
+
+  <rect class="box" x="346" y="36" width="268" height="118" rx="8" />
+  <text class="title" x="480" y="60" text-anchor="middle">DOM rect -&gt; scissor rect</text>
+  <text class="note" x="362" y="80">getBoundingClientRect(), every frame</text>
+  <text class="note" x="362" y="100">left = rect.left - canvas.left</text>
+  <text class="note" x="362" y="120">bottom = canvas.bottom - rect.bottom</text>
+  <text class="note" x="362" y="140">DOM counts down, WebGL counts up</text>
+
+  <rect class="box" x="346" y="164" width="268" height="58" rx="8" />
+  <text class="title" x="480" y="188" text-anchor="middle">one context for all of them</text>
+  <text class="note" x="480" y="208" text-anchor="middle">shaders, textures, geometry shared</text>
+
+  <rect class="box" x="26" y="252" width="588" height="98" rx="8" />
+  <text class="title" x="320" y="276" text-anchor="middle">per View, once a frame, in index order</text>
+  <text class="note" x="320" y="298" text-anchor="middle">gl.autoClear = false  ·  gl.setViewport(l, b, w, h)  ·  gl.setScissor(l, b, w, h)</text>
+  <text class="note" x="320" y="318" text-anchor="middle">gl.setScissorTest(true)  -&gt;  gl.render(virtualScene, camera)</text>
+  <text class="note" x="320" y="338" text-anchor="middle">index is the useFrame priority — a higher one draws later, over the top</text>
+
+  <text class="note" x="320" y="370" text-anchor="middle">An orthographic camera needs manual, or View overwrites its frustum every frame.</text>
+</svg>

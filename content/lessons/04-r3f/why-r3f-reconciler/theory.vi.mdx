@@ -15,7 +15,7 @@ Hệ quả trực tiếp: scene 3D trong R3F là một hàm thuần của state 
 - Node biến mất khỏi cây mới → dọn cleanup, object bị gỡ khỏi scene graph thật.
 
 <Figure
-  src="/figures/04-r3f/reconciler-diff-loop.svg"
+  src="/figures/04-r3f/reconciler-diff-loop/vi.svg"
   alt="Vòng lặp reconciler: state React đổi, cây JSX mới được diff với cây fiber cũ, rồi từng node được tạo, mutate hoặc huỷ trên object THREE thật"
   caption="Mỗi lần state đổi, R3F chỉ chạm vào phần khác biệt — nên object nào sống sót vẫn giữ nguyên instance và buffer GPU của chính nó."
 />

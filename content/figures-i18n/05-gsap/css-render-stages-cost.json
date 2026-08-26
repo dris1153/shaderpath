@@ -1,0 +1,22 @@
+{
+  "A property change re-runs its stage and every stage after it": null,
+  "1. Style": null,
+  "recalculate CSS": null,
+  "2. Layout": null,
+  "size + position": null,
+  "3. Paint": null,
+  "rasterize pixels": null,
+  "4. Composite": null,
+  "GPU merges layers": null,
+  "Layout group": null,
+  "3 stages, every frame": null,
+  "width, height, top, left, margin, padding, font-size": null,
+  "Paint group": null,
+  "2 stages": null,
+  "color, background, box-shadow, border-radius": null,
+  "Composite group": null,
+  "1 stage, on the GPU": null,
+  "transform, opacity": null,
+  "A progress bar animating width sits on the top lane; scaleX with transform-origin: left": null,
+  "looks identical and sits on the bottom one. will-change only pre-creates the layer.": null
+}

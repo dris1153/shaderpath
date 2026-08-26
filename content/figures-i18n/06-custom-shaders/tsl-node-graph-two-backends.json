@@ -1,0 +1,17 @@
+{
+  "One TSL node graph": null,
+  "sin(uv().x.mul(uFreq).add(time))": null,
+  "plain JS objects, not shader text": null,
+  "WebGPURenderer.init()": null,
+  "chooses a backend at runtime": null,
+  "WGSLNodeBuilder": null,
+  "generates WGSL": null,
+  "WebGPU backend": null,
+  "compute pipelines are first-class": null,
+  "GLSLNodeBuilder": null,
+  "generates GLSL ES 3.00": null,
+  "WebGL2 backend": null,
+  "the transparent fallback": null,
+  "The classic WebGLRenderer is not on this diagram": null,
+  "it only understands GLSL strings assembled from #include, and ignores .colorNode without a word": null
+}

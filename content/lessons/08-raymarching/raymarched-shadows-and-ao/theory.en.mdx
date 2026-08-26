@@ -58,7 +58,7 @@ float calcAO(vec3 p, vec3 n) {
 If the space around $p$ is completely empty, `map(p + n*h)` should return $\approx h$ (move $h$ units away from the surface along its outward direction, and the nearest surface is still exactly $h$ away) — the difference `h - d` is 0, contributing nothing to `occ`. If other geometry sits nearby (a concave corner, an adjacent object), `d` comes back smaller than the expected `h` — a positive difference accumulates into `occ`, weighted by a geometrically decaying `sca` ($0.95^i$) so farther samples contribute less, approximating a crude hemispherical integral with just 5 points instead of hundreds of real Monte Carlo rays.
 
 <Figure
-  src="/figures/08-raymarching/soft-shadow-ratio-and-ao-taps.svg"
+  src="/figures/08-raymarching/soft-shadow-ratio-and-ao-taps/en.svg"
   alt="Left: three shadow rays leaving the ground toward a sun — one blocked by a box, one grazing its corner with the closest gap d marked at distance t, one entirely clear. Right: five ambient-occlusion taps along the normal, the upper three cut short by a nearby wall"
   caption="Both effects are only extra map() calls along a direction the primary ray never travelled. The shadow keeps the smallest k·d/t it ever saw; AO keeps the shortfall between the distance a tap should have read and the distance it actually read."
 />

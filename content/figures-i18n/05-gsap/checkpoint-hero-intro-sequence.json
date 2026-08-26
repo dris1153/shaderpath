@@ -1,0 +1,23 @@
+{
+  "The timeline the brief asks for": null,
+  "four tweens, three labels, one relative offset — 1.5 s end to end": null,
+  "shapes": null,
+  "t = 0": null,
+  "headline": null,
+  "“shapes+=0.3”": null,
+  "cta": null,
+  "3 shapes": null,
+  "power3.out · stagger 0.12": null,
+  "back.out(1.7)": null,
+  "“<0.2”": null,
+  "sub-line": null,
+  "power2.out": null,
+  "CTA": null,
+  "back.out(2.8)": null,
+  "0 s": null,
+  "0.5": null,
+  "1.0": null,
+  "1.5 s": null,
+  "“<0.2” starts the sub-line 0.2 s after the headline tween STARTS, not after it ends — the two overlap by half a second.": null,
+  "“>” appends the CTA after the previous tween ends, so changing any duration never needs the delays recomputed.": null
+}

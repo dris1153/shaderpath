@@ -118,7 +118,10 @@ replayBtn.addEventListener("click", () => {
 export function teardownHeroIntro() {
   ctx.revert();
 }`,
-    referenceImage: "/figures/05-gsap/checkpoint-hero-intro-sequence.svg",
+    referenceImage: {
+      vi: "/figures/05-gsap/checkpoint-hero-intro-sequence/vi.svg",
+      en: "/figures/05-gsap/checkpoint-hero-intro-sequence/en.svg",
+    },
     hints: [
       {
         vi: "Position parameter quyết định mọi thứ: \"shapes\" đặt một label tại ĐIỂM CUỐI hiện tại của timeline (ở đây là 0 vì timeline còn rỗng); \"<0.2\" nghĩa là 0.2 giây SAU KHI tween ngay trước nó bắt đầu, không phải sau khi kết thúc; không truyền tham số nào nghĩa là nối tiếp ngay sau tween trước — không cần cộng dồn delay thủ công.",

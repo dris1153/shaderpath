@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 580" width="640" height="580" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .formula { font-size: 13px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .title-accent { fill: var(--accent-ink); }
+    .lbl-a { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .lbl-b { font-size: 12px; font-weight: 600; fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .axis { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .plot-a { stroke: var(--muted); stroke-width: 2; fill: none; }
+    .plot-b { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- the mixer is bound to one root, and writes back onto it -->
+  <rect class="box" x="24" y="24" width="224" height="64" rx="8" />
+  <text class="title" x="136" y="46" text-anchor="middle">root Object3D</text>
+  <text class="note" x="136" y="64" text-anchor="middle">.position, .quaternion, …</text>
+  <text class="note" x="136" y="81" text-anchor="middle">mixer.update(delta) writes here</text>
+  <path class="arrow" d="M270,56 L252,56" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="270" y="24" width="220" height="64" rx="8" />
+  <text class="title title-accent" x="380" y="48" text-anchor="middle">AnimationMixer(root)</text>
+  <text class="note" x="380" y="66" text-anchor="middle">one runtime, one root</text>
+  <text class="note" x="380" y="83" text-anchor="middle">mixer.timeScale = 0 pauses all</text>
+
+  <path class="arrow" d="M380,88 L380,106" />
+  <path class="arrow" d="M164,106 L476,106" />
+  <path class="arrow" d="M164,106 L164,120" marker-end="url(#head)" />
+  <path class="arrow" d="M476,106 L476,120" marker-end="url(#head)" />
+  <text class="note" x="498" y="110">mixer.clipAction(clip)</text>
+
+  <!-- one action per (mixer, clip) pair: the play state -->
+  <rect class="box" x="24" y="124" width="280" height="90" rx="8" />
+  <text class="title" x="164" y="148" text-anchor="middle">AnimationAction A</text>
+  <text class="note" x="164" y="166" text-anchor="middle">the play state of (mixer, clip)</text>
+  <text class="note" x="164" y="183" text-anchor="middle">.weight — how much it counts</text>
+  <text class="note" x="164" y="200" text-anchor="middle">.timeScale, .setLoop(), .play()</text>
+
+  <rect class="box" x="336" y="124" width="280" height="90" rx="8" />
+  <text class="title" x="476" y="148" text-anchor="middle">AnimationAction B</text>
+  <text class="note" x="476" y="166" text-anchor="middle">a second one on the same root</text>
+  <text class="note" x="476" y="183" text-anchor="middle">.weight — how much it counts</text>
+  <text class="note" x="476" y="200" text-anchor="middle">both must be play()ing to blend</text>
+
+  <path class="arrow" d="M164,214 L164,234" marker-end="url(#head)" />
+  <path class="arrow" d="M476,214 L476,234" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="236" width="280" height="72" rx="8" />
+  <text class="title" x="164" y="260" text-anchor="middle">AnimationClip "orbit"</text>
+  <text class="note" x="164" y="278" text-anchor="middle">duration 2 s · tracks[]</text>
+  <text class="note" x="164" y="297" text-anchor="middle">pure data — references no object</text>
+
+  <rect class="box" x="336" y="236" width="280" height="72" rx="8" />
+  <text class="title" x="476" y="260" text-anchor="middle">AnimationClip "bounce"</text>
+  <text class="note" x="476" y="278" text-anchor="middle">duration 2 s · tracks[]</text>
+  <text class="note" x="476" y="297" text-anchor="middle">the same layers, different data</text>
+
+  <path class="arrow" d="M164,308 L164,330" marker-end="url(#head)" />
+  <path class="arrow" d="M476,308 L476,330" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="332" width="592" height="92" rx="8" />
+  <text class="title" x="320" y="356" text-anchor="middle">KeyframeTrack[] — one per animated property</text>
+  <text class="note" x="320" y="378" text-anchor="middle">VectorKeyframeTrack(".position", times, values) — 3 numbers per keyframe</text>
+  <text class="note" x="320" y="395" text-anchor="middle">QuaternionKeyframeTrack(".quaternion", …) — 4 numbers, unit quaternions</text>
+  <text class="note" x="320" y="412" text-anchor="middle">a leading dot targets the root; "Bone_Head.quaternion" targets a child node</text>
+
+  <!-- the crossfade: two weights, one interval -->
+  <text class="title" x="24" y="452">Crossfade: the weights sum to 1 across the interval</text>
+  <path class="axis" d="M120,462 L120,528 L428,528" />
+  <path class="plot-a" d="M120,468 L420,528" />
+  <path class="plot-b" d="M120,528 L420,468" />
+  <text class="note" x="112" y="472" text-anchor="end">1</text>
+  <text class="note" x="112" y="531" text-anchor="end">0</text>
+  <text class="note" x="120" y="549" text-anchor="middle">t = 0</text>
+  <text class="note" x="420" y="549" text-anchor="middle">t = 1</text>
+  <text class="lbl-b" x="440" y="472">wB = t</text>
+  <text class="formula" x="440" y="502">wA + wB = 1</text>
+  <text class="lbl-a" x="440" y="532">wA = 1 - t</text>
+  <text class="note" x="24" y="566">actionA.crossFadeTo(actionB, duration) ramps the two weights for you</text>
+</svg>

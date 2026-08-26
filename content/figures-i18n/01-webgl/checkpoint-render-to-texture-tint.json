@@ -1,0 +1,6 @@
+{
+  "Three-pass render to texture with tint, vignette and overlay": null,
+  "One frame at t = 1.25 s, square canvas": null,
+  "Tinted, vignetted FBO image; overlay blended on top": null,
+  "The back quad stays occluded: depth test, not draw order": null
+}

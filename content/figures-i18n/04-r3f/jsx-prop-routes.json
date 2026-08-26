@@ -1,0 +1,21 @@
+{
+  "<mesh> is THREE.Mesh — the tag name is the class name, lowercased": null,
+  "Every prop then takes exactly one of these four routes onto that object.": null,
+  "args — constructor arguments": null,
+  "<boxGeometry args={[1, 2, 3]} />": null,
+  "new THREE.BoxGeometry(1, 2, 3)": null,
+  "Runs once, at construction — a changed value here destroys the instance and builds a new one.": null,
+  "property prop — assigned after construction": null,
+  "<mesh position={[1, 0, 0]} />": null,
+  "mesh.position.set(1, 0, 0)": null,
+  "A target with .set() keeps its own instance; scale={2} becomes setScalar(2).": null,
+  "pierced prop — a dashed property path": null,
+  "<mesh material-color=\"pink\" />": null,
+  "mesh.material.color.set(\"pink\")": null,
+  "The dash splits into successive property lookups, to any depth.": null,
+  "attach — where a child lands on its parent": null,
+  "<boxGeometry /> inside <mesh>": null,
+  "mesh.geometry = boxGeometry": null,
+  "Implicit for geometry and material; spell it out elsewhere, e.g. attach=\"attributes-position\".": null,
+  "args, attach, dispose, object and onUpdate are reserved — they never reach the object as properties.": null
+}

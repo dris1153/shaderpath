@@ -11,7 +11,7 @@ Mở thẳng `node_modules/three/src/renderers/shaders/ShaderLib/meshphysical.gl
 `resolveIncludes()` chỉ chạy BÊN TRONG `new WebGLProgram(...)`, sau khi `material.onBeforeCompile(parameters, renderer)` đã chạy xong — trong `WebGLRenderer.js`, dòng gọi `material.onBeforeCompile(parameters, this)` nằm trước dòng dựng `WebGLProgram` thật sự. Hệ quả: bên trong `onBeforeCompile`, `shader.vertexShader`/`shader.fragmentShader` VẪN còn nguyên các dòng `#include <chunk>` — chưa hề được thay bằng GLSL thật. Đây là cái bẫy phổ biến nhất khi mới hack shader: tìm bằng mắt đoạn GLSL "đã lắp ráp" (ví dụ đọc `begin_vertex.glsl.js` trên GitHub, thấy `vec3 transformed = vec3( position );`) rồi `.replace()` đúng chuỗi đó bên trong `onBeforeCompile` — không báo lỗi gì, nhưng cũng không có tác dụng gì, vì chuỗi đó chưa tồn tại trong `shader.vertexShader` ở thời điểm đó. Mục tiêu `.replace()` đúng phải là chính marker `#include <begin_vertex>` — giữ nguyên marker để include gốc vẫn chạy, rồi nối thêm code ngay sau nó.
 
 <Figure
-  src="/figures/06-custom-shaders/shader-assembly-injection-point.svg"
+  src="/figures/06-custom-shaders/shader-assembly-injection-point/vi.svg"
   alt="Chuỗi lắp ráp sáu bước từ ShaderLib.meshphysical xuống compileShader, với onBeforeCompile ở bước 3 và resolveIncludes ở bước 4, cạnh hai panel cho thấy cùng một dòng lúc còn là marker #include và sau khi đã bung thành nội dung chunk"
   caption="resolveIncludes chạy sau callback của bạn đúng một bước, nên đoạn GLSL đã lắp ráp mà bạn đọc trên GitHub chưa hề tồn tại vào lúc bạn sửa chuỗi."
 />

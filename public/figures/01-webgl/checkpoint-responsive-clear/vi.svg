@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 336" width="520" height="336" role="img">
+  <title>Hue-cycling fullscreen clear colour</title>
+  <style>
+    :root {
+      --muted: #64748b;
+      --line: #94a3b8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --muted: #94a3b8;
+        --line: #64748b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      font-size: 12px;
+      fill: var(--muted);
+    }
+    .frame { fill: none; stroke: var(--line); stroke-width: 1; }
+  </style>
+  <rect x="0" y="0" width="520" height="292" fill="#33cc80" />
+  <rect class="frame" x="0.5" y="0.5" width="519" height="291" />
+  <text x="0" y="314">One frame at t = 5.0 s — hue 150 deg, hsl(150, 60%, 50%)</text>
+  <text x="0" y="330">The whole canvas is a single gl.clear colour; no geometry is drawn</text>
+</svg>

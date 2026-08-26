@@ -38,7 +38,7 @@ Một draw call bình thường luôn rasterize: biến điểm/tam giác thành
 Ping-pong FBO ping-pong ở cấp texture (hai `WebGLRenderTarget`); transform feedback ping-pong ở cấp buffer/VAO. Mỗi bộ (A, B) là một `WebGLVertexArrayObject` trỏ tới đúng hai buffer position/velocity của bộ đó. Một frame: bind VAO của bộ đang là "front" để vừa render (vẽ particle lên màn hình, dùng dữ liệu của frame trước) vừa dùng làm input cho draw call update; buffer đích của bộ còn lại nhận output qua `bindBufferBase`; xong thì đảo vai trò front/back cho frame sau. Vì input và output là hai object buffer vật lý khác nhau (không phải hai vùng của cùng một buffer), không cần đồng bộ hoá thủ công gì thêm — driver tự đảm bảo thứ tự.
 
 <Figure
-  src="/figures/09-gpgpu/transform-feedback-capture-path.svg"
+  src="/figures/09-gpgpu/transform-feedback-capture-path/vi.svg"
   alt="Đường đi từ VAO của buffer set A qua vertex shader tới các điểm bind transform feedback rồi vào buffer set B, với hộp rasterizer và fragment vẽ nét đứt vì bị RASTERIZER_DISCARD bỏ qua"
   caption="Không một texture nào xuất hiện trên đường đi này: output của vertex shader rơi thẳng vào buffer, còn tầng rasterize thì bị tắt hẳn."
 />

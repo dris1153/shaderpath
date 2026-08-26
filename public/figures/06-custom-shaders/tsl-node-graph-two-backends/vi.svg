@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 390" width="600" height="390" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .head { font-size: 15px; font-weight: 600; }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .code { font-size: 11px; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-node { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-out { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .ink-node { fill: var(--accent-ink); }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <rect class="box-node" x="150" y="16" width="300" height="70" rx="8" />
+  <text class="head ink-node" x="300" y="40" text-anchor="middle">One TSL node graph</text>
+  <text class="code ink-node" x="300" y="60" text-anchor="middle">sin(uv().x.mul(uFreq).add(time))</text>
+  <text class="note" x="300" y="78" text-anchor="middle">plain JS objects, not shader text</text>
+
+  <path class="arrow" d="M300,86 L300,100" marker-end="url(#head)" />
+
+  <rect class="box" x="170" y="102" width="260" height="46" rx="8" />
+  <text class="title" x="300" y="124" text-anchor="middle">WebGPURenderer.init()</text>
+  <text class="note" x="300" y="140" text-anchor="middle">chooses a backend at runtime</text>
+
+  <path class="arrow" d="M300,148 L300,166 L150,166 L150,182" marker-end="url(#head)" />
+  <path class="arrow" d="M300,166 L450,166 L450,182" marker-end="url(#head)" />
+
+  <rect class="box-node" x="24" y="186" width="252" height="94" rx="8" />
+  <text class="title ink-node" x="38" y="208">WGSLNodeBuilder</text>
+  <text class="code" x="38" y="228">generates WGSL</text>
+  <text class="label" x="38" y="252">WebGPU backend</text>
+  <text class="note" x="38" y="270">compute pipelines are first-class</text>
+
+  <rect class="box-node" x="324" y="186" width="252" height="94" rx="8" />
+  <text class="title ink-node" x="338" y="208">GLSLNodeBuilder</text>
+  <text class="code" x="338" y="228">generates GLSL ES 3.00</text>
+  <text class="label" x="338" y="252">WebGL2 backend</text>
+  <text class="note" x="338" y="270">the transparent fallback</text>
+
+  <rect class="box-out" x="24" y="308" width="552" height="60" rx="8" />
+  <text class="label" x="42" y="332">The classic WebGLRenderer is not on this diagram</text>
+  <text class="note" x="42" y="354">it only understands GLSL strings assembled from #include, and ignores .colorNode without a word</text>
+</svg>

@@ -1,0 +1,21 @@
+{
+  "the depth buffer": null,
+  "one depth per pixel, nothing else": null,
+  "DOF reads it as a radius": null,
+  "every pixel picks its own blur radius": null,
+  "focus": null,
+  "distance from the camera": null,
+  "radius grows with the gap to the focus plane, either side of it:": null,
+  "blur = clamp((focus − depth) · aperture, ±maxblur)": null,
+  "Motion blur reads it as a position": null,
+  "depth plus this frame's inverse view-projection": null,
+  "rebuild the world point P behind the pixel": null,
+  "P": null,
+  "image plane": null,
+  "this frame": null,
+  "last frame's camera": null,
+  "velocity": null,
+  "16 colour samples gathered along it": null,
+  "Both effects cost one full-screen pass and one depth read — no extra per-object data.": null,
+  "That is also the limit: camera-only velocity assumes the geometry itself never moved.": null
+}

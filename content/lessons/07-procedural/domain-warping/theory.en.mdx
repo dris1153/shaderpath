@@ -64,7 +64,7 @@ Why this matters: $f$ in the end is just one scalar number — coloring by it al
 The two `fbm()` calls building $q_x$ and $q_y$ use different offsets — $(0,0)$ and $(5.2, 1.3)$ — deliberately, not as two meaningless random numbers. Using the same offset (or none at all) would make $q_x$ and $q_y$ the exact same FBM field at every point, meaning $q$ would always sit along the diagonal $q_x = q_y$ — the warp would only pull in one fixed direction instead of swirling freely. An offset large enough — a few units, well beyond a noise cycle — guarantees the two channels sample unrelated regions of the same field, producing near-independent values. This is the cheapest way to fake two independent noise fields out of a single `fbm()`, with no need for a second hash function.
 
 <Figure
-  src="/figures/07-procedural/domain-warp-nesting.svg"
+  src="/figures/07-procedural/domain-warp-nesting/en.svg"
   alt="Three stacked tiers: the first builds q from two fbm calls, the second builds r from p plus s times q, the last produces f; dashed arrows carry q and r back into the next tier's coordinate, beside a cost table of 5, 15 and 25 noise calls"
   caption="q and r never enter the result — they enter the next tier's sampling coordinate; relative to plain fbm the bill becomes ×3 then ×5, since each layer adds two full fbm evaluations."
 />

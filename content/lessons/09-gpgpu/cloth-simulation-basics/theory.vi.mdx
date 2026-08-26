@@ -27,7 +27,7 @@ Vì Verlet cần cả $\vec{x}_t$ lẫn $\vec{x}_{t-1}$, trạng thái mô phỏ
 Một constraint khoảng cách là phép chỉnh đơn giản: kéo hai điểm lại gần/xa nhau đúng bằng nửa chênh lệch so với chiều dài nghỉ. Trên CPU, giải Gauss-Seidel xử lý từng constraint TUẦN TỰ, mỗi constraint thấy ngay kết quả vừa chỉnh của constraint trước trong cùng vòng lặp — hội tụ nhanh. Trên GPU điều này không thể tái tạo: mỗi texel chạy trong một invocation song song, không có cách nào "thấy" kết quả vừa tính của texel bên cạnh trong CÙNG draw call — tất cả đọc từ CÙNG một texture đầu vào, không đổi suốt cả pass. Giải pháp bắt buộc là Jacobi: mỗi điểm tính độ chỉnh từ TẤT CẢ hàng xóm dựa trên texture đầu vào của pass này, lấy trung bình, ghi ra texture đầu ra — rồi lặp lại pass đó nhiều lần. Vì mỗi pass chỉ lan truyền chỉnh sửa đúng một texel, Jacobi cần NHIỀU vòng lặp hơn Gauss-Seidel để đạt cùng độ cứng — không phải chi tiết vặt, mà là ràng buộc kiến trúc nền tảng của mọi cloth solver trên GPU.
 
 <Figure
-  src="/figures/09-gpgpu/cloth-frame-integrate-then-relax.svg"
+  src="/figures/09-gpgpu/cloth-frame-integrate-then-relax/vi.svg"
   alt="Bốn bước của một frame vải xếp dọc: gpu.compute() chạy hai biến vị trí, vòng relax lặp N lần bằng doRenderTarget, ghi kết quả relax trở lại texturePosition, rồi pass render lấy mẫu texture đó; bên phải là panel giải thích Verlet không giữ texture vận tốc"
   caption="Thanh trượt số vòng constraint trong demo chính là N ở bước 2 — mỗi vòng là một pass phủ kín lưới, và bước 3 tồn tại chỉ để vận tốc ngầm của Verlet đo đúng hình dạng đã được relax."
 />

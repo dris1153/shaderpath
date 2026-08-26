@@ -49,7 +49,7 @@ GPGPU (General-Purpose computing on GPU) lật ngược toàn bộ kiến trúc 
 Nguyên lý tổng quát đứng sau kỹ thuật này: **texture tương đương một mảng 2D, fragment shader tương đương một phép `map` song song** trên mảng đó. Đây là ý tưởng có trước cả compute shader — GPGPU ra đời từ giữa những năm 2000, khi lập trình viên "đánh lừa" pipeline đồ hoạ (vốn chỉ để vẽ tam giác) thành một cỗ máy tính toán song song, bằng cách render vào texture thay vì render ra màn hình. WebGL2 không có compute shader thật (đó là đặc quyền của WebGPU), nên thủ thuật texture-là-mảng này vẫn là con đường chính để làm GPGPU trong trình duyệt, và là nền tảng cho mọi bài còn lại của track này.
 
 <Figure
-  src="/figures/09-gpgpu/per-frame-cost-cpu-vs-gpu.svg"
+  src="/figures/09-gpgpu/per-frame-cost-cpu-vs-gpu/vi.svg"
   alt="Hai cột song song: cột trái đi từ Float32Array qua vòng lặp JS và bufferSubData tới VBO, cột phải đi từ texture trạng thái qua compute pass tới vertex shader lấy mẫu, kèm ghi chú so 1,2 MB mỗi frame với băng thông PCIe"
   caption="Cả hai cột đều chạy mỗi frame, nhưng chỉ cột trái tiêu vào ngân sách 16,6 ms của main thread — và phần đắt nhất trong đó không phải lượng dữ liệu được truyền đi."
 />

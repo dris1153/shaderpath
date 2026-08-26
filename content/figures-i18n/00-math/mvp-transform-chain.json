@@ -1,0 +1,21 @@
+{
+  "Local / object space": null,
+  "mesh coordinates, origin at its own pivot": null,
+  "× model matrix M": null,
+  "World space": null,
+  "objects, lights and camera share one frame": null,
+  "× view matrix V": null,
+  "View / camera space": null,
+  "camera at the origin, looking down -z": null,
+  "× projection matrix P": null,
+  "Clip space": null,
+  "GPU clips here, against |x, y, z| <= w": null,
+  "÷ w (perspective divide)": null,
+  "NDC": null,
+  "a [-1, 1] cube on all three axes": null,
+  "viewport transform": null,
+  "Screen space": null,
+  "pixels in the render target, y up (gl_FragCoord)": null,
+  "matrix you supply (M, V, P)": null,
+  "automatic GPU step": null
+}

@@ -1,0 +1,18 @@
+{
+  "Which axis points up?": null,
+  "Y-up — Three.js, glTF": null,
+  "y": null,
+  "x": null,
+  "z": null,
+  "ground = xz plane": null,
+  "Z-up — Blender, CAD": null,
+  "ground = xy plane": null,
+  "rotate −90° about x": null,
+  "Blender's glTF export": null,
+  "Which way does z point? Same x, same y — only z differs": null,
+  "Right-handed — Three.js, OpenGL": null,
+  "z toward you": null,
+  "Left-handed — DirectX, Unity": null,
+  "z away from you": null,
+  "Swapping handedness flips the sign of every cross product — an import with the wrong one renders inside-out.": null
+}

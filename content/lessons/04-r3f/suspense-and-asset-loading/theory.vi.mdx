@@ -11,7 +11,7 @@ React Suspense không "biết" gì về network hay asset 3D. Hợp đồng củ
 Khi `onLoad` được gọi (asset tải xong), Promise resolve, cache lưu lại GIÁ TRỊ đã resolve (không còn là Promise nữa) khoá bởi đúng `[loader, url]` đó. React render lại subtree bị suspend — lần này `useLoader` tra cache, thấy giá trị đã sẵn sàng, trả về NGAY, không throw gì cả — component render bình thường như một hook đồng bộ. `useGLTF` của drei là `useLoader` được cấu hình sẵn cho `GLTFLoader` (kèm thiết lập Draco/meshopt) — cùng cơ chế, chỉ khác loader cụ thể.
 
 <Figure
-  src="/figures/04-r3f/suspense-throw-sequence.svg"
+  src="/figures/04-r3f/suspense-throw-sequence/vi.svg"
   alt="Trình tự Suspense khi tải asset: tra cache theo khoá loader và url, cache miss thì throw Promise đang pending, Suspense gần nhất hiện fallback, onLoad ghi cache rồi render lại, onError bay lên Error Boundary"
   caption="Suspense chỉ hiểu đúng một tín hiệu là throw — nên nhánh lỗi không bao giờ dừng ở đó, nó luôn cần một Error Boundary bọc bên ngoài."
 />

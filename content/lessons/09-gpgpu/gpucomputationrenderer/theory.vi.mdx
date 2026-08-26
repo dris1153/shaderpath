@@ -44,7 +44,7 @@ particleMaterial.uniforms.texturePosition.value =
 ```
 
 <Figure
-  src="/figures/09-gpgpu/compute-variable-dependency-graph.svg"
+  src="/figures/09-gpgpu/compute-variable-dependency-graph/vi.svg"
   alt="Hai biến compute textureVelocity và texturePosition, mỗi biến sở hữu một cặp render target, mũi tên phụ thuộc chạy hai chiều giữa chúng, phía dưới là hộp nhấn mạnh chỉ số ping-pong dùng chung cho cả renderer"
   caption="setVariableDependencies vừa sinh ra dòng uniform sampler2D, vừa quyết định texture của frame nào được nạp — luôn là frame trước, kể cả với biến được tính sau trong cùng một compute()."
 />

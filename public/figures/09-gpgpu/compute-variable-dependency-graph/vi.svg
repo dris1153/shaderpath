@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 420" width="640" height="420" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --warn-fill: #fef3c7;
+      --warn-stroke: #d97706;
+      --warn-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --warn-fill: #422006;
+        --warn-stroke: #fbbf24;
+        --warn-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .chip { font-size: 12px; font-weight: 600; }
+    .code { font-size: 11px; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-warn { fill: var(--warn-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-var { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-warn { fill: var(--warn-fill); stroke: var(--warn-stroke); stroke-width: 2; }
+    .chip-box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="note" x="320" y="22" text-anchor="middle">Each compute variable owns one render target pair; addVariable() gives it a fragment shader and a seed texture.</text>
+
+  <rect class="box-var" x="24" y="36" width="236" height="112" rx="8" />
+  <text class="title ink-accent" x="38" y="60">textureVelocity</text>
+  <text class="note" x="38" y="78">velocity.frag, run once per compute()</text>
+  <rect class="chip-box" x="38" y="94" width="102" height="36" rx="6" />
+  <text class="chip" x="89" y="117" text-anchor="middle">targets[0]</text>
+  <rect class="chip-box" x="148" y="94" width="102" height="36" rx="6" />
+  <text class="chip" x="199" y="117" text-anchor="middle">targets[1]</text>
+
+  <rect class="box-var" x="380" y="36" width="236" height="112" rx="8" />
+  <text class="title ink-accent" x="394" y="60">texturePosition</text>
+  <text class="note" x="394" y="78">position.frag, run once per compute()</text>
+  <rect class="chip-box" x="394" y="94" width="102" height="36" rx="6" />
+  <text class="chip" x="445" y="117" text-anchor="middle">targets[0]</text>
+  <rect class="chip-box" x="504" y="94" width="102" height="36" rx="6" />
+  <text class="chip" x="555" y="117" text-anchor="middle">targets[1]</text>
+
+  <path class="arrow" d="M260,74 L376,74" marker-end="url(#head)" />
+  <text class="note" x="318" y="68" text-anchor="middle">textureVelocity</text>
+  <path class="arrow" d="M380,118 L264,118" marker-end="url(#head)" />
+  <text class="note" x="322" y="112" text-anchor="middle">texturePosition</text>
+
+  <rect class="box" x="24" y="164" width="592" height="104" rx="8" />
+  <text class="code" x="38" y="188">setVariableDependencies(velVar, [velVar, posVar]);</text>
+  <text class="code" x="38" y="206">setVariableDependencies(posVar, [velVar, posVar]);</text>
+  <text class="note" x="38" y="230">init() prepends one line onto each shader, one per dependency — the variable&#39;s own name included:</text>
+  <text class="code ink-accent" x="38" y="252">uniform sampler2D textureVelocity;</text>
+  <text class="code ink-accent" x="330" y="252">uniform sampler2D texturePosition;</text>
+
+  <rect class="box-warn" x="24" y="284" width="592" height="98" rx="8" />
+  <text class="title ink-warn" x="38" y="308">One currentTextureIndex for the whole renderer, not one per variable</text>
+  <text class="note" x="38" y="330">compute() walks the variables in the order they were added, reads every dependency from targets[i],</text>
+  <text class="note" x="38" y="348">writes each result into targets[1-i], then flips i exactly once, after the last variable. So the position</text>
+  <text class="note" x="38" y="366">pass reads the velocity of the PREVIOUS frame — never the velocity written moments earlier this frame.</text>
+
+  <text class="foot" x="320" y="404" text-anchor="middle">Writing either uniform line yourself is a redefinition error: init() already wrote it for you.</text>
+</svg>

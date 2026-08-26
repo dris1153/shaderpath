@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 440" width="640" height="440" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-pass { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .title-pass { fill: var(--accent-ink); }
+    .container { fill: none; stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- pass 1 writes into the FBO -->
+  <rect class="box-pass" x="40" y="16" width="350" height="50" rx="8" />
+  <text class="title title-pass" x="215" y="38" text-anchor="middle">Pass 1: bindFramebuffer(fbo)</text>
+  <text class="note" x="215" y="56" text-anchor="middle">draw the scene into the FBO, not the canvas</text>
+  <path class="arrow" d="M215,66 L215,86" marker-end="url(#head)" />
+
+  <!-- the framebuffer object and its attachment points -->
+  <rect class="container" x="40" y="90" width="350" height="162" rx="8" />
+  <text class="title" x="215" y="116" text-anchor="middle">Framebuffer object</text>
+  <text class="note" x="215" y="134" text-anchor="middle">attachment points only, no pixels of its own</text>
+
+  <rect class="box" x="58" y="148" width="314" height="38" rx="6" />
+  <text class="title" x="215" y="172" text-anchor="middle">COLOR_ATTACHMENT0</text>
+
+  <rect class="box" x="58" y="196" width="314" height="44" rx="6" />
+  <text class="title" x="215" y="218" text-anchor="middle">DEPTH_ATTACHMENT</text>
+  <text class="note" x="215" y="234" text-anchor="middle">renderbuffer: the depth test writes here</text>
+
+  <!-- the colour attachment is backed by a real texture, outside the FBO -->
+  <path class="arrow" d="M372,167 L416,167" marker-end="url(#head)" />
+  <rect class="box" x="420" y="140" width="200" height="60" rx="8" />
+  <text class="title" x="520" y="162" text-anchor="middle">Texture (RGBA8)</text>
+  <text class="note" x="520" y="179" text-anchor="middle">256 x 256, created empty</text>
+  <text class="note" x="520" y="194" text-anchor="middle">framebufferTexture2D</text>
+
+  <!-- pass 2 reads that texture back -->
+  <path class="arrow" d="M520,200 L520,288" marker-end="url(#head)" />
+  <text class="note" x="512" y="268" text-anchor="end">sampled as uniform sampler2D</text>
+
+  <rect class="box-pass" x="250" y="292" width="370" height="52" rx="8" />
+  <text class="title title-pass" x="435" y="314" text-anchor="middle">Pass 2: bindFramebuffer(null)</text>
+  <text class="note" x="435" y="332" text-anchor="middle">fullscreen quad samples that texture</text>
+  <path class="arrow" d="M435,344 L435,374" marker-end="url(#head)" />
+
+  <rect class="box" x="250" y="378" width="370" height="46" rx="8" />
+  <text class="title" x="435" y="400" text-anchor="middle">Default framebuffer (the canvas)</text>
+  <text class="note" x="435" y="417" text-anchor="middle">what the user finally sees</text>
+</svg>

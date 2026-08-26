@@ -13,7 +13,7 @@ But "instantiated by R3F itself" is a narrower net than most people assume. Thre
 3. **Event listeners and RAF handles** registered by hand (`addEventListener`, `requestAnimationFrame` called directly outside `useFrame`) — not Three.js objects, so "dispose" doesn't apply, but forgetting to remove them leaks a closure in exactly the same spirit.
 
 <Figure
-  src="/figures/04-r3f/disposal-ownership.svg"
+  src="/figures/04-r3f/disposal-ownership/en.svg"
   alt="A decision table for unmount: the column R3F disposes, holding JSX tags the reconciler constructed, beside the column you must dispose yourself, holding primitive, new THREE.X in useMemo, render targets and listeners"
   caption="The line is simply who called new — R3F frees only what it constructed, and everything else holds its VRAM until you free it."
 />

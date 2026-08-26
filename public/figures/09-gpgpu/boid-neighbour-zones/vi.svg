@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 400" width="640" height="400" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --sep: #d97706;
+      --sep-ink: #92400e;
+      --ali: #2563eb;
+      --ali-ink: #1e3a8a;
+      --coh: #64748b;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --sep: #fbbf24;
+        --sep-ink: #fde68a;
+        --ali: #60a5fa;
+        --ali-ink: #bfdbfe;
+        --coh: #94a3b8;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-sep { fill: var(--sep-ink); }
+    .ink-ali { fill: var(--ali-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .ring-sep { fill: none; stroke: var(--sep); stroke-width: 2; }
+    .ring-ali { fill: none; stroke: var(--ali); stroke-width: 2; }
+    .ring-coh { fill: none; stroke: var(--coh); stroke-width: 2; stroke-dasharray: 5 4; }
+    .vec-sep { stroke: var(--sep); stroke-width: 2.5; fill: none; }
+    .vec-ali { stroke: var(--ali); stroke-width: 2.5; fill: none; }
+    .vec-coh { stroke: var(--coh); stroke-width: 2.5; fill: none; }
+    .boid { fill: var(--ink); }
+    .dot { fill: var(--muted); }
+  </style>
+  <defs>
+    <marker id="h-sep" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--sep)" />
+    </marker>
+    <marker id="h-ali" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--ali)" />
+    </marker>
+    <marker id="h-coh" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--coh)" />
+    </marker>
+  </defs>
+
+  <text class="note" x="24" y="24">One boid&#39;s neighbourhood: three rules, three nested radii cut from the single perception radius R.</text>
+
+  <circle class="ring-coh" cx="184" cy="196" r="120" />
+  <circle class="ring-ali" cx="184" cy="196" r="84" />
+  <circle class="ring-sep" cx="184" cy="196" r="48" />
+
+  <circle class="dot" cx="156" cy="176" r="3.5" />
+  <circle class="dot" cx="232" cy="160" r="3.5" />
+  <circle class="dot" cx="140" cy="246" r="3.5" />
+  <circle class="dot" cx="100" cy="160" r="3.5" />
+  <circle class="dot" cx="262" cy="244" r="3.5" />
+  <circle class="dot" cx="196" cy="300" r="3.5" />
+
+  <path class="vec-sep" d="M184,196 L218,220" marker-end="url(#h-sep)" />
+  <path class="vec-ali" d="M184,196 L222,152" marker-end="url(#h-ali)" />
+  <path class="vec-coh" d="M184,196 L186,262" marker-end="url(#h-coh)" />
+  <path class="boid" d="M172,187 L192,196 L172,205 Z" />
+
+  <rect class="box" x="368" y="56" width="248" height="256" rx="8" />
+
+  <path class="vec-sep" d="M382,86 L410,86" />
+  <text class="title ink-sep" x="418" y="90">separation, inside 0.4 R</text>
+  <text class="note" x="382" y="110">push away, strength ~ 1 / d&#178;</text>
+
+  <path class="vec-ali" d="M382,142 L410,142" />
+  <text class="title ink-ali" x="418" y="146">alignment, inside 0.7 R</text>
+  <text class="note" x="382" y="166">steer toward the neighbours&#39; mean velocity</text>
+
+  <path class="ring-coh" d="M382,198 L410,198" />
+  <text class="title" x="418" y="202">cohesion, the full R</text>
+  <text class="note" x="382" y="222">steer toward their mean position</text>
+
+  <text class="note" x="382" y="254">The nesting is the whole balance: separation</text>
+  <text class="note" x="382" y="272">has to win up close, or alignment and cohesion</text>
+  <text class="note" x="382" y="290">pull the flock into one overlapping clump.</text>
+
+  <text class="foot" x="320" y="344" text-anchor="middle">No boid knows the flock&#39;s shape: each one sums these three local vectors and nothing else.</text>
+  <text class="foot" x="320" y="364" text-anchor="middle">To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel</text>
+  <text class="foot" x="320" y="384" text-anchor="middle">neighbours are not spatial neighbours, so the only cheap cut is striding (k = 8 leaves an eighth).</text>
+</svg>

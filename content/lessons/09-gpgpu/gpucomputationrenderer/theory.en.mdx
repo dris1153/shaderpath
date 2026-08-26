@@ -44,7 +44,7 @@ particleMaterial.uniforms.texturePosition.value =
 ```
 
 <Figure
-  src="/figures/09-gpgpu/compute-variable-dependency-graph.svg"
+  src="/figures/09-gpgpu/compute-variable-dependency-graph/en.svg"
   alt="Two compute variables, textureVelocity and texturePosition, each owning a render target pair, with dependency arrows running both ways between them and a panel below highlighting the ping-pong index shared by the whole renderer"
   caption="setVariableDependencies both writes the uniform sampler2D line and decides which frame's texture gets bound — always the previous frame, even for a variable computed later in the same compute()."
 />

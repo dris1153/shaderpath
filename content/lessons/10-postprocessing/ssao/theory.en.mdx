@@ -23,7 +23,7 @@ With a fixed kernel oriented the same way at every pixel, AO would show obvious 
 `kernelRadius` (default $8$) is the hemisphere's radius in **view-space units** — the scene's own world units, not pixels — larger values spread AO farther from every concave corner.
 
 <Figure
-  src="/figures/10-postprocessing/ssao-hemisphere-kernel.svg"
+  src="/figures/10-postprocessing/ssao-hemisphere-kernel/en.svg"
   alt="A shaded point p on a surface with its view-space normal, a dashed hemisphere of kernelRadius around it holding eleven sample dots, three of which fall inside a nearer surface and are marked as occluded, beside a panel stating the per-sample depth comparison"
   caption="A sample counts as occluded only when the depth already stored at its pixel sits in front of it by more than minDistance and less than maxDistance — the whole test is one comparison against a buffer, never against real geometry."
 />

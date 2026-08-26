@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 376" width="660" height="376" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --warm-fill: #fef3c7;
+      --warm-stroke: #d97706;
+      --warm-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --warm-fill: #422006;
+        --warm-stroke: #f59e0b;
+        --warm-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .ink-warm { fill: var(--warm-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .rule { stroke: var(--line); stroke-width: 2; fill: none; }
+    .hatch { stroke: var(--line); stroke-width: 1; fill: none; }
+    .dome { fill: none; stroke: var(--accent-stroke); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .arrow-in { stroke: var(--line); stroke-width: 1.4; fill: none; }
+    .arrow-you { stroke: var(--accent-stroke); stroke-width: 2; fill: none; }
+    .arrow-warm { stroke: var(--warm-stroke); stroke-width: 2; fill: none; }
+    .wedge { fill: var(--warm-fill); stroke: var(--warm-stroke); stroke-width: 1.2; }
+    .arc { fill: none; stroke: var(--warm-stroke); stroke-width: 1.2; }
+    .dot-you { fill: var(--accent-stroke); }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+    <marker id="head-you" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <marker id="head-warm" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--warm-stroke)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">The rendering equation, drawn at one point</text>
+
+  <!-- the surface -->
+  <path class="rule" d="M60,262 L430,262" />
+  <path class="hatch" d="M72,262 L62,274 M100,262 L90,274 M128,262 L118,274 M156,262 L146,274 M184,262 L174,274 M212,262 L202,274 M268,262 L258,274 M296,262 L286,274 M324,262 L314,274 M352,262 L342,274 M380,262 L370,274 M408,262 L398,274" />
+
+  <!-- hemisphere -->
+  <path class="dome" d="M120,262 A120,120 0 0 1 360,262" />
+  <text class="label ink-you" x="240" y="132" text-anchor="middle">Ω — the hemisphere above x</text>
+
+  <!-- incoming directions -->
+  <path class="arrow-in" d="M127,221 L223,256" marker-end="url(#head)" />
+  <path class="arrow-in" d="M199,149 L234,245" marker-end="url(#head)" />
+  <path class="arrow-in" d="M277,148 L246,245" marker-end="url(#head)" />
+  <path class="arrow-in" d="M325,177 L253,249" marker-end="url(#head)" />
+  <path class="arrow-in" d="M351,217 L257,255" marker-end="url(#head)" />
+
+  <!-- the one highlighted incoming direction, with its solid-angle patch -->
+  <path class="wedge" d="M145,188 A120,120 0 0 1 166,167 L176,180 A104,104 0 0 0 158,198 Z" />
+  <path class="arrow-warm" d="M155,177 L227,249" marker-end="url(#head-warm)" />
+  <text class="label ink-warm" x="140" y="160" text-anchor="end">dωi</text>
+  <text class="label ink-warm" x="176" y="224">ωi</text>
+
+  <!-- normal, angle, outgoing -->
+  <path class="arrow-you" d="M240,262 L240,140" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="248" y="154">n</text>
+  <path class="arc" d="M240,216 A46,46 0 0 0 208,230" />
+  <text class="label ink-warm" x="209" y="210" text-anchor="end">θ</text>
+
+  <path class="arrow-you" d="M240,262 L343,183" marker-end="url(#head-you)" />
+  <text class="label ink-you" x="350" y="176">ωo → camera</text>
+
+  <circle class="dot-you" cx="240" cy="262" r="5" />
+  <text class="label ink-you" x="240" y="286" text-anchor="middle">x</text>
+
+  <text class="note" x="60" y="310">every direction in Ω delivers light at the same instant — the integral is their sum</text>
+  <text class="note" x="60" y="328">(n·ωi) = cos θ, because the same beam is spread over dA / cos θ of surface</text>
+
+  <!-- the two things a picture can say that the shaded sphere cannot -->
+  <rect class="box" x="450" y="48" width="188" height="118" rx="8" />
+  <text class="label" x="464" y="72">Li(x, ωi)</text>
+  <text class="note" x="464" y="92">is the Lo of whatever surface</text>
+  <text class="note" x="464" y="110">happens to sit in that direction</text>
+  <text class="note" x="464" y="134">the recursion is why no closed</text>
+  <text class="note" x="464" y="152">form exists for a real scene</text>
+
+  <rect class="box" x="450" y="182" width="188" height="100" rx="8" />
+  <text class="label" x="464" y="206">A PointLight</text>
+  <text class="note" x="464" y="226">keeps one ωi and discards the</text>
+  <text class="note" x="464" y="244">rest of Ω, so the integral turns</text>
+  <text class="note" x="464" y="262">into a single evaluation</text>
+
+  <text class="note" x="24" y="352">Le adds on top of all this and needs no integral: it is read straight off the material.</text>
+  <text class="note" x="24" y="370">Every later lesson in the track sharpens exactly one symbol in this picture — fr, Li, or where Li is zero.</text>
+</svg>

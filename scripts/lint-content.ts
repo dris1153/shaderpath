@@ -69,6 +69,16 @@ function assetMissing(src: string): boolean {
   );
 }
 
+/**
+ * SVG figures ship one file per locale, so a vi document must name vi.svg. The
+ * two theory files are mirrors edited by copy-paste, and nothing else notices a
+ * crossed reference: the file exists, so every other check passes. Rendered
+ * screenshots keep a flat .png path and are exempt.
+ */
+function wrongLocaleFigure(src: string, locale: "vi" | "en"): boolean {
+  return src.endsWith(".svg") && !src.endsWith(`/${locale}.svg`);
+}
+
 function figureSources(src: string): string[] {
   return [...src.matchAll(/<Figure\b[\s\S]*?\/>/g)]
     .map((m) => /\bsrc=["{]?"?([^"'}\s]+)/.exec(m[0])?.[1])
@@ -158,12 +168,16 @@ async function lintLesson(trackDir: string, slug: string) {
   }
 
   // --- figure assets --------------------------------------------------
-  for (const file of ["theory.vi.mdx", "theory.en.mdx"]) {
+  for (const loc of ["vi", "en"] as const) {
+    const file = `theory.${loc}.mdx`;
     const filePath = path.join(dir, file);
     if (!fs.existsSync(filePath)) continue;
     for (const src of figureSources(fs.readFileSync(filePath, "utf8"))) {
       if (assetMissing(src)) {
         report(`${at}: ${file} has <Figure src="${src}"> but public${src} is missing`);
+      }
+      if (wrongLocaleFigure(src, loc)) {
+        report(`${at}: ${file} has <Figure src="${src}"> — should end in /${loc}.svg`);
       }
     }
   }
@@ -255,10 +269,18 @@ async function lintLesson(trackDir: string, slug: string) {
       if (ex.checklist.length < minChecklist) {
         report(`${at}/${ex.id}: needs >=${minChecklist} checklist items`);
       }
-      if (ex.referenceImage && assetMissing(ex.referenceImage)) {
-        report(
-          `${at}/${ex.id}: referenceImage "${ex.referenceImage}" has no file under public/`,
-        );
+      for (const loc of ["vi", "en"] as const) {
+        const ref = ex.referenceImage?.[loc];
+        if (ref && assetMissing(ref)) {
+          report(
+            `${at}/${ex.id}: ${loc} referenceImage "${ref}" has no file under public/`,
+          );
+        }
+        if (ref && wrongLocaleFigure(ref, loc)) {
+          report(
+            `${at}/${ex.id}: ${loc} referenceImage "${ref}" should end in /${loc}.svg`,
+          );
+        }
       }
       for (const loc of ["vi", "en"] as const) {
         if (!ex.prompt[loc]?.trim()) {

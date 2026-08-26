@@ -58,7 +58,7 @@ float calcAO(vec3 p, vec3 n) {
 Nếu không gian quanh $p$ hoàn toàn trống, `map(p + n*h)` phải trả về đúng $\approx h$ (di chuyển $h$ theo hướng ra ngoài bề mặt thì còn cách bề mặt gần nhất đúng $h$) — hiệu `h - d` bằng 0, không đóng góp gì vào `occ`. Nếu có hình học khác ở gần (một góc lõm, một vật thể khác kề bên), `d` nhỏ hơn `h` kỳ vọng — hiệu dương tích luỹ vào `occ`, và trọng số `sca` giảm dần theo cấp số nhân ($0.95^i$) để mẫu càng xa càng đóng góp ít, giống một phép tích phân bán cầu thô chỉ với 5 điểm thay vì hàng trăm tia Monte Carlo thật.
 
 <Figure
-  src="/figures/08-raymarching/soft-shadow-ratio-and-ao-taps.svg"
+  src="/figures/08-raymarching/soft-shadow-ratio-and-ao-taps/vi.svg"
   alt="Trái: ba tia bóng rời mặt đất đi về phía mặt trời — một tia bị hộp chặn, một tia lướt sát góc hộp với khe hẹp nhất d đánh dấu tại quãng đường t, một tia thoáng hoàn toàn. Phải: năm mẫu AO dọc theo normal, ba mẫu trên bị bức tường gần đó cắt ngắn"
   caption="Cả hai hiệu ứng chỉ là thêm lời gọi map() theo một hướng mà tia chính chưa từng đi. Bóng giữ lại giá trị k·d/t nhỏ nhất từng gặp; AO giữ lại phần hụt giữa khoảng cách mẫu đáng lẽ đọc được và khoảng cách nó thực sự đọc được."
 />

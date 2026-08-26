@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 438" width="660" height="438" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --cost-fill: #fef3c7;
+      --cost-stroke: #d97706;
+      --cost-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --cost-fill: #422006;
+        --cost-stroke: #fbbf24;
+        --cost-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .lane { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .head { font-size: 13px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .row { font-size: 12px; }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-cost { fill: var(--cost-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-cost { fill: var(--cost-fill); stroke: var(--cost-stroke); stroke-width: 2; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .mark { stroke: var(--accent-stroke); stroke-width: 1.5; stroke-dasharray: 5 4; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">One frame, two lanes — and what each tool can actually see</text>
+
+  <text class="lane" x="24" y="52">CPU · main thread</text>
+  <rect class="box" x="24" y="60" width="126" height="46" rx="8" />
+  <text class="head" x="36" y="82">your JS</text>
+  <text class="note" x="36" y="98">useFrame, state, GC</text>
+
+  <rect class="box-cost" x="154" y="60" width="248" height="46" rx="8" />
+  <text class="head ink-cost" x="166" y="82">renderer.render()</text>
+  <text class="note" x="166" y="98">cull → sort → bind state → issue draw calls</text>
+  <text class="note" x="414" y="88">main thread idle again</text>
+
+  <path class="arrow" d="M300,106 L300,130" marker-end="url(#head)" />
+  <text class="note" x="308" y="124">commands submitted</text>
+
+  <text class="lane" x="24" y="152">GPU · its own queue</text>
+  <path class="mark" d="M402,46 L402,162" />
+  <text class="note ink-accent" x="410" y="44">rAF delta stops here</text>
+  <rect class="box-accent" x="248" y="160" width="388" height="46" rx="8" />
+  <text class="head ink-accent" x="260" y="182">the GPU works through that command buffer</text>
+  <text class="note" x="260" y="198">still busy after the frame's JS already returned — asynchronous</text>
+
+  <path class="rule" d="M24,234 L636,234" />
+  <text class="note" x="24" y="252">tool</text>
+  <text class="note" x="250" y="252">what it reports</text>
+  <text class="note" x="500" y="252">the lane it reads</text>
+
+  <text class="row" x="24" y="276">renderer.info</text>
+  <text class="note" x="250" y="276">calls and triangles, reset every frame</text>
+  <text class="note" x="500" y="276">what the CPU issued</text>
+
+  <text class="row" x="24" y="298">inline frame-time meter</text>
+  <text class="note" x="250" y="298">wall-clock ms between rAF ticks</text>
+  <text class="note" x="500" y="298">the CPU lane, end to end</text>
+
+  <text class="row" x="24" y="320">DevTools Performance</text>
+  <text class="note" x="250" y="320">Main track vs GPU track, 50 ms Long Task flag</text>
+  <text class="note" x="500" y="320">both lanes, side by side</text>
+
+  <text class="row" x="24" y="342">Spector.js</text>
+  <text class="note" x="250" y="342">every gl.* call and the state bound per draw</text>
+  <text class="note" x="500" y="342">the command buffer itself</text>
+
+  <text class="row" x="24" y="364">RenderDoc</text>
+  <text class="note" x="250" y="364">native calls, after ANGLE has translated them</text>
+  <text class="note" x="500" y="364">below WebGL entirely</text>
+
+  <text class="foot" x="24" y="396">No number your JavaScript can read is GPU time — the meter times the top lane and then the frame ends.</text>
+  <text class="foot" x="24" y="414">That blind spot is what the DPR 0.5 test covers: same JS, same draw calls, a quarter of the pixels.</text>
+  <text class="foot" x="24" y="432">If that alone makes it smooth, the cost was in the bottom lane the whole time.</text>
+</svg>

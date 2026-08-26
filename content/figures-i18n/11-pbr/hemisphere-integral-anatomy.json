@@ -1,0 +1,23 @@
+{
+  "The rendering equation, drawn at one point": null,
+  "Ω — the hemisphere above x": null,
+  "dωi": null,
+  "ωi": null,
+  "n": null,
+  "θ": null,
+  "ωo → camera": null,
+  "x": null,
+  "every direction in Ω delivers light at the same instant — the integral is their sum": null,
+  "(n·ωi) = cos θ, because the same beam is spread over dA / cos θ of surface": null,
+  "Li(x, ωi)": null,
+  "is the Lo of whatever surface": null,
+  "happens to sit in that direction": null,
+  "the recursion is why no closed": null,
+  "form exists for a real scene": null,
+  "A PointLight": null,
+  "keeps one ωi and discards the": null,
+  "rest of Ω, so the integral turns": null,
+  "into a single evaluation": null,
+  "Le adds on top of all this and needs no integral: it is read straight off the material.": null,
+  "Every later lesson in the track sharpens exactly one symbol in this picture — fr, Li, or where Li is zero.": null
+}

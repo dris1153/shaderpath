@@ -1,0 +1,16 @@
+{
+  "Addition": null,
+  "b starts where a ends": null,
+  "a": null,
+  "b": null,
+  "a + b": null,
+  "Subtraction": null,
+  "the arrow from b to a": null,
+  "a − b": null,
+  "Normalize": null,
+  "direction kept, length forced to 1": null,
+  "v": null,
+  "v̂": null,
+  "v = (3, 4), ‖v‖ = 5, so v̂ = (0.6, 0.8)": null,
+  "Add to step forward, subtract to aim from one point at another, normalize before multiplying by a speed.": null
+}

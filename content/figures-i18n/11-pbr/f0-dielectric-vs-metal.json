@@ -1,0 +1,21 @@
+{
+  "What F0 is, and what metalness does to it": null,
+  "Dielectric — metalness = 0": null,
+  "F reflects": null,
+  "F0 ≈ 0.04": null,
+  "diffuse": null,
+  "F0 = ((n1 − n2) / (n1 + n2))² — IOR 1.5 gives exactly 0.04.": null,
+  "Skin, wood, plastic and water sit in the 0.02–0.05 band.": null,
+  "(1 − F) refracts in, scatters under the surface, and leaves": null,
+  "tinted by albedo — that is the diffuse term.": null,
+  "Metal — metalness = 1": null,
+  "F0 = albedo": null,
+  "absorbed": null,
+  "F0 is three numbers, not one. Gold is (1.00, 0.85, 0.57)": null,
+  "and head-on that triplet IS the colour you see.": null,
+  "Free electrons swallow whatever does not reflect within": null,
+  "nanometres, so a metal has no diffuse term at all.": null,
+  "metalness does not blend two looks — it reroutes one albedo value": null,
+  "F0 = mix(vec3(0.04), albedo, metalness)   ·   kd = (1 − F)(1 − metalness)": null,
+  "so 0.5 across a whole surface describes a material that does not exist; it only means something at a mask edge.": null
+}

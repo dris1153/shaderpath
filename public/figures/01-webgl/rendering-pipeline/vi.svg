@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 660" width="560" height="660" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --prog-fill: #dbeafe;
+      --prog-stroke: #2563eb;
+      --prog-ink: #1e3a8a;
+      --fixed-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --prog-fill: #1e3a5f;
+        --prog-stroke: #60a5fa;
+        --prog-ink: #bfdbfe;
+        --fixed-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .stage { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .legend { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--fixed-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-prog { fill: var(--prog-fill); stroke: var(--prog-stroke); stroke-width: 2; }
+    .stage-prog { fill: var(--prog-ink); }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <!-- 1 vertex specification -->
+  <rect class="box" x="120" y="16" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="38" text-anchor="middle">1. Vertex specification</text>
+  <text class="note" x="280" y="54" text-anchor="middle">VBO / VAO / attribute pointers</text>
+  <path class="arrow" d="M280,62 L280,84" marker-end="url(#head)" />
+
+  <!-- 2 vertex shader -->
+  <rect class="box-prog" x="120" y="86" width="320" height="46" rx="8" />
+  <text class="stage stage-prog" x="280" y="108" text-anchor="middle">2. Vertex shader</text>
+  <text class="note" x="280" y="124" text-anchor="middle">writes gl_Position in clip space</text>
+  <path class="arrow" d="M280,132 L280,154" marker-end="url(#head)" />
+
+  <!-- 3 primitive assembly -->
+  <rect class="box" x="120" y="156" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="178" text-anchor="middle">3. Primitive assembly</text>
+  <text class="note" x="280" y="194" text-anchor="middle">vertices grouped into triangles</text>
+  <path class="arrow" d="M280,202 L280,224" marker-end="url(#head)" />
+
+  <!-- 4 clipping + perspective divide -->
+  <rect class="box" x="120" y="226" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="248" text-anchor="middle">4. Clipping + perspective divide</text>
+  <text class="note" x="280" y="264" text-anchor="middle">clip space -&gt; NDC, xyz / w</text>
+  <path class="arrow" d="M280,272 L280,294" marker-end="url(#head)" />
+
+  <!-- 5 viewport transform -->
+  <rect class="box" x="120" y="296" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="318" text-anchor="middle">5. Viewport transform</text>
+  <text class="note" x="280" y="334" text-anchor="middle">NDC -&gt; pixel coordinates</text>
+  <path class="arrow" d="M280,342 L280,364" marker-end="url(#head)" />
+
+  <!-- 6 rasterization -->
+  <rect class="box" x="120" y="366" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="388" text-anchor="middle">6. Rasterization</text>
+  <text class="note" x="280" y="404" text-anchor="middle">triangles -&gt; fragments, varyings interpolated</text>
+  <path class="arrow" d="M280,412 L280,434" marker-end="url(#head)" />
+
+  <!-- 7 fragment shader -->
+  <rect class="box-prog" x="120" y="436" width="320" height="46" rx="8" />
+  <text class="stage stage-prog" x="280" y="458" text-anchor="middle">7. Fragment shader</text>
+  <text class="note" x="280" y="474" text-anchor="middle">runs once per fragment, writes a colour</text>
+  <path class="arrow" d="M280,482 L280,504" marker-end="url(#head)" />
+
+  <!-- 8 per-fragment operations -->
+  <rect class="box" x="120" y="506" width="320" height="46" rx="8" />
+  <text class="stage" x="280" y="528" text-anchor="middle">8. Per-fragment operations</text>
+  <text class="note" x="280" y="544" text-anchor="middle">depth test, blending, write mask</text>
+  <path class="arrow" d="M280,552 L280,574" marker-end="url(#head)" />
+
+  <!-- framebuffer -->
+  <rect class="box" x="180" y="576" width="200" height="34" rx="8" />
+  <text class="stage" x="280" y="598" text-anchor="middle">Framebuffer</text>
+
+  <!-- legend -->
+  <rect class="box-prog" x="120" y="630" width="16" height="14" rx="3" />
+  <text class="legend" x="144" y="641">you write this (programmable)</text>
+  <rect class="box" x="330" y="630" width="16" height="14" rx="3" />
+  <text class="legend" x="354" y="641">fixed function</text>
+</svg>

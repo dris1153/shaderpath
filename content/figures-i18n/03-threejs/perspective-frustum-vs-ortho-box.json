@@ -1,0 +1,21 @@
+{
+  "The shape of what the camera can see": null,
+  "Side view, camera looking right; the vertical axis is the camera's up. One box, drawn at two distances.": null,
+  "PerspectiveCamera — a frustum": null,
+  "(fov, aspect, near, far)": null,
+  "OrthographicCamera — a box": null,
+  "(left, right, top, bottom, near, far)": null,
+  "fov": null,
+  "near": null,
+  "far": null,
+  "top": null,
+  "bottom": null,
+  "what the screen shows": null,
+  "twice as far, half as big": null,
+  "same size at any distance": null,
+  "fov is the vertical angle, in degrees": null,
+  "aspect is width / height": null,
+  "no aspect property exists here": null,
+  "recompute left / right yourself on resize": null,
+  "Both cache the result in camera.projectionMatrix — change a value and call updateProjectionMatrix().": null
+}

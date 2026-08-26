@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 374" width="620" height="374" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --blob-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --blob-fill: #334155;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .sub { font-size: 13px; font-weight: 600; fill: var(--accent-ink); }
+    .code { font-size: 11px; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .blob { fill: var(--blob-fill); stroke: none; }
+    .win { fill: none; stroke: var(--accent-stroke); stroke-width: 2; stroke-dasharray: 5 4; }
+    .slab { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .slab-hi { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .axis { stroke: var(--line); stroke-width: 1.25; fill: none; }
+    .orbit { fill: none; stroke: var(--accent-stroke); stroke-width: 2; }
+    .move { stroke: var(--accent-stroke); stroke-width: 1.75; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+    .dot-acc { fill: var(--accent-stroke); }
+  </style>
+  <defs>
+    <marker id="mhead" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--accent-stroke)" />
+    </marker>
+    <clipPath id="field">
+      <rect x="26" y="90" width="176" height="120" rx="4" />
+    </clipPath>
+  </defs>
+
+  <text class="title" x="24" y="22">Where the sample actually travels when time advances</text>
+
+  <!-- scroll -->
+  <text class="sub" x="24" y="50">scroll &#183; 2D noise</text>
+  <text class="code" x="24" y="68">noise2(p + t&#183;dir)</text>
+  <rect class="box" x="26" y="90" width="176" height="120" rx="4" />
+  <g clip-path="url(#field)">
+    <ellipse class="blob" cx="72" cy="122" rx="30" ry="19" />
+    <ellipse class="blob" cx="146" cy="154" rx="36" ry="21" />
+    <ellipse class="blob" cx="58" cy="192" rx="25" ry="15" />
+    <ellipse class="blob" cx="176" cy="104" rx="22" ry="13" />
+  </g>
+  <rect class="win" x="36" y="150" width="66" height="46" rx="3" />
+  <rect class="win" x="94" y="117" width="66" height="46" rx="3" />
+  <path class="move" d="M69,173 L124,141" marker-end="url(#mhead)" />
+  <text class="note" x="24" y="230">the field is fixed; the window moves</text>
+
+  <!-- slice -->
+  <text class="sub" x="220" y="50">slice &#183; 3D noise</text>
+  <text class="code" x="220" y="68">noise3(p.x, p.y, t)</text>
+  <rect class="slab" x="292" y="84" width="100" height="76" rx="4" />
+  <rect class="slab-hi" x="264" y="112" width="100" height="76" rx="4" />
+  <rect class="slab" x="236" y="140" width="100" height="76" rx="4" />
+  <path class="move" d="M228,150 L282,96" marker-end="url(#mhead)" />
+  <text class="sub" x="288" y="92">t</text>
+  <text class="note" x="220" y="230">every t is a different 2D field</text>
+
+  <!-- loop -->
+  <text class="sub" x="416" y="50">loop &#183; 4D noise</text>
+  <text class="code" x="416" y="68">noise4(p.x, p.y, R&#183;cos &#969;t, R&#183;sin &#969;t)</text>
+  <path class="axis" d="M436,150 L566,150 M500,214 L500,86" />
+  <text class="note" x="570" y="154">z</text>
+  <text class="note" x="494" y="84" text-anchor="end">w</text>
+  <circle class="orbit" cx="500" cy="150" r="52" />
+  <circle class="dot-acc" cx="552" cy="150" r="5" />
+  <path class="move" d="M552,150 A52,52 0 0,0 534,111" marker-end="url(#mhead)" />
+  <circle class="dot-acc" cx="530" cy="107" r="4.5" />
+  <text class="note" x="540" y="96">&#969;t</text>
+  <text class="note" x="416" y="230">t = 0 and t = T land on the same point</text>
+
+  <line class="rule" x1="24" y1="252" x2="596" y2="252" />
+  <text class="note" x="24" y="272">hash calls per sample, value noise:</text>
+  <text class="code" x="220" y="272">2&#178; = 4 corners</text>
+  <text class="code" x="330" y="272">2&#179; = 8 corners</text>
+  <text class="code" x="440" y="272">2&#8308; = 16 corners</text>
+  <text class="note" x="24" y="292">Simplex pays n+1 instead:</text>
+  <text class="code" x="220" y="292">3</text>
+  <text class="code" x="330" y="292">4</text>
+  <text class="code" x="440" y="292">5</text>
+
+  <text class="foot" x="310" y="324" text-anchor="middle">Scroll moves the field rigidly: a blob keeps its shape forever.</text>
+  <text class="foot" x="310" y="342" text-anchor="middle">Only a real extra coordinate lets features grow, split and dissolve.</text>
+  <text class="foot" x="310" y="360" text-anchor="middle">Slice never visibly repeats but never closes; the 4D circle is what makes the last frame bit-identical to the first.</text>
+</svg>

@@ -1,0 +1,18 @@
+{
+  "render <HeavyExhibit />": null,
+  "useLoader(loader, url)": null,
+  "cache lookup on the key [loader, url]": null,
+  "hit -> returns the value, renders synchronously": null,
+  "useLoader.preload(loader, url) fills this same key early": null,
+  "miss": null,
+  "loader.load(url, onLoad, onProgress, onError)": null,
+  "useLoader throws the still-pending Promise": null,
+  "the nearest <Suspense> catches the throw": null,
+  "fallback must be a mesh, a <group>, or drei <Html>": null,
+  "onLoad": null,
+  "the cache stores the resolved value": null,
+  "React retries the subtree — now a hit": null,
+  "onError": null,
+  "the next render throws a real Error": null,
+  "Suspense ignores it — Error Boundary catches": null
+}

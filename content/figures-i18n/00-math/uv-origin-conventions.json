@@ -1,0 +1,14 @@
+{
+  "WebGL / OpenGL texture": null,
+  "origin bottom-left, v points up": null,
+  "v": null,
+  "u": null,
+  "(0, 0)": null,
+  "(1, 1)": null,
+  "(0.3, 0.75)": null,
+  "Image / 2D canvas": null,
+  "origin top-left, v points down": null,
+  "(0.3, 0.25)": null,
+  "Same texel, same u — only v flips: v_gl = 1 - v_image.": null,
+  "Upload an image into a GL texture without that flip and it renders upside down.": null
+}

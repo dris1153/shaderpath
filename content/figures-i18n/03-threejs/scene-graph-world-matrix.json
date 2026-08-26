@@ -1,0 +1,19 @@
+{
+  "updateMatrixWorld() walks top-down": null,
+  "Scene": null,
+  "sun": null,
+  "Mesh": null,
+  "planetGroup": null,
+  "Group": null,
+  "planet": null,
+  "moonGroup": null,
+  "moon": null,
+  "worldMatrix = parent.worldMatrix × localMatrix": null,
+  "one multiply per node, parents resolved first": null,
+  "moon.matrixWorld": null,
+  "= sun.matrix × planetGroup.matrix": null,
+  "× moonGroup.matrix × moon.matrix": null,
+  "Scene.matrixWorld is identity, so it drops out": null,
+  "localMatrix = T · R · S": null,
+  "updateMatrix() packs .position/.quaternion/.scale": null
+}

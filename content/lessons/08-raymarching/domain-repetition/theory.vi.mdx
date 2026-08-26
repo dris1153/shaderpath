@@ -25,7 +25,7 @@ Track 6 dạy `InstancedMesh` — cách rasterize hàng nghìn bản sao một m
 Công thức fold ở trên ngầm giả định object nằm gọn trong nửa ô ($\|q\|$ nhỏ hơn $0.5c$ theo mọi hướng) — tức bản sao "chính chủ" của ô hiện tại luôn là bản sao gần nhất với mọi điểm truy vấn trong ô đó. Giả định này vỡ khi object KHÔNG đối xứng quanh tâm ô — object lệch tâm, hoặc mỗi ô một biến thể (hash kích thước/chiều cao). (Object đối xứng đặt đúng tâm thì dù to quá cỡ ô cũng không gây overstepping: đối xứng gương qua biên ô giữ trường sau fold liên tục và 1-Lipschitz — các bản sao chỉ dính/cắt nhau sai hình.) Gần biên ô, một bản sao ở ô lân cận có thể thực sự gần điểm truy vấn hơn bản sao đã fold — nhưng SDF chỉ đánh giá đúng một bản sao (của ô hiện tại), nên giá trị trả về là một khoảng cách LỚN HƠN khoảng cách thật tới bề mặt gần nhất. Đây là vi phạm trực tiếp điều kiện Lipschitz-1 mà sphere tracing dựa vào (bài Nguyên lý sphere tracing): bước march tính từ một $d(p)$ bị thổi phồng có thể nhảy quá xa, xuyên qua bề mặt thật ở đúng vùng hai ô chạm nhau, hiện ra thành vệt răng cưa hoặc lỗ hổng ngay tại đường lưới.
 
 <Figure
-  src="/figures/08-raymarching/domain-fold-one-cell.svg"
+  src="/figures/08-raymarching/domain-fold-one-cell/vi.svg"
   alt="Trên: năm ô của một thế giới lặp, mỗi ô có một mũi tên gập về cùng một ô chuẩn chứa đúng một bản sao. Dưới: hai ô có vật thể lệch tâm, khoảng cách mà map() trả về dài hơn hẳn khoảng cách tới bản sao ở ô bên cạnh"
   caption="Các bản sao không được lưu ở đâu cả — toạ độ mới là thứ bị gập, nên một lần gọi trả lời cho tất cả. Cái giá là mỗi truy vấn chỉ đo được đúng một bản sao, và đó chính là lý do vật thể lệch tâm khiến khoảng cách trả về dài quá mức an toàn."
 />

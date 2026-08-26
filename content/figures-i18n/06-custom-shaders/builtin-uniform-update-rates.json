@@ -1,0 +1,20 @@
+{
+  "Once per camera switch": null,
+  "only when refreshProgram or the": null,
+  "active camera actually changed": null,
+  "projectionMatrix": null,
+  "viewMatrix": null,
+  "cameraPosition": null,
+  "isOrthographic": null,
+  "Every object, every frame": null,
+  "written unconditionally — there is": null,
+  "no \"did it change\" check at all": null,
+  "modelMatrix": null,
+  "modelViewMatrix": null,
+  "normalMatrix": null,
+  "Inside one frame: one camera, N meshes": null,
+  "camera block runs 1x": null,
+  "object block runs N times": null,
+  "modelViewMatrix and normalMatrix depend on the camera AND the object at once —": null,
+  "no two meshes can ever share them, so there is nothing to cache.": null
+}

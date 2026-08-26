@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="640" height="320" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .stage { font-size: 13px; font-weight: 600; }
+    .group { font-size: 13px; font-weight: 600; }
+    .group-accent { fill: var(--accent-ink); }
+    .note { font-size: 12px; fill: var(--muted); }
+    .inbar { font-size: 12px; font-weight: 600; }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .guide { stroke: var(--line); stroke-width: 1.5; fill: none; stroke-dasharray: 3 4; }
+  </style>
+
+  <text class="title" x="20" y="22">A property change re-runs its stage and every stage after it</text>
+
+  <rect class="box" x="20" y="38" width="140" height="48" rx="8" />
+  <text class="stage" x="90" y="60" text-anchor="middle">1. Style</text>
+  <text class="note" x="90" y="77" text-anchor="middle">recalculate CSS</text>
+
+  <rect class="box" x="174" y="38" width="140" height="48" rx="8" />
+  <text class="stage" x="244" y="60" text-anchor="middle">2. Layout</text>
+  <text class="note" x="244" y="77" text-anchor="middle">size + position</text>
+
+  <rect class="box" x="328" y="38" width="140" height="48" rx="8" />
+  <text class="stage" x="398" y="60" text-anchor="middle">3. Paint</text>
+  <text class="note" x="398" y="77" text-anchor="middle">rasterize pixels</text>
+
+  <rect class="box" x="482" y="38" width="140" height="48" rx="8" />
+  <text class="stage" x="552" y="60" text-anchor="middle">4. Composite</text>
+  <text class="note" x="552" y="77" text-anchor="middle">GPU merges layers</text>
+
+  <path class="guide" d="M174,86 L174,120 M328,86 L328,178 M482,86 L482,236" />
+
+  <text class="group" x="160" y="129" text-anchor="end">Layout group</text>
+  <text class="note" x="160" y="145" text-anchor="end">3 stages, every frame</text>
+  <rect class="box" x="174" y="120" width="448" height="24" rx="6" />
+  <text class="inbar" x="186" y="136">width, height, top, left, margin, padding, font-size</text>
+
+  <text class="group" x="160" y="187" text-anchor="end">Paint group</text>
+  <text class="note" x="160" y="203" text-anchor="end">2 stages</text>
+  <rect class="box" x="328" y="178" width="294" height="24" rx="6" />
+  <text class="inbar" x="338" y="194">color, background, box-shadow, border-radius</text>
+
+  <text class="group group-accent" x="160" y="245" text-anchor="end">Composite group</text>
+  <text class="note" x="160" y="261" text-anchor="end">1 stage, on the GPU</text>
+  <rect class="box-accent" x="482" y="236" width="140" height="24" rx="6" />
+  <text class="inbar" x="492" y="252">transform, opacity</text>
+
+  <text class="note" x="20" y="286">A progress bar animating width sits on the top lane; scaleX with transform-origin: left</text>
+  <text class="note" x="20" y="304">looks identical and sits on the bottom one. will-change only pre-creates the layer.</text>
+</svg>

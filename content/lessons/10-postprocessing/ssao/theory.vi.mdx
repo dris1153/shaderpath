@@ -23,7 +23,7 @@ Với kernel cố định, xoay cùng hướng ở mọi pixel, AO sẽ có dả
 `kernelRadius` ($8$ mặc định) là bán kính bán cầu theo **view-space unit** — cùng đơn vị thế giới cảnh, không phải pixel — càng lớn, AO càng loang rộng từ mỗi góc lõm.
 
 <Figure
-  src="/figures/10-postprocessing/ssao-hemisphere-kernel.svg"
+  src="/figures/10-postprocessing/ssao-hemisphere-kernel/vi.svg"
   alt="Điểm p đang được tô bóng trên một bề mặt cùng pháp tuyến view-space, một bán cầu nét đứt bán kính kernelRadius bao quanh chứa mười một chấm mẫu, ba trong số đó rơi vào một bề mặt gần hơn và bị đánh dấu là bị che, cạnh một panel mô tả phép so sánh độ sâu cho từng mẫu"
   caption="Một mẫu chỉ bị tính là bị che khi độ sâu đã lưu tại pixel của nó nằm phía trước nó quá minDistance và dưới maxDistance — toàn bộ phép thử chỉ là một lần so sánh với buffer, không bao giờ với hình học thật."
 />

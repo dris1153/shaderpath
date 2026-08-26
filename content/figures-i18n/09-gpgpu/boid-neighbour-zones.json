@@ -1,0 +1,15 @@
+{
+  "One boid's neighbourhood: three rules, three nested radii cut from the single perception radius R.": null,
+  "separation, inside 0.4 R": null,
+  "push away, strength ~ 1 / d²": null,
+  "alignment, inside 0.7 R": null,
+  "steer toward the neighbours' mean velocity": null,
+  "cohesion, the full R": null,
+  "steer toward their mean position": null,
+  "The nesting is the whole balance: separation": null,
+  "has to win up close, or alignment and cohesion": null,
+  "pull the flock into one overlapping clump.": null,
+  "No boid knows the flock's shape: each one sums these three local vectors and nothing else.": null,
+  "To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel": null,
+  "neighbours are not spatial neighbours, so the only cheap cut is striding (k = 8 leaves an eighth).": null
+}

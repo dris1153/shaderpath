@@ -50,7 +50,7 @@ Hai điều kiện dừng đối lập: `d < epsilon` là **hit** — tia đã �
 Tăng `maxSteps` cho thêm cơ hội hội tụ, lấp lỗ — đổi lại chi phí: mỗi bước là một lần gọi $f(p)$, và ở cảnh phức tạp, $f$ có thể tốn hàng chục phép toán mỗi lần.
 
 <Figure
-  src="/figures/08-raymarching/sphere-tracing-safe-step.svg"
+  src="/figures/08-raymarching/sphere-tracing-safe-step/vi.svg"
   alt="Hai panel: một tia chạm bề mặt sau sáu bước, mỗi bước kết thúc đúng trên đường tròn nét đứt bán kính f(p) tiếp xúc bề mặt gần nhất; bên dưới là một tia lướt cạnh có các bước dồn lại thành cụm dày đặc trước khi tới được bề mặt"
   caption="Đường tròn đó chính là toàn bộ đảm bảo: bước dừng trên nó, không bao giờ vượt qua. Khi bề mặt gần nhất nằm cạnh tia thay vì nằm phía trước, cũng quy tắc ấy biến thành bò từng chút, và ngân sách bước cạn trước khi tia kịp tới."
 />

@@ -1,0 +1,18 @@
+{
+  "Pass 1: render the scene from the light": null,
+  "camera = light.shadow.camera (Orthographic for a DirectionalLight)": null,
+  "only meshes with castShadow = true are drawn — depth, no colour": null,
+  "Shadow map — a depth texture": null,
+  "mapSize × mapSize texels, one depth value each:": null,
+  "how far the nearest surface is from the light": null,
+  "Pass 2: render the scene from the camera": null,
+  "each fragment of a receiveShadow surface runs these three steps": null,
+  "shadowCoord = shadow.matrix × (worldPos + N·normalBias)": null,
+  "bias 1 — shift the sample point along the surface normal N": null,
+  "shadowCoord.xyz /= shadowCoord.w": null,
+  "perspective divide: xy become texture coords, z the depth": null,
+  "shadowCoord.z + bias <= depth stored at shadowCoord.xy": null,
+  "true -> lit; false -> something nearer the light blocks it": null,
+  "where a depth bias is applied:": null,
+  "too little leaves shadow acne, too much causes peter-panning": null
+}

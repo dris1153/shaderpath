@@ -11,7 +11,7 @@ That grouping unit has a vendor-specific name: NVIDIA calls it a **warp**, fixed
 What happens when an `if` inside a warp evaluates differently across lanes — say 20 lanes take the `true` branch, the remaining 12 take `false`? The hardware cannot execute two different instructions at once for the same warp (that's the definition of lockstep), so it does the only thing it can: run **both branches sequentially** for the entire warp, using an **execution mask** to suppress writes on lanes not in the currently-running branch. Pass 1: all 32 lanes "run" the `true` branch's code, but only 20 lanes actually commit results — the other 12 are silently masked off. Pass 2: flip it for the `false` branch. The total cost is roughly the **sum** of both branches' cost, for the entire warp — not an average, and definitely not "you only pay for the path you took." This is called **divergence**, and it's the single reason `if` on a GPU behaves nothing like `if` on a CPU.
 
 <Figure
-  src="/figures/02-glsl/warp-divergence.svg"
+  src="/figures/02-glsl/warp-divergence/en.svg"
   alt="A warp of 8 lanes hitting a divergent if: pass 1 runs the then branch with the false lanes masked off, pass 2 runs the else branch with the true lanes masked off, then the warp reconverges; below it, a non-divergent warp that runs one branch only"
   caption="The bill is set by the branches the whole warp has to walk, not by the branch each lane wanted — which is exactly why a condition that agrees across the warp is the cheap one."
 />

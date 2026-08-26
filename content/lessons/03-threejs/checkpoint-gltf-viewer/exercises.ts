@@ -169,7 +169,7 @@ function dispose() {
   renderer.dispose();
 }
 window.addEventListener("beforeunload", dispose);`,
-    referenceImage: "/figures/03-threejs/checkpoint-gltf-viewer.png",
+    referenceImage: { vi: "/figures/03-threejs/checkpoint-gltf-viewer.png", en: "/figures/03-threejs/checkpoint-gltf-viewer.png" },
     hints: [
       {
         vi: "Box3.setFromObject phải chạy bên trong callback onLoad, sau khi parse xong — gọi sớm hơn sẽ ra bounding box rỗng (kích thước 0). Model có nằm trong scene hay chưa không quan trọng.",

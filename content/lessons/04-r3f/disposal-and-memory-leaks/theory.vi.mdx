@@ -13,7 +13,7 @@ Nhưng "tự khởi tạo từ JSX" hẹp hơn nhiều người nghĩ. Ba trư�
 3. **Event listener và RAF handle** đăng ký tay (`addEventListener`, `requestAnimationFrame` gọi trực tiếp ngoài `useFrame`) — không phải object Three.js nên "dispose" không áp dụng, nhưng quên gỡ gây leak closure cùng bản chất.
 
 <Figure
-  src="/figures/04-r3f/disposal-ownership.svg"
+  src="/figures/04-r3f/disposal-ownership/vi.svg"
   alt="Bảng phân định dispose lúc unmount: cột R3F tự dispose gồm các tag JSX do reconciler dựng, cột bạn phải tự dispose gồm primitive, new THREE.X trong useMemo, render target và listener"
   caption="Ranh giới chỉ là ai đã gọi new — R3F dọn đúng object chính nó dựng, mọi thứ còn lại giữ nguyên VRAM cho tới khi bạn tự gọi dispose."
 />

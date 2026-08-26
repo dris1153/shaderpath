@@ -5,7 +5,7 @@ Mọi lệnh vẽ (`gl.drawArrays`, `gl.drawElements`) ghi kết quả vào mộ
 ## Render-to-texture: gắn texture làm color attachment
 
 <Figure
-  src="/figures/01-webgl/fbo-attachments.svg"
+  src="/figures/01-webgl/fbo-attachments/vi.svg"
   alt="Framebuffer object với COLOR_ATTACHMENT0 gắn một texture rỗng và depth attachment là renderbuffer; pass 1 vẽ vào FBO, pass 2 sample texture đó ra framebuffer mặc định"
   caption="Bản thân FBO không chứa pixel nào — ảnh rơi vào texture được attach, và chính điều đó cho phép pass 2 đọc lại đúng thứ pass 1 vừa vẽ. Ô depth trong sơ đồ dùng renderbuffer (vùng nhớ vẽ-được nhưng không sample-được) — scene 3D cần thêm nó, còn bài này vẽ 2D nên chỉ cần color."
 />

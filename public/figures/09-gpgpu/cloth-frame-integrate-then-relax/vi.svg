@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 432" width="640" height="432" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --loop-fill: #fef3c7;
+      --loop-stroke: #d97706;
+      --loop-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --loop-fill: #422006;
+        --loop-stroke: #fbbf24;
+        --loop-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .chip { font-size: 11px; }
+    .formula { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-loop { fill: var(--loop-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .box-loop { fill: var(--loop-fill); stroke: var(--loop-stroke); stroke-width: 2; }
+    .chip-box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="note" x="24" y="24">One cloth frame, in order — and why the constraint loop cannot be a compute variable.</text>
+
+  <rect class="box-accent" x="24" y="42" width="336" height="96" rx="8" />
+  <text class="title ink-accent" x="38" y="64">1. gpu.compute() — one pass per variable</text>
+  <rect class="chip-box" x="38" y="74" width="308" height="26" rx="5" />
+  <text class="chip" x="50" y="92">texturePositionPrev &#8592; last frame&#39;s texturePosition</text>
+  <rect class="chip-box" x="38" y="104" width="308" height="26" rx="5" />
+  <text class="chip" x="50" y="122">texturePosition &#8592; Verlet step + gravity + wind</text>
+  <path class="arrow" d="M192,138 L192,156" marker-end="url(#head)" />
+
+  <rect class="box-loop" x="24" y="158" width="336" height="98" rx="8" />
+  <text class="title ink-loop" x="38" y="180">2. relax x N — doRenderTarget, by hand</text>
+  <text class="note" x="38" y="200">a variable runs its shader once per compute(), and</text>
+  <text class="note" x="38" y="218">stiff cloth needs 4-8 full-grid passes to hold shape</text>
+  <text class="note" x="38" y="236">Jacobi: one pass moves a correction exactly one texel</text>
+  <path class="arrow" d="M192,256 L192,274" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="276" width="336" height="64" rx="8" />
+  <text class="title" x="38" y="298">3. renderTexture(relaxed, texturePosition)</text>
+  <text class="note" x="38" y="318">next frame&#39;s x - x_prev then measures the relaxed shape</text>
+  <path class="arrow" d="M192,340 L192,358" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="360" width="336" height="56" rx="8" />
+  <text class="title" x="38" y="382">4. render pass samples texturePosition</text>
+  <text class="note" x="38" y="402">the same texture the whole frame just rewrote</text>
+
+  <rect class="box" x="384" y="42" width="232" height="250" rx="8" />
+  <text class="title" x="398" y="66">There is no velocity texture</text>
+  <text class="note" x="398" y="88">Verlet keeps two positions instead:</text>
+  <text class="formula ink-accent" x="398" y="112">x&#39; = x + (x - x_prev) d + a dt&#178;</text>
+  <text class="note" x="398" y="138">so velocity is only the gap between</text>
+  <text class="note" x="398" y="156">the two textures. When step 2 nudges</text>
+  <text class="note" x="398" y="174">a point, the velocity it implies is</text>
+  <text class="note" x="398" y="192">corrected in the same move — which</text>
+  <text class="note" x="398" y="210">is exactly what step 3 protects.</text>
+  <text class="note" x="398" y="240">The alpha channel carries the pin</text>
+  <text class="note" x="398" y="258">mask: a pinned point skips both step 1</text>
+  <text class="note" x="398" y="276">and step 2 and rewrites its rest spot.</text>
+
+  <rect class="box" x="384" y="306" width="232" height="110" rx="8" />
+  <text class="title" x="398" y="330">Scratch targets, not variables</text>
+  <text class="note" x="398" y="352">The relax loop ping-pongs a pair of its</text>
+  <text class="note" x="398" y="370">own scratch targets, outside both</text>
+  <text class="note" x="398" y="388">variables — which is exactly why its</text>
+  <text class="note" x="398" y="406">result has to be copied back in step 3.</text>
+</svg>

@@ -5,7 +5,7 @@ Every draw call (`gl.drawArrays`, `gl.drawElements`) writes its result into whic
 ## Render-to-Texture: Attaching a Texture as the Color Attachment
 
 <Figure
-  src="/figures/01-webgl/fbo-attachments.svg"
+  src="/figures/01-webgl/fbo-attachments/en.svg"
   alt="A framebuffer object whose COLOR_ATTACHMENT0 is backed by an empty texture and whose depth attachment is a renderbuffer, with pass 1 drawing into the FBO and pass 2 sampling that texture onto the default framebuffer"
   caption="The FBO holds no pixels of its own — the image lands in the attached texture, and that is precisely what lets pass 2 read back whatever pass 1 drew. The depth slot in the diagram uses a renderbuffer (render-into-able but not sample-able memory) — 3D scenes need one; this lesson draws 2D, so color alone suffices."
 />

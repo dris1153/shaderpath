@@ -12,7 +12,7 @@ Bài trước dừng ở $F(\theta)$: bề mặt phản xạ bao nhiêu theo gó
 Không có phép trộn hai "kết quả render" — chỉ một input bị đổi vai trò triệt để. Filament's PBR guide (google.github.io/filament/Filament.md.html) nói thẳng: *"Metallic is almost a binary value... Intermediate values are meant for transitions between surface types (metal to rust for instance)"* — không vật liệu thật nào "nửa kim loại" ở cấp vi mô. Giá trị giữa $0$ và $1$ chỉ có ý nghĩa ở hai trường hợp: (1) **ranh giới mask** — biên giữa vùng kim loại sạch và rỉ sét/sơn phủ, nơi lọc mipmap tự nhiên tạo giá trị trung gian dù hoạ sĩ chỉ vẽ mask nhị phân; (2) **chuyển tiếp có chủ đích** — dải rỉ sét/bẩn vẽ mờ dần. Ngoài hai trường hợp đó, $0.5$ cho cả bề mặt là tổ hợp không vật lý.
 
 <Figure
-  src="/figures/11-pbr/f0-dielectric-vs-metal.svg"
+  src="/figures/11-pbr/f0-dielectric-vs-metal/vi.svg"
   alt="Hai mặt cắt của bề mặt được chiếu sáng: với phi kim, F0 khoảng 0.04 và phần còn lại khúc xạ vào trong rồi thoát ra thành diffuse; với kim loại F0 chính là bộ ba albedo và phần khúc xạ bị hấp thụ, phía dưới là dải ghi công thức mix và kd"
   caption="metalness chỉ hoán vai của cùng một giá trị albedo — hai mặt cắt cho thấy chính xác cái gì đổi."
 />
@@ -40,7 +40,7 @@ Trước metalness/roughness, ngành có chuẩn song song: **specular/glossines
 Bài `checkpoint-material-study` ngay sau yêu cầu dựng dãy quả cầu quét lưới metalness × roughness để đối chiếu bằng mắt; các bài IBL nửa sau track quay lại đúng bộ albedo/metalness/roughness để quyết định cách trộn ánh sáng môi trường.
 
 <Figure
-  src="/figures/11-pbr/orm-channel-routing.svg"
+  src="/figures/11-pbr/orm-channel-routing/vi.svg"
   alt="Texture albedo và texture normal bên trái, cạnh một ảnh ORM chia thành ba dải R, G, B, với các mũi tên đưa từng kênh sang material.aoMap, material.roughnessMap và material.metalnessMap kèm dòng shader tương ứng"
   caption="Một ảnh nuôi ba slot, và map nào là dữ liệu màu còn map nào thì không."
 />

@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 330" width="620" height="330" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --pos-fill: #dbeafe;
+      --pos-stroke: #2563eb;
+      --pos-ink: #1e3a8a;
+      --col-fill: #fef3c7;
+      --col-stroke: #d97706;
+      --col-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --pos-fill: #1e3a5f;
+        --pos-stroke: #60a5fa;
+        --pos-ink: #bfdbfe;
+        --col-fill: #422006;
+        --col-stroke: #fbbf24;
+        --col-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 15px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .cell-label { font-size: 14px; font-weight: 600; }
+    .byte { font-size: 11px; fill: var(--muted); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .cell-pos { fill: var(--pos-fill); stroke: var(--pos-stroke); stroke-width: 1.5; }
+    .cell-col { fill: var(--col-fill); stroke: var(--col-stroke); stroke-width: 1.5; }
+    .ink-pos { fill: var(--pos-ink); }
+    .ink-col { fill: var(--col-ink); }
+    .span { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .wire-pos { stroke: var(--pos-stroke); stroke-width: 1.5; fill: none; }
+    .wire-col { stroke: var(--col-stroke); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head-pos" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--pos-stroke)" />
+    </marker>
+    <marker id="head-col" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--col-stroke)" />
+    </marker>
+  </defs>
+
+  <!-- the VAO: recorded pointer settings, no data -->
+  <rect class="box" x="40" y="16" width="540" height="92" rx="8" />
+  <text class="title" x="58" y="40">VAO: a record of attribute pointers</text>
+  <text class="note" x="58" y="58">it stores no vertex data of its own</text>
+  <rect class="cell-pos" x="58" y="70" width="12" height="12" rx="3" />
+  <text class="note" x="78" y="80">aPosition: size 2, FLOAT, stride 20, offset 0</text>
+  <rect class="cell-col" x="58" y="88" width="12" height="12" rx="3" />
+  <text class="note" x="78" y="98">aColor: size 3, FLOAT, stride 20, offset 8</text>
+
+  <path class="wire-pos" d="M65,108 L65,146" marker-end="url(#head-pos)" />
+  <path class="wire-col" d="M165,108 L165,146" marker-end="url(#head-col)" />
+
+  <!-- the VBO: one flat interleaved byte run -->
+  <text class="note" x="580" y="142" text-anchor="end">VBO: one interleaved Float32Array</text>
+  <rect class="cell-pos" x="40" y="150" width="50" height="42" />
+  <rect class="cell-pos" x="90" y="150" width="50" height="42" />
+  <rect class="cell-col" x="140" y="150" width="50" height="42" />
+  <rect class="cell-col" x="190" y="150" width="50" height="42" />
+  <rect class="cell-col" x="240" y="150" width="50" height="42" />
+  <rect class="cell-pos" x="290" y="150" width="50" height="42" />
+  <rect class="cell-pos" x="340" y="150" width="50" height="42" />
+  <rect class="cell-col" x="390" y="150" width="50" height="42" />
+  <rect class="cell-col" x="440" y="150" width="50" height="42" />
+  <rect class="cell-col" x="490" y="150" width="50" height="42" />
+  <text class="cell-label ink-pos" x="65" y="177" text-anchor="middle">x</text>
+  <text class="cell-label ink-pos" x="115" y="177" text-anchor="middle">y</text>
+  <text class="cell-label ink-col" x="165" y="177" text-anchor="middle">r</text>
+  <text class="cell-label ink-col" x="215" y="177" text-anchor="middle">g</text>
+  <text class="cell-label ink-col" x="265" y="177" text-anchor="middle">b</text>
+  <text class="cell-label ink-pos" x="315" y="177" text-anchor="middle">x</text>
+  <text class="cell-label ink-pos" x="365" y="177" text-anchor="middle">y</text>
+  <text class="cell-label ink-col" x="415" y="177" text-anchor="middle">r</text>
+  <text class="cell-label ink-col" x="465" y="177" text-anchor="middle">g</text>
+  <text class="cell-label ink-col" x="515" y="177" text-anchor="middle">b</text>
+  <text class="cell-label" x="550" y="177">...</text>
+
+  <!-- byte ruler -->
+  <text class="byte" x="40" y="208" text-anchor="middle">0</text>
+  <text class="byte" x="90" y="208" text-anchor="middle">4</text>
+  <text class="byte" x="140" y="208" text-anchor="middle">8</text>
+  <text class="byte" x="190" y="208" text-anchor="middle">12</text>
+  <text class="byte" x="240" y="208" text-anchor="middle">16</text>
+  <text class="byte" x="290" y="208" text-anchor="middle">20</text>
+  <text class="byte" x="340" y="208" text-anchor="middle">24</text>
+  <text class="byte" x="390" y="208" text-anchor="middle">28</text>
+  <text class="byte" x="440" y="208" text-anchor="middle">32</text>
+  <text class="byte" x="490" y="208" text-anchor="middle">36</text>
+  <text class="byte" x="540" y="208" text-anchor="middle">40</text>
+  <text class="byte" x="556" y="208">bytes</text>
+
+  <!-- measured spans -->
+  <path class="span" d="M40,226 L40,238 M40,232 L140,232 M140,226 L140,238" />
+  <text class="note" x="150" y="236">offset 8: where aColor starts inside each vertex</text>
+
+  <path class="span" d="M40,262 L40,274 M40,268 L290,268 M290,262 L290,274" />
+  <text class="note" x="300" y="272">stride 20: bytes to the next vertex</text>
+
+  <text class="note" x="40" y="312">Off by 4 bytes and the GPU reads the wrong float as colour: no error, just wrong pixels.</text>
+</svg>

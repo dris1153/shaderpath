@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 336" width="560" height="336" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --alt-fill: #fef3c7;
+      --alt-stroke: #d97706;
+      --alt-ink: #92400e;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --alt-fill: #422006;
+        --alt-stroke: #fbbf24;
+        --alt-ink: #fde68a;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .stage { font-size: 15px; font-weight: 600; }
+    .cell { font-size: 14px; font-weight: 600; }
+    .note { font-size: 12px; fill: var(--muted); }
+    .key { font-weight: 600; fill: var(--ink); }
+    .legend { font-size: 12px; fill: var(--muted); }
+    .block-a { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .block-b { fill: var(--alt-fill); stroke: var(--alt-stroke); stroke-width: 2; }
+    .block-c { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .bracket { stroke: var(--ink); stroke-width: 2; fill: none; }
+    .rule { stroke: var(--line); stroke-width: 1; }
+  </style>
+
+  <!-- 4x4 matrix: 3x3 linear block, translation column, bottom row -->
+  <path class="bracket" d="M42,28 L34,28 L34,200 L42,200" />
+  <path class="bracket" d="M206,28 L214,28 L214,200 L206,200" />
+
+  <rect class="block-a" x="44" y="34" width="120" height="120" rx="4" />
+  <text class="stage" x="104" y="99" text-anchor="middle" fill="var(--accent-ink)">R · S</text>
+
+  <rect class="block-b" x="164" y="34" width="40" height="120" rx="4" />
+  <text class="cell" x="184" y="59" text-anchor="middle" fill="var(--alt-ink)">tx</text>
+  <text class="cell" x="184" y="99" text-anchor="middle" fill="var(--alt-ink)">ty</text>
+  <text class="cell" x="184" y="139" text-anchor="middle" fill="var(--alt-ink)">tz</text>
+
+  <rect class="block-c" x="44" y="154" width="160" height="40" rx="4" />
+  <text class="cell" x="64" y="179" text-anchor="middle" fill="var(--muted)">0</text>
+  <text class="cell" x="104" y="179" text-anchor="middle" fill="var(--muted)">0</text>
+  <text class="cell" x="144" y="179" text-anchor="middle" fill="var(--muted)">0</text>
+  <text class="cell" x="184" y="179" text-anchor="middle">1</text>
+
+  <!-- legend -->
+  <rect class="block-a" x="248" y="62" width="14" height="14" rx="3" />
+  <text class="legend" x="272" y="73">3×3 block: rotate and scale</text>
+  <rect class="block-b" x="248" y="98" width="14" height="14" rx="3" />
+  <text class="legend" x="272" y="109">4th column: translation (tx, ty, tz)</text>
+  <rect class="block-c" x="248" y="134" width="14" height="14" rx="3" />
+  <text class="legend" x="272" y="145">bottom row 0 0 0 1: leaves w unchanged</text>
+
+  <!-- what w selects -->
+  <text class="note" x="44" y="230"><tspan class="key">(x, y, z, 1)</tspan> is a point — the translation column is added in</text>
+  <text class="note" x="44" y="252"><tspan class="key">(x, y, z, 0)</tspan> is a direction — added with weight 0, so it never moves</text>
+
+  <path class="rule" d="M44,274 L516,274" />
+
+  <!-- perspective divide -->
+  <text class="note" x="44" y="298">A projection matrix breaks that bottom row: it writes w = -z of view space,</text>
+  <text class="note" x="44" y="318">then the GPU divides every vertex: (x/w, y/w, z/w) -&gt; NDC.</text>
+</svg>

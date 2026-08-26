@@ -1,0 +1,23 @@
+{
+  "0": null,
+  "1": null,
+  "2": null,
+  "3": null,
+  "4": null,
+  "8": null,
+  "Four octaves of the same noise, one accumulator": null,
+  "octave i": null,
+  "frequency lⁱ": null,
+  "amplitude gⁱ": null,
+  "amplitude × noise(lⁱ · p)": null,
+  "1/2": null,
+  "1/4": null,
+  "1/8": null,
+  "sum, then normalise": null,
+  "÷ Σ gⁱ = (1 − gᴺ)/(1 − g)": null,
+  "= 1.875 at N = 4, g = 0.5": null,
+  "Without that divisor, changing N alone shifts the": null,
+  "whole image brighter or darker.": null,
+  "g and l reshape the whole spectrum at once — an octave is a sample point on it, not a layer you design.": null,
+  "Cost is linear in N, but an octave with a period under one pixel buys flicker, not detail — hence the 6–8 ceiling.": null
+}

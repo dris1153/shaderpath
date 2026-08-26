@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 516" width="660" height="516" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --cost-fill: #fef3c7;
+      --cost-stroke: #d97706;
+      --cost-ink: #92400e;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --cost-fill: #422006;
+        --cost-stroke: #fbbf24;
+        --cost-ink: #fde68a;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 14px; font-weight: 600; }
+    .col { font-size: 12px; font-weight: 600; fill: var(--muted); }
+    .head { font-size: 13px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .foot { font-size: 12px; fill: var(--muted); }
+    .ink-accent { fill: var(--accent-ink); }
+    .ink-cost { fill: var(--cost-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-cost { fill: var(--cost-fill); stroke: var(--cost-stroke); stroke-width: 2; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+    .plane { stroke: var(--line); stroke-width: 2; fill: none; }
+    .out { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+    .in { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .dim { stroke: var(--accent-stroke); stroke-width: 1.2; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="24">What the renderer decides per object, before a single draw call</text>
+  <text class="note" x="24" y="42">WebGLRenderer.projectObject(), once per object, every frame</text>
+
+  <rect class="box" x="24" y="58" width="332" height="42" rx="8" />
+  <text class="head" x="36" y="78">object.visible === false</text>
+  <text class="note" x="36" y="94">returns immediately — this object and its whole subtree</text>
+  <path class="arrow" d="M190,100 L190,112" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="114" width="332" height="42" rx="8" />
+  <text class="head" x="36" y="134">object.layers.test(camera.layers)</text>
+  <text class="note" x="36" y="150">fails: this object is skipped, its children are still walked</text>
+  <path class="arrow" d="M190,156 L190,168" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="170" width="332" height="42" rx="8" />
+  <text class="head" x="36" y="190">object.frustumCulled === false</text>
+  <text class="note" x="36" y="206">straight into the render list, with no test at all</text>
+  <path class="arrow" d="M190,212 L190,224" marker-end="url(#head)" />
+
+  <rect class="box-accent" x="24" y="226" width="332" height="42" rx="8" />
+  <text class="head ink-accent" x="36" y="246">_frustum.intersectsObject(object)</text>
+  <text class="note" x="36" y="262">the only step that looks at where the object actually is</text>
+  <path class="arrow" d="M190,268 L190,280" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="282" width="332" height="42" rx="8" />
+  <text class="head" x="36" y="302">render list → sort → one draw call</text>
+  <text class="note" x="36" y="318">a few dozen flops per object; under 1 ms for 10,000 of them</text>
+
+  <rect class="box" x="384" y="58" width="252" height="124" rx="8" />
+  <text class="col" x="396" y="78">INSIDE THAT TEST</text>
+  <text class="head" x="396" y="100">geometry.boundingSphere</text>
+  <text class="note" x="396" y="116">computed once, from the stored positions</text>
+  <text class="head" x="396" y="138">.applyMatrix4(object.matrixWorld)</text>
+  <text class="note" x="396" y="154">radius × matrix.getMaxScaleOnAxis()</text>
+  <text class="note" x="396" y="174">then 6 plane comparisons against that centre</text>
+
+  <rect class="box-cost" x="384" y="196" width="252" height="140" rx="8" />
+  <text class="col ink-cost" x="396" y="216">WHERE IT STOPS HELPING</text>
+  <text class="note" x="396" y="236">A Group is never sphere-tested. The renderer</text>
+  <text class="note" x="396" y="252">descends into every child regardless — only</text>
+  <text class="note" x="396" y="268">group.visible = false skips a whole subtree.</text>
+  <text class="note" x="396" y="290">InstancedMesh has ONE sphere for all instances,</text>
+  <text class="note" x="396" y="306">so one visible instance keeps every far-away</text>
+  <text class="note" x="396" y="322">sibling inside the same draw call.</text>
+
+  <text class="col" x="24" y="356">ONE PLANE OF THE SIX</text>
+  <text class="note" x="292" y="368" text-anchor="end">outside</text>
+  <text class="note" x="308" y="368">inside</text>
+
+  <circle class="out" cx="150" cy="412" r="28" />
+  <circle class="in" cx="282" cy="412" r="28" />
+  <path class="dim" d="M282,412 L310,412" />
+  <path class="plane" d="M300,372 L300,452" />
+
+  <text class="note" x="150" y="464" text-anchor="middle">rejected</text>
+  <text class="note" x="150" y="480" text-anchor="middle">distance &lt; −radius</text>
+
+  <text class="note" x="348" y="406">kept — the centre is already outside,</text>
+  <text class="note" x="348" y="422">but by less than the radius, so part of</text>
+  <text class="note" x="348" y="438">the object can still reach the screen</text>
+
+  <text class="foot" x="24" y="504">All 6 planes must agree before an object is dropped, and the sphere never learns what the vertex shader did to it.</text>
+</svg>

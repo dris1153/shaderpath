@@ -5,7 +5,7 @@ Mesh, Group, Light, Camera — everything you add to a scene inherits from `Obje
 `.matrix` is purely a **local** transform — it maps the object's space into its direct parent's space, computed from the object's own three properties alone; it carries no information about the parent's transform. Once an object sits inside a hierarchy (via `parent.add(child)`), Three.js also computes `.matrixWorld`, the matrix actually used for rendering, by chaining: `matrixWorld = parent.matrixWorld × this.matrix`. That's the "parent-child matrix chain" Track 0 mentioned without a concrete object to demonstrate it — Three.js walks down from the scene root, computing each object's `matrixWorld` in exactly that order inside `updateMatrixWorld()`, recursing into every child.
 
 <Figure
-  src="/figures/03-threejs/scene-graph-world-matrix.svg"
+  src="/figures/03-threejs/scene-graph-world-matrix/en.svg"
   alt="The sun → planetGroup → moonGroup → moon scene graph beside the rule worldMatrix = parent.worldMatrix × localMatrix and the accumulated product along the path to moon"
   caption="A node's world transform is stored nowhere — it is the running product along its own path from the root, which is exactly why reparenting changes the result."
 />

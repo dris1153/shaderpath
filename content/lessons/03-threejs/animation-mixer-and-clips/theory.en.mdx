@@ -5,7 +5,7 @@ Animation in Three.js isn't a single API but three separate layers, each respons
 A useful analogy: an AnimationClip is like a music file on disk — just data. An AnimationMixer is like a playback device wired into one room (the root object). An AnimationAction is like a play button plus a volume fader for one specific playthrough — the same device can "play" several tracks at once at different volumes, which is exactly the crossfade mechanism covered later. The three layers stay separate for practical reasons: one clip ("walk") can replay on any root that shares the same property structure, and one root can play several clips at once to crossfade between them — folding all three responsibilities into a single object would rule out both.
 
 <Figure
-  src="/figures/03-threejs/animation-mixer-graph.svg"
+  src="/figures/03-threejs/animation-mixer-graph/en.svg"
   alt="The animation object graph: an AnimationMixer bound to one root Object3D, its AnimationActions, AnimationClips and KeyframeTrack arrays, plus a crossfade chart where two weights sum to 1"
   caption="Only the AnimationAction carries play state — so a crossfade never touches the clips at all, it is just two weight numbers summing to 1 on the same root."
 />

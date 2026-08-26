@@ -18,7 +18,7 @@ ground.receiveShadow = true; // 4. mesh khác: mesh này ĐỌC shadow map khi s
 Bốn cờ độc lập vì chúng phục vụ hai giai đoạn khác nhau của pipeline. `castShadow` quyết định object có được vẽ trong **pass phụ** — một lần render toàn bộ scene từ góc nhìn của light vào một depth texture, gọi là shadow map. `receiveShadow` quyết định object có **đọc** shadow map đó khi tính màu ở pass chính hay không. Một quả cầu `castShadow = true` nhưng mặt sàn `receiveShadow = false` sẽ khiến quả cầu "đổ bóng" vào shadow map hoàn hảo, nhưng mặt sàn render ra hoàn toàn sạch bóng vì nó không bao giờ tra cứu shadow map lúc shading.
 
 <Figure
-  src="/figures/03-threejs/shadow-map-two-pass.svg"
+  src="/figures/03-threejs/shadow-map-two-pass/vi.svg"
   alt="Hai pass của shadow map: pass 1 render depth từ góc nhìn light vào depth texture, pass 2 chiếu fragment vào light space rồi so sánh depth, kèm hai điểm áp bias"
   caption="Bóng đổ không phải một phép chiếu hình học mà là một phép so sánh depth — nên mọi acne hay peter-panning đều truy về đúng hai chỗ cộng bias được đánh dấu."
 />

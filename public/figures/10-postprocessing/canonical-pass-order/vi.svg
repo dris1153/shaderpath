@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 486" width="660" height="486" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .stage { font-size: 12px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-you { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .band { fill: none; stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">Why the canonical order is the order it is</text>
+
+  <rect class="box" x="24" y="44" width="376" height="44" rx="8" />
+  <text class="stage" x="38" y="66">scene render (HDR)</text>
+  <text class="note" x="38" y="82">linear radiance, values can sit far above 1.0</text>
+  <path class="arrow" d="M212,88 L212,100" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="102" width="376" height="44" rx="8" />
+  <text class="stage" x="38" y="124">ambient occlusion</text>
+  <text class="note" x="38" y="140">multiplies into radiance, before any curve bends it</text>
+  <path class="arrow" d="M212,146 L212,158" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="160" width="376" height="44" rx="8" />
+  <text class="stage" x="38" y="182">bloom</text>
+  <text class="note" x="38" y="198">needs true HDR to tell an emitter from a bright wall</text>
+  <path class="arrow" d="M212,204 L212,216" marker-end="url(#head)" />
+
+  <rect class="box-you" x="24" y="218" width="376" height="44" rx="8" />
+  <text class="stage ink-you" x="38" y="240">tone mapping — OutputPass</text>
+  <text class="note" x="38" y="256">compresses HDR into [0,1], then encodes sRGB</text>
+  <path class="arrow" d="M212,262 L212,274" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="276" width="376" height="44" rx="8" />
+  <text class="stage" x="38" y="298">grade / LUT</text>
+  <text class="note" x="38" y="314">a 16³ lookup grid only addresses [0,1]</text>
+  <path class="arrow" d="M212,320 L212,332" marker-end="url(#head)" />
+
+  <rect class="box" x="24" y="334" width="376" height="44" rx="8" />
+  <text class="stage" x="38" y="356">grain · vignette · aberration</text>
+  <text class="note" x="38" y="372">lens and film come last in reality too</text>
+  <path class="arrow" d="M212,378 L212,394" marker-end="url(#head)" />
+  <text class="note" x="212" y="408" text-anchor="middle">the canvas</text>
+
+  <rect class="band" x="418" y="44" width="218" height="160" rx="8" />
+  <text class="label" x="432" y="68">linear HDR</text>
+  <text class="note" x="432" y="90">unbounded above 1.0 — the</text>
+  <text class="note" x="432" y="108">numbers still mean real light</text>
+  <text class="note" x="432" y="136">so any pass that has to reason</text>
+  <text class="note" x="432" y="154">about brightness belongs here,</text>
+  <text class="note" x="432" y="180">and its order decides what the</text>
+  <text class="note" x="432" y="198">next pass is computing on</text>
+
+  <text class="label ink-you" x="432" y="240">the boundary</text>
+  <text class="note" x="432" y="256">cross it exactly once</text>
+
+  <rect class="band" x="418" y="276" width="218" height="102" rx="8" />
+  <text class="label" x="432" y="300">display-referred</text>
+  <text class="note" x="432" y="320">everything now inside [0,1]</text>
+  <text class="note" x="432" y="344">the range LUTs and film</text>
+  <text class="note" x="432" y="362">simulations were built for</text>
+
+  <text class="note" x="24" y="440">Fillrate is not the addPass() count: UnrealBloomPass issues 13 draws, but four of its</text>
+  <text class="note" x="24" y="458">five mips run at quarter resolution or less — roughly 2 full-resolution passes worth of texels.</text>
+  <text class="note" x="24" y="478">DPR scales width and height both, so cost grows with DPR²: 1 → 2 is 4×, 1 → 3 is 9×.</text>
+</svg>

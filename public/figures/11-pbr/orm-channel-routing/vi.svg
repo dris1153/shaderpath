@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 432" width="660" height="432" role="img">
+  <style>
+    :root {
+      --ink: #334155;
+      --muted: #64748b;
+      --line: #94a3b8;
+      --accent-fill: #dbeafe;
+      --accent-stroke: #2563eb;
+      --accent-ink: #1e3a8a;
+      --box-fill: #f1f5f9;
+      --solid-fill: #e2e8f0;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e2e8f0;
+        --muted: #94a3b8;
+        --line: #64748b;
+        --accent-fill: #1e3a5f;
+        --accent-stroke: #60a5fa;
+        --accent-ink: #bfdbfe;
+        --box-fill: #1e293b;
+        --solid-fill: #334155;
+      }
+    }
+    text {
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      fill: var(--ink);
+    }
+    .title { font-size: 13px; font-weight: 600; }
+    .label { font-size: 12px; font-weight: 600; }
+    .mono { font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: var(--muted); }
+    .note { font-size: 11px; fill: var(--muted); }
+    .ink-you { fill: var(--accent-ink); }
+    .box { fill: var(--box-fill); stroke: var(--line); stroke-width: 1.5; }
+    .box-accent { fill: var(--accent-fill); stroke: var(--accent-stroke); stroke-width: 2; }
+    .strip { fill: var(--solid-fill); stroke: var(--line); stroke-width: 1.2; }
+    .arrow { stroke: var(--line); stroke-width: 1.5; fill: none; }
+  </style>
+  <defs>
+    <marker id="head" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L8,4 L0,8 z" fill="var(--line)" />
+    </marker>
+  </defs>
+
+  <text class="title" x="24" y="26">One image, three channels, three material slots</text>
+
+  <!-- albedo -->
+  <rect class="box-accent" x="24" y="56" width="150" height="76" rx="8" />
+  <text class="label ink-you" x="38" y="80">albedo</text>
+  <text class="note" x="38" y="100">the only map that is</text>
+  <text class="note" x="38" y="118">colour: SRGBColorSpace</text>
+  <path class="arrow" d="M174,94 L284,94" marker-end="url(#head)" />
+
+  <!-- ORM -->
+  <rect class="box" x="24" y="152" width="150" height="136" rx="8" />
+  <text class="label" x="38" y="176">ORM — one image</text>
+  <rect class="strip" x="38" y="188" width="122" height="26" rx="3" />
+  <text class="note" x="48" y="205">R — occlusion</text>
+  <rect class="strip" x="38" y="220" width="122" height="26" rx="3" />
+  <text class="note" x="48" y="237">G — roughness</text>
+  <rect class="strip" x="38" y="252" width="122" height="26" rx="3" />
+  <text class="note" x="48" y="269">B — metalness</text>
+
+  <path class="arrow" d="M160,201 L284,172" marker-end="url(#head)" />
+  <path class="arrow" d="M160,233 L284,220" marker-end="url(#head)" />
+  <path class="arrow" d="M160,265 L284,268" marker-end="url(#head)" />
+
+  <!-- normal -->
+  <rect class="box" x="24" y="308" width="150" height="76" rx="8" />
+  <text class="label" x="38" y="332">normal</text>
+  <text class="note" x="38" y="352">vectors, not colour:</text>
+  <text class="note" x="38" y="370">NoColorSpace</text>
+  <path class="arrow" d="M174,346 L284,346" marker-end="url(#head)" />
+
+  <!-- material slots -->
+  <rect class="box-accent" x="290" y="56" width="346" height="76" rx="8" />
+  <text class="label ink-you" x="306" y="80">material.map</text>
+  <text class="note" x="306" y="102">forget SRGBColorSpace and lighting reads an already-</text>
+  <text class="note" x="306" y="120">encoded value as if it were linear: washed out, not darker</text>
+
+  <rect class="box" x="290" y="152" width="346" height="40" rx="8" />
+  <text class="label" x="306" y="170">material.aoMap</text>
+  <text class="mono" x="306" y="186">texture2D( aoMap, uv ).r → indirect light only</text>
+
+  <rect class="box" x="290" y="200" width="346" height="40" rx="8" />
+  <text class="label" x="306" y="218">material.roughnessMap</text>
+  <text class="mono" x="306" y="234">roughnessFactor *= texelRoughness.g</text>
+
+  <rect class="box" x="290" y="248" width="346" height="40" rx="8" />
+  <text class="label" x="306" y="266">material.metalnessMap</text>
+  <text class="mono" x="306" y="282">metalnessFactor *= texelMetalness.b</text>
+
+  <rect class="box" x="290" y="308" width="346" height="76" rx="8" />
+  <text class="label" x="306" y="332">material.normalMap</text>
+  <text class="note" x="306" y="354">bends the shading normal only — the silhouette of the</text>
+  <text class="note" x="306" y="372">mesh never changes</text>
+
+  <text class="note" x="24" y="410">One THREE.Texture object in all three ORM slots: one bind, three roles — three only reads the channel it needs.</text>
+  <text class="note" x="24" y="428">Those *= multiplies are why material.roughness and .metalness must sit at 1 while a map drives them.</text>
+</svg>

@@ -9,7 +9,7 @@ Một phép biến đổi tuyến tính phải giữ gốc toạ độ đứng y
 Cách khắc phục: thêm một chiều giả, gọi là $w$, biến điểm 3D $(x,y,z)$ thành vector 4D $(x,y,z,1)$ — gọi là **toạ độ đồng nhất** (homogeneous coordinates). Trong không gian 4 chiều này, translation lại trở thành tuyến tính, vì bây giờ có thể "mượn" thành phần $w=1$ cố định làm nguồn cho độ dịch chuyển.
 
 <Figure
-  src="/figures/00-math/homogeneous-4x4-layout.svg"
+  src="/figures/00-math/homogeneous-4x4-layout/vi.svg"
   alt="Bố cục khối của ma trận 4x4: khối 3x3 rotate và scale, cột translation, và hàng cuối 0 0 0 1"
   caption="Hàng cuối là thứ phân biệt ma trận T/R/S của bài này (giữ nguyên w đầu vào) với ma trận chiếu phối cảnh học ở cuối bài — chỉ ma trận chiếu mới ghi w khác 1 cho điểm, và đó là lúc phép chia (luôn chạy trên mọi vertex) thật sự thay đổi kết quả."
 />
