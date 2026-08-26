@@ -40,21 +40,21 @@
     </marker>
   </defs>
 
-  <text class="title" x="20" y="22">FLIP: four steps, and which three GSAP runs for you</text>
+  <text class="title" x="20" y="22">FLIP: bốn bước, và ba bước GSAP làm hộ bạn</text>
 
   <!-- 1. FIRST -->
   <text class="step" x="86" y="50" text-anchor="middle">1. FIRST</text>
   <rect class="frame" x="18" y="58" width="136" height="104" rx="8" />
   <rect class="card" x="34" y="74" width="26" height="26" rx="4" />
-  <text class="note" x="86" y="182" text-anchor="middle">measure the element</text>
-  <text class="note" x="86" y="198" text-anchor="middle">before the change</text>
+  <text class="note" x="86" y="182" text-anchor="middle">đo phần tử</text>
+  <text class="note" x="86" y="198" text-anchor="middle">trước khi thay đổi</text>
 
   <!-- 2. LAST -->
   <text class="step" x="242" y="50" text-anchor="middle">2. LAST</text>
   <rect class="frame" x="174" y="58" width="136" height="104" rx="8" />
   <rect class="card" x="242" y="100" width="50" height="50" rx="5" />
-  <text class="note" x="242" y="182" text-anchor="middle">measure it again</text>
-  <text class="note" x="242" y="198" text-anchor="middle">after the change</text>
+  <text class="note" x="242" y="182" text-anchor="middle">đo lại lần nữa</text>
+  <text class="note" x="242" y="198" text-anchor="middle">sau khi thay đổi</text>
 
   <!-- 3. INVERT -->
   <text class="step" x="398" y="50" text-anchor="middle">3. INVERT</text>
@@ -62,8 +62,8 @@
   <rect class="ghost" x="398" y="100" width="50" height="50" rx="5" />
   <path class="arrow" d="M416,118 L380,98" marker-end="url(#head)" />
   <rect class="card" x="346" y="74" width="26" height="26" rx="4" />
-  <text class="note" x="398" y="182" text-anchor="middle">transform it back</text>
-  <text class="note" x="398" y="198" text-anchor="middle">onto First, instantly</text>
+  <text class="note" x="398" y="182" text-anchor="middle">transform nó ngược lại</text>
+  <text class="note" x="398" y="198" text-anchor="middle">về đúng vị trí First, tức thì</text>
 
   <!-- 4. PLAY -->
   <text class="step" x="554" y="50" text-anchor="middle">4. PLAY</text>
@@ -71,16 +71,16 @@
   <rect class="ghost" x="554" y="100" width="50" height="50" rx="5" />
   <rect class="card" x="510" y="82" width="38" height="38" rx="5" />
   <path class="arrow" d="M550,102 L582,130" marker-end="url(#head)" />
-  <text class="note" x="554" y="182" text-anchor="middle">animate that transform</text>
-  <text class="note" x="554" y="198" text-anchor="middle">back to identity</text>
+  <text class="note" x="554" y="182" text-anchor="middle">animate cái transform đó</text>
+  <text class="note" x="554" y="198" text-anchor="middle">về lại identity</text>
 
   <!-- who calls what -->
   <path class="brace" d="M18,216 L18,222 L154,222 L154,216" />
   <text class="api" x="86" y="240" text-anchor="middle">Flip.getState()</text>
 
   <path class="brace" d="M174,216 L174,222 L622,222 L622,216" />
-  <text class="api" x="398" y="240" text-anchor="middle">Flip.from(state, vars) does these three for you</text>
+  <text class="api" x="398" y="240" text-anchor="middle">Flip.from(state, vars) làm hộ bạn ba bước này</text>
 
-  <text class="note" x="20" y="274">Between the two calls you may mutate the DOM however you like — Flip re-measures.</text>
-  <text class="note" x="20" y="292">With scale: true, only transform runs during Play — no frame costs a layout pass.</text>
+  <text class="note" x="20" y="274">Giữa hai lệnh gọi đó bạn sửa DOM kiểu gì cũng được — Flip sẽ đo lại.</text>
+  <text class="note" x="20" y="292">Với scale: true, lúc Play chỉ chạy transform — không khung hình nào tốn một lượt layout.</text>
 </svg>

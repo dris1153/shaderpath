@@ -48,15 +48,15 @@
     </marker>
   </defs>
 
-  <text class="title title-warn" x="20" y="22">Anti-pattern: two loops draw the same canvas</text>
+  <text class="title title-warn" x="20" y="22">Phản mẫu: hai vòng lặp cùng vẽ một canvas</text>
 
   <rect class="box-warn" x="20" y="36" width="280" height="58" rx="8" />
   <text class="name name-warn" x="160" y="60" text-anchor="middle">gsap.ticker.add(...)</text>
-  <text class="note" x="160" y="79" text-anchor="middle">calls renderer.render() itself</text>
+  <text class="note" x="160" y="79" text-anchor="middle">tự gọi renderer.render()</text>
 
   <rect class="box-warn" x="340" y="36" width="280" height="58" rx="8" />
-  <text class="name name-warn" x="480" y="60" text-anchor="middle">&lt;Canvas&gt; frame loop</text>
-  <text class="note" x="480" y="79" text-anchor="middle">R3F already renders every frame</text>
+  <text class="name name-warn" x="480" y="60" text-anchor="middle">vòng lặp khung hình của &lt;Canvas&gt;</text>
+  <text class="note" x="480" y="79" text-anchor="middle">R3F vốn đã render mỗi khung hình</text>
 
   <path class="arrow" d="M160,94 L160,110 L320,110" />
   <path class="arrow" d="M480,94 L480,110 L320,110" />
@@ -64,36 +64,36 @@
 
   <rect class="box" x="200" y="124" width="240" height="48" rx="8" />
   <text class="name" x="320" y="146" text-anchor="middle">WebGLRenderer</text>
-  <text class="note" x="320" y="164" text-anchor="middle">same image, drawn twice per frame</text>
+  <text class="note" x="320" y="164" text-anchor="middle">cùng một ảnh, vẽ hai lần mỗi khung</text>
 
-  <text class="note" x="320" y="192" text-anchor="middle">frameloop="demand" is defeated too: the extra ticker runs at full rate</text>
+  <text class="note" x="320" y="192" text-anchor="middle">frameloop="demand" cũng vô hiệu: ticker thừa vẫn chạy hết tốc độ</text>
 
-  <text class="title title-accent" x="20" y="222">Correct: one writer, one reader, one renderer</text>
+  <text class="title title-accent" x="20" y="222">Đúng: một bên ghi, một bên đọc, một bên render</text>
 
-  <text class="note" x="215" y="248" text-anchor="middle">writes</text>
-  <text class="note" x="425" y="248" text-anchor="middle">reads</text>
+  <text class="note" x="215" y="248" text-anchor="middle">ghi</text>
+  <text class="note" x="425" y="248" text-anchor="middle">đọc</text>
 
   <rect class="box-accent" x="20" y="254" width="180" height="70" rx="8" />
   <text class="name name-accent" x="110" y="278" text-anchor="middle">ScrollTrigger</text>
-  <text class="note" x="110" y="296" text-anchor="middle">onUpdate(self) writes</text>
+  <text class="note" x="110" y="296" text-anchor="middle">onUpdate(self) ghi vào</text>
   <text class="note" x="110" y="313" text-anchor="middle">progress.value</text>
 
   <path class="arrow" d="M200,289 L228,289" marker-end="url(#head)" />
 
   <rect class="box" x="230" y="254" width="180" height="70" rx="8" />
   <text class="name" x="320" y="278" text-anchor="middle">progress</text>
-  <text class="note" x="320" y="296" text-anchor="middle">a plain object, never</text>
-  <text class="note" x="320" y="313" text-anchor="middle">React state</text>
+  <text class="note" x="320" y="296" text-anchor="middle">một object thường, không phải</text>
+  <text class="note" x="320" y="313" text-anchor="middle">state của React</text>
 
   <path class="arrow" d="M410,289 L438,289" marker-end="url(#head)" />
 
   <rect class="box-accent" x="440" y="254" width="180" height="70" rx="8" />
   <text class="name name-accent" x="530" y="278" text-anchor="middle">useFrame</text>
-  <text class="note" x="530" y="296" text-anchor="middle">reads progress.value,</text>
-  <text class="note" x="530" y="313" text-anchor="middle">writes mesh + camera</text>
+  <text class="note" x="530" y="296" text-anchor="middle">đọc progress.value,</text>
+  <text class="note" x="530" y="313" text-anchor="middle">ghi vào mesh + camera</text>
 
   <path class="arrow" d="M110,324 L110,348 L530,348 L530,326" marker-end="url(#head)" />
-  <text class="note" x="320" y="366" text-anchor="middle">invalidate() — asks R3F for exactly one frame</text>
+  <text class="note" x="320" y="366" text-anchor="middle">invalidate() — xin R3F đúng một khung hình</text>
 
-  <text class="note" x="20" y="392">Your code never calls renderer.render(): R3F owns the only render in the frame.</text>
+  <text class="note" x="20" y="392">Code của bạn không bao giờ gọi renderer.render(): R3F nắm lần render duy nhất của khung hình.</text>
 </svg>

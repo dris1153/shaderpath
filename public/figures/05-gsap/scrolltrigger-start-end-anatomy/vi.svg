@@ -41,10 +41,10 @@
     </marker>
   </defs>
 
-  <text class="title" x="20" y="22">start / end: one edge on the trigger, one on the scroller</text>
+  <text class="title" x="20" y="22">start / end: một mép trên trigger, một mép trên scroller</text>
 
   <!-- the scroller viewport, with the trigger crossing its lower edge -->
-  <text class="note" x="24" y="44">scroller viewport</text>
+  <text class="note" x="24" y="44">viewport của scroller</text>
   <rect class="box" x="24" y="52" width="180" height="200" rx="8" />
   <path class="guide" d="M18,52 L212,52" />
   <text class="tag" x="216" y="56">top</text>
@@ -52,28 +52,28 @@
   <text class="tag" x="216" y="216">80%</text>
   <rect class="box-accent" x="52" y="212" width="110" height="104" rx="8" />
   <text class="edge" x="107" y="262" text-anchor="middle">trigger</text>
-  <text class="edge" x="107" y="280" text-anchor="middle">element</text>
+  <text class="edge" x="107" y="280" text-anchor="middle">phần tử</text>
 
   <text class="key" x="248" y="100">start: "top 80%"</text>
-  <text class="note" x="248" y="122">the trigger's TOP edge reaches</text>
-  <text class="note" x="248" y="140">the point 80% down the scroller</text>
+  <text class="note" x="248" y="122">mép TRÊN của trigger chạm tới</text>
+  <text class="note" x="248" y="140">điểm cách đỉnh scroller 80%</text>
 
   <text class="key" x="248" y="184">end: "bottom top"</text>
-  <text class="note" x="248" y="206">the trigger's BOTTOM edge reaches</text>
-  <text class="note" x="248" y="224">the scroller's TOP edge — the</text>
-  <text class="note" x="248" y="242">trigger has scrolled fully past</text>
+  <text class="note" x="248" y="206">mép DƯỚI của trigger chạm tới</text>
+  <text class="note" x="248" y="224">mép TRÊN của scroller — tức là</text>
+  <text class="note" x="248" y="242">trigger đã trôi qua hoàn toàn</text>
 
   <!-- the active range between them -->
-  <text class="title" x="20" y="364">The active range, and the four toggleActions verbs</text>
+  <text class="title" x="20" y="364">Khoảng hoạt động, và bốn động từ của toggleActions</text>
 
-  <text class="note" x="20" y="388">scrolling down</text>
+  <text class="note" x="20" y="388">cuộn xuống</text>
   <path class="arrow" d="M120,384 L470,384" marker-end="url(#head)" />
 
   <text class="verb" x="120" y="406" text-anchor="middle">onEnter</text>
   <text class="verb" x="470" y="406" text-anchor="middle">onLeave</text>
 
   <rect class="box-accent" x="120" y="414" width="350" height="20" rx="6" />
-  <text class="edge" x="295" y="429" text-anchor="middle">active range · progress 0 -&gt; 1</text>
+  <text class="edge" x="295" y="429" text-anchor="middle">khoảng hoạt động · progress 0 -&gt; 1</text>
 
   <text class="edge" x="120" y="452" text-anchor="middle">start</text>
   <text class="edge" x="470" y="452" text-anchor="middle">end</text>
@@ -82,8 +82,8 @@
   <text class="verb" x="470" y="472" text-anchor="middle">onEnterBack</text>
 
   <path class="arrow" d="M470,488 L120,488" marker-end="url(#head)" />
-  <text class="note" x="486" y="492">scrolling up</text>
+  <text class="note" x="486" y="492">cuộn lên</text>
 
-  <text class="note" x="20" y="522">toggleActions: "onEnter onLeave onEnterBack onLeaveBack" — that order,</text>
-  <text class="note" x="20" y="540">always four slots; any slot you omit silently falls back to "none".</text>
+  <text class="note" x="20" y="522">toggleActions: "onEnter onLeave onEnterBack onLeaveBack" — đúng thứ tự đó,</text>
+  <text class="note" x="20" y="540">luôn bốn ô; ô nào bỏ trống thì âm thầm về "none".</text>
 </svg>

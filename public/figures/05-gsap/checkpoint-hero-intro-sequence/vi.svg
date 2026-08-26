@@ -40,8 +40,8 @@
     .span { stroke: var(--warn-stroke); stroke-width: 1.5; fill: none; }
   </style>
 
-  <text class="title" x="20" y="24">The timeline the brief asks for</text>
-  <text class="note" x="20" y="44">four tweens, three labels, one relative offset &#8212; 1.5 s end to end</text>
+  <text class="title" x="20" y="24">Timeline mà đề bài yêu cầu</text>
+  <text class="note" x="20" y="44">bốn tween, ba label, một offset tương đối — 1.5 s từ đầu tới cuối</text>
 
   <!-- label guides: every tween is placed against one of these, never a delay -->
   <path class="guide" d="M110,58 L110,296" />
@@ -56,7 +56,7 @@
   <text class="note" x="394" y="88">&#8220;&gt;&#8221;</text>
 
   <!-- three shapes, staggered 0.12 apart, 0.6 each -->
-  <text class="row" x="20" y="123">3 shapes</text>
+  <text class="row" x="20" y="123">3 hình</text>
   <rect class="bar-accent" x="110" y="100" width="168" height="10" rx="2" />
   <rect class="bar-accent" x="143.6" y="114" width="168" height="10" rx="2" />
   <rect class="bar-accent" x="177.2" y="128" width="168" height="10" rx="2" />
@@ -70,7 +70,7 @@
   <path class="span" d="M194,192 L250,192 M194,188 L194,196 M250,188 L250,196" />
   <text class="warn" x="204" y="186">&#8220;&lt;0.2&#8221;</text>
 
-  <text class="row" x="20" y="214">sub-line</text>
+  <text class="row" x="20" y="214">dòng phụ</text>
   <rect class="bar" x="250" y="200" width="140" height="20" rx="3" />
   <text class="note" x="398" y="214">power2.out</text>
 
@@ -85,6 +85,6 @@
   <text class="note" x="382" y="314">1.0</text>
   <text class="note" x="518" y="314">1.5 s</text>
 
-  <text class="note" x="20" y="344">&#8220;&lt;0.2&#8221; starts the sub-line 0.2 s after the headline tween STARTS, not after it ends &#8212; the two overlap by half a second.</text>
-  <text class="note" x="20" y="362">&#8220;&gt;&#8221; appends the CTA after the previous tween ends, so changing any duration never needs the delays recomputed.</text>
+  <text class="note" x="20" y="344">“&lt;0.2” cho dòng phụ chạy 0.2 s sau khi tween headline BẮT ĐẦU, không phải khi nó xong — chồng nhau nửa giây.</text>
+  <text class="note" x="20" y="362">“&gt;” nối CTA vào sau khi tween trước kết thúc, nên đổi duration nào cũng không phải tính lại delay.</text>
 </svg>

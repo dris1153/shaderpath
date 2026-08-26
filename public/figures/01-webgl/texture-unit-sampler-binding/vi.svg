@@ -113,7 +113,7 @@
   <path class="rule" d="M30,450 L590,450" />
 
   <text class="cell" x="30" y="472">TEXTURE_MIN_FILTER</text>
-  <text class="note" x="250" y="472">NEAREST · LINEAR · the four *_MIPMAP_* modes</text>
+  <text class="note" x="250" y="472">NEAREST · LINEAR · bốn chế độ *_MIPMAP_*</text>
   <path class="rule" d="M30,482 L590,482" />
 
   <text class="note" x="30" y="504">MIN_FILTER mặc định là NEAREST_MIPMAP_LINEAR: texture không có mipmap sẽ lấy mẫu ra màu đen.</text>

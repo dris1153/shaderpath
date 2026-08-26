@@ -36,7 +36,7 @@
     .brace { stroke: var(--line); stroke-width: 1.5; fill: none; }
   </style>
 
-  <text class="title" x="20" y="22">Timeline position parameter: where each tween starts</text>
+  <text class="title" x="20" y="22">Tham số vị trí của timeline: mỗi tween bắt đầu ở đâu</text>
 
   <!-- guides: previous end at t=1, and the "settle" label at t=2.2 -->
   <path class="guide" d="M362,44 L362,240" />
@@ -45,28 +45,28 @@
 
   <!-- row 1: no position -->
   <rect class="bar" x="262" y="48" width="100" height="16" rx="4" />
-  <text class="row" x="248" y="60" text-anchor="end">box-1 — no position</text>
-  <text class="note" x="248" y="76" text-anchor="end">starts at 0</text>
+  <text class="row" x="248" y="60" text-anchor="end">box-1 — không có vị trí</text>
+  <text class="note" x="248" y="76" text-anchor="end">bắt đầu tại 0</text>
 
   <!-- row 2: "<" -->
   <rect class="bar-accent" x="262" y="84" width="100" height="16" rx="4" />
   <text class="row" x="248" y="96" text-anchor="end">box-2 — "&lt;"</text>
-  <text class="note" x="248" y="112" text-anchor="end">with the previous start</text>
+  <text class="note" x="248" y="112" text-anchor="end">cùng lúc với cái trước bắt đầu</text>
 
   <!-- row 3: default ">" -->
   <rect class="bar" x="362" y="120" width="100" height="16" rx="4" />
-  <text class="row" x="248" y="132" text-anchor="end">box-3 — (default)</text>
-  <text class="note" x="248" y="148" text-anchor="end">at the timeline end</text>
+  <text class="row" x="248" y="132" text-anchor="end">box-3 — (mặc định)</text>
+  <text class="note" x="248" y="148" text-anchor="end">tại cuối timeline</text>
 
   <!-- row 4: overlap -->
   <rect class="bar-accent" x="432" y="156" width="50" height="16" rx="4" />
   <text class="row" x="248" y="168" text-anchor="end">box-4 — "-=0.3"</text>
-  <text class="note" x="248" y="184" text-anchor="end">0.3 s before timeline end</text>
+  <text class="note" x="248" y="184" text-anchor="end">0.3 s trước khi timeline kết thúc</text>
 
   <!-- row 5: label offset -->
   <rect class="bar-accent" x="502" y="192" width="40" height="16" rx="4" />
   <text class="row" x="248" y="204" text-anchor="end">box-5 — "settle+=0.2"</text>
-  <text class="note" x="248" y="220" text-anchor="end">0.2 s past the label</text>
+  <text class="note" x="248" y="220" text-anchor="end">0.2 s sau label</text>
 
   <!-- time axis -->
   <path class="axis" d="M262,240 L572,240" />
@@ -77,7 +77,7 @@
   <text class="note" x="562" y="260" text-anchor="middle">3 s</text>
 
   <!-- stagger: one slot, stretched -->
-  <text class="sub" x="20" y="296">A staggered tween is still one slot — stagger stretches it</text>
+  <text class="sub" x="20" y="296">Tween có stagger vẫn chỉ là một ô — stagger kéo dài nó ra</text>
 
   <rect class="bar-accent" x="262" y="310" width="50" height="10" rx="3" />
   <rect class="bar-accent" x="282" y="324" width="50" height="10" rx="3" />
@@ -85,9 +85,9 @@
   <rect class="bar-accent" x="322" y="352" width="50" height="10" rx="3" />
 
   <text class="row" x="248" y="326" text-anchor="end">stagger: { each: 0.2 }</text>
-  <text class="note" x="248" y="342" text-anchor="end">4 targets · duration 0.5 s</text>
+  <text class="note" x="248" y="342" text-anchor="end">4 đích · duration 0.5 s</text>
 
   <path class="brace" d="M262,364 L262,370 L372,370 L372,364" />
   <text class="row" x="382" y="368">duration + (n - 1) × each</text>
-  <text class="note" x="382" y="384">= 0.5 + 3 × 0.2 = 1.1 s, not 0.5 s</text>
+  <text class="note" x="382" y="384">= 0.5 + 3 × 0.2 = 1.1 s, không phải 0.5 s</text>
 </svg>

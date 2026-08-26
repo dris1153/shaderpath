@@ -32,6 +32,6 @@
   "TEXTURE_MAG_FILTER": "TEXTURE_MAG_FILTER",
   "NEAREST · LINEAR": "NEAREST · LINEAR",
   "TEXTURE_MIN_FILTER": "TEXTURE_MIN_FILTER",
-  "NEAREST · LINEAR · the four *_MIPMAP_* modes": "NEAREST · LINEAR · the four *_MIPMAP_* modes",
+  "NEAREST · LINEAR · the four *_MIPMAP_* modes": "NEAREST · LINEAR · bốn chế độ *_MIPMAP_*",
   "MIN_FILTER defaults to NEAREST_MIPMAP_LINEAR: a texture with no mipmaps samples black.": "MIN_FILTER mặc định là NEAREST_MIPMAP_LINEAR: texture không có mipmap sẽ lấy mẫu ra màu đen."
 }
