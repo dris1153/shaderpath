@@ -28,13 +28,14 @@ export default defineConfig({
   // milliseconds, so this is headroom for first-compile, not cover for a slow app.
   timeout: 60_000,
   use: {
-    baseURL: "http://localhost:3100",
+    baseURL: "http://localhost:3177",
   },
   webServer: {
-    // Fixed non-default port — 3000 is often taken by other local apps.
-    // Never reuse: a reused server would keep a previous run's DB env.
-    command: "pnpm dev --port 3100",
-    url: "http://localhost:3100/vi",
+    // Fixed non-default port. 3000 and 3100 are both commonly taken by other
+    // local apps; 3177 is picked to stay clear of them. Never reuse: a reused
+    // server would keep a previous run's DB env.
+    command: "pnpm dev --port 3177",
+    url: "http://localhost:3177/vi",
     reuseExistingServer: false,
     timeout: 120_000,
     // No NEXT_PUBLIC_SUPABASE_* on purpose: a placeholder host makes every

@@ -9,7 +9,7 @@ import { chromium, type Page } from "@playwright/test";
 // ship green, so this measures the composited pixels instead.
 // Run against a running server: pnpm audit:demos [baseUrl] [limit]
 
-const BASE = process.argv[2] ?? "http://localhost:3100";
+const BASE = process.argv[2] ?? "http://localhost:3177";
 const LIMIT = Number(process.argv[3] ?? 999);
 // A canvas showing only the container behind it lands in the twenties; anything
 // actually drawn clears 150. The gap is wide, so the threshold is not delicate.
