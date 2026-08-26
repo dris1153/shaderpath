@@ -18,6 +18,7 @@ const HOVER_EMISSIVE = 0x442200;
 
 const LABELS = {
   vi: {
+    hint: "Tắt lật trục Y rồi rê chuột: ô được đánh dấu trúng nằm đối xứng qua tâm so với ô dưới con trỏ.",
     title: "Raycasting: hover + click trên lưới box",
     flipY: "Lật trục Y (đúng)",
     hit: "Trúng",
@@ -25,6 +26,7 @@ const LABELS = {
     dist: "Khoảng cách",
   },
   en: {
+    hint: "Turn off the Y flip and move the pointer: the box reported as hit is mirrored through the centre from the one under the cursor.",
     title: "Raycasting: hover + click on a box grid",
     flipY: "Flip Y axis (correct)",
     hit: "Hit",
@@ -215,6 +217,7 @@ export default function RaycastingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "flipY", label: L.flipY, defaultValue: true },

@@ -11,6 +11,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Kéo fov và khoảng cách: không có gì tự vẽ lại cả — mỗi khung hình là một lệnh render bạn tự gọi trong vòng lặp của mình.",
     title: "Scene, Camera & Renderer — vòng lặp render là của bạn",
     fov: "fov (°)",
     distance: "Khoảng cách camera",
@@ -18,6 +19,7 @@ const LABELS = {
       "renderer sở hữu context (Track 1: gl.getContext) · render() duyệt scene, gọi gl.draw* cho mesh (Track 1: bạn từng gọi tay)",
   },
   en: {
+    hint: "Drag fov and distance: nothing redraws itself here — every frame is a render call you make yourself, inside your own loop.",
     title: "Scene, Camera & Renderer — the render loop is yours",
     fov: "fov (°)",
     distance: "Camera distance",
@@ -146,6 +148,7 @@ export default function SceneCameraRendererDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",

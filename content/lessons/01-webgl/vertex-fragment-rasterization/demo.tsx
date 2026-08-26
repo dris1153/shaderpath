@@ -12,6 +12,7 @@ import vertexSource from "./gradient-triangle.vert";
 
 const LABELS = {
   vi: {
+    hint: "Kéo đỉnh A và bám hai bộ đếm: số lần chạy vertex shader đứng yên ở 3, còn số fragment nhảy theo diện tích tam giác.",
     title: "Tam giác gradient — kéo một đỉnh",
     ax: "Đỉnh A: x",
     ay: "Đỉnh A: y",
@@ -19,6 +20,7 @@ const LABELS = {
     fragmentCount: "Fragment shader chạy (ước lượng)",
   },
   en: {
+    hint: "Drag vertex A and watch the two counters: the vertex shader run count sits at 3, while the fragment count swings with the triangle's area.",
     title: "Gradient Triangle — drag one vertex",
     ax: "Vertex A: x",
     ay: "Vertex A: y",
@@ -194,6 +196,7 @@ export default function VertexFragmentRasterizationDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "ax", label: L.ax, min: -1, max: 1, step: 0.01, defaultValue: 0 },
         { kind: "number", key: "ay", label: L.ay, min: -1, max: 1, step: 0.01, defaultValue: 0.7 },

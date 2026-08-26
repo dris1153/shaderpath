@@ -3,6 +3,7 @@ export type DemoLocale = "vi" | "en";
 
 export const LABELS = {
   vi: {
+    hint: "Bật reparent bằng attach(): object giữ nguyên vị trí trên màn hình trong khi số local đổi hẳn — đó chính là toàn bộ khác biệt so với add().",
     title: "Source map: attach / culling / thứ tự vẽ / state cache",
     concept: "Khái niệm",
     concepts: {
@@ -27,6 +28,7 @@ export const LABELS = {
     },
   },
   en: {
+    hint: "Turn on reparenting via attach(): the object holds its place on screen while its local numbers change completely — that difference is the whole point against add().",
     title: "Source Map: attach / culling / draw order / state cache",
     concept: "Concept",
     concepts: {

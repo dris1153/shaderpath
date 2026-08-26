@@ -182,6 +182,7 @@ export default function LightsAndShadowMapsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",
@@ -215,10 +216,7 @@ export default function LightsAndShadowMapsDemo() {
       ]}
     >
       <div className="relative size-full">
-        <ShadowLab />
-        <div className="absolute inset-x-3 bottom-3 rounded-lg border bg-background/85 px-3 py-1.5 text-xs">
-          {L.hint}
-        </div>
+        <ShadowLab />
       </div>
     </Demo>
   );

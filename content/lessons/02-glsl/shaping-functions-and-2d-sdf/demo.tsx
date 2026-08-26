@@ -13,6 +13,7 @@ import vertexShader from "./sdf-circle.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật nhịp đập: bán kính thay đổi mà cạnh vẫn mượt y như cũ — độ mượt do smoothstep quyết định, không dính gì tới kích thước hình.",
     title: "smoothstep & SDF hình tròn",
     edge0: "edge0",
     edge1: "edge1",
@@ -20,6 +21,7 @@ const LABELS = {
     pulse: "Nhịp đập theo thời gian",
   },
   en: {
+    hint: "Turn on the pulse: the radius changes while the edge stays exactly as smooth — smoothstep owns the softness, and it has nothing to do with the shape's size.",
     title: "smoothstep & Circle SDF",
     edge0: "edge0",
     edge1: "edge1",
@@ -77,6 +79,7 @@ export default function SdfCircleDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "edge0", label: L.edge0, min: -0.2, max: 0.2, step: 0.005, defaultValue: -0.02 },

@@ -177,6 +177,7 @@ export default function ShadowTechniquesDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",
@@ -234,9 +235,6 @@ export default function ShadowTechniquesDemo() {
         <DemoCanvas camera={{ position: [0, 4.5, 13], fov: 42 }}>
           <ShadowRig />
         </DemoCanvas>
-        <div className="absolute inset-x-3 bottom-3 rounded-lg border bg-background/85 px-3 py-1.5 text-xs">
-          {L.hint}
-        </div>
       </div>
     </Demo>
   );

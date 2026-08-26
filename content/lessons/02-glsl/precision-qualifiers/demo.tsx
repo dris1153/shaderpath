@@ -13,10 +13,12 @@ import vertexShader from "./precision-banding.vert";
 
 const LABELS = {
   vi: {
+    hint: "Hạ số bit xuống và nhìn vùng chuyển màu mượt nhất: banding hiện ra ở đó trước, còn vùng tương phản mạnh vẫn trông bình thường.",
     title: "Precision (mô phỏng): banding khi hạ mediump giả lập",
     bits: "Số bit mô phỏng (N = 2^bits)",
   },
   en: {
+    hint: "Drop the bit count and look at the smoothest gradient: banding shows up there first, while high-contrast areas still look fine.",
     title: "Precision (simulated): Banding as Simulated mediump Drops",
     bits: "Simulated bits (N = 2^bits)",
   },
@@ -66,6 +68,7 @@ export default function PrecisionBandingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "bits", label: L.bits, min: 1, max: 8, step: 1, defaultValue: 4 },

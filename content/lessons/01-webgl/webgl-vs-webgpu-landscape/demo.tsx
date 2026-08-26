@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const LABELS = {
   vi: {
+    hint: "Bảng này đọc đúng máy bạn đang ngồi. Dòng nào ghi 'một phần' nghĩa là chỉ có qua extension — tức phải kiểm tra lúc chạy chứ không được giả định.",
     title: "Máy dò khả năng WebGL / WebGPU",
     feature: "Khả năng",
     status: "Trạng thái",
@@ -17,6 +18,7 @@ const LABELS = {
     checking: "Đang kiểm tra…",
   },
   en: {
+    hint: "This table is reading the machine you are sitting at. A row marked partial means it exists only through an extension — something to test for at runtime, never assume.",
     title: "WebGL / WebGPU Capability Detector",
     feature: "Feature",
     status: "Status",
@@ -265,7 +267,8 @@ export default function WebglVsWebgpuDemo() {
   const L = LABELS[locale as Loc] ?? LABELS.vi;
 
   return (
-    <Demo title={L.title} ratio={16 / 9}>
+    <Demo title={L.title}
+ hint={L.hint} ratio={16 / 9}>
       <CapabilityTable />
     </Demo>
   );

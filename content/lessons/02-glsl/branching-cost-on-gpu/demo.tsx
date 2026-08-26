@@ -12,6 +12,7 @@ import vertexShader from "./branch-cost.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đẩy số vòng lặp lên cao rồi bật tắt branchless: chênh lệch frame-time chỉ lộ ra khi các pixel cạnh nhau rẽ hai nhánh khác nhau.",
     title: "Branchy vs branchless: đo frame-time thật",
     branchless: "Branchless (mix/step)",
     iterations: "Số vòng lặp / pixel",
@@ -19,6 +20,7 @@ const LABELS = {
       `${ms.toFixed(2)} ms/frame (~${Math.round(1000 / Math.max(ms, 0.01))} fps)`,
   },
   en: {
+    hint: "Push the iteration count up, then toggle branchless: the frame-time gap only shows up when neighbouring pixels take different branches.",
     title: "Branchy vs Branchless: Real Frame-Time Readout",
     branchless: "Branchless (mix/step)",
     iterations: "Iterations / pixel",
@@ -85,6 +87,7 @@ export default function BranchingCostOnGpuDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

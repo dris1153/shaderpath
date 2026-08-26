@@ -19,6 +19,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Chuyển sang orthographic rồi xoay quanh: các khối ở xa không còn nhỏ đi nữa, và cảm giác chiều sâu biến mất theo.",
     title: "OrbitControls: Perspective ↔ Orthographic",
     damping: "Damping (quán tính)",
     autoRotate: "Tự xoay quanh tâm",
@@ -31,6 +32,7 @@ const LABELS = {
     target: "mục tiêu",
   },
   en: {
+    hint: "Switch to orthographic and orbit around: distant boxes stop shrinking, and the sense of depth goes with them.",
     title: "OrbitControls: Perspective ↔ Orthographic",
     damping: "Damping (inertia)",
     autoRotate: "Auto-rotate around target",
@@ -288,6 +290,7 @@ export default function CamerasAndControlsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "boolean", key: "damping", label: L.damping, defaultValue: true },
         {

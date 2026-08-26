@@ -186,6 +186,7 @@ export default function ReadingThreejsSourceDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 7}
       controls={[
         {

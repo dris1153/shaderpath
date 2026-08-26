@@ -12,6 +12,7 @@ import vertexSource from "./pattern.vert";
 
 const LABELS = {
   vi: {
+    hint: "So 0.5× với devicePixelRatio trên cùng một khung: cạnh chéo và chữ lộ ra trước, còn mảng màu đặc thì gần như không phân biệt được.",
     title: "Kiểm tra độ nét: DPR & kích thước buffer",
     dpr: "Chế độ DPR",
     dprHalf: "0.5× (buffer nhỏ hơn CSS)",
@@ -22,6 +23,7 @@ const LABELS = {
     buffer: "Buffer",
   },
   en: {
+    hint: "Compare 0.5× against devicePixelRatio on the same frame: diagonal edges and text give it away first, while flat colour areas look almost identical.",
     title: "Crispness Test: DPR & Buffer Size",
     dpr: "DPR mode",
     dprHalf: "0.5× (buffer smaller than CSS)",
@@ -157,6 +159,7 @@ export default function CanvasContextDprDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

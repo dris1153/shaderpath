@@ -12,6 +12,7 @@ import vertexSource from "./shape.vert";
 
 const LABELS = {
   vi: {
+    hint: "Tắt thứ tự vẽ đúng và nhìn vùng chồng: nó bị đục lỗ chứ không tối đi. Depth test đã loại pixel trước khi blend kịp chạy.",
     title: "Ba hình trong suốt: preset blend & lỗi thứ tự vẽ",
     preset: "Blend preset",
     presetAlpha: "Alpha (SRC_ALPHA, 1-SRC_ALPHA)",
@@ -22,6 +23,7 @@ const LABELS = {
     buggyNote: "Sai: gần→xa, depthMask vẫn bật — vùng chồng bị đục lỗ",
   },
   en: {
+    hint: "Turn off the correct draw order and look at the overlaps: they get punched out, not darkened. The depth test rejected those pixels before blending ever ran.",
     title: "Three Translucent Shapes: Blend Preset & Draw-Order Bug",
     preset: "Blend preset",
     presetAlpha: "Alpha (SRC_ALPHA, 1-SRC_ALPHA)",
@@ -221,6 +223,7 @@ export default function BlendingAlphaDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

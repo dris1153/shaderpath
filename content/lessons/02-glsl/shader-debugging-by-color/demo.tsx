@@ -15,6 +15,7 @@ const MODES = ["final", "probeA", "probeB", "probeC", "fixed"] as const;
 
 const LABELS = {
   vi: {
+    hint: "Đi qua từng chế độ xem theo thứ tự: mỗi chế độ loại trừ một nghi phạm, và vòng tròn đen hoá ra hỏng ở đúng một trong số đó.",
     title: "Debug bằng màu: ca \"vòng tròn đen\"",
     mode: "Chế độ xem",
     radius: "Bán kính vòng",
@@ -28,6 +29,7 @@ const LABELS = {
     },
   },
   en: {
+    hint: "Step through the view modes in order: each one rules out a suspect, and the black circle turns out to break at exactly one of them.",
     title: 'Debugging by Color: the "black ring" case',
     mode: "Debug view",
     radius: "Ring radius",
@@ -86,6 +88,7 @@ export default function ShaderDebuggingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

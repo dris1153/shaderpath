@@ -12,6 +12,7 @@ import vertexSource from "./quad.vert";
 
 const LABELS = {
   vi: {
+    hint: "Giữ nguyên khoảng cách hai mặt rồi chỉ kéo near xuống: nhấp nháy xuất hiện dù hai mặt chưa hề xích lại gần nhau.",
     title: "Z-fighting sống: khoảng cách & near plane",
     gap: "Khoảng cách 2 mặt (world)",
     near: "Near plane",
@@ -21,6 +22,7 @@ const LABELS = {
     stepLabel: "1 bước lượng tử",
   },
   en: {
+    hint: "Hold the surface gap fixed and drag only near downwards: the flicker appears even though the two surfaces never moved any closer together.",
     title: "Live Z-Fighting: Gap & Near Plane",
     gap: "Surface gap (world units)",
     near: "Near plane",
@@ -216,6 +218,7 @@ export default function DepthBufferZFightingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "gap", label: L.gap, min: 0, max: 1.5, step: 0.001, defaultValue: 0.05 },
         { kind: "number", key: "near", label: L.near, min: 0.001, max: 1, step: 0.001, defaultValue: 0.05 },

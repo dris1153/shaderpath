@@ -11,6 +11,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Bật wireframe rồi kéo segments: bám lấy số vertex trong buffer — nó tăng theo bình phương chứ không tuyến tính.",
     title: "Geometry & BufferGeometry — cùng một loại dữ liệu attribute",
     shape: "Hình dạng",
     shapeBox: "Box (built-in)",
@@ -26,6 +27,7 @@ const LABELS = {
     times: "lần",
   },
   en: {
+    hint: "Turn on wireframe and drag segments: watch the vertex count in the buffer — it grows quadratically, not linearly.",
     title: "Geometry & BufferGeometry — the same attribute data underneath",
     shape: "Shape",
     shapeBox: "Box (built-in)",
@@ -256,6 +258,7 @@ export default function GeometriesAndBufferGeometryDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

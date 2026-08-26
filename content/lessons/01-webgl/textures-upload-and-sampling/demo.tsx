@@ -12,6 +12,7 @@ import vertexSource from "./texture-quad.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đẩy UV scale lên cao rồi so Nearest với Mipmap ở vùng xa: nearest lấm tấm nhiễu chứ không phải nét hơn — đó là aliasing.",
     title: "Texture: filter, wrap & UV scale",
     filter: "Filter",
     wrap: "Wrap mode",
@@ -24,6 +25,7 @@ const LABELS = {
     wrapMirror: "Mirrored repeat",
   },
   en: {
+    hint: "Push the UV scale up, then compare Nearest against Mipmap in the distance: nearest is speckled with noise, not sharper — that is aliasing.",
     title: "Textures: Filtering, Wrapping & UV Scale",
     filter: "Filter",
     wrap: "Wrap mode",
@@ -249,6 +251,7 @@ export default function TexturesUploadAndSamplingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

@@ -50,8 +50,7 @@ function ToolStage() {
         {tool === "waapi" && <WaapiCard L={cardLabels} />}
         {tool === "gsap" && <GsapCard L={cardLabels} />}
       </div>
-      <div className="bg-background/60 h-1/2 w-full overflow-auto border-t p-3 md:h-full md:w-1/2 md:border-t-0 md:border-l">
-        <p className="text-muted-foreground mb-2 text-[11px] italic">{L.hint}</p>
+      <div className="bg-background/60 h-1/2 w-full overflow-auto border-t p-3 md:h-full md:w-1/2 md:border-t-0 md:border-l">
         <pre className="overflow-x-auto text-[11px] leading-4 whitespace-pre">
           <code>{SOURCES[tool]}</code>
         </pre>
@@ -67,6 +66,7 @@ export default function ChoosingYourAnimationToolDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

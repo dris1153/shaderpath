@@ -14,6 +14,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Bật cho Mặt Trăng bay thẳng quanh Mặt Trời: toạ độ local của nó gần như không đổi, còn toạ độ world thì chạy loạn. Cha là thứ quyết định.",
     title: "Hệ mặt trời mini: Group làm pivot",
     sunSpin: "Mặt Trời quay (kéo quỹ đạo hành tinh theo)",
     planetSpin: "Hành tinh tự quay (kéo khung quỹ đạo mặt trăng theo)",
@@ -23,6 +24,7 @@ const LABELS = {
     world: "world",
   },
   en: {
+    hint: "Attach the moon straight to the sun: its local coordinates barely move while its world coordinates race around. The parent is what decides.",
     title: "Mini Solar System: Groups as Pivots",
     sunSpin: "Sun spin (drags the planet's orbit along)",
     planetSpin: "Planet's own spin (drags the moon's orbit frame along)",
@@ -235,6 +237,7 @@ export default function SceneGraphAndTransformsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "number",

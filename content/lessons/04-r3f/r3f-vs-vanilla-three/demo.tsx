@@ -168,9 +168,6 @@ function ComparisonPanel() {
         <p className="text-muted-foreground mb-1 text-xs font-medium">
           {L[view]} — {lineCount} {L.lines} · {concepts.length} {L.concepts}
         </p>
-        <p className="text-muted-foreground mb-2 text-[11px] italic">
-          {L.hint}
-        </p>
         <pre className="overflow-x-auto text-[11px] leading-4 whitespace-pre">
           <code>{source}</code>
         </pre>
@@ -191,6 +188,7 @@ export default function R3fVsVanillaThreeDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         {

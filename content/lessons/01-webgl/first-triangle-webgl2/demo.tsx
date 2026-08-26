@@ -12,11 +12,13 @@ import vertexSource from "./triangle.vert";
 
 const LABELS = {
   vi: {
+    hint: "Phép xoay này chạy trong vertex shader, mỗi đỉnh một lần — ba lần cho cả hình, dù tam giác phủ bao nhiêu pixel đi nữa.",
     title: "Tam giác WebGL2 thuần — không thư viện",
     angle: "Góc xoay (°)",
     spin: "Tự xoay",
   },
   en: {
+    hint: "This rotation runs inside the vertex shader, once per vertex — three times for the whole shape, no matter how many pixels the triangle covers.",
     title: "Raw WebGL2 Triangle — no libraries",
     angle: "Rotation (°)",
     spin: "Auto-spin",
@@ -142,6 +144,7 @@ export default function FirstTriangleDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         { kind: "number", key: "angle", label: L.angle, min: 0, max: 360, step: 1, defaultValue: 0 },
         { kind: "boolean", key: "spin", label: L.spin, defaultValue: true },

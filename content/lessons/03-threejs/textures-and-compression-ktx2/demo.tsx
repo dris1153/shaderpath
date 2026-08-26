@@ -211,6 +211,7 @@ export default function TexturesAndCompressionKtx2Demo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",
@@ -262,9 +263,6 @@ export default function TexturesAndCompressionKtx2Demo() {
             <span className="text-muted-foreground">{L.anisoActual}</span>
             <span>{readout.effectiveAniso}×</span>
           </div>
-        </div>
-        <div className="absolute inset-x-3 bottom-3 rounded-lg border bg-background/85 px-3 py-1.5 text-xs">
-          {L.hint}
         </div>
       </div>
     </Demo>

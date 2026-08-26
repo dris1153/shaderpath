@@ -20,6 +20,7 @@ type FuncId = (typeof FUNC_IDS)[number];
 
 const LABELS = {
   vi: {
+    hint: "So step với smoothstep ở cùng một ngưỡng: step cho cạnh răng cưa, smoothstep cho một dải chuyển. Đó là khác biệt giữa có và không có khử răng cưa.",
     title: "Function grapher: bộ hàm dựng sẵn",
     func: "Hàm",
     count: "Tần suất N",
@@ -32,6 +33,7 @@ const LABELS = {
     },
   },
   en: {
+    hint: "Compare step against smoothstep at the same threshold: step gives a jagged edge, smoothstep gives a band of transition. That is antialiasing, present or absent.",
     title: "Function Grapher: The Built-in Toolkit",
     func: "Function",
     count: "Frequency N",
@@ -87,6 +89,7 @@ export default function GlslBuiltinFunctionsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

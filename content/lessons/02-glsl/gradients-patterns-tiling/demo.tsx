@@ -20,6 +20,7 @@ const MOTIF_INDEX: Record<string, number> = {
 
 const LABELS = {
   vi: {
+    hint: "Bật lệch hàng rồi tăng số ô: đường nối giữa các ô biến mất, vì không ô nào còn thẳng hàng với ô ngay trên nó.",
     title: "Pattern builder: tiling & xoay theo ô",
     motif: "Hoạ tiết",
     checker: "Caro",
@@ -31,6 +32,7 @@ const LABELS = {
     rowOffset: "Lệch hàng (brick offset)",
   },
   en: {
+    hint: "Turn on the row offset and raise the tile count: the seams between tiles disappear, because no tile lines up with the one directly above it any more.",
     title: "Pattern Builder: Per-Cell Tiling & Rotation",
     motif: "Motif",
     checker: "Checker",
@@ -87,6 +89,7 @@ export default function GradientsPatternsTilingDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

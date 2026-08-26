@@ -11,6 +11,7 @@ import { useVisibleRaf } from "@/lib/hooks/use-visible-frameloop";
 
 const LABELS = {
   vi: {
+    hint: "Chọn Basic: quả cầu phẳng lì dù đèn ở đâu. Đó không phải material xấu — nó chỉ đơn giản là không đọc ánh sáng.",
     title: "Bậc thang material: Basic → Physical",
     material: "Loại material",
     metalness: "Metalness (Standard/Physical)",
@@ -22,6 +23,7 @@ const LABELS = {
     optPhysical: "Physical — PBR + clearcoat",
   },
   en: {
+    hint: "Pick Basic: the sphere stays flat no matter where the light is. That is not a bad material — it simply does not read lighting at all.",
     title: "Material Ladder: Basic → Physical",
     material: "Material type",
     metalness: "Metalness (Standard/Physical)",
@@ -199,6 +201,7 @@ export default function MaterialsFromBasicToPhysicalDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

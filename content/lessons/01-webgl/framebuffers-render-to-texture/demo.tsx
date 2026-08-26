@@ -14,6 +14,7 @@ import postVertexSource from "./post-effect.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đặt hiệu ứng về 'không': hình trông y như chưa hề có pass thứ hai. Kết quả pass 1 vẫn đi trọn qua một texture, chỉ là pass 2 không đụng vào nó.",
     title: "Render-to-texture: pipeline 2 pass qua framebuffer",
     effect: "Hiệu ứng pass 2",
     strength: "Cường độ",
@@ -23,6 +24,7 @@ const LABELS = {
     effectWave: "Sóng",
   },
   en: {
+    hint: "Set the effect to none: the image looks as if there were no second pass at all. Pass 1's result still travels through a texture; pass 2 simply leaves it alone.",
     title: "Render-to-Texture: a 2-Pass Framebuffer Pipeline",
     effect: "Pass 2 effect",
     strength: "Strength",
@@ -297,6 +299,7 @@ export default function FramebuffersRenderToTextureDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

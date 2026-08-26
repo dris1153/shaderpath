@@ -12,6 +12,7 @@ import vertexSource from "./pipeline-trace.vert";
 
 const LABELS = {
   vi: {
+    hint: "Đặt w khác 1 rồi nhảy giữa trạm clip space và trạm NDC. Đó là trạm duy nhất trong cả chuỗi không phải một phép nhân ma trận.",
     title: "Trace panel: một tam giác qua từng trạm của pipeline",
     stage: "Trạm",
     stageInput: "1. Vertex specification (input)",
@@ -30,6 +31,7 @@ const LABELS = {
     loading: "đang dựng lại pipeline…",
   },
   en: {
+    hint: "Set w away from 1, then step between the clip space stage and the NDC stage. That is the only station in the whole chain that is not a matrix multiply.",
     title: "Trace Panel: One Triangle Through Every Pipeline Station",
     stage: "Station",
     stageInput: "1. Vertex specification (input)",
@@ -309,6 +311,7 @@ export default function RenderingPipelineDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

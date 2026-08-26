@@ -12,6 +12,7 @@ import vertexSource from "./roads.vert";
 
 const LABELS = {
   vi: {
+    hint: "Chuyển từ attribute sang varying: vẫn đúng ba đỉnh đó, nhưng màu giờ được nội suy cho từng pixel nằm giữa chúng. Đó là toàn bộ việc varying làm.",
     title: "Ba con đường dữ liệu: attribute vs uniform vs varying",
     mode: "Con đường dữ liệu",
     modeUniform: "uniform — màu đặc cả tam giác",
@@ -20,6 +21,7 @@ const LABELS = {
     hue: "Hue (chỉ dùng ở chế độ uniform)",
   },
   en: {
+    hint: "Switch from attribute to varying: the same three vertices, but the colour is now interpolated for every pixel between them. That is the whole job of a varying.",
     title: "Three Data Roads: attribute vs uniform vs varying",
     mode: "Data road",
     modeUniform: "uniform — one solid color, whole triangle",
@@ -171,6 +173,7 @@ export default function AttributesUniformsVaryingsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       controls={[
         {
           kind: "select",

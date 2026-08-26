@@ -13,6 +13,7 @@ import vertexShader from "./matrix-transform.vert";
 
 const LABELS = {
   vi: {
+    hint: "Tắt pivot ở tâm rồi xoay: hình quay quanh góc (0,0) chứ không quanh chính nó. Ma trận xoay luôn quay quanh gốc toạ độ, muốn khác thì phải dời trước.",
     title: "Xoay & scale UV bằng ma trận",
     rotation: "Góc xoay (độ)",
     scale: "Tỉ lệ",
@@ -21,6 +22,7 @@ const LABELS = {
     spin: "Tự xoay theo thời gian",
   },
   en: {
+    hint: "Turn the centre pivot off and rotate: the shape swings about the (0,0) corner, not about itself. A rotation matrix always turns about the origin; anything else needs a shift first.",
     title: "Rotating & Scaling UV with a Matrix",
     rotation: "Rotation (deg)",
     scale: "Scale",
@@ -82,6 +84,7 @@ export default function MatrixTransformsDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         { kind: "number", key: "rotation", label: L.rotation, min: -180, max: 180, step: 5, defaultValue: 0 },

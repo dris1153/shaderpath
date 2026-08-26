@@ -16,6 +16,7 @@ type SwizzleMode = (typeof SWIZZLE_MODES)[number];
 
 const LABELS = {
   vi: {
+    hint: "Để ý kiểu swizzle lặp kênh (như .xxx): một kênh duy nhất bị nhân ra cả ba, nên màu luôn rơi về thang xám.",
     title: "Swizzle explorer: cùng một base color, đổi kênh",
     pattern: "Kiểu swizzle",
     options: {
@@ -26,6 +27,7 @@ const LABELS = {
     },
   },
   en: {
+    hint: "Watch a swizzle that repeats a channel (like .xxx): one channel gets copied into all three, so the colour always lands on the grey scale.",
     title: "Swizzle Explorer: Same Base Color, Re-channeled",
     pattern: "Swizzle pattern",
     options: {
@@ -77,6 +79,7 @@ export default function SwizzleExplorerDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={1}
       controls={[
         {

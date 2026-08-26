@@ -12,6 +12,7 @@ import vertexSource from "./interleaved-quad.vert";
 
 const LABELS = {
   vi: {
+    hint: "Bật offset sai và soi bảng byte: màu không lệch nhẹ mà đọc trọn vào ô của trường khác. Lệch 4 byte là lệch hẳn một số thực.",
     title: "Buffer xen kẽ: byte table trực quan",
     wrong: "Dùng offset SAI (giáo dục)",
     caption: "Buffer interleaved — 20 byte/vertex (2 float vị trí + 3 float màu)",
@@ -19,6 +20,7 @@ const LABELS = {
     statusBad: "VAO SAI: color offset 4 thay vì 8 — đọc lệch 1 số thực (4 byte)",
   },
   en: {
+    hint: "Flip to the wrong offset and read the byte table: the colour is not slightly off, it reads straight out of another field's cell. Four bytes off is one whole float off.",
     title: "Interleaved Buffer: Visual Byte Table",
     wrong: "Use WRONG offset (educational)",
     caption: "Interleaved buffer — 20 bytes/vertex (2 position floats + 3 color floats)",
@@ -197,6 +199,7 @@ export default function BuffersVboVaoDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "wrong", label: L.wrong, defaultValue: false },

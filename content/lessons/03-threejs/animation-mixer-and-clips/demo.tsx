@@ -24,6 +24,7 @@ const THREE_LOOP: Record<LoopMode, THREE.AnimationActionLoopStyles> = {
 
 const LABELS = {
   vi: {
+    hint: "Kéo crossfade tới khoảng giữa: cả hai clip cùng chạy và kết quả là trung bình có trọng số của chúng, không phải clip này cắt sang clip kia.",
     title: "AnimationMixer: clip dựng tay + crossfade",
     playing: "Đang phát",
     timeScale: "Tốc độ (timeScale)",
@@ -32,6 +33,7 @@ const LABELS = {
     loopOptions: { repeat: "Lặp lại", once: "Một lần", pingpong: "Ping-pong" },
   },
   en: {
+    hint: "Drag the crossfade to the middle: both clips run at once and the result is their weighted average, not one clip cutting to the other.",
     title: "AnimationMixer: hand-built clip + crossfade",
     playing: "Playing",
     timeScale: "Speed (timeScale)",
@@ -202,6 +204,7 @@ export default function AnimationMixerDemo() {
   return (
     <Demo
       title={L.title}
+      hint={L.hint}
       ratio={16 / 9}
       controls={[
         { kind: "boolean", key: "playing", label: L.playing, defaultValue: true },
