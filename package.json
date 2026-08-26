@@ -22,7 +22,8 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "db:migrate": "tsx db/migrate.ts",
-    "audit:triage": "tsx scripts/audit-content-triage.ts"
+    "audit:triage": "tsx scripts/audit-content-triage.ts",
+    "verify:rls": "tsx scripts/verify-rls.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
