@@ -121,5 +121,12 @@ export async function resetTestDatabase(
   }
 
   process.env.DIRECT_URL = url;
+  // A freshly recreated schema has no pre-auth rows to claim, and the uuid in
+  // .env belongs to the production project — leaving it set would make the
+  // migrator reject a value it cannot find in this database's auth.users.
+  //
+  // Empty rather than deleted: runMigrations loads .env itself, and dotenv only
+  // skips keys that are already present — a deleted one would be filled back in.
+  process.env.BACKFILL_USER_ID = "";
   await runMigrations();
 }
