@@ -35,7 +35,8 @@ export function DeleteAccount() {
   const email = data?.user?.email ?? null;
   if (!data?.user) return null;
 
-  const confirmed = email !== null && typed.trim().toLowerCase() === email.toLowerCase();
+  const confirmed =
+    email !== null && typed.trim().toLowerCase() === email.toLowerCase();
 
   async function handleDelete() {
     setBusy(true);
@@ -60,11 +61,15 @@ export function DeleteAccount() {
         <CardDescription>{t("deleteAccountBody")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button variant="outline" size="sm" onClick={() => void downloadExportFile()}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void downloadExportFile()}
+        >
           {t("deleteAccountExportFirst")}
         </Button>
 
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <label htmlFor="confirm-email" className="text-sm font-medium">
             {t("deleteAccountConfirmLabel", { email: email ?? "" })}
           </label>

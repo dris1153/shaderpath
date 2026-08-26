@@ -51,7 +51,6 @@ export async function AppHeader() {
         <div className="flex items-center gap-1">
           <LocaleSwitcher />
           <ThemeToggle />
-          <UserMenu />
           <Button
             variant="ghost"
             size="icon"
@@ -61,6 +60,7 @@ export async function AppHeader() {
           >
             <IconSettings />
           </Button>
+          <UserMenu />
         </div>
       </div>
     </header>

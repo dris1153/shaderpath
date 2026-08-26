@@ -70,7 +70,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </Alert>
       )}
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <label htmlFor="email" className="text-sm font-medium">
           {t("email")}
         </label>
@@ -84,14 +84,16 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="flex flex-col gap-2">
         <label htmlFor="password" className="text-sm font-medium">
           {t("password")}
         </label>
         <Input
           id="password"
           type="password"
-          autoComplete={mode === "register" ? "new-password" : "current-password"}
+          autoComplete={
+            mode === "register" ? "new-password" : "current-password"
+          }
           required
           minLength={mode === "register" ? MIN_PASSWORD : undefined}
           value={password}
@@ -105,7 +107,11 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
       </div>
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? t("working") : mode === "register" ? t("register") : t("login")}
+        {pending
+          ? t("working")
+          : mode === "register"
+            ? t("register")
+            : t("login")}
       </Button>
 
       <p className="text-muted-foreground text-center text-sm">

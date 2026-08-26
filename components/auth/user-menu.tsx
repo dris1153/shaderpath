@@ -25,7 +25,12 @@ export function UserMenu() {
 
   if (!data?.user) {
     return (
-      <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/login" />}>
+      <Button
+        variant="outline"
+        size="sm"
+        nativeButton={false}
+        render={<Link href="/login" />}
+      >
         {t("login")}
       </Button>
     );
@@ -48,7 +53,7 @@ export function UserMenu() {
           </Button>
         }
       />
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="min-w-max">
         <DropdownMenuItem disabled className="text-muted-foreground text-xs">
           {data.user.email ?? t("account")}
         </DropdownMenuItem>
