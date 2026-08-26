@@ -122,4 +122,58 @@ void main() {
 }
 `,
   },
+  {
+    slug: "polar-kaleidoscope",
+    title: { vi: "Toạ độ cực & kaleidoscope", en: "Polar Coordinates and Kaleidoscope" },
+    source: `void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec2 q = (uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
+
+  // @polarPair
+  float r = length(q);
+  float a = atan(q.y, q.x);
+
+  // @polarFold
+  float slices = 3.0 + floor(uMouse.x * 9.0);
+  a = abs(mod(a, 6.2831853 / slices) - 3.14159265 / slices);
+
+  // @polarBackToXy
+  vec2 folded = vec2(cos(a), sin(a)) * r;
+
+  float shape = smoothstep(0.02, 0.0, abs(folded.x - 0.18) - 0.05 * sin(folded.y * 14.0 + uTime));
+  vec3 color = 0.5 + 0.5 * cos(r * 6.0 - uTime + vec3(0.0, 2.0, 4.0));
+  fragColor = vec4(color * shape + 0.03, 1.0);
+}
+`,
+  },
+  {
+    slug: "easing-curves",
+    title: { vi: "Đường cong easing", en: "Easing Curves" },
+    source: `float plot(float y, float value) {
+  // @easePlotBand
+  return smoothstep(0.012, 0.0, abs(y - value));
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  float t = uv.x;
+
+  float linear = t;
+  float easeIn = t * t;
+  float easeOut = 1.0 - (1.0 - t) * (1.0 - t);
+  // @easeSmoothstep
+  float smooth_ = t * t * (3.0 - 2.0 * t);
+
+  vec3 color = vec3(0.05, 0.06, 0.09);
+  color += vec3(0.35) * plot(uv.y, linear);
+  color += vec3(0.95, 0.4, 0.3) * plot(uv.y, easeIn);
+  color += vec3(0.3, 0.8, 0.95) * plot(uv.y, easeOut);
+  color += vec3(0.6, 0.95, 0.5) * plot(uv.y, smooth_);
+
+  // @easeSameEndpoints
+  float head = smoothstep(0.006, 0.0, min(t, 1.0 - t));
+  fragColor = vec4(color + head * 0.25, 1.0);
+}
+`,
+  },
 ];

@@ -1,7 +1,9 @@
 import type { Locale } from "@/content/types";
 import { BASICS_PRESETS } from "./basics";
+import { COLOR_PRESETS } from "./color";
 import { localizeSource } from "./comments";
 import { FEEDBACK_PRESETS } from "./feedback";
+import { IMAGE_FX_PRESETS } from "./image-fx";
 import { NOISE_PRESETS } from "./noise";
 import { RAYMARCH_PRESETS } from "./raymarch";
 import type { PlaygroundPreset, PlaygroundPresetGroup } from "./types";
@@ -22,6 +24,16 @@ export const PRESET_GROUPS: PlaygroundPresetGroup[] = [
     id: "procedural",
     label: { vi: "Noise & thủ tục", en: "Noise & Procedural" },
     presets: NOISE_PRESETS,
+  },
+  {
+    id: "color",
+    label: { vi: "Màu & tín hiệu", en: "Colour & Signal" },
+    presets: COLOR_PRESETS,
+  },
+  {
+    id: "image-fx",
+    label: { vi: "Hiệu ứng ảnh", en: "Image Effects" },
+    presets: IMAGE_FX_PRESETS,
   },
   {
     id: "feedback",

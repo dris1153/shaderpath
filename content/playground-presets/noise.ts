@@ -161,4 +161,32 @@ void main() {
 }
 `,
   },
+  {
+    slug: "truchet-tiles",
+    title: { vi: "Truchet tiles", en: "Truchet Tiles" },
+    source: `float hash21(vec2 p) {
+  p = fract(p * vec2(127.1, 311.7));
+  p += dot(p, p + 34.23);
+  return fract(p.x * p.y);
+}
+
+void main() {
+  vec2 uv = gl_FragCoord.xy / uResolution;
+  vec2 p = uv * vec2(uResolution.x / uResolution.y, 1.0) * (4.0 + floor(uMouse.x * 8.0));
+
+  vec2 cell = floor(p);
+  vec2 f = fract(p) - 0.5;
+
+  // @truchetFlip
+  if (hash21(cell) > 0.5) f.x = -f.x;
+
+  // @truchetTwoArcs
+  float d = abs(length(f - sign(f.x + f.y + 0.001) * 0.5) - 0.5);
+
+  float line = smoothstep(0.09, 0.06, d);
+  vec3 color = 0.5 + 0.5 * cos(hash21(cell) * 6.0 + vec3(0.0, 2.0, 4.0));
+  fragColor = vec4(mix(vec3(0.04, 0.05, 0.08), color, line), 1.0);
+}
+`,
+  },
 ];
