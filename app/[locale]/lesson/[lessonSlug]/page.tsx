@@ -34,6 +34,7 @@ import { LessonFooterNav } from "@/components/lesson/lesson-footer-nav";
 import { MarkComplete } from "@/components/lesson/mark-complete";
 import { ProgressTracker } from "@/components/lesson/progress-tracker";
 import { References } from "@/components/lesson/references";
+import { DEFAULT_LOCALE } from "@/content/types";
 
 // 162 lessons per locale. The page reads no user data, so every one of them is
 // the same for every reader and can be built once instead of per request.
@@ -58,7 +59,9 @@ export default async function LessonPage({
   const availableLocales = entry
     ? (Object.keys(entry) as Locale[])
     : ([] as Locale[]);
-  const usedLocale = entry?.[locale] ? locale : availableLocales[0];
+  const usedLocale = entry?.[locale]
+    ? locale
+    : (availableLocales.find((l) => l === DEFAULT_LOCALE) ?? availableLocales[0]);
   const theoryLoader = usedLocale ? entry?.[usedLocale] : undefined;
   const Theory = theoryLoader ? (await theoryLoader()).default : null;
   const toc = usedLocale ? (TOC_REGISTRY[lesson.slug]?.[usedLocale] ?? []) : [];

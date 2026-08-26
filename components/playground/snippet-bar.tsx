@@ -31,7 +31,7 @@ import {
   findPreset,
   presetSource,
 } from "@/content/playground-presets";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 
 // Select values are namespaced because presets and snippets share one list:
 // "u:<id>" is a saved snippet, "p:<slug>" is a built-in preset.
@@ -59,7 +59,7 @@ export function SnippetBar({
   const selectItems: Record<string, string> = {};
   for (const group of PRESET_GROUPS) {
     for (const p of group.presets) {
-      selectItems[`p:${p.slug}`] = p.title[locale] ?? p.title.vi;
+      selectItems[`p:${p.slug}`] = pick(p.title, locale);
     }
   }
   for (const s of snippets) selectItems[`u:${s.id}`] = s.title;
@@ -109,7 +109,7 @@ export function SnippetBar({
             const preset = findPreset(v.slice(2));
             if (preset) {
               onSelect(v, {
-                title: preset.title[locale] ?? preset.title.vi,
+                title: pick(preset.title, locale),
                 source: presetSource(preset, locale),
               });
             }
@@ -130,10 +130,10 @@ export function SnippetBar({
         <SelectContent>
           {PRESET_GROUPS.map((group) => (
             <SelectGroup key={group.id}>
-              <SelectLabel>{group.label[locale] ?? group.label.vi}</SelectLabel>
+              <SelectLabel>{pick(group.label, locale)}</SelectLabel>
               {group.presets.map((p) => (
                 <SelectItem key={p.slug} value={`p:${p.slug}`}>
-                  {p.title[locale] ?? p.title.vi}
+                  {pick(p.title, locale)}
                 </SelectItem>
               ))}
             </SelectGroup>

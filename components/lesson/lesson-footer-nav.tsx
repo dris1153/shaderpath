@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import type { LessonSlug } from "@/content/slugs";
 import { getNeighbors } from "@/lib/curriculum";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,7 +26,7 @@ export async function LessonFooterNav({
               <div className="min-w-0">
                 <p className="text-muted-foreground text-xs">{t("prev")}</p>
                 <p className="truncate text-sm font-medium">
-                  {prev.title[locale]}
+                  {pick(prev.title, locale)}
                 </p>
               </div>
             </CardContent>
@@ -42,7 +42,7 @@ export async function LessonFooterNav({
               <div className="min-w-0">
                 <p className="text-muted-foreground text-xs">{t("next")}</p>
                 <p className="truncate text-sm font-medium">
-                  {next.title[locale]}
+                  {pick(next.title, locale)}
                 </p>
               </div>
               <IconArrowRight className="text-muted-foreground size-4 shrink-0" />

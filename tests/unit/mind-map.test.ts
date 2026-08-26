@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LESSONS } from "@/content/curriculum";
+import { LOCALES } from "@/content/types";
 import {
   PITFALLS_REGISTRY,
   TOC_REGISTRY,
@@ -111,7 +112,7 @@ describe("buildLessonMindMap", () => {
 
   it("keeps node ids unique in every real lesson tree (both locales)", () => {
     for (const lesson of LESSONS) {
-      for (const locale of ["vi", "en"] as const) {
+      for (const locale of LOCALES) {
         const tree = buildLessonMindMap({
           meta: lesson,
           locale,

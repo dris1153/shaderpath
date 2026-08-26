@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { LESSONS, TRACKS } from "@/content/curriculum";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { getLesson, getTrack } from "@/lib/curriculum";
 import { useDashboard } from "@/lib/hooks/use-dashboard";
 import { isAuthError } from "@/lib/hooks/fetch-json";
@@ -48,10 +48,10 @@ export function DashboardView() {
                 href={`/track/${track.id}`}
                 className="font-medium hover:underline"
               >
-                {track.title[locale]}
+                {pick(track.title, locale)}
               </Link>
               <p className="text-muted-foreground text-sm">
-                {track.summary[locale]}
+                {pick(track.summary, locale)}
               </p>
             </li>
           ))}
@@ -81,7 +81,7 @@ export function DashboardView() {
   // The queue is the page: every row states why it is there and what to do.
   const items: QueueItemVM[] = queue.flatMap((item) => {
     const lesson = getLesson(item.lessonSlug);
-    return lesson ? [{ ...item, slug: lesson.slug, title: lesson.title[locale] }] : [];
+    return lesson ? [{ ...item, slug: lesson.slug, title: pick(lesson.title, locale) }] : [];
   });
 
   const track = map ? getTrack(map.trackId) : undefined;
@@ -93,7 +93,7 @@ export function DashboardView() {
       ? [
           {
             ...step,
-            title: lesson.title[locale],
+            title: pick(lesson.title, locale),
             scrollPercent: step.current
               ? queue.find((i) => i.kind === "continue")?.scrollPercent
               : undefined,
@@ -113,7 +113,7 @@ export function DashboardView() {
         <TrackMap
           heading={t("trackHeading", {
             position: map.position,
-            title: track.title[locale],
+            title: pick(track.title, locale),
           })}
           meta={t("trackMeta", {
             done: map.done,
@@ -129,7 +129,7 @@ export function DashboardView() {
           unlocksNext={
             nextTrack
               ? t("unlocksTrack", {
-                  track: nextTrack.title[locale],
+                  track: pick(nextTrack.title, locale),
                   count: map.nextTrackLessons,
                 })
               : undefined
@@ -141,7 +141,7 @@ export function DashboardView() {
         items={items}
         unlocksLesson={
           nextLesson
-            ? t("unlocksLesson", { title: nextLesson.title[locale] })
+            ? t("unlocksLesson", { title: pick(nextLesson.title, locale) })
             : undefined
         }
       />

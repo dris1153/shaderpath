@@ -3,7 +3,13 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { LESSONS } from "../content/curriculum";
 import { LESSON_SLUGS } from "../content/slugs";
-import type { Citation, Exercise } from "../content/types";
+import {
+  CORE_LOCALES,
+  LOCALES,
+  type Citation,
+  type Exercise,
+  type Locale,
+} from "../content/types";
 import { extractToc } from "../lib/mdx-toc";
 import { lintMindMapOverride } from "../lib/mind-map-lint";
 
@@ -75,7 +81,7 @@ function assetMissing(src: string): boolean {
  * crossed reference: the file exists, so every other check passes. Rendered
  * screenshots keep a flat .png path and are exempt.
  */
-function wrongLocaleFigure(src: string, locale: "vi" | "en"): boolean {
+function wrongLocaleFigure(src: string, locale: Locale): boolean {
   return src.endsWith(".svg") && !src.endsWith(`/${locale}.svg`);
 }
 
@@ -168,7 +174,7 @@ async function lintLesson(trackDir: string, slug: string) {
   }
 
   // --- figure assets --------------------------------------------------
-  for (const loc of ["vi", "en"] as const) {
+  for (const loc of LOCALES) {
     const file = `theory.${loc}.mdx`;
     const filePath = path.join(dir, file);
     if (!fs.existsSync(filePath)) continue;
@@ -269,7 +275,8 @@ async function lintLesson(trackDir: string, slug: string) {
       if (ex.checklist.length < minChecklist) {
         report(`${at}/${ex.id}: needs >=${minChecklist} checklist items`);
       }
-      for (const loc of ["vi", "en"] as const) {
+      // Core locales only: an extra locale falls back to the default's image.
+      for (const loc of CORE_LOCALES) {
         const ref = ex.referenceImage?.[loc];
         if (ref && assetMissing(ref)) {
           report(
@@ -282,7 +289,9 @@ async function lintLesson(trackDir: string, slug: string) {
           );
         }
       }
-      for (const loc of ["vi", "en"] as const) {
+      // Core locales only: a locale still being filled in is allowed to be
+      // missing, and pick() would report the default's text as if it were its.
+      for (const loc of CORE_LOCALES) {
         if (!ex.prompt[loc]?.trim()) {
           report(`${at}/${ex.id}: empty ${loc} prompt`);
         }

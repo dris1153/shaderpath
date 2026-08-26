@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { extractToc } from "../lib/mdx-toc";
 import { LESSON_SLUGS } from "../content/slugs";
+import { LOCALES } from "../content/types";
 import { stripInlineMath } from "../lib/tex-to-text";
 
 // Emits typed maps from the content/lessons filesystem (decision D2):
@@ -14,7 +15,7 @@ import { stripInlineMath } from "../lib/tex-to-text";
 
 const LESSONS_DIR = path.join(process.cwd(), "content", "lessons");
 const OUT = path.join(process.cwd(), "content", "lesson-registry.generated.ts");
-const LOCALES = ["vi", "en"] as const;
+
 
 interface PitfallItem {
   label: string;

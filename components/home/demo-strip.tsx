@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useLocale, useTranslations } from "next-intl";
 import { LESSONS, TRACKS } from "@/content/curriculum";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { Link } from "@/i18n/navigation";
 import { SHOTS } from "./demo-shots";
 export function DemoStrip() {
@@ -34,7 +34,7 @@ export function DemoStrip() {
                   className="bg-muted aspect-[16/10] w-full rounded-lg border object-cover"
                 />
                 <span className="mt-2 block text-sm font-medium group-hover:underline">
-                  {lesson.title[locale]}
+                  {pick(lesson.title, locale)}
                 </span>
                 <span className="text-muted-foreground block text-xs">
                   {t("thumbMeta", { track: track?.order ?? 0, count })}

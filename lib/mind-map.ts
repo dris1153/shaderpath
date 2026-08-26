@@ -2,7 +2,7 @@ import type {
   PitfallItem,
   TocItem,
 } from "@/content/lesson-registry.generated";
-import type { LessonMeta, Locale, MindMapNode } from "@/content/types";
+import { pick, type LessonMeta, type Locale, type MindMapNode } from "@/content/types";
 import { stripInlineMath } from "@/lib/tex-to-text";
 
 export interface MindMapStrings {
@@ -74,19 +74,19 @@ export function buildLessonMindMap(args: {
     return {
       id: "root",
       kind: "section",
-      label: meta.title[locale],
-      detail: meta.summary[locale],
+      label: pick(meta.title, locale),
+      detail: pick(meta.summary, locale),
       children: args.overrideBranches,
     };
   }
   const branches: MindMapNode[] = [];
 
-  if (meta.objectives[locale].length > 0) {
+  if (pick(meta.objectives, locale).length > 0) {
     branches.push({
       id: "objectives",
       kind: "objective",
       label: strings.objectives,
-      children: meta.objectives[locale].map((o, i) => ({
+      children: pick(meta.objectives, locale).map((o, i) => ({
         id: `objective-${i}`,
         kind: "objective",
         label: o,
@@ -122,13 +122,13 @@ export function buildLessonMindMap(args: {
     ...prerequisites.map((p): MindMapNode => ({
       id: p.slug,
       kind: "link",
-      label: p.title[locale],
+      label: pick(p.title, locale),
       detail: strings.prerequisiteNote,
     })),
     ...dependents.map((d): MindMapNode => ({
       id: d.slug,
       kind: "link",
-      label: d.title[locale],
+      label: pick(d.title, locale),
       detail: strings.dependentNote,
     })),
   ];
@@ -144,8 +144,8 @@ export function buildLessonMindMap(args: {
   return {
     id: "root",
     kind: "section",
-    label: meta.title[locale],
-    detail: meta.summary[locale],
+    label: pick(meta.title, locale),
+    detail: pick(meta.summary, locale),
     children: branches,
   };
 }

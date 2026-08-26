@@ -1,5 +1,6 @@
 "use client";
 
+import { pick } from "@/content/types";
 import { useLocale } from "next-intl";
 import { Demo } from "@/components/viz/demo";
 import { useDemoContext } from "@/components/viz/demo-context";
@@ -38,9 +39,9 @@ function ToolStage() {
   const { values } = useDemoContext();
   const locale = useLocale();
   const loc: "vi" | "en" = locale === "en" ? "en" : "vi";
-  const L = LABELS[loc];
+  const L = pick(LABELS, loc);
   const tool = stringOf(values, "tool", "css") as ToolKind;
-  const cardLabels = CARD_LABELS[loc];
+  const cardLabels = pick(CARD_LABELS, loc);
 
   return (
     <div className="flex size-full flex-col md:flex-row">

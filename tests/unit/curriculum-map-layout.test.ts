@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
+import { CORE_LOCALES } from "@/content/types";
 import {
   COL_W,
   layoutCurriculumMap,
@@ -52,7 +53,9 @@ describe("layoutCurriculumMap", () => {
     // is all the 64px row affords. A longer title would silently overlap the
     // node below — bump ROW_H deliberately if a title ever needs more.
     for (const l of LESSONS) {
-      for (const locale of ["vi", "en"] as const) {
+      // CORE_LOCALES, not LOCALES: pick() would fall back for a locale still
+      // being translated and assert the default's length twice over.
+      for (const locale of CORE_LOCALES) {
         expect(
           l.title[locale].length,
           `${l.slug} ${locale} title too long for the curriculum map row`,

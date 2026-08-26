@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { chromium, type Page } from "@playwright/test";
+import { LOCALES } from "../content/types";
 
 // Reports display-math blocks that overflow their column. KaTeX refuses to wrap
 // display math, so a formula that is too wide either scrolls (fine on a phone,
@@ -75,7 +76,7 @@ async function main() {
       viewport: { width: viewport.width, height: viewport.height },
     });
     for (const slug of slugs) {
-      for (const locale of ["vi", "en"]) {
+      for (const locale of LOCALES) {
         results.push(...(await measure(page, slug, locale, viewport.name)));
       }
     }

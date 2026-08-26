@@ -1,5 +1,6 @@
 "use client";
 
+import { pick } from "@/content/types";
 import { useLocale } from "next-intl";
 import { Demo } from "@/components/viz/demo";
 import { PrincipleStage } from "./principle-stage";
@@ -14,7 +15,7 @@ export default function AnimationPrinciplesForUiDemo() {
   const locale = useLocale();
   const L = LABELS[locale as keyof typeof LABELS] ?? LABELS.vi;
   const loc: "vi" | "en" = locale === "en" ? "en" : "vi";
-  const options = PRINCIPLE_OPTIONS[loc];
+  const options = pick(PRINCIPLE_OPTIONS, loc);
   const keys = Object.keys(options) as PrincipleKind[];
 
   return (

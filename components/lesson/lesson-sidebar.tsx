@@ -8,7 +8,7 @@ import {
   IconStar,
 } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
-import type { LessonMeta, Locale, TrackId } from "@/content/types";
+import { pick, type LessonMeta, type Locale, type TrackId } from "@/content/types";
 import type { ProgressMap } from "@/lib/curriculum";
 import {
   getLessonsOfModule,
@@ -64,7 +64,7 @@ function LessonLink({
       ) : (
         <span className="size-4 shrink-0" />
       )}
-      <span className="truncate">{lesson.title[locale]}</span>
+      <span className="truncate">{pick(lesson.title, locale)}</span>
       {lesson.tier === "elective" && (
         <IconStar className="size-3 shrink-0 opacity-50" />
       )}
@@ -99,13 +99,13 @@ export function LessonSidebar({
             href={`/track/${track.id}`}
             className="text-muted-foreground hover:text-foreground text-xs font-medium tracking-wide uppercase"
           >
-            {t("backToTrack")} · {track.title[locale]}
+            {t("backToTrack")} · {pick(track.title, locale)}
           </Link>
           <Accordion defaultValue={[currentModuleId]} className="mt-2">
             {modules.map((mod) => (
               <AccordionItem key={mod.id} value={mod.id}>
                 <AccordionTrigger className="text-sm">
-                  {mod.title[locale]}
+                  {pick(mod.title, locale)}
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="flex flex-col gap-0.5">

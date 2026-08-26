@@ -1,11 +1,20 @@
 import fs from "node:fs";
 import path from "node:path";
+import { LOCALES, type Locale } from "../content/types";
 
 // Shared by gen-figures.ts and lint-figures.ts so the generator and the gate
 // can never disagree about what counts as translatable text in a figure.
 
 export const FIGURES_DIR = path.join(process.cwd(), "public", "figures");
 export const STRINGS_DIR = path.join(process.cwd(), "content", "figures-i18n");
+
+/**
+ * The language the figures are authored in. Its SVG is both the geometry source
+ * and that locale's output — not the same thing as DEFAULT_LOCALE, which is the
+ * language the site serves first.
+ */
+export const SOURCE_LOCALE: Locale = "en";
+export const TARGET_LOCALES = LOCALES.filter((l) => l !== SOURCE_LOCALE);
 
 // Text-bearing elements. They do not nest into themselves, so a non-greedy
 // match to the closing tag is exact.
@@ -95,11 +104,19 @@ export interface Figure {
   name: string;
   /** public/figures/<track>/<name> */
   dir: string;
-  enPath: string;
-  viPath: string;
-  /** content/figures-i18n/<track>/<name>.json */
-  stringsPath: string;
 }
+
+/** public/figures/<track>/<name>/<locale>.svg */
+export function svgPath(figure: Figure, locale: Locale): string {
+  return path.join(figure.dir, `${locale}.svg`);
+}
+
+/** content/figures-i18n/<track>/<name>.<locale>.json */
+export function stringsPath(figure: Figure, locale: Locale): string {
+  return path.join(STRINGS_DIR, figure.track, `${figure.name}.${locale}.json`);
+}
+
+export const sourcePath = (figure: Figure) => svgPath(figure, SOURCE_LOCALE);
 
 export function listFigures(): Figure[] {
   const out: Figure[] = [];
@@ -109,25 +126,18 @@ export function listFigures(): Figure[] {
     for (const name of fs.readdirSync(trackDir).sort()) {
       const dir = path.join(trackDir, name);
       if (!fs.statSync(dir).isDirectory()) continue;
-      const enPath = path.join(dir, "en.svg");
-      if (!fs.existsSync(enPath)) continue;
-      out.push({
-        track,
-        name,
-        dir,
-        enPath,
-        viPath: path.join(dir, "vi.svg"),
-        stringsPath: path.join(STRINGS_DIR, track, `${name}.json`),
-      });
+      if (!fs.existsSync(path.join(dir, `${SOURCE_LOCALE}.svg`))) continue;
+      out.push({ track, name, dir });
     }
   }
   return out;
 }
 
-export function readStrings(figure: Figure): Strings {
-  if (!fs.existsSync(figure.stringsPath)) return Object.create(null) as Strings;
+export function readStrings(figure: Figure, locale: Locale): Strings {
+  const file = stringsPath(figure, locale);
+  if (!fs.existsSync(file)) return Object.create(null) as Strings;
   return Object.assign(
     Object.create(null) as Strings,
-    JSON.parse(fs.readFileSync(figure.stringsPath, "utf8")) as Strings,
+    JSON.parse(fs.readFileSync(file, "utf8")) as Strings,
   );
 }

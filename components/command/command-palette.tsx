@@ -25,6 +25,7 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { rankLessons, type SearchEntry } from "./search-match";
+import { DEFAULT_LOCALE, LOCALES, type Locale } from "@/content/types";
 
 const INDEX = searchIndex as SearchEntry[];
 
@@ -110,7 +111,12 @@ export function CommandPalette({
             <CommandItem
               value="action-locale"
               onSelect={() => {
-                const next = locale === "vi" ? "en" : "vi";
+                // Cycles every configured language, the way the dropdown does — a
+                // vi/en toggle could never reach a third one.
+                const order: readonly Locale[] = LOCALES;
+                const next: Locale =
+                  order[(order.indexOf(locale as Locale) + 1) % order.length] ??
+                  DEFAULT_LOCALE;
                 onOpenChange(false);
                 router.replace("/", { locale: next });
               }}

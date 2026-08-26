@@ -1,5 +1,6 @@
 "use client";
 
+import { pick } from "@/content/types";
 import { useEffect, useState, type ComponentType } from "react";
 import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -44,8 +45,8 @@ export function PrincipleStage() {
   const { values } = useDemoContext();
   const locale = useLocale();
   const loc: "vi" | "en" = locale === "en" ? "en" : "vi";
-  const T = STAGE_TEXT[loc];
-  const panelLabels = PANEL_LABELS[loc];
+  const T = pick(STAGE_TEXT, loc);
+  const panelLabels = pick(PANEL_LABELS, loc);
   const principle = stringOf(values, "principle", "anticipation") as PrincipleKind;
   const reducedMotion = usePrefersReducedMotion();
   const [playToken, setPlayToken] = useState(0);

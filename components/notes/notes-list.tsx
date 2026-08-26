@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { IconBookmark, IconNote } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
 import type { LessonSlug } from "@/content/slugs";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { getLesson } from "@/lib/curriculum";
 import { useNotes } from "@/lib/hooks/use-notes";
 import {
@@ -76,7 +76,7 @@ export function NotesList() {
               <CardHeader>
                 <CardTitle>
                   <Link href={`/lesson/${slug}`} className="hover:underline">
-                    {lesson.title[locale]}
+                    {pick(lesson.title, locale)}
                   </Link>
                 </CardTitle>
               </CardHeader>
@@ -90,7 +90,7 @@ export function NotesList() {
                       <BookmarkItem
                         key={b.id}
                         id={b.id}
-                        label={b.label ?? lesson.title[locale]}
+                        label={b.label ?? pick(lesson.title, locale)}
                         href={`/${locale}/lesson/${slug}${b.anchorId ? `#${b.anchorId}` : ""}`}
                       />
                     ))}

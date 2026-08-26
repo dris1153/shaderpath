@@ -18,7 +18,7 @@ import { useTheme } from "next-themes";
 import { Link } from "@/i18n/navigation";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import type { LessonSlug } from "@/content/slugs";
-import type { Locale } from "@/content/types";
+import { type Locale, pick } from "@/content/types";
 import { isUnlocked, type ProgressMap } from "@/lib/curriculum";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import { cn } from "@/lib/utils";
@@ -110,7 +110,7 @@ export default function CurriculumMap({
           ...common,
           type: "lesson",
           data: {
-            title: n.lesson!.title[locale],
+            title: pick(n.lesson!.title, locale),
             state: stateOf(n.lesson!.slug, progress),
             slug: n.lesson!.slug,
             isCheckpoint: n.lesson!.kind === "checkpoint",
@@ -123,7 +123,7 @@ export default function CurriculumMap({
         type: "label",
         selectable: false,
         data: {
-          title: (n.track?.title ?? n.module?.title)?.[locale] ?? "",
+          title: pick(n.track?.title ?? n.module?.title ?? { vi: "", en: "" }, locale),
           kind: n.kind,
         } satisfies LabelNodeData,
       };

@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { TRACKS } from "@/content/curriculum";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { useStats } from "@/lib/hooks/use-stats";
 import {
   Card,
@@ -47,7 +47,7 @@ export function StatsView() {
 
   const distribution = stats
     ? TRACKS.map((track) => ({
-        track: track.title[locale],
+        track: pick(track.title, locale),
         minutes: Math.round(stats.minutesByTrack[track.id] ?? 0),
       })).filter((d) => d.minutes > 0)
     : [];

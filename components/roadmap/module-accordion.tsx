@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { Locale, ModuleDef } from "@/content/types";
+import { pick, type Locale, type ModuleDef } from "@/content/types";
 import { getLessonsOfModule, moduleCompletion } from "@/lib/curriculum";
 import {
   Accordion,
@@ -38,7 +38,7 @@ export function ModuleAccordion({
           <AccordionItem key={mod.id} value={mod.id}>
             <AccordionTrigger>
               <div className="flex w-full items-center justify-between gap-4 pr-2">
-                <span className="font-medium">{mod.title[locale]}</span>
+                <span className="font-medium">{pick(mod.title, locale)}</span>
                 <span className="text-muted-foreground flex items-center gap-3 text-xs tabular-nums">
                   {stats ? (
                     <>
@@ -50,7 +50,7 @@ export function ModuleAccordion({
                       </span>
                       <Progress
                         value={stats.percent}
-                        aria-label={`${mod.title[locale]}: ${t("coreProgress", {
+                        aria-label={`${pick(mod.title, locale)}: ${t("coreProgress", {
                           completed: stats.coreCompleted,
                           total: stats.coreTotal,
                         })}`}

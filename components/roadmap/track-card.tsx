@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { Locale, TrackDef } from "@/content/types";
+import { pick, type Locale, type TrackDef } from "@/content/types";
 import { getModulesOfTrack, trackCompletion } from "@/lib/curriculum";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import {
@@ -38,7 +38,7 @@ export function TrackCard({
               {String(track.order).padStart(2, "0")}
             </Badge>
             <Link href={`/track/${track.id}`} className="hover:underline">
-              {track.title[locale]}
+              {pick(track.title, locale)}
             </Link>
           </CardTitle>
           {stats ? (
@@ -52,11 +52,11 @@ export function TrackCard({
             <Skeleton className="h-4 w-16 shrink-0" />
           )}
         </div>
-        <CardDescription>{track.summary[locale]}</CardDescription>
+        <CardDescription>{pick(track.summary, locale)}</CardDescription>
         {stats ? (
           <Progress
             value={stats.percent}
-            aria-label={`${track.title[locale]}: ${t("coreProgress", {
+            aria-label={`${pick(track.title, locale)}: ${t("coreProgress", {
               completed: stats.coreCompleted,
               total: stats.coreTotal,
             })}`}

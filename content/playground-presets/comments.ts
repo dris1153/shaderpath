@@ -1,10 +1,10 @@
-import type { Locale } from "@/content/types";
+import { pick, type Locale, type Localized} from "@/content/types";
 
 // Preset sources carry `// @key` markers instead of prose so one shader body
 // serves both locales — the code can never drift between languages, only the
 // comment text does. Keys are global (helpers like fbm are shared by several
 // presets); tests/unit/playground-presets.test.ts fails on a missing key.
-export const PRESET_COMMENTS: Record<Locale, Record<string, string>> = {
+export const PRESET_COMMENTS: Localized<Record<string, string>> = {
   vi: {
     cosinePalette: "Bảng màu cosine: a + b * cos(2pi * (c*t + d))",
     mouseHalo: "Quầng sáng bám theo con trỏ (uMouse chuẩn hoá 0..1)",
@@ -57,7 +57,7 @@ const MARKER = /\/\/\s*@(\w+)/g;
 
 /** Swap `// @key` markers for the locale's comment text. */
 export function localizeSource(source: string, locale: Locale): string {
-  const dict = PRESET_COMMENTS[locale] ?? PRESET_COMMENTS.vi;
+  const dict = pick(PRESET_COMMENTS, locale);
   return source.replace(MARKER, (_m, key: string) => `// ${dict[key] ?? key}`);
 }
 

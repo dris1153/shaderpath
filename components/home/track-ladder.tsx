@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { Link } from "@/i18n/navigation";
 
 const LESSON_COUNTS = LESSONS.reduce<Record<string, number>>((acc, lesson) => {
@@ -54,7 +54,7 @@ export function TrackLadder() {
                 {index + 1}
               </span>
               <span className="min-w-0 flex-1 font-medium group-hover:underline">
-                {track.title[locale]}
+                {pick(track.title, locale)}
               </span>
               <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
                 {t("trackLessons", { count: LESSON_COUNTS[track.id] ?? 0 })}

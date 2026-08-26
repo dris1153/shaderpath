@@ -1,6 +1,6 @@
 import { EXERCISES_REGISTRY } from "@/content/lesson-registry.generated";
 import type { LessonSlug } from "@/content/slugs";
-import type { Locale } from "@/content/types";
+import { pick, type Locale } from "@/content/types";
 import { highlightCode } from "@/lib/highlight";
 import { ExerciseList } from "./exercise-list";
 import { PromptBody } from "./prompt-body";
@@ -26,17 +26,19 @@ export async function ExerciseSection({
       const vm: ExerciseVM = {
         id: ex.id,
         kind: ex.kind,
-        hints: ex.hints.map((h) => h[locale]),
-        checklist: ex.checklist.map((c) => c[locale]),
+        hints: ex.hints.map((h) => pick(h, locale)),
+        checklist: ex.checklist.map((c) => pick(c, locale)),
         starterCode: ex.starterCode,
-        referenceImage: ex.referenceImage?.[locale],
+        referenceImage: ex.referenceImage
+          ? pick(ex.referenceImage, locale)
+          : undefined,
       };
 
       return {
         exercise: vm,
-        prompt: <PromptBody text={ex.prompt[locale]} />,
+        prompt: <PromptBody text={pick(ex.prompt, locale)} />,
         solutionNote: ex.solutionNote ? (
-          <PromptBody text={ex.solutionNote[locale]} />
+          <PromptBody text={pick(ex.solutionNote, locale)} />
         ) : null,
         solutionHtml: ex.solutionCode
           ? await highlightCode(

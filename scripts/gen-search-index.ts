@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { LESSONS, TRACKS } from "../content/curriculum";
+import { pick, LOCALES, type Locale } from "../content/types";
 
 // Build-time search index for the command palette (spec §6.1.9): title, tags,
 // summary from curriculum + a plaintext excerpt from authored theory MDX.
@@ -16,7 +17,7 @@ const EXCERPT_CHARS = 240;
 
 interface SearchEntry {
   slug: string;
-  locale: "vi" | "en";
+  locale: Locale;
   title: string;
   trackTitle: string;
   tags: string[];
@@ -49,7 +50,7 @@ const trackTitle = new Map(TRACKS.map((t) => [t.id, t.title]));
 const entries: SearchEntry[] = [];
 
 for (const lesson of LESSONS) {
-  for (const locale of ["vi", "en"] as const) {
+  for (const locale of LOCALES) {
     const theoryPath = findTheoryFile(lesson.slug, locale);
     const excerpt = theoryPath
       ? mdxToPlaintext(fs.readFileSync(theoryPath, "utf8")).slice(
@@ -60,10 +61,13 @@ for (const lesson of LESSONS) {
     entries.push({
       slug: lesson.slug,
       locale,
-      title: lesson.title[locale],
-      trackTitle: trackTitle.get(lesson.trackId)?.[locale] ?? "",
+      title: pick(lesson.title, locale),
+      trackTitle: (() => {
+        const t = trackTitle.get(lesson.trackId);
+        return t ? pick(t, locale) : "";
+      })(),
       tags: lesson.tags,
-      summary: lesson.summary[locale],
+      summary: pick(lesson.summary, locale),
       excerpt,
     });
   }

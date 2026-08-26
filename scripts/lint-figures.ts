@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import { chromium, type Page } from "@playwright/test";
+import { LOCALES } from "../content/types";
 import {
   applyFigureText,
   extractFigureText,
   listFigures,
   readStrings,
+  sourcePath,
+  stringsPath,
+  svgPath,
+  TARGET_LOCALES,
 } from "./figure-text";
 
 // Three gates over the bilingual figures. Usage: pnpm lint:figures [--no-render]
@@ -21,63 +26,65 @@ const figures = listFigures();
 
 // --- gate 1 + 2 -------------------------------------------------------
 let nodes = 0;
-let undecided = 0;
+const undecided = new Map<string, number>();
 for (const figure of figures) {
   const at = `${figure.track}/${figure.name}`;
-  const en = fs.readFileSync(figure.enPath, "utf8");
-  const texts = extractFigureText(en);
+  const source = fs.readFileSync(sourcePath(figure), "utf8");
+  const texts = extractFigureText(source);
   nodes += texts.length;
 
   // Two shapes the run walker cannot see correctly. Both are legal SVG and both
   // are absent from the corpus today, so this reports them rather than letting
   // a future figure translate itself into nonsense.
-  const withoutComments = en.replace(/<!--[\s\S]*?-->/g, "");
+  const withoutComments = source.replace(/<!--[\s\S]*?-->/g, "");
   for (const tag of withoutComments.match(/<[^>]*>/g) ?? []) {
     // A `>` inside an attribute value ends the tag as far as the walker is
     // concerned, corrupting every key after it.
     if ((tag.match(/"/g) ?? []).length % 2 === 1) {
-      errors.push(`${at}: en.svg has a '>' inside an attribute — ${tag.slice(0, 50)}`);
+      errors.push(`${at}: source has a '>' inside an attribute — ${tag.slice(0, 50)}`);
       break;
     }
   }
-  for (const comment of en.match(/<!--[\s\S]*?-->/g) ?? []) {
+  for (const comment of source.match(/<!--[\s\S]*?-->/g) ?? []) {
     // A commented-out label would still be extracted, translated and billed.
-    if (/<(?:text|title)/.test(comment)) {
-      errors.push(`${at}: en.svg has a commented-out <text> — delete it instead`);
+    if (/<(?:text|title)/.test(comment)) {
+      errors.push(`${at}: source has a commented-out <text> — delete it instead`);
       break;
     }
-  }
-
-  if (!fs.existsSync(figure.stringsPath)) {
-    errors.push(`${at}: no strings file — run pnpm gen:figures --skeleton`);
-    continue;
-  }
-  const strings = readStrings(figure);
-
-  const expected = applyFigureText(en, strings);
-  const actual = fs.existsSync(figure.viPath)
-    ? fs.readFileSync(figure.viPath, "utf8")
-    : null;
-  if (actual === null) {
-    errors.push(`${at}: vi.svg is missing — run pnpm gen:figures`);
-  } else if (actual !== expected) {
-    errors.push(`${at}: vi.svg is not what gen:figures writes (hand-edited, or stale)`);
   }
 
   const seen = new Set(texts);
-  for (const text of seen) {
-    if (!Object.hasOwn(strings, text)) {
-      errors.push(`${at}: no entry for ${JSON.stringify(text.slice(0, 60))}`);
-    } else if (strings[text] === null) {
-      undecided += 1;
-    } else if (strings[text]?.trim() === "") {
-      // An empty value deletes the label and would pass every other check.
-      errors.push(`${at}: empty translation for ${JSON.stringify(text.slice(0, 60))}`);
+  for (const locale of TARGET_LOCALES) {
+    const where = `${at} (${locale})`;
+    if (!fs.existsSync(stringsPath(figure, locale))) {
+      errors.push(`${where}: no strings file — run pnpm gen:figures --skeleton`);
+      continue;
     }
-  }
-  for (const key of Object.keys(strings)) {
-    if (!seen.has(key)) {
-      errors.push(`${at}: stale entry ${JSON.stringify(key.slice(0, 60))} — no longer in en.svg`);
+    const strings = readStrings(figure, locale);
+
+    const expected = applyFigureText(source, strings);
+    const file = svgPath(figure, locale);
+    const actual = fs.existsSync(file) ? fs.readFileSync(file, "utf8") : null;
+    if (actual === null) {
+      errors.push(`${where}: SVG is missing — run pnpm gen:figures`);
+    } else if (actual !== expected) {
+      errors.push(`${where}: SVG is not what gen:figures writes (hand-edited, or stale)`);
+    }
+
+    for (const text of seen) {
+      if (!Object.hasOwn(strings, text)) {
+        errors.push(`${where}: no entry for ${JSON.stringify(text.slice(0, 60))}`);
+      } else if (strings[text] === null) {
+        undecided.set(locale, (undecided.get(locale) ?? 0) + 1);
+      } else if (strings[text]?.trim() === "") {
+        // An empty value deletes the label and would pass every other check.
+        errors.push(`${where}: empty translation for ${JSON.stringify(text.slice(0, 60))}`);
+      }
+    }
+    for (const key of Object.keys(strings)) {
+      if (!seen.has(key)) {
+        errors.push(`${where}: stale entry ${JSON.stringify(key.slice(0, 60))} — no longer in the source`);
+      }
     }
   }
 }
@@ -162,13 +169,11 @@ async function overflow() {
   const page = await browser.newPage();
   try {
     for (const figure of figures) {
-      // Both locales: the one real content bug this gate has found so far was
-      // in an en.svg, and English is not frozen either.
-      for (const [locale, file] of [
-        ["en", figure.enPath],
-        ["vi", figure.viPath],
-      ] as const) {
+      // Every locale, source included: the one real content bug this gate has
+      // found so far was in the source, and English is not frozen either.
+      for (const locale of LOCALES) {
         const at = `${figure.track}/${figure.name} (${locale})`;
+        const file = svgPath(figure, locale);
         if (!fs.existsSync(file)) continue;
         try {
           const { xmlError, vb, boxes } = await measure(page, file);
@@ -214,8 +219,11 @@ async function overflow() {
 async function main() {
   if (!process.argv.includes("--no-render")) await overflow();
 
+  const perLocale = TARGET_LOCALES.map(
+    (l) => `${l} ${undecided.get(l) ?? 0} undecided`,
+  ).join(", ");
   console.log(
-    `figures: ${figures.length} checked, ${nodes} text runs, ${undecided} undecided, ${errors.length} error(s)`,
+    `figures: ${figures.length} checked, ${nodes} text runs, ${perLocale}, ${errors.length} error(s)`,
   );
   for (const e of errors) console.error(`  ${e}`);
   if (errors.length > 0) process.exit(1);

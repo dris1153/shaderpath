@@ -5,9 +5,9 @@ import {
   localizeSource,
   markersIn,
 } from "@/content/playground-presets";
-import type { Locale } from "@/content/types";
+import { CORE_LOCALES } from "@/content/types";
 
-const LOCALES: Locale[] = ["vi", "en"];
+
 const usedKeys = new Set(ALL_PRESETS.flatMap((p) => markersIn(p.source)));
 
 describe("playground preset comments", () => {
@@ -17,7 +17,7 @@ describe("playground preset comments", () => {
     expect(new Set(slugs).size).toBe(slugs.length);
   });
 
-  it.each(LOCALES)("translates every marker used in a preset (%s)", (loc) => {
+  it.each(CORE_LOCALES)("translates every marker used in a preset (%s)", (loc) => {
     const dict = PRESET_COMMENTS[loc];
     const missing = [...usedKeys].filter((k) => !dict[k]);
     expect(missing, `untranslated markers in "${loc}"`).toEqual([]);
@@ -31,7 +31,7 @@ describe("playground preset comments", () => {
   });
 
   it("keeps comments single-line so substitution cannot break the code", () => {
-    for (const loc of LOCALES) {
+    for (const loc of CORE_LOCALES) {
       for (const [key, text] of Object.entries(PRESET_COMMENTS[loc])) {
         expect(text, `${loc}.${key} must stay on one line`).not.toMatch(/[\r\n]/);
       }

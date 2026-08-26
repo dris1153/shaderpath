@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { IconExternalLink } from "@tabler/icons-react";
-import type { Citation, Locale } from "@/content/types";
+import { pick, type Citation, type Locale } from "@/content/types";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
@@ -47,7 +47,7 @@ export async function References({
               )}
             </div>
             {ref.note && (
-              <p className="text-muted-foreground mt-1">{ref.note[locale]}</p>
+              <p className="text-muted-foreground mt-1">{pick(ref.note, locale)}</p>
             )}
           </li>
         ))}

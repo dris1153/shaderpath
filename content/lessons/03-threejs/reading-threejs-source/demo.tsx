@@ -1,5 +1,6 @@
 "use client";
 
+import { pick } from "@/content/types";
 import { useEffect, useRef } from "react";
 import { useLocale } from "next-intl";
 import * as THREE from "three";
@@ -133,7 +134,7 @@ function ThreeSourceMap() {
 
     const [a, b] = handleRef.current?.metrics(renderer) ?? [0, 0];
     const statusEl = statusRef.current;
-    if (statusEl) statusEl.textContent = LABELS[locale].status[conceptId](a, b);
+    if (statusEl) statusEl.textContent = pick(LABELS, locale).status[conceptId](a, b);
   });
 
   return (
@@ -158,7 +159,7 @@ function SourceMapPanel() {
   return (
     <div className="flex size-full">
       <div className="bg-muted/30 hidden w-[44%] shrink-0 overflow-y-auto border-r p-3 md:block">
-        <div className="mb-1 text-xs font-semibold">{snippet.label[locale]}</div>
+        <div className="mb-1 text-xs font-semibold">{pick(snippet.label, locale)}</div>
         <a
           href={snippet.url}
           target="_blank"

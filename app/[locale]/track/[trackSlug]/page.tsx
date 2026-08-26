@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TRACKS } from "@/content/curriculum";
-import type { Locale, TrackId } from "@/content/types";
+import { pick, type Locale, type TrackId } from "@/content/types";
 import { getModulesOfTrack, getTrack } from "@/lib/curriculum";
 import {
   Breadcrumb,
@@ -45,15 +45,15 @@ export default async function TrackPage({
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>{track.title[locale]}</BreadcrumbPage>
+            <BreadcrumbPage>{pick(track.title, locale)}</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
       <h1 className="mt-4 text-3xl font-semibold tracking-tight">
-        {track.title[locale]}
+        {pick(track.title, locale)}
       </h1>
-      <p className="text-muted-foreground mt-2">{track.summary[locale]}</p>
-      <TrackProgress trackId={track.id} title={track.title[locale]} />
+      <p className="text-muted-foreground mt-2">{pick(track.summary, locale)}</p>
+      <TrackProgress trackId={track.id} title={pick(track.title, locale)} />
       <div className="mt-8">
         <ModuleAccordion modules={modules} locale={locale} />
       </div>

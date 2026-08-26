@@ -1,5 +1,6 @@
 "use client";
 
+import { pick } from "@/content/types";
 import { useMemo, useRef, type RefObject } from "react";
 import { useLocale } from "next-intl";
 import gsap from "gsap";
@@ -274,7 +275,7 @@ export default function EasingInDepthDemo() {
           key: "ease",
           label: L.easeLabel,
           defaultValue: DEFAULT_EASE,
-          options: EASE_VALUES.map((e) => ({ value: e.value, label: e[loc] })),
+          options: EASE_VALUES.map((e) => ({ value: e.value, label: pick(e, loc) })),
         },
         {
           kind: "number",

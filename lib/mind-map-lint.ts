@@ -1,4 +1,10 @@
-import type { Locale, Localized, MindMapNode } from "@/content/types";
+import {
+  pick,
+  CORE_LOCALES,
+  type Locale,
+  type Localized,
+  type MindMapNode,
+} from "@/content/types";
 
 // Validates a handwritten mindmap.ts override. Pure so lint-content.ts and
 // the unit tests share the exact same rules. The auto-generated tree needs no
@@ -59,7 +65,9 @@ export function lintMindMapOverride(args: {
 
   // Rule 5: well-formed export — Localized<MindMapNode[]>, both locales non-empty
   const record = mindMap as Partial<Localized<unknown>> | null | undefined;
-  const locales: Locale[] = ["vi", "en"];
+  // Core locales only: a handwritten override cannot exist for a language
+  // still being filled in, and that language falls back rather than failing.
+  const locales: readonly Locale[] = CORE_LOCALES;
   let malformed = false;
   for (const loc of locales) {
     const tree = record?.[loc];
@@ -89,7 +97,7 @@ export function lintMindMapOverride(args: {
 
   for (const loc of locales) {
     const seen = new Set<string>();
-    walk(trees[loc], (n, depth) => {
+    walk(pick(trees, loc), (n, depth) => {
       // ids must stay unique: they are anchor targets and React keys
       if (seen.has(n.id)) {
         errors.push(`${at}: mindmap.ts ${loc} duplicate node id "${n.id}"`);
@@ -107,7 +115,7 @@ export function lintMindMapOverride(args: {
       // must resolve.
       // Rule 1: section anchors must point at a real heading of that locale
       if (n.kind === "section" && depth >= 1) {
-        if (!headingIds[loc].has(n.id)) {
+        if (!pick(headingIds, loc).has(n.id)) {
           errors.push(
             `${at}: mindmap.ts ${loc} section node "${n.id}" matches no heading in theory.${loc}.mdx`,
           );

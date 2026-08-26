@@ -1,7 +1,58 @@
 import type { LessonSlug } from "./slugs";
 
-export type Locale = "vi" | "en";
-export type Localized<T> = Record<Locale, T>;
+// The one place a language is declared. i18n/routing.ts reads these, so adding
+// a language never means editing two lists that agree only by coincidence.
+// Kept dependency-free on purpose: the content scripts import this file, and
+// they must not drag next-intl in with it.
+export const CORE_LOCALES = ["vi", "en"] as const;
+/**
+ * Locales allowed to be incomplete while they are being filled in. Empty today.
+ *
+ * This split is what makes adding a language possible at all: `Localized<T>` is
+ * a *complete* record, and content holds 3,416 of them, so a locale listed as
+ * core demands 3,416 new values before the build is green again. A locale
+ * listed here is optional from day one and falls back through `pick()`.
+ */
+export const EXTRA_LOCALES = [] as const;
+export const LOCALES = [...CORE_LOCALES, ...EXTRA_LOCALES] as const;
+export const DEFAULT_LOCALE = "vi" satisfies CoreLocale;
+
+export type CoreLocale = (typeof CORE_LOCALES)[number];
+export type ExtraLocale = (typeof EXTRA_LOCALES)[number];
+export type Locale = CoreLocale | ExtraLocale;
+
+export type Localized<T> = Record<CoreLocale, T> & Partial<Record<ExtraLocale, T>>;
+
+/**
+ * Reads a locale off any per-locale table, falling back to the default for a
+ * locale still being filled in.
+ *
+ * Generic over the table, not over its value: inline copy tables in demos are
+ * `as const`, so their vi and en branches have *different* literal types and a
+ * `Localized<T>` parameter has nothing to infer T from. Constraining on the
+ * core locales keeps the "both must exist" guarantee and returns exactly what
+ * indexing used to.
+ */
+export function pick<T extends Record<CoreLocale, unknown>>(
+  value: T,
+  locale: Locale,
+): PickResult<T> {
+  // Own properties only: a locale is a closed union today, but the one cast to
+  // it (`getLocale() as Locale`) is a trust boundary, and "constructor" would
+  // otherwise resolve through the prototype.
+  const own = Object.hasOwn(value, locale)
+    ? (value as Record<string, unknown>)[locale]
+    : undefined;
+  return (own ?? value[DEFAULT_LOCALE]) as PickResult<T>;
+}
+
+/**
+ * Every branch this can return. `Exclude<..., undefined>` strips the artifact of
+ * an extra locale's key being optional — the function falls back rather than
+ * returning undefined — while keeping the branch's own type, so a table that
+ * grows an extra locale reports it instead of quietly typing as the core two.
+ */
+type PickResult<T> = Exclude<T[Locale & keyof T], undefined>;
 
 // D9: elective never gates unlock; checkpoint = module mini-build, no new theory
 export type LessonTier = "core" | "elective";

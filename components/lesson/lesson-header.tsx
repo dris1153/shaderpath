@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import type { LessonMeta, Locale } from "@/content/types";
+import { pick, type LessonMeta, type Locale } from "@/content/types";
 import { Badge } from "@/components/ui/badge";
 
 export async function LessonHeader({
@@ -26,10 +26,10 @@ export async function LessonHeader({
         </span>
       </div>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight">
-        {lesson.title[locale]}
+        {pick(lesson.title, locale)}
       </h1>
       {/* Objectives moved into the mind map (its "objectives" branch). */}
-      <p className="text-muted-foreground mt-2">{lesson.summary[locale]}</p>
+      <p className="text-muted-foreground mt-2">{pick(lesson.summary, locale)}</p>
     </header>
   );
 }

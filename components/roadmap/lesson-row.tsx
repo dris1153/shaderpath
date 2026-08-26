@@ -3,7 +3,7 @@
 import { IconLock } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import type { LessonMeta, Locale } from "@/content/types";
+import { pick, type LessonMeta, type Locale } from "@/content/types";
 import { isUnlocked } from "@/lib/curriculum";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ export function LessonRow({
                 : "text-muted-foreground truncate"
           }
         >
-          {lesson.title[locale]}
+          {pick(lesson.title, locale)}
         </span>
         {completed && <Badge>✓</Badge>}
         {lesson.kind === "checkpoint" && (
