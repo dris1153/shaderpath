@@ -104,10 +104,22 @@ export default function CurriculumMap({
     const layout = layoutCurriculumMap(TRACKS, MODULES, LESSONS);
     const flowNodes: Node[] = layout.nodes.map((n) => {
       const position = { x: n.x, y: n.y };
-      const common = { id: n.id, position, draggable: false, connectable: false };
+      // MiniMap reads node.internals.userNode and skips anything without
+      // dimensions. These nodes are uncontrolled — no onNodesChange — so
+      // nothing writes `measured` back onto them and the minimap rendered an
+      // empty frame. initialWidth/Height are hints only: the node still
+      // measures itself, and fitView gets a better first guess.
+      const common = {
+        id: n.id,
+        position,
+        draggable: false,
+        connectable: false,
+        initialWidth: 224,
+      };
       if (n.kind === "lesson") {
         return {
           ...common,
+          initialHeight: n.lesson!.kind === "checkpoint" ? 44 : 30,
           type: "lesson",
           data: {
             title: pick(n.lesson!.title, locale),
@@ -120,6 +132,7 @@ export default function CurriculumMap({
       }
       return {
         ...common,
+        initialHeight: 20,
         type: "label",
         selectable: false,
         data: {
