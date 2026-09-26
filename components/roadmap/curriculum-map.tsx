@@ -28,7 +28,7 @@ import {
 } from "@/lib/roadmap/zoom-bands";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import { cn } from "@/lib/utils";
-import { layoutCurriculumMap } from "./curriculum-map-layout";
+import { chainEdges, layoutFor, type LayoutId } from "@/lib/roadmap/layouts";
 
 export interface CurriculumMapStrings {
   legendCompleted: string;
@@ -73,11 +73,27 @@ function LessonNode({ data }: NodeProps<Node<LessonNodeData>>) {
   );
 }
 
+const SIDES = [
+  ["t", Position.Top],
+  ["r", Position.Right],
+  ["b", Position.Bottom],
+  ["l", Position.Left],
+] as const;
+
 function LabelNode({ data }: NodeProps<Node<LabelNodeData>>) {
   return data.kind === "track" ? (
     // A link, not a heading: the keyboard needs the stop, while 14 headings
     // inside a canvas would only clutter the page outline.
     <p className="w-56 text-sm font-semibold">
+      {/* Chain edges run between tracks, and xyflow draws nothing to a node
+          without handles. Every side carries both kinds so each fold can
+          leave from whichever side faces the next station. */}
+      {SIDES.map(([id, position]) => (
+        <span key={id}>
+          <Handle id={`s-${id}`} type="source" position={position} className="invisible!" />
+          <Handle id={`t-${id}`} type="target" position={position} className="invisible!" />
+        </span>
+      ))}
       <Link href={data.href ?? "/roadmap"} className="hover:underline">
         {data.title}
       </Link>
@@ -119,13 +135,16 @@ export default function CurriculumMap({
   // onMove/onInit rather than an effect on the zoom store: setting state from
   // an effect is what react-hooks/set-state-in-effect flags.
   const [band, setBand] = useState<ZoomBand>("tracks");
+  // Temporary: four folds ship together so they can be compared and three
+  // deleted. Phase 4 of the plan removes this control and the losers.
+  const [variant, setVariant] = useState<LayoutId>("serpentine");
   const observe = useCallback(
     (zoom: number) => setBand((current) => nextBand(zoom, current)),
     [],
   );
 
   const { nodes, edges } = useMemo(() => {
-    const layout = layoutCurriculumMap(TRACKS, MODULES, LESSONS);
+    const layout = layoutFor(variant, TRACKS, MODULES, LESSONS);
     const flowNodes: Node[] = layout.nodes.map((n) => {
       const position = { x: n.x, y: n.y };
       // MiniMap reads node.internals.userNode and skips anything without
@@ -171,18 +190,42 @@ export default function CurriculumMap({
         } satisfies LabelNodeData,
       };
     });
-    const flowEdges: Edge[] = layout.edges.map((e) => ({
-      id: e.id,
-      source: e.from,
-      target: e.to,
-      markerEnd: { type: MarkerType.ArrowClosed },
-      style: { opacity: 0.5 },
-      // Both endpoints are lessons: leave the edge visible above that band
-      // and it draws to nothing.
-      hidden: band !== "lessons",
-    }));
+    // The overview draws the sequence between tracks; the detail view draws
+    // prerequisites between lessons. Drawing either at the wrong band leaves
+    // edges hanging off hidden endpoints.
+    const at = new Map(layout.nodes.map((n) => [n.id, n]));
+    const flowEdges: Edge[] =
+      band === "lessons"
+        ? layout.edges.map((e) => ({
+            id: e.id,
+            source: e.from,
+            target: e.to,
+            markerEnd: { type: MarkerType.ArrowClosed },
+            style: { opacity: 0.5 },
+          }))
+        : chainEdges(TRACKS, LESSONS).map((e) => {
+            // Leave from the side facing the next station: a serpentine row
+            // that runs right to left must not loop round to its right edge.
+            const a = at.get(e.from)!;
+            const b = at.get(e.to)!;
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const [out, into] =
+              Math.abs(dx) >= Math.abs(dy)
+                ? dx >= 0 ? ["r", "l"] : ["l", "r"]
+                : dy >= 0 ? ["b", "t"] : ["t", "b"];
+            return {
+              id: e.id,
+              source: e.from,
+              target: e.to,
+              sourceHandle: `s-${out}`,
+              targetHandle: `t-${into}`,
+              markerEnd: { type: MarkerType.ArrowClosed },
+              style: { opacity: 0.6 },
+            };
+          });
     return { nodes: flowNodes, edges: flowEdges };
-  }, [band, locale, progress, strings.checkpoint]);
+  }, [band, locale, progress, strings.checkpoint, variant]);
 
   return (
     <div>
@@ -202,6 +245,24 @@ export default function CurriculumMap({
           </span>
         </div>
       )}
+      <div className="mt-3 flex flex-wrap gap-1 text-xs">
+        {(["serpentine", "vertical", "horizontal", "columns"] as const).map(
+          (id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setVariant(id)}
+              aria-pressed={variant === id}
+              className={cn(
+                "rounded-md border px-2 py-1",
+                variant === id ? "bg-secondary" : "text-muted-foreground",
+              )}
+            >
+              {id}
+            </button>
+          ),
+        )}
+      </div>
       {/* Nodes render in curriculum order, so tabbing the region walks the
           14 tracks in sequence — the same path the list view offers. */}
       <div

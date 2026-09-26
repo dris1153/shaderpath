@@ -81,3 +81,19 @@ test("the keyboard walks the 14 tracks in curriculum order", async ({
   expect(await links.first().getAttribute("href")).toContain("/track/math");
   expect(await links.last().getAttribute("href")).toContain("/track/capstones");
 });
+
+test.describe("every fold draws the chain at the far band", () => {
+  for (const variant of ["serpentine", "vertical", "horizontal", "columns"]) {
+    test(variant, async ({ page }) => {
+      await openMap(page);
+      await page.getByRole("button", { name: variant, exact: true }).click();
+      await expect.poll(() => visible(page).count(), { timeout: 15_000 }).toBe(14);
+
+      // 13 consecutive links plus the five convergence arcs into capstones
+      // that are not already the performance -> capstones step.
+      await expect
+        .poll(() => page.locator(".react-flow__edge").count(), { timeout: 10_000 })
+        .toBe(18);
+    });
+  }
+});
