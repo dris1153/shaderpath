@@ -95,6 +95,23 @@ export const REVIEW_CARDS_REGISTRY: Partial<
   "sdf-primitives": () => import("./lessons/08-raymarching/sdf-primitives/review-cards"),
   "sphere-tracing-principle": () => import("./lessons/08-raymarching/sphere-tracing-principle/review-cards"),
   "volumetric-rendering-basics": () => import("./lessons/08-raymarching/volumetric-rendering-basics/review-cards"),
+  "boids-flocking-on-gpu": () => import("./lessons/09-gpgpu/boids-flocking-on-gpu/review-cards"),
+  "cloth-simulation-basics": () => import("./lessons/09-gpgpu/cloth-simulation-basics/review-cards"),
+  "flow-field-particles": () => import("./lessons/09-gpgpu/flow-field-particles/review-cards"),
+  "fluid-simulation-intro": () => import("./lessons/09-gpgpu/fluid-simulation-intro/review-cards"),
+  "gpucomputationrenderer": () => import("./lessons/09-gpgpu/gpucomputationrenderer/review-cards"),
+  "instancing-a-million-objects": () => import("./lessons/09-gpgpu/instancing-a-million-objects/review-cards"),
+  "pingpong-fbo-state-textures": () => import("./lessons/09-gpgpu/pingpong-fbo-state-textures/review-cards"),
+  "transform-feedback": () => import("./lessons/09-gpgpu/transform-feedback/review-cards"),
+  "why-particles-live-on-gpu": () => import("./lessons/09-gpgpu/why-particles-live-on-gpu/review-cards"),
+  "bloom-done-right": () => import("./lessons/10-postprocessing/bloom-done-right/review-cards"),
+  "color-grading-lut-tonemapping": () => import("./lessons/10-postprocessing/color-grading-lut-tonemapping/review-cards"),
+  "depth-of-field-and-motion-blur": () => import("./lessons/10-postprocessing/depth-of-field-and-motion-blur/review-cards"),
+  "effectcomposer-and-passes": () => import("./lessons/10-postprocessing/effectcomposer-and-passes/review-cards"),
+  "pass-order-and-fillrate": () => import("./lessons/10-postprocessing/pass-order-and-fillrate/review-cards"),
+  "ssao": () => import("./lessons/10-postprocessing/ssao/review-cards"),
+  "stylistic-effects-grain-vignette": () => import("./lessons/10-postprocessing/stylistic-effects-grain-vignette/review-cards"),
+  "writing-custom-passes": () => import("./lessons/10-postprocessing/writing-custom-passes/review-cards"),
 };
 
 export type ReviewExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
