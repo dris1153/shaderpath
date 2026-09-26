@@ -74,7 +74,7 @@ float divergence(vec2 p, float fieldType) {
 }
 
 float dotMask(vec2 local, vec2 center, float r) {
-  return smoothstep(r, r * 0.35, length(local - center));
+  return 1.0 - smoothstep(r * 0.35, r, length(local - center));
 }
 
 // Backward-integrates a hash-dot lattice a few steps along the curl field,
@@ -113,7 +113,7 @@ float advectedDots(vec2 p, float amount, float fieldType) {
       best = min(best, length(f - (restLocal + disp)));
     }
   }
-  return smoothstep(0.13, 0.03, best);
+  return 1.0 - smoothstep(0.03, 0.13, best);
 }
 
 void main() {
@@ -144,7 +144,7 @@ void main() {
     float dots = advectedDots(p, amount, side);
     color = mix(bg, vec3(0.97), dots);
 
-    float seam = smoothstep(0.0015, 0.0, abs(vUv.x - 0.5));
+    float seam = 1.0 - smoothstep(0.0, 0.0015, abs(vUv.x - 0.5));
     color = mix(color, vec3(1.0), seam);
   }
 

@@ -34,7 +34,7 @@ void main() {
   vec3 color = mix(linearBlend, srgbBlend, isSrgbHalf);
 
   // Thin divider so the two halves read as one side-by-side comparison.
-  float divider = smoothstep(0.004, 0.0, abs(vUv.y - 0.5));
+  float divider = 1.0 - smoothstep(0.0, 0.004, abs(vUv.y - 0.5));
   color = mix(color, vec3(1.0), divider);
 
   gl_FragColor = vec4(color, 1.0);

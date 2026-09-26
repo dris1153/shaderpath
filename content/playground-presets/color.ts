@@ -24,7 +24,7 @@ export const COLOR_PRESETS: PlaygroundPreset[] = [
 
   // @srgbSplit
   vec3 color = uv.y > 0.5 ? naive : correct;
-  color = mix(color, vec3(1.0), smoothstep(0.004, 0.0, abs(uv.y - 0.5)));
+  color = mix(color, vec3(1.0), 1.0 - smoothstep(0.0, 0.004, abs(uv.y - 0.5)));
   fragColor = vec4(color, 1.0);
 }
 `,
@@ -38,7 +38,7 @@ export const COLOR_PRESETS: PlaygroundPreset[] = [
 }
 
 float plot(float y, float v) {
-  return smoothstep(0.014, 0.0, abs(y - v));
+  return 1.0 - smoothstep(0.0, 0.014, abs(y - v));
 }
 
 void main() {
@@ -55,7 +55,7 @@ void main() {
 
   vec3 color = vec3(0.05, 0.06, 0.09);
   // @toneOneLine
-  color += vec3(0.18) * smoothstep(0.004, 0.0, abs(y - 1.0));
+  color += vec3(0.18) * (1.0 - smoothstep(0.0, 0.004, abs(y - 1.0)));
   color += vec3(0.95, 0.95, 0.95) * plot(y, clipped);
   color += vec3(0.95, 0.5, 0.25) * plot(y, reinhard);
   color += vec3(0.35, 0.8, 0.95) * plot(y, aces(hdr));
@@ -110,7 +110,7 @@ void main() {
   vec3 stepped = floor(ramp * levels) / levels;
 
   vec3 color = uv.y > 0.5 ? stepped : ramp;
-  color = mix(color, vec3(1.0), smoothstep(0.003, 0.0, abs(uv.y - 0.5)));
+  color = mix(color, vec3(1.0), 1.0 - smoothstep(0.0, 0.003, abs(uv.y - 0.5)));
   fragColor = vec4(color, 1.0);
 }
 `,

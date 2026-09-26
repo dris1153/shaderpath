@@ -39,7 +39,7 @@ export const BASICS_PRESETS: PlaygroundPreset[] = [
   }
 
   float local = fract(uv.y * 4.0);
-  float curve = smoothstep(0.035, 0.0, abs(local - value));
+  float curve = 1.0 - smoothstep(0.0, 0.035, abs(local - value));
   fragColor = vec4(vec3(value * 0.3) + curve, 1.0);
 }
 `,
@@ -96,7 +96,7 @@ void main() {
   float h = hash21(cell);
   float pulse = 0.5 + 0.5 * sin(uTime * 1.5 + h * 6.28318);
   float radius = 0.16 + 0.26 * pulse;
-  float shape = smoothstep(radius, radius - 0.04, length(local));
+  float shape = 1.0 - smoothstep(radius - 0.04, radius, length(local));
 
   vec3 tint = 0.5 + 0.5 * cos(6.28318 * (h + vec3(0.0, 0.33, 0.67)));
   fragColor = vec4(tint * shape, 1.0);
@@ -140,7 +140,7 @@ void main() {
   // @polarBackToXy
   vec2 folded = vec2(cos(a), sin(a)) * r;
 
-  float shape = smoothstep(0.02, 0.0, abs(folded.x - 0.18) - 0.05 * sin(folded.y * 14.0 + uTime));
+  float shape = 1.0 - smoothstep(0.0, 0.02, abs(folded.x - 0.18) - 0.05 * sin(folded.y * 14.0 + uTime));
   vec3 color = 0.5 + 0.5 * cos(r * 6.0 - uTime + vec3(0.0, 2.0, 4.0));
   // @polarBackdrop
   vec3 bg = 0.05 + 0.05 * cos(r * 5.0 + vec3(0.0, 2.0, 4.0));
@@ -153,7 +153,7 @@ void main() {
     title: { vi: "Đường cong easing", en: "Easing Curves" },
     source: `float plot(float y, float value) {
   // @easePlotBand
-  return smoothstep(0.012, 0.0, abs(y - value));
+  return 1.0 - smoothstep(0.0, 0.012, abs(y - value));
 }
 
 void main() {
@@ -173,7 +173,7 @@ void main() {
   color += vec3(0.6, 0.95, 0.5) * plot(uv.y, smooth_);
 
   // @easeSameEndpoints
-  float head = smoothstep(0.006, 0.0, min(t, 1.0 - t));
+  float head = 1.0 - smoothstep(0.0, 0.006, min(t, 1.0 - t));
   fragColor = vec4(color + head * 0.25, 1.0);
 }
 `,

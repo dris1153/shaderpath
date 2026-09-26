@@ -145,7 +145,7 @@ void main() {
   vec3 color = shade(n);
 
   if (uSideBySide > 0.5) {
-    float divider = smoothstep(0.002, 0.0, abs(vUv.x - 0.5));
+    float divider = 1.0 - smoothstep(0.0, 0.002, abs(vUv.x - 0.5));
     color = mix(color, vec3(1.0), divider);
   }
 

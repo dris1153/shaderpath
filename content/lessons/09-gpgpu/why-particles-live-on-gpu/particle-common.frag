@@ -8,6 +8,6 @@ void main() {
   float d = length(c);
   if (d > 0.5) discard;
 
-  float alpha = smoothstep(0.5, 0.35, d);
+  float alpha = 1.0 - smoothstep(0.35, 0.5, d);
   gl_FragColor = vec4(0.4, 0.7, 1.0, alpha);
 }

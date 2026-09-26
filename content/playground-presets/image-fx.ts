@@ -48,8 +48,8 @@ void main() {
     title: { vi: "Quang sai màu", en: "Chromatic Aberration" },
     source: `float scene(vec2 p) {
   vec2 q = (p - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
-  float ring = smoothstep(0.02, 0.0, abs(length(q) - 0.28));
-  float bar = smoothstep(0.01, 0.0, abs(q.y)) * step(abs(q.x), 0.45);
+  float ring = 1.0 - smoothstep(0.0, 0.02, abs(length(q) - 0.28));
+  float bar = (1.0 - smoothstep(0.0, 0.01, abs(q.y))) * step(abs(q.x), 0.45);
   return max(ring, bar);
 }
 
@@ -84,7 +84,7 @@ void main() {
 
   // @vignetteFalloff
   vec2 q = (uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
-  color *= smoothstep(0.85, 0.25, length(q));
+  color *= 1.0 - smoothstep(0.25, 0.85, length(q));
 
   // @grainAnimated
   float grain = hash21(gl_FragCoord.xy + floor(uTime * 24.0));
@@ -99,7 +99,7 @@ void main() {
     title: { vi: "Halftone", en: "Halftone" },
     source: `float scene(vec2 p) {
   vec2 q = (p - 0.5) * vec2(uResolution.x / uResolution.y, 1.0);
-  float ball = smoothstep(0.32, 0.0, length(q - vec2(0.0, 0.05)));
+  float ball = 1.0 - smoothstep(0.0, 0.32, length(q - vec2(0.0, 0.05)));
   return clamp(ball * (0.4 + 0.6 * (1.0 - p.y)) + 0.12, 0.0, 1.0);
 }
 
@@ -113,7 +113,7 @@ void main() {
 
   // @halftoneDotSize
   vec2 cell = fract(rotated / 8.0) - 0.5;
-  float dot_ = smoothstep(0.5 * shade, 0.5 * shade - 0.06, length(cell));
+  float dot_ = 1.0 - smoothstep(0.5 * shade - 0.06, 0.5 * shade, length(cell));
 
   fragColor = vec4(vec3(1.0 - dot_), 1.0);
 }

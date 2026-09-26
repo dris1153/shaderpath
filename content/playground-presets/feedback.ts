@@ -51,7 +51,7 @@ void main() {
   float bb = ab.y + (0.105 * d.y + reaction - (k + f) * ab.y);
 
   // @rdMousePoke
-  float poke = smoothstep(0.06, 0.0, distance(uv, uMouse));
+  float poke = 1.0 - smoothstep(0.0, 0.06, distance(uv, uMouse));
   bb = clamp(bb + poke * 0.6, 0.0, 1.0);
 
   fragColor = vec4(clamp(a, 0.0, 1.0), bb, 0.0, 1.0);
@@ -129,7 +129,7 @@ void main() {
   prev *= 0.985;
 
   vec2 d = (uv - uMouse) * vec2(aspect, 1.0);
-  float brush = smoothstep(0.045, 0.0, length(d));
+  float brush = 1.0 - smoothstep(0.0, 0.045, length(d));
   vec3 ink = 0.5 + 0.5 * cos(uTime + vec3(0.0, 2.0, 4.0));
 
   fragColor = vec4(prev + brush * ink * 0.35, 1.0);
@@ -152,7 +152,7 @@ void main() {
   if (uFrame == 0) {
     // @waveSeedDrops
     float d = length((uv - 0.5) * vec2(uResolution.x / uResolution.y, 1.0));
-    float h = smoothstep(0.08, 0.0, d) - smoothstep(0.05, 0.0, abs(d - 0.3));
+    float h = (1.0 - smoothstep(0.0, 0.08, d)) - (1.0 - smoothstep(0.0, 0.05, abs(d - 0.3)));
     fragColor = vec4(h * 0.5 + 0.5, 0.5, 0.0, 1.0);
     return;
   }
@@ -178,8 +178,8 @@ void main() {
   float beat = step(0.985, hash21(vec2(floor(uTime * 1.5), 7.0)));
   vec2 spot = fract(vec2(hash21(vec2(floor(uTime * 1.5), 1.0)),
                          hash21(vec2(floor(uTime * 1.5), 2.0))));
-  next += beat * smoothstep(0.03, 0.0, distance(uv, spot)) * 0.9;
-  next += smoothstep(0.03, 0.0, distance(uv, uMouse)) * 0.5;
+  next += beat * (1.0 - smoothstep(0.0, 0.03, distance(uv, spot))) * 0.9;
+  next += (1.0 - smoothstep(0.0, 0.03, distance(uv, uMouse))) * 0.5;
 
   next = clamp(next, -1.0, 1.0);
   float shade = 0.5 + 0.5 * next;

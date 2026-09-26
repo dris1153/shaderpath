@@ -183,7 +183,7 @@ void main() {
   // @truchetTwoArcs
   float d = abs(length(f - sign(f.x + f.y + 0.001) * 0.5) - 0.5);
 
-  float line = smoothstep(0.09, 0.06, d);
+  float line = 1.0 - smoothstep(0.06, 0.09, d);
   vec3 color = 0.5 + 0.5 * cos(hash21(cell) * 6.0 + vec3(0.0, 2.0, 4.0));
   fragColor = vec4(mix(vec3(0.04, 0.05, 0.08), color, line), 1.0);
 }

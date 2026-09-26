@@ -7,6 +7,13 @@ uniform float uRadius;
 uniform float uTime;
 uniform float uPulse;
 
+// Both edges are free sliders, and smoothstep is undefined for edge0 >= edge1.
+// Swapped edges give the inverted mask drivers happen to produce anyway.
+float edgeMask(float e0, float e1, float x) {
+  if (e0 == e1) return step(e0, x);
+  return e0 < e1 ? smoothstep(e0, e1, x) : 1.0 - smoothstep(e1, e0, x);
+}
+
 void main() {
   vec2 p = vUv - 0.5;
   float r = uRadius + uPulse * 0.05 * sin(uTime * 2.0);
@@ -15,7 +22,7 @@ void main() {
   float d = length(p) - r;
 
   // smoothstep(edge0, edge1, d) is THE shaping function of this lesson
-  float m = smoothstep(uEdge0, uEdge1, d);
+  float m = edgeMask(uEdge0, uEdge1, d);
   vec3 inside = vec3(0.98, 0.45, 0.2);
   vec3 outside = vec3(0.08, 0.12, 0.2);
   vec3 color = mix(inside, outside, m);

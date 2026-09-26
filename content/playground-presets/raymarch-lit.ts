@@ -227,7 +227,7 @@ float density(vec3 p) {
   p *= 0.55;
   p.x += uTime * 0.09;
   float d = 0.5 * noise3(p) + 0.25 * noise3(p * 2.03) + 0.125 * noise3(p * 4.01);
-  float slab = smoothstep(0.9, 0.1, abs(p.y - 0.35));
+  float slab = 1.0 - smoothstep(0.1, 0.9, abs(p.y - 0.35));
   return clamp((d - 0.34) * 4.5, 0.0, 1.0) * slab;
 }
 
