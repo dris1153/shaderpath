@@ -59,7 +59,7 @@ Thứ ba — chủ đề trọn vẹn của bài kế tiếp — prop trên JSX 
 
 Nơi mental model reconciler ngừng là chi tiết triển khai và bắt đầu quyết định trực tiếp hành vi: danh sách mesh render bằng `.map()` với `key`. Giống hệt React DOM, `key` là định danh identity mà reconciler dùng để so khớp node cũ với node mới — đổi `key` của một phần tử (dù prop khác giữ nguyên) buộc reconciler coi đó là node HOÀN TOÀN khác: unmount bản cũ (huỷ object Three.js thật, mất mọi state cục bộ gắn qua ref vào nó), rồi mount bản mới (tạo object Three.js mới tinh). Ngược lại, giữ nguyên `key` nhưng đổi prop khác chỉ mutate object đã tồn tại — state gắn qua ref (ví dụ một góc xoay dở dang) sống sót qua lần render đó.
 
-Đây chính xác là bẫy phổ biến nhất khi một danh sách 3D được sắp lại (sort/filter) mà dùng index mảng làm `key`: index đổi theo thứ tự mới → reconciler nghĩ phần lớn node đã đổi identity → huỷ và tạo lại hầu hết mesh dù dữ liệu thực chất chỉ đổi chỗ, gây giật hình và mất animation state đang chạy dở. Quy tắc rút ra giống hệt React DOM: dùng một id ổn định của chính dữ liệu (không phải index mảng) làm `key` cho bất kỳ danh sách object 3D nào có thể thêm/bớt/sắp lại thứ tự.
+Đây chính xác là bẫy phổ biến nhất khi một danh sách 3D được sắp lại (sort/filter) mà dùng index mảng làm `key`: key 0, 1, 2… vẫn còn sau khi sắp, nên reconciler khớp node theo **vị trí** chứ không theo dữ liệu: giữ mesh cũ, ghi đè props của item mới lên (lọc bớt thì chỉ mesh cuối bị huỷ). State gắn qua ref nhảy sang item khác, mesh giật sang chỗ mới thay vì đi cùng dữ liệu. Quy tắc rút ra giống hệt React DOM: dùng một id ổn định của chính dữ liệu (không phải index mảng) làm `key` cho bất kỳ danh sách object 3D nào có thể thêm/bớt/sắp lại thứ tự.
 
 ## Nền tảng này dẫn tới đâu: JSX ↔ Three.js mapping và giới hạn của mental model
 
@@ -70,7 +70,7 @@ Bài tiếp theo mổ xẻ đúng cơ chế ánh xạ prop → property mà ph�
 Ba lỗi hay gặp nhất khi mới quen mental model reconciler:
 
 1. **Gọi `scene.add()`/`.remove()` thủ công bên trong component R3F.** Reconciler không biết gì về object bạn tự thêm bằng tay — nó không nằm trong cây fiber nên không được diff, không được dispose khi unmount, và dễ tạo ra object trùng lặp mỗi lần component re-render.
-2. **Dùng index mảng làm `key` cho danh sách mesh có thể sắp lại hoặc lọc.** Index đổi theo vị trí mới khiến reconciler coi gần như mọi phần tử đã đổi identity, huỷ và tạo lại object Three.js không cần thiết, làm mất animation state đang chạy dở gắn qua ref.
+2. **Dùng index mảng làm `key` cho danh sách mesh có thể sắp lại hoặc lọc.** Key bám theo vị trí, không theo dữ liệu: state gắn qua ref nhảy sang sai item và mesh giật chỗ.
 3. **Tưởng unmount luôn tự dispose mọi thứ.** Tự động dispose chỉ áp dụng cho geometry/material được JSX tạo ra trực tiếp; texture nạp thủ công ngoài JSX, event listener gắn tay, hay object dựng bằng `new THREE.X()` ngoài cây component vẫn phải tự cleanup — chi tiết đầy đủ ở bài Disposal & Memory Leak.
 
 </Callout>

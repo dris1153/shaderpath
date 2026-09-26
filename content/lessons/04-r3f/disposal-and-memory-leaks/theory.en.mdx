@@ -44,7 +44,7 @@ useEffect(() => {
 }, []);
 ```
 
-**2. `useMemo` to keep the object stable across re-renders, plus a separate effect purely for disposal** — needed when the object is read elsewhere in the component, not only inside the effect that built it. Careful: this pattern walks straight into the Strict Mode trap described below — the memoized object gets disposed at the simulated unmount and comes back dead:
+**2. `useMemo` to keep the object stable across re-renders, plus a separate effect purely for disposal** — needed when the object is read elsewhere in the component, not only inside the effect that built it. Careful: this pattern walks straight into the Strict Mode trap described below — the memoized object gets disposed at the simulated unmount and is then used again, so the renderer quietly re-uploads it and the dispose is wasted:
 
 ```tsx
 const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
@@ -66,7 +66,7 @@ useEffect(() => {
 
 ## Strict Mode and the loseContext Cautionary Tale
 
-React Strict Mode (on by default in dev) deliberately mounts, unmounts, then remounts every component the moment it appears, to surface cleanup that isn't safe to run twice. For GPU resources, safety depends on WHERE the object is created: Strict Mode only replays effects, while state/memo are PRESERVED across the simulated remount — a `useMemo`'d object gets disposed on the fake unmount and then reused, already dead, on mount 2. Create-inside-effect is the safe pattern: each effect run creates fresh objects, and its cleanup disposes exactly that run's objects.
+React Strict Mode (on by default in dev) deliberately mounts, unmounts, then remounts every component the moment it appears, to surface cleanup that isn't safe to run twice. For GPU resources, safety depends on WHERE the object is created: Strict Mode only replays effects, while state/memo are PRESERVED across the simulated remount — a `useMemo`'d object gets disposed on the fake unmount and then reused on mount 2: the image stays right, since the renderer re-uploads geometry/textures and recompiles the material, but the dispose is undone at extra cost. Create-inside-effect is the safe pattern: each effect run creates fresh objects, and its cleanup disposes exactly that run's objects.
 
 But this platform once hit a much subtler bug tied to that exact double-mount mechanism: a raw-WebGL demo used to call `gl.getExtension('WEBGL_lose_context').loseContext()` in its cleanup, on the assumption it would "cleanly reset the context every unmount." The catch: a Strict Mode remount **reuses the same `<canvas>` element**, and a context once "lost" cannot be recovered on that canvas without manually catching `webglcontextrestored` and rebuilding the entire pipeline. The result: the demo worked on the first mount and stayed permanently blank on the second — in dev, reproducing 100% of the time, not some rare edge case. The lesson generalizes past `loseContext`: any cleanup that destroys the *container being reused* (the canvas, the context, a singleton) — rather than only disposing the *resources you created inside it* — cannot survive Strict Mode's double-mount.
 

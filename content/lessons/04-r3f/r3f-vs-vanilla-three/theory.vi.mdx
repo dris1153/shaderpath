@@ -4,7 +4,7 @@
 
 Lợi thế thứ hai là composition. Scene giàu chi tiết viết bằng JSX tận dụng được toàn bộ công cụ React quen thuộc: `{condition && <mesh>}` để mount/unmount có điều kiện, custom hook tái sử dụng logic giữa nhiều scene, Context chia sẻ state sâu mà không "prop drilling" thủ công qua từng object Three.js. Track này đã dùng đúng những công cụ đó — `useDisposable`, `useVisibleRaf`/`useVisibleFrameloop` — như hook dùng chung, khó làm gọn tương tự trong vanilla nếu không tự chế một hệ thống tương đương.
 
-Lợi thế thứ ba, cụ thể và đo được: pointer event. `<mesh onPointerOver={...} onClick={...}>` hoạt động ngay — `<Canvas>` của R3F tự đăng ký một hệ thống raycasting nội bộ khi mount, kiểm tra giao điểm toàn scene graph mỗi khi con trỏ di chuyển. Ở Three.js thuần, cùng hành vi đó cần tự tạo `THREE.Raycaster`, tự chuyển toạ độ chuột sang NDC, tự gọi `intersectObject` trong render loop, và tự khớp kết quả với đúng mesh đang hover — đúng thứ demo bài này đặt cạnh nhau.
+Lợi thế thứ ba, cụ thể và đo được: pointer event. `<mesh onPointerOver={...} onClick={...}>` hoạt động ngay — `<Canvas>` của R3F tự đăng ký một hệ thống raycasting nội bộ khi mount, mỗi khi con trỏ di chuyển thì raycast đúng những object có gắn handler sự kiện, không phải cả scene graph. Ở Three.js thuần, cùng hành vi đó cần tự tạo `THREE.Raycaster`, tự chuyển toạ độ chuột sang NDC, tự gọi `intersectObject` trong render loop, và tự khớp kết quả với đúng mesh đang hover — đúng thứ demo bài này đặt cạnh nhau.
 
 ## Three.js thuần thắng ở đâu: kiểm soát, bundle, kiến trúc engine
 

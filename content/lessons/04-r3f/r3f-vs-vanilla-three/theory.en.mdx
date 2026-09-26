@@ -4,7 +4,7 @@
 
 The second advantage is composition. A detail-heavy scene written in JSX gets the full React toolbox for free: `{condition && <mesh>}` for conditional mount/unmount, custom hooks to share logic across scenes, Context to pass state deep down without manually threading it through every Three.js object. This track already leans on exactly those tools — `useDisposable`, `useVisibleRaf`/`useVisibleFrameloop` — as shared hooks, hard to replicate this cleanly in vanilla without hand-rolling an equivalent system.
 
-The third advantage is concrete and measurable: pointer events. `<mesh onPointerOver={...} onClick={...}>` just works — R3F's `<Canvas>` registers its own internal raycasting system on mount, testing intersections against the whole scene graph every time the pointer moves. In vanilla Three.js, the same behavior needs a hand-built `THREE.Raycaster`, manual mouse-to-NDC conversion, manual `intersectObject` calls inside the render loop, and manual matching of hits back to the right mesh — exactly what this lesson's demo puts side by side.
+The third advantage is concrete and measurable: pointer events. `<mesh onPointerOver={...} onClick={...}>` just works — R3F's `<Canvas>` registers its own internal raycasting system on mount, raycasting, every time the pointer moves, only the objects that carry event handlers — not the whole scene graph. In vanilla Three.js, the same behavior needs a hand-built `THREE.Raycaster`, manual mouse-to-NDC conversion, manual `intersectObject` calls inside the render loop, and manual matching of hits back to the right mesh — exactly what this lesson's demo puts side by side.
 
 ## Where Vanilla Three.js Wins: Control, Bundle, Engine Architectures
 

@@ -51,7 +51,7 @@ Không có material "tốt nhất" — chỉ có material đúng cho từng vi�
 
 Gán `new THREE.Color(0xff6b35)` cho `material.color` không lưu thẳng ba số $(1, 0.42, 0.21)$ vào bộ nhớ — Three.js bật `ColorManagement` mặc định (từ r150), tự động hiểu hex đó là sRGB (đúng như bài sRGB vs Linear ở Track 0) và convert ngay sang không gian linear trước khi lưu vào `.r/.g/.b`. Bạn không cần tự gamma-correct màu material bằng tay — engine đã làm hộ — nhưng nếu đọc trực tiếp `.r/.g/.b` để tính toán thủ công (ví dụ làm tối màu bằng `multiplyScalar`), kết quả nằm trong không gian linear chứ không phải hex gốc bạn gõ.
 
-Material cũng là tài nguyên GPU — nó giữ tham chiếu tới một chương trình shader đã biên dịch và trạng thái uniform liên quan, y hệt geometry hay texture. Gán `mesh.material = newMaterial` **không** tự động giải phóng material cũ; bạn phải gọi `oldMaterial.dispose()` sau khi gán, nếu không chương trình shader cũ vẫn nằm lại trong bộ nhớ GPU dù chẳng còn mesh nào tham chiếu tới nó.
+Material cũng là tài nguyên GPU — nó giữ tham chiếu tới một chương trình shader đã biên dịch và trạng thái uniform liên quan, y hệt geometry hay texture. Gán `mesh.material = newMaterial` **không** tự động giải phóng material cũ; bạn phải gọi `oldMaterial.dispose()` sau khi gán, nếu không material cũ vẫn giữ tham chiếu tới chương trình shader của nó — program chỉ được giải phóng khi không còn material nào dùng tới, kể cả material cũ chưa dispose.
 
 ## Từ đây đi đâu: ánh sáng thật và PBR sâu hơn
 
@@ -62,7 +62,7 @@ Bài này cố tình chỉ dùng một light để cô lập phản ứng của 
 Ba lỗi hay gặp nhất khi làm việc với material:
 
 1. **Sửa property trên một material đang bị nhiều mesh dùng chung.** `const shared = new THREE.MeshStandardMaterial(...)` rồi gán cho 50 mesh để tiết kiệm bộ nhớ là hợp lý — nhưng gọi `shared.roughness = 0.1` sau đó đổi ngoại hình của **cả 50 mesh cùng lúc**, vì chúng tham chiếu đúng một object JS. Cần độc lập hoá appearance thì `clone()` material trước, hoặc dùng attribute per-instance.
-2. **Gán `mesh.material = newMat` mà quên `.dispose()` material cũ.** Three.js không tự dọn — làm việc này trong một vòng lặp (ví dụ mỗi lần kéo slider) mà không dispose sẽ tích tụ state per-material phía renderer và giữ sống mọi texture material cũ tham chiếu. Shader program thì KHÔNG rò theo cách đó — renderer cache program theo tham số và đếm tham chiếu, hai material giống hệt nhau dùng chung một program; thứ thật sự ăn VRAM nhanh là texture không được dispose.
+2. **Gán `mesh.material = newMat` mà quên `.dispose()` material cũ.** Three.js không tự dọn — làm việc này trong một vòng lặp (ví dụ mỗi lần kéo slider) mà không dispose sẽ tích tụ state per-material phía renderer và giữ sống mọi texture material cũ tham chiếu. Shader program được cache theo cấu hình và đếm tham chiếu — thay bằng material cùng cấu hình thì dùng chung program cũ, không nhân lên; nhưng material cũ khác cấu hình mà chưa dispose vẫn giữ program của nó sống. Thứ ăn VRAM nhanh nhất thường là texture không được dispose.
 3. **Kỳ vọng `MeshBasicMaterial` phản ứng với ánh sáng hoặc đổ bóng.** `receiveShadow` trên mesh dùng Basic không có tác dụng — shader của Basic không hề đọc shadow map. Nhưng `castShadow` thì **vẫn hoạt động**: pass đổ bóng render mọi vật bằng depth material nội bộ của renderer, bỏ qua material của chính vật, nên mesh Basic vẫn đổ bóng lên vật khác.
 
 </Callout>

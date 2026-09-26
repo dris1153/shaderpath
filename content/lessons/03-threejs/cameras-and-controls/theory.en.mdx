@@ -28,7 +28,7 @@ Panning (`enablePan`, on by default) shifts both `camera.position` and `controls
 
 ## Who Owns the Camera: Code-Driven Animation vs Letting Controls Manage It
 
-Animating a camera in code is usually two lines: `camera.position.lerp(targetPos, alpha)` to ease toward a new position, and `camera.lookAt(lookTarget)` to keep it aimed correctly. The trouble starts when `OrbitControls` is also enabled: every `controls.update()` call overwrites `camera.position`/`camera.quaternion` from its own internal spherical state — if your code sets `camera.position` and then `controls.update()` runs right after, controls will yank the camera back to its old spherical position, silently undoing your animation (or fighting it every single frame if both run in the same loop). Only one side should write to the camera transform each frame — two fixes: either flip `controls.enabled = false` while code is driving the camera and re-enable it afterward, or animate `controls.target` instead of `camera.position`/`lookAt` directly, so controls stays the sole owner and recomputes its spherical state for you.
+Animating a camera in code is usually two lines: `camera.position.lerp(targetPos, alpha)` to ease toward a new position, and `camera.lookAt(lookTarget)` to keep it aimed correctly. The trouble starts when the loop keeps calling `controls.update()`: each call rebuilds its spherical state from the camera's **current** position (so it never pulls the camera back to an old one), adds any leftover damping, applies the clamps, then calls `camera.lookAt(controls.target)`. Your tweened position mostly survives, but the look direction is always dragged back to `controls.target` — your `lookAt` is overwritten — and leftover inertia or a clamp can nudge the camera off the tween's path. Two fixes: animate `controls.target` alongside `camera.position` so controls looks where you want, or stop calling `update()` during the tween and resume afterward. Note that `controls.enabled = false` only blocks input — it does not stop `update()` from running.
 
 ## Resize: Updating Aspect and updateProjectionMatrix
 
@@ -40,8 +40,8 @@ Camera and controls still operate inside a flat scene graph today — the next l
 
 The three most common camera/controls mistakes:
 
-1. **Enabling `enableDamping` but only calling `controls.update()` on pointer events.** The camera eases for a couple of frames right after you release the pointer, then snaps to a dead stop — damping needs `update()` running every frame, including the ones with zero input, not just the ones with an event.
-2. **Animating `camera.position` in code while `OrbitControls` stays enabled.** Both sides fight over the camera transform every frame — the camera jitters or snaps back to its old position because `controls.update()` overwrites your animation right after it runs.
+1. **Enabling `enableDamping` but only calling `controls.update()` on pointer events.** While dragging, the camera lags behind the pointer; on release it stops dead with no inertia at all, and the unapplied motion jumps in at the next interaction — damping applies only part of the motion per `update()`, so it needs `update()` every frame, including frames with zero input.
+2. **Tweening the camera in code while the loop still calls `controls.update()`.** `update()` calls `lookAt(controls.target)` on every run, so the direction you set is overwritten, and leftover inertia or clamps drag the camera off the tween — animate `controls.target` too, or stop calling `update()` during the tween (`controls.enabled = false` is not enough).
 3. **Resizing the canvas and forgetting `updateProjectionMatrix()`.** `camera.aspect` (or `left`/`right`/`top`/`bottom` on Orthographic) changes value, but the projection matrix stays stale because it's only recomputed when this call fires explicitly — the image stretches by exactly the mismatch between the old and new aspect ratio.
 
 </Callout>

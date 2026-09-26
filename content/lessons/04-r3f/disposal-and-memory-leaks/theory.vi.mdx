@@ -44,7 +44,7 @@ useEffect(() => {
 }, []);
 ```
 
-**2. `useMemo` giữ object ổn định qua re-render, cộng effect riêng chỉ để dispose** — khi object cần dùng ở nhiều chỗ khác trong component, không chỉ trong effect tạo ra nó. Cẩn thận: pattern này vướng đúng cái bẫy Strict Mode mô tả ở phần dưới — object memo bị dispose ở lần unmount mô phỏng rồi quay lại ở trạng thái đã chết:
+**2. `useMemo` giữ object ổn định qua re-render, cộng effect riêng chỉ để dispose** — khi object cần dùng ở nhiều chỗ khác trong component, không chỉ trong effect tạo ra nó. Cẩn thận: pattern này vướng đúng cái bẫy Strict Mode mô tả ở phần dưới — object memo bị dispose ở lần unmount mô phỏng rồi vẫn được dùng tiếp, nên renderer lặng lẽ upload lại nó và lệnh dispose thành vô ích:
 
 ```tsx
 const geometry = useMemo(() => new THREE.SphereGeometry(1, 32, 32), []);
@@ -66,7 +66,7 @@ useEffect(() => {
 
 ## Strict Mode và bài học loseContext
 
-React Strict Mode (mặc định ở dev) cố tình mount → unmount → mount lại mỗi component ngay khi xuất hiện, để lộ cleanup không an toàn khi chạy hai lần. Với GPU resource, an toàn hay không phụ thuộc vào NƠI tạo object: Strict Mode chỉ chạy lại effect, còn state/memo được GIỮ NGUYÊN qua lần remount mô phỏng — object `useMemo` bị dispose ở lần unmount giả rồi bị dùng lại ở mount 2 (đã chết). Tạo-trong-effect mới là pattern an toàn: mỗi lần effect chạy tạo object mới, cleanup dispose đúng object của lần đó.
+React Strict Mode (mặc định ở dev) cố tình mount → unmount → mount lại mỗi component ngay khi xuất hiện, để lộ cleanup không an toàn khi chạy hai lần. Với GPU resource, an toàn hay không phụ thuộc vào NƠI tạo object: Strict Mode chỉ chạy lại effect, còn state/memo được GIỮ NGUYÊN qua lần remount mô phỏng — object `useMemo` bị dispose ở lần unmount giả rồi bị dùng lại ở mount 2: hình vẫn đúng vì renderer upload lại geometry/texture và biên dịch lại material, nhưng dispose bị vô hiệu và tốn thêm công. Tạo-trong-effect mới là pattern an toàn: mỗi lần effect chạy tạo object mới, cleanup dispose đúng object của lần đó.
 
 Nhưng nền tảng này từng dính lỗi tinh vi hơn, đúng ở cơ chế double-mount này: một demo WebGL thuần từng gọi `gl.getExtension('WEBGL_lose_context').loseContext()` trong cleanup, nghĩ là "reset sạch context mỗi lần unmount". Vấn đề: Strict Mode remount **dùng lại đúng element `<canvas>`**, và context đã "lost" không tự phục hồi trên canvas đó nếu không tự bắt `webglcontextrestored` rồi khởi tạo lại cả pipeline. Kết quả: demo chạy được lần mount đầu, trắng vĩnh viễn ở lần hai — ngay trong dev, tái hiện 100%. Bài học không riêng cho `loseContext`: cleanup nào phá huỷ *container đang được tái sử dụng* (canvas, context, singleton) — thay vì chỉ dispose *resource bạn tự tạo bên trong nó* — không sống sót qua double-mount của Strict Mode.
 

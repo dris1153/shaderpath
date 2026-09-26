@@ -28,7 +28,7 @@ Pan (`enablePan`, mặc định bật) dịch chuyển cả `camera.position` l�
 
 ## Ai làm chủ camera: animate bằng code vs để controls tự quản
 
-Animate camera bằng code thường chỉ cần hai dòng: `camera.position.lerp(targetPos, alpha)` để trượt êm tới vị trí mới, và `camera.lookAt(lookTarget)` để luôn hướng đúng chỗ. Vấn đề nảy sinh khi `OrbitControls` cũng đang bật: `controls.update()` mỗi frame ghi đè `camera.position`/`camera.quaternion` từ trạng thái spherical nội bộ của nó — nếu code set `camera.position` xong rồi `controls.update()` chạy ngay sau, controls sẽ kéo camera về đúng vị trí spherical cũ, animate coi như vô nghĩa (hoặc giật liên tục nếu hai bên tranh chấp mỗi frame). Chỉ một bên được ghi vào camera transform mỗi frame — hai cách giải quyết: tắt hẳn `controls.enabled = false` khi code đang animate rồi bật lại khi xong, hoặc animate `controls.target` thay vì `camera.position`/`lookAt` trực tiếp để controls luôn là chủ sở hữu duy nhất và tự tính lại spherical state cho bạn.
+Animate camera bằng code thường chỉ cần hai dòng: `camera.position.lerp(targetPos, alpha)` để trượt êm tới vị trí mới, và `camera.lookAt(lookTarget)` để luôn hướng đúng chỗ. Vấn đề nảy sinh khi vòng lặp vẫn gọi `controls.update()`: mỗi lần chạy, nó dựng lại trạng thái spherical từ **vị trí hiện tại** của camera (nên không kéo camera về vị trí cũ nào), cộng quán tính damping còn dư, áp các giới hạn clamp, rồi gọi `camera.lookAt(controls.target)`. Vị trí tween gần như được giữ, nhưng hướng nhìn luôn bị kéo về `controls.target` — `lookAt` của bạn bị ghi đè — và quán tính hay clamp có thể đẩy camera lệch đường tween. Hai cách giải quyết: animate `controls.target` cùng với `camera.position` để controls nhìn đúng chỗ bạn muốn, hoặc ngừng gọi `update()` trong lúc tween rồi gọi lại khi xong. Lưu ý `controls.enabled = false` chỉ chặn input — nó không ngăn `update()` chạy.
 
 ## Resize: cập nhật aspect và updateProjectionMatrix
 
@@ -40,8 +40,8 @@ Camera và controls hôm nay vẫn di chuyển trong một scene graph phẳng �
 
 Ba lỗi hay gặp nhất khi làm việc với camera và controls:
 
-1. **Bật `enableDamping` mà chỉ gọi `controls.update()` trong sự kiện chuột.** Camera trôi được vài frame ngay sau khi thả chuột rồi đứng khựng đột ngột — vì damping cần `update()` chạy liên tục mỗi frame kể cả khi không có input mới, không phải chỉ khi có sự kiện.
-2. **Vừa animate `camera.position` bằng code, vừa để `OrbitControls` bật.** Hai bên tranh chấp quyền ghi lên transform camera mỗi frame — kết quả camera giật hoặc bật ngược lại vị trí cũ do `controls.update()` ghi đè animate ngay sau đó.
+1. **Bật `enableDamping` mà chỉ gọi `controls.update()` trong sự kiện chuột.** Khi kéo, camera trễ theo chuột; thả tay là dừng khựng ngay, không có chút quán tính nào, và phần chuyển động chưa áp sẽ giật vào ở lần tương tác sau — vì damping chỉ áp một phần chuyển động mỗi lần `update()`, nên nó cần chạy mỗi frame kể cả khi không có input.
+2. **Tween camera bằng code trong khi vòng lặp vẫn gọi `controls.update()`.** `update()` gọi `lookAt(controls.target)` mỗi lần chạy nên hướng nhìn bạn đặt bị ghi đè, còn quán tính dư và clamp kéo camera lệch đường tween — animate luôn `controls.target`, hoặc ngừng gọi `update()` trong lúc tween (`controls.enabled = false` không đủ).
 3. **Đổi kích thước canvas mà quên gọi `updateProjectionMatrix()`.** `camera.aspect` (hay `left`/`right`/`top`/`bottom` với Orthographic) đổi giá trị nhưng ma trận chiếu vẫn giữ nguyên vì nó chỉ được tính lại khi hàm này được gọi tường minh — hình ảnh bị méo đúng bằng tỉ lệ sai lệch giữa aspect cũ và mới.
 
 </Callout>

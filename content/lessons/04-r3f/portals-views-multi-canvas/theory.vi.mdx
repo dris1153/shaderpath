@@ -42,7 +42,7 @@ function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
 
 ### `track`, `index`, và cạm bẫy camera orthographic
 
-`index` quyết định thứ tự vẽ: các `<View>` được sắp theo `index` tăng dần, `index` cao hơn vẽ sau nên đè lên trên — dùng để layer overlay lên trên khung nhìn chính. Cạm bẫy thường gặp nhất nằm ở camera orthographic: nếu không set `manual` trên camera, `View` sẽ tự ép `left/right/top/bottom` của nó khớp chính xác kích thước pixel của rect đang track mỗi frame — mọi giá trị zoom hay frustum bạn tự đặt trong code đều bị ghi đè âm thầm. Muốn giữ frustum tự chọn (ví dụ một khung nhìn từ trên xuống bao trọn đúng phạm vi scene bạn muốn), phải khai báo tường minh `manual` trên camera.
+`index` quyết định thứ tự vẽ: các `<View>` được sắp theo `index` tăng dần, `index` cao hơn vẽ sau nên đè lên trên — dùng để layer overlay lên trên khung nhìn chính. Cạm bẫy thường gặp nhất nằm ở camera orthographic: nếu không set `manual` trên camera, `View` sẽ tự ép `left/right/top/bottom` của nó khớp chính xác kích thước pixel của rect đang track mỗi frame — mọi `left/right/top/bottom` bạn tự đặt trong code đều bị ghi đè âm thầm (`zoom` thì không bị động tới). Muốn giữ frustum tự chọn (ví dụ một khung nhìn từ trên xuống bao trọn đúng phạm vi scene bạn muốn), phải khai báo tường minh `manual` trên camera.
 
 ## `createPortal`: vẽ một nhánh scene vào một đích khác
 
@@ -93,8 +93,8 @@ Kỹ thuật render vào một đích khác quay lại nhiều lần sau bài n�
 
 Ba lỗi hay gặp nhất khi dùng View và createPortal:
 
-1. **Quên `manual` trên camera orthographic bên trong `View`.** Thiếu nó, `View` tự ép `left/right/top/bottom` khớp pixel của rect đang track mỗi frame — zoom/frustum tự đặt trong code lặng lẽ bị ghi đè, không lỗi nào log ra console.
+1. **Quên `manual` trên camera orthographic bên trong `View`.** Thiếu nó, `View` tự ép `left/right/top/bottom` khớp pixel của rect đang track mỗi frame — frustum tự đặt trong code lặng lẽ bị ghi đè, không lỗi nào log ra console.
 2. **Tưởng nhiều `<View>` chia sẻ chung một Three.js Scene.** Mỗi `<View>` render vào một virtual scene riêng — di chuyển object ở khung nhìn này không tự động di chuyển bản "giống hệt" ở khung nhìn kia, trừ khi cả hai điều khiển từ cùng một state bên ngoài.
-3. **Quên rằng scissor chỉ giới hạn vùng vẽ, không tự dọn canvas.** `setScissor`/`setViewport` không thay cho một lần `clear()` toàn canvas đầu frame — thiếu bước này, pixel cũ ở vùng chưa vẽ lại (ví dụ chỗ object vừa rời khỏi) vẫn còn nguyên, tạo vệt bóng ma.
+3. **Quên rằng scissor giới hạn cả vùng `clear()`.** Khi scissor test đang bật, `clear()` chỉ xoá bên trong rect đó. Canvas mặc định (`preserveDrawingBuffer: false`) được trình duyệt xoá toàn bộ sau mỗi frame nên không sao; nhưng với `preserveDrawingBuffer: true`, hoặc khi vẽ vào một render target giữ qua nhiều frame, pixel cũ ở vùng không vẽ lại (chỗ object vừa rời khỏi) còn nguyên thành vệt bóng ma — tắt scissor rồi `clear()` toàn bộ ở đầu frame.
 
 </Callout>

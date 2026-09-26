@@ -59,7 +59,7 @@ What R3F does NOT change matters just as much as what it does: the final scene t
 
 Where the reconciler model stops being an implementation detail and starts directly deciding behavior: a list of meshes rendered with `.map()` and `key`. Exactly like React DOM, `key` is the identity the reconciler uses to match old nodes to new ones — changing an element's `key` (even with every other prop unchanged) forces the reconciler to treat it as an ENTIRELY different node: the old one unmounts (the real Three.js object gets destroyed, along with any local state attached via ref), the new one mounts (a brand-new Three.js object gets constructed). Keep the same `key` but change some other prop, and only the existing object gets mutated — state attached via ref (say, a rotation mid-animation) survives that render.
 
-This is exactly the most common trap when a 3D list gets reordered (sorted/filtered) using the array index as `key`: the index shifts with the new order → the reconciler thinks most nodes changed identity → it destroys and recreates most meshes even though the underlying data merely moved, causing visible pops and losing in-flight animation state. The rule is identical to React DOM: use a stable id from the data itself (never the array index) as `key` for any 3D list that can be added to, removed from, or reordered.
+This is exactly the most common trap when a 3D list gets reordered (sorted/filtered) using the array index as `key`: keys 0, 1, 2… still exist after the sort, so the reconciler matches nodes by **position**, not by data — it keeps the old meshes and writes the new items' props onto them (a filter unmounts only the last one). The result: state attached via ref (a half-finished rotation, a running animation) stays with the position and jumps to a different item, while the meshes pop to new places instead of travelling with their data. The rule is identical to React DOM: use a stable id from the data itself (never the array index) as `key` for any 3D list that can be added to, removed from, or reordered.
 
 ## Where This Foundation Leads: JSX ↔ Three.js Mapping and the Model's Limits
 
@@ -70,7 +70,7 @@ The next lesson dissects the exact prop → property mapping mechanism that the 
 The three most common mistakes when first learning the reconciler mental model:
 
 1. **Calling `scene.add()`/`.remove()` manually inside an R3F component.** The reconciler knows nothing about an object you added by hand — it's not part of the fiber tree, so it never gets diffed, never gets disposed on unmount, and easily ends up duplicated on every re-render.
-2. **Using the array index as `key` for a mesh list that can be reordered or filtered.** The index shifts with the new position, making the reconciler treat nearly every element as a changed identity, needlessly destroying and recreating Three.js objects and losing in-flight animation state attached via ref.
+2. **Using the array index as `key` for a mesh list that can be reordered or filtered.** Keys follow position, not data: the reconciler keeps the old meshes and writes other items' props onto them, so animation state attached via ref jumps to the wrong item and meshes pop.
 3. **Assuming unmount always disposes everything.** Automatic disposal only covers geometries/materials created directly by JSX; textures loaded imperatively outside JSX, manually attached event listeners, or objects built with `new THREE.X()` outside the component tree still need explicit cleanup — full details in the Disposal & Memory Leak lesson.
 
 </Callout>

@@ -49,9 +49,9 @@ Một `<mesh>` không tự biết `<boxGeometry>` con của nó phải gán vào
 
 ## Giá trị "không serialize được": vector nhận mảng, màu nhận chuỗi
 
-`Vector3`, `Euler`, `Color` không phải kiểu dữ liệu JSON-serializable thuần — chúng là class THREE thật, có method. R3F chấp nhận PROP dạng "gọn" (mảng số, hoặc chuỗi) rồi tự chuyển đổi bằng đúng API của class đó thay vì gán đè: prop `color` nhận chuỗi CSS (`"hotpink"`, `"#ff0088"`, `"rgb(255,0,136)"`) và R3F gọi `material.color.set("hotpink")` — không tạo `Color` mới, chỉ set lại giá trị Color instance sẵn có. Tương tự, prop `position` nhận mảng ba số và R3F gọi `.set(...array)` thay vì gán đè property.
+`Vector3`, `Euler`, `Color` không phải kiểu dữ liệu JSON-serializable thuần — chúng là class THREE thật, có method. R3F chấp nhận PROP dạng "gọn" (mảng số, hoặc chuỗi) rồi tự chuyển đổi bằng đúng API của class đó thay vì gán đè: prop `color` nhận chuỗi CSS (`"hotpink"`, `"#ff0088"`, `"rgb(255,0,136)"`) và R3F gọi `material.color.set("hotpink")` — không tạo `Color` mới, chỉ set lại giá trị Color instance sẵn có. Tương tự, prop `position` nhận mảng ba số và R3F gọi `.fromArray(array)` thay vì gán đè property.
 
-Nguyên tắc chung: bất kỳ property đích nào có method `.set()` (hầu hết class toán học của THREE đều có), R3F ưu tiên gọi `.set()` thay vì gán đè bằng object mới — giữ nguyên identity của instance, tránh cấp phát thừa mỗi lần re-render, và giữ tham chiếu cũ (nếu code khác đang giữ) vẫn hợp lệ.
+Nguyên tắc chung: bất kỳ property đích nào có method `.set()` (hầu hết class toán học của THREE đều có), R3F ưu tiên gọi `.set()` thay vì gán đè bằng object mới — giữ nguyên identity của instance và giữ tham chiếu cũ (nếu code khác đang giữ) vẫn hợp lệ. Prop không đổi thì bước diff bỏ qua hẳn.
 
 ## extend(): mở rộng bảng catalog JSX cho class tuỳ biến
 
@@ -73,6 +73,6 @@ Ba lỗi hay gặp nhất khi ánh xạ JSX sang Three.js:
 
 1. **Đưa giá trị animate mượt vào `args`.** `args` chỉ chạy một lần lúc constructor — đổi nó mỗi frame (ví dụ nối `args={[radius, 32, 32]}` với một `radius` animate) huỷ và dựng lại toàn bộ geometry, re-upload buffer GPU liên tục thay vì chỉ mutate `scale`.
 2. **Đặt geometry/material dưới nhầm HOST cha.** Auto-attach quyết định theo KIỂU instance (`isBufferGeometry` → `attach="geometry"`, `isMaterial` → `"material"`) và gắn vào host cha gần nhất — bọc qua component React tự viết vẫn ổn (component không tạo host node), nhưng lồng geometry dưới một `<group>` sẽ gắn thành `group.geometry`: không lỗi, không hiển thị gì. Với thứ không auto-attach được (ví dụ texture vào slot cụ thể), phải set `attach` tường minh.
-3. **Tưởng `color="hotpink"` tạo Color mới mỗi lần re-render.** R3F gọi `.set()` trên Color instance có sẵn, không cấp phát object mới — nhưng nếu bạn TỰ tạo `new THREE.Color()` trong thân component (ngoài `useMemo`) rồi truyền qua một prop khác, bạn mới thực sự tạo object rác mỗi lần render, không phải do JSX gây ra.
+3. **Tưởng `color="hotpink"` tạo Color mới mỗi lần re-render.** Khi giá trị đổi, R3F gọi `.set()` trên Color instance có sẵn, không cấp phát object mới — nhưng nếu bạn TỰ tạo `new THREE.Color()` trong thân component (ngoài `useMemo`) rồi truyền qua một prop khác, bạn mới thực sự tạo object rác mỗi lần render, không phải do JSX gây ra.
 
 </Callout>

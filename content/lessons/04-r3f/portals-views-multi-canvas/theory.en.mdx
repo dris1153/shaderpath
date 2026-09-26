@@ -42,7 +42,7 @@ function renderViewports(renderer: THREE.WebGLRenderer, viewports: Viewport[]) {
 
 ### `track`, `index`, and the Orthographic Camera Trap
 
-`index` decides draw order: `<View>`s are sorted by ascending `index`, and a higher `index` draws later, so it paints on top — used to layer an overlay above the main viewport. The most common trap is with orthographic cameras: without `manual` set on the camera, `View` silently forces its `left/right/top/bottom` to match the tracked rect's pixel dimensions every single frame — any zoom or frustum you set yourself in code gets overwritten without a trace. To keep a chosen frustum (say, a top-down viewport framing an exact portion of the scene), you must explicitly set `manual` on the camera.
+`index` decides draw order: `<View>`s are sorted by ascending `index`, and a higher `index` draws later, so it paints on top — used to layer an overlay above the main viewport. The most common trap is with orthographic cameras: without `manual` set on the camera, `View` silently forces its `left/right/top/bottom` to match the tracked rect's pixel dimensions every single frame — any `left/right/top/bottom` you set yourself in code gets overwritten without a trace (`zoom` is left alone). To keep a chosen frustum (say, a top-down viewport framing an exact portion of the scene), you must explicitly set `manual` on the camera.
 
 ## `createPortal`: Rendering a Branch Into a Different Target
 
@@ -93,8 +93,8 @@ Rendering into a different target keeps coming back after this lesson. Track 9 (
 
 The three most common mistakes with View and createPortal:
 
-1. **Forgetting `manual` on an orthographic camera inside a `View`.** Without it, `View` silently forces `left/right/top/bottom` to match the tracked rect's pixel dimensions every frame — any zoom or frustum set in code gets overwritten with nothing logged to the console.
+1. **Forgetting `manual` on an orthographic camera inside a `View`.** Without it, `View` silently forces `left/right/top/bottom` to match the tracked rect's pixel dimensions every frame — any frustum set in code gets overwritten with nothing logged to the console.
 2. **Assuming multiple `<View>`s share one Three.js Scene.** Each `<View>` renders into its own virtual scene — moving an object in one viewport doesn't automatically move its "identical" counterpart in another, unless both are driven from the same external state.
-3. **Forgetting that scissor only restricts WHERE drawing happens, it doesn't clear the canvas for you.** `setScissor`/`setViewport` are no substitute for one full-canvas `clear()` at the frame's start — skip it, and old pixels in regions not repainted this frame (say, where an object just moved away from) stay put, leaving a ghost trail.
+3. **Forgetting that scissor restricts `clear()` too.** With the scissor test on, `clear()` only wipes inside that rect. A default canvas (`preserveDrawingBuffer: false`) is cleared whole by the browser after every frame, so no harm done; but with `preserveDrawingBuffer: true`, or when rendering into a render target that persists across frames, old pixels in regions not repainted (say, where an object just moved away from) stay put as a ghost trail — turn scissor off and `clear()` everything at the frame's start.
 
 </Callout>
