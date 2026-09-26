@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Một cảnh raymarch dùng exponential fog với mật độ $\\rho = 0.08$ (đơn vị: nghịch đảo đơn vị cảnh). Không chạy code, tính transmittance $T(t) = e^{-\\rho t}$ tại $t = 10$ và $t = 30$.
 
-Sau đó: muốn có khoảng cách tầm nhìn $d_{vis} = 50$ (tại đó $T \\approx 0.05$, quy ước "gần như khuất") thay vì mật độ hiện tại, $\\rho$ cần đổi thành bao nhiêu?`,
+Sau đó: muốn có khoảng cách tầm nhìn $d_{vis} = 50$ (tại đó $T \\approx 0.05$, quy ước tầm nhìn quang học của WMO) thay vì mật độ hiện tại, $\\rho$ cần đổi thành bao nhiêu?`,
       en: `A raymarched scene uses exponential fog with density $\\rho = 0.08$ (units: inverse scene units). Without running code, compute the transmittance $T(t) = e^{-\\rho t}$ at $t = 10$ and $t = 30$.
 
-Then: to get a visibility distance $d_{vis} = 50$ (where $T \\approx 0.05$, the "practically invisible" convention) instead of the current density, what should $\\rho$ become?`,
+Then: to get a visibility distance $d_{vis} = 50$ (where $T \\approx 0.05$, the WMO optical-range convention) instead of the current density, what should $\\rho$ become?`,
     },
     hints: [
       {

@@ -15,12 +15,12 @@ export const reviewCards: ReviewCard[] = [
   {
     id: "emit-before-attenuating",
     q: {
-      vi: "Trong vòng lặp tích luỹ, vì sao cộng phần phát xạ của bước này vào $C$ trước khi nhân $T$ với hệ số suy hao của chính bước đó?",
-      en: "In the accumulation loop, why add this step's emission to $C$ before multiplying $T$ by this step's attenuation?",
+      vi: "Trong vòng lặp tích luỹ, nếu cộng phần phát xạ của bước này vào $C$ SAU khi đã nhân $T$ với hệ số suy hao của chính bước đó, thay vì trước, thì điều gì thay đổi?",
+      en: "In the accumulation loop, what changes if you add this step's emission to $C$ after multiplying $T$ by this step's attenuation, instead of before?",
     },
     a: {
-      vi: "Lúc đó $T$ là phần ánh sáng còn sống sót từ camera tới đây qua các bước gần hơn. Trong mô hình này, ánh sáng do chính bước đó phát ra chưa đi qua chính nó, nên không bị làm tối bởi hệ số của nó. Đảo hai dòng thì mỗi lớp tự chặn một phần ánh sáng của chính mình — mây ra tối và phẳng.",
-      en: "At that moment $T$ is the light surviving from the camera to here through the nearer steps. In this model the current step's own emission has not passed through itself, so it should not be dimmed by its own factor. Swap the two lines and every layer blocks part of its own light — the cloud comes out dim and flat.",
+      vi: "Phát xạ của mỗi bước bị chính lớp của nó làm tối: trọng số thành $\\rho\\,\\Delta s\\,e^{-\\rho\\Delta s}$ thay vì $\\rho\\,\\Delta s$, nên các bước dày ra tối hơn. Không thứ tự nào chính xác — cộng trước thì thừa, cộng sau thì thiếu; trọng số chính xác $1 - e^{-\\rho\\Delta s}$ nằm giữa, và cả ba khớp nhau khi bước mỏng.",
+      en: "Each step's emission gets dimmed by its own slab: the weight becomes $\\rho\\,\\Delta s\\,e^{-\\rho\\Delta s}$ instead of $\\rho\\,\\Delta s$, so thick steps come out darker. Neither order is exact — emit-first overshoots, emit-after undershoots; the exact slab weight $1 - e^{-\\rho\\Delta s}$ sits between, and all three agree for thin steps.",
     },
   },
   {

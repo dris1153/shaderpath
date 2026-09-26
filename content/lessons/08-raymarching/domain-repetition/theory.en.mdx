@@ -50,9 +50,9 @@ with $l$ the clamp radius in cells, any query point beyond $l$ cells no longer "
 
 The cell id computed right before the fold step — `floor(p/c + 0.5)` or `round(p/c)`, depending on the formula — is an integer coordinate uniquely identifying each cell. Feeding it straight into a Track 7 hash (`hash31(cellId)`) produces a pseudo-random number that's perfectly stable per cell: use it to scale height before calling the SDF, or to pick a color at shading time, turning a monotonous repeated field into a scene that reads as hand-placed — every cell its own variation, at zero extra memory cost, since a hash is a pure function recomputed every time, never stored anywhere.
 
-## Mirrored Repetition: abs() in Brief
+## Mirrored Repetition: Flip Every Other Cell
 
-One quick variant worth knowing: calling `abs(p)` (or `abs(p.xz)`) right before the fold step produces mirrored repetition instead of pure translation — every cell becomes a reflection of its neighbor rather than an identical copy, giving kaleidoscope-like patterns or symmetric crystal structures with just one extra line ahead of the existing fold formula.
+One quick variant worth knowing: flipping `q` in every other cell — by the parity of the cell id, e.g. `q.x *= 1.0 - 2.0 * mod(id.x, 2.0)` — produces mirrored repetition instead of pure translation: every cell becomes a reflection of its neighbor rather than an identical copy, giving kaleidoscope-like patterns or symmetric crystal structures. (A plain `abs(p)` before the fold mirrors space only once, across the origin.)
 
 Domain repetition is the last technique before the Shading module closes: the next checkpoint combines it with the normals, soft shadows and AO from the previous two lessons into one complete scene. Further ahead, Track 8's Atmosphere module reuses this same "transform before marching" idea for fog and scattering, and Track 9 (GPGPU) applies the same domain-thinking to simulate millions of particles without a single position buffer storing each particle individually.
 

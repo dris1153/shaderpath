@@ -112,8 +112,8 @@ void main() {
         en: "`stepLen` is already computed from `uv.x` — every pixel marches a different span, no need to change the `steps` constant.",
       },
       {
-        vi: "TODO 1 và TODO 2 không hoán đổi thứ tự được: cộng vào `acc` bằng `T` CÒN NGUYÊN của bước này, chỉ SAU ĐÓ mới suy hao `T` để dùng cho bước kế tiếp.",
-        en: "TODO 1 and TODO 2 cannot swap order: add to `acc` using this step's UN-attenuated `T`, and only THEN attenuate `T` for the next step.",
+        vi: "Giữ đúng thứ tự của bài: cộng vào `acc` bằng `T` CÒN NGUYÊN của bước này, chỉ SAU ĐÓ mới suy hao `T` để dùng cho bước kế tiếp (đảo lại thì mỗi bước bị chính lớp của nó làm tối).",
+        en: "Keep the lesson's order: add to `acc` using this step's UN-attenuated `T`, and only THEN attenuate `T` for the next step (swapped, each step gets darkened by its own slab).",
       },
     ],
     checklist: [

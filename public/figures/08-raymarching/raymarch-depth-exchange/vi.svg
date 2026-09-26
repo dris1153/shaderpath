@@ -107,8 +107,8 @@
   <rect class="box" x="432" y="360" width="184" height="80" rx="8" />
   <text class="stage" x="446" y="382">3 · phép depth test thông thường</text>
   <text class="note" x="446" y="402">gl_FragDepth = (z_ndc + 1) / 2</text>
-  <text class="note" x="446" y="418">giải quyết chiều còn lại</text>
+  <text class="note" x="446" y="418">giải quyết cả hai chiều</text>
 
-  <text class="note" x="24" y="466">Shader không lấy mẫu được depth attachment mà chính nó đang ghi — đó là toàn bộ lý do lượt 1 tồn tại.</text>
+  <text class="note" x="24" y="466">Depth của canvas không lấy mẫu được, depth texture đang bị ghi cũng vậy — nên mới cần lượt 1 chỉ vẽ mesh.</text>
   <text class="note" x="24" y="484">Ghi gl_FragDepth cũng là từ bỏ early-Z: depth thật chỉ có sau khi fragment shader chạy xong.</text>
 </svg>

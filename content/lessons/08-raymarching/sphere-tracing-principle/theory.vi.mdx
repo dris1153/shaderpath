@@ -71,7 +71,7 @@ Vòng lặp march ở bài này mới chạy trên một $f(p)$ duy nhất, vi�
 
 Ba lỗi hay gặp nhất khi viết vòng lặp sphere tracing đầu tiên:
 
-1. **Quên chuẩn hoá `rd`.** Công thức $t_{i+1} = t_i + f(p_i)$ giả định `rd` là vector đơn vị — nếu không, `t` không còn đúng là khoảng cách thực dọc tia, bước march bị scale sai theo độ dài `rd`, hình ảnh méo phối cảnh đúng kiểu một fov sai gây ra.
+1. **Quên chuẩn hoá `rd`.** Công thức $t_{i+1} = t_i + f(p_i)$ giả định `rd` là vector đơn vị — nếu không, `t` không còn đo khoảng cách thật dọc tia và mỗi bước đi $|rd| \cdot f(p)$ trong không gian. Hướng tia không đổi nên phối cảnh vẫn đúng; nhưng bước march vượt quá khoảng cách an toàn, nặng nhất ở rìa màn hình nơi $|rd|$ lớn nhất, làm thủng các bề mặt mỏng hoặc bị tia lướt cạnh, và mọi thứ đọc `t` như một khoảng cách (fog, depth, `maxDist`) đều bị scale sai.
 2. **Dùng `epsilon` tuyệt đối không theo tỉ lệ cảnh.** `epsilon = 0.001` hợp lý cho mặt cầu bán kính 1, nhưng vô nghĩa nếu cảnh scale lên bán kính 100 (quá nhỏ, gây banding và tốn hiệu năng) hoặc xuống 0.01 (quá lớn, gây lồi lõm rõ rệt).
 3. **Không giới hạn `maxDist`, chỉ dựa `maxSteps`.** Thiếu `t > maxDist`, mọi tia bắn ra bầu trời vẫn buộc chạy hết `maxSteps` mới dừng — lãng phí đúng số bước tối đa cho phần lớn pixel khung hình, vì bầu trời thường chiếm diện tích màn hình nhiều hơn vật thể.
 

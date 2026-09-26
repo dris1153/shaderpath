@@ -58,7 +58,7 @@ vec3 fogColor = mix(coolFog, warmFog, pow(sunAmount, 8.0));
 
 Thứ tự các phép toán quan trọng: fog LUÔN áp dụng SAU KHI đã tính xong màu bề mặt đầy đủ — lighting, bóng, AO của các bài trước — chứ không phải trộn vào albedo trước khi shading. Và khoảng cách $t$ dùng trong công thức fog phải là TỔNG quãng đường tia đã march được tới điểm va chạm (biến `t` tích luỹ suốt vòng lặp sphere tracing), không phải giá trị SDF trả về ở bước cuối cùng — giá trị đó gần 0 tại điểm chạm, mang ý nghĩa hoàn toàn khác.
 
-Chọn mật độ $\rho$ (hay $a$ cho height fog) quyết định fog "ăn" cảnh nhanh hay chậm. Một cách chọn thực dụng: chọn trước một khoảng cách tầm nhìn mong muốn $d_{vis}$ (ví dụ 30 đơn vị cảnh) — khoảng cách mà tại đó $T$ đã tụt còn khoảng 2% (một quy ước ước lượng mượn từ khí tượng học, coi vật thể tại $T = 0.02$ là "gần như khuất") — rồi suy ngược:
+Chọn mật độ $\rho$ (hay $a$ cho height fog) quyết định fog "ăn" cảnh nhanh hay chậm. Một cách chọn thực dụng: chọn trước một khoảng cách tầm nhìn mong muốn $d_{vis}$ (ví dụ 30 đơn vị cảnh) — khoảng cách mà tại đó $T$ đã tụt còn khoảng 2% (ngưỡng tương phản 2% của Koschmieder trong khí tượng học; tầm nhìn quang học của WMO dùng 5% — cả hai đều là quy ước) — rồi suy ngược:
 
 $$
 \rho \approx \frac{-\ln(0.02)}{d_{vis}} \approx \frac{3.9}{d_{vis}}
@@ -75,7 +75,7 @@ Fog ở đây là một phép hoà màu thuần theo $t$ đã march — hoàn to
 Ba lỗi hay gặp nhất khi cài fog trong raymarch:
 
 1. **Nhầm `t` march (đã tích luỹ) với giá trị SDF trả về ở bước cuối.** Vòng lặp sphere tracing thường dùng chung một tên biến kiểu `d` cho cả khoảng-cách-an-toàn-mỗi-bước lẫn quãng-đường-tổng — nếu vô tình đưa `d` (gần 0 tại bề mặt) vào công thức fog thay vì `t` (quãng đường thật), fog gần như không bao giờ kích hoạt dù cảnh rất sâu.
-2. **Chia cho $d_y$ (thành phần y của hướng tia) mà không chặn khi nó gần 0.** Với height fog, một tia gần như nằm ngang (nhìn thẳng ra chân trời) có $d_y \approx 0$, khiến công thức tích phân đóng chia cho một số cực nhỏ — ra `NaN`/`Inf`, biểu hiện thành các điểm ảnh chớp nháy hoặc một vệt sáng bất thường đúng ngay đường chân trời.
+2. **Chia cho $d_y$ (thành phần y của hướng tia) mà không chặn khi nó gần 0.** Với height fog, một tia gần như nằm ngang (nhìn thẳng ra chân trời) có $d_y \approx 0$, và công thức tích phân đóng chia một đại lượng gần 0 cho một đại lượng gần 0 khác: giới hạn thật vẫn hữu hạn, nhưng kết quả float thành nhiễu (và đúng $d_y = 0$ thì ra `0/0`, NaN trên phần cứng IEEE), biểu hiện thành các điểm ảnh chớp nháy hoặc một vệt sáng bất thường đúng ngay đường chân trời.
 3. **Áp cùng công thức fog cho cả pixel nền trời (sky) khi tia không chạm gì.** Sky đã LÀ khí quyển ở vô cực — trộn thêm một lớp fog theo công thức bề mặt lên trên nó là "fog hoá" hai lần, làm chân trời bẹt hẳn về một màu fog phẳng lì thay vì giữ gradient trời tự nhiên.
 
 </Callout>

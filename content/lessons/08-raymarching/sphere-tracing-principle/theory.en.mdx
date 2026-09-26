@@ -71,7 +71,7 @@ This lesson's march loop only ever runs on a single $f(p)$, hand-written as a sp
 
 The three most common mistakes when writing your first sphere tracing loop:
 
-1. **Forgetting to normalize `rd`.** The formula $t_{i+1} = t_i + f(p_i)$ assumes `rd` is a unit vector — otherwise `t` no longer represents real-world distance traveled along the ray, the march step gets scaled by `rd`'s length, and the image distorts in perspective exactly the way a wrong fov would.
+1. **Forgetting to normalize `rd`.** The formula $t_{i+1} = t_i + f(p_i)$ assumes `rd` is a unit vector — otherwise `t` no longer measures real distance along the ray and each step moves $|rd| \cdot f(p)$ in space. The direction is unchanged, so perspective still looks right; but steps overshoot the safe distance, worst toward the screen edges where $|rd|$ is largest, punching holes through thin or grazed surfaces, and anything that reads `t` as a distance (fog, depth, `maxDist`) comes out scaled.
 2. **Using an absolute `epsilon` that ignores scene scale.** `epsilon = 0.001` is reasonable for a radius-1 sphere, but meaningless if the scene is scaled up to radius 100 (too tiny, causing banding and wasted performance) or down to radius 0.01 (too large, causing obvious lumpiness).
 3. **Skipping `maxDist` and relying on `maxSteps` alone.** Without a `t > maxDist` check, every ray shot into open sky (hitting nothing) is still forced to run the full `maxSteps` before the loop ends — wasting exactly the maximum step count on most of the frame's pixels, since sky typically covers far more screen area than any object.
 

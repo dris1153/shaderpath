@@ -13,6 +13,17 @@ export const reviewCards: ReviewCard[] = [
     },
   },
   {
+    id: "back-face-proxy-needs-the-write",
+    q: {
+      vi: "Demo bài này vẽ SDF trên các mặt sau của một sphere bao, và vòng march đã bị chặn bởi depth của mesh. Vì sao hễ không ghi `gl_FragDepth` là torus knot cắt xuyên qua blob, ngay chỗ blob ở phía trước?",
+      en: "This lesson's demo draws its SDF on the back faces of a bounding sphere, and the march is already bounded by the mesh's depth. Why does the torus knot cut through the blob, right where the blob is in front, as soon as `gl_FragDepth` isn't written?",
+    },
+    a: {
+      vi: "Cận trên chỉ lo phần SDF nằm sau mesh — các pixel đó bị discard. Ở chỗ blob phía trước, fragment giữ depth raster của mặt sau, vốn nằm sau blob và ở đây nằm sau cả knot, nên depth test cho knot thắng. Ghi depth của điểm chạm (chiếu qua camera, NDC map về $[0, 1]$) thì depth test mới so đúng bề mặt thật.",
+      en: "The bound only handles the SDF behind the mesh — those pixels discard. Where the blob is in front, the fragment keeps the back face's rasterized depth, which lies behind the blob and here behind the knot too, so the depth test lets the knot win. Writing the hit point's depth (projected, NDC remapped to $[0, 1]$) makes the test compare the real surface.",
+    },
+  },
+  {
     id: "frag-depth-kills-early-z",
     q: {
       vi: "Ngoài phần toán thêm vào, ghi `gl_FragDepth` còn khiến GPU mất gì?",

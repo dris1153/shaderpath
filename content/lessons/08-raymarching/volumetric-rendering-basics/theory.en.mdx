@@ -12,7 +12,7 @@ $$
 C \leftarrow C + T\,\rho\,\Delta s\,L_e, \qquad T \leftarrow T\, e^{-\rho\,\Delta s}
 $$
 
-This order isn't arbitrary: $L_e$ (the color emitted at the current step) has to be added BEFORE $T$ gets multiplied by this step's own attenuation factor — because at that point $T$ already correctly represents how much light survived from every step BEFORE it (closer to the camera) to reach here, while the light just emitted at the current step hasn't been blocked by that same step yet (a point doesn't absorb its own emitted light). Only after adding does $T$ get updated, to prepare for the next step — farther from the camera, needing further attenuation.
+Adding $L_e$ (the color emitted at the current step) BEFORE $T$ gets multiplied by this step's own attenuation factor is the usual convention: at that point $T$ correctly represents how much light survived from every step BEFORE it (closer to the camera) to reach here, and the light emitted at the current step is treated as not yet blocked by that same step. Only after adding does $T$ get updated, to prepare for the next step — farther from the camera, needing further attenuation. Both orders are first-order approximations: emitting first weights the step by $\rho\,\Delta s$ and overshoots, emitting after weights it by $\rho\,\Delta s\,e^{-\rho\Delta s}$ and undershoots; the exact slab weight $1 - e^{-\rho\Delta s}$ sits between, and all three agree for thin steps.
 
 $T$ decreases monotonically at every step (it never climbs back up) — once $T$ is small enough (say, $< 0.01$), whatever volume remains farther along the ray can no longer contribute anything visible: exiting the loop early (early exit) saves exactly the steps that would otherwise be wasted.
 
@@ -58,7 +58,7 @@ Multiplying the numbers straight out (an estimate): 64 march steps, each calling
 The three most common mistakes when wiring up a volumetric march:
 
 1. **Confusing a volumetric march with surface raymarching.** Stopping the instant density is first greater than 0 (exactly like sphere tracing stopping at $f < \epsilon$) instead of marching the whole bounding region and ACCUMULATING — this shears the cloud down to a thin shell stuck at the nearest edge to the camera, losing any sense of a volume that thickens toward its interior.
-2. **Adding $L_e$ AFTER updating that same step's $T$** (swapping the two update lines from the accumulation section) — every layer of cloud blocks part of its own emitted light before it can contribute to $C$, making the cloud look unnaturally dim and flat no matter how high the density is set.
+2. **Adding $L_e$ AFTER updating that same step's $T$** (swapping the two update lines from the accumulation section) — every layer of cloud blocks part of its own emitted light before it can contribute to $C$, so thick steps come out too dark, and raising the density makes it worse (emitting first errs the other way, a little too bright).
 3. **Setting the early-exit threshold too high** (say, $T < 0.5$) thinking it's an optimization — stopping the march while 50% of the light could still pass through cuts off unmarched volume midway, visibly distorting the cloud's silhouette on its far side.
 
 </Callout>

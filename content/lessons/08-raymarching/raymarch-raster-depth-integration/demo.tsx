@@ -15,13 +15,13 @@ import vertexShader from "./sdf-object.vert";
 
 const LABELS = {
   vi: {
-    hint: "Bật naive overlay: hình raymarch nổi đè lên mesh dù rõ ràng đang ở phía sau. Không ghi gl_FragDepth thì depth buffer không hề biết nó tồn tại.",
+    hint: "Bật naive overlay: hình raymarch nổi đè lên mesh dù rõ ràng đang ở phía sau. Tắt ghi gl_FragDepth thì ngược lại: torus knot cắt xuyên qua hình raymarch ở chỗ lẽ ra hình ở phía trước.",
     title: "Raymarch + rasterized depth: occlusion hai chiều",
     naive: "Naive overlay (bỏ qua depth mesh)",
     writeDepth: "Ghi gl_FragDepth từ điểm chạm SDF",
   },
   en: {
-    hint: "Turn on the naive overlay: the raymarched shape floats over the mesh even when it is clearly behind it. Without writing gl_FragDepth the depth buffer never knew it was there.",
+    hint: "Turn on the naive overlay: the raymarched shape floats over the mesh even when it is clearly behind it. Turn off the gl_FragDepth write instead and the reverse happens: the torus knot cuts through the shape where the shape should be in front.",
     title: "Raymarch + Rasterized Depth: Two-Way Occlusion",
     naive: "Naive overlay (ignore mesh depth)",
     writeDepth: "Write gl_FragDepth from the SDF hit",
@@ -116,8 +116,11 @@ function Scene() {
       </mesh>
       <mesh ref={proxyRef}>
         <sphereGeometry args={[2.6, 48, 32]} />
+        {/* Back faces keep working with the camera inside the sphere, and their depth
+            lies behind the blob, so mesh-behind-SDF occlusion rests on the depth write. */}
         <shaderMaterial
           ref={bindMaterial}
+          side={THREE.BackSide}
           vertexShader={vertexShader}
           fragmentShader={fragmentShader}
         />

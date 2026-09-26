@@ -25,7 +25,7 @@ for (int i = -1; i <= 1; i++) {
 }
 ```
 
-$3 \times 3$ is enough because jitter (covered below) is clamped to $[0, 1]$ — a feature point never drifts outside its owning cell, so no point further than one cell away could ever beat a point already found within the 3x3 neighborhood.
+$3 \times 3$ is enough in practice because jitter (covered below) is clamped to $[0, 1]$ — a feature point never drifts outside its owning cell, so a point two cells away starts at least a full cell width off. It is not a strict guarantee: in rare layouts, with all nine nearby points pushed into far corners, a point two cells over can still win (and for $F_2$ the second-nearest is missed more often); a $5 \times 5$ scan removes those misses for $F_1$ at almost three times the cost.
 
 ## F1, F2, and F2 − F1: Organic Cell Borders for Free
 
@@ -63,7 +63,7 @@ $$
 d_{\text{smooth}} = -\frac{1}{k}\ln\sum_{i} e^{-k\,d_i}
 $$
 
-When $k$ is large enough, the term for the smallest $d_i$ dominates the sum completely, so $d_{\text{smooth}} \approx \min_i d_i$ — an excellent approximation of min, but one built purely from continuous exponentials, infinitely differentiable ($C^\infty$), with no kink anywhere. Switch from F1 to "smooth voronoi" in the demo and zoom near a cell border to see the difference: F1 has a sharp crease; the smooth version bends through it seamlessly.
+When $k$ is large enough, the term for the smallest $d_i$ dominates the sum completely, so $d_{\text{smooth}} \approx \min_i d_i$ — an excellent approximation of min, but one built from smooth exponentials, so it bends smoothly through every cell border (the only non-smooth spots left are the cone tips at the feature points themselves, inherited from `length()`). Switch from F1 to "smooth voronoi" in the demo and zoom near a cell border to see the difference: F1 has a sharp crease; the smooth version bends through it seamlessly.
 
 ## Applications and Cost: Stone, Cracked Mud, Cells
 
@@ -76,7 +76,7 @@ The next lesson (Curl Noise & Flow Fields) leaves static fields behind for movin
 The three most common Voronoi/Worley implementation mistakes:
 
 1. **Scanning only the pixel's own cell, skipping the 8 neighbors.** Correct near cell centers, wrong near edges — a pixel near a cell border often has a neighboring cell's feature point closer than its own, producing a jagged seam at every cell boundary that's easy to misdiagnose as a hash bug instead of a scan-range bug.
-2. **Treating $F_2 - F_1$ as a real signed distance to the border.** It isn't — the "border" width it produces stretches and shrinks with the distance between the two feature points on either side (borders between nearby points are thinner than borders between far-apart ones), unlike a true SDF's uniform width.
+2. **Treating $F_2 - F_1$ as a real signed distance to the border.** It isn't — the "border" width it produces stretches and shrinks with the distance between the two feature points on either side (borders between close pairs of points tend to come out wider than borders between far-apart ones), unlike a true SDF's uniform width.
 3. **Letting jitter exceed the $[0, 1]$ range without widening the scan.** The entire "3x3 is enough" argument depends on feature points never leaving their owning cell; jitter above 1 (or extra offset added outside the hash) can push a point two cells away, outside the scanned neighborhood — Voronoi silently starts missing the true nearest point with no error to flag it.
 
 </Callout>

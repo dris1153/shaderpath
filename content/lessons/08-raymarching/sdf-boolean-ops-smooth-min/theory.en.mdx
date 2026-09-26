@@ -88,7 +88,7 @@ The order here isn't arbitrary: the torus must be carved **after** the cap and s
 
 <Callout variant="mistake" title="Common mistakes">
 
-1. **Letting `k` hit 0 inside `smin`.** The formula divides by `k` — `k = 0` gives `0.5/0 = ±inf`, `h` becomes `NaN`, and it spreads into a black or noisy patch wherever the march passes through that point. Always `max(k, tiny_epsilon)` in code, not just a UI slider floor above zero.
+1. **Letting `k` hit 0 inside `smin`.** The formula divides by `k`: at `k = 0`, `(dB - dA)/k` becomes ±Inf, so `clamp` snaps `h` to 0 or 1 — a hard `min` with no fillet — and exactly where `dA == dB` it is `0/0` — NaN on IEEE hardware, left unspecified by GLSL ES — which can print black or noisy pixels along the seam. Always `max(k, tiny_epsilon)` in code, not just a UI slider floor above zero.
 2. **Forgetting to flip the sign when writing subtraction.** Typing `max(d1, d2)` instead of `max(d1, -d2)` still compiles, still runs, still produces a shape — it's just the wrong shape (it silently becomes an intersection). No compile error flags it; the only sign is the render not matching expectations.
 3. **Applying subtraction/intersection before welding the two main masses with `smin`.** As in the mushroom example above, operation order changes the result even though `min`/`max` are each individually associative — `smin`'s correction term doesn't "know" about material already carved away earlier, and can partially fill the exact notch just cut.
 

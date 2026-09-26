@@ -58,7 +58,7 @@ This is the classic trick that sells depth: a scene where the fog changes color 
 
 Order of operations matters: fog is ALWAYS applied AFTER the full surface color has already been computed — lighting, shadows, AO from earlier lessons — never blended into the albedo before shading. And the distance $t$ used in the fog formula must be the TOTAL distance the ray has marched to the hit point (the `t` variable accumulated across the sphere-tracing loop), not the SDF's return value at the final step — that value sits near 0 at the surface and means something entirely different.
 
-Choosing the density $\rho$ (or $a$ for height fog) decides how fast fog eats the scene. A practical way to pick it: decide on a desired visibility distance $d_{vis}$ first (say, 30 scene units) — the distance at which $T$ has dropped to about 2% (an estimate borrowed from meteorology's convention that an object at $T = 0.02$ counts as "practically invisible") — then solve backward:
+Choosing the density $\rho$ (or $a$ for height fog) decides how fast fog eats the scene. A practical way to pick it: decide on a desired visibility distance $d_{vis}$ first (say, 30 scene units) — the distance at which $T$ has dropped to about 2% (Koschmieder's 2% contrast threshold from meteorology; the WMO's optical range uses 5% instead — both are conventions) — then solve backward:
 
 $$
 \rho \approx \frac{-\ln(0.02)}{d_{vis}} \approx \frac{3.9}{d_{vis}}
@@ -75,7 +75,7 @@ Fog here is a pure color blend keyed to the marched $t$ — it lives entirely in
 The three most common mistakes when wiring up fog in a raymarcher:
 
 1. **Confusing the accumulated march `t` with the SDF's return value at the final step.** Sphere-tracing loops often reuse the same variable name, something like `d`, for both the per-step safe distance and the running total distance — accidentally feeding `d` (near 0 at the surface) into the fog formula instead of `t` (the real distance traveled) means fog almost never activates, no matter how deep the scene is.
-2. **Dividing by $d_y$ (the ray direction's y-component) without guarding near zero.** With height fog, a nearly horizontal ray (looking straight at the horizon) has $d_y \approx 0$, sending the closed-form integral's division toward a tiny number — the result is `NaN`/`Inf`, showing up as flickering pixels or a stray bright streak right along the horizon line.
+2. **Dividing by $d_y$ (the ray direction's y-component) without guarding near zero.** With height fog, a nearly horizontal ray (looking straight at the horizon) has $d_y \approx 0$, and the closed-form integral divides a near-zero quantity by another: the limit is finite, but the float result turns noisy (exactly $d_y = 0$ gives `0/0`, NaN on IEEE hardware), showing up as flickering pixels or a stray bright streak right along the horizon line.
 3. **Applying the same fog formula to sky pixels when the ray hits nothing.** The sky already IS the atmosphere at infinity — blending an extra layer of surface-style fog on top of it double-fogs the horizon, flattening it into a single flat fog color instead of keeping its natural sky gradient.
 
 </Callout>

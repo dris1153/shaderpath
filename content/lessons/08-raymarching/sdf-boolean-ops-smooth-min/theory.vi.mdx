@@ -88,7 +88,7 @@ Thứ tự ở đây không tuỳ ý: torus phải khoét **sau khi** mũ và th
 
 <Callout variant="mistake" title="Lỗi hay gặp">
 
-1. **Để `k` chạm 0 trong `smin`.** Công thức chia cho `k` — `k = 0` cho `0.5/0 = ±inf`, `h` thành `NaN`, lan ra cả bề mặt march qua điểm đó thành mảng đen/nhiễu. Luôn `max(k, epsilon_nhỏ)` trong code, không chỉ đặt min slider > 0 ở UI.
+1. **Để `k` chạm 0 trong `smin`.** Công thức chia cho `k`: với `k = 0`, `(dB - dA)/k` thành ±Inf, nên `clamp` ép `h` về 0 hoặc 1 — thành `min` cứng, không còn góc bo — và đúng chỗ `dA == dB` thì ra `0/0` — NaN trên phần cứng IEEE, GLSL ES không quy định — có thể in thành điểm đen/nhiễu dọc đường nối. Luôn `max(k, epsilon_nhỏ)` trong code, không chỉ đặt min slider > 0 ở UI.
 2. **Quên đảo dấu khi viết subtraction.** Gõ nhầm `max(d1, d2)` thay vì `max(d1, -d2)` vẫn compile, vẫn chạy, vẫn cho hình — chỉ là hình sai (biến thành intersection). Không có lỗi biên dịch nào báo, chỉ nhìn ra khi hình không giống kỳ vọng.
 3. **Áp subtraction/intersection trước rồi mới `smin` hai khối chính lại.** Như ví dụ cây nấm ở trên, thứ tự phép toán đổi kết quả dù `min`/`max` từng cái tự thân có tính kết hợp — số hạng bù của `smin` không "biết" phần đã bị khoét trước đó, có thể lấp lại đúng chỗ vừa khoét.
 

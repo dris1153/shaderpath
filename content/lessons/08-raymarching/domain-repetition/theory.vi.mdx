@@ -50,9 +50,9 @@ với $l$ là bán kính giới hạn tính theo số ô, mọi điểm truy v�
 
 Chỉ số ô (cell-id) tính được ngay trước bước fold — `floor(p/c + 0.5)` hay `round(p/c)`, tuỳ công thức — là một toạ độ nguyên xác định duy nhất cho mỗi ô. Đưa thẳng nó vào một hash của Track 7 (`hash31(cellId)`) cho ra một số giả ngẫu nhiên ổn định tuyệt đối theo ô: dùng số đó để scale chiều cao trước khi gọi SDF, hoặc để chọn màu ở bước shading, biến một trường lặp đơn điệu thành một cảnh trông như được dàn dựng thủ công — mỗi cell một biến thể riêng, nhưng không tốn thêm bộ nhớ nào vì hash là hàm thuần tính lại mỗi lần, không lưu trữ ở đâu cả.
 
-## Lặp gương: abs() một dòng
+## Lặp gương: lật ô xen kẽ
 
-Một biến thể nhanh đáng biết: gọi `abs(p)` (hoặc `abs(p.xz)`) ngay trước bước fold tạo ra lặp gương thay vì lặp tịnh tiến thuần — mỗi ô là ảnh phản chiếu của ô liền kề thay vì bản sao y hệt, cho hoạ tiết kiểu kính vạn hoa hay cấu trúc tinh thể đối xứng, chỉ với một dòng code thêm vào trước công thức fold đã có.
+Một biến thể nhanh đáng biết: lật `q` ở mỗi ô xen kẽ — theo tính chẵn lẻ của chỉ số ô, ví dụ `q.x *= 1.0 - 2.0 * mod(id.x, 2.0)` — tạo ra lặp gương thay vì lặp tịnh tiến thuần: mỗi ô là ảnh phản chiếu của ô liền kề thay vì bản sao y hệt, cho hoạ tiết kiểu kính vạn hoa hay cấu trúc tinh thể đối xứng. (Một `abs(p)` đơn thuần trước bước fold chỉ phản chiếu không gian một lần, qua gốc toạ độ.)
 
 Domain repetition là kỹ thuật cuối cùng trước khi module Shading khép lại: checkpoint kế tiếp ghép chính nó với normal, soft shadow và AO của hai bài trước thành một cảnh hoàn chỉnh. Xa hơn, module Khí quyển của Track 8 dùng lại chính ý tưởng "biến đổi trước khi march" này cho fog và scattering, còn Track 9 (GPGPU) áp dụng tư duy tương tự để mô phỏng hàng triệu hạt mà không cần một buffer vị trí nào lưu từng hạt riêng lẻ.
 

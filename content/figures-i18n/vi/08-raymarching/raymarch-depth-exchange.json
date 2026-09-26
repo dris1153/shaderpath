@@ -18,7 +18,7 @@
   "tMax = min(MAX_DIST, tBound)": "tMax = min(MAX_DIST, tBound)",
   "3 · the ordinary depth test": "3 · phép depth test thông thường",
   "gl_FragDepth = (z_ndc + 1) / 2": "gl_FragDepth = (z_ndc + 1) / 2",
-  "settles the other direction": "giải quyết chiều còn lại",
-  "A shader cannot sample the depth attachment it is currently writing — that is the entire reason pass 1 exists.": "Shader không lấy mẫu được depth attachment mà chính nó đang ghi — đó là toàn bộ lý do lượt 1 tồn tại.",
+  "settles both directions": "giải quyết cả hai chiều",
+  "The canvas depth can't be sampled, nor a depth texture while it is being written — hence the mesh-only pass 1.": "Depth của canvas không lấy mẫu được, depth texture đang bị ghi cũng vậy — nên mới cần lượt 1 chỉ vẽ mesh.",
   "Writing gl_FragDepth also gives up early-Z: the real depth only exists once the fragment shader has finished.": "Ghi gl_FragDepth cũng là từ bỏ early-Z: depth thật chỉ có sau khi fragment shader chạy xong."
 }

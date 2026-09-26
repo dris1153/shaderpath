@@ -25,7 +25,7 @@ for (int i = -1; i <= 1; i++) {
 }
 ```
 
-$3 \times 3$ đủ dùng vì jitter (phần sau) bị giới hạn trong $[0, 1]$ — một điểm hạt giống không bao giờ trôi ra khỏi ô chủ của nó, nên không thể có điểm nào cách xa hơn 1 ô mà vẫn gần hơn điểm trong 3×3 lân cận.
+$3 \times 3$ đủ dùng trong thực tế vì jitter (phần sau) bị giới hạn trong $[0, 1]$ — một điểm hạt giống không bao giờ trôi ra khỏi ô chủ của nó, nên điểm ở ô cách hai bước luôn xa ít nhất trọn một bề rộng ô. Đó không phải bảo đảm tuyệt đối: ở vài bố cục hiếm, khi cả chín điểm lân cận bị đẩy vào góc xa, một điểm cách hai ô vẫn có thể thắng (với $F_2$, điểm gần thứ hai còn bị sót thường hơn); quét $5 \times 5$ loại bỏ các lần sót đó cho $F_1$ với chi phí gần gấp ba.
 
 ## F1, F2 và hiệu F2 − F1: viền ô hữu cơ
 
@@ -63,7 +63,7 @@ $$
 d_{\text{smooth}} = -\frac{1}{k}\ln\sum_{i} e^{-k\,d_i}
 $$
 
-Khi $k$ đủ lớn, số hạng ứng với $d_i$ nhỏ nhất áp đảo tổng, nên $d_{\text{smooth}} \approx \min_i d_i$ — xấp xỉ tốt hàm min, nhưng bản thân là tổng các hàm mũ liên tục vô hạn lần khả vi ($C^\infty$), không còn điểm gãy. Đổi từ F1 sang "Voronoi mượt" trong demo và phóng to gần một biên ô: F1 có nếp gấp sắc; bản mượt uốn cong liền mạch qua đúng chỗ đó.
+Khi $k$ đủ lớn, số hạng ứng với $d_i$ nhỏ nhất áp đảo tổng, nên $d_{\text{smooth}} \approx \min_i d_i$ — xấp xỉ tốt hàm min, nhưng dựng từ các hàm mũ trơn, nên uốn mượt qua mọi biên ô (chỗ không trơn duy nhất còn lại là đỉnh nón tại chính các điểm hạt giống, thừa hưởng từ `length()`). Đổi từ F1 sang "Voronoi mượt" trong demo và phóng to gần một biên ô: F1 có nếp gấp sắc; bản mượt uốn cong liền mạch qua đúng chỗ đó.
 
 ## Ứng dụng và chi phí: đá, bùn nứt, tế bào
 
@@ -76,7 +76,7 @@ Bài kế tiếp (Curl noise & flow field) rời trường tĩnh để bước s
 Ba lỗi hay gặp nhất khi cài Voronoi/Worley:
 
 1. **Chỉ quét ô chứa pixel, bỏ qua 8 ô lân cận.** Kết quả đúng ở tâm ô nhưng sai hẳn gần biên — pixel gần mép ô thường có điểm hạt giống ở ô hàng xóm gần hơn điểm của chính ô nó, tạo ra đường ráp nối lởm chởm đúng tại mọi biên ô, dễ nhầm là lỗi hash thay vì lỗi phạm vi quét.
-2. **Coi $F_2 - F_1$ như một khoảng cách có dấu thật đến biên.** Nó không phải — độ rộng "viền" mà nó tạo ra co giãn theo khoảng cách giữa hai điểm hạt giống hai bên biên (biên giữa hai điểm gần nhau mỏng hơn biên giữa hai điểm xa nhau), không đồng đều như một SDF thật.
+2. **Coi $F_2 - F_1$ như một khoảng cách có dấu thật đến biên.** Nó không phải — độ rộng "viền" mà nó tạo ra co giãn theo khoảng cách giữa hai điểm hạt giống hai bên biên (biên giữa hai điểm gần nhau thường lại dày hơn biên giữa hai điểm xa nhau), không đồng đều như một SDF thật.
 3. **Đặt jitter vượt quá phạm vi $[0, 1]$ mà không mở rộng vùng quét.** Toàn bộ lập luận "3×3 là đủ" dựa trên giả định điểm hạt giống không bao giờ rời khỏi ô chủ của nó; jitter lớn hơn 1 (hoặc cộng thêm độ lệch ngoài hash) có thể đẩy điểm sang ô cách 2 bước, nằm ngoài vùng quét — Voronoi bắt đầu bỏ sót điểm gần nhất thật sự mà không có cảnh báo lỗi nào.
 
 </Callout>

@@ -12,7 +12,7 @@ $$
 C \leftarrow C + T\,\rho\,\Delta s\,L_e, \qquad T \leftarrow T\, e^{-\rho\,\Delta s}
 $$
 
-Thứ tự này không tuỳ tiện: $L_e$ (màu phát xạ tại bước hiện tại) phải được cộng vào TRƯỚC KHI $T$ bị nhân thêm hệ số suy hao của CHÍNH bước này — vì $T$ tại thời điểm đó đã đại diện đúng cho lượng ánh sáng còn sống sót từ MỌI bước TRƯỚC nó (gần camera hơn) tới đây, còn ánh sáng vừa phát ra tại bước hiện tại thì chưa hề bị chính bước đó cản (một điểm không tự chặn ánh sáng của chính nó). Sau khi cộng xong, MỚI cập nhật $T$ để chuẩn bị cho bước kế tiếp — xa camera hơn, cần suy hao thêm.
+Cộng $L_e$ (màu phát xạ tại bước hiện tại) TRƯỚC KHI $T$ bị nhân thêm hệ số suy hao của CHÍNH bước này là quy ước thường dùng: lúc đó $T$ đại diện đúng cho lượng ánh sáng còn sống sót từ MỌI bước TRƯỚC nó (gần camera hơn) tới đây, còn ánh sáng vừa phát ra tại bước hiện tại được coi như chưa bị chính bước đó cản. Sau khi cộng xong, MỚI cập nhật $T$ để chuẩn bị cho bước kế tiếp — xa camera hơn, cần suy hao thêm. Cả hai thứ tự đều là xấp xỉ bậc một: cộng trước dùng trọng số $\rho\,\Delta s$ nên thừa, cộng sau dùng $\rho\,\Delta s\,e^{-\rho\Delta s}$ nên thiếu; trọng số chính xác $1 - e^{-\rho\Delta s}$ nằm giữa, và cả ba khớp nhau khi bước mỏng.
 
 $T$ giảm dần đơn điệu theo mỗi bước (không bao giờ tăng lại) — khi $T$ đã đủ nhỏ (ví dụ $< 0.01$), phần thể tích còn lại phía sau gần như không thể đóng góp thêm gì thấy được nữa: dừng vòng lặp sớm (early exit) tiết kiệm đúng những bước lẽ ra lãng phí.
 
@@ -58,7 +58,7 @@ Nhân thẳng các con số (ước lượng): 64 bước march, mỗi bước g
 Ba lỗi hay gặp nhất khi cài volumetric march:
 
 1. **Nhầm volumetric march với surface raymarch.** Dừng ngay khi mật độ đầu tiên lớn hơn 0 (giống hệt sphere tracing dừng khi $f < \epsilon$) thay vì march hết vùng bao rồi TÍCH LUỸ — cắt cụt đám mây thành một lớp vỏ mỏng dính ở rìa gần camera nhất, mất hẳn cảm giác khối đặc dần vào trong.
-2. **Cộng $L_e$ SAU KHI đã cập nhật $T$ của chính bước đó** (đảo ngược thứ tự hai dòng cập nhật ở phần 2) — mọi lớp mây tự chặn một phần ánh sáng của chính nó trước khi nó kịp góp vào $C$, mây trông nhạt và phẳng bất thường dù mật độ đặt cao.
+2. **Cộng $L_e$ SAU KHI đã cập nhật $T$ của chính bước đó** (đảo ngược thứ tự hai dòng cập nhật ở phần 2) — mọi lớp mây tự chặn một phần ánh sáng của chính nó trước khi nó kịp góp vào $C$, nên các bước dày ra quá tối, tăng mật độ còn tệ hơn (cộng trước thì sai theo chiều ngược lại, hơi quá sáng).
 3. **Đặt ngưỡng early-exit quá cao** (ví dụ $T < 0.5$) tưởng là tối ưu — dừng march khi vẫn còn 50% ánh sáng có thể xuyên qua, cắt cụt phần thể tích chưa march tới giữa chừng, méo hẳn silhouette phía xa của mây.
 
 </Callout>
