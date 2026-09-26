@@ -1,7 +1,7 @@
 "use client";
 
 import "@xyflow/react/dist/style.css";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Background,
   Controls,
@@ -20,6 +20,12 @@ import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import type { LessonSlug } from "@/content/slugs";
 import { type Locale, pick } from "@/content/types";
 import { isUnlocked, type ProgressMap } from "@/lib/curriculum";
+import {
+  isVisible,
+  nextBand,
+  type NodeTier,
+  type ZoomBand,
+} from "@/lib/roadmap/zoom-bands";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
 import { cn } from "@/lib/utils";
 import { layoutCurriculumMap } from "./curriculum-map-layout";
@@ -28,7 +34,7 @@ export interface CurriculumMapStrings {
   legendCompleted: string;
   legendUnlocked: string;
   legendLocked: string;
-  a11y: string;
+  regionLabel: string;
   checkpoint: string;
 }
 
@@ -41,7 +47,7 @@ type LessonNodeData = {
   isCheckpoint: boolean;
   checkpointLabel: string;
 };
-type LabelNodeData = { title: string; kind: "track" | "module" };
+type LabelNodeData = { title: string; kind: "track" | "module"; href?: string };
 
 function LessonNode({ data }: NodeProps<Node<LessonNodeData>>) {
   return (
@@ -69,7 +75,13 @@ function LessonNode({ data }: NodeProps<Node<LessonNodeData>>) {
 
 function LabelNode({ data }: NodeProps<Node<LabelNodeData>>) {
   return data.kind === "track" ? (
-    <p className="w-56 text-sm font-semibold">{data.title}</p>
+    // A link, not a heading: the keyboard needs the stop, while 14 headings
+    // inside a canvas would only clutter the page outline.
+    <p className="w-56 text-sm font-semibold">
+      <Link href={data.href ?? "/roadmap"} className="hover:underline">
+        {data.title}
+      </Link>
+    </p>
   ) : (
     <p className="text-muted-foreground w-56 text-[10px] font-medium tracking-wide uppercase">
       {data.title}
@@ -98,7 +110,19 @@ export default function CurriculumMap({
 }) {
   const { resolvedTheme } = useTheme();
   const { data } = useProgressMap();
-  const progress = data?.progress;
+  // The API answers { progress: {}, authenticated: false } for a guest, and an
+  // empty map is not "an account that has done nothing": taken literally it
+  // locks almost every node and a visitor meets a wall of dashes. Same line
+  // RoadmapSummary already draws.
+  const progress = data?.authenticated ? data.progress : undefined;
+  // Starts wide because fitView lands near 0.2 with 211 nodes. Driven from
+  // onMove/onInit rather than an effect on the zoom store: setting state from
+  // an effect is what react-hooks/set-state-in-effect flags.
+  const [band, setBand] = useState<ZoomBand>("tracks");
+  const observe = useCallback(
+    (zoom: number) => setBand((current) => nextBand(zoom, current)),
+    [],
+  );
 
   const { nodes, edges } = useMemo(() => {
     const layout = layoutCurriculumMap(TRACKS, MODULES, LESSONS);
@@ -115,6 +139,11 @@ export default function CurriculumMap({
         draggable: false,
         connectable: false,
         initialWidth: 224,
+        // 162 lessons cannot be legible at once at any styling, so each zoom
+        // band hides the tiers below it. Hiding rather than rebuilding the
+        // array keeps node identity and measurements, and the minimap already
+        // skips hidden nodes so it follows the band for free.
+        hidden: !isVisible(n.kind as NodeTier, band),
       };
       if (n.kind === "lesson") {
         return {
@@ -138,6 +167,7 @@ export default function CurriculumMap({
         data: {
           title: pick(n.track?.title ?? n.module?.title ?? { vi: "", en: "" }, locale),
           kind: n.kind,
+          href: n.track ? `/track/${n.track.id}` : undefined,
         } satisfies LabelNodeData,
       };
     });
@@ -147,9 +177,12 @@ export default function CurriculumMap({
       target: e.to,
       markerEnd: { type: MarkerType.ArrowClosed },
       style: { opacity: 0.5 },
+      // Both endpoints are lessons: leave the edge visible above that band
+      // and it draws to nothing.
+      hidden: band !== "lessons",
     }));
     return { nodes: flowNodes, edges: flowEdges };
-  }, [locale, progress, strings.checkpoint]);
+  }, [band, locale, progress, strings.checkpoint]);
 
   return (
     <div>
@@ -169,8 +202,13 @@ export default function CurriculumMap({
           </span>
         </div>
       )}
-      <p className="text-muted-foreground mt-2 text-xs">{strings.a11y}</p>
-      <div className="mt-3 h-[70vh] min-h-120 overflow-hidden rounded-xl border">
+      {/* Nodes render in curriculum order, so tabbing the region walks the
+          14 tracks in sequence — the same path the list view offers. */}
+      <div
+        role="region"
+        aria-label={strings.regionLabel}
+        className="mt-3 h-[70vh] min-h-120 overflow-hidden rounded-xl border"
+      >
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -183,6 +221,8 @@ export default function CurriculumMap({
           // Without this every node wrapper (incl. 49 inert labels) is a tab
           // stop; the inner lesson links are the real keyboard targets.
           nodesFocusable={false}
+          onInit={(instance) => observe(instance.getZoom())}
+          onMove={(_, viewport) => observe(viewport.zoom)}
           // elementsSelectable stays on: with both dragging and selection off,
           // xyflow turns node pointer-events off entirely and the lesson links
           // stop receiving clicks.

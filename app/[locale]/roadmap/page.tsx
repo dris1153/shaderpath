@@ -27,7 +27,7 @@ export default async function RoadmapPage({
           legendCompleted: t("mapLegendCompleted"),
           legendUnlocked: t("mapLegendUnlocked"),
           legendLocked: t("mapLegendLocked"),
-          a11y: t("mapA11y"),
+          regionLabel: t("mapRegion"),
           checkpoint: t("checkpoint"),
         }}
         listView={

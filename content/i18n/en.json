@@ -155,7 +155,7 @@
     "mapLegendCompleted": "Completed",
     "mapLegendUnlocked": "Ready to learn",
     "mapLegendLocked": "Not yet unlocked",
-    "mapA11y": "The map favors mouse and touch — List view is the fuller experience for keyboard and screen readers.",
+    "mapRegion": "Curriculum map: 14 tracks in learning order; open a track for its page",
     "signedOut": "You are browsing as a guest — nothing is being saved.",
     "signedOutCta": "Sign in to save progress"
   },
