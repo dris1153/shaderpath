@@ -76,7 +76,7 @@ Chính xác pattern 2 pass ở trên là nền của ba kỹ thuật lớn sẽ 
 
 Ba lỗi hay gặp nhất khi bắt đầu dùng framebuffer:
 
-1. **Bỏ qua `checkFramebufferStatus`.** Framebuffer thiếu attachment hoặc sai định dạng không throw lỗi khi bạn vẽ vào nó — draw call chỉ lặng lẽ không hiệu lực, nên bug hiện ra dưới dạng màn hình đen không rõ nguyên nhân thay vì một exception rõ ràng.
+1. **Bỏ qua `checkFramebufferStatus`.** Framebuffer thiếu attachment hoặc sai định dạng không throw lỗi khi bạn vẽ vào nó — draw call không vẽ gì, và lỗi chỉ hiện qua `gl.getError()` hoặc một warning dễ bỏ sót trong console, nên bug thường trông như màn hình đen không rõ nguyên nhân thay vì một exception rõ ràng.
 2. **Quên đổi viewport khi chuyển pass.** Viewport không tự đồng bộ theo framebuffer đang bind; giữ nguyên viewport của pass trước khi sang pass sau khiến hình bị crop hoặc chỉ phủ một góc canvas, dễ nhầm là lỗi hình học hoặc lỗi shader.
 3. **Quên `bindFramebuffer(gl.FRAMEBUFFER, null)` trước khi vẽ ra màn hình.** Nếu FBO vẫn đang bind ở pass "cuối cùng", kết quả lại ghi tiếp vào texture offscreen thay vì canvas — màn hình không bao giờ cập nhật, trông như cả pipeline không chạy.
 

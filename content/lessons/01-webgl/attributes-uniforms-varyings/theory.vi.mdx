@@ -58,7 +58,7 @@ Trước khi viết `uniform`, `in`, hay `out` cho một giá trị mới, hỏi
 
 Ba lỗi hay gặp nhất với attribute/uniform/varying:
 
-1. Quên `gl.useProgram(program)` trước khi gọi `gl.uniform*`. Giá trị set uniform áp lên chương trình đang active — thiếu bước này, giá trị rơi vào chương trình sai, không cảnh báo nào bắt lỗi hộ bạn.
+1. Quên `gl.useProgram(program)` trước `gl.uniform*`. Location thuộc về chương trình đã sinh ra nó — gọi khi chương trình khác đang active, lệnh bị bỏ với `INVALID_OPERATION` và uniform giữ giá trị cũ.
 2. Coi `getUniformLocation` luôn trả handle hợp lệ. GLSL compiler loại bỏ uniform không dùng tới (typo tên, hoặc không ảnh hưởng tới output) — hàm trả `null` hợp lệ, và `gl.uniform1f(null, ...)` là no-op im lặng, không throw, không log.
 3. Khai `vertexAttribPointer` sai số component so với kiểu GLSL — shader khai `in vec3 aColor` nhưng gọi `vertexAttribPointer(loc, 2, ...)`. Component thứ ba không đọc được, GPU tự điền mặc định — màu lệch nhẹ mà không lỗi nào chỉ đúng nguyên nhân.
 

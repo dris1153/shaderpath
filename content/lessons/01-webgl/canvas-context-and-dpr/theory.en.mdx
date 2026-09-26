@@ -26,7 +26,7 @@ An `<canvas>` element has **two** entirely independent sizes, and confusing them
 - **CSS size** — `canvas.clientWidth`/`clientHeight` (or `canvas.style.width`/`height`): the space the canvas **occupies** on the page, in CSS pixels, decided by layout.
 - **Drawing buffer size** — `canvas.width`/`canvas.height`: the number of **actual pixels** in the framebuffer the GPU renders into.
 
-If you only change the CSS size (say, `canvas.style.width = "100%"`) without touching `canvas.width`/`height`, the browser does not re-render at the new resolution — it **stretches** the old buffer to fill the CSS box, exactly like zooming into a small image. The default is `canvas.width = 300`, `canvas.height = 150` if you set nothing at all, which is also why a canvas so often "mysteriously" looks blurry and distorted the moment it's dropped into a responsive layout without setting a matching buffer size.
+If you only change the CSS size (say, `canvas.style.width = "100%"`) without touching `canvas.width`/`height`, the browser does not re-render at the new resolution — it **stretches** the old buffer to fill the CSS box, exactly like zooming into a small image. The default is `canvas.width = 300`, `canvas.height = 150` if you set nothing at all, which is also why a canvas so often "mysteriously" looks blurry the moment it's dropped into a responsive layout without setting a matching buffer size — and distorted too if the CSS also forces the height into a box that isn't 2:1 (left at `height: auto`, the canvas keeps the buffer's 300:150 ratio).
 
 ## devicePixelRatio: Why Retina Needs More Pixels
 
@@ -90,7 +90,7 @@ The resize function and context setup from this lesson are the first lines of co
 
 The three most common canvas, context and DPR mistakes:
 
-1. **Changing only the CSS size and forgetting the drawing buffer.** Setting `canvas.style.width = "100%"` while leaving `canvas.width`/`height` at their $300 \times 150$ default makes the browser stretch that small buffer to fill the bigger box — the image comes out blurry and distorted in aspect ratio.
+1. **Changing only the CSS size and forgetting the drawing buffer.** Setting `canvas.style.width = "100%"` while leaving `canvas.width`/`height` at their $300 \times 150$ default makes the browser scale that small buffer up to fill the bigger box — the image comes out blurry, and distorted in aspect ratio if the CSS forces the height as well.
 2. **Ignoring devicePixelRatio when setting the buffer size.** Setting `canvas.width = clientWidth`, `canvas.height = clientHeight` (without multiplying by DPR) looks "correct" on a standard display but still comes out blurry on Retina, because the buffer falls short of the screen's actual device pixel count.
 3. **Forgetting to call `gl.viewport` again after the buffer changes size.** Resizing `canvas.width`/`height` without also calling `gl.viewport(0, 0, width, height)` leaves the GPU drawing into the old viewport — the image shrinks into a corner or stretches with the wrong aspect ratio even though the buffer itself is now the right size.
 

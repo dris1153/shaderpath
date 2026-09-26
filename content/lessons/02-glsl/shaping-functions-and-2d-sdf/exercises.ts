@@ -7,10 +7,10 @@ export const exercises: Exercise[] = [
     prompt: {
       vi: `Hình tròn SDF tâm gốc, bán kính $r = 0.3$: $d(p) = \\|p\\| - r$. Không chạy code, tính $d(p)$ tại ba điểm $p_1 = (0, 0)$, $p_2 = (0.3, 0)$, $p_3 = (0.5, 0.2)$, rồi phân loại mỗi điểm là trong / trên biên / ngoài hình.
 
-Sau đó: muốn vẽ một đường viền dày tổng cộng $0.01$ đơn vị quanh biên bằng \`smoothstep(w, 0.0, abs(d))\`, giá trị $w$ (nửa-độ-rộng) nên là bao nhiêu — và vì sao độ dày viền thật sự bằng $2w$ chứ không phải $w$?`,
+Sau đó: muốn vẽ một đường viền dày tổng cộng $0.01$ đơn vị quanh biên bằng \`1.0 - smoothstep(0.0, w, abs(d))\`, giá trị $w$ (nửa-độ-rộng) nên là bao nhiêu — và vì sao độ dày viền thật sự bằng $2w$ chứ không phải $w$?`,
       en: `A circle SDF centered at the origin, radius $r = 0.3$: $d(p) = \\|p\\| - r$. Without running code, compute $d(p)$ at three points $p_1 = (0, 0)$, $p_2 = (0.3, 0)$, $p_3 = (0.5, 0.2)$, then classify each point as inside / on the boundary / outside.
 
-Then: to draw an outline with total thickness $0.01$ units using \`smoothstep(w, 0.0, abs(d))\`, what should $w$ (the half-width) be — and why is the actual outline thickness $2w$, not $w$?`,
+Then: to draw an outline with total thickness $0.01$ units using \`1.0 - smoothstep(0.0, w, abs(d))\`, what should $w$ (the half-width) be — and why is the actual outline thickness $2w$, not $w$?`,
     },
     hints: [
       {
@@ -18,8 +18,8 @@ Then: to draw an outline with total thickness $0.01$ units using \`smoothstep(w,
         en: "$\\|p_3\\| = \\sqrt{0.5^2 + 0.2^2}$. Subtract $r$ from that to get $d(p_3)$ — don't skip the subtraction.",
       },
       {
-        vi: "abs(d) gấp cả phía trong lẫn phía ngoài biên về cùng một trục số dương — dải kích hoạt của smoothstep(w,0,abs(d)) trải đều sang cả hai phía của biên, mỗi phía rộng $w$.",
-        en: "abs(d) folds both the inside and outside of the boundary onto the same positive axis — smoothstep(w,0,abs(d))'s active band spreads evenly to both sides of the boundary, each side w wide.",
+        vi: "abs(d) gấp cả phía trong lẫn phía ngoài biên về cùng một trục số dương — dải kích hoạt của 1.0 - smoothstep(0.0, w, abs(d)) trải đều sang cả hai phía của biên, mỗi phía rộng $w$.",
+        en: "abs(d) folds both the inside and outside of the boundary onto the same positive axis — the active band of 1.0 - smoothstep(0.0, w, abs(d)) spreads evenly to both sides of the boundary, each side w wide.",
       },
     ],
     checklist: [
@@ -39,10 +39,10 @@ Then: to draw an outline with total thickness $0.01$ units using \`smoothstep(w,
     solutionNote: {
       vi: `$d(p_1) = \\|(0,0)\\| - 0.3 = -0.3$ → trong hình (âm). $d(p_2) = \\|(0.3,0)\\| - 0.3 = 0.3-0.3 = 0$ → đúng trên biên. $d(p_3) = \\|(0.5,0.2)\\| - 0.3 = \\sqrt{0.25+0.04}-0.3 = \\sqrt{0.29}-0.3 \\approx 0.5385-0.3 \\approx 0.2385$ → ngoài hình (dương).
 
-Với $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` bật lên (giá trị $\\approx 1$) khi $|d| < w$, tức khi $-w < d < w$ — một dải rộng $2w = 0.01$ đơn vị bao quanh $d = 0$, đối xứng vào TRONG hình lẫn ra NGOÀI hình, không chỉ một phía.`,
+Với $w = 0.005$: \`1.0 - smoothstep(0.0, w, abs(d))\` khác 0 khi $|d| < w$, tức khi $-w < d < w$ (bằng 1 ngay trên biên, giảm về 0 tại $|d| = w$) — một dải rộng $2w = 0.01$ đơn vị bao quanh $d = 0$, đối xứng vào TRONG hình lẫn ra NGOÀI hình, không chỉ một phía.`,
       en: `$d(p_1) = \\|(0,0)\\| - 0.3 = -0.3$ → inside the shape (negative). $d(p_2) = \\|(0.3,0)\\| - 0.3 = 0.3-0.3 = 0$ → exactly on the boundary. $d(p_3) = \\|(0.5,0.2)\\| - 0.3 = \\sqrt{0.25+0.04}-0.3 = \\sqrt{0.29}-0.3 \\approx 0.5385-0.3 \\approx 0.2385$ → outside the shape (positive).
 
-With $w = 0.005$: \`smoothstep(w, 0.0, abs(d))\` turns on (value $\\approx 1$) when $|d| < w$, i.e. when $-w < d < w$ — a band $2w = 0.01$ units wide surrounding $d = 0$, symmetric both INSIDE and OUTSIDE the shape, not just one side.`,
+With $w = 0.005$: \`1.0 - smoothstep(0.0, w, abs(d))\` is non-zero when $|d| < w$, i.e. when $-w < d < w$ (1 right on the boundary, falling to 0 at $|d| = w$) — a band $2w = 0.01$ units wide surrounding $d = 0$, symmetric both INSIDE and OUTSIDE the shape, not just one side.`,
     },
   },
   {

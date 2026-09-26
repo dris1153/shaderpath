@@ -58,7 +58,7 @@ Before writing `uniform`, `in`, or `out` for a new value, ask in order: does the
 
 The three most common attribute/uniform/varying mistakes:
 
-1. Forgetting `gl.useProgram(program)` before calling `gl.uniform*`. A uniform set applies to whichever program is currently active — skip this and the value lands on the wrong program, with no clear warning catching it.
+1. Forgetting `gl.useProgram(program)` before `gl.uniform*`. A location belongs to the program that produced it — called while another program is active, the call is dropped with `INVALID_OPERATION` and the uniform keeps its old value.
 2. Assuming `getUniformLocation` always returns a valid handle. The GLSL compiler strips out any uniform it never uses (a typo, or one that never reaches the output) — the function validly returns `null`, and `gl.uniform1f(null, ...)` is a silent no-op: no throw, no log.
 3. Declaring `vertexAttribPointer` with the wrong component count for the GLSL type — the shader declares `in vec3 aColor` but JS calls `vertexAttribPointer(loc, 2, ...)`. The third component never gets read, the GPU quietly fills in a default — colors come out subtly wrong with nothing pointing at the actual cause.
 

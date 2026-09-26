@@ -27,7 +27,7 @@ gl.depthFunc(gl.LESS); // default: a new fragment only wins if its depth is SMAL
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 ```
 
-Forgetting to OR in `DEPTH_BUFFER_BIT` is a quiet bug: last frame's depth values survive, a new fragment at the same screen position gets compared against its own stale value and usually **loses** — because it isn't genuinely closer than itself — so an object vanishes even though the color buffer was cleared cleanly and the drawing code is otherwise correct.
+Forgetting to OR in `DEPTH_BUFFER_BIT` is a quiet bug wherever nobody clears depth for you — an FBO with a depth attachment, or a canvas created with `preserveDrawingBuffer: true`: last frame's depth values survive, a new fragment at the same screen position gets compared against its own stale value and usually **loses** — because it isn't genuinely closer than itself — so an object vanishes even though the color buffer was cleared cleanly and the drawing code is otherwise correct. On a default canvas (`preserveDrawingBuffer: false`) the browser clears depth too after every composite, so the bug tends to lie dormant until the day you start rendering into an FBO.
 
 ## Why Depth Precision Isn't Linear
 
@@ -84,7 +84,7 @@ This non-linear formula resurfaces in Track 3 when Three.js exposes a `logarithm
 
 The three most common depth buffer mistakes:
 
-1. **Forgetting to OR `gl.DEPTH_BUFFER_BIT` into `gl.clear`.** Last frame's depth survives, a new fragment at the same spot gets compared against itself and loses even though it's perfectly valid — an object vanishes for no apparent reason.
+1. **Forgetting to OR `gl.DEPTH_BUFFER_BIT` into `gl.clear` when drawing into an FBO** (or a canvas with `preserveDrawingBuffer: true`). Last frame's depth survives, a new fragment at the same spot gets compared against itself and loses even though it's perfectly valid — an object vanishes for no apparent reason. A default canvas hides this bug, because the browser clears it after every frame.
 2. **Setting near absurdly small (`0.001`) "just in case."** This dumps nearly the entire precision budget into the first few millimeters, starving the rest of the scene at ordinary distances — the quiet root cause behind z-fighting that looks random.
 3. **Using `polygonOffset` with the wrong sign, or forgetting `gl.disable(POLYGON_OFFSET_FILL)`.** A positive offset pushes a decal away from the camera instead of toward it (sinking below the floor instead of sitting on top); leaving it enabled bleeds that same offset into unrelated draw calls that come after.
 

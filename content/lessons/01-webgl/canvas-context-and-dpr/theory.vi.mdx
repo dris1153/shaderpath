@@ -26,7 +26,7 @@ Một thẻ `<canvas>` có **hai** kích thước hoàn toàn độc lập, và 
 - **CSS size** — `canvas.clientWidth`/`clientHeight` (hoặc `canvas.style.width`/`height`): kích thước canvas **chiếm chỗ** trên trang, tính bằng CSS pixel, do layout quyết định.
 - **Drawing buffer size** — `canvas.width`/`canvas.height`: số **pixel thật** trong framebuffer mà GPU render vào.
 
-Nếu chỉ đổi CSS size (ví dụ `canvas.style.width = "100%"`) mà không đụng đến `canvas.width`/`height`, trình duyệt không tự render lại ở độ phân giải mới — nó **kéo giãn** buffer cũ để lấp đầy CSS box, y hệt phóng to một tấm ảnh nhỏ. Mặc định `canvas.width = 300`, `canvas.height = 150` nếu không set gì, nên đây cũng là lý do canvas hay "tự nhiên bị mờ và méo" khi mới thêm vào layout responsive mà quên set buffer tương ứng.
+Nếu chỉ đổi CSS size (ví dụ `canvas.style.width = "100%"`) mà không đụng đến `canvas.width`/`height`, trình duyệt không tự render lại ở độ phân giải mới — nó **kéo giãn** buffer cũ để lấp đầy CSS box, y hệt phóng to một tấm ảnh nhỏ. Mặc định `canvas.width = 300`, `canvas.height = 150` nếu không set gì, nên đây cũng là lý do canvas hay "tự nhiên bị mờ" khi mới thêm vào layout responsive mà quên set buffer tương ứng — và méo tỉ lệ nếu CSS ép luôn cả chiều cao theo một khung không phải 2:1 (để `height` tự động thì canvas giữ đúng tỉ lệ 300:150 của buffer).
 
 ## devicePixelRatio: vì sao Retina cần nhiều pixel hơn
 
@@ -90,7 +90,7 @@ Hàm resize và cách khởi tạo context ở bài này là đoạn code đầu
 
 Ba lỗi hay gặp nhất với canvas, context và DPR:
 
-1. **Chỉ đổi CSS size mà quên đổi drawing buffer.** Set `canvas.style.width = "100%"` nhưng để `canvas.width`/`height` nguyên giá trị mặc định $300 \times 150$ khiến trình duyệt kéo giãn buffer nhỏ để lấp đầy khung lớn — hình bị mờ và méo tỉ lệ.
+1. **Chỉ đổi CSS size mà quên đổi drawing buffer.** Set `canvas.style.width = "100%"` nhưng để `canvas.width`/`height` nguyên giá trị mặc định $300 \times 150$ khiến trình duyệt phóng buffer nhỏ để lấp đầy khung lớn — hình bị mờ, và méo tỉ lệ nếu CSS ép cả chiều cao.
 2. **Bỏ qua devicePixelRatio khi set buffer size.** Set `canvas.width = clientWidth`, `canvas.height = clientHeight` (không nhân DPR) trông "đúng" trên màn hình thường nhưng vẫn mờ trên Retina, vì buffer thiếu hẳn số device pixel thật màn hình có.
 3. **Quên gọi lại `gl.viewport` sau khi buffer đổi size.** Resize `canvas.width`/`height` xong nhưng không gọi `gl.viewport(0, 0, width, height)` khiến GPU tiếp tục vẽ theo viewport cũ — hình bị co vào một góc hoặc kéo dài sai tỉ lệ dù buffer đã đúng kích thước.
 

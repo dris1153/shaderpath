@@ -57,7 +57,7 @@ Một câu hỏi tự nhiên: mỗi vertex có thể mang màu, UV riêng — v�
 Khi canvas chỉ hiện màu `clearColor` mà không có hình gì, kiểm tra thứ gần code JavaScript của bạn nhất trước — rẻ nhất để loại trừ — rồi tiến dần về phía GPU:
 
 1. **Draw call có đúng count không?** `gl.drawArrays(gl.TRIANGLES, 0, 3)` gọi với `count=0` không vẽ gì — kiểm tra tham số trước tiên vì đây là nghi vấn rẻ nhất để loại trừ.
-2. **Có bị clip hết không?** Nếu cả ba đỉnh cùng nằm ngoài **một** mặt phẳng clip (ví dụ cả ba đều có $x > w$), tam giác bị clipping loại sạch trước khi tới rasterization. Chú ý: ba đỉnh cùng ngoài frustum nhưng ở các phía khác nhau thì tam giác vẫn có thể phủ màn hình — fullscreen triangle hoạt động đúng nhờ vậy.
+2. **Có bị clip hết không?** Nếu cả ba đỉnh cùng nằm ngoài **một** mặt phẳng clip (ví dụ cả ba đều có $x > w$), tam giác bị clipping loại sạch trước khi tới rasterization. Chú ý: các đỉnh ngoài vùng nhìn ở những phía khác nhau thì tam giác vẫn có thể cắt qua vùng nhìn — fullscreen triangle có hai đỉnh nằm xa bên ngoài, vậy mà vẫn phủ kín màn hình.
 3. **Fragment shader có ghi alpha = 0 không?** Với blending bật, fragment vẫn "vẽ" về mặt kỹ thuật nhưng trong suốt hoàn toàn — dễ nhầm với "không vẽ được gì".
 4. **Winding order và cull face?** Một tam giác đúng toạ độ nhưng sai thứ tự đỉnh có thể bị `gl.CULL_FACE` loại bỏ trước rasterization nếu tính năng này đang bật.
 

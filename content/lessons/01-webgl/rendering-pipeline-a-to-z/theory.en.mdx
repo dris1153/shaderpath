@@ -57,7 +57,7 @@ A natural question: each vertex can carry its own color or UV — so what value 
 When the canvas shows nothing but the `clearColor`, check whatever sits closest to your JavaScript first — cheapest to rule out — then move toward the GPU:
 
 1. **Is the draw call's count actually right?** `gl.drawArrays(gl.TRIANGLES, 0, 3)` called with `count=0` draws nothing — check parameters first, since it's the cheapest suspect to rule out.
-2. **Did clipping remove everything?** If all three vertices sit outside the **same** clip plane (say all have $x > w$), clipping discards the triangle before rasterization ever runs. Note: three vertices outside the frustum on different sides can still cover the screen — that is exactly how the fullscreen triangle works.
+2. **Did clipping remove everything?** If all three vertices sit outside the **same** clip plane (say all have $x > w$), clipping discards the triangle before rasterization ever runs. Note: vertices outside the view volume on different sides can still form a triangle that crosses it — the fullscreen triangle has two vertices far outside, and it still covers the whole screen.
 3. **Is the fragment shader writing alpha = 0?** With blending enabled, a fragment technically still "draws," just fully transparent — easy to mistake for nothing rendering at all.
 4. **Winding order and face culling?** A triangle with correct coordinates but the wrong vertex order can get discarded by `gl.CULL_FACE` before rasterization if culling is enabled.
 

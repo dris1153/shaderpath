@@ -27,7 +27,7 @@ gl.depthFunc(gl.LESS); // mặc định: fragment mới chỉ thắng nếu dept
 gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 ```
 
-Quên OR thêm `DEPTH_BUFFER_BIT` là lỗi âm thầm: depth frame trước còn nguyên, fragment mới ở đúng vị trí cũ bị so với chính giá trị cũ đó — thường **thua**, khiến vật biến mất dù color buffer đã xoá sạch và code vẽ hoàn toàn đúng.
+Quên OR thêm `DEPTH_BUFFER_BIT` là lỗi âm thầm ở những nơi không ai xoá depth hộ bạn — một FBO có depth attachment, hoặc canvas tạo với `preserveDrawingBuffer: true`: depth frame trước còn nguyên, fragment mới ở đúng vị trí cũ bị so với chính giá trị cũ đó — thường **thua**, khiến vật biến mất dù color buffer đã xoá sạch và code vẽ hoàn toàn đúng. Canvas mặc định (`preserveDrawingBuffer: false`) thì trình duyệt tự xoá cả depth sau mỗi lần hiển thị, nên lỗi này hay nằm im cho tới ngày bạn chuyển sang vẽ vào FBO.
 
 ## Vì sao độ chính xác depth không tuyến tính
 
@@ -84,7 +84,7 @@ Công thức phi tuyến ở trên quay lại trong Track 3 khi Three.js expose 
 
 Ba lỗi hay gặp nhất với depth buffer:
 
-1. **Quên OR `gl.DEPTH_BUFFER_BIT` vào `gl.clear`.** Depth cũ từ frame trước vẫn còn, fragment mới ở cùng vị trí bị so với chính nó và thua ngay cả khi hoàn toàn hợp lệ — vật biến mất không rõ lý do.
+1. **Quên OR `gl.DEPTH_BUFFER_BIT` vào `gl.clear` khi vẽ vào FBO** (hoặc canvas có `preserveDrawingBuffer: true`). Depth cũ từ frame trước vẫn còn, fragment mới ở cùng vị trí bị so với chính nó và thua ngay cả khi hoàn toàn hợp lệ — vật biến mất không rõ lý do. Canvas mặc định che giấu lỗi này vì trình duyệt tự xoá nó sau mỗi frame.
 2. **Đặt near cực nhỏ (`0.001`) "cho chắc".** Dồn gần hết ngân sách precision vào vài milimet đầu tiên, bỏ đói phần còn lại của scene ở khoảng cách bình thường — chính nguyên nhân âm thầm của z-fighting tưởng như ngẫu nhiên.
 3. **Dùng `polygonOffset` với dấu sai hoặc quên `gl.disable(POLYGON_OFFSET_FILL)`.** Offset dương đẩy decal ra xa camera thay vì lại gần (chìm dưới sàn thay vì nổi lên); quên tắt sau khi vẽ khiến offset đó áp nhầm lên các draw call tiếp theo không liên quan.
 

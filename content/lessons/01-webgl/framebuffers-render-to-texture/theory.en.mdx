@@ -76,7 +76,7 @@ This exact 2-pass pattern underlies three major techniques you'll meet again: **
 
 The three most common mistakes when starting out with framebuffers:
 
-1. **Skipping `checkFramebufferStatus`.** A framebuffer missing an attachment or with a mismatched format doesn't throw when you draw into it — the draw call just silently has no effect, so the bug shows up as an unexplained blank screen instead of a clear exception.
+1. **Skipping `checkFramebufferStatus`.** A framebuffer missing an attachment or with a mismatched format doesn't throw when you draw into it — the draw call draws nothing, and the error shows only through `gl.getError()` or an easily missed console warning, so the bug usually looks like an unexplained blank screen instead of a clear exception.
 2. **Forgetting to change the viewport when switching passes.** The viewport doesn't auto-sync to the bound framebuffer; keeping the previous pass' viewport while drawing the next leaves the image cropped or confined to a corner of the canvas, easy to mistake for a geometry or shader bug.
 3. **Forgetting `bindFramebuffer(gl.FRAMEBUFFER, null)` before drawing to the screen.** If the FBO is still bound during what was meant to be the final pass, the result keeps writing into the offscreen texture instead of the canvas — the screen never updates, as if the whole pipeline silently did nothing.
 

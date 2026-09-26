@@ -58,7 +58,7 @@ The intuition "running per-pixel is expensive" points in the right direction but
 The three most common vertex/fragment shader and rasterization mistakes:
 
 1. **Forgetting `gl_Position` or writing the wrong clip-space value.** The shader compiles and links with zero errors, but the triangle never appears — because an unwritten `gl_Position` is *undefined* per the spec (most drivers behave as `vec4(0,0,0,0)`), a degenerate point the rasterizer can't build a fragment from.
-2. **Mismatching a varying's name or type between the two shaders.** `out vec3 vColor` in the vertex shader but `in vec4 vColor` in the fragment shader (wrong type) or `vColour` (a typo) either fails linking outright or — worse — gets silently treated as unused by the driver, producing a default color instead of a clear error.
+2. **Mismatching a varying's name or type between the two shaders.** `out vec3 vColor` in the vertex shader but `in vec4 vColor` in the fragment shader (wrong type) or `vColour` (a typo) has fully deterministic behavior: a fragment `in` that is **used** without a matching name+type is a guaranteed link error; a declared-but-**unused** fragment `in` is silently dropped — there is no "default color" case.
 3. **Assuming varying interpolation is always simple linear interpolation.** For a flat 2D triangle exactly like this lesson's demo, plain barycentric linear interpolation is correct; but the moment a real perspective projection enters (3D world space through a projection matrix), interpolation has to be perspective-correct — skipping that division by $w$ warps textures or colors along a triangle's far edge, a classic bug when hand-writing a software rasterizer without knowing Track 0's Model → View → Projection lesson already warned about it.
 
 </Callout>
