@@ -5,7 +5,7 @@ export const routing = defineRouting({
   locales: LOCALES,
   defaultLocale: DEFAULT_LOCALE,
   localePrefix: "always",
-  // Spec §0: vi is THE default — don't let Accept-Language override it
+  // en is THE default — neither Accept-Language nor a remembered cookie overrides it
   localeDetection: false,
 });
 

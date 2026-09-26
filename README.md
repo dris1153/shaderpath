@@ -1,6 +1,6 @@
 # Shaderpath
 
-A single-user learning platform for Three.js / WebGL / GLSL / GSAP — from zero to senior. 14 tracks, 162 bilingual units (Vietnamese default, English), interactive demos, a GLSL playground, exercises with spaced repetition, notes, and progress tracking. Progress lives in Postgres; lesson content lives in code and never enters the database.
+A single-user learning platform for Three.js / WebGL / GLSL / GSAP — from zero to senior. 14 tracks, 162 bilingual units (English default, Vietnamese), interactive demos, a GLSL playground, exercises with spaced repetition, notes, and progress tracking. Progress lives in Postgres; lesson content lives in code and never enters the database.
 
 ## Requirements
 

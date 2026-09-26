@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("root redirects to default locale /vi", async ({ page }) => {
+test("root redirects to default locale /en", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveURL(/\/vi$/);
+  await expect(page).toHaveURL(/\/en$/);
 });
 
 test("vi and en shells render translated content", async ({ page }) => {

@@ -15,7 +15,7 @@ export const CORE_LOCALES = ["vi", "en"] as const;
  */
 export const EXTRA_LOCALES = [] as const;
 export const LOCALES = [...CORE_LOCALES, ...EXTRA_LOCALES] as const;
-export const DEFAULT_LOCALE = "vi" satisfies CoreLocale;
+export const DEFAULT_LOCALE = "en" satisfies CoreLocale;
 
 export type CoreLocale = (typeof CORE_LOCALES)[number];
 export type ExtraLocale = (typeof EXTRA_LOCALES)[number];
