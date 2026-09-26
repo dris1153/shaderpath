@@ -94,12 +94,28 @@ test("the far band draws the route between the tracks", async ({ page }) => {
     .toBe(18);
 });
 
-test("the old layout switcher is gone", async ({ page }) => {
-  await openMap(page);
-  for (const name of ["serpentine", "horizontal", "vertical", "columns"]) {
-    await expect(page.getByRole("button", { name, exact: true })).toHaveCount(0);
-  }
-});
+// The four layouts stay side by side until the user picks one. Each must
+// still open on the tracks with the whole route drawn, or the comparison is
+// between a working map and a broken one.
+for (const name of ["serpentine", "horizontal", "vertical", "columns"]) {
+  test(`the ${name} layout opens on the tracks and the route`, async ({
+    page,
+  }) => {
+    await openMap(page);
+    const button = page.getByRole("button", { name, exact: true });
+    await button.click();
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+    await expect
+      .poll(() => visible(page).count(), { timeout: 15_000 })
+      .toBe(14);
+    await expect
+      .poll(() => page.locator(".react-flow__edge").count(), {
+        timeout: 10_000,
+      })
+      .toBe(18);
+    await expect(page.locator(".react-flow__node a")).toHaveCount(14);
+  });
+}
 
 // a11y.spec.ts visits /vi/roadmap in its default list view, so the map itself
 // was never scanned. Both themes: the card borders and muted text are the
@@ -110,7 +126,9 @@ for (const colorScheme of ["light", "dark"] as const) {
   }) => {
     await page.emulateMedia({ colorScheme });
     await openMap(page);
-    await expect.poll(() => visible(page).count(), { timeout: 15_000 }).toBe(14);
+    await expect
+      .poll(() => visible(page).count(), { timeout: 15_000 })
+      .toBe(14);
 
     const { violations } = await new AxeBuilder({ page })
       .include('[role="region"]')

@@ -19,7 +19,9 @@ describe("road length", () => {
   // would crush thirteen tracks into a quarter of the width.
   it("measures against the longest track that is not the terminus", () => {
     expect(yardstick).toBeLessThan(stats.at(-1)!.minutes);
-    expect(yardstick).toBe(Math.max(...stats.slice(0, -1).map((s) => s.minutes)));
+    expect(yardstick).toBe(
+      Math.max(...stats.slice(0, -1).map((s) => s.minutes)),
+    );
   });
 
   it("caps the terminus at full length rather than overflowing", () => {
@@ -27,7 +29,9 @@ describe("road length", () => {
   });
 
   it("keeps every regular track comparable, the longest at full length", () => {
-    const fractions = stats.slice(0, -1).map((s) => roadFraction(s.minutes, yardstick));
+    const fractions = stats
+      .slice(0, -1)
+      .map((s) => roadFraction(s.minutes, yardstick));
     for (const f of fractions) {
       expect(f).toBeGreaterThan(0);
       expect(f).toBeLessThanOrEqual(1);
@@ -74,19 +78,24 @@ describe("labels", () => {
 describe("card containment", () => {
   // Rows live inside their track's card. If a track grows past what the card
   // was sized for, its lessons spill over the next station.
-  it("keeps every module and lesson inside its own track card", () => {
-    const { nodes } = layoutRoadmap(TRACKS, MODULES, LESSONS);
-    const cards = new Map(
-      nodes.filter((n) => n.kind === "track").map((n) => [n.track!.id, n]),
-    );
-    for (const n of nodes) {
-      if (n.kind === "track") continue;
-      const trackId = n.module?.trackId ?? n.lesson!.trackId;
-      const card = cards.get(trackId)!;
-      expect(n.x, `${n.id} left`).toBeGreaterThanOrEqual(card.x);
-      expect(n.x + n.w, `${n.id} right`).toBeLessThanOrEqual(card.x + CARD.w);
-      expect(n.y, `${n.id} top`).toBeGreaterThanOrEqual(card.y + CARD.header);
-      expect(n.y + n.h, `${n.id} bottom`).toBeLessThanOrEqual(card.y + CARD.h);
-    }
-  });
+  it.each(["serpentine", "horizontal", "vertical"] as const)(
+    "keeps every module and lesson inside its own track card (%s)",
+    (id) => {
+      const { nodes } = layoutRoadmap(TRACKS, MODULES, LESSONS, id);
+      const cards = new Map(
+        nodes.filter((n) => n.kind === "track").map((n) => [n.track!.id, n]),
+      );
+      for (const n of nodes) {
+        if (n.kind === "track") continue;
+        const trackId = n.module?.trackId ?? n.lesson!.trackId;
+        const card = cards.get(trackId)!;
+        expect(n.x, `${n.id} left`).toBeGreaterThanOrEqual(card.x);
+        expect(n.x + n.w, `${n.id} right`).toBeLessThanOrEqual(card.x + CARD.w);
+        expect(n.y, `${n.id} top`).toBeGreaterThanOrEqual(card.y + CARD.header);
+        expect(n.y + n.h, `${n.id} bottom`).toBeLessThanOrEqual(
+          card.y + CARD.h,
+        );
+      }
+    },
+  );
 });
