@@ -145,3 +145,11 @@ export interface Exercise {
    *  screenshot simply names the same file twice. */
   referenceImage?: Localized<string>;
 }
+
+/** A short recall prompt for the review queue — one idea, ~30s to answer.
+ *  Same text subset as exercise prompts (see PromptBody). */
+export interface ReviewCard {
+  id: string;
+  q: Localized<string>;
+  a: Localized<string>;
+}

@@ -44,6 +44,7 @@ const ROUTES: { name: string; path: string; heading: string }[] = [
   },
   { name: "playground", path: "/vi/playground", heading: "GLSL Playground" },
   { name: "notes", path: "/vi/notes", heading: "Ghi chú & Bookmark" },
+  { name: "review", path: "/vi/review", heading: "Ôn tập" },
   { name: "stats", path: "/vi/stats", heading: "Thống kê học tập" },
   { name: "settings", path: "/vi/settings", heading: "Cài đặt" },
 ];

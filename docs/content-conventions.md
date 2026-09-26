@@ -101,6 +101,27 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
 - Interaction affordances ("drag to inject dye") are not hints. Those stay as
   an overlay on the canvas, where the pointer is, under a different key.
 
+## Review cards
+
+- Optional `review-cards.ts` beside `exercises.ts`, exporting
+  `reviewCards: ReviewCard[]` (`{ id, q, a }`, both `Localized`). `/review`
+  shows one per due review, rotating on the review count. A lesson without
+  cards reviews its first concept exercise, then its objectives.
+- Lint (`pnpm lint:content`): 2–5 cards, unique ids, `q` and `a` non-empty in
+  both locales, no tags (PromptBody prints them literally), none on a
+  checkpoint — checkpoints review their objectives.
+- Text is the PromptBody subset: paragraphs, `code`, `$math$`, fences,
+  `**bold**`, `*italic*`. No lists, links or MDX.
+- One idea per card, answerable in ~30 seconds without scrolling. Ask for a
+  consequence or a reason ("two unit vectors, dot = −1: where do they
+  point?"), not a definition, and never yes/no.
+- The answer states the reason, not only the result — a bare "−1" teaches
+  nothing on a wrong guess.
+- Do not restate a heading as a question, and do not duplicate the lesson's
+  concept exercise: the exercise is practice, the card is a recall cue.
+- The mistake callout is the best seam: a card that walks the learner into the
+  wrong intuition and back out beats one that quotes the right one.
+
 ## Mind maps
 
 - Every lesson renders a mind map above the theory, **auto-generated** from

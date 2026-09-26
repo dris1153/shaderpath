@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test";
 import { requiresAuth, signIn } from "./requires-auth";
 
 // The dashboard is the "what do I do now" screen: it must show the queue, keep
-// review grading reachable (this is the only screen that offers it), and keep
-// the syllabus collapsed until asked for.
+// the way into /review reachable (grading lives there, after the question),
+// and keep the syllabus collapsed until asked for.
 // Writes user data, so it needs an account: RLS shows a signed-out
 // visitor nothing, and the account-only endpoints answer 401.
 requiresAuth();

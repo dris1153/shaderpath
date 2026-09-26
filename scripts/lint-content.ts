@@ -9,10 +9,12 @@ import {
   type Citation,
   type Exercise,
   type Locale,
+  type ReviewCard,
 } from "../content/types";
 import { extractToc } from "../lib/mdx-toc";
 import { lintMindMapOverride } from "../lib/mind-map-lint";
 import { lintPredict } from "../lib/predict-lint";
+import { lintReviewCards } from "../lib/review-cards-lint";
 
 // A3: mechanical gate for the content rules (spec §3.2/§10/§11, amended by D9).
 // Usage: pnpm lint:content [--require math,webgl]
@@ -320,6 +322,18 @@ async function lintLesson(trackDir: string, slug: string) {
           );
         }
       }
+    }
+  }
+
+  // --- review cards ---------------------------------------------------
+  // Optional: a lesson without them reviews its concept exercise instead.
+  const cardsPath = path.join(dir, "review-cards.ts");
+  if (fs.existsSync(cardsPath)) {
+    const { reviewCards } = (await import(pathToFileURL(cardsPath).href)) as {
+      reviewCards: ReviewCard[];
+    };
+    for (const error of lintReviewCards({ at, kind: meta.kind, cards: reviewCards })) {
+      report(error);
     }
   }
 

@@ -1,18 +1,12 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { toast } from "sonner";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { gradeReview } from "@/lib/review";
-import type { ReviewQuality } from "@/lib/srs";
-import { GROUP_OF, type QueueGroup, type QueueKind } from "@/lib/dashboard-queue";
+import { GROUP_OF, REVIEW_KINDS, type QueueGroup, type QueueKind } from "@/lib/dashboard-queue";
 import { cn } from "@/lib/utils";
-
-const GRADES: ReviewQuality[] = ["again", "hard", "good", "easy"];
 
 export interface QueueItemVM {
   kind: QueueKind;
@@ -48,9 +42,8 @@ export function ActionQueue({
 }) {
   const t = useTranslations("dashboard");
   const tReview = useTranslations("review");
-  const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
-  const [pending, startTransition] = useTransition();
+  const dueReviews = items.filter((i) => REVIEW_KINDS.has(i.kind)).length;
 
   const counts = useMemo(() => {
     const acc: Record<Filter, number> = { all: items.length, review: 0, weak: 0, next: 0 };
@@ -124,6 +117,11 @@ export function ActionQueue({
 
   return (
     <>
+      {dueReviews > 0 && (
+        <Button className="mt-4" nativeButton={false} render={<Link href="/review" />}>
+          {tReview("startN", { count: dueReviews })}
+        </Button>
+      )}
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t("queueTitle")}>
         {CHIPS.map((chip) => (
           <Button
@@ -170,32 +168,18 @@ export function ActionQueue({
                   {metaOf(item)}
                 </span>
               </span>
-              {/* Reviews are graded here rather than linked away: grading is the
-                  action a due card needs, and this is the only screen that offers it. */}
+              {/* Grading lives on /review, after the question: grading a bare
+                  title here was recognition, not recall. */}
               {GROUP_OF[item.kind] === "review" ? (
-                <span className="flex shrink-0 gap-1">
-                  {GRADES.map((q) => (
-                    <Button
-                      key={q}
-                      size="sm"
-                      variant={q === "good" ? "default" : "outline"}
-                      disabled={pending}
-                      onClick={() =>
-                        startTransition(async () => {
-                          try {
-                            await gradeReview(item.slug, q);
-                            toast.success(tReview("graded"));
-                            router.refresh();
-                          } catch {
-                            toast.error(tReview("gradeError"));
-                          }
-                        })
-                      }
-                    >
-                      {tReview(`grade_${q}`)}
-                    </Button>
-                  ))}
-                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  nativeButton={false}
+                  className="shrink-0"
+                  render={<Link href="/review" />}
+                >
+                  {t("actionReview")}
+                </Button>
               ) : (
                 <Button
                   size="sm"

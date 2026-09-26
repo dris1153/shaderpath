@@ -35,6 +35,10 @@ export const GROUP_OF: Record<QueueKind, QueueGroup> = {
   continue: "next",
 };
 
+/** What /review asks about. Leeches are due too (only due ones are queued);
+ *  the card adds a re-read note for them. */
+export const REVIEW_KINDS: ReadonlySet<QueueKind> = new Set(["leech", "overdue", "due"]);
+
 export interface QueueItem {
   kind: QueueKind;
   lessonSlug: LessonSlug;
