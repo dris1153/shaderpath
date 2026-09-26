@@ -28,7 +28,6 @@ export default async function RoadmapPage({
           legendUnlocked: t("mapLegendUnlocked"),
           legendLocked: t("mapLegendLocked"),
           regionLabel: t("mapRegion"),
-          checkpoint: t("checkpoint"),
         }}
         listView={
           <div className="mt-4 flex flex-col gap-6">

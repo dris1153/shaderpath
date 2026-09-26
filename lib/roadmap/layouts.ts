@@ -1,40 +1,47 @@
+import type { LessonSlug } from "@/content/slugs";
 import type { LessonMeta, ModuleDef, TrackDef } from "@/content/types";
 import { trackChain, trackLinks } from "./chain";
-import {
-  layoutCurriculumMap,
-  type CurriculumMapLayout,
-  type CurriculumMapNode,
-} from "@/components/roadmap/curriculum-map-layout";
 
-// Three folds of one line, drawn as a zoomable UI: modules live inside their
-// track's card and lessons inside their module, with type sized per tier.
-// That is what lets one world stay legible at every band. Hanging lessons
-// below each track (phase 2) spaced the rows 1280 apart, so fitting the
-// overview meant zooming out until names were a few pixels; packing each band
-// separately fought the zoom that picks the band. Nesting has neither
-// problem — positions never move and zoom only ever means "closer".
+// The curriculum is a chain — 14 tracks, one dependency layer each, converging
+// on capstones — drawn as a zoomable UI: modules live inside their track's
+// card and lessons inside their module, with type sized per tier, so one world
+// stays legible at every zoom band.
 //
-// The columns layout stays as the old design, drawn the old way, as the
-// control the new folds have to beat.
+// The route is folded five stations wide, alternate rows running backwards.
+// Folding is what makes the overview readable at all: it is the only
+// arrangement whose bounding box matches a landscape canvas. A single row or
+// column is fitted by its long side, and at that zoom its names are 3–4px.
+// Horizontal, vertical and the old columns were built, rendered and deleted
+// for exactly that reason.
 
-export type LayoutId = "columns" | "horizontal" | "vertical" | "serpentine";
-export type LayoutStyle = "compact" | "card";
-
-export interface SizedNode extends CurriculumMapNode {
+export interface MapNode {
+  id: string;
+  kind: "track" | "module" | "lesson";
+  x: number;
+  y: number;
   w: number;
   h: number;
+  track?: TrackDef;
+  module?: ModuleDef;
+  lesson?: LessonMeta;
 }
 
-export interface SizedLayout extends Omit<CurriculumMapLayout, "nodes"> {
-  nodes: SizedNode[];
-  style: LayoutStyle;
+export interface MapEdge {
+  id: string;
+  from: string;
+  to: string;
 }
 
-/** World units. Chosen so the serpentine overview fits a 1100×630 canvas at
- *  zoom 0.25, where a 48-unit title renders at 12px. The tallest track
- *  (webgl: 3 modules, 15 lessons) needs 170 + 3×40 + 15×24 = 650. Module rows
- *  are taller than lesson rows because their type has to read at the modules
- *  band, which starts at zoom 0.38. */
+export interface MapLayout {
+  nodes: MapNode[];
+  edges: MapEdge[];
+}
+
+/** World units. Chosen so the overview fits a 1100×630 canvas at zoom 0.25,
+ *  where a 48-unit title renders at 12px. The tallest track (webgl: 3
+ *  modules, 15 lessons) needs 170 + 3×40 + 15×24 = 650. Module rows are taller
+ *  than lesson rows because their type has to read at the modules band, which
+ *  starts at zoom 0.38. */
 export const CARD = {
   w: 800,
   h: 680,
@@ -46,50 +53,56 @@ export const CARD = {
   gapY: 80,
 } as const;
 
-const SERPENTINE_COLS = 5;
+const COLS = 5;
 
-function origin(id: Exclude<LayoutId, "columns">, i: number) {
-  const px = CARD.w + CARD.gapX;
-  const py = CARD.h + CARD.gapY;
-  switch (id) {
-    case "horizontal":
-      return { x: i * px, y: 0 };
-    case "vertical":
-      return { x: 0, y: i * py };
-    case "serpentine": {
-      const row = Math.floor(i / SERPENTINE_COLS);
-      const col = i % SERPENTINE_COLS;
-      // Alternate rows run backwards so the route stays continuous across the
-      // fold instead of jumping back to the left edge.
-      return {
-        x: (row % 2 === 0 ? col : SERPENTINE_COLS - 1 - col) * px,
-        y: row * py,
-      };
-    }
-  }
+function origin(i: number) {
+  const row = Math.floor(i / COLS);
+  const col = i % COLS;
+  return {
+    // Alternate rows run backwards so the route stays continuous across the
+    // fold instead of jumping back to the left edge.
+    x: (row % 2 === 0 ? col : COLS - 1 - col) * (CARD.w + CARD.gapX),
+    y: row * (CARD.h + CARD.gapY),
+  };
 }
 
-function nest(
-  id: Exclude<LayoutId, "columns">,
+/** Prerequisites between lessons in different tracks. In-track order is
+ *  already the order of rows inside a card, so drawing it would only add
+ *  noise. */
+export function lessonEdges(lessons: readonly LessonMeta[]): MapEdge[] {
+  const trackOf = new Map<LessonSlug, string>(
+    lessons.map((l) => [l.slug, l.trackId]),
+  );
+  return lessons.flatMap((l) =>
+    l.prerequisites
+      .filter((p) => trackOf.has(p) && trackOf.get(p) !== l.trackId)
+      .map((p) => ({ id: `${p}->${l.slug}`, from: p, to: l.slug })),
+  );
+}
+
+export function chainEdges(
+  tracks: readonly TrackDef[],
+  lessons: readonly LessonMeta[],
+): MapEdge[] {
+  return trackLinks(tracks, lessons).map((l) => ({
+    id: `chain:${l.from}->${l.to}`,
+    from: `track:${l.from}`,
+    to: `track:${l.to}`,
+  }));
+}
+
+export function layoutRoadmap(
   tracks: readonly TrackDef[],
   modules: readonly ModuleDef[],
   lessons: readonly LessonMeta[],
-): SizedLayout {
+): MapLayout {
   const lessonBySlug = new Map(lessons.map((l) => [l.slug, l]));
   const inner = CARD.w - CARD.pad * 2;
-  const nodes: SizedNode[] = [];
+  const nodes: MapNode[] = [];
 
   trackChain(tracks).forEach((track, i) => {
-    const o = origin(id, i);
-    nodes.push({
-      id: `track:${track.id}`,
-      kind: "track",
-      x: o.x,
-      y: o.y,
-      w: CARD.w,
-      h: CARD.h,
-      track,
-    });
+    const o = origin(i);
+    nodes.push({ id: `track:${track.id}`, kind: "track", x: o.x, y: o.y, w: CARD.w, h: CARD.h, track });
 
     let y = o.y + CARD.header;
     const trackModules = modules
@@ -123,39 +136,5 @@ function nest(
     }
   });
 
-  return {
-    nodes,
-    edges: layoutCurriculumMap(tracks, modules, lessons).edges,
-    style: "card",
-  };
-}
-
-export function layoutFor(
-  id: LayoutId,
-  tracks: readonly TrackDef[],
-  modules: readonly ModuleDef[],
-  lessons: readonly LessonMeta[],
-): SizedLayout {
-  if (id !== "columns") return nest(id, tracks, modules, lessons);
-  const old = layoutCurriculumMap(tracks, modules, lessons);
-  return {
-    edges: old.edges,
-    style: "compact",
-    nodes: old.nodes.map((n) => ({
-      ...n,
-      w: 224,
-      h: n.kind === "lesson" ? (n.lesson!.kind === "checkpoint" ? 44 : 30) : 20,
-    })),
-  };
-}
-
-export function chainEdges(
-  tracks: readonly TrackDef[],
-  lessons: readonly LessonMeta[],
-) {
-  return trackLinks(tracks, lessons).map((l) => ({
-    id: `chain:${l.from}->${l.to}`,
-    from: `track:${l.from}`,
-    to: `track:${l.to}`,
-  }));
+  return { nodes, edges: lessonEdges(lessons) };
 }

@@ -8,7 +8,7 @@ import {
   roadFraction,
   trackStats,
 } from "@/lib/roadmap/encoding";
-import { CARD, layoutFor, type LayoutId } from "@/lib/roadmap/layouts";
+import { CARD, layoutRoadmap } from "@/lib/roadmap/layouts";
 
 const chain = trackChain(TRACKS);
 const yardstick = longestRegularMinutes(chain, LESSONS);
@@ -71,25 +71,22 @@ describe("labels", () => {
   });
 });
 
-describe.each(["horizontal", "vertical", "serpentine"] as LayoutId[])(
-  "card fold %s",
-  (id) => {
-    // Rows live inside their track's card. If a track grows past what the
-    // card was sized for, its lessons spill over the next station.
-    it("keeps every module and lesson inside its own track card", () => {
-      const { nodes } = layoutFor(id, TRACKS, MODULES, LESSONS);
-      const cards = new Map(
-        nodes.filter((n) => n.kind === "track").map((n) => [n.track!.id, n]),
-      );
-      for (const n of nodes) {
-        if (n.kind === "track") continue;
-        const trackId = n.module?.trackId ?? n.lesson!.trackId;
-        const card = cards.get(trackId)!;
-        expect(n.x, `${n.id} left`).toBeGreaterThanOrEqual(card.x);
-        expect(n.x + n.w, `${n.id} right`).toBeLessThanOrEqual(card.x + CARD.w);
-        expect(n.y, `${n.id} top`).toBeGreaterThanOrEqual(card.y + CARD.header);
-        expect(n.y + n.h, `${n.id} bottom`).toBeLessThanOrEqual(card.y + CARD.h);
-      }
-    });
-  },
-);
+describe("card containment", () => {
+  // Rows live inside their track's card. If a track grows past what the card
+  // was sized for, its lessons spill over the next station.
+  it("keeps every module and lesson inside its own track card", () => {
+    const { nodes } = layoutRoadmap(TRACKS, MODULES, LESSONS);
+    const cards = new Map(
+      nodes.filter((n) => n.kind === "track").map((n) => [n.track!.id, n]),
+    );
+    for (const n of nodes) {
+      if (n.kind === "track") continue;
+      const trackId = n.module?.trackId ?? n.lesson!.trackId;
+      const card = cards.get(trackId)!;
+      expect(n.x, `${n.id} left`).toBeGreaterThanOrEqual(card.x);
+      expect(n.x + n.w, `${n.id} right`).toBeLessThanOrEqual(card.x + CARD.w);
+      expect(n.y, `${n.id} top`).toBeGreaterThanOrEqual(card.y + CARD.header);
+      expect(n.y + n.h, `${n.id} bottom`).toBeLessThanOrEqual(card.y + CARD.h);
+    }
+  });
+});

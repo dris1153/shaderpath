@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import { trackChain, trackDependencies, trackLinks } from "@/lib/roadmap/chain";
-import { chainEdges, layoutFor, type LayoutId } from "@/lib/roadmap/layouts";
-
-const LAYOUTS: LayoutId[] = ["columns", "horizontal", "vertical", "serpentine"];
+import { chainEdges, layoutRoadmap, lessonEdges } from "@/lib/roadmap/layouts";
 
 describe("track chain", () => {
   // Derived, not listed: a curriculum that grows a real branch should fail
@@ -52,60 +50,48 @@ describe("track chain", () => {
   });
 });
 
-describe.each(LAYOUTS)("layout %s", (id) => {
-  it("places every node exactly once", () => {
-    const { nodes } = layoutFor(id, TRACKS, MODULES, LESSONS);
-    expect(nodes.filter((n) => n.kind === "track")).toHaveLength(TRACKS.length);
-    expect(nodes.filter((n) => n.kind === "module")).toHaveLength(MODULES.length);
-    expect(nodes.filter((n) => n.kind === "lesson")).toHaveLength(LESSONS.length);
-    expect(new Set(nodes.map((n) => n.id)).size).toBe(nodes.length);
+describe("layoutRoadmap", () => {
+  const layout = layoutRoadmap(TRACKS, MODULES, LESSONS);
+  const of = (kind: string) => layout.nodes.filter((n) => n.kind === kind);
+
+  it("places every track, module and lesson exactly once", () => {
+    expect(of("track")).toHaveLength(TRACKS.length);
+    expect(of("module")).toHaveLength(MODULES.length);
+    expect(of("lesson")).toHaveLength(LESSONS.length);
+    expect(new Set(layout.nodes.map((n) => n.id)).size).toBe(layout.nodes.length);
   });
 
-  it("keeps coordinates finite", () => {
-    for (const n of layoutFor(id, TRACKS, MODULES, LESSONS).nodes) {
-      expect(Number.isFinite(n.x), `${n.id}.x`).toBe(true);
-      expect(Number.isFinite(n.y), `${n.id}.y`).toBe(true);
+  it("keeps coordinates finite and never stacks two nodes on one spot", () => {
+    for (const n of layout.nodes) {
+      expect(Number.isFinite(n.x) && Number.isFinite(n.y), n.id).toBe(true);
     }
-  });
-
-  it("never puts two nodes on the same spot", () => {
-    const spots = layoutFor(id, TRACKS, MODULES, LESSONS).nodes.map(
-      (n) => `${n.x},${n.y}`,
-    );
+    const spots = layout.nodes.map((n) => `${n.x},${n.y}`);
     expect(new Set(spots).size).toBe(spots.length);
   });
 
-  it("never puts two stations on the same spot", () => {
-    const stations = layoutFor(id, TRACKS, MODULES, LESSONS).nodes
-      .filter((n) => n.kind === "track")
-      .map((n) => `${n.x},${n.y}`);
-    expect(new Set(stations).size).toBe(stations.length);
-  });
-});
-
-describe("folds", () => {
-  const stations = (id: LayoutId) =>
-    layoutFor(id, TRACKS, MODULES, LESSONS).nodes.filter((n) => n.kind === "track");
-
-  it("horizontal lays the chain out left to right", () => {
-    const xs = stations("horizontal").map((n) => n.x);
-    expect([...xs].sort((a, b) => a - b)).toEqual(xs);
-    expect(new Set(stations("horizontal").map((n) => n.y)).size).toBe(1);
-  });
-
-  it("vertical lays the chain out top to bottom", () => {
-    const ys = stations("vertical").map((n) => n.y);
-    expect([...ys].sort((a, b) => a - b)).toEqual(ys);
-    expect(new Set(stations("vertical").map((n) => n.x)).size).toBe(1);
-  });
-
-  it("serpentine reverses direction on every other row", () => {
-    const s = stations("serpentine");
-    // Row 0 runs left to right, row 1 right to left, so the chain stays
-    // continuous across the fold instead of jumping back to the left edge.
+  // Row 0 runs left to right, row 1 right to left, so the route stays
+  // continuous across the fold instead of jumping back to the left edge.
+  it("folds the route five wide, reversing on alternate rows", () => {
+    const s = of("track");
     expect(s[4]!.x).toBeGreaterThan(s[0]!.x);
     expect(s[5]!.x).toBe(s[4]!.x);
     expect(s[9]!.x).toBe(s[0]!.x);
     expect(s[5]!.y).toBeGreaterThan(s[4]!.y);
+  });
+
+  // Carried over from the columns layout this replaced.
+  it("mirrors the curriculum: every cross-track prerequisite becomes an edge", () => {
+    const trackOf = new Map(LESSONS.map((l) => [l.slug, l.trackId]));
+    const expected = LESSONS.flatMap((l) =>
+      l.prerequisites
+        .filter((p) => trackOf.get(p) !== l.trackId)
+        .map((p) => `${p}->${l.slug}`),
+    );
+    expect(lessonEdges(LESSONS).map((e) => e.id).sort()).toEqual(expected.sort());
+    expect(layout.edges).toEqual(lessonEdges(LESSONS));
+  });
+
+  it("is deterministic", () => {
+    expect(layoutRoadmap(TRACKS, MODULES, LESSONS)).toEqual(layout);
   });
 });
