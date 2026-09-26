@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useState, type RefObject } from "react";
 
 export interface TextSelection {
   text: string;
   /** Nearest preceding heading id inside the container, if any */
   anchorId: string | null;
-  /** Viewport-relative rect of the selection end */
-  rect: { top: number; left: number; bottom: number };
+  /** A copy of the selected range. Read its rect on demand: the page scrolls
+   *  under it, so any rect captured at mouseup goes stale. */
+  range: Range;
 }
 
 // Anchoring strategy (phase-08 key insight): notes attach to the nearest
@@ -26,7 +27,9 @@ export function useTextSelection(
         if (!container || !sel || sel.isCollapsed || sel.rangeCount === 0) {
           return;
         }
-        const range = sel.getRangeAt(0);
+        // Cloned: the selection's own range can be mutated in place when the
+        // selection collapses, and the popover still anchors to this one.
+        const range = sel.getRangeAt(0).cloneRange();
         if (!container.contains(range.commonAncestorContainer)) return;
         const text = sel.toString().trim();
         if (text.length < 3) return;
@@ -41,11 +44,7 @@ export function useTextSelection(
           else break;
         }
 
-        setSelection({
-          text,
-          anchorId,
-          rect: { top: rect.top, left: rect.left, bottom: rect.bottom },
-        });
+        setSelection({ text, anchorId, range });
       });
     };
 
@@ -53,5 +52,7 @@ export function useTextSelection(
     return () => document.removeEventListener("mouseup", onMouseUp);
   }, [containerRef]);
 
-  return [selection, () => setSelection(null)];
+  // Stable, so callers can hand it to event listeners.
+  const clear = useCallback(() => setSelection(null), []);
+  return [selection, clear];
 }
