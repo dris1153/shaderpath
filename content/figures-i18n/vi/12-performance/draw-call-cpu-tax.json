@@ -17,9 +17,9 @@
   "the tax is paid once, whatever the count": "thuế trả một lần, số lượng bao nhiêu cũng vậy",
   "only render.triangles keeps scaling": "chỉ render.triangles là còn tăng theo",
   "a shared material is not this": "dùng chung vật liệu không phải chuyện này",
-  "it cuts useProgram switches, not the call count": "nó cắt số lần đổi useProgram, không cắt số lệnh gọi",
+  "it saves uniform uploads, not the call count": "nó bớt việc upload uniform, không bớt số lệnh gọi",
   "Each mesh stays its own transform node, so it still needs its own draw command — that is why sharing": "Mỗi mesh vẫn là một nút biến đổi riêng, nên vẫn cần lệnh vẽ riêng — đó là lý do dùng chung",
   "a material leaves render.calls exactly where it was, and why merging or instancing is what moves it.": "vật liệu không làm render.calls nhúc nhích, còn gộp hay instancing mới là thứ đổi được nó.",
   "render.calls is also not the mesh count: every shadow-casting light re-renders the casters from its own": "render.calls cũng không phải số mesh: mỗi đèn đổ bóng lại render các vật đổ bóng từ góc nhìn",
-  "view, so 50 meshes under 2 such lights is 50 + 50×2 = 150 calls. Read it right after render().": "của nó, nên 50 mesh dưới 2 đèn như vậy là 50 + 50×2 = 150 lệnh gọi. Đọc nó ngay sau render()."
+  "view, so 50 casting meshes under 2 directional lights is 50 + 50×2 = 150 calls. Read it right after render().": "của nó, nên 50 mesh đổ bóng dưới 2 đèn directional là 50 + 50×2 = 150 lệnh gọi. Đọc nó ngay sau render()."
 }

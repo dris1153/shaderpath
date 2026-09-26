@@ -22,6 +22,6 @@
   "material.normalMap": "material.normalMap",
   "bends the shading normal only — the silhouette of the": "chỉ bẻ pháp tuyến tô bóng — đường viền của mesh",
   "mesh never changes": "không hề thay đổi",
-  "One THREE.Texture object in all three ORM slots: one bind, three roles — three only reads the channel it needs.": "Một object THREE.Texture cho cả ba khe ORM: một lần bind, ba vai — three chỉ đọc đúng kênh nó cần.",
+  "One THREE.Texture object in all three ORM slots: one upload, three roles — three only reads the channel it needs.": "Một object THREE.Texture cho cả ba khe ORM: một lần upload, ba vai — three chỉ đọc đúng kênh nó cần.",
   "Those *= multiplies are why material.roughness and .metalness must sit at 1 while a map drives them.": "Chính các phép *= đó là lý do material.roughness và .metalness phải để bằng 1 khi có map điều khiển."
 }

@@ -128,8 +128,8 @@ Growth ratio: $0.1061 / 0.0773 \\approx 1.37\\times$ — already at just $60^\\c
         en: "The sphere's center color visibly tracks `uMouse.x`: near the left it's dark (low F0, dielectric-like), near the right it's uniformly bright (high F0, metal-like)",
       },
       {
-        vi: "Không có artifact đen/nhấp nháy ở đúng viền hình tròn (cosTheta được clamp trước khi pow)",
-        en: "No black/flickering artifacts right at the circle's edge (cosTheta is clamped before pow)",
+        vi: "Không có pixel sáng quá mức hay hỏng ở đúng viền hình tròn (`1.0 - cosTheta` được kẹp vào $[0,1]$ trước khi `pow`)",
+        en: "No over-bright or broken pixels right at the circle's edge (`1.0 - cosTheta` is clamped to $[0,1]$ before `pow`)",
       },
     ],
   },

@@ -7,8 +7,8 @@ export const references: Citation[] = [
     title: "Three.js Docs — WebGLRenderer.info",
     url: "https://threejs.org/docs/#api/en/renderers/WebGLRenderer.info",
     note: {
-      vi: "Nguồn chuẩn cho `render.calls`, `render.triangles`, `memory.geometries/textures` — kể cả hành vi reset mỗi frame mà bài này dựa vào.",
-      en: "The authoritative source for `render.calls`, `render.triangles`, `memory.geometries/textures` — including the per-frame reset behavior this lesson relies on.",
+      vi: "Nguồn chuẩn cho `render.calls`, `render.triangles`, `memory.geometries/textures` — kể cả hành vi reset ở mỗi lần `render()` mà bài này dựa vào.",
+      en: "The authoritative source for `render.calls`, `render.triangles`, `memory.geometries/textures` — including the reset at every `render()` call this lesson relies on.",
     },
   },
   {

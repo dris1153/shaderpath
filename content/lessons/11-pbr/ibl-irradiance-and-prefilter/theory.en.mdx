@@ -34,7 +34,7 @@ $$
 \text{specular}_{\text{IBL}} \approx \text{PrefilteredEnvMap}(R,\rho)\times\big(F_0\cdot\text{scale}(N{\cdot}V,\rho) + F_{90}\cdot\text{bias}(N{\cdot}V,\rho)\big)
 $$
 
-This is a genuinely inexact approximation — splitting one double integral into a product of two single integrals isn't algebraically identical to the original, and it quietly loses multi-bounce energy at high roughness (materials look slightly too dark at extreme roughness, the well-known "energy loss" artifact that later work like Fdez-Agüera's multi-scattering compensation addresses). But it turns an expensive per-pixel double integral into exactly two texture fetches, which is why nearly every real-time renderer uses it anyway.
+This is a genuinely inexact approximation — splitting one double integral into a product of two single integrals isn't algebraically identical to the original, and the prefilter assumes the view direction equals the normal ($n = v = r$), so the stretched reflections real surfaces show at grazing angles are lost. (The slight darkening at high roughness is a separate problem: the single-scattering microfacet BRDF itself drops light that bounces between microfacets — Fdez-Agüera's multi-scattering compensation, which three already applies to IBL, adds it back.) But it turns an expensive per-pixel double integral into exactly two texture fetches, which is why nearly every real-time renderer uses it anyway.
 
 ## Three.js's PMREMGenerator: from a scene or HDRI to one texture
 

@@ -90,7 +90,7 @@
 
   <rect class="box-cost" x="24" y="290" width="612" height="60" rx="8" />
   <text class="col ink-cost" x="38" y="310">WHEN THAT COMPILE ACTUALLY HAPPENS</text>
-  <text class="note" x="38" y="330">getProgram() is only reachable from the render path, so a variant compiles on the frame that first draws it — never</text>
+  <text class="note" x="38" y="330">getProgram() runs in the render path (or compile()), so an unwarmed variant compiles on the frame that first draws it — never</text>
   <text class="note" x="38" y="345">when you constructed the material. map (2) × fog (2) × shadow type (3) × skinning (2) is already 24 programs.</text>
 
   <text class="foot" x="24" y="378">renderer.compile(scene, camera) moves that cost behind a loading screen instead of erasing it; compileAsync only</text>

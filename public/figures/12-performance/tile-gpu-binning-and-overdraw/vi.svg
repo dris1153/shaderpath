@@ -88,8 +88,8 @@
   <text class="col ink-cost" x="38" y="314">TRONG SUỐT THOÁT KHỎI CÁI GÌ</text>
   <text class="note" x="38" y="336">Blend phụ thuộc thứ tự, nên không được bỏ thứ gì nằm sau một lớp trong suốt: 5 lớp chồng nhau nghĩa là cùng một</text>
   <text class="note" x="38" y="352">pixel chạy fragment shader 5 lần — trên chip hay không, trên máy rẻ nhất hay card desktop đắt nhất cũng vậy.</text>
-  <text class="note" x="38" y="372">discard / alphaTest cũng không phải early-Z: GPU chỉ biết fragment đã chết sau khi shader chạy xong.</text>
-  <text class="note" x="38" y="388">Đọc một render target đang được vẽ vào buộc phải xả ô sớm — rẻ trên desktop, nghẽn thật trên điện thoại.</text>
+  <text class="note" x="38" y="372">discard / alphaTest cũng không phải early-Z: mọi pixel bị phủ đều chạy shader, và depth chỉ ghi được sau đó.</text>
+  <text class="note" x="38" y="388">Đọc một render target đang được vẽ vào gây nghẽn ở mọi nơi — và trên điện thoại còn buộc phải xả ô sớm.</text>
 
   <text class="foot" x="24" y="426">Three.js sắp danh sách đục bằng painterSortStable — material.id trước, z chỉ để phân định — nên thứ tự gần-tới-xa</text>
   <text class="foot" x="24" y="444">không được bảo đảm. Tự đặt renderOrder cho các object lớn gần camera để early-Z có cái mà loại.</text>

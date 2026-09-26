@@ -15,7 +15,7 @@
   "what it reports": "nó báo cái gì",
   "the lane it reads": "làn nó đọc",
   "renderer.info": "renderer.info",
-  "calls and triangles, reset every frame": "số calls và triangles, reset mỗi khung",
+  "calls and triangles, reset every render()": "số calls và triangles, reset mỗi lần render()",
   "what the CPU issued": "thứ CPU đã phát ra",
   "inline frame-time meter": "đồng hồ thời gian khung tại chỗ",
   "wall-clock ms between rAF ticks": "số ms thực giữa hai nhịp rAF",

@@ -5,10 +5,10 @@ export const exercises: Exercise[] = [
     id: "shadow-pass-call-count",
     kind: "concept",
     prompt: {
-      vi: `Một cảnh có 300 mesh giống hệt nhau (cùng geometry, cùng material), cộng 2 đèn đổ bóng (shadow-casting). Bạn đọc \`renderer.info.render.calls = 900\` ngay sau một frame.
+      vi: `Một cảnh có 300 mesh giống hệt nhau (cùng geometry, cùng material), cộng 2 directional light đổ bóng (shadow-casting); mesh nào cũng \`castShadow = true\` và nằm trong cả hai shadow camera lẫn khung nhìn camera chính. Bạn đọc \`renderer.info.render.calls = 900\` ngay sau một frame.
 
 Giải thích vì sao con số là 900 chứ không phải 300. Sau đó: nếu bạn chuyển 300 mesh đó sang MỘT \`InstancedMesh\` duy nhất (vẫn giữ nguyên 2 đèn đổ bóng), bạn kỳ vọng \`render.calls\` đọc được là bao nhiêu, và vì sao con số đó không phải là 1?`,
-      en: `A scene has 300 identical meshes (same geometry, same material), plus 2 shadow-casting lights. You read \`renderer.info.render.calls = 900\` right after one frame.
+      en: `A scene has 300 identical meshes (same geometry, same material), plus 2 shadow-casting directional lights; every mesh has \`castShadow = true\` and sits inside both shadow cameras and the main camera's view. You read \`renderer.info.render.calls = 900\` right after one frame.
 
 Explain why the number is 900, not 300. Then: if you convert those 300 meshes into a SINGLE \`InstancedMesh\` (keeping the same 2 shadow-casting lights), what do you expect \`render.calls\` to read, and why isn't that number 1?`,
     },
@@ -49,8 +49,8 @@ Converting to a SINGLE \`InstancedMesh\`: it's still ONE object that must be dra
     id: "estimate-draw-calls",
     kind: "code",
     prompt: {
-      vi: `Viết hàm \`estimateDrawCalls(count, technique, shadowLights)\` trả về số draw call ước lượng cho \`count\` object giống hệt nhau, với \`technique\` là \`"individual"\`, \`"merged"\` hoặc \`"instanced"\`, và \`shadowLights\` là số đèn đổ bóng (mỗi đèn thêm một pass). Giả định: mỗi object tham gia mọi pass (1 pass chính + \`shadowLights\` pass shadow).`,
-      en: `Write \`estimateDrawCalls(count, technique, shadowLights)\` returning the estimated draw-call count for \`count\` identical objects, where \`technique\` is \`"individual"\`, \`"merged"\`, or \`"instanced"\`, and \`shadowLights\` is the number of shadow-casting lights (each adding one pass). Assume every object participates in every pass (1 main pass + \`shadowLights\` shadow passes).`,
+      vi: `Viết hàm \`estimateDrawCalls(count, technique, shadowLights)\` trả về số draw call ước lượng cho \`count\` object giống hệt nhau, với \`technique\` là \`"individual"\`, \`"merged"\` hoặc \`"instanced"\`, và \`shadowLights\` là số đèn directional hoặc spot đổ bóng (mỗi đèn thêm một pass — point light sẽ thêm sáu). Giả định: mỗi object tham gia mọi pass (1 pass chính + \`shadowLights\` pass shadow).`,
+      en: `Write \`estimateDrawCalls(count, technique, shadowLights)\` returning the estimated draw-call count for \`count\` identical objects, where \`technique\` is \`"individual"\`, \`"merged"\`, or \`"instanced"\`, and \`shadowLights\` is the number of shadow-casting directional or spot lights (each adding one pass — a point light would add six). Assume every object participates in every pass (1 main pass + \`shadowLights\` shadow passes).`,
     },
     starterCode: `type Technique = "individual" | "merged" | "instanced";
 

@@ -4,7 +4,7 @@ Mỗi lần `renderer.render()` chạy, MỖI mesh riêng biệt cần ít nhấ
 
 ## Đếm draw call cho đúng: renderer.info.render.calls
 
-`gl.info.render.calls` (bài "Công cụ Profiling" trước đó đã giới thiệu) là sự thật duy nhất đáng tin, tự reset mỗi frame. Con số này CÓ THỂ vượt quá số mesh trong scene: mỗi light đổ bóng render lại toàn bộ vật thể đổ bóng từ góc nhìn CỦA NÓ — 50 mesh với 2 shadow-casting light cho ra 150 call (50 pass chính + 50×2 pass shadow), không phải 50. Một material cần nhiều pass GL (một số thiết lập depth-prepass hoặc transparency) cũng nhân thêm. Đọc con số này đúng ngay sau `render()`, đừng kỳ vọng nó khớp 1:1 với `scene.children.length` khi có shadow map trong cảnh.
+`gl.info.render.calls` (bài "Công cụ Profiling" trước đó đã giới thiệu) là sự thật duy nhất đáng tin, tự reset ở đầu mỗi lần gọi `render()`. Con số này CÓ THỂ vượt quá số mesh trong scene: mỗi light đổ bóng render lại các vật đổ bóng nằm trong shadow camera của nó, từ góc nhìn CỦA NÓ — 50 mesh, đều `castShadow` và đều trong khung, dưới 2 directional light đổ bóng cho ra 150 call (50 pass chính + 50×2 pass shadow), không phải 50; point light render sáu mặt cube, mỗi mặt cull theo frustum 90° riêng, nên mỗi vật đổ bóng tốn thêm một call cho mỗi mặt nó nằm trong — tối đa sáu. Một material cần nhiều pass GL (một số thiết lập depth-prepass hoặc transparency) cũng nhân thêm. Đọc con số này đúng ngay sau `render()`, đừng kỳ vọng nó khớp 1:1 với `scene.children.length` khi có shadow map trong cảnh.
 
 <Figure
   src="/figures/12-performance/draw-call-cpu-tax/vi.svg"
@@ -14,7 +14,7 @@ Mỗi lần `renderer.render()` chạy, MỖI mesh riêng biệt cần ít nhấ
 
 ## Bậc thang bậc 1: material dùng chung
 
-Callback bài "Memoizing Geometry & Materials" ở Track 4: dùng lại MỘT instance material cho nhiều mesh giảm số lần `gl.useProgram` phải đổi program (driver phải re-validate state mỗi lần đổi) — nhưng KHÔNG giảm số draw call. Vẫn N mesh, N lần gọi vẽ, vì mỗi mesh vẫn là một node transform riêng. Việc này gần như miễn phí và luôn nên làm, nhưng tự nó không giải quyết thuế draw call — nó dọn đường cho hai bậc kế tiếp, hai bậc THỰC SỰ đưa N lệnh vẽ về một.
+Callback bài "Memoizing Geometry & Materials" ở Track 4: dùng lại MỘT instance material cho nhiều mesh giúp Three khỏi upload lại uniform của material giữa các lần vẽ liên tiếp (nó refresh mỗi khi material đổi) — nhưng KHÔNG giảm số draw call, cũng không giảm số lần đổi program: các material cùng loại và cùng bộ tính năng vốn đã dùng chung một program đã compile. Vẫn N mesh, N lần gọi vẽ, vì mỗi mesh vẫn là một node transform riêng. Việc này gần như miễn phí và luôn nên làm, nhưng tự nó không giải quyết thuế draw call — nó dọn đường cho hai bậc kế tiếp, hai bậc THỰC SỰ đưa N lệnh vẽ về một.
 
 ## Bậc thang bậc 2: gộp tĩnh với BufferGeometryUtils.mergeGeometries
 
@@ -47,7 +47,7 @@ Checkpoint ngay sau đây (Profile & Sửa cảnh chậm) ghép thẳng bài nà
 
 Ba lỗi hay gặp nhất khi giảm draw call:
 
-1. **Dùng chung material rồi kỳ vọng draw call giảm.** Material dùng chung chỉ giảm số lần đổi program — draw call vẫn bằng đúng số mesh, vì mỗi mesh vẫn là một node transform riêng cần một lệnh vẽ riêng.
+1. **Dùng chung material rồi kỳ vọng draw call giảm.** Material dùng chung chỉ bớt việc upload uniform material mỗi lần vẽ — draw call vẫn bằng đúng số mesh, vì mỗi mesh vẫn là một node transform riêng cần một lệnh vẽ riêng.
 2. **Gộp tĩnh (`mergeGeometries`) những object cần di chuyển hoặc ẩn/hiện độc lập.** Transform đã bake cứng vào geometry ngay lúc gộp — muốn di chuyển "một" object trong khối gộp sau đó là bất khả thi trừ khi gộp lại từ đầu mỗi frame, tự triệt tiêu lợi ích ban đầu; cần chuyển động độc lập thì dùng InstancedMesh ngay từ đầu, không dùng merge.
 3. **Coi `render.calls` luôn bằng số mesh trong scene.** Shadow-casting light nhân số pass, khiến con số thực tế cao hơn kỳ vọng — dễ kết luận nhầm "instancing không có tác dụng" khi thực ra main pass đã giảm đúng như mong đợi, phần dư ra là các pass shadow không liên quan tới kỹ thuật vừa áp dụng.
 

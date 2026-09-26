@@ -4,7 +4,7 @@ Tối ưu một cảnh 3D chưa từng đo là đoán mò có căn cứ nghe h�
 
 ## renderer.info: bộ đếm miễn phí, luôn bật
 
-Mọi `THREE.WebGLRenderer` đã có sẵn `renderer.info`, không cần cài gì. `info.render.calls` và `info.render.triangles` đếm đúng việc driver vừa làm trong lệnh `render()` gần nhất — cả hai **tự reset về 0 mỗi frame** (`autoReset` mặc định `true` — xác nhận trong `WebGLInfo.js` của three@0.185.1, hàm `reset()` xoá `calls`/`triangles`/`points`/`lines` ở ĐẦU mỗi lần render). Đọc con số này một lần rồi coi là "tổng" cho cả phiên là sai — phải đọc lại MỖI frame, ngay sau frame đó render xong. Ngược lại, `info.memory.geometries` và `info.memory.textures` **không reset theo frame** — đếm số geometry/texture thực sự sống trên GPU, tăng khi tạo mới, giảm khi gọi đúng `.dispose()`. `info.programs` là mảng shader program đã compile (khởi tạo là mảng RỖNG — constructor gán nó từ cache ngay khi tạo renderer, chỉ đầy lên sau lần render đầu) — độ dài của nó là số program VARIANT đang tồn tại, số sẽ quay lại ở bài "Đứng hình do Compile Shader" sau này. Ba nhóm số này, đọc đúng cách, đã trả lời phần lớn câu hỏi "cảnh này nặng ở đâu" mà chưa cần mở công cụ nào khác.
+Mọi `THREE.WebGLRenderer` đã có sẵn `renderer.info`, không cần cài gì. `info.render.calls` và `info.render.triangles` đếm đúng việc driver vừa làm trong lệnh `render()` gần nhất — cả hai **tự reset về 0 ở đầu mỗi lần gọi `render()`** (`autoReset` mặc định `true` — `WebGLInfo.js` của three@0.185.1). Đọc con số này một lần rồi coi là "tổng" cho cả phiên là sai — đọc lại ngay sau lần render bạn cần, và nếu một frame gọi `render()` nhiều lần (các pass hậu kỳ), đặt `info.autoReset = false` rồi tự gọi `info.reset()` mỗi frame. Ngược lại, `info.memory.geometries` và `info.memory.textures` **không reset theo frame** — đếm số geometry/texture thực sự sống trên GPU, tăng khi upload, giảm khi gọi đúng `.dispose()`. `info.programs` là mảng shader program đã compile (khởi tạo là mảng RỖNG — constructor gán nó từ cache ngay khi tạo renderer, chỉ đầy lên sau lần render đầu) — độ dài của nó là số program VARIANT đang tồn tại, số sẽ quay lại ở bài "Đứng hình do Compile Shader" sau này. Ba nhóm số này, đọc đúng cách, đã trả lời phần lớn câu hỏi "cảnh này nặng ở đâu" mà chưa cần mở công cụ nào khác.
 
 ## FPS meter và frame time: 16.67ms không phải số ma thuật
 
@@ -28,7 +28,7 @@ RenderDoc bắt native API call (OpenGL/Vulkan/D3D thật, không phải WebGL �
 
 ## Case study: bộ đo tự thân của Shaderpath
 
-Nền tảng bạn đang học là ví dụ sống. `lib/hooks/use-visible-frameloop.ts` gắn `data-frames` lên container mỗi lần `requestAnimationFrame` tick — để `tests/e2e/demo-viewport-pause.spec.ts` có con số THẬT để `poll()` thay vì `waitForTimeout` cố định (sleep cố định trong test là đoán mò y hệt tối ưu chưa đo). `components/viz/demo-canvas.tsx` dùng chính hook đó để chỉ gọi `invalidate()` khi container còn trong viewport — canvas cuộn khỏi màn hình dừng tick ngay, đo được bằng đúng `data-frames` đó. Và `scripts/gen-lesson-registry.ts` sinh `DEMO_REGISTRY` để mỗi demo nạp qua `next/dynamic` đúng lúc trang cần — không kéo `three` vào bundle của trang chưa có canvas. Cả ba đều là "đo/kiểm soát trước, tối ưu sau" áp dụng ở tầng hạ tầng.
+Nền tảng bạn đang học là ví dụ sống. `lib/hooks/use-visible-frameloop.ts` gắn `data-frames` lên container mỗi lần `requestAnimationFrame` tick — để `tests/e2e/demo-viewport-pause.spec.ts` có con số THẬT để `poll()` thay vì `waitForTimeout` cố định (sleep cố định trong test là đoán mò y hệt tối ưu chưa đo). `components/viz/demo-canvas.tsx` dùng chính hook đó để chỉ gọi `invalidate()` khi container còn trong viewport — canvas cuộn khỏi màn hình dừng tick ngay, đo được bằng đúng `data-frames` đó. Và `scripts/gen-lesson-registry.ts` sinh `DEMO_REGISTRY` để mỗi demo nạp qua `React.lazy` (trong `LessonDemoHost`) đúng lúc trang cần — không kéo `three` vào bundle của trang chưa có canvas. Cả ba đều là "đo/kiểm soát trước, tối ưu sau" áp dụng ở tầng hạ tầng.
 
 <Figure
   src="/figures/12-performance/frame-timeline-and-where-tools-measure/vi.svg"
@@ -47,7 +47,7 @@ Bài tiếp theo — Draw Call, Batching & Instancing — dùng thẳng `rendere
 Ba lỗi hay gặp nhất khi mới cầm công cụ profiling:
 
 1. **Tin vào FPS trung bình mà không nhìn phương sai.** Một cảnh 59fps trung bình vẫn có thể chứa cú đứng hình 300ms làm người dùng khó chịu — trung bình là thống kê tổng hợp, che mất đúng frame gây khó chịu; phải nhìn chuỗi frame-time theo thời gian, không phải một con số tổng kết.
-2. **Đọc `renderer.info.render.calls` mà quên nó tự reset mỗi frame.** Đọc ở thời điểm sai (giữa hai lần render, hoặc cộng dồn qua nhiều frame tưởng là "tổng") ra giá trị vô nghĩa — phải đọc lại đúng ngay sau MỖI lần `render()`, không cache hay trung bình hoá thủ công.
+2. **Đọc `renderer.info.render.calls` mà quên nó tự reset mỗi lần `render()`.** Đọc ở thời điểm sai (giữa hai lần render, hoặc cộng dồn qua nhiều frame tưởng là "tổng") ra giá trị vô nghĩa — phải đọc lại đúng ngay sau MỖI lần `render()`, không cache hay trung bình hoá thủ công.
 3. **Mặc định "chậm vì đây là 3D nên chắc do GPU".** Phần lớn cảnh WebGL chậm vì lý do CPU — hàng nghìn draw call, hoặc JS tính lại thứ không cần thiết mỗi frame — nhảy thẳng vào tối ưu fragment shader trước khi mở flame chart kiểm tra track Main là lãng phí thời gian ở sai tầng.
 
 </Callout>

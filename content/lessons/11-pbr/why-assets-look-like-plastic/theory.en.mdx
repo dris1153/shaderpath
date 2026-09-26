@@ -41,7 +41,7 @@ The seven causes above aren't independent in some random order — they follow a
 The three most common mistakes in the DIAGNOSTIC PROCESS itself, not in the list of seven causes above:
 
 1. **Changing several parameters at once and concluding "looks less plastic now."** There's no way to isolate which change actually mattered — the next time the same failure shows up on a different scene, the lesson doesn't transfer.
-2. **Fixing detail maps (normal, AO) before fixing lighting.** A flawless normal map stays invisible if the scene has no IBL to reflect into — effort spent on a triage step out of order is nearly wasted.
+2. **Fixing detail maps (normal, AO) before fixing lighting.** Under a couple of direct lights, a flawless normal map shows only where those lights hit it; without IBL there's little for it to reflect — effort spent on a triage step out of order is nearly wasted.
 3. **Believing "looks nicer" means "more physically correct."** Metalness $0.5$ sometimes looks more eye-catching from one specific camera angle, but is entirely wrong physically — it'll show under a different angle or lighting, while the correct fix stays stable across every condition.
 
 </Callout>

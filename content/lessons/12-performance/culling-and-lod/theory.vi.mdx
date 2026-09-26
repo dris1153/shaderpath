@@ -31,7 +31,7 @@ Câu trả lời thực dụng hơn là thiết kế cấp độ (level design) 
 
 ## LOD: chuỗi chi tiết chuyển theo khoảng cách camera
 
-`THREE.LOD` là container quản lý nhiều phiên bản chi tiết của cùng một object. API tối giản — `addLevel(object, distance, hysteresis?)` — thêm một mesh, hiển thị khi khoảng cách từ camera đến LOD $\geq$ `distance` đó (và nhỏ hơn distance level kế tiếp). Cơ chế cập nhật nằm trong vòng lặp render: mỗi frame, nếu `lod.autoUpdate` (mặc định `true`), renderer tự gọi `lod.update(camera)` — tính khoảng cách từ `camera.position` đến `lod.matrixWorld` chia cho `camera.zoom`, bật `visible` đúng một level, tắt các level còn lại.
+`THREE.LOD` là container quản lý nhiều phiên bản chi tiết của cùng một object. API tối giản — `addLevel(object, distance, hysteresis?)` — thêm một mesh, hiển thị khi khoảng cách từ camera đến LOD $\geq$ `distance` đó (và nhỏ hơn distance level kế tiếp). Cơ chế cập nhật nằm trong vòng lặp render: mỗi frame, nếu `lod.autoUpdate` (mặc định `true`), renderer tự gọi `lod.update(camera)` — tính khoảng cách từ vị trí thế giới của camera (lấy từ `camera.matrixWorld`) đến `lod.matrixWorld` chia cho `camera.zoom`, bật `visible` đúng một level, tắt các level còn lại.
 
 ```ts
 const lod = new THREE.LOD();

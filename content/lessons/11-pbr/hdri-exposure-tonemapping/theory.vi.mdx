@@ -34,11 +34,11 @@ Vì $E$ nhân TRƯỚC $f_{tonemap}$, nó dịch chuyển toàn bộ cảnh tớ
 
 ## Tone mapping trên HDRI thật: shoulder khác biệt rõ trên đĩa mặt trời
 
-Bài Track 10 đã nói Reinhard nén theo từng kênh độc lập nên "bạc màu" vùng sáng; trên một đĩa mặt trời cực sáng (preset "sun" ở demo, sáng gấp ~50 lần bầu trời quanh nó), hiệu ứng này lộ rõ nhất: Reinhard làm đĩa mặt trời và vùng trời sát cạnh gần như hoà thành một mảng trắng phẳng lì. ACES và AgX, nhờ shoulder fit riêng cho vùng cực sáng, giữ được viền chuyển êm quanh đĩa mặt trời thay vì cắt cụt đột ngột — đúng lý do cả hai được ưa chuộng cho cảnh có nguồn sáng trực tiếp lọt khung hình.
+Bài Track 10 đã so sánh các đường cong này; một đĩa mặt trời cực sáng (preset "sun" ở demo, sáng gấp ~50 lần bầu trời quanh nó) là nơi khác biệt lộ rõ nhất. Reinhard, $x/(1+x)$, không bao giờ chạm hẳn trắng: ở exposure 1 bầu trời chỉ tới khoảng $0.5$ hoặc thấp hơn, mặt trời quanh $0.98$ — hai vùng vẫn tách nhau, nhưng thiếu toe và shoulder dài, êm khiến vùng trung tính bị ép lại, cả ảnh trông phẳng. ACES và AgX thêm toe và shoulder: vùng trung tính giữ tương phản, còn mặt trời cuộn êm vào một vùng trắng cắt gọn — đúng lý do cả hai được ưa chuộng cho cảnh có nguồn sáng trực tiếp lọt khung hình.
 
 ## Quy trình hiệu chỉnh thực dụng: chủ thể trước, emissive sau, rồi mới grade
 
-Thứ tự thực tế trong production: (1) **expose cho chủ thể** — tưởng tượng đặt một thẻ xám 18% (chuẩn đo sáng nhiếp ảnh) lên vật thể chính, chỉnh exposure để nó rơi vào giữa đường cong, không phải toe hay shoulder; (2) **kiểm tra vật liệu emissive** — vật liệu `toneMapped = false` (bài Bloom Done Right, Track 10) hoàn toàn không bị exposure/tone mapping ảnh hưởng, quên kiểm tra riêng dễ khiến chúng lệch tông so với phần còn lại sau khi exposure đã đổi; (3) **grade sau cùng** — LUT color grading (Track 10) được thiết kế cho ảnh đã tone-map, nên luôn là bước cuối.
+Thứ tự thực tế trong production: (1) **expose cho chủ thể** — tưởng tượng đặt một thẻ xám 18% (chuẩn đo sáng nhiếp ảnh) lên vật thể chính, chỉnh exposure để nó rơi vào giữa đường cong, không phải toe hay shoulder; (2) **kiểm tra vật liệu emissive** — khi renderer tự tone-map (không có composer, như demo này), vật liệu `toneMapped = false` (bài Bloom Done Right, Track 10) hoàn toàn không bị exposure/tone mapping ảnh hưởng (sau một `OutputPass` thì cờ này vô tác dụng), quên kiểm tra riêng dễ khiến chúng lệch tông so với phần còn lại sau khi exposure đã đổi; (3) **grade sau cùng** — LUT color grading (Track 10) được thiết kế cho ảnh đã tone-map, nên luôn là bước cuối.
 
 ## Polyhaven: nguồn HDRI thật, miễn phí và CC0
 
@@ -52,6 +52,6 @@ Ba lỗi hay gặp nhất với exposure và tone mapping trên HDRI:
 
 1. **Nhầm exposure với tăng cường độ đèn/emissive.** Exposure là một số nhân ĐỀU áp lên toàn cảnh trước tone map; tăng `intensity` của một đèn cụ thể lại thay đổi tỉ lệ tương đối giữa các nguồn sáng (đèn đó sáng hơn HẲN so với các đèn khác) — hai thao tác trông có vẻ "làm sáng cảnh" nhưng cho kết quả hoàn toàn khác nhau về contrast và bóng đổ.
 2. **Vặn brightness hậu kỳ để "cứu" một cảnh phơi sáng sai thay vì sửa exposure.** Dữ liệu hậu kỳ đã nằm trong $[0,1]$ và đã bị nén theo đường cong tone map — nhân thêm chỉ đẩy pixel đã gần 1.0 chạm biên và cắt cụt, không tái định vị được gì trên đường cong như exposure thật sự làm.
-3. **Quên vật liệu `toneMapped = false` không phản ứng với exposure/tone mapping.** Sau khi chỉnh exposure cho toàn cảnh, các vật liệu emissive dùng cờ này (đèn neon, marker UI...) vẫn giữ nguyên độ sáng cũ — dễ nhầm là bug render, thực chất là quên bước (2) trong quy trình hiệu chỉnh ở trên.
+3. **Quên vật liệu `toneMapped = false` không phản ứng với exposure/tone mapping (khi render thẳng ra canvas).** Sau khi chỉnh exposure cho toàn cảnh, các vật liệu emissive dùng cờ này (đèn neon, marker UI...) vẫn giữ nguyên độ sáng cũ — dễ nhầm là bug render, thực chất là quên bước (2) trong quy trình hiệu chỉnh ở trên.
 
 </Callout>

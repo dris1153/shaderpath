@@ -31,7 +31,7 @@ The far more practical answer is level design combined with manual zone culling:
 
 ## LOD: a Detail Chain That Swaps by Camera Distance
 
-`THREE.LOD` is a container managing several detail versions of the same object. The API is minimal — `addLevel(object, distance, hysteresis?)` — adds a mesh, shown when the camera-to-LOD distance is $\geq$ that `distance` (and less than the next level's). The update mechanism lives in the render loop: every frame, if `lod.autoUpdate` (default `true`), the renderer calls `lod.update(camera)` itself — distance from `camera.position` to `lod.matrixWorld`, divided by `camera.zoom`, turning `visible` on for exactly one level and off for the rest.
+`THREE.LOD` is a container managing several detail versions of the same object. The API is minimal — `addLevel(object, distance, hysteresis?)` — adds a mesh, shown when the camera-to-LOD distance is $\geq$ that `distance` (and less than the next level's). The update mechanism lives in the render loop: every frame, if `lod.autoUpdate` (default `true`), the renderer calls `lod.update(camera)` itself — distance from the camera's world position (from `camera.matrixWorld`) to `lod.matrixWorld`, divided by `camera.zoom`, turning `visible` on for exactly one level and off for the rest.
 
 ```ts
 const lod = new THREE.LOD();

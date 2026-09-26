@@ -23,7 +23,7 @@ float schlickFresnel(float F0, float cosTheta) {
 }
 ```
 
-Vì sao luỹ thừa 5, không phải 2 hay 3? Đây là một phép **fit đường cong** — Schlick chọn số mũ khớp gần nhất hình dạng Fresnel thật của điện môi. Luỹ thừa thấp tăng quá chậm: ở $70°$–$85°$, nơi phản xạ thật đã dựng gần thẳng đứng, luỹ thừa 2 vẫn thấp hơn đáng kể, làm gương ở góc xiên yếu đi. Luỹ thừa 5 bám sát đường cong thật trong dải góc thực tế, sai số dưới ~1% — đủ để Filament, learnopengl.com và gần mọi shader PBR coi 5 là mặc định không bàn cãi.
+Vì sao luỹ thừa 5, không phải 2 hay 3? Đây là một phép **fit đường cong** — Schlick chọn số mũ khớp gần nhất hình dạng Fresnel thật của điện môi. Vì $1-\cos\theta$ nằm trong $[0,1]$, luỹ thừa càng thấp cho giá trị càng LỚN ở mọi góc: luỹ thừa 2 đã lên $F \approx 0.28$ ở $60°$ và $\approx 0.70$ ở $80°$, trong khi đường chính xác với $n = 1.5$ chỉ $\approx 0.09$ và $\approx 0.39$ — mọi bề mặt sẽ bóng loáng ngay ở góc nhìn bình thường. Luỹ thừa 5 giữ $F$ sát $F_0$ tới gần góc xiên rồi mới vọt lên 1 ở $90°$, lệch đường chính xác không quá khoảng $0.04$ — đủ để Filament, learnopengl.com và gần mọi shader PBR coi 5 là mặc định không bàn cãi.
 
 <Playground source={"void main() {\n  vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;\n  uv.x *= uResolution.x / uResolution.y;\n\n  float r = 0.65;\n  float d = length(uv);\n  if (d > r) {\n    fragColor = vec4(0.05, 0.06, 0.1, 1.0);\n    return;\n  }\n\n  // Fake pháp tuyến hình cầu nhìn thẳng diện (orthographic front view)\n  vec2 p = uv / r;\n  float z = sqrt(max(0.0, 1.0 - dot(p, p)));\n  vec3 N = vec3(p, z);\n  vec3 V = vec3(0.0, 0.0, 1.0);\n  float cosTheta = max(dot(N, V), 0.0);\n\n  float F0 = 0.04;\n  float F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);\n\n  vec3 base = vec3(0.12, 0.22, 0.5);\n  vec3 rim = vec3(1.0, 0.98, 0.9);\n  vec3 color = mix(base, rim, F);\n\n  fragColor = vec4(color, 1.0);\n}"} />
 
@@ -82,7 +82,7 @@ Bài này dừng ở $F(\theta)$ như một con số (hay RGB) cho toàn bề m�
 Ba lỗi hay gặp nhất với Fresnel và Schlick:
 
 1. **Coi $F_0=0.04$ là hằng số dùng được cho mọi vật liệu, kể cả kim loại.** $F_0$ kim loại nằm trong $0.5$–$1.0$ và có màu; gán $0.04$ cho quả cầu lẽ ra là vàng khiến nó phản xạ như nhựa xỉn, mất hẳn ánh kim.
-2. **Quên `clamp`/`max` $\cos\theta$ trước khi đưa vào `pow`.** Ở rìa silhouette hoặc pháp tuyến nội suy trên mesh ít vertex, `dot(N,V)` có thể âm nhẹ; `pow()` cơ số âm cho kết quả không xác định theo GLSL spec, gây artifact chớp đen/NaN đúng ở viền — dòng `clamp` trong `schlickFresnel` tồn tại vì lý do này.
+2. **Quên `clamp`/`max` $\cos\theta$ trước khi đưa vào `pow`.** Ở rìa silhouette hoặc pháp tuyến nội suy trên mesh ít vertex, `dot(N,V)` có thể hơi âm, đẩy `1.0 - cosTheta` vượt 1 nên Schlick trả về $F > 1$ — viền sáng quá mức; vector chưa chuẩn hoá lại có thể đẩy $\cos\theta$ vượt 1, làm cơ số âm, mà `pow()` cơ số âm là không xác định theo GLSL spec. Dòng `clamp` trong `schlickFresnel` chặn cả hai.
 3. **Gán $F$ một hằng số cố định (bỏ qua $\theta$) mà vẫn tưởng đó là "Fresnel".** $F_0$ nhỏ (nước, $0.02$) không có nghĩa bề mặt luôn phản xạ yếu — ở góc xiên $F$ vẫn tiến gần 1. Tắt số hạng góc (công tắc "Schlick vs hằng số" trong demo) làm mặt nước ở góc quay thấp mất hẳn độ loé gương đặc trưng.
 
 </Callout>

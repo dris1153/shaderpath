@@ -37,8 +37,8 @@ A rare upside: MSAA is nearly free on tile GPUs, since every sample already live
 ## Three Practical Ways to Cut Overdraw
 
 1. **Sort opaque front-to-back.** If your engine doesn't do this thoroughly (Three.js only uses `z` as a tiebreaker AFTER `material.id`), set `renderOrder` yourself on large, near-camera objects so they draw first, giving early-Z/HSR more fragments behind them to reject.
-2. **Trim transparent quad area.** A particle system using a $96\times96$px quad for a $20$px visible circle costs roughly $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ more shaded fragment area than a quad fitted to the content — every "wasted" transparent pixel still runs the shader and blends, even at zero final alpha.
-3. **Weigh the alphaTest/discard tradeoff.** `discard` to fake "opaque" sounds appealing but has a real cost: the GPU can't know a fragment will be discarded until AFTER the shader has already run, so early-Z/HSR can't reject it ahead of shading. Still cheaper than true alpha blending, but not as cheap as real opaque geometry.
+2. **Trim transparent quad area.** A particle system using a $96\times96$px quad for a $20$px visible circle costs roughly $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ more shaded fragment area than a $24$px quad fitted to it (the circle plus a little padding) — every "wasted" transparent pixel still runs the shader and blends, even at zero final alpha.
+3. **Weigh the alphaTest/discard tradeoff.** `discard` to fake "opaque" is cheaper than true alpha blending, but not as cheap as real opaque geometry — mistake 1 below explains why.
 
 ## Connecting Back to Track 10, and What's Next
 
@@ -48,8 +48,8 @@ Track 10 already covered how a postprocessing chain's fillrate grows with pass c
 
 Three of the most common mistakes when reasoning about mobile overdraw:
 
-1. **Treating `discard`/alphaTest as equivalent to real early-Z.** The GPU only learns a fragment is "dead" AFTER the shader has already run to the discard instruction — hidden-surface removal can't reject it ahead of shading the way it does for true opaque geometry, so `discard` saves write/blend bandwidth but not shader execution cost.
+1. **Treating `discard`/alphaTest as equivalent to real early-Z.** The GPU only learns a fragment is "dead" AFTER its shader runs, so every covered pixel is shaded anyway, and the surface can't occlude anything early the way true opaque geometry does — `discard` saves the color write/blend, not shader execution cost.
 2. **Assuming Three.js always draws opaque objects in strict front-to-back order.** `painterSortStable` groups by `material.id` FIRST, with `z` only as a tiebreaker — a scene with hundreds of meshes sharing one material but sitting at very different depths gets no guaranteed front-to-back order; set `renderOrder` yourself when it actually matters.
-3. **Calling `readPixels`/reading a render target mid-frame and testing only on desktop.** Desktop devtools show nothing unusual because immediate-mode has no concept of a "tile flush" — but on mobile this forces an early tile resolve and a real GPU stall that only a genuine mobile profiler (or CPU/GPU throttling in Chrome DevTools) will reveal.
+3. **Calling `readPixels`/reading a render target mid-frame and testing only on desktop.** On desktop a synchronous read costs a CPU–GPU sync (a long `readPixels` slice on the main thread), but nothing more; on mobile it also forces an early tile resolve, a far bigger stall that no desktop tool reproduces — Chrome DevTools only throttles CPU and network. Profile it on a real device with the GPU vendor's tools (Arm Performance Studio, formerly Mobile Studio, for Mali, Snapdragon Profiler for Adreno).
 
 </Callout>

@@ -95,6 +95,6 @@
   <text class="note" x="306" y="354">chỉ bẻ pháp tuyến tô bóng — đường viền của mesh</text>
   <text class="note" x="306" y="372">không hề thay đổi</text>
 
-  <text class="note" x="24" y="410">Một object THREE.Texture cho cả ba khe ORM: một lần bind, ba vai — three chỉ đọc đúng kênh nó cần.</text>
+  <text class="note" x="24" y="410">Một object THREE.Texture cho cả ba khe ORM: một lần upload, ba vai — three chỉ đọc đúng kênh nó cần.</text>
   <text class="note" x="24" y="428">Chính các phép *= đó là lý do material.roughness và .metalness phải để bằng 1 khi có map điều khiển.</text>
 </svg>

@@ -95,6 +95,6 @@
   <text class="note" x="306" y="354">bends the shading normal only — the silhouette of the</text>
   <text class="note" x="306" y="372">mesh never changes</text>
 
-  <text class="note" x="24" y="410">One THREE.Texture object in all three ORM slots: one bind, three roles — three only reads the channel it needs.</text>
+  <text class="note" x="24" y="410">One THREE.Texture object in all three ORM slots: one upload, three roles — three only reads the channel it needs.</text>
   <text class="note" x="24" y="428">Those *= multiplies are why material.roughness and .metalness must sit at 1 while a map drives them.</text>
 </svg>

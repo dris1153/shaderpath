@@ -39,7 +39,7 @@ with a small $\alpha$ (say $0.1$) to smooth out single-frame noise. If `ema` sta
 
 ## R3F: The Real Levers That Enforce a Tier
 
-Three places in R3F directly enforce a config: the `dpr` prop on `<Canvas>` (accepts a number or a `[min, max]` range — exactly where medium tier's "DPR capped at 1.5" becomes real); conditionally mounting heavy effect components (don't just set `enabled={false}` if the component still pays the cost of building its tree/uniforms while disabled — drop it entirely from the JSX tree if the tier doesn't need it); and a particle-count prop passed straight into the component that generates instances, not a fixed-size array with some instances hidden via `visible={false}` (a hidden mesh costs no draw call — `projectObject` skips it — but its oversized buffers still sit in VRAM).
+Three places in R3F directly enforce a config: the `dpr` prop on `<Canvas>` (accepts a number or a `[min, max]` range — exactly where medium tier's "DPR capped at 1.5" becomes real); conditionally mounting heavy effect components (don't just set `enabled={false}` if the component still pays the cost of building its tree/uniforms while disabled — drop it entirely from the JSX tree if the tier doesn't need it); and a particle-count prop passed straight into the component that generates instances, not a fixed-size array with some instances hidden via `visible={false}` (a hidden mesh costs no draw call — `projectObject` skips it — but its oversized buffers stay allocated — in JS memory, and in VRAM too once they've been drawn).
 
 ## Respecting the User's Manual Choice
 
@@ -51,6 +51,6 @@ Three of the most common mistakes when building adaptive quality:
 
 1. **Letting the watchdog switch tiers after a SINGLE bad frame-time sample.** One stutter from garbage collection or an asset still loading doesn't reflect the device's real performance — without hysteresis the tier bounces up and down constantly, which is a worse experience than just staying on a slightly-too-low tier the whole time.
 2. **Trusting `navigator.deviceMemory`/the GPU debug string as absolute, forgetting they can be missing or blurred.** Code that hard-depends on these APIs with no fallback (say, defaulting to medium when the API returns `undefined`) will crash or pick the wrong tier on exactly the browsers that respect user privacy the most.
-3. **Keeping everything at the high tier and just hiding it with `visible={false}` instead of not building it at all.** A hidden mesh costs no draw call — the renderer's `projectObject` returns as soon as `visible === false`, skipping the whole subtree (exactly as the culling lesson taught) — but all of its geometry/textures still occupy VRAM, and the React tree still pays reconciliation — a low tier has to mean that component doesn't exist in the React tree at all, not "exists but invisible."
+3. **Keeping everything at the high tier and just hiding it with `visible={false}` instead of not building it at all.** A hidden mesh costs no draw call — the renderer's `projectObject` returns as soon as `visible === false`, skipping the whole subtree — but all of its geometry/textures stay allocated (in VRAM too, if they were ever drawn before being hidden), and the React tree still pays reconciliation — a low tier has to mean that component doesn't exist in the React tree at all, not "exists but invisible."
 
 </Callout>

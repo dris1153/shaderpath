@@ -1,6 +1,6 @@
 ## Bí ẩn cái giật hình giữa cảnh
 
-Scene đã chạy mượt được vài giây, camera vẫn đứng yên, rồi đột nhiên một khung hình treo cứng vài chục đến vài trăm mili-giây (ước lượng, tuỳ thiết bị) ngay khi một vật mới xuất hiện — một particle mới, một LOD chuyển mức, một material vừa bật thêm một tính năng. Không phải lỗi logic, không phải garbage collector: WebGL compile và link một chương trình shader hoàn toàn lười biếng, đúng vào lần đầu tiên chương trình đó cần vẽ một thứ gì đó, không phải lúc gọi `new THREE.ShaderMaterial()` hay `new THREE.MeshStandardMaterial()`. Đọc thẳng mã nguồn `WebGLRenderer.js`: hàm `getProgram()` chỉ được gọi từ bên trong đường render, khi `needsProgramChange` bật lên `true` cho vật sắp được vẽ — nghĩa là chi phí compile luôn rơi đúng vào khung hình đang render, trên đúng luồng chính đang vẽ mọi thứ khác.
+Scene đã chạy mượt được vài giây, camera vẫn đứng yên, rồi đột nhiên một khung hình treo cứng vài chục đến vài trăm mili-giây (ước lượng, tuỳ thiết bị) ngay khi một vật mới xuất hiện — một particle mới, một LOD chuyển mức, một material vừa bật thêm một tính năng. Không phải lỗi logic, không phải garbage collector: Three compile và link một chương trình shader một cách lười biếng, đúng vào lần đầu tiên chương trình đó cần vẽ một thứ gì đó, không phải lúc gọi `new THREE.ShaderMaterial()` hay `new THREE.MeshStandardMaterial()`. Đọc thẳng mã nguồn `WebGLRenderer.js`: hàm `getProgram()` chỉ được gọi từ đường render, khi `needsProgramChange` bật lên `true` cho vật sắp được vẽ (hoặc từ `renderer.compile()`, xem bên dưới) — nghĩa là chi phí compile luôn rơi đúng vào khung hình đang render, trên đúng luồng chính đang vẽ mọi thứ khác.
 
 ## Vì sao "cùng một material" đôi khi vẫn compile hai lần
 
@@ -18,7 +18,7 @@ Mỗi tính năng độc lập nhân số biến thể lên, không cộng: bậ
 
 ## Pre-warm bằng renderer.compile(): kiểm soát THỜI ĐIỂM, không xoá chi phí
 
-`renderer.compile(scene, camera)` (đọc thẳng `WebGLRenderer.js`) `traverse` toàn bộ `scene`, gọi `prepareMaterial()` cho mọi material tìm thấy — bên trong, `prepareMaterial` gọi thẳng `getProgram()`, ép Three biên dịch và link ngay tại chỗ, đồng bộ, trong đúng lệnh gọi này. Điều đó nghĩa là `compile()` không làm chi phí compile biến mất — nó chỉ chuyển chi phí sang một thời điểm do bạn chọn, thường là ngay sau khi asset tải xong nhưng trước khi hiện scene, đứng sau một loading screen. Gọi `compile()` giữa lúc người dùng đang tương tác vẫn gây đúng cái giật hình đang cố tránh — chỉ là compile nhiều biến thể cùng lúc thay vì một, đôi khi còn tệ hơn.
+`renderer.compile(scene, camera)` (đọc thẳng `WebGLRenderer.js`) `traverse` toàn bộ `scene`, gọi `prepareMaterial()` cho mọi material tìm thấy — bên trong, `prepareMaterial` gọi thẳng `getProgram()`, phát lệnh compile và link ngay tại chỗ, trong đúng lệnh gọi này — driver có thể làm nốt ở nền, còn Three đọc kết quả (trạng thái link, vị trí uniform) ở lần vẽ đầu, nên hãy gọi đủ sớm để việc đó kịp xong. Điều đó nghĩa là `compile()` không làm chi phí compile biến mất — nó chỉ chuyển chi phí sang một thời điểm do bạn chọn, thường là ngay sau khi asset tải xong nhưng trước khi hiện scene, đứng sau một loading screen. Gọi `compile()` giữa lúc người dùng đang tương tác vẫn gây đúng cái giật hình đang cố tránh — chỉ là compile nhiều biến thể cùng lúc thay vì một, đôi khi còn tệ hơn.
 
 ## compileAsync và KHR_parallel_shader_compile: đường không chặn
 
@@ -26,7 +26,7 @@ Mỗi tính năng độc lập nhân số biến thể lên, không cộng: bậ
 
 ## Giảm biến thể: kỷ luật tại nguồn
 
-Cách rẻ nhất để giảm số lần compile không phải pre-warm — là đừng tạo ra biến thể ngay từ đầu. Một mẹo cụ thể: thay vì bật/tắt `material.map = texture` rồi `material.map = null` (mỗi lần đổi giữa null/có-texture đổi luôn define `USE_MAP`, ép compile lại), gán một texture trắng $1\times1$ cố định khi "tắt" — `map` luôn tồn tại, define không đổi, không compile mới nào xảy ra, chỉ đổi nội dung pixel được sample. Track 6 đã dạy nửa còn lại của kỷ luật này: nếu buộc phải rẽ nhánh trong `onBeforeCompile` theo một biến runtime, phải tự set `customProgramCacheKey` — nếu không, `.toString()` mặc định của Three không phân biệt được hai closure cùng văn bản hàm, và hai biến thể tưởng khác nhau lại bị dùng chung một chương trình.
+Cách rẻ nhất để giảm số lần compile không phải pre-warm — là đừng tạo ra biến thể ngay từ đầu. Một mẹo cụ thể: thay vì bật/tắt `material.map = texture` rồi `material.map = null` (null và có-texture khác nhau ở define `USE_MAP` — hai chương trình, mỗi cái compile lần đầu được vẽ, và thay đổi chỉ được nhận sau `material.needsUpdate = true`), gán một texture trắng $1\times1$ cố định khi "tắt" — `map` luôn tồn tại, define không đổi, không compile mới nào xảy ra, chỉ đổi nội dung pixel được sample. Track 6 đã dạy nửa còn lại của kỷ luật này: nếu buộc phải rẽ nhánh trong `onBeforeCompile` theo một biến runtime, phải tự set `customProgramCacheKey` — nếu không, `.toString()` mặc định của Three không phân biệt được hai closure cùng văn bản hàm, và hai biến thể tưởng khác nhau lại bị dùng chung một chương trình.
 
 ## Đo: frame đầu tiên so với steady-state
 
@@ -40,8 +40,8 @@ Bài tiếp theo, `asset-pipeline-draco-ktx2`, rời khỏi thời gian compile 
 
 Ba lỗi hay gặp nhất khi xử lý shader compilation stall:
 
-1. **Gọi `renderer.compile()` ngay lúc người dùng tương tác** (ví dụ trong callback thêm object) thay vì trước khi hiện scene — vẫn đúng một chi phí compile đồng bộ, chỉ đổi chỗ giật hình từ "lúc thêm object" sang "lúc gọi compile", không hề biến mất.
-2. **Toggle `material.map` giữa `null` và một texture để bật/tắt hiệu ứng.** Mỗi lần đổi qua lại đổi define `USE_MAP`, buộc Three compile lại chương trình mỗi lần bấm, dù trông như chỉ đổi một thuộc tính runtime.
+1. **Gọi `renderer.compile()` ngay lúc người dùng tương tác** (ví dụ trong callback thêm object) thay vì trước khi hiện scene — vẫn đúng một chi phí compile đó, chỉ đổi chỗ giật hình từ "lúc thêm object" sang "lúc gọi compile" — và vẽ ngay sau đó vẫn phải chờ nó; không hề biến mất.
+2. **Toggle `material.map` giữa `null` và một texture để bật/tắt hiệu ứng.** `null` và có texture là hai chương trình khác nhau (define `USE_MAP`), nên lần đầu chuyển sang trạng thái chưa từng vẽ sẽ compile chương trình của nó ngay giữa lúc tương tác — còn thiếu `material.needsUpdate = true` thì chẳng có gì thay đổi, vì Three không hề kiểm tra `map` đã thành `null` hay chưa.
 3. **Tin rằng `compileAsync()` luôn không chặn.** Nếu trình duyệt/driver không hỗ trợ `KHR_parallel_shader_compile`, nó lặng lẽ quay về hành vi đồng bộ của `compile()`, không có cảnh báo nào báo hiệu điều đó.
 
 </Callout>

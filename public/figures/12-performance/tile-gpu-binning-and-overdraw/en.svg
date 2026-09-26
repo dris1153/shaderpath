@@ -88,8 +88,8 @@
   <text class="col ink-cost" x="38" y="314">WHAT TRANSPARENCY ESCAPES</text>
   <text class="note" x="38" y="336">Blending is order-dependent, so nothing behind a transparent layer may be dropped: 5 stacked layers means the same</text>
   <text class="note" x="38" y="352">pixel runs its fragment shader 5 times — on-chip or not, on the cheapest phone or the most expensive desktop card.</text>
-  <text class="note" x="38" y="372">discard / alphaTest is not early-Z either: the GPU only learns the fragment is dead after the shader has already run.</text>
-  <text class="note" x="38" y="388">Reading a render target still being drawn into forces an early tile flush — cheap on desktop, a real stall on a phone.</text>
+  <text class="note" x="38" y="372">discard / alphaTest is not early-Z either: every covered pixel runs the shader, and its depth only lands after that.</text>
+  <text class="note" x="38" y="388">Reading a render target still being drawn into stalls anywhere — and on a phone it also forces an early tile flush.</text>
 
   <text class="foot" x="24" y="426">Three.js sorts the opaque list with painterSortStable — material.id first, z only as a tiebreaker — so front-to-back</text>
   <text class="foot" x="24" y="444">is not guaranteed. Set renderOrder yourself on large near-camera objects to give early-Z something to reject.</text>

@@ -79,7 +79,7 @@
   <text class="note" x="500" y="252">the lane it reads</text>
 
   <text class="row" x="24" y="276">renderer.info</text>
-  <text class="note" x="250" y="276">calls and triangles, reset every frame</text>
+  <text class="note" x="250" y="276">calls and triangles, reset every render()</text>
   <text class="note" x="500" y="276">what the CPU issued</text>
 
   <text class="row" x="24" y="298">inline frame-time meter</text>

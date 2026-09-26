@@ -79,7 +79,7 @@
   <text class="note" x="500" y="252">làn nó đọc</text>
 
   <text class="row" x="24" y="276">renderer.info</text>
-  <text class="note" x="250" y="276">số calls và triangles, reset mỗi khung</text>
+  <text class="note" x="250" y="276">số calls và triangles, reset mỗi lần render()</text>
   <text class="note" x="500" y="276">thứ CPU đã phát ra</text>
 
   <text class="row" x="24" y="298">đồng hồ thời gian khung tại chỗ</text>

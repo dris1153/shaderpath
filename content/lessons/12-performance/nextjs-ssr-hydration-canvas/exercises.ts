@@ -26,8 +26,8 @@ Snippet C — inside a \`useEffect\`: \`useEffect(() => { const ctx = canvasRef.
         en: "Module scope runs the instant the module is imported — on both server and client, before any component even renders.",
       },
       {
-        vi: "useEffect (kể cả useLayoutEffect) không BAO GIỜ chạy trong lúc React render trên server — nó chỉ được LÊN LỊCH, và lịch đó chỉ thực thi trên trình duyệt sau khi hydrate.",
-        en: "useEffect (including useLayoutEffect) NEVER runs during React's server render — it only gets SCHEDULED, and that schedule only executes in the browser after hydration.",
+        vi: "useEffect (kể cả useLayoutEffect) không BAO GIỜ chạy trong lúc React render trên server — server bỏ qua nó, chỉ trình duyệt chạy nó, sau khi hydrate.",
+        en: "useEffect (including useLayoutEffect) NEVER runs during React's server render — the server skips it, and only the browser runs it, after hydration.",
       },
     ],
     checklist: [
@@ -36,8 +36,8 @@ Snippet C — inside a \`useEffect\`: \`useEffect(() => { const ctx = canvasRef.
         en: "I correctly identified: Snippet A crashes the server (window doesn't exist at module scope on Node.js)",
       },
       {
-        vi: "Tôi xác định đúng: Đoạn B chỉ cảnh báo dev console — effect không chạy trên server, không có gì sập, nhưng React log warning vì component có useLayoutEffect bị SSR",
-        en: "I correctly identified: Snippet B only logs a dev-console warning — the effect doesn't run on the server, nothing crashes, but React logs a warning because the component using useLayoutEffect got SSR'd",
+        vi: "Tôi xác định đúng: Đoạn B hoàn toàn ổn với React 19 — effect không chạy trên server (no-op im lặng, không cảnh báo) và chạy trên client sau khi hydrate; chỉ React 18 trở về trước mới log cảnh báo",
+        en: "I correctly identified: Snippet B is completely fine in React 19 — the effect doesn't run on the server (a silent no-op there, no warning) and runs on the client after hydration; only React 18 and earlier logged a warning",
       },
       {
         vi: "Tôi xác định đúng: Đoạn C hoàn toàn ổn — nằm trong effect nên chỉ chạy trên client, không đụng gì lúc server render",
@@ -47,12 +47,12 @@ Snippet C — inside a \`useEffect\`: \`useEffect(() => { const ctx = canvasRef.
     solutionNote: {
       vi: `A: SẬP SERVER. \`const MAX_DPR = window.devicePixelRatio\` chạy ngay khi module được import — Node.js không có \`window\`, nên đây là \`ReferenceError: window is not defined\` ngay tại thời điểm import, trước khi component kịp render dòng nào. Sửa: đọc \`devicePixelRatio\` bên trong effect/callback, không phải module scope.
 
-B: CHỈ CẢNH BÁO. \`useLayoutEffect\` không chạy trong lúc server render — React chỉ ghi lịch nó cho lần chạy trên client. Component vẫn render ra HTML bình thường, KHÔNG sập, nhưng React in cảnh báo dev "useLayoutEffect does nothing on the server" vì phát hiện component này bị đưa vào cây SSR. (Cách R3F tự tránh cảnh báo này: dùng \`useIsomorphicLayoutEffect\`, tự chọn \`useEffect\` trên server, \`useLayoutEffect\` trên client.)
+B: HOÀN TOÀN ỔN (với React 19). \`useLayoutEffect\` không chạy trong lúc server render — renderer phía server của React 19 coi nó là no-op im lặng, nên component vẫn render HTML bình thường, không sập, không log gì; effect chạy trên client sau khi hydrate. Cảnh báo "useLayoutEffect does nothing on the server" mà bạn có thể còn nhớ là của React 18 trở về trước — lý do các thư viện như R3F vẫn giữ helper \`useIsomorphicLayoutEffect\` (\`useEffect\` trên server, \`useLayoutEffect\` trên client).
 
 C: HOÀN TOÀN ỔN. Toàn bộ thân effect chỉ chạy sau khi component đã mount thật trên trình duyệt (post-hydration) — không bao giờ chạy trong lúc React render trên Node.js, dù nội dung bên trong đụng WebGL trực tiếp.`,
       en: `A: CRASHES THE SERVER. \`const MAX_DPR = window.devicePixelRatio\` runs the instant the module is imported — Node.js has no \`window\`, so this throws \`ReferenceError: window is not defined\` right at import time, before the component even gets to render a single line. Fix: read \`devicePixelRatio\` inside an effect/callback, not at module scope.
 
-B: ONLY A WARNING. \`useLayoutEffect\` doesn't run during server rendering — React only schedules it for the client run. The component still renders normal HTML, it does NOT crash, but React logs a dev warning "useLayoutEffect does nothing on the server" because it detects this component being included in the SSR tree. (How R3F avoids this warning itself: \`useIsomorphicLayoutEffect\`, which picks \`useEffect\` on the server and \`useLayoutEffect\` on the client.)
+B: COMPLETELY FINE (in React 19). \`useLayoutEffect\` doesn't run during server rendering — React 19's server renderer treats it as a silent no-op, so the component renders normal HTML, nothing crashes, and nothing is logged; the effect runs on the client after hydration. The "useLayoutEffect does nothing on the server" warning you may remember came from React 18 and earlier — the reason libraries like R3F still carry a \`useIsomorphicLayoutEffect\` helper (\`useEffect\` on the server, \`useLayoutEffect\` on the client).
 
 C: COMPLETELY FINE. The entire effect body only runs after the component has actually mounted in the browser (post-hydration) — it never runs during React's render on Node.js, even though its contents touch WebGL directly.`,
     },

@@ -23,7 +23,7 @@ float schlickFresnel(float F0, float cosTheta) {
 }
 ```
 
-Why exactly 5, not 2 or 3? It's a **curve fit** — Schlick picked the exponent that best matches the real Fresnel curve for dielectrics. Lower powers climb too slowly: around $70°$–$85°$, where the real curve has already swung up close to 1, a power-2 approximation still sits noticeably lower, visibly weakening the grazing mirror effect. Power 5 tracks the real curve closely across the practically observed angle range, within roughly 1% — accurate enough that Filament, learnopengl.com, and essentially every PBR shader treat 5 as the unquestioned default.
+Why exactly 5, not 2 or 3? It's a **curve fit** — Schlick picked the exponent that best matches the real Fresnel curve for dielectrics. Since $1-\cos\theta$ lies in $[0,1]$, a lower power gives a LARGER value at every angle: power 2 already reaches $F \approx 0.28$ at $60°$ and $\approx 0.70$ at $80°$, where the exact curve for $n = 1.5$ is only $\approx 0.09$ and $\approx 0.39$ — every surface would look glossy at ordinary angles. Power 5 keeps $F$ near $F_0$ until close to grazing, then rises steeply to 1 at $90°$, staying within about $0.04$ of the exact curve — accurate enough that Filament, learnopengl.com, and essentially every PBR shader treat 5 as the unquestioned default.
 
 <Playground source={"void main() {\n  vec2 uv = (gl_FragCoord.xy / uResolution) * 2.0 - 1.0;\n  uv.x *= uResolution.x / uResolution.y;\n\n  float r = 0.65;\n  float d = length(uv);\n  if (d > r) {\n    fragColor = vec4(0.05, 0.06, 0.1, 1.0);\n    return;\n  }\n\n  // Fake sphere normal from a 2D disc position (orthographic front view)\n  vec2 p = uv / r;\n  float z = sqrt(max(0.0, 1.0 - dot(p, p)));\n  vec3 N = vec3(p, z);\n  vec3 V = vec3(0.0, 0.0, 1.0);\n  float cosTheta = max(dot(N, V), 0.0);\n\n  float F0 = 0.04;\n  float F = F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);\n\n  vec3 base = vec3(0.12, 0.22, 0.5);\n  vec3 rim = vec3(1.0, 0.98, 0.9);\n  vec3 color = mix(base, rim, F);\n\n  fragColor = vec4(color, 1.0);\n}"} />
 
@@ -82,7 +82,7 @@ This lesson treats $F(\theta)$ as a number (or RGB triplet) for a whole surface.
 The three most common Fresnel/Schlick mistakes:
 
 1. **Treating $F_0=0.04$ as universal, including for metals.** Metal $F_0$ sits in $0.5$–$1.0$ and is colored; assigning $0.04$ to a sphere meant to be gold makes it reflect like dull plastic.
-2. **Forgetting to `clamp`/`max` $\cos\theta$ before `pow`.** At silhouette edges or with interpolated normals on low-poly meshes, `dot(N, V)` can go slightly negative; `pow()` with a negative base is undefined per the GLSL spec, producing flickering black artifacts right at edges — the `clamp` in `schlickFresnel` exists for exactly this.
+2. **Forgetting to `clamp`/`max` $\cos\theta$ before `pow`.** At silhouette edges or with interpolated normals on low-poly meshes, `dot(N, V)` can dip below 0, pushing `1.0 - cosTheta` above 1 so Schlick returns $F > 1$ — an over-bright rim; unnormalized vectors can push $\cos\theta$ above 1 instead, giving a negative base, and `pow()` with a negative base is undefined per the GLSL spec. The `clamp` in `schlickFresnel` handles both.
 3. **Hardcoding $F$ to a constant while still calling it "Fresnel."** A small $F_0$ (water's $0.02$) doesn't mean weak reflectance everywhere — at grazing angles $F$ still climbs toward 1. Disabling the angle term (the demo's "Schlick vs constant" toggle) makes water at a low camera angle lose its characteristic glare.
 
 </Callout>

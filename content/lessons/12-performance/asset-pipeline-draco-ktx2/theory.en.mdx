@@ -1,6 +1,6 @@
 ## Two Different Compression Domains: Geometry and Textures
 
-A heavy `.glb` file is usually heavy for two independent reasons, and each one needs a completely different compression technique. Geometry (position, normal, uv, index) is numeric data — it compresses by reducing precision (quantization) and then entropy-coding the leftovers, the same lossless-compression philosophy as ZIP, just specialized for 3D meshes. Textures are raster images instead — the GPU needs to sample them directly, so JPEG/PNG (formats meant to compress for *storage*) don't help: they still get fully decoded to raw RGBA before landing in VRAM, exactly what the `textures-and-compression-ktx2` lesson showed with $2048^2 \times 4 \approx 16\text{MB}$. The two problems are independent — a model might need heavy geometry compression but have light textures, or the reverse — and a real pipeline always handles each domain separately before merging everything back into one final `.glb`.
+A heavy `.glb` file is usually heavy for two independent reasons, and each one needs a completely different compression technique. Geometry (position, normal, uv, index) is numeric data — it compresses by reducing precision (quantization — lossy, but tuned to stay below what you'd notice) and then entropy-coding what's left losslessly, the way ZIP does, just specialized for 3D meshes. Textures are raster images instead — the GPU needs to sample them directly, so JPEG/PNG (formats meant to compress for *storage*) don't help: they still get fully decoded to raw RGBA before landing in VRAM, exactly what the `textures-and-compression-ktx2` lesson showed with $2048^2 \times 4 \approx 16\text{MB}$. The two problems are independent — a model might need heavy geometry compression but have light textures, or the reverse — and a real pipeline always handles each domain separately before merging everything back into one final `.glb`.
 
 ## Compressing Geometry with Draco: Quantize, Then Entropy-Code
 
@@ -54,7 +54,7 @@ const loader = new GLTFLoader()
 loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
 ```
 
-The order is mandatory: all three `set*Loader` calls must run **before** `load()`/`parse()` — calling them afterward means `GLTFLoader` throws an explicit error while parsing the matching extension ("setKTX2Loader must be called before loading KTX2 textures").
+What matters is that all three `set*Loader` calls happen before the file is **parsed** — before the call for `parse()`; for `load()`, `GLTFLoader` only reads them once the fetch resolves, but registering them first is the only order worth relying on. A loader that's missing at parse time fails on the matching extension: a Draco file throws "No DRACOLoader instance provided.", and a KTX2 texture throws "setKTX2Loader must be called before loading KTX2 textures" when the file marks the extension required — when it's optional, GLTFLoader quietly falls back to the file's fallback texture.
 
 ## Automating It with gltf-transform
 
@@ -112,7 +112,7 @@ This repo carries no real binary assets (a rule running through Track 3) — so 
 
 The three most common mistakes when building an asset compression pipeline:
 
-1. **Calling `setKTX2Loader`/`setDRACOLoader` after `load()` has already run.** All three methods just attach a reference to the auxiliary loader on the instance — `GLTFLoader` looks them up while parsing the matching extension, so registering late makes GLTFLoader throw an explicit error ("setKTX2Loader must be called before loading KTX2 textures"); the other common symptom is `KTX2Loader: Missing initialization with .detectSupport()` (source: the actual error message in `KTX2Loader.js`) from forgetting to call `detectSupport(renderer)` before `load()`.
+1. **Registering `setKTX2Loader`/`setDRACOLoader` too late.** All three methods just attach a reference to the auxiliary loader on the instance — `GLTFLoader` looks them up while parsing the matching extension, so one that isn't there by then fails right there ("No DRACOLoader instance provided.", or "setKTX2Loader must be called before loading KTX2 textures" when KTX2 is required); the other common symptom is `Missing initialization with .detectSupport( renderer )` (source: the actual error message in `KTX2Loader.js`) from forgetting to call `detectSupport(renderer)` before `load()`.
 2. **Using ETC1S for every texture type, including normal maps.** ETC1S compresses aggressively but loses high-frequency detail — fine for base color, but visibly grainy on normal/roughness maps; UASTC preserves detail better at a lower compression ratio, the right choice for data maps.
 3. **Compressing a small model by reflex without measuring first.** The one-time cost of fetching the WASM decoder (a few hundred KB, plus init time) can easily outweigh the bytes saved on a mesh with a few thousand vertices — always measure `network time` vs. `decode time` before adding a compression step to the pipeline.
 

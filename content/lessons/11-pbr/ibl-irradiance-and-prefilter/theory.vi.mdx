@@ -34,7 +34,7 @@ $$
 \text{specular}_{\text{IBL}} \approx \text{PrefilteredEnvMap}(R,\rho)\times\big(F_0\cdot\text{scale}(N{\cdot}V,\rho) + F_{90}\cdot\text{bias}(N{\cdot}V,\rho)\big)
 $$
 
-Đây là xấp xỉ không chính xác tuyệt đối — tách một tích phân kép thành tích hai tích phân đơn không tương đương đại số với bản gốc, và âm thầm làm mất năng lượng multi-bounce ở roughness cao (vật liệu hơi tối hơn thực tế ở mức nhám lớn — artifact "energy loss" mà Fdez-Agüera multi-scattering bù lại sau này). Nhưng nó biến một tích phân kép đắt đỏ mỗi pixel thành đúng hai lần sample texture, nên gần như mọi renderer real-time đều dùng.
+Đây là xấp xỉ không chính xác tuyệt đối — tách một tích phân kép thành tích hai tích phân đơn không tương đương đại số với bản gốc, và bước prefilter giả định hướng nhìn trùng pháp tuyến ($n = v = r$), nên các phản xạ bị kéo dài ở góc xiên của bề mặt thật bị mất. (Việc vật liệu hơi tối ở roughness cao là chuyện khác: chính BRDF microfacet tán xạ đơn đã bỏ mất ánh sáng nảy qua lại giữa các microfacet — phần bù multi-scattering của Fdez-Agüera, mà three đã áp dụng cho IBL, thêm lại phần đó.) Nhưng nó biến một tích phân kép đắt đỏ mỗi pixel thành đúng hai lần sample texture, nên gần như mọi renderer real-time đều dùng.
 
 ## PMREMGenerator của Three.js: từ scene/HDRI ra một texture
 

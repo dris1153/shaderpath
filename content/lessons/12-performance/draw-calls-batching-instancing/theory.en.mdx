@@ -4,7 +4,7 @@ Every time `renderer.render()` runs, EACH distinct mesh needs at least one `gl.d
 
 ## Counting Draw Calls Correctly: renderer.info.render.calls
 
-`gl.info.render.calls` (introduced in the previous "Profiling Tools" lesson) is the only ground truth, resetting every frame. It CAN exceed your scene's mesh count: every shadow-casting light re-renders shadow-casting objects from ITS OWN view — 50 meshes with 2 shadow-casting lights produce 150 calls (50 main-pass + 50×2 shadow-pass), not 50. A material needing multiple GL passes (certain depth-prepass or transparency setups) multiplies it further. Read this number right after `render()`, and don't expect it to match `scene.children.length` 1:1 the moment shadow maps enter the scene.
+`gl.info.render.calls` (introduced in the previous "Profiling Tools" lesson) is the only ground truth, resetting at the start of every `render()` call. It CAN exceed your scene's mesh count: every shadow-casting light re-renders the shadow casters inside its shadow camera from ITS OWN view — 50 meshes, all with `castShadow` and all in view, under 2 directional shadow lights produce 150 calls (50 main-pass + 50×2 shadow-pass), not 50; a point light renders six cube faces, each culled to its own 90° frustum, so a caster adds one call per face it falls in — up to six. A material needing multiple GL passes (certain depth-prepass or transparency setups) multiplies it further. Read this number right after `render()`, and don't expect it to match `scene.children.length` 1:1 the moment shadow maps enter the scene.
 
 <Figure
   src="/figures/12-performance/draw-call-cpu-tax/en.svg"
@@ -14,7 +14,7 @@ Every time `renderer.render()` runs, EACH distinct mesh needs at least one `gl.d
 
 ## Fix Ladder, Rung 1: Shared Materials
 
-Callback to the Track 4 "Memoizing Geometry & Materials" lesson: reusing ONE material instance across many meshes cuts how often `gl.useProgram` has to switch programs (the driver re-validates state on every switch) — but does NOT cut draw-call count. Still N meshes, still N draw calls, since each mesh remains its own transform node. This is nearly free and always worth doing, but it doesn't solve the draw-call tax by itself — it sets up the next two rungs, which actually do collapse N calls into one.
+Callback to the Track 4 "Memoizing Geometry & Materials" lesson: reusing ONE material instance across many meshes lets Three skip re-uploading material uniforms between consecutive draws (it refreshes them whenever the material changes) — but it does NOT cut draw-call count, nor program switches: materials of the same type and feature set already share one compiled program. Still N meshes, still N draw calls, since each mesh remains its own transform node. This is nearly free and always worth doing, but it doesn't solve the draw-call tax by itself — it sets up the next two rungs, which actually do collapse N calls into one.
 
 ## Fix Ladder, Rung 2: Static Merging With BufferGeometryUtils.mergeGeometries
 
@@ -47,7 +47,7 @@ The checkpoint right after this — Profile & Fix a Slow Scene — pairs this le
 
 The three most common mistakes when cutting draw calls:
 
-1. **Sharing a material and expecting draw calls to drop.** A shared material only cuts program switches — draw calls stay exactly equal to mesh count, since each mesh remains its own transform node needing its own draw command.
+1. **Sharing a material and expecting draw calls to drop.** A shared material only saves per-draw material-uniform uploads — draw calls stay exactly equal to mesh count, since each mesh remains its own transform node needing its own draw command.
 2. **Static-merging (`mergeGeometries`) objects that need to move or show/hide independently.** Transforms are baked hard into the geometry at merge time — moving "one" object inside the merged blob afterward is impossible short of re-merging from scratch every frame, which erases the original benefit; use InstancedMesh from the start whenever independent motion is needed.
 3. **Assuming `render.calls` always equals scene mesh count.** Shadow-casting lights multiply the number of passes, pushing the real number higher than expected — easy to wrongly conclude "instancing didn't work" when the main pass actually dropped exactly as expected and the leftover calls are unrelated shadow passes.
 

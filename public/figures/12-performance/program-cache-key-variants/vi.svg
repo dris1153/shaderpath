@@ -90,7 +90,7 @@
 
   <rect class="box-cost" x="24" y="290" width="612" height="60" rx="8" />
   <text class="col ink-cost" x="38" y="310">LẦN BIÊN DỊCH ĐÓ THẬT SỰ XẢY RA LÚC NÀO</text>
-  <text class="note" x="38" y="330">getProgram() chỉ tới được từ đường render, nên một biến thể biên dịch đúng khung hình đầu tiên vẽ nó — không phải</text>
+  <text class="note" x="38" y="330">getProgram() chạy từ đường render (hoặc compile()): biến thể chưa warm biên dịch ở khung hình đầu vẽ nó — không phải</text>
   <text class="note" x="38" y="345">lúc bạn tạo vật liệu. map (2) × fog (2) × kiểu shadow (3) × skinning (2) đã là 24 program.</text>
 
   <text class="foot" x="24" y="378">renderer.compile(scene, camera) đẩy chi phí đó ra sau màn hình chờ chứ không xoá nó; compileAsync chỉ</text>

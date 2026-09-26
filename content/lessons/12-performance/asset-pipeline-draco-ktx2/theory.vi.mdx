@@ -1,6 +1,6 @@
 ## Hai miền nén khác nhau: hình học và texture
 
-Một file `.glb` nặng thường nặng vì hai lý do độc lập, và mỗi lý do cần một kỹ thuật nén khác hẳn nhau. Geometry (position, normal, uv, index) là dữ liệu số — nén được bằng cách giảm độ chính xác (lượng tử hoá) rồi nén phần dư bằng entropy coding, đúng triết lý nén dữ liệu không mất mát của ZIP nhưng chuyên biệt cho mesh 3D. Texture lại là ảnh raster — GPU cần sample trực tiếp nên không thể dùng JPEG/PNG (định dạng nén để *lưu trữ*, phải giải mã hoàn toàn ra RGBA thô trước khi lên VRAM, như bài `textures-and-compression-ktx2` đã chỉ ra qua công thức $2048^2 \times 4 \approx 16\text{MB}$). Hai bài toán này độc lập: một model có thể cần nén geometry nặng nhưng texture nhẹ, hoặc ngược lại — pipeline thật luôn xử lý riêng từng miền rồi mới gộp lại thành một file `.glb` cuối.
+Một file `.glb` nặng thường nặng vì hai lý do độc lập, và mỗi lý do cần một kỹ thuật nén khác hẳn nhau. Geometry (position, normal, uv, index) là dữ liệu số — nén được bằng cách giảm độ chính xác (lượng tử hoá — có mất mát, nhưng chỉnh để dưới ngưỡng nhận ra) rồi nén phần còn lại bằng entropy coding không mất mát, giống cách ZIP làm nhưng chuyên biệt cho mesh 3D. Texture lại là ảnh raster — GPU cần sample trực tiếp nên không thể dùng JPEG/PNG (định dạng nén để *lưu trữ*, phải giải mã hoàn toàn ra RGBA thô trước khi lên VRAM, như bài `textures-and-compression-ktx2` đã chỉ ra qua công thức $2048^2 \times 4 \approx 16\text{MB}$). Hai bài toán này độc lập: một model có thể cần nén geometry nặng nhưng texture nhẹ, hoặc ngược lại — pipeline thật luôn xử lý riêng từng miền rồi mới gộp lại thành một file `.glb` cuối.
 
 ## Nén hình học với Draco: lượng tử hoá rồi entropy-code
 
@@ -54,7 +54,7 @@ const loader = new GLTFLoader()
 loader.load("/models/product.glb", (gltf) => scene.add(gltf.scene));
 ```
 
-Thứ tự bắt buộc: cả ba `set*Loader` phải chạy **trước** `load()`/`parse()` — gọi sau khi đã load xong khiến `GLTFLoader` ném lỗi rõ ràng khi gặp extension tương ứng trong lúc parse ("setKTX2Loader must be called before loading KTX2 textures").
+Điều quan trọng là cả ba `set*Loader` phải có mặt trước khi file được **parse** — với `parse()` là trước lời gọi; với `load()`, `GLTFLoader` chỉ đọc chúng khi fetch xong, nhưng đăng ký trước vẫn là thứ tự duy nhất đáng tin. Loader nào vắng mặt lúc parse sẽ hỏng ở extension tương ứng: file Draco ném "No DRACOLoader instance provided.", còn texture KTX2 ném "setKTX2Loader must be called before loading KTX2 textures" khi file đánh dấu extension là bắt buộc — nếu chỉ là tuỳ chọn, GLTFLoader lặng lẽ dùng texture dự phòng của file.
 
 ## Tự động hoá bằng gltf-transform
 
@@ -112,7 +112,7 @@ Repo này không chứa asset nhị phân thật (quy tắc xuyên suốt từ T
 
 Ba lỗi hay gặp nhất khi dựng pipeline nén asset:
 
-1. **Gọi `setKTX2Loader`/`setDRACOLoader` sau khi đã gọi `load()`.** Cả ba hàm chỉ gắn tham chiếu loader phụ vào instance — `GLTFLoader` tra cứu chúng lúc parse extension, nên đăng ký muộn khiến GLTFLoader ném lỗi rõ ràng ("setKTX2Loader must be called before loading KTX2 textures"), lỗi thường gặp nhất là `KTX2Loader: Missing initialization with .detectSupport()` (nguồn: thông báo lỗi thật trong `KTX2Loader.js`) vì quên gọi `detectSupport(renderer)` trước `load()`.
+1. **Đăng ký `setKTX2Loader`/`setDRACOLoader` quá muộn.** Cả ba hàm chỉ gắn tham chiếu loader phụ vào instance — `GLTFLoader` tra cứu chúng lúc parse extension, nên loader nào chưa có mặt lúc đó sẽ hỏng ngay tại đó ("No DRACOLoader instance provided.", hoặc "setKTX2Loader must be called before loading KTX2 textures" khi KTX2 là bắt buộc), lỗi thường gặp nhất là `Missing initialization with .detectSupport( renderer )` (nguồn: thông báo lỗi thật trong `KTX2Loader.js`) vì quên gọi `detectSupport(renderer)` trước `load()`.
 2. **Dùng ETC1S cho mọi loại texture, kể cả normal map.** ETC1S nén mạnh nhưng mất chi tiết cao tần — chấp nhận được cho base color, nhưng làm normal map/roughness map nhiễu hạt rõ rệt; UASTC giữ chi tiết tốt hơn với tỉ lệ nén thấp hơn, đúng lựa chọn cho các map dữ liệu.
 3. **Nén một model nhỏ theo phản xạ mà không đo trước.** Chi phí tải decoder WASM lần đầu (vài trăm KB, cộng thời gian khởi tạo) có thể vượt hẳn dung lượng tiết kiệm được trên một mesh vài nghìn vertex — luôn đo `network time` vs `decode time` trước khi thêm bước nén vào pipeline.
 

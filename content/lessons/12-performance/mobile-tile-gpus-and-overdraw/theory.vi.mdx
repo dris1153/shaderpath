@@ -37,8 +37,8 @@ Hệ quả tích cực hiếm hoi: MSAA gần như miễn phí trên tile GPU, v
 ## Ba cách giảm overdraw thực chiến
 
 1. **Sắp opaque front-to-back**: nếu engine không tự làm triệt để (Three.js chỉ dùng `z` làm tiêu chí phụ SAU `material.id`), tự set `renderOrder` cho vật lớn, gần camera để chúng vẽ trước, giúp early-Z/HSR loại nhiều fragment phía sau hơn.
-2. **Cắt gọn diện tích quad trong suốt**: một particle system dùng quad $96\times96$px cho sprite tròn $20$px tốn diện tích fragment gấp $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ so với quad khít bounding box — mọi pixel trong suốt "thừa" vẫn chạy shader và blend, dù alpha cuối bằng 0.
-3. **Cân nhắc alphaTest/discard**: `discard` giả lập opaque nghe hấp dẫn nhưng có đánh đổi — GPU không biết trước fragment sẽ bị discard cho tới khi shader ĐÃ chạy xong, nên early-Z/HSR không loại được nó trước khi tô màu. Vẫn rẻ hơn true alpha blending, nhưng không rẻ như opaque thật.
+2. **Cắt gọn diện tích quad trong suốt**: một particle system dùng quad $96\times96$px cho sprite tròn $20$px tốn diện tích fragment gấp $\left(\dfrac{96}{24}\right)^2 \approx 16\times$ so với quad $24$px khít bounding box (sprite cộng chút padding) — mọi pixel trong suốt "thừa" vẫn chạy shader và blend, dù alpha cuối bằng 0.
+3. **Cân nhắc alphaTest/discard**: `discard` giả lập opaque rẻ hơn true alpha blending, nhưng không rẻ như opaque thật — lỗi 1 bên dưới giải thích vì sao.
 
 ## Kết nối về Track 10 và bài tiếp theo
 
@@ -48,8 +48,8 @@ Track 10 đã nói fillrate của một chuỗi postprocessing tăng theo số p
 
 Ba lỗi hay gặp nhất khi nghĩ về overdraw trên mobile:
 
-1. **Coi `discard`/alphaTest ngang hàng với early-Z thật.** GPU chỉ biết một fragment "chết" SAU khi shader đã chạy tới lệnh discard — hidden-surface removal không thể loại nó trước khi tô màu như opaque thật, nên `discard` tiết kiệm băng thông ghi/blend nhưng không tiết kiệm chi phí chạy shader.
+1. **Coi `discard`/alphaTest ngang hàng với early-Z thật.** GPU chỉ biết một fragment "chết" SAU khi shader chạy, nên mọi pixel bị phủ vẫn phải tô, và bề mặt không che sớm được gì như opaque thật — `discard` tiết kiệm phần ghi màu/blend, không tiết kiệm chi phí chạy shader.
 2. **Tin rằng Three.js luôn vẽ opaque theo đúng thứ tự front-to-back tuyệt đối.** `painterSortStable` ưu tiên gộp theo `material.id` TRƯỚC, `z` chỉ là tiêu chí phụ — một cảnh có hàng trăm mesh dùng chung material nhưng nằm ở độ sâu rất khác nhau không được đảm bảo thứ tự front-to-back, phải tự set `renderOrder` nếu cần chắc chắn.
-3. **Gọi `readPixels`/đọc render target ngay giữa lúc đang vẽ vào nó rồi chỉ test trên desktop.** Desktop devtools không thấy gì bất thường vì immediate-mode không có khái niệm "tile flush" — nhưng trên mobile, thao tác này buộc GPU resolve tile sớm, gây GPU stall lớn mà chỉ profiler mobile thật (hoặc throttle CPU/GPU trong Chrome DevTools) mới lộ ra.
+3. **Gọi `readPixels`/đọc render target ngay giữa lúc đang vẽ vào nó rồi chỉ test trên desktop.** Trên desktop, một lần đọc đồng bộ chỉ tốn một lần đồng bộ CPU–GPU (một đoạn `readPixels` dài trên main thread); trên mobile nó còn buộc GPU resolve tile sớm — stall lớn hơn nhiều mà không công cụ desktop nào tái hiện được, vì Chrome DevTools chỉ throttle CPU và mạng. Hãy profile trên máy thật bằng công cụ của hãng GPU (Arm Performance Studio, tên cũ Mobile Studio, cho Mali, Snapdragon Profiler cho Adreno).
 
 </Callout>

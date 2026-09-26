@@ -4,7 +4,7 @@ Bài trước dừng lại ở việc gọi $f_r$ (BRDF) là "hàm mã hoá ch�
 
 ## Roughness là gì về mặt thống kê: độ tán của pháp tuyến vi mô
 
-Roughness, trong khung microfacet, không phải con số mờ hồ — nó là **độ lệch chuẩn của phân bố hướng pháp tuyến vi mô** quanh pháp tuyến vĩ mô $n$ lưu trong mesh. Roughness $=0$: mọi microfacet chĩa đúng theo $n$, bề mặt là gương hoàn hảo. Roughness tiến gần $1$: pháp tuyến vi mô toả gần như ngẫu nhiên quanh $n$, chóp phản xạ bị kéo dãn cực rộng, trông gần như khuếch tán dù vẫn là hàng triệu phản xạ gương chồng lên nhau. Vì vậy roughness luôn được biểu diễn bằng một hàm phân bố xác suất, không phải một hằng số nhân — nó chính là tham số hình dạng của phân bố đó.
+Roughness, trong khung microfacet, không phải con số mờ hồ — nó là **độ rộng của phân bố hướng pháp tuyến vi mô** quanh pháp tuyến vĩ mô $n$ lưu trong mesh (qua $\alpha = \text{roughness}^2$, xem bên dưới). Roughness $=0$: mọi microfacet chĩa đúng theo $n$, bề mặt là gương hoàn hảo. Roughness tiến gần $1$: pháp tuyến vi mô toả gần như ngẫu nhiên quanh $n$, chóp phản xạ bị kéo dãn cực rộng, trông gần như khuếch tán dù vẫn là hàng triệu phản xạ gương chồng lên nhau. Vì vậy roughness luôn được biểu diễn bằng một hàm phân bố xác suất, không phải một hằng số nhân — bình phương lên, nó chính là tham số độ rộng của phân bố đó.
 
 ## Cook-Torrance: fr = D·G·F / (4(n·v)(n·l))
 

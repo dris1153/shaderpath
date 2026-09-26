@@ -23,7 +23,7 @@
   "program C": "program C",
   "same material, map on": "cùng vật liệu, bật map",
   "WHEN THAT COMPILE ACTUALLY HAPPENS": "LẦN BIÊN DỊCH ĐÓ THẬT SỰ XẢY RA LÚC NÀO",
-  "getProgram() is only reachable from the render path, so a variant compiles on the frame that first draws it — never": "getProgram() chỉ tới được từ đường render, nên một biến thể biên dịch đúng khung hình đầu tiên vẽ nó — không phải",
+  "getProgram() runs in the render path (or compile()), so an unwarmed variant compiles on the frame that first draws it — never": "getProgram() chạy từ đường render (hoặc compile()): biến thể chưa warm biên dịch ở khung hình đầu vẽ nó — không phải",
   "when you constructed the material. map (2) × fog (2) × shadow type (3) × skinning (2) is already 24 programs.": "lúc bạn tạo vật liệu. map (2) × fog (2) × kiểu shadow (3) × skinning (2) đã là 24 program.",
   "renderer.compile(scene, camera) moves that cost behind a loading screen instead of erasing it; compileAsync only": "renderer.compile(scene, camera) đẩy chi phí đó ra sau màn hình chờ chứ không xoá nó; compileAsync chỉ",
   "stops blocking where KHR_parallel_shader_compile exists — without it, it falls back to the same synchronous compile.": "hết chặn ở nơi có KHR_parallel_shader_compile — không có nó thì lại quay về đúng phép biên dịch đồng bộ đó."

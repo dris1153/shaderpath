@@ -95,9 +95,9 @@ function FrameProbe({
   return null;
 }
 
-// renderer.compile(scene, camera) forces every material in a throwaway
-// scene to compile NOW, synchronously — the platform's actual "loading
-// screen" pre-warm technique, verified against WebGLRenderer.js.
+// renderer.compile(scene, camera) issues every material's compile/link in a
+// throwaway scene NOW, ahead of its first draw — the platform's actual
+// "loading screen" pre-warm technique, verified against WebGLRenderer.js.
 function PrewarmController({
   materialsRef,
   disposables,
