@@ -6,9 +6,7 @@ import { Background, Controls, MiniMap, ReactFlow } from "@xyflow/react";
 import { useTheme } from "next-themes";
 import type { Locale } from "@/content/types";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
-import type { LayoutId } from "@/lib/roadmap/layouts";
 import { nextBand, type ZoomBand } from "@/lib/roadmap/zoom-bands";
-import { cn } from "@/lib/utils";
 import { buildFlow } from "./build-flow";
 import {
   LessonRowNode,
@@ -16,7 +14,6 @@ import {
   ModuleRowNode,
   TrackCardNode,
 } from "./map-card-nodes";
-import { LabelNode, LessonNode } from "./map-compact-nodes";
 
 export interface CurriculumMapStrings {
   legendCompleted: string;
@@ -26,8 +23,6 @@ export interface CurriculumMapStrings {
 }
 
 const nodeTypes = {
-  lesson: LessonNode,
-  label: LabelNode,
   trackCard: TrackCardNode,
   moduleRow: ModuleRowNode,
   lessonRow: LessonRowNode,
@@ -51,41 +46,19 @@ export default function CurriculumMap({
   // from onMove/onInit rather than an effect on the zoom store: setting state
   // from an effect is what react-hooks/set-state-in-effect flags.
   const [band, setBand] = useState<ZoomBand>("tracks");
-  // Temporary: four layouts ship together so the user can compare them in the
-  // app and pick one. The switcher and the losers go once that choice is made.
-  const [variant, setVariant] = useState<LayoutId>("serpentine");
   const observe = useCallback(
     (zoom: number) => setBand((current) => nextBand(zoom, current)),
     [],
   );
 
   const { nodes, edges } = useMemo(
-    () => buildFlow({ variant, band, locale, progress }),
-    [variant, band, locale, progress],
+    () => buildFlow({ band, locale, progress }),
+    [band, locale, progress],
   );
 
   return (
     <div>
-      <div className="mb-3 flex flex-wrap gap-1 text-xs">
-        {(["serpentine", "horizontal", "vertical", "columns"] as const).map(
-          (id) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setVariant(id)}
-              aria-pressed={variant === id}
-              className={cn(
-                "rounded-md border px-2 py-1",
-                variant === id ? "bg-secondary" : "text-muted-foreground",
-              )}
-            >
-              {id}
-            </button>
-          ),
-        )}
-      </div>
-      {/* Columns has no bars or pips to explain. */}
-      {variant !== "columns" && <MapLegend />}
+      <MapLegend />
       {progress && (
         // Swatches match the lesson rows: completed reads in the primary
         // colour, the same colour that fills each track's road.
@@ -112,8 +85,6 @@ export default function CurriculumMap({
         className="mt-3 h-[70vh] min-h-120 overflow-hidden rounded-xl border"
       >
         <ReactFlow
-          // fitView only runs on mount; remounting refits each layout.
-          key={variant}
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}

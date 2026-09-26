@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import { trackChain, trackDependencies, trackLinks } from "@/lib/roadmap/chain";
-import {
-  chainEdges,
-  layoutRoadmap,
-  lessonEdges,
-  type LayoutId,
-} from "@/lib/roadmap/layouts";
-
-const LAYOUTS: LayoutId[] = ["serpentine", "horizontal", "vertical", "columns"];
+import { chainEdges, layoutRoadmap, lessonEdges } from "@/lib/roadmap/layouts";
 
 describe("track chain", () => {
   // Derived, not listed: a curriculum that grows a real branch should fail
@@ -57,17 +50,15 @@ describe("track chain", () => {
   });
 });
 
-describe.each(LAYOUTS)("layoutRoadmap %s", (id) => {
-  const layout = layoutRoadmap(TRACKS, MODULES, LESSONS, id);
+describe("layoutRoadmap", () => {
+  const layout = layoutRoadmap(TRACKS, MODULES, LESSONS);
   const of = (kind: string) => layout.nodes.filter((n) => n.kind === kind);
 
   it("places every track, module and lesson exactly once", () => {
     expect(of("track")).toHaveLength(TRACKS.length);
     expect(of("module")).toHaveLength(MODULES.length);
     expect(of("lesson")).toHaveLength(LESSONS.length);
-    expect(new Set(layout.nodes.map((n) => n.id)).size).toBe(
-      layout.nodes.length,
-    );
+    expect(new Set(layout.nodes.map((n) => n.id)).size).toBe(layout.nodes.length);
   });
 
   it("keeps coordinates finite and never stacks two nodes on one spot", () => {
@@ -78,6 +69,17 @@ describe.each(LAYOUTS)("layoutRoadmap %s", (id) => {
     expect(new Set(spots).size).toBe(spots.length);
   });
 
+  // Row 0 runs left to right, row 1 right to left, so the route stays
+  // continuous across the fold instead of jumping back to the left edge.
+  it("folds the route five wide, reversing on alternate rows", () => {
+    const s = of("track");
+    expect(s[4]!.x).toBeGreaterThan(s[0]!.x);
+    expect(s[5]!.x).toBe(s[4]!.x);
+    expect(s[9]!.x).toBe(s[0]!.x);
+    expect(s[5]!.y).toBeGreaterThan(s[4]!.y);
+  });
+
+  // Carried over from the columns layout this replaced.
   it("mirrors the curriculum: every cross-track prerequisite becomes an edge", () => {
     const trackOf = new Map(LESSONS.map((l) => [l.slug, l.trackId]));
     const expected = LESSONS.flatMap((l) =>
@@ -85,59 +87,11 @@ describe.each(LAYOUTS)("layoutRoadmap %s", (id) => {
         .filter((p) => trackOf.get(p) !== l.trackId)
         .map((p) => `${p}->${l.slug}`),
     );
-    expect(
-      lessonEdges(LESSONS)
-        .map((e) => e.id)
-        .sort(),
-    ).toEqual(expected.sort());
+    expect(lessonEdges(LESSONS).map((e) => e.id).sort()).toEqual(expected.sort());
     expect(layout.edges).toEqual(lessonEdges(LESSONS));
   });
 
   it("is deterministic", () => {
-    expect(layoutRoadmap(TRACKS, MODULES, LESSONS, id)).toEqual(layout);
-  });
-});
-
-describe("layout shapes", () => {
-  const tracksOf = (id: LayoutId) =>
-    layoutRoadmap(TRACKS, MODULES, LESSONS, id).nodes.filter(
-      (n) => n.kind === "track",
-    );
-
-  it("defaults to the serpentine", () => {
-    expect(layoutRoadmap(TRACKS, MODULES, LESSONS)).toEqual(
-      layoutRoadmap(TRACKS, MODULES, LESSONS, "serpentine"),
-    );
-  });
-
-  // Row 0 runs left to right, row 1 right to left, so the route stays
-  // continuous across the fold instead of jumping back to the left edge.
-  it("folds the serpentine five wide, reversing on alternate rows", () => {
-    const s = tracksOf("serpentine");
-    expect(s[4]!.x).toBeGreaterThan(s[0]!.x);
-    expect(s[5]!.x).toBe(s[4]!.x);
-    expect(s[9]!.x).toBe(s[0]!.x);
-    expect(s[5]!.y).toBeGreaterThan(s[4]!.y);
-  });
-
-  it.each([
-    ["horizontal", "x", "y"],
-    ["vertical", "y", "x"],
-  ] as const)("lays %s out on one line", (id, along, across) => {
-    const s = tracksOf(id);
-    expect(new Set(s.map((n) => n[across])).size).toBe(1);
-    for (let i = 1; i < s.length; i++)
-      expect(s[i]![along]).toBeGreaterThan(s[i - 1]![along]);
-  });
-
-  it("gives columns one column per track and the compact style", () => {
-    const layout = layoutRoadmap(TRACKS, MODULES, LESSONS, "columns");
-    expect(layout.style).toBe("compact");
-    const x = new Map(tracksOf("columns").map((n) => [n.track!.id, n.x]));
-    expect(new Set(x.values()).size).toBe(TRACKS.length);
-    for (const n of layout.nodes) {
-      const trackId = n.track?.id ?? n.module?.trackId ?? n.lesson!.trackId;
-      expect(n.x, n.id).toBe(x.get(trackId));
-    }
+    expect(layoutRoadmap(TRACKS, MODULES, LESSONS)).toEqual(layout);
   });
 });

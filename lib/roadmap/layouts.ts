@@ -7,12 +7,12 @@ import { trackChain, trackLinks } from "./chain";
 // card and lessons inside their module, with type sized per tier, so one world
 // stays legible at every zoom band.
 //
-// Four arrangements ship side by side so they can be compared in the app and
-// all but one deleted — that choice is the user's, not the code's. The
-// serpentine folds the route five wide, alternate rows running backwards; it
-// is the only one whose bounding box matches a landscape canvas, so it is the
-// default. Horizontal and vertical draw the same cards on one line; columns
-// is the original design, drawn the original way, as the baseline.
+// The route is folded five stations wide, alternate rows running backwards.
+// Folding is what makes the overview readable at all: it is the only
+// arrangement whose bounding box matches a landscape canvas. A single row or
+// column is fitted by its long side, and at that zoom its names are 3–4px.
+// Horizontal, vertical and the old columns were built, rendered and deleted
+// for exactly that reason.
 
 export interface MapNode {
   id: string;
@@ -32,14 +32,9 @@ export interface MapEdge {
   to: string;
 }
 
-export type LayoutId = "serpentine" | "horizontal" | "vertical" | "columns";
-/** Card layouts nest rows inside track cards; compact is the original. */
-export type LayoutStyle = "card" | "compact";
-
 export interface MapLayout {
   nodes: MapNode[];
   edges: MapEdge[];
-  style: LayoutStyle;
 }
 
 /** World units. Chosen so the overview fits a 1100×630 canvas at zoom 0.25,
@@ -60,77 +55,15 @@ export const CARD = {
 
 const COLS = 5;
 
-function origin(id: Exclude<LayoutId, "columns">, i: number) {
-  const px = CARD.w + CARD.gapX;
-  const py = CARD.h + CARD.gapY;
-  if (id === "horizontal") return { x: i * px, y: 0 };
-  if (id === "vertical") return { x: 0, y: i * py };
+function origin(i: number) {
   const row = Math.floor(i / COLS);
   const col = i % COLS;
   return {
     // Alternate rows run backwards so the route stays continuous across the
     // fold instead of jumping back to the left edge.
-    x: (row % 2 === 0 ? col : COLS - 1 - col) * px,
-    y: row * py,
+    x: (row % 2 === 0 ? col : COLS - 1 - col) * (CARD.w + CARD.gapX),
+    y: row * (CARD.h + CARD.gapY),
   };
-}
-
-/** The original design: one column per track, a small box per lesson. */
-const COL_W = 260;
-const ROW_H = 64;
-
-function layoutColumns(
-  tracks: readonly TrackDef[],
-  modules: readonly ModuleDef[],
-  lessons: readonly LessonMeta[],
-): MapLayout {
-  const lessonBySlug = new Map(lessons.map((l) => [l.slug, l]));
-  const nodes: MapNode[] = [];
-  trackChain(tracks).forEach((track, col) => {
-    const x = col * COL_W;
-    let row = 0;
-    nodes.push({
-      id: `track:${track.id}`,
-      kind: "track",
-      x,
-      y: 0,
-      w: 224,
-      h: 20,
-      track,
-    });
-    row += 1;
-    const trackModules = modules
-      .filter((m) => m.trackId === track.id)
-      .sort((a, b) => a.order - b.order);
-    for (const mod of trackModules) {
-      nodes.push({
-        id: `module:${mod.id}`,
-        kind: "module",
-        x,
-        y: row * ROW_H,
-        w: 224,
-        h: 20,
-        module: mod,
-      });
-      row += 1;
-      for (const slug of mod.lessonSlugs) {
-        const lesson = lessonBySlug.get(slug);
-        if (!lesson) continue;
-        const h = lesson.kind === "checkpoint" ? 44 : 30;
-        nodes.push({
-          id: slug,
-          kind: "lesson",
-          x,
-          y: row * ROW_H,
-          w: 224,
-          h,
-          lesson,
-        });
-        row += 1;
-      }
-    }
-  });
-  return { nodes, edges: lessonEdges(lessons), style: "compact" };
 }
 
 /** Prerequisites between lessons in different tracks. In-track order is
@@ -162,24 +95,14 @@ export function layoutRoadmap(
   tracks: readonly TrackDef[],
   modules: readonly ModuleDef[],
   lessons: readonly LessonMeta[],
-  id: LayoutId = "serpentine",
 ): MapLayout {
-  if (id === "columns") return layoutColumns(tracks, modules, lessons);
   const lessonBySlug = new Map(lessons.map((l) => [l.slug, l]));
   const inner = CARD.w - CARD.pad * 2;
   const nodes: MapNode[] = [];
 
   trackChain(tracks).forEach((track, i) => {
-    const o = origin(id, i);
-    nodes.push({
-      id: `track:${track.id}`,
-      kind: "track",
-      x: o.x,
-      y: o.y,
-      w: CARD.w,
-      h: CARD.h,
-      track,
-    });
+    const o = origin(i);
+    nodes.push({ id: `track:${track.id}`, kind: "track", x: o.x, y: o.y, w: CARD.w, h: CARD.h, track });
 
     let y = o.y + CARD.header;
     const trackModules = modules
@@ -213,5 +136,5 @@ export function layoutRoadmap(
     }
   });
 
-  return { nodes, edges: lessonEdges(lessons), style: "card" };
+  return { nodes, edges: lessonEdges(lessons) };
 }

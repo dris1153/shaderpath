@@ -2,11 +2,7 @@ import { MarkerType, type Edge, type Node } from "@xyflow/react";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import type { LessonSlug } from "@/content/slugs";
 import { type Locale, pick } from "@/content/types";
-import {
-  isUnlocked,
-  trackCompletion,
-  type ProgressMap,
-} from "@/lib/curriculum";
+import { isUnlocked, trackCompletion, type ProgressMap } from "@/lib/curriculum";
 import { trackChain } from "@/lib/roadmap/chain";
 import {
   difficultyPips,
@@ -15,18 +11,13 @@ import {
   roadFraction,
   trackStats,
 } from "@/lib/roadmap/encoding";
-import {
-  chainEdges,
-  layoutRoadmap,
-  type LayoutId,
-} from "@/lib/roadmap/layouts";
+import { chainEdges, layoutRoadmap } from "@/lib/roadmap/layouts";
 import { isVisible, type ZoomBand } from "@/lib/roadmap/zoom-bands";
 import type {
   LessonRowData,
   ModuleRowData,
   TrackCardData,
 } from "./map-card-nodes";
-import type { LabelNodeData, LessonNodeData } from "./map-compact-nodes";
 
 // Turns the layout into xyflow nodes and edges. Kept out of the component so
 // the component is state and markup, and this stays a plain function of its
@@ -46,10 +37,7 @@ function stateOf(
 
 /** Leave from the side facing the next station: a row that runs right to left
  *  must not loop round to its right edge. */
-function sidesBetween(
-  a: { x: number; y: number },
-  b: { x: number; y: number },
-) {
+function sidesBetween(a: { x: number; y: number }, b: { x: number; y: number }) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   if (Math.abs(dx) >= Math.abs(dy)) return dx >= 0 ? ["r", "l"] : ["l", "r"];
@@ -57,17 +45,15 @@ function sidesBetween(
 }
 
 export function buildFlow({
-  variant,
   band,
   locale,
   progress,
 }: {
-  variant: LayoutId;
   band: ZoomBand;
   locale: Locale;
   progress: ProgressMap | undefined;
 }): { nodes: Node[]; edges: Edge[] } {
-  const layout = layoutRoadmap(TRACKS, MODULES, LESSONS, variant);
+  const layout = layoutRoadmap(TRACKS, MODULES, LESSONS);
   const chain = trackChain(TRACKS);
   const yardstick = longestRegularMinutes(chain, LESSONS);
   const terminus = chain.at(-1)!.id;
@@ -90,31 +76,6 @@ export function buildFlow({
       // Cards sit under the rows drawn inside them.
       zIndex: n.kind === "track" ? 0 : 1,
     };
-
-    if (layout.style === "compact") {
-      if (n.kind === "lesson") {
-        return {
-          ...common,
-          type: "lesson",
-          data: {
-            title: pick(n.lesson!.title, locale),
-            state: stateOf(n.lesson!.slug, progress),
-            slug: n.lesson!.slug,
-            isCheckpoint: n.lesson!.kind === "checkpoint",
-          } satisfies LessonNodeData,
-        };
-      }
-      return {
-        ...common,
-        type: "label",
-        selectable: false,
-        data: {
-          title: pick((n.track ?? n.module)!.title, locale),
-          kind: n.kind,
-          href: n.track ? `/track/${n.track.id}` : undefined,
-        } satisfies LabelNodeData,
-      };
-    }
 
     if (n.kind === "track") {
       const stats = trackStats(n.track!, LESSONS);
@@ -194,10 +155,7 @@ export function buildFlow({
             markerEnd: { type: MarkerType.ArrowClosed },
             // Stroke is in world units: 2 is half a pixel at the overview's
             // zoom of 0.25, which is how the route once went invisible.
-            style: {
-              opacity: 0.55,
-              strokeWidth: layout.style === "card" ? 10 : 1,
-            },
+            style: { opacity: 0.55, strokeWidth: 10 },
           };
         });
 
