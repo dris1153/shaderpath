@@ -175,10 +175,9 @@ function GpuInstancedField({ grid, orient }: { grid: number; orient: boolean }) 
     material.customProgramCacheKey = () => "gpgpu-instancing-v1";
 
     const mesh = new THREE.InstancedMesh(geometry, material, count);
-    // instanceMatrix starts as an all-zero buffer, NOT identity — every
-    // instance needs an explicit identity matrix or the (meant-to-be-a-
-    // no-op) instanceMatrix multiply in #include <project_vertex> zeroes
-    // the position out (see mistake #1).
+    // InstancedMesh's constructor already sets every instanceMatrix to
+    // identity; this loop only makes explicit that the instanceMatrix
+    // multiply in #include <project_vertex> is meant to be a no-op.
     const identity = new THREE.Matrix4();
     for (let i = 0; i < count; i++) mesh.setMatrixAt(i, identity);
     mesh.instanceMatrix.needsUpdate = true;

@@ -11,7 +11,7 @@ gl.transformFeedbackVaryings(program, ["vPosition", "vVelocity"], gl.SEPARATE_AT
 gl.linkProgram(program); // phải đứng SAU transformFeedbackVaryings()
 ```
 
-`gl.transformFeedbackVaryings(...)` khai báo đúng điều đó — và phải gọi **trước** `gl.linkProgram(program)`, không phải sau. Lý do: linker cần biết trước để cấp phát đúng "chân cắm" output cho từng varying được liệt kê, y hệt cách nó cấp phát location cho attribute input; gọi sau khi link xong không còn tác dụng gì (chương trình đã "đóng băng" cấu trúc). `SEPARATE_ATTRIBS` nghĩa là mỗi varying trong danh sách ghi ra một buffer RIÊNG (buffer thứ $i$ ứng với binding point thứ $i$); chế độ còn lại, `INTERLEAVED_ATTRIBS`, gộp tất cả varying vào một buffer duy nhất theo layout xen kẽ (stride) — tiết kiệm số buffer nhưng đọc lại từng attribute ở draw call sau phức tạp hơn vì phải khai báo đúng stride/offset.
+`gl.transformFeedbackVaryings(...)` khai báo đúng điều đó — và phải gọi **trước** `gl.linkProgram(program)`, không phải sau. Lý do: linker cần biết trước để cấp phát đúng "chân cắm" output cho từng varying được liệt kê, y hệt cách nó cấp phát location cho attribute input; gọi sau khi link xong thì vô tác dụng cho tới lần link kế tiếp (chương trình hiện tại đã "đóng băng" cấu trúc). `SEPARATE_ATTRIBS` nghĩa là mỗi varying trong danh sách ghi ra một buffer RIÊNG (buffer thứ $i$ ứng với binding point thứ $i$); chế độ còn lại, `INTERLEAVED_ATTRIBS`, gộp tất cả varying vào một buffer duy nhất theo layout xen kẽ (stride) — tiết kiệm số buffer nhưng đọc lại từng attribute ở draw call sau phức tạp hơn vì phải khai báo đúng stride/offset.
 
 ## Ghi ra buffer: `bindBufferBase`, `beginTransformFeedback`/`endTransformFeedback`
 
@@ -61,8 +61,8 @@ Cả ping-pong texture lẫn transform feedback đều là cách lách quanh vi�
 
 Ba lỗi hay gặp nhất với transform feedback:
 
-1. **Gọi `transformFeedbackVaryings` SAU `gl.linkProgram`.** Chương trình vẫn "link thành công" về cú pháp nhưng không capture đúng gì cả — linker đã cố định layout output trước khi lệnh này chạy, gọi muộn không còn tác dụng.
-2. **Dùng cùng một buffer vừa làm input VAO vừa làm đích `bindBufferBase`** trong một draw call (quên double-buffer) — WebGL báo lỗi hoặc hành vi không xác định vì đọc/ghi chồng nhau trong cùng lúc hàng nghìn invocation vertex shader chạy song song.
+1. **Gọi `transformFeedbackVaryings` SAU `gl.linkProgram`.** Chương trình vẫn link được, nhưng layout output đã cố định trước khi lệnh này chạy nên nó không ghi output nào — `beginTransformFeedback` báo `INVALID_OPERATION` và không có gì được capture. (Lời gọi muộn chỉ có hiệu lực ở lần link kế tiếp.)
+2. **Dùng cùng một buffer vừa làm input VAO vừa làm đích `bindBufferBase`** trong một draw call (quên double-buffer) — WebGL từ chối lệnh vẽ với `INVALID_OPERATION`, vì nếu không, hàng nghìn invocation vertex shader chạy song song sẽ đọc/ghi chồng lên cùng vùng nhớ.
 3. **Quên `gl.disable(RASTERIZER_DISCARD)` sau update pass.** Mọi draw call render TIẾP THEO — kể cả không liên quan gì tới simulation — im lặng không vẽ gì lên màn hình, vì trạng thái discard vẫn còn bật toàn cục cho tới khi tắt tay.
 
 </Callout>

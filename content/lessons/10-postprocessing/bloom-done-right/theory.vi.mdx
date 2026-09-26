@@ -16,7 +16,7 @@ Cái bẫy phổ biến nhất: threshold đặt quá thấp khiến bloom khôn
 
 ### Bước 2 — chuỗi mip blur giảm dần
 
-Ảnh "chỉ giữ vùng sáng" đó được blur Gauss theo 5 mip liên tiếp (`nMips = 5`), mỗi mip ở độ phân giải bằng NỬA mip trước, bắt đầu từ `resolution / 2`: tức năm mip lần lượt ở khoảng $1/2, 1/4, 1/8, 1/16, 1/32$ độ phân giải gốc — con số này khớp chính xác với tài liệu Unreal Engine ("kết hợp nhiều Gaussian blur ở độ phân giải 1/2 đến 1/32 chiều rộng màn hình"), xác nhận `UnrealBloomPass` mô phỏng đúng kỹ thuật gốc chứ không chỉ mượn tên. Kích thước kernel mỗi mip tăng dần: `[6, 10, 14, 18, 22]` — mip càng nhỏ (độ phân giải càng thấp) càng dùng kernel lớn hơn, tạo quầng sáng lan rộng mà không cần kernel khổng lồ ở độ phân giải gốc.
+Ảnh "chỉ giữ vùng sáng" đó được blur Gauss theo 5 mip liên tiếp (`nMips = 5`), mỗi mip ở độ phân giải bằng NỬA mip trước, bắt đầu từ `resolution / 2`: tức năm mip lần lượt ở khoảng $1/2, 1/4, 1/8, 1/16, 1/32$ độ phân giải gốc — con số này khớp chính xác với tài liệu Unreal Engine ("kết hợp nhiều Gaussian blur ở độ phân giải 1/2 đến 1/32 chiều rộng màn hình"), xác nhận `UnrealBloomPass` mô phỏng đúng kỹ thuật gốc chứ không chỉ mượn tên. `KERNEL_RADIUS` mỗi mip tăng dần: `[6, 10, 14, 18, 22]` — tap tâm cộng 5 đến 21 texel mỗi bên, tức 11 đến 43 tap mỗi chiều blur — mip càng nhỏ (độ phân giải càng thấp) càng dùng kernel lớn hơn, tạo quầng sáng lan rộng mà không cần kernel khổng lồ ở độ phân giải gốc.
 
 ### Bước 3 — composite theo trọng số strength và radius
 

@@ -28,7 +28,7 @@ Nhưng ở $N = 65536$ (lưới $256\times256$, quy mô bài `instancing-a-milli
 
 ## Vùng bán kính và cân bằng trọng số
 
-Ba quy tắc dùng ba bán kính lồng nhau: separation nhỏ nhất (khoảng $0.4$ lần bán kính cảm nhận), alignment trung bình ($0.7$ lần), cohesion dùng trọn bán kính cảm nhận. Thứ tự này không tuỳ ý: separation phải thắng ở cự ly gần, nếu không cohesion (kéo vào tâm) và alignment (kéo theo hướng chung) sẽ áp đảo, khiến các boid chồng lấn lên nhau thay vì né tránh — nhìn giống một khối hạt dính chặt hơn là một đàn chim. Cân bằng trọng số ba lực (không chỉ bán kính vùng) quan trọng không kém: trọng số separation quá thấp so với alignment/cohesion tạo đúng lỗi collapse này dù bán kính đã đúng thứ tự.
+Ba quy tắc dùng ba bán kính lồng nhau: separation nhỏ nhất (khoảng $0.4$ lần bán kính cảm nhận), alignment trung bình ($0.7$ lần), cohesion dùng trọn bán kính cảm nhận. Thứ tự này không tuỳ ý: separation phải thắng ở cự ly gần, nếu không cohesion (kéo vào tâm) sẽ áp đảo — alignment chỉ làm các boid cùng hướng, không kéo lại gần hay đẩy ra xa — khiến các boid chồng lấn lên nhau thay vì né tránh — nhìn giống một khối hạt dính chặt hơn là một đàn chim. Cân bằng trọng số ba lực (không chỉ bán kính vùng) quan trọng không kém: trọng số separation quá thấp so với cohesion tạo đúng lỗi collapse này dù bán kính đã đúng thứ tự.
 
 <Figure
   src="/figures/09-gpgpu/boid-neighbour-zones/vi.svg"
@@ -38,7 +38,7 @@ Ba quy tắc dùng ba bán kính lồng nhau: separation nhỏ nhất (khoảng 
 
 ## Speed clamping và edge behavior
 
-Vận tốc thô sau khi cộng ba lực có thể tăng dần vô hạn (alignment liên tục kéo về trung bình đang tăng) hoặc giảm về gần 0 (boid mắc kẹt giữa các lực triệt tiêu nhau) — cả hai đều phá vỡ cảm giác "đang bay". Speed clamping ép độ lớn vận tốc vào một khoảng $[v_{min}, v_{max}]$ sau mỗi lần cộng lực, giữ chuyển động tự nhiên.
+Vận tốc thô sau khi cộng ba lực có thể tăng dần vô hạn (lực được cộng mỗi frame mà không có gì làm hao, nên những cú đẩy độ lớn cố định cứ chồng lên) hoặc giảm về gần 0 (alignment lấy trung bình vận tốc hàng xóm, mà trung bình của các hướng lệch nhau là vector ngắn hơn) — cả hai đều phá vỡ cảm giác "đang bay". Speed clamping ép độ lớn vận tốc vào một khoảng $[v_{min}, v_{max}]$ sau mỗi lần cộng lực, giữ chuyển động tự nhiên.
 
 Khi boid bay ra khỏi vùng biên, có hai lựa chọn: **wrap** (dịch chuyển tức thời sang phía đối diện, dùng `mod()`) hoặc **soft-turn** (một lực steer nhẹ đẩy ngược về tâm khi vượt biên, không có bước nhảy vị trí). Wrap rẻ và đơn giản nhưng gây "dịch chuyển tức thời" nhìn thấy được nếu camera đủ gần biên; soft-turn mượt hơn về thị giác nhưng cần tinh chỉnh độ mạnh lực để không tạo dao động qua lại ở rìa. Demo bài này dùng soft-turn để giữ cả đàn luôn trong khung hình.
 
@@ -58,7 +58,7 @@ Boids hôm nay dừng lại ở việc render bằng point sprite — bài `inst
 
 Ba lỗi hay gặp nhất khi cài đặt boids trên GPU:
 
-1. **Trọng số separation quá thấp so với alignment/cohesion.** Vì cohesion kéo boid vào tâm khối và alignment kéo boid theo vận tốc trung bình, cả hai gần như luôn "thắng" nếu separation không được nhân trọng số đủ mạnh ở cự ly gần — kết quả là cả đàn co lại thành một khối chồng lấn thay vì bay sát nhau có khoảng cách. Luôn kiểm tra: ở khoảng cách rất nhỏ, độ lớn lực separation ($1/d^2$ nhân trọng số) phải vượt hẳn tổng alignment + cohesion.
+1. **Trọng số separation quá thấp so với cohesion.** Cohesion luôn kéo boid vào tâm khối và chỉ separation đẩy ra — alignment chỉ làm các boid cùng hướng, không kéo lại gần hay đẩy ra xa — nên cohesion gần như luôn "thắng" nếu separation không được nhân trọng số đủ mạnh ở cự ly gần — kết quả là cả đàn co lại thành một khối chồng lấn thay vì bay sát nhau có khoảng cách. Luôn kiểm tra: ở khoảng cách rất nhỏ, lực đẩy separation phải thắng rõ lực kéo cohesion (demo này normalize tổng separation, nên độ lớn của nó chỉ do trọng số quyết định).
 2. **So sánh UV bằng dấu `==` để bỏ qua chính mình thay vì so khoảng cách.** `gl_FragCoord.xy / resolution.xy` và `(vec2(x, y) + 0.5) / resolution` là hai phép tính độc lập — sai số làm tròn dấu phẩy động đôi khi khiến `otherUv == uv` sai dù cùng một texel, khiến boid tự đẩy chính mình (self-repulsion), gây rung giật khó truy. Luôn dùng `dist < epsilon` để bỏ qua chính mình.
 3. **Quên khai báo chính biến làm dependency của chính nó trong `setVariableDependencies`.** `textureVelocity` cần đọc chính `textureVelocity` frame trước để cộng dồn lực lên vận tốc hiện có — bỏ sót dependency này nghĩa là init() không bao giờ chèn dòng `uniform sampler2D textureVelocity;` vào shader — shader tham chiếu tên chưa khai báo và LỖI BIÊN DỊCH ngay (undeclared identifier), đúng ca lỗi bài GPUComputationRenderer đã tập. (Sample một texture chưa bind trong WebGL trả về (0,0,0,1), không phải giá trị bất định.)
 

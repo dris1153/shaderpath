@@ -9,12 +9,12 @@ export const exercises: Exercise[] = [
 
 Xét HAI cách render: (X) qua \`EffectComposer\` — \`RenderPass → UnrealBloomPass → OutputPass\`; (Y) gọi thẳng \`renderer.render()\` ra màn hình, không composer.
 
-Không chạy code: trong (X), pass bloom "thấy" mỗi quả cầu ở giá trị luminance bao nhiêu, quả nào bloom, và cờ \`toneMapped\` đóng vai trò gì? Trong (Y), hai quả cầu khác nhau thế nào trên màn hình? Bám đúng điều kiện thật trong \`WebGLPrograms.getParameters\`: tonemapping của material chỉ được giữ khi \`material.toneMapped\` VÀ render target hiện tại là \`null\` — và mọi đường cong tonemapping kết thúc bằng \`saturate()\`.`,
+Không chạy code: trong (X), pass bloom "thấy" mỗi quả cầu ở giá trị luminance bao nhiêu, quả nào bloom, và cờ \`toneMapped\` đóng vai trò gì? Trong (Y), hai quả cầu khác nhau thế nào trên màn hình? Bám đúng điều kiện thật trong \`WebGLPrograms.getParameters\`: tonemapping của material chỉ được giữ khi \`material.toneMapped\` VÀ render target hiện tại là \`null\` — và các đường cong Linear, Reinhard, ACESFilmic đều kết thúc bằng \`saturate()\`.`,
       en: `A renderer has \`toneMapping = THREE.ACESFilmicToneMapping\` (R3F's default). The scene has two spheres, both with white \`emissive\` and \`emissiveIntensity = 2.4\`: sphere A uses the default material (\`toneMapped: true\`), sphere B has \`toneMapped: false\`. \`UnrealBloomPass\` is set to \`threshold = 1.3\`.
 
 Consider TWO ways to render: (X) through an \`EffectComposer\` — \`RenderPass → UnrealBloomPass → OutputPass\`; (Y) calling \`renderer.render()\` straight to the screen, no composer.
 
-Without running any code: in (X), at what luminance does the bloom pass "see" each sphere, which spheres bloom, and what role does the \`toneMapped\` flag play? In (Y), how do the two spheres differ on screen? Follow the REAL condition in \`WebGLPrograms.getParameters\`: a material's tone mapping is kept only when \`material.toneMapped\` AND the current render target is \`null\` — and every tonemapping curve ends with \`saturate()\`.`,
+Without running any code: in (X), at what luminance does the bloom pass "see" each sphere, which spheres bloom, and what role does the \`toneMapped\` flag play? In (Y), how do the two spheres differ on screen? Follow the REAL condition in \`WebGLPrograms.getParameters\`: a material's tone mapping is kept only when \`material.toneMapped\` AND the current render target is \`null\` — and the Linear, Reinhard and ACESFilmic curves all end with \`saturate()\`.`,
     },
     hints: [
       {

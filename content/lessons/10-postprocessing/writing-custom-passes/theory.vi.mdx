@@ -4,7 +4,7 @@
 
 ## FullScreenQuad không hề là một quad
 
-`Pass.js` còn export `FullScreenQuad` — cái tên gây hiểu lầm, vì hình học bên trong (`FullscreenTriangleGeometry`) là MỘT tam giác phủ quá khổ màn hình (đỉnh tại $(-1,3)$, $(-1,-1)$, $(3,-1)$), không phải hai tam giác ghép thành quad. Một tam giác tránh hẳn đường chéo seam giữa hai tam giác của một quad thật, và rẻ hơn một chút (3 vertex thay vì 4, không cần index buffer) — chi tiết kinh điển của full-screen-triangle trick. Quan trọng hơn cho phần dispose bên dưới: hình học này là biến MODULE-LEVEL, được `Pass.js` tạo đúng một lần rồi mọi `FullScreenQuad` trong toàn bộ app — của mọi pass, mọi composer — dùng chung.
+`Pass.js` còn export `FullScreenQuad` — cái tên gây hiểu lầm, vì hình học bên trong (`FullscreenTriangleGeometry`) là MỘT tam giác phủ quá khổ màn hình (đỉnh tại $(-1,3)$, $(-1,-1)$, $(3,-1)$), không phải hai tam giác ghép thành quad. Hai tam giác của một quad chung một đường chéo, mà GPU tô pixel theo khối 2×2, nên mọi khối vắt qua đường chéo bị tô cho cả hai tam giác; một tam giác lớn duy nhất không có cạnh bên trong (bớt đỉnh, 3 thay vì 4, thì không đáng kể) — chi tiết kinh điển của full-screen-triangle trick. Cũng đáng biết: hình học này là biến MODULE-LEVEL, được `Pass.js` tạo đúng một lần rồi mọi `FullScreenQuad` trong toàn bộ app — của mọi pass, mọi composer — dùng chung.
 
 ## Dựng một pass từng bước: heat shimmer
 
@@ -25,11 +25,11 @@ Trước khi thả `HeatShimmerPass` vào composer đầy đủ, cách rẻ nh�
 
 ## ShaderPass đủ dùng khi nào, và khi nào cần tự viết Pass
 
-`HeatShimmerPass` là hiệu ứng một-input-một-output đơn giản — trong dự án thật, `new ShaderPass(heatShimmerShaderObject)` là đủ, không cần tự viết class. Bài này tự tay dựng lại đúng những gì `ShaderPass` làm sẵn để thấy rõ hợp đồng bên dưới lớp vỏ tiện lợi đó. Tự viết `Pass` riêng chỉ thật sự cần khi hiệu ứng cần NHIỀU render target nội bộ (blur tách trục ngang/dọc, ví dụ), nhiều bước render không phải full-screen-quad (chính `RenderPass` là ví dụ), hoặc logic `needsSwap`/`clear` khác quy ước mặc định.
+`HeatShimmerPass` là hiệu ứng một-input-một-output đơn giản — trong dự án thật, `new ShaderPass(heatShimmerShaderObject)` là đủ, không cần tự viết class. Bài này tự tay dựng lại đúng những gì `ShaderPass` làm sẵn để thấy rõ hợp đồng bên dưới lớp vỏ tiện lợi đó. Tự viết `Pass` riêng chỉ thật sự cần khi hiệu ứng cần NHIỀU render target nội bộ (blur tách trục ngang/dọc, ví dụ), nhiều bước render không phải full-screen-quad (chính `RenderPass` là ví dụ), hoặc phải ghi vào chỗ khác `writeBuffer` (như `UnrealBloomPass` blend ngược vào `readBuffer` với `needsSwap = false`).
 
 ## pmndrs Effect: một hợp đồng khác hẳn
 
-`@react-three/postprocessing` (bản cài ^3.0.5) không dùng `Pass` của three.js core — nó bọc thư viện `pmndrs/postprocessing`, nơi mỗi hiệu ứng là một `Effect` khai báo đoạn GLSL của mình như một HÀM, để `EffectPass` GỘP nhiều effect vào một shader/pass biên dịch duy nhất thay vì chạy tuần tự N pass full-screen riêng biệt — ít lần đọc/ghi texture hơn, rẻ fillrate hơn khi xếp chồng nhiều hiệu ứng. Đánh đổi: một `Effect` không tự do cấp phát render target riêng như một `Pass` đầy đủ — nó phải vừa khuôn hợp đồng merge được. Hai kiến trúc phục vụ hai bài toán khác nhau, không phải cái này thay thế cái kia.
+`@react-three/postprocessing` (bản cài ^3.0.5) không dùng `Pass` của three.js core — nó bọc thư viện `pmndrs/postprocessing`, nơi mỗi hiệu ứng là một `Effect` khai báo đoạn GLSL của mình như một HÀM, để `EffectPass` GỘP nhiều effect vào một shader/pass biên dịch duy nhất thay vì chạy tuần tự N pass full-screen riêng biệt — ít lần đọc/ghi texture hơn, rẻ fillrate hơn khi xếp chồng nhiều hiệu ứng. Đánh đổi: các effect đã gộp chạy nối tiếp trong cùng một fragment shader, nên mỗi effect chỉ thấy màu đang tích luỹ tại đúng pixel của nó — mỗi `EffectPass` chứa tối đa một effect lấy mẫu pixel lân cận (convolution như chromatic aberration hay bokeh); cái thứ hai phải có pass riêng. Hai kiến trúc phục vụ hai bài toán khác nhau, không phải cái này thay thế cái kia.
 
 Bài `pass-order-and-fillrate` sau sẽ định lượng chính xác chi phí mỗi pass thêm vào chuỗi tốn bao nhiêu fillrate — nền tảng đọc code `Pass`/`ShaderPass` ở bài này là điều kiện để hiểu vì sao gộp pass (theo kiểu Effect) lại tiết kiệm được.
 
@@ -38,7 +38,7 @@ Bài `pass-order-and-fillrate` sau sẽ định lượng chính xác chi phí m�
 Ba lỗi hay gặp nhất khi tự viết Pass:
 
 1. **Quên set `needsSwap`, hoặc set sai giá trị cho hiệu ứng của mình.** Một pass ghi kết quả hợp lệ vào `writeBuffer` nhưng lỡ để `needsSwap = false` khiến `composer.readBuffer` không bao giờ được cập nhật trỏ tới nó — pass sau đọc nhầm buffer cũ, hiệu ứng "biến mất" dù code render hoàn toàn đúng.
-2. **Đọc nhầm `writeBuffer` thay vì `readBuffer`.** `writeBuffer` là đích sắp bị ghi đè trong CHÍNH pass này — sample nó làm input nghĩa là đọc dữ liệu rác hoặc dữ liệu cũ từ hai frame trước, tuỳ driver, một bug không nhất quán và khó lần ra.
+2. **Đọc nhầm `writeBuffer` thay vì `readBuffer`.** `writeBuffer` là đích mà CHÍNH pass này đang render vào — sample nó cùng lúc là feedback loop, nên WebGL bỏ qua lệnh vẽ với `INVALID_OPERATION` kèm cảnh báo trên console, và pass không cho ra gì — pass sau đọc lại nội dung cũ còn trong `writeBuffer`.
 3. **Không cập nhật uniform phụ thuộc độ phân giải trong `setSize()`.** Bỏ qua bước này khiến hiệu ứng đúng hoàn toàn ở kích thước ban đầu rồi méo/lệch tỉ lệ ngay khi resize cửa sổ — lỗi chỉ lộ ra khi test resize, dễ lọt qua review nếu chỉ test ở một kích thước cố định.
 
 </Callout>

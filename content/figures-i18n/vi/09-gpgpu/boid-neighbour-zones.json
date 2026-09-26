@@ -7,8 +7,8 @@
   "cohesion, the full R": "gắn kết, trọn R",
   "steer toward their mean position": "lái về vị trí trung bình của chúng",
   "The nesting is the whole balance: separation": "Chuyện lồng nhau chính là cả thế cân bằng: tách",
-  "has to win up close, or alignment and cohesion": "đàn phải thắng khi ở sát, không thì canh hướng",
-  "pull the flock into one overlapping clump.": "và gắn kết kéo đàn thành một cục chồng nhau.",
+  "has to win up close, or cohesion": "đàn phải thắng khi ở sát, không thì gắn kết",
+  "pulls the flock into one overlapping clump.": "kéo đàn thành một cục chồng nhau.",
   "No boid knows the flock's shape: each one sums these three local vectors and nothing else.": "Không boid nào biết hình dạng cả đàn: mỗi con chỉ cộng ba vector cục bộ này, không gì khác.",
   "To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel": "Để tìm ra chúng, nó quét cả 4.096 texel của texture trạng thái mỗi khung — 16.8 triệu lần đọc. Lân cận",
   "neighbours are not spatial neighbours, so the only cheap cut is striding (k = 8 leaves an eighth).": "theo texel không phải lân cận trong không gian, nên cách cắt rẻ duy nhất là nhảy bước (k = 8 còn một phần tám)."

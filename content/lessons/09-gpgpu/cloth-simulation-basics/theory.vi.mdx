@@ -4,13 +4,13 @@ Mô hình vải phổ biến nhất trong đồ hoạ thời gian thực là mas
 
 ## Verlet integration: vì sao ổn định hơn Euler tường minh
 
-Explicit Euler — cách tích phân "hiển nhiên" nhất — lưu vị trí và vận tốc riêng biệt, cập nhật tuần tự:
+Euler tường minh (forward Euler) — cách "hiển nhiên" nhất — lưu vị trí và vận tốc riêng biệt, và đẩy vị trí bằng vận tốc CŨ:
 
 $$
-\vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t, \qquad \vec{x}_{t+1} = \vec{x}_t + \vec{v}_{t+1} \, \Delta t
+\vec{x}_{t+1} = \vec{x}_t + \vec{v}_t \, \Delta t, \qquad \vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t
 $$
 
-Vấn đề nằm ở constraint cứng: một lò xo giữ khoảng cách gần tuyệt đối tương đương một phương trình vi phân "stiff" — sai số tích luỹ mỗi bước Euler bơm thêm năng lượng giả vào hệ, vải rung nảy hoặc nổ tung dù không có lực bất thường. Verlet integration né vấn đề này bằng cách không lưu vận tốc tường minh — chỉ lưu vị trí hiện tại và vị trí frame trước, suy vận tốc ngầm từ hiệu của chúng:
+Vấn đề nằm ở constraint cứng: một lò xo giữ khoảng cách gần tuyệt đối tương đương một phương trình vi phân "stiff" — sai số tích luỹ mỗi bước Euler bơm thêm năng lượng giả vào hệ, vải rung nảy hoặc nổ tung dù không có lực bất thường. Lối thoát (của Jakobsen) là thôi mô hình khoảng cách gần như cứng bằng lò xo cứng: tích phân tự do, rồi chiếu vị trí về lại các constraint. Verlet integration khiến phép chiếu đó rẻ vì nó không lưu vận tốc tường minh — chỉ lưu vị trí hiện tại và vị trí frame trước, suy vận tốc ngầm từ hiệu của chúng:
 
 $$
 \vec{x}_{t+1} = \vec{x}_t + (\vec{x}_t - \vec{x}_{t-1}) \cdot d + \vec{a}_t \, \Delta t^2
@@ -38,7 +38,7 @@ Một lưới vải đầy đủ dùng ba loại constraint, phân biệt bằng
 
 ## Ghim điểm và lực: trọng lực, gió chiếu theo pháp tuyến
 
-Ghim (pin) dễ cài đặt nhất về cơ chế nhưng dễ quên nhất về phạm vi: một điểm bị ghim bỏ qua toàn bộ tích phân Verlet VÀ constraint-solving, luôn ghi lại đúng vị trí nghỉ ban đầu mỗi frame — mã hoá bằng mask trong kênh alpha của texture vị trí, đọc theo UV như Track 0 đã giới thiệu. Trọng lực chỉ là một hằng số cộng vào gia tốc. Gió thú vị hơn: một hướng gió không đổi làm vải phồng lên như bong bóng phẳng lì, không có cảm giác gió thật. Cách đúng là chiếu vector gió lên pháp tuyến cục bộ tại từng điểm ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$, chặn dưới 0 để gió không "hút" vải từ phía sau) — pháp tuyến ước lượng rẻ bằng cross product của hai vector nối hàng xóm ngang/dọc, đúng kỹ thuật normal-từ-gradient bài heightfield Track 8 đã dùng. Cộng thêm tín hiệu "gật gù" biến thiên theo không gian lẫn thời gian (vài sóng sin lệch tần số, rẻ hơn noise 3D thật), vải sẽ gợn sóng thay vì phồng cứng một khối.
+Ghim (pin) dễ cài đặt nhất về cơ chế nhưng dễ quên nhất về phạm vi: một điểm bị ghim bỏ qua toàn bộ tích phân Verlet VÀ constraint-solving, luôn ghi lại đúng vị trí nghỉ ban đầu mỗi frame — mã hoá bằng mask trong kênh alpha của texture vị trí, đọc theo UV như Track 0 đã giới thiệu. Trọng lực chỉ là một hằng số cộng vào gia tốc. Gió thú vị hơn: một vector gió không đổi tác động như trọng lực bị nghiêng: tấm vải chỉ nghiêng đi rồi treo im, không có cảm giác gió thật. Cách đúng là chiếu vector gió lên pháp tuyến cục bộ tại từng điểm ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$; demo còn chặn tích vô hướng dưới 0, nên chỉ mảng vải quay về phía gió mới bị đẩy — một đơn giản hoá một phía, vì lực chiếu vốn luôn hướng theo chiều gió) — pháp tuyến ước lượng rẻ bằng cross product của hai vector nối hàng xóm ngang/dọc, đúng kỹ thuật normal-từ-gradient bài heightfield Track 8 đã dùng. Cộng thêm tín hiệu gió giật biến thiên theo không gian lẫn thời gian (vài sóng sin lệch tần số, rẻ hơn noise 3D thật), vải sẽ gợn sóng thay vì đứng yên ở một tư thế nghiêng.
 
 ## Số vòng lặp constraint quyết định độ "dẻo"
 
@@ -52,6 +52,6 @@ Ba lỗi hay gặp nhất khi cài GPU cloth:
 
 1. **Tự khai báo lại uniform của dependency.** `init()` prepend sẵn `uniform sampler2D <tên>;` cho mọi dependency, kể cả self-dependency. Viết thêm dòng đó trong shader là lỗi trùng định nghĩa — demo im lặng ra canvas trắng chứ không báo gì rõ ràng.
 2. **Đưa kết quả Jacobi relax pass cuối cùng nhầm chỗ.** Nếu texture "hiện tại" dùng cho frame sau vẫn là candidate CHƯA relax, vận tốc ngầm của Verlet ở frame kế bị tính sai — vải trông như có thêm một lực bí ẩn không nguồn gốc.
-3. **Gió không chiếu theo pháp tuyến.** Cộng thẳng vector gió hằng vào gia tốc mà không nhân $(\hat n \cdot \vec w)$ khiến cả tấm vải trôi dạt một hướng như khối cứng — dấu hiệu nhận biết là vải "bay" thay vì "gợn".
+3. **Gió không chiếu theo pháp tuyến.** Cộng thẳng vector gió hằng vào gia tốc mà không nhân $(\hat n \cdot \vec w)$ khiến cả tấm vải chỉ nghiêng đi rồi treo im, như thể trọng lực bị nghiêng — dấu hiệu nhận biết là vải "treo xiên" thay vì "gợn".
 
 </Callout>

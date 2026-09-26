@@ -83,6 +83,6 @@
   <text class="note" x="320" y="282" text-anchor="middle">next frame the two sets trade roles</text>
 
   <text class="foot" x="320" y="356" text-anchor="middle">gl.transformFeedbackVaryings(program, [&quot;vPosition&quot;, &quot;vVelocity&quot;], SEPARATE_ATTRIBS) must run BEFORE</text>
-  <text class="foot" x="320" y="376" text-anchor="middle">linkProgram — the linker freezes the capture slots, so calling it afterwards does nothing at all. And one</text>
+  <text class="foot" x="320" y="376" text-anchor="middle">linkProgram — the linker freezes the capture slots; calling it later waits for the next link. And one</text>
   <text class="foot" x="320" y="396" text-anchor="middle">buffer can never be a VAO input and a capture destination in the same draw: that is why there are two sets.</text>
 </svg>

@@ -59,7 +59,7 @@ Ba giới hạn đáng nhớ, cả ba đều bắt nguồn từ việc nó chỉ
 
 ## Kiểu dữ liệu texture: FloatType mặc định, fallback phải tự làm
 
-`dataType` mặc định là `THREE.FloatType`, đổi được qua `gpuCompute.setDataType(type)`. Render vào một render target kiểu float đòi hỏi WebGL2 hỗ trợ extension [`EXT_color_buffer_float`](https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/) — không phải mọi GPU di động có nó. Đọc kỹ file nguồn `GPUComputationRenderer.js` không thấy bất kỳ đoạn code nào tự phát hiện thiết bị hay tự đổi sang `HalfFloatType` — khác với mô tả thường nghe truyền miệng, bản hiện tại **không** tự fallback: nếu thiết bị không hỗ trợ float render target, `compute()` vẫn chạy không báo lỗi gì (không đi qua nhánh kiểm tra nào cả), nhưng framebuffer sẽ không hoàn chỉnh và texture đọc lại toàn số rác hoặc đen ngòm. Muốn an toàn trên di động, tự gọi `gpuCompute.setDataType(THREE.HalfFloatType)` trước khi `addVariable` — độ chính xác thấp hơn nhưng đủ cho hầu hết mô phỏng particle, và được hỗ trợ rộng hơn nhiều.
+`dataType` mặc định là `THREE.FloatType`, đổi được qua `gpuCompute.setDataType(type)`. Render vào một render target kiểu float đòi hỏi WebGL2 hỗ trợ extension [`EXT_color_buffer_float`](https://registry.khronos.org/webgl/extensions/EXT_color_buffer_float/) — không phải mọi GPU di động có nó. Đọc kỹ file nguồn `GPUComputationRenderer.js` không thấy bất kỳ đoạn code nào tự phát hiện thiết bị hay tự đổi sang `HalfFloatType` — khác với mô tả thường nghe truyền miệng, bản hiện tại **không** tự fallback: nếu thiết bị không hỗ trợ float render target, `compute()` vẫn chạy không ném lỗi (three chỉ in một cảnh báo trên console một lần), nhưng framebuffer sẽ không hoàn chỉnh, không gì được ghi vào, và trạng thái đứng yên ở 0 (đen ngòm). Muốn an toàn trên di động, tự gọi `gpuCompute.setDataType(THREE.HalfFloatType)` trước `init()` — độ chính xác thấp hơn nhưng đủ cho hầu hết mô phỏng particle, và được hỗ trợ rộng hơn nhiều.
 
 ## Nối tiếp: cấu trúc hai biến này quay lại ở đâu
 
@@ -71,6 +71,6 @@ Ba lỗi hay gặp nhất với `GPUComputationRenderer`:
 
 1. **Quên gọi `setVariableDependencies` trước `init()`.** Không có dependency, không có uniform `sampler2D` nào được chèn — shader tham chiếu `texturePosition`/`textureVelocity` sẽ không biên dịch được (identifier chưa khai báo), hoặc nếu bạn không tham chiếu gì thì trạng thái đơn giản là đứng yên mãi mãi vì chẳng đọc được frame trước.
 2. **Tự khai báo lại `uniform sampler2D texturePosition;`** cho một biến đã liệt kê chính nó trong dependency. `init()` đã tự chèn đúng dòng đó rồi — khai báo tay thêm một lần nữa là lỗi biên dịch "redefinition".
-3. **Coi `FloatType` mặc định là chạy được trên mọi thiết bị.** Không có fallback tự động trong bản three hiện tại (đã đọc source xác nhận) — thiết bị thiếu `EXT_color_buffer_float` không ném lỗi gì ở `init()` hay `compute()`, chỉ âm thầm cho texture toàn số rác hoặc đen ngòm.
+3. **Coi `FloatType` mặc định là chạy được trên mọi thiết bị.** Không có fallback tự động trong bản three hiện tại (đã đọc source xác nhận) — thiết bị thiếu `EXT_color_buffer_float` không ném lỗi ở `init()` hay `compute()` — three chỉ in một cảnh báo một lần — và trạng thái không bao giờ rời khỏi 0 (đen ngòm).
 
 </Callout>

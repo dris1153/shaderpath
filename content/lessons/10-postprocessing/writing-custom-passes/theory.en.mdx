@@ -4,7 +4,7 @@ Reading `Pass.js` directly in `three/addons/postprocessing/`, the base `Pass` cl
 
 ## FullScreenQuad Isn't Actually a Quad
 
-`Pass.js` also exports `FullScreenQuad` — a misleading name, since the geometry inside it (`FullscreenTriangleGeometry`) is a SINGLE oversized triangle covering the screen (vertices at $(-1,3)$, $(-1,-1)$, $(3,-1)$), not two triangles forming a quad. A single triangle avoids the diagonal seam a real two-triangle quad would have, and is slightly cheaper (3 vertices, no index buffer) — the classic full-screen-triangle trick. More important for the dispose section below: this geometry is a MODULE-LEVEL variable, created exactly once by `Pass.js`, and every `FullScreenQuad` in the entire app — across every pass, every composer — shares that same instance.
+`Pass.js` also exports `FullScreenQuad` — a misleading name, since the geometry inside it (`FullscreenTriangleGeometry`) is a SINGLE oversized triangle covering the screen (vertices at $(-1,3)$, $(-1,-1)$, $(3,-1)$), not two triangles forming a quad. A quad's two triangles share a diagonal, and the GPU shades pixels in 2×2 blocks, so every block straddling that diagonal gets shaded for both triangles; one oversized triangle has no internal edge (the vertex saving, 3 instead of 4, is negligible) — the classic full-screen-triangle trick. Also worth knowing: this geometry is a MODULE-LEVEL variable, created exactly once by `Pass.js`, and every `FullScreenQuad` in the entire app — across every pass, every composer — shares that same instance.
 
 ## Building a Pass Step by Step: Heat Shimmer
 
@@ -25,11 +25,11 @@ Before dropping `HeatShimmerPass` into the full composer, the cheapest way to ca
 
 ## When ShaderPass Suffices, and When a Custom Pass Is Worth It
 
-`HeatShimmerPass` is a simple single-input, single-output effect — in a real project, `new ShaderPass(heatShimmerShaderObject)` would be enough, no custom class needed. This lesson hand-builds exactly what `ShaderPass` already does to expose the contract underneath that convenience wrapper. Writing your own `Pass` subclass genuinely pays off when an effect needs MULTIPLE internal render targets (a separable horizontal/vertical blur, for instance), multiple non-full-screen-quad render steps (`RenderPass` itself is the prime example), or `needsSwap`/`clear` logic that diverges from the defaults.
+`HeatShimmerPass` is a simple single-input, single-output effect — in a real project, `new ShaderPass(heatShimmerShaderObject)` would be enough, no custom class needed. This lesson hand-builds exactly what `ShaderPass` already does to expose the contract underneath that convenience wrapper. Writing your own `Pass` subclass genuinely pays off when an effect needs MULTIPLE internal render targets (a separable horizontal/vertical blur, for instance), multiple non-full-screen-quad render steps (`RenderPass` itself is the prime example), or has to write somewhere other than `writeBuffer` (as `UnrealBloomPass` blends back into `readBuffer` with `needsSwap = false`).
 
 ## The pmndrs Effect: A Genuinely Different Contract
 
-`@react-three/postprocessing` (installed at ^3.0.5) doesn't use three.js core's `Pass` at all — it wraps the `pmndrs/postprocessing` library, where every effect is an `Effect` declaring its GLSL as a FUNCTION, so an `EffectPass` can MERGE several effects into one compiled shader/pass instead of running N separate full-screen passes sequentially — fewer texture reads/writes, cheaper on fillrate when stacking many effects. The tradeoff: an `Effect` can't freely allocate its own render targets the way a full `Pass` can — it has to fit the mergeable contract. The two architectures serve different problems; neither replaces the other.
+`@react-three/postprocessing` (installed at ^3.0.5) doesn't use three.js core's `Pass` at all — it wraps the `pmndrs/postprocessing` library, where every effect is an `Effect` declaring its GLSL as a FUNCTION, so an `EffectPass` can MERGE several effects into one compiled shader/pass instead of running N separate full-screen passes sequentially — fewer texture reads/writes, cheaper on fillrate when stacking many effects. The tradeoff: merged effects run one after another inside a single fragment shader, so each sees only the running color at its own pixel — one `EffectPass` holds at most one effect that samples neighboring pixels (a convolution such as chromatic aberration or bokeh); a second one needs its own pass. The two architectures serve different problems; neither replaces the other.
 
 The later `pass-order-and-fillrate` lesson quantifies exactly how much fillrate each added pass costs — the `Pass`/`ShaderPass` source-reading done here is the foundation for understanding why merging passes (the Effect approach) actually saves anything.
 
@@ -38,7 +38,7 @@ The later `pass-order-and-fillrate` lesson quantifies exactly how much fillrate 
 The three most common mistakes writing a custom Pass:
 
 1. **Forgetting `needsSwap`, or setting it wrong for your effect.** A pass that writes a valid result into `writeBuffer` but leaves `needsSwap = false` means `composer.readBuffer` never gets updated to point at it — the next pass reads the stale old buffer instead, and the effect "disappears" even though the render code was entirely correct.
-2. **Reading `writeBuffer` instead of `readBuffer` by mistake.** `writeBuffer` is the target about to be overwritten by THIS very pass — sampling it as input means reading garbage or stale data from two frames back, depending on the driver, an inconsistent bug that's hard to track down.
+2. **Reading `writeBuffer` instead of `readBuffer` by mistake.** `writeBuffer` is the target THIS very pass renders into — sampling it at the same time is a feedback loop, so WebGL skips the draw with `INVALID_OPERATION` and a console warning, and the pass produces nothing — the next pass reads whatever `writeBuffer` last held, a stale image.
 3. **Not updating a resolution-dependent uniform in `setSize()`.** Skip this and the effect is perfectly correct at the initial size, then stretches or skews the instant the window resizes — a bug that only surfaces on resize testing, easy to miss if you only ever test at one fixed size.
 
 </Callout>

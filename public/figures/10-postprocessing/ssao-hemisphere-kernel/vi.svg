@@ -94,6 +94,6 @@
 
   <text class="note" x="24" y="306">kernelRadius tính theo đơn vị view space chứ không phải pixel, và độ dài mẫu được co lại bằng</text>
   <text class="note" x="24" y="324">lerp(0.1, 1, (i/N)²) — phần lớn trong 32 mẫu rơi gần p.</text>
-  <text class="note" x="24" y="348">Một texture nhiễu 4×4 xoay cả kernel theo từng pixel, nên sai số còn lại hiện ra như nhiễu chứ không</text>
+  <text class="note" x="24" y="348">Texture nhiễu 4×4 lật hệ trục của kernel theo pixel, nên sai số còn lại hiện ra như nhiễu chứ không</text>
   <text class="note" x="24" y="366">phải dải sọc — và đó đúng là lý do SSAOPass chạy ngay một lượt blur 5×5 sau đó.</text>
 </svg>

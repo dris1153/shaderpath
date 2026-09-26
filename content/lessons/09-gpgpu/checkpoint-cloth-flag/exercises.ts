@@ -72,7 +72,7 @@ const integrateShader = /* glsl */ \`
 
     // TODO 1: project windRaw onto \`normal\` (dot(normal, windRaw), clamped
     // at 0, scaled back up by length(windRaw)) — the exact mechanism that
-    // turns "puffs sideways like a rigid slab" into "flaps like fabric".
+    // turns "leans over and hangs still" into "flaps like fabric".
     vec3 wind = vec3(0.0);
 
     vec3 accel = uGravity + wind;
@@ -393,7 +393,7 @@ const integrateShader = /* glsl */ \`
 
     // Projected onto the surface normal: only the wind component along the
     // NORMAL (perpendicular to the face) survives, clamped at 0 so wind
-    // never "sucks" the cloth from behind — flap, not slide.
+    // only faces turned toward the wind get pushed — flap, not slide.
     vec3 wind = normal * max(dot(normal, windRaw), 0.0) * length(windRaw);
 
     vec3 accel = uGravity + wind;
@@ -663,8 +663,8 @@ export function ClothFlag() {
         en: "`uDt` is a fixed constant (1/60), NEVER taken from the real per-frame delta — swapping in `state.clock.getDelta()` sounds more 'accurate' but makes Verlet's implicit velocity inconsistent frame to frame, destabilizing the constraint solve even though the integration formula itself isn't wrong.",
       },
       {
-        vi: "Gió chiếu lên pháp tuyến nghĩa là chỉ giữ phần lực dọc theo PHÁP TUYẾN (vuông góc với bề mặt), kẹp về 0 khi gió thổi từ mặt sau — cộng thẳng `windRaw` vào gia tốc (bỏ qua bước chiếu) làm cả tấm vải trôi cứng theo một hướng như một khối phẳng, không có cảm giác phần phật.",
-        en: "Projecting wind onto the normal means keeping only the force component along the NORMAL (perpendicular to the surface), clamped to 0 when wind hits from behind — adding `windRaw` straight into acceleration (skipping the projection) makes the whole sheet drift rigidly in one direction like a flat slab, with no sense of flutter.",
+        vi: "Gió chiếu lên pháp tuyến nghĩa là chỉ giữ phần lực dọc theo PHÁP TUYẾN (vuông góc với bề mặt), kẹp về 0 khi gió thổi từ mặt sau — cộng thẳng `windRaw` vào gia tốc (bỏ qua bước chiếu) chỉ khiến cả tấm vải nghiêng đi rồi treo im, như thể trọng lực bị nghiêng, không có cảm giác phần phật.",
+        en: "Projecting wind onto the normal means keeping only the force component along the NORMAL (perpendicular to the surface), clamped to 0 when wind hits from behind — adding `windRaw` straight into acceleration (skipping the projection) only makes the whole sheet lean over and hang still, as if gravity were tilted, with no sense of flutter.",
       },
       {
         vi: "Pháp tuyến trong vertex shader hiển thị phải tính lại MỖI FRAME từ `texturePosition` (cross của right-left và up-down) — dùng pháp tuyến gốc của `PlaneGeometry` phẳng sẽ luôn chỉ thẳng ra (0,0,1) bất kể vải biến dạng thế nào, ánh sáng sẽ không bao giờ đổi theo nếp gấp.",

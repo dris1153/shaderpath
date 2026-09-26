@@ -8,8 +8,8 @@ export const reviewCards: ReviewCard[] = [
       en: "All three rules are running, yet the flock collapses into an overlapping clump instead of flying with spacing. What is out of balance?",
     },
     a: {
-      vi: "Separation quá yếu ở cự ly gần so với cohesion: cohesion luôn kéo boid về tâm khối, và chỉ separation đẩy ra (alignment chỉ làm các boid cùng hướng, không đổi khoảng cách). Trong bán kính nhỏ nhất, lực đẩy separation phải thắng rõ lực kéo cohesion — tăng trọng số của nó.",
-      en: "Separation is too weak at close range relative to cohesion: cohesion keeps pulling every boid toward the local center, and only separation pushes back (alignment matches headings; it does not change spacing). Inside the smallest radius, separation's push must clearly beat cohesion's pull — raise its weight.",
+      vi: "Separation quá yếu ở cự ly gần so với cohesion: cohesion luôn kéo boid về tâm khối, và chỉ separation đẩy ra (alignment chỉ làm các boid cùng hướng, không kéo lại gần hay đẩy ra xa). Trong bán kính nhỏ nhất, lực đẩy separation phải thắng rõ lực kéo cohesion — tăng trọng số của nó.",
+      en: "Separation is too weak at close range relative to cohesion: cohesion keeps pulling every boid toward the local center, and only separation pushes back (alignment matches headings; it doesn't pull boids together or push them apart). Inside the smallest radius, separation's push must clearly beat cohesion's pull — raise its weight.",
     },
   },
   {

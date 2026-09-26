@@ -42,7 +42,7 @@ Either way, sampling always needs a **half-texel inset** — the same reason Tra
 
 ## Order Doctrine: Grade After Tone Mapping
 
-A grading LUT — whether baked from real camera footage or hand-authored like teal-orange here — is designed for **display-referred** images: values already tone mapped, sitting neatly in $[0,1]$, where "0.2" genuinely means "shadow region." Grade directly onto linear HDR data instead (which could be 40.0), and a $16^3$ LUT covering only $[0,1]$ has nothing to do but clamp it into the nearest edge cell — every highlight, no matter how different, lands in the exact same cell, and the shoulder tone mapping was supposed to produce never happens before grading sees it.
+A grading LUT — whether baked from real camera footage or hand-authored like teal-orange here — is designed for **display-referred** images: values already tone mapped, sitting neatly in $[0,1]$, where "0.2" genuinely means "shadow region." Grade directly onto linear HDR data instead (which could be 40.0), and a $16^3$ LUT covering only $[0,1]$ has nothing to do but clamp it into the nearest edge cell — highlights, no matter how different, pile onto the LUT's outer faces (the white-hot ones into the same corner cell), and the shoulder tone mapping was supposed to produce never happens before grading sees it.
 
 That's why the demo's `GradingPipeline` places `OutputPass` BEFORE the custom LUT pass: `RenderPass` (linear HDR) → `OutputPass` (tone map + sRGB encode) → LUT pass (reading an already-display-referred image). Filament's tone mapping documentation confirms this exact ordering for every modern pipeline.
 
@@ -56,8 +56,8 @@ The next lesson dissects the exact `Pass` class `OutputPass`/`ShaderPass` inheri
 
 The three most common tone mapping and LUT mistakes:
 
-1. **Grading before tone mapping (LUT pass before OutputPass).** A $16^3$ LUT covers only $[0,1]$; feed it linear HDR values (possibly 40.0) and every highlight clamps into the same edge cell regardless of how different they are — the teal-orange shift never reaches a real highlight, because "highlight" in the display-referred sense doesn't exist yet at that stage.
-2. **Forgetting the half-texel inset when sampling a LUT.** Sampling raw `rgb` without $rgb \cdot (1-\frac1N) + \frac1{2N}$ pushes the extremes (pure black/white) outside the cell grid — with `ClampToEdgeWrapping` that lands on a cell that isn't the true corner, a small but systematic error across the whole image.
+1. **Grading before tone mapping (LUT pass before OutputPass).** A $16^3$ LUT covers only $[0,1]$; feed it linear HDR values (possibly 40.0) and highlights clamp onto the LUT's outer faces — the white-hot ones into the very same corner cell — regardless of how different they are — the teal-orange shift never reaches a real highlight, because "highlight" in the display-referred sense doesn't exist yet at that stage.
+2. **Forgetting the half-texel inset when sampling a LUT.** Sampling raw `rgb` without $rgb \cdot (1-\frac1N) + \frac1{2N}$ maps the color range onto the texture's outer edges instead of the corner cells' centers: black, white and exact mid-gray still come out right, but everything in between is pushed away from mid-gray by up to $\frac{1}{2N}$ (≈0.03 at $N = 16$), and values within half a cell of either end crush to pure black or white — a small, systematic contrast error.
 3. **Treating the neutral LUT as decoration, not a test.** A swapped-axis bug (R and B sampled in the wrong place) or a wrong inset formula can still look "close enough" with a colored LUT — only the neutral LUT catches it immediately, since it's the one case required to reproduce the original pixel exactly.
 
 </Callout>

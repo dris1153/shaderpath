@@ -15,8 +15,8 @@ export const reviewCards: ReviewCard[] = [
   {
     id: "float-type-has-no-fallback",
     q: {
-      vi: "Trên vài điện thoại, mô phỏng `GPUComputationRenderer` ra rác hoặc đen kịt, trong khi `init()` trả về `null` và `compute()` không ném lỗi nào. Thiếu gì?",
-      en: "On some phones a `GPUComputationRenderer` simulation renders garbage or solid black, while `init()` returns `null` and `compute()` throws nothing. What is missing?",
+      vi: "Trên vài điện thoại, mô phỏng `GPUComputationRenderer` cứ đen kịt, trong khi `init()` trả về `null` và `compute()` không ném lỗi nào. Thiếu gì?",
+      en: "On some phones a `GPUComputationRenderer` simulation stays solid black, while `init()` returns `null` and `compute()` throws nothing. What is missing?",
     },
     a: {
       vi: "Kiểu mặc định là `FloatType`, mà render vào texture float cần `EXT_color_buffer_float` — không phải máy nào cũng có, và bản three này không tự lùi về kiểu khác. Gọi `gpuCompute.setDataType(THREE.HalfFloatType)` trước `init()`: kém chính xác hơn nhưng được hỗ trợ rộng hơn nhiều.",

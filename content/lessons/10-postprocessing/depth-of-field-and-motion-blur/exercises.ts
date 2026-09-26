@@ -94,8 +94,8 @@ function dofBlurRadius(depth: number, params: DofParams): number {
     id: "camera-only-velocity-reconstruction",
     kind: "concept",
     prompt: {
-      vi: `Kỹ thuật motion blur "chỉ-từ-camera" dùng đúng hai ma trận $4\\times4$ để tái tạo vector vận tốc màn hình của một pixel, không cần buffer vận tốc riêng. Nêu tên chính xác hai ma trận đó, ma trận nào dùng để làm gì (unproject hay reproject), và giải thích bằng một câu vì sao kỹ thuật này cho vệt mờ sai (bằng 0) với một nhân vật đang chạy giữa một cảnh tĩnh, dù camera đứng yên hay di chuyển.`,
-      en: `The "camera-only" motion blur technique uses exactly two $4\\times4$ matrices to reconstruct a pixel's screen-space velocity vector, with no dedicated velocity buffer. Name the two matrices precisely, state which one unprojects and which one reprojects, and explain in one sentence why this technique produces zero blur for a character running through an otherwise static scene, whether or not the camera moves.`,
+      vi: `Kỹ thuật motion blur "chỉ-từ-camera" dùng đúng hai ma trận $4\\times4$ để tái tạo vector vận tốc màn hình của một pixel, không cần buffer vận tốc riêng. Nêu tên chính xác hai ma trận đó, ma trận nào dùng để làm gì (unproject hay reproject), và giải thích bằng một câu vì sao kỹ thuật này không tạo vệt mờ nào từ chính việc chạy của một nhân vật giữa một cảnh tĩnh — nó chỉ mờ theo chuyển động của camera, như một vật đứng yên.`,
+      en: `The "camera-only" motion blur technique uses exactly two $4\\times4$ matrices to reconstruct a pixel's screen-space velocity vector, with no dedicated velocity buffer. Name the two matrices precisely, state which one unprojects and which one reprojects, and explain in one sentence why this technique gives a character running through an otherwise static scene no blur from its own running — it only blurs with the camera's motion, like a static object.`,
     },
     hints: [
       {

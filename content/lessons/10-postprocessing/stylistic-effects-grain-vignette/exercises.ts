@@ -146,8 +146,8 @@ function chromaticAberrationOffset(
         en: "Aspect only multiplies $p$'s $x$ component before computing $\\text{dist}$ — this is the same aspect-correction step that keeps the vignette/CA circular instead of elliptical, identical to how this lesson handles the vignette.",
       },
       {
-        vi: "\`aberrationPx / resolution.x\` chuyển độ mạnh từ đơn vị PIXEL sang đơn vị UV (khoảng $[0,1]$) — thiếu phép chia này, cùng một giá trị \`aberrationPx\` sẽ tạo ra độ lệch UV khác nhau (và do đó độ lệch pixel khác nhau) tuỳ theo độ phân giải canvas.",
-        en: "\`aberrationPx / resolution.x\` converts the strength from PIXEL units into UV units (the $[0,1]$ range) — skip this division and the same \`aberrationPx\` value produces a different UV shift (and therefore a different pixel shift) depending on canvas resolution.",
+        vi: "\`aberrationPx / resolution.x\` chuyển độ mạnh từ đơn vị PIXEL sang đơn vị UV (khoảng $[0,1]$) — thiếu phép chia này, \`aberrationPx\` bị hiểu là đơn vị UV: giá trị định là 2 pixel thành độ lệch bằng hai lần cả bề rộng màn hình.",
+        en: "\`aberrationPx / resolution.x\` converts the strength from PIXEL units into UV units (the $[0,1]$ range) — skip this division and \`aberrationPx\` is read as UV units: a value meant as 2 pixels becomes a shift of two whole screen widths.",
       },
     ],
     checklist: [

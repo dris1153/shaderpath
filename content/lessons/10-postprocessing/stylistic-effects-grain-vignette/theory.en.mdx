@@ -25,7 +25,7 @@ color += n * uGrainAmount * grainFalloff;
 
 That helper is called `luma`, not `luminance` — three injects its own `luminance()` into the fragment prefix of **every** `ShaderMaterial`, so redefining the name is a compile error that silently takes the whole pass down.
 
-Grain is also deliberately written **monochrome** — the same noise value `n` added to all three of R, G, B, rather than hashing three independent channels. This isn't cutting corners: silver-halide grain is a physical DENSITY fluctuation, highly correlated across a single grain's color layers, not independent per-channel sensor noise — monochrome grain reads as "film," while independently-hashed per-channel grain reads as digital sensor noise (chroma noise), an entirely different feeling.
+Grain is also deliberately written **monochrome** — the same noise value `n` added to all three of R, G, B, rather than hashing three independent channels. This isn't cutting corners: grain reads as film mostly through brightness — black-and-white film grain is purely a DENSITY fluctuation, and the eye reads that luminance texture as "film" — while independently-hashed per-channel grain adds colored speckles, read as digital sensor noise (chroma noise), an entirely different feeling.
 
 ## Vignette: Radial Darkening — Optical Origin and Its Job in Composition
 
@@ -72,6 +72,6 @@ The three most common mistakes when writing grain/vignette/CA:
 
 1. **Hashing grain only on `uv`, forgetting `time`.** The result is a STATIC noise frame, repeating identically every frame — reading as a dirty nylon sheet permanently stuck to the screen, an instant "amateur shader" tell rather than real grain.
 2. **Forgetting to multiply the distance-to-center by `aspect`.** Vignette and CA darken/shift in an ELLIPSE stretched along the frame's long edge instead of a circle — most visible on ultra-wide or portrait canvases, easy to mistake for a bug rather than an aesthetic effect.
-3. **Defining the chromatic aberration offset in raw UV units, without dividing by `resolution.x`.** The same "strength" value produces a different pixel shift depending on render resolution — an effect tasteful at 1x DPR suddenly breaks on a 2x–3x DPR retina display, without changing a single number in the code.
+3. **Tuning the chromatic aberration strength without deciding which pixels it counts.** The offset divides `s` by `uResolution.x`, so `s` is measured in whatever pixels `uResolution` holds. This demo feeds R3F's `size` (CSS pixels), so its `s` looks the same at any DPR; feed the drawing-buffer size (render pixels) instead and the same `s` shrinks to a half or a third on a 2x–3x display, so a fringe tuned on a 1x screen nearly vanishes on a retina phone. Keep `uResolution` in CSS pixels, or define `s` as a fraction of the screen (plain UV units).
 
 </Callout>

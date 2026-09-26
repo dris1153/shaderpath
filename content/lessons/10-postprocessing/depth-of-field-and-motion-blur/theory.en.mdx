@@ -46,7 +46,7 @@ A full velocity buffer needs every vertex's previous clip-space position (usuall
 
 ## The Cost Ladder: None → Camera-Only → Full Velocity Buffer
 
-Three tiers: no motion blur (zero cost, fast camera motion reads as visible judder at low frame rates); camera-only (one full-screen pass plus one extra depth pre-pass, no new buffer — cheap, correct for the camera, but self-animating objects stay perfectly rigid); full velocity buffer (an extra target writing every vertex's velocity every frame — correct for both, most expensive). A cutscene with fast character action needs the full buffer; a static exploration scene with only camera pan/orbit is already convincing with camera-only.
+Three tiers: no motion blur (zero cost, fast camera motion reads as visible judder at low frame rates); camera-only (one full-screen pass plus one extra depth pre-pass, no new buffer — cheap, correct for the camera, but self-animating objects get no blur from their own motion); full velocity buffer (an extra target writing every vertex's velocity every frame — correct for both, most expensive). A cutscene with fast character action needs the full buffer; a static exploration scene with only camera pan/orbit is already convincing with camera-only.
 
 ## Where This Foundation Leads
 
@@ -58,6 +58,6 @@ The three most common mistakes when implementing post-process DOF and motion blu
 
 1. **Treating `BokehPass`'s `aperture`/`maxblur` as real optical parameters.** They're tuning coefficients for the linear approximation, not an f-number or focal length — cranking `aperture` up expecting "stronger DOF" without realizing it's just a multiplier gives jumpy, hard-to-predict results compared to adjusting `focus`, which has a clear world-unit meaning.
 2. **Thinking blending previous frames equals motion blur.** A conceptual bug, not a code bug: blending produces ghosting, not a continuous streak — getting it right requires computing screen-space velocity and gathering along that vector.
-3. **Using camera-only motion blur, then wondering why self-animating objects show no blur.** This technique only derives velocity from depth plus the camera matrix delta — it assumes geometry sits still in world space; a character running through an otherwise static scene shows zero streaking regardless of camera motion, because the "previous frame" world position the pass reconstructs for it reuses the current depth, not the object's actual position one frame earlier.
+3. **Using camera-only motion blur, then wondering why self-animating objects show no blur.** This technique only derives velocity from depth plus the camera matrix delta — it assumes geometry sits still in world space; a character running through an otherwise static scene gets no streak from its own running — with a moving camera it blurs only the way a static object would — because the "previous frame" world position the pass reconstructs for it reuses the current depth, not the object's actual position one frame earlier.
 
 </Callout>

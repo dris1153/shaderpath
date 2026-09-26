@@ -25,7 +25,7 @@ color += n * uGrainAmount * grainFalloff;
 
 Hàm tính độ sáng ở trên tên là `luma`, không phải `luminance` — three tiêm sẵn một `luminance()` vào prefix fragment của **mọi** `ShaderMaterial`, nên định nghĩa trùng tên là lỗi biên dịch và pass sẽ không chạy được gì cả.
 
-Grain cũng cố tình viết **đơn sắc** (monochrome) — cùng một giá trị nhiễu `n` cộng vào cả ba kênh R, G, B, thay vì hash ba lần độc lập. Không phải cắt góc cho rẻ: hạt bạc trên phim là biến động MẬT ĐỘ vật lý, tương quan cao giữa các lớp màu cùng một hạt, không phải nhiễu cảm biến độc lập từng kênh — grain đơn sắc trông "giống phim", grain per-channel độc lập trông giống nhiễu cảm biến kỹ thuật số (chroma noise), một cảm giác khác hẳn.
+Grain cũng cố tình viết **đơn sắc** (monochrome) — cùng một giá trị nhiễu `n` cộng vào cả ba kênh R, G, B, thay vì hash ba lần độc lập. Không phải cắt góc cho rẻ: grain được nhận ra là phim chủ yếu qua độ sáng — grain của phim đen trắng thuần là biến động MẬT ĐỘ, và mắt đọc kết cấu độ sáng ấy là "phim" — còn grain per-channel độc lập thêm các chấm màu, trông giống nhiễu cảm biến kỹ thuật số (chroma noise), một cảm giác khác hẳn.
 
 ## Vignette: tối dần theo bán kính — nguồn gốc quang học và vai trò dẫn mắt
 
@@ -72,6 +72,6 @@ Ba lỗi hay gặp nhất khi viết grain/vignette/CA:
 
 1. **Hash grain chỉ theo `uv`, quên `time`.** Kết quả là một khung nhiễu TĨNH, lặp lại y hệt mỗi frame — nhìn như một lớp nylon bẩn dán cố định lên màn hình, dấu hiệu "amateur shader" ngay lập tức chứ không phải grain thật.
 2. **Quên nhân `aspect` vào khoảng cách tới tâm.** Vignette và CA tối/lệch theo hình ELIP kéo dài theo cạnh dài khung hình thay vì hình tròn — rõ nhất trên canvas ultra-wide hoặc portrait, dễ bị nhầm là bug hơn là hiệu ứng thẩm mỹ.
-3. **Định nghĩa offset của chromatic aberration bằng đơn vị UV thô, không chia cho `resolution.x`.** Cùng một giá trị "độ mạnh" cho ra độ lệch pixel khác nhau tuỳ độ phân giải render — hiệu ứng tinh tế ở 1x DPR bỗng vỡ hình ở màn hình retina 2x–3x DPR, dù không đổi một con số nào trong code.
+3. **Chỉnh độ mạnh chromatic aberration mà không chốt `s` đếm loại pixel nào.** Offset chia `s` cho `uResolution.x`, nên `s` đo bằng đúng loại pixel mà `uResolution` chứa. Demo này truyền `size` của R3F (pixel CSS), nên `s` trông như nhau ở mọi DPR; nếu truyền kích thước drawing buffer (pixel render) thì cùng một `s` chỉ còn một nửa hay một phần ba trên màn DPR 2x–3x, và viền màu chỉnh vừa mắt ở màn 1x gần như biến mất trên điện thoại retina. Giữ `uResolution` theo pixel CSS, hoặc định nghĩa `s` theo tỉ lệ màn hình (đơn vị UV thô).
 
 </Callout>

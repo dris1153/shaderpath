@@ -83,6 +83,6 @@
   <text class="note" x="320" y="282" text-anchor="middle">khung sau hai bộ đổi vai cho nhau</text>
 
   <text class="foot" x="320" y="356" text-anchor="middle">gl.transformFeedbackVaryings(program, ["vPosition", "vVelocity"], SEPARATE_ATTRIBS) phải chạy TRƯỚC</text>
-  <text class="foot" x="320" y="376" text-anchor="middle">linkProgram — trình liên kết đóng băng các khe bắt, nên gọi sau đó hoàn toàn vô tác dụng. Và một</text>
+  <text class="foot" x="320" y="376" text-anchor="middle">linkProgram — trình liên kết đóng băng các khe bắt; gọi muộn phải chờ lần link kế tiếp. Và một</text>
   <text class="foot" x="320" y="396" text-anchor="middle">buffer không bao giờ vừa là đầu vào VAO vừa là đích bắt trong cùng lệnh vẽ: nên mới cần hai bộ.</text>
 </svg>

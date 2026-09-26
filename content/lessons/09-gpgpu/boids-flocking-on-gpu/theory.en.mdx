@@ -28,7 +28,7 @@ But at $N = 65536$ (a $256\times256$ grid, the scale the very next lesson, `inst
 
 ## Zones and Weight Balancing
 
-The three rules use three nested radii: separation the smallest (roughly $0.4\times$ the perception radius), alignment in the middle ($0.7\times$), cohesion using the full perception radius. This ordering isn't arbitrary — separation must win at close range, or cohesion (pulling toward the center) and alignment (pulling toward the shared heading) overpower it, and boids overlap instead of avoiding each other — looking more like a clumped mass than a flock. Weight balancing (not just zone radii) matters just as much: a separation weight set too low relative to alignment/cohesion produces exactly this collapse even when the radii are ordered correctly.
+The three rules use three nested radii: separation the smallest (roughly $0.4\times$ the perception radius), alignment in the middle ($0.7\times$), cohesion using the full perception radius. This ordering isn't arbitrary — separation must win at close range, or cohesion (pulling toward the center) overpowers it — alignment only matches headings and doesn't pull boids together or push them apart — and boids overlap instead of avoiding each other — looking more like a clumped mass than a flock. Weight balancing (not just zone radii) matters just as much: a separation weight set too low relative to cohesion produces exactly this collapse even when the radii are ordered correctly.
 
 <Figure
   src="/figures/09-gpgpu/boid-neighbour-zones/en.svg"
@@ -38,7 +38,7 @@ The three rules use three nested radii: separation the smallest (roughly $0.4\ti
 
 ## Speed Clamping and Edge Behavior
 
-Raw velocity after summing all three forces can drift toward infinity (alignment keeps chasing a rising average) or toward zero (a boid stuck between canceling forces) — either breaks the illusion of flight. Speed clamping forces the velocity's magnitude into a $[v_{min}, v_{max}]$ range after every force sum, keeping motion looking natural.
+Raw velocity after summing all three forces can drift toward infinity (forces are added every frame with nothing draining them, so the fixed-size pushes pile up) or toward zero (alignment averages neighbors' velocities, and the average of headings that disagree is a shorter vector) — either breaks the illusion of flight. Speed clamping forces the velocity's magnitude into a $[v_{min}, v_{max}]$ range after every force sum, keeping motion looking natural.
 
 When a boid drifts past the bounds, there are two options: **wrap** (teleport to the opposite side via `mod()`) or **soft-turn** (a gentle steering force pushing back toward center, no position jump). Wrap is cheap and simple but produces a visible "teleport" if the camera sits close to the edge; soft-turn looks smoother but needs its force strength tuned so boids don't oscillate back and forth at the boundary. This lesson's demo uses soft-turn to keep the whole flock inside frame.
 
@@ -58,7 +58,7 @@ Today's boids stop at rendering with point sprites — the very next lesson, `in
 
 The three most common mistakes when implementing boids on the GPU:
 
-1. **Setting the separation weight too low relative to alignment/cohesion.** Since cohesion pulls a boid toward the group's center and alignment pulls it toward the average velocity, both routinely "win" unless separation is weighted strongly enough at close range — the result is the whole flock collapsing into an overlapping clump instead of flying tightly together with real spacing. Always check: at very small distances, separation's magnitude ($1/d^2$ times its weight) needs to clearly outweigh alignment + cohesion combined.
+1. **Setting the separation weight too low relative to cohesion.** Cohesion keeps pulling every boid toward the group's center and only separation pushes back — alignment matches headings but doesn't pull boids together or push them apart — so cohesion routinely "wins" unless separation is weighted strongly enough at close range — the result is the whole flock collapsing into an overlapping clump instead of flying tightly together with real spacing. Always check that at very small distances separation's push clearly beats cohesion's pull (this demo normalizes the separation sum, so its size is set by its weight alone).
 2. **Comparing UV coordinates with `==` to skip self, instead of comparing distance.** `gl_FragCoord.xy / resolution.xy` and `(vec2(x, y) + 0.5) / resolution` are two independently computed values — floating-point rounding can occasionally make `otherUv == uv` false even for the exact same texel, which makes a boid apply separation against itself, producing hard-to-trace jitter. Always use `dist < epsilon` to skip self instead.
 3. **Forgetting to list a variable as its own dependency in `setVariableDependencies`.** `textureVelocity` needs to read its own previous frame to accumulate forces onto the existing velocity — omitting that self-dependency means init() never prepends the `uniform sampler2D textureVelocity;` line — the shader references an undeclared identifier and FAILS TO COMPILE immediately, the exact error the GPUComputationRenderer lesson drilled. (Sampling an unbound texture in WebGL returns (0,0,0,1), not undefined values.)
 

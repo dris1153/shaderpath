@@ -56,8 +56,8 @@ Bài sau mổ xẻ chính xác `Pass` mà `OutputPass`/`ShaderPass` kế thừa,
 
 Ba lỗi hay gặp nhất với tone mapping và LUT:
 
-1. **Grade trước khi tone map (LUT pass trước OutputPass).** LUT $16^3$ chỉ phủ $[0,1]$; feed giá trị linear HDR (có thể 40.0) khiến mọi vùng sáng kẹp vào cùng một ô biên bất kể chênh lệch — hiệu ứng teal-orange chưa kịp chạm highlight thật, vì "highlight" theo nghĩa display-referred chưa tồn tại ở bước đó.
-2. **Quên inset nửa-texel khi sample LUT.** Sample thẳng `rgb` chưa qua $rgb \cdot (1-\frac1N) + \frac1{2N}$ khiến cực trị (đen/trắng tuyệt đối) rơi ra ngoài rìa lưới ô — với `ClampToEdgeWrapping` bị kẹp vào một ô không phải ô góc thật, sai lệch nhẹ nhưng có hệ thống toàn ảnh.
+1. **Grade trước khi tone map (LUT pass trước OutputPass).** LUT $16^3$ chỉ phủ $[0,1]$; feed giá trị linear HDR (có thể 40.0) khiến các vùng sáng bị kẹp lên mặt ngoài của LUT — vùng trắng chói rơi đúng vào cùng một ô góc — bất kể chênh lệch — hiệu ứng teal-orange chưa kịp chạm highlight thật, vì "highlight" theo nghĩa display-referred chưa tồn tại ở bước đó.
+2. **Quên inset nửa-texel khi sample LUT.** Sample thẳng `rgb` chưa qua $rgb \cdot (1-\frac1N) + \frac1{2N}$ khiến dải màu trải lên mép ngoài của texture thay vì tâm các ô góc: đen, trắng và đúng xám giữa vẫn ra đúng, nhưng mọi giá trị ở giữa bị đẩy xa khỏi xám giữa tới $\frac{1}{2N}$ (≈0.03 với $N = 16$), còn giá trị nằm trong nửa ô sát hai đầu bị ép thành đen hoặc trắng tuyệt đối — một sai lệch tương phản nhỏ nhưng có hệ thống.
 3. **Coi neutral LUT là trang trí, không phải test.** Một lỗi đảo trục (R và B sample nhầm chỗ) hay sai công thức inset vẫn có thể cho ảnh "gần đúng" khi dùng LUT có màu — chỉ neutral LUT bắt lỗi này ngay, vì đó là trường hợp duy nhất bắt buộc tái tạo pixel gốc y hệt.
 
 </Callout>

@@ -32,8 +32,8 @@ Without running any code, trace through the real \`render()\` loop (each pass: r
         en: "I trace exactly one swap after ShaderPass A and conclude OutputPass reads target1",
       },
       {
-        vi: "Tôi giải thích được bật ShaderPass B không đổi kết quả cuối vì nó chỉ thêm một swap NỮA (ghi rồi swap lại), quay về đọc target1 — số swap chẵn hay lẻ mới là thứ quyết định, không phải số pass",
-        en: "I explain that enabling ShaderPass B doesn't change the final answer because it just adds one MORE swap (write then swap back), landing on target1 again — the swap count's parity decides the outcome, not the pass count",
+        vi: "Tôi giải thích được bật ShaderPass B CÓ đổi đáp án: B ghi vào target2 rồi swap, nên OutputPass đọc target2 — mỗi pass có swap lật tính chẵn lẻ một lần, và chính số swap chẵn hay lẻ (lẻ → target1, chẵn → target2) quyết định, không phải số pass",
+        en: "I explain that enabling ShaderPass B DOES change the answer: B writes target2 and swaps, so OutputPass reads target2 — every swapping pass flips the parity once, and the swap count's parity (odd → target1, even → target2) decides the outcome, not the pass count",
       },
     ],
     solutionNote: {
@@ -45,7 +45,7 @@ ShaderPass B (\`enabled:false\`): composer "continue" ngay đầu vòng lặp, k
 
 OutputPass: đọc \`tDiffuse = readBuffer.texture = target1.texture\` — đáp án: \`target1\`.
 
-Nếu bật ShaderPass B: nó đọc \`target1\`, ghi vào \`target2\` (writeBuffer hiện tại), rồi swap, khiến \`readBuffer\` quay lại \`target1\`. OutputPass vẫn đọc \`target1\` — không đổi, vì swap có tính chẵn/lẻ: hai swap liên tiếp quay lại đúng vai trò ban đầu.`,
+Nếu bật ShaderPass B: nó đọc \`target1\`, ghi vào \`target2\` (writeBuffer hiện tại), rồi swap: \`readBuffer=target2\`, \`writeBuffer=target1\`. OutputPass giờ đọc \`target2\` — đáp án đổi, vì swap có tính chẵn/lẻ: một swap (chỉ A) để ảnh ở target1, hai swap (A và B) đưa nó về lại target2.`,
       en: `RenderPass: \`renderToScreen=false\` so it writes into \`readBuffer\` (target2), \`needsSwap=false\` so it never swaps. After this step: \`readBuffer=target2\`, \`writeBuffer=target1\` (unchanged).
 
 ShaderPass A (enabled): reads \`tDiffuse=target2.texture\`, writes into \`writeBuffer=target1\`. \`needsSwap=true\` (the default) triggers a swap: \`readBuffer=target1\`, \`writeBuffer=target2\`.
@@ -54,7 +54,7 @@ ShaderPass B (\`enabled:false\`): the composer \`continue\`s right at the top of
 
 OutputPass: reads \`tDiffuse = readBuffer.texture = target1.texture\` — the answer: \`target1\`.
 
-If ShaderPass B were enabled: it reads \`target1\`, writes into \`target2\` (the current writeBuffer), then swaps, sending \`readBuffer\` back to \`target1\`. OutputPass still reads \`target1\` — unchanged, because swaps behave by parity: two consecutive swaps land back on the original assignment.`,
+If ShaderPass B were enabled: it reads \`target1\`, writes into \`target2\` (the current writeBuffer), then swaps: \`readBuffer=target2\`, \`writeBuffer=target1\`. OutputPass now reads \`target2\` — the answer flips, because swaps behave by parity: one swap (A only) leaves the image in target1, two swaps (A and B) bring it back to target2.`,
     },
   },
   {

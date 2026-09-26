@@ -19,6 +19,6 @@
   "filled by that same draw call": "được chính lệnh vẽ đó điền vào",
   "next frame the two sets trade roles": "khung sau hai bộ đổi vai cho nhau",
   "gl.transformFeedbackVaryings(program, [\"vPosition\", \"vVelocity\"], SEPARATE_ATTRIBS) must run BEFORE": "gl.transformFeedbackVaryings(program, [\"vPosition\", \"vVelocity\"], SEPARATE_ATTRIBS) phải chạy TRƯỚC",
-  "linkProgram — the linker freezes the capture slots, so calling it afterwards does nothing at all. And one": "linkProgram — trình liên kết đóng băng các khe bắt, nên gọi sau đó hoàn toàn vô tác dụng. Và một",
+  "linkProgram — the linker freezes the capture slots; calling it later waits for the next link. And one": "linkProgram — trình liên kết đóng băng các khe bắt; gọi muộn phải chờ lần link kế tiếp. Và một",
   "buffer can never be a VAO input and a capture destination in the same draw: that is why there are two sets.": "buffer không bao giờ vừa là đầu vào VAO vừa là đích bắt trong cùng lệnh vẽ: nên mới cần hai bộ."
 }

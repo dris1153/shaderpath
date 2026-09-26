@@ -44,7 +44,7 @@ Bài `instancedmesh-per-instance-attributes` ở Track 6 từng đo trực tiế
 
 Ba lỗi hay gặp nhất khi ghép InstancedMesh với texture trạng thái GPGPU:
 
-1. **Quên rằng `instanceMatrix` mặc định là ma trận toàn số 0, không phải identity.** Dùng thẳng `new THREE.InstancedMesh(geo, mat, count)` mà không gán identity cho từng instance khiến `instanceMatrix * vec4(transformed, 1.0)` ở `project_vertex` nhân với ma trận 0 — mọi instance co về đúng gốc toạ độ, biến mất khỏi màn hình dù code đọc texture vị trí hoàn toàn đúng.
+1. **Đọc vị trí ngược về CPU bằng `readPixels` để điều khiển thứ gì đó phía CPU.** Vẫn chạy, nhưng buộc CPU chờ GPU mỗi frame — đúng chỗ nghẽn mà cả pipeline này sinh ra để tránh. Giữ trọn compute → render trên GPU, và tìm đường khác cho thứ phía CPU cần.
 2. **Xoay `transformed` (vị trí) theo basis vận tốc mà quên xoay pháp tuyến theo đúng basis đó.** Vị trí đỉnh đúng nhưng ánh sáng tính từ pháp tuyến cũ (chưa xoay) — hình vẫn ở đúng chỗ, hướng đúng chiều bay, nhưng phần sáng/tối trên mỗi mặt không khớp với hướng nó đang chỉ, nhìn "sai sai" dù không lỗi rõ ràng.
 3. **Không tắt `frustumCulled` trên InstancedMesh có vị trí đến từ texture.** Three tính frustum culling dựa trên bounding sphere của geometry gốc (thường ở gần origin) — vì vị trí thật của từng instance nằm ngoài đó, xoay camera một chút có thể khiến Three quyết định "cả object nằm ngoài khung hình" và bỏ qua draw call dù instance vẫn đang hiển thị đúng vị trí thực.
 

@@ -15,6 +15,6 @@
   "counted as open sky": "tính là trời trống",
   "kernelRadius is in view-space units, not pixels, and sample lengths are rescaled by": "kernelRadius tính theo đơn vị view space chứ không phải pixel, và độ dài mẫu được co lại bằng",
   "lerp(0.1, 1, (i/N)²) — most of the 32 land close to p.": "lerp(0.1, 1, (i/N)²) — phần lớn trong 32 mẫu rơi gần p.",
-  "A 4×4 noise texture rotates the whole kernel per pixel, so the leftover error reads as noise rather": "Một texture nhiễu 4×4 xoay cả kernel theo từng pixel, nên sai số còn lại hiện ra như nhiễu chứ không",
+  "A 4×4 noise texture flips the kernel's frame per pixel, so the leftover error reads as noise rather": "Texture nhiễu 4×4 lật hệ trục của kernel theo pixel, nên sai số còn lại hiện ra như nhiễu chứ không",
   "than banding — which is exactly why SSAOPass runs a 5×5 blur straight after.": "phải dải sọc — và đó đúng là lý do SSAOPass chạy ngay một lượt blur 5×5 sau đó."
 }

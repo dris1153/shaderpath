@@ -4,13 +4,13 @@ The most common real-time cloth model is mass-spring: every grid vertex is a poi
 
 ## Verlet Integration: Why It Beats Explicit Euler
 
-Explicit Euler — the "obvious" way to integrate — stores position and velocity separately, updating them in sequence:
+Explicit (forward) Euler — the "obvious" way — stores position and velocity separately and advances position with the OLD velocity:
 
 $$
-\vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t, \qquad \vec{x}_{t+1} = \vec{x}_t + \vec{v}_{t+1} \, \Delta t
+\vec{x}_{t+1} = \vec{x}_t + \vec{v}_t \, \Delta t, \qquad \vec{v}_{t+1} = \vec{v}_t + \vec{a}_t \, \Delta t
 $$
 
-The problem shows up at stiff constraints: a spring holding an almost-rigid distance behaves like a stiff differential equation — the error accumulated at each Euler step pumps fake energy into the system, and cloth either jitters or explodes with no unusual force in sight. Verlet integration sidesteps this by never storing velocity explicitly — only the current position and the previous frame's position, with velocity inferred implicitly from their difference:
+The problem shows up at stiff constraints: a spring holding an almost-rigid distance behaves like a stiff differential equation — the error accumulated at each Euler step pumps fake energy into the system, and cloth either jitters or explodes with no unusual force in sight. The way out (Jakobsen's) is to stop modeling near-rigid distances as stiff springs at all: integrate freely, then project positions back onto the constraints. Verlet integration makes that projection cheap because it never stores velocity explicitly — only the current position and the previous frame's position, with velocity inferred implicitly from their difference:
 
 $$
 \vec{x}_{t+1} = \vec{x}_t + (\vec{x}_t - \vec{x}_{t-1}) \cdot d + \vec{a}_t \, \Delta t^2
@@ -38,7 +38,7 @@ A complete cloth grid typically uses three constraint types, distinguished by wh
 
 ## Pinning and Forces: Constant Gravity, Wind Projected on the Normal
 
-Pinning is the easiest mechanism to implement but the easiest to forget the scope of: a pinned point skips the entire Verlet integration AND constraint-solving, always writing back its original rest position every frame — encoded as a mask in the position texture's alpha channel, read by UV exactly the way Track 0 introduced. Gravity is just a constant added to acceleration. Wind is more interesting: a constant wind direction puffs the cloth up like a flat balloon, with none of the feel of real wind. The correct approach projects the wind vector onto the cloth's local normal at each point ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$, clamped at 0 so wind never "sucks" the cloth from behind) — that normal is cheaply estimated from the cross product of two vectors linking the horizontal/vertical neighbors, the exact normal-from-gradient technique Track 8's heightfield lesson used. Adding a "gusty" signal varying over both space and time (a few sine waves at mismatched frequencies, cheaper than real 3D noise) makes the cloth ripple instead of puffing up as one rigid mass.
+Pinning is the easiest mechanism to implement but the easiest to forget the scope of: a pinned point skips the entire Verlet integration AND constraint-solving, always writing back its original rest position every frame — encoded as a mask in the position texture's alpha channel, read by UV exactly the way Track 0 introduced. Gravity is just a constant added to acceleration. Wind is more interesting: a constant wind vector acts like tilted gravity: the sheet just leans over and hangs still, with none of the feel of real wind. The correct approach projects the wind vector onto the cloth's local normal at each point ($\vec{F}_{wind} = \hat n \, (\hat n \cdot \vec{w}) \, \|\vec{w}\|$; the demo also clamps the dot product at 0, so only patches facing the wind get pushed — a one-sided simplification, since the projected force always points along the wind anyway) — that normal is cheaply estimated from the cross product of two vectors linking the horizontal/vertical neighbors, the exact normal-from-gradient technique Track 8's heightfield lesson used. Adding a "gusty" signal varying over both space and time (a few sine waves at mismatched frequencies, cheaper than real 3D noise) makes the cloth ripple instead of settling into one tilted pose.
 
 ## Iteration Count Decides How "Stretchy" It Looks
 
@@ -52,6 +52,6 @@ Three mistakes that show up constantly when building GPU cloth:
 
 1. **Redeclaring a dependency's uniform.** `init()` already prepends `uniform sampler2D <name>;` for every dependency, the self-dependency included. Writing that line in the shader too is a duplicate-definition error — the demo goes blank rather than reporting anything obvious.
 2. **Feeding the wrong texture back as "current" after relaxation.** If next frame's "current" texture is still the un-relaxed candidate, Verlet's implicit velocity next frame gets computed against the wrong reference — the cloth appears to gain a mysterious extra force from nowhere.
-3. **Wind not projected onto the normal.** Adding a constant wind vector straight into acceleration without multiplying by $(\hat n \cdot \vec w)$ makes the whole sheet drift in one direction like a rigid slab — the giveaway is cloth that "flies" instead of "ripples".
+3. **Wind not projected onto the normal.** Adding a constant wind vector straight into acceleration without multiplying by $(\hat n \cdot \vec w)$ makes the whole sheet lean over and hang still, as if gravity were tilted — the giveaway is cloth that "hangs sideways" instead of "ripples".
 
 </Callout>

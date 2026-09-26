@@ -11,7 +11,7 @@ gl.transformFeedbackVaryings(program, ["vPosition", "vVelocity"], gl.SEPARATE_AT
 gl.linkProgram(program); // must come AFTER transformFeedbackVaryings()
 ```
 
-`gl.transformFeedbackVaryings(...)` declares exactly that — and it must run **before** `gl.linkProgram(program)`, not after. Why: the linker needs that information up front to allocate the correct output "slot" for each listed varying, the same way it allocates a location for an input attribute; calling this after linking has no effect at all — the program's layout is already frozen. `SEPARATE_ATTRIBS` means each varying in the list writes to its OWN buffer (the $i$-th buffer maps to the $i$-th binding point); the other mode, `INTERLEAVED_ATTRIBS`, packs every varying into a single buffer with an interleaved layout (stride) — fewer buffers to manage, but reading each attribute back in a later draw call is more work since you have to get the stride/offset exactly right.
+`gl.transformFeedbackVaryings(...)` declares exactly that — and it must run **before** `gl.linkProgram(program)`, not after. Why: the linker needs that information up front to allocate the correct output "slot" for each listed varying, the same way it allocates a location for an input attribute; calling this after linking has no effect until the program is linked again — the current layout is already frozen. `SEPARATE_ATTRIBS` means each varying in the list writes to its OWN buffer (the $i$-th buffer maps to the $i$-th binding point); the other mode, `INTERLEAVED_ATTRIBS`, packs every varying into a single buffer with an interleaved layout (stride) — fewer buffers to manage, but reading each attribute back in a later draw call is more work since you have to get the stride/offset exactly right.
 
 ## Writing to a Buffer: `bindBufferBase`, `beginTransformFeedback`/`endTransformFeedback`
 
@@ -61,8 +61,8 @@ Both ping-pong textures and transform feedback are ways of working around WebGL 
 
 The three most common transform feedback mistakes:
 
-1. **Calling `transformFeedbackVaryings` AFTER `gl.linkProgram`.** The program still "links successfully" syntactically but captures nothing meaningful — the linker already froze the output layout before this call ran, so calling it late has no effect.
-2. **Using the same buffer as both the VAO's input source and the `bindBufferBase` destination** in one draw call (forgetting to double-buffer) — WebGL errors out or produces undefined behavior, since thousands of vertex shader invocations run in parallel, reading and writing the same memory at once.
+1. **Calling `transformFeedbackVaryings` AFTER `gl.linkProgram`.** The program still links, but its output layout was frozen before this call ran, so it records no outputs — `beginTransformFeedback` then fails with `INVALID_OPERATION` and nothing gets captured. (The late call only takes effect at the next link.)
+2. **Using the same buffer as both the VAO's input source and the `bindBufferBase` destination** in one draw call (forgetting to double-buffer) — WebGL rejects the draw with `INVALID_OPERATION`, because thousands of parallel vertex shader invocations reading and writing the same memory would otherwise race.
 3. **Forgetting `gl.disable(RASTERIZER_DISCARD)` after the update pass.** Every following render draw call — even ones unrelated to the simulation — silently draws nothing at all, because the discard state is still globally on until it's turned off by hand.
 
 </Callout>

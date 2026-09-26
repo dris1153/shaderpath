@@ -94,6 +94,6 @@
 
   <text class="note" x="24" y="306">kernelRadius is in view-space units, not pixels, and sample lengths are rescaled by</text>
   <text class="note" x="24" y="324">lerp(0.1, 1, (i/N)²) — most of the 32 land close to p.</text>
-  <text class="note" x="24" y="348">A 4×4 noise texture rotates the whole kernel per pixel, so the leftover error reads as noise rather</text>
+  <text class="note" x="24" y="348">A 4×4 noise texture flips the kernel's frame per pixel, so the leftover error reads as noise rather</text>
   <text class="note" x="24" y="366">than banding — which is exactly why SSAOPass runs a 5×5 blur straight after.</text>
 </svg>

@@ -34,7 +34,7 @@ for (let i = 0; i < this.passes.length; i++) {
 
 ### OutputPass: tonemapping + color space, đúng một lần ở cuối
 
-`OutputPass` đọc trực tiếp `renderer.toneMapping` và `renderer.outputColorSpace` — không phải baked sẵn lúc khởi tạo — và chỉ build lại shader define khi hai giá trị đó thật sự đổi (so sánh cache nội bộ). Nó áp 6 đường cong tonemapping dựng sẵn (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) cộng nhánh `CustomToneMapping`, rồi chuyển sang sRGB nếu color space yêu cầu. Bỏ qua OutputPass (hoặc tương đương) ở cuối chuỗi nghĩa là pass cuối ghi thẳng dữ liệu linear ra canvas — canvas vốn hiển thị byte theo chuẩn sRGB — ảnh nhận được sẽ nhợt nhạt hoặc quá tối so với ý đồ.
+`OutputPass` đọc trực tiếp `renderer.toneMapping` và `renderer.outputColorSpace` — không phải baked sẵn lúc khởi tạo — và chỉ build lại shader define khi hai giá trị đó thật sự đổi (so sánh cache nội bộ). Nó áp 6 đường cong tonemapping dựng sẵn (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) cộng nhánh `CustomToneMapping`, rồi chuyển sang sRGB nếu color space yêu cầu. Bỏ qua OutputPass (hoặc tương đương) ở cuối chuỗi nghĩa là pass cuối ghi thẳng dữ liệu linear ra canvas — canvas vốn hiển thị byte theo chuẩn sRGB — ảnh nhận được sẽ quá tối và gắt, vùng sáng bị cắt cứng thay vì được đường cong tone mapping uốn mượt.
 
 ## Anatomy của một pass: enabled, needsSwap, renderToScreen
 
@@ -78,8 +78,8 @@ Bài tiếp theo (`bloom-done-right`) dùng đúng bộ khung composer này — 
 
 Ba lỗi hay gặp nhất khi mới ráp composer:
 
-1. **Quên `OutputPass` (hoặc bất kỳ pass tonemapping/color-space nào) ở cuối chuỗi.** Pass cuối cùng ghi thẳng dữ liệu linear ra canvas thay vì sRGB đã tonemap — ảnh nhợt nhạt hoặc tối bất thường so với những gì R3F từng render mặc định, dù composer "chạy không lỗi."
-2. **Quên gọi `composer.setSize()` khi canvas đổi kích thước.** R3F tự resize canvas và camera qua ResizeObserver, nhưng composer có buffer RIÊNG, không tự theo — ảnh cuối bị kéo giãn hoặc lệch tỉ lệ so với khung hiển thị thật, một lỗi dễ bị nhầm là "bug shader."
+1. **Quên `OutputPass` (hoặc bất kỳ pass tonemapping/color-space nào) ở cuối chuỗi.** Pass cuối cùng ghi thẳng dữ liệu linear ra canvas thay vì sRGB đã tonemap — ảnh tối và gắt bất thường so với những gì R3F từng render mặc định, dù composer "chạy không lỗi."
+2. **Quên gọi `composer.setSize()` khi canvas đổi kích thước.** R3F tự resize canvas và camera qua ResizeObserver, nhưng composer có buffer RIÊNG, không tự theo — ảnh vẫn render ở kích thước buffer cũ rồi bị kéo giãn ra canvas mới — mềm nhoè khi canvas to ra, răng cưa khi thu nhỏ, dù tỉ lệ vẫn đúng — một lỗi dễ bị nhầm là "bug shader."
 3. **Coi readBuffer/writeBuffer là hai texture cố định thay vì hai VAI TRÒ hoán đổi.** Giữ một tham chiếu cứng tới `composer.renderTarget1` rồi coi nó luôn là "ảnh scene mới nhất" sẽ sai ngay sau lượt `swapBuffers()` đầu tiên — chỉ `readBuffer`/`writeBuffer` (thuộc tính động trên composer) mới phản ánh đúng trạng thái hiện tại của chuỗi.
 
 </Callout>

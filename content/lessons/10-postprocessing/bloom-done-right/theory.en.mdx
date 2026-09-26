@@ -16,7 +16,7 @@ The most common trap: threshold set too low, so bloom can't tell "a genuinely li
 
 ### Step 2 — A Progressively Downsampled Blur Chain
 
-That "bright areas only" image gets Gaussian-blurred across 5 successive mips (`nMips = 5`), each mip at HALF the resolution of the one before, starting from `resolution / 2`: the five mips land at roughly $1/2, 1/4, 1/8, 1/16, 1/32$ of the original resolution — a number that matches Unreal Engine's own documentation exactly ("combines multiple Gaussian blurs... at different resolutions (1/2 to 1/32 screen width)"), confirming `UnrealBloomPass` genuinely mirrors the original technique rather than just borrowing its name. Each mip's kernel size grows as it goes: `[6, 10, 14, 18, 22]` — smaller (lower-resolution) mips use a larger kernel, producing a wide-reaching glow without needing a huge kernel at full resolution.
+That "bright areas only" image gets Gaussian-blurred across 5 successive mips (`nMips = 5`), each mip at HALF the resolution of the one before, starting from `resolution / 2`: the five mips land at roughly $1/2, 1/4, 1/8, 1/16, 1/32$ of the original resolution — a number that matches Unreal Engine's own documentation exactly ("combines multiple Gaussian blurs... at different resolutions (1/2 to 1/32 screen width)"), confirming `UnrealBloomPass` genuinely mirrors the original technique rather than just borrowing its name. Each mip's `KERNEL_RADIUS` grows as it goes: `[6, 10, 14, 18, 22]` — the center tap plus 5 to 21 texels each side, i.e. 11 to 43 taps per blur direction — smaller (lower-resolution) mips use a larger kernel, producing a wide-reaching glow without needing a huge kernel at full resolution.
 
 ### Step 3 — Composite by Strength and Radius Weighting
 

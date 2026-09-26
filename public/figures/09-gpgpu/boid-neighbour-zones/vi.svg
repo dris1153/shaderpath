@@ -88,8 +88,8 @@
   <text class="note" x="382" y="222">lái về vị trí trung bình của chúng</text>
 
   <text class="note" x="382" y="254">Chuyện lồng nhau chính là cả thế cân bằng: tách</text>
-  <text class="note" x="382" y="272">đàn phải thắng khi ở sát, không thì canh hướng</text>
-  <text class="note" x="382" y="290">và gắn kết kéo đàn thành một cục chồng nhau.</text>
+  <text class="note" x="382" y="272">đàn phải thắng khi ở sát, không thì gắn kết</text>
+  <text class="note" x="382" y="290">kéo đàn thành một cục chồng nhau.</text>
 
   <text class="foot" x="320" y="344" text-anchor="middle">Không boid nào biết hình dạng cả đàn: mỗi con chỉ cộng ba vector cục bộ này, không gì khác.</text>
   <text class="foot" x="320" y="364" text-anchor="middle">Để tìm ra chúng, nó quét cả 4.096 texel của texture trạng thái mỗi khung — 16.8 triệu lần đọc. Lân cận</text>

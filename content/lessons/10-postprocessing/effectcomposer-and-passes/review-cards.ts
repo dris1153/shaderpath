@@ -15,8 +15,8 @@ export const reviewCards: ReviewCard[] = [
   {
     id: "composer-set-size",
     q: {
-      vi: "Kéo đổi kích thước cửa sổ, ảnh qua composer bị mềm nhoè hoặc vỡ khối, dù tỉ lệ hình vẫn đúng. Thứ gì không theo canvas?",
-      en: "You resize the window and the composer's image turns soft or blocky, though its proportions look right. What didn't follow the canvas?",
+      vi: "Kéo đổi kích thước cửa sổ, ảnh qua composer bị mềm nhoè (hoặc răng cưa nếu canvas thu nhỏ), dù tỉ lệ hình vẫn đúng. Thứ gì không theo canvas?",
+      en: "You resize the window and the composer's image turns soft (or jagged, if the canvas shrank), though its proportions look right. What didn't follow the canvas?",
     },
     a: {
       vi: "Hai render target nội bộ của composer. R3F tự resize canvas và cập nhật aspect của camera, nên hình vẫn đúng tỉ lệ, nhưng vẫn được render ở kích thước buffer cũ rồi kéo giãn ra canvas mới. Gọi `composer.setSize(width, height)` mỗi khi canvas đổi kích thước.",

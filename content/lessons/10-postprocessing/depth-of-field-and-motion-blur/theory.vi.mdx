@@ -46,7 +46,7 @@ Velocity buffer đầy đủ cần lưu vị trí clip-space frame trước củ
 
 ## Thang chi phí: none → camera-only → velocity buffer đầy đủ
 
-Ba mức, ba chi phí khác hẳn: không motion blur (0 chi phí, camera di chuyển nhanh nhìn giật/strobing rõ ở khung hình thấp); camera-only (một pass full-screen + một depth pre-pass phụ, không buffer mới — rẻ, đúng với camera nhưng vật tự chuyển động vẫn cứng như không có gì); velocity buffer đầy đủ (thêm target ghi vận tốc mọi vertex mỗi frame — đúng cả camera lẫn vật thể, tốn nhất). Cutscene có hành động nhanh cần velocity buffer đầy đủ; cảnh khám phá tĩnh chỉ camera pan/orbit thì camera-only đã đủ thuyết phục mắt.
+Ba mức, ba chi phí khác hẳn: không motion blur (0 chi phí, camera di chuyển nhanh nhìn giật/strobing rõ ở khung hình thấp); camera-only (một pass full-screen + một depth pre-pass phụ, không buffer mới — rẻ, đúng với camera nhưng vật tự chuyển động không có vệt mờ từ chính chuyển động của nó); velocity buffer đầy đủ (thêm target ghi vận tốc mọi vertex mỗi frame — đúng cả camera lẫn vật thể, tốn nhất). Cutscene có hành động nhanh cần velocity buffer đầy đủ; cảnh khám phá tĩnh chỉ camera pan/orbit thì camera-only đã đủ thuyết phục mắt.
 
 ## Nền tảng này dẫn tới đâu
 
@@ -58,6 +58,6 @@ Ba lỗi hay gặp nhất khi cài DOF và motion blur hậu kỳ:
 
 1. **Coi `aperture`/`maxblur` của `BokehPass` là tham số quang học thật.** Chúng là hệ số tuỳ chỉnh cho công thức xấp xỉ tuyến tính, không phải f-number hay tiêu cự — đẩy `aperture` lên rất cao để "DOF mạnh hơn" mà không hiểu nó chỉ là hệ số nhân cho kết quả nhảy cảm, khó đoán hơn hẳn đổi `focus` (đơn vị world rõ ràng).
 2. **Tưởng blend frame trước = motion blur.** Lỗi khái niệm, không phải lỗi code: blend cho ghosting (ảnh rời rạc chồng lớp), không phải vệt mờ liên tục — muốn đúng phải tính vận tốc màn hình rồi gather dọc vector đó.
-3. **Dùng camera-only motion blur rồi thắc mắc vì sao vật tự chuyển động không bị mờ.** Kỹ thuật này chỉ suy vận tốc từ depth + delta ma trận camera, giả định hình học đứng yên trong world space — một nhân vật chạy giữa cảnh tĩnh không có vệt mờ nào dù camera đứng yên hay di chuyển, vì world position "frame trước" mà pass tái tạo lại chính là depth hiện tại, không phải vị trí thật của vật một frame trước.
+3. **Dùng camera-only motion blur rồi thắc mắc vì sao vật tự chuyển động không bị mờ.** Kỹ thuật này chỉ suy vận tốc từ depth + delta ma trận camera, giả định hình học đứng yên trong world space — một nhân vật chạy giữa cảnh tĩnh không có vệt mờ nào từ chính việc chạy — khi camera di chuyển, nó chỉ mờ theo đúng cách một vật đứng yên bị mờ — vì world position "frame trước" mà pass tái tạo lại chính là depth hiện tại, không phải vị trí thật của vật một frame trước.
 
 </Callout>

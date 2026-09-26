@@ -44,7 +44,7 @@ The Track 6 lesson `instancedmesh-per-instance-attributes` measured this directl
 
 The three most common mistakes when combining InstancedMesh with a GPGPU state texture:
 
-1. **Assuming `instanceMatrix` defaults to identity — it defaults to all zeros.** Creating `new THREE.InstancedMesh(geo, mat, count)` without explicitly setting every instance's matrix to identity means the `instanceMatrix * vec4(transformed, 1.0)` multiply in `#include <project_vertex>` multiplies by the zero matrix — every instance collapses to the origin and vanishes, even though the texture-position code is completely correct.
+1. **Reading positions back with `readPixels` to drive something on the CPU.** It works, but it forces the CPU to wait for the GPU every frame — the stall this whole pipeline exists to avoid. Keep compute → render on the GPU and find another route for whatever the CPU side needs.
 2. **Rotating `transformed` (position) by the velocity basis but forgetting to rotate the normal the same way.** Vertex positions land correctly, instances point the right direction, but lighting is computed from the old, un-rotated normal — the shape sits in the right place facing the right way, yet its shading looks subtly wrong on every face.
 3. **Leaving `frustumCulled` on for an InstancedMesh whose positions come from a texture.** Three computes frustum culling from the base geometry's bounding sphere (usually near the origin) — since instances' real positions live far outside that, a small camera turn can make Three decide the "whole object" is off-screen and skip the draw call, even though instances are still visibly rendering at their real positions.
 

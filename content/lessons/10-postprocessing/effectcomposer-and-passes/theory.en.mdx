@@ -34,7 +34,7 @@ This is the exact ping-pong FBO technique from Track 9 (`pingpong-fbo-state-text
 
 ### OutputPass: Tonemapping + Color Space, Exactly Once at the End
 
-`OutputPass` reads `renderer.toneMapping` and `renderer.outputColorSpace` directly — not baked in at construction time — and only rebuilds its shader defines when those two values actually change (checked against an internal cache). It applies the 6 built-in tonemapping curves (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) plus a `CustomToneMapping` branch, then converts to sRGB if the color space calls for it. Skipping OutputPass (or an equivalent) at the end of the chain means the last pass writes linear data straight to the canvas — which expects sRGB-encoded bytes — and the resulting image looks washed out or too dark relative to what was intended.
+`OutputPass` reads `renderer.toneMapping` and `renderer.outputColorSpace` directly — not baked in at construction time — and only rebuilds its shader defines when those two values actually change (checked against an internal cache). It applies the 6 built-in tonemapping curves (Linear, Reinhard, Cineon, ACESFilmic, AgX, Neutral) plus a `CustomToneMapping` branch, then converts to sRGB if the color space calls for it. Skipping OutputPass (or an equivalent) at the end of the chain means the last pass writes linear data straight to the canvas — which expects sRGB-encoded bytes — and the resulting image looks too dark and harsh, highlights clipping where a tone curve would have rolled them off.
 
 ## Anatomy of a Pass: enabled, needsSwap, renderToScreen
 
@@ -78,8 +78,8 @@ The next lesson (`bloom-done-right`) reuses this exact composer skeleton — Ren
 
 The three most common mistakes when first wiring up a composer:
 
-1. **Forgetting `OutputPass` (or any tonemapping/color-space pass) at the end of the chain.** The final pass writes linear data straight to the canvas instead of tonemapped sRGB — the image looks washed out or unexpectedly dark compared to what R3F used to render by default, even though the composer "runs without errors."
-2. **Forgetting to call `composer.setSize()` when the canvas resizes.** R3F auto-resizes the canvas and camera through a ResizeObserver, but the composer owns its OWN buffers that don't follow along — the final image ends up stretched or off-ratio relative to the actual display area, a bug easy to misdiagnose as "a shader bug."
+1. **Forgetting `OutputPass` (or any tonemapping/color-space pass) at the end of the chain.** The final pass writes linear data straight to the canvas instead of tonemapped sRGB — the image looks darker and harsher than what R3F used to render by default, even though the composer "runs without errors."
+2. **Forgetting to call `composer.setSize()` when the canvas resizes.** R3F auto-resizes the canvas and camera through a ResizeObserver, but the composer owns its OWN buffers that don't follow along — the image keeps rendering at the old buffer size and gets stretched over the new canvas — soft when the canvas grew, jagged when it shrank, though the proportions stay right — a bug easy to misdiagnose as "a shader bug."
 3. **Treating readBuffer/writeBuffer as two fixed textures instead of two swapping ROLES.** Holding onto a hard reference to `composer.renderTarget1` and assuming it's always "the latest scene image" breaks right after the first `swapBuffers()` call — only `readBuffer`/`writeBuffer` (the composer's dynamic properties) reflect the chain's actual current state.
 
 </Callout>

@@ -30,8 +30,8 @@ export const reviewCards: ReviewCard[] = [
       en: "Why does `UnrealBloomPass` blur a chain of five mips, each at half the resolution of the one before, instead of one very wide blur at full resolution?",
     },
     a: {
-      vi: "Ở mip thấp, mỗi texel phủ nhiều pixel màn hình hơn, nên một kernel vừa phải (bán kính từ 6 lên 22 texel, tức 11 đến 43 tap mỗi chiều) đã tạo được quầng sáng lan rất rộng. Một kernel đủ rộng như vậy ở độ phân giải đầy đủ sẽ cần quá nhiều lần đọc cho mỗi pixel.",
-      en: "At a low mip each texel covers many screen pixels, so a modest kernel (a radius of 6 up to 22 texels, 11 to 43 taps per direction) already produces a very wide glow. A kernel that wide at full resolution would need far too many reads per pixel.",
+      vi: "Ở mip thấp, mỗi texel phủ nhiều pixel màn hình hơn, nên một kernel vừa phải (11 đến 43 tap mỗi chiều, với tới 5 đến 21 texel mỗi bên) đã tạo được quầng sáng lan rất rộng. Một kernel đủ rộng như vậy ở độ phân giải đầy đủ sẽ cần quá nhiều lần đọc cho mỗi pixel.",
+      en: "At a low mip each texel covers many screen pixels, so a modest kernel (11 to 43 taps per direction, reaching 5 to 21 texels each side) already produces a very wide glow. A kernel that wide at full resolution would need far too many reads per pixel.",
     },
   },
 ];

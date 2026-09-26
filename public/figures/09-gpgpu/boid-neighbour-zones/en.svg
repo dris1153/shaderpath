@@ -88,8 +88,8 @@
   <text class="note" x="382" y="222">steer toward their mean position</text>
 
   <text class="note" x="382" y="254">The nesting is the whole balance: separation</text>
-  <text class="note" x="382" y="272">has to win up close, or alignment and cohesion</text>
-  <text class="note" x="382" y="290">pull the flock into one overlapping clump.</text>
+  <text class="note" x="382" y="272">has to win up close, or cohesion</text>
+  <text class="note" x="382" y="290">pulls the flock into one overlapping clump.</text>
 
   <text class="foot" x="320" y="344" text-anchor="middle">No boid knows the flock&#39;s shape: each one sums these three local vectors and nothing else.</text>
   <text class="foot" x="320" y="364" text-anchor="middle">To find them it scans all 4,096 texels of the state texture every frame — 16.8 million reads. Texel</text>
