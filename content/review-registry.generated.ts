@@ -8,7 +8,17 @@ export type ReviewCardsLoader = () => Promise<{ reviewCards: ReviewCard[] }>;
 export const REVIEW_CARDS_REGISTRY: Partial<
   Record<LessonSlug, ReviewCardsLoader>
 > = {
-
+  "cartesian-and-uv-space": () => import("./lessons/00-math/cartesian-and-uv-space/review-cards"),
+  "dot-and-cross-products": () => import("./lessons/00-math/dot-and-cross-products/review-cards"),
+  "euler-angles-and-gimbal-lock": () => import("./lessons/00-math/euler-angles-and-gimbal-lock/review-cards"),
+  "homogeneous-coordinates-4x4": () => import("./lessons/00-math/homogeneous-coordinates-4x4/review-cards"),
+  "interpolation-and-easing": () => import("./lessons/00-math/interpolation-and-easing/review-cards"),
+  "matrix-basics": () => import("./lessons/00-math/matrix-basics/review-cards"),
+  "model-view-projection": () => import("./lessons/00-math/model-view-projection/review-cards"),
+  "quaternions": () => import("./lessons/00-math/quaternions/review-cards"),
+  "srgb-linear-and-gamma": () => import("./lessons/00-math/srgb-linear-and-gamma/review-cards"),
+  "trigonometry-for-animation": () => import("./lessons/00-math/trigonometry-for-animation/review-cards"),
+  "vector-basics": () => import("./lessons/00-math/vector-basics/review-cards"),
 };
 
 export type ReviewExercisesLoader = () => Promise<{ exercises: Exercise[] }>;
