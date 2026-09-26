@@ -6,29 +6,31 @@ import {
   Background,
   Controls,
   Handle,
-  MarkerType,
   MiniMap,
   Position,
   ReactFlow,
-  type Edge,
   type Node,
   type NodeProps,
 } from "@xyflow/react";
 import { useTheme } from "next-themes";
 import { Link } from "@/i18n/navigation";
-import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
-import type { LessonSlug } from "@/content/slugs";
-import { type Locale, pick } from "@/content/types";
-import { isUnlocked, type ProgressMap } from "@/lib/curriculum";
-import {
-  isVisible,
-  nextBand,
-  type NodeTier,
-  type ZoomBand,
-} from "@/lib/roadmap/zoom-bands";
+import type { Locale } from "@/content/types";
 import { useProgressMap } from "@/lib/hooks/use-progress-map";
+import type { LayoutId } from "@/lib/roadmap/layouts";
+import { nextBand, type ZoomBand } from "@/lib/roadmap/zoom-bands";
 import { cn } from "@/lib/utils";
-import { chainEdges, layoutFor, type LayoutId } from "@/lib/roadmap/layouts";
+import {
+  buildFlow,
+  type LabelNodeData,
+  type LessonNodeData,
+} from "./build-flow";
+import {
+  ChainHandles,
+  LessonRowNode,
+  MapLegend,
+  ModuleRowNode,
+  TrackCardNode,
+} from "./map-card-nodes";
 
 export interface CurriculumMapStrings {
   legendCompleted: string;
@@ -38,16 +40,6 @@ export interface CurriculumMapStrings {
   checkpoint: string;
 }
 
-type LessonState = "pending" | "completed" | "unlocked" | "locked";
-
-type LessonNodeData = {
-  title: string;
-  state: LessonState;
-  slug: string;
-  isCheckpoint: boolean;
-  checkpointLabel: string;
-};
-type LabelNodeData = { title: string; kind: "track" | "module"; href?: string };
 
 function LessonNode({ data }: NodeProps<Node<LessonNodeData>>) {
   return (
@@ -73,27 +65,12 @@ function LessonNode({ data }: NodeProps<Node<LessonNodeData>>) {
   );
 }
 
-const SIDES = [
-  ["t", Position.Top],
-  ["r", Position.Right],
-  ["b", Position.Bottom],
-  ["l", Position.Left],
-] as const;
-
 function LabelNode({ data }: NodeProps<Node<LabelNodeData>>) {
   return data.kind === "track" ? (
     // A link, not a heading: the keyboard needs the stop, while 14 headings
     // inside a canvas would only clutter the page outline.
     <p className="w-56 text-sm font-semibold">
-      {/* Chain edges run between tracks, and xyflow draws nothing to a node
-          without handles. Every side carries both kinds so each fold can
-          leave from whichever side faces the next station. */}
-      {SIDES.map(([id, position]) => (
-        <span key={id}>
-          <Handle id={`s-${id}`} type="source" position={position} className="invisible!" />
-          <Handle id={`t-${id}`} type="target" position={position} className="invisible!" />
-        </span>
-      ))}
+      <ChainHandles />
       <Link href={data.href ?? "/roadmap"} className="hover:underline">
         {data.title}
       </Link>
@@ -105,17 +82,14 @@ function LabelNode({ data }: NodeProps<Node<LabelNodeData>>) {
   );
 }
 
-const nodeTypes = { lesson: LessonNode, label: LabelNode };
+const nodeTypes = {
+  lesson: LessonNode,
+  label: LabelNode,
+  trackCard: TrackCardNode,
+  moduleRow: ModuleRowNode,
+  lessonRow: LessonRowNode,
+};
 
-function stateOf(
-  slug: LessonSlug,
-  progress: ProgressMap | undefined,
-): LessonState {
-  // Unknown never renders as a confident value: no data → neutral, not locked.
-  if (!progress) return "pending";
-  if (progress[slug] === "completed") return "completed";
-  return isUnlocked(slug, progress) ? "unlocked" : "locked";
-}
 
 export default function CurriculumMap({
   locale,
@@ -143,89 +117,17 @@ export default function CurriculumMap({
     [],
   );
 
-  const { nodes, edges } = useMemo(() => {
-    const layout = layoutFor(variant, TRACKS, MODULES, LESSONS);
-    const flowNodes: Node[] = layout.nodes.map((n) => {
-      const position = { x: n.x, y: n.y };
-      // MiniMap reads node.internals.userNode and skips anything without
-      // dimensions. These nodes are uncontrolled — no onNodesChange — so
-      // nothing writes `measured` back onto them and the minimap rendered an
-      // empty frame. initialWidth/Height are hints only: the node still
-      // measures itself, and fitView gets a better first guess.
-      const common = {
-        id: n.id,
-        position,
-        draggable: false,
-        connectable: false,
-        initialWidth: 224,
-        // 162 lessons cannot be legible at once at any styling, so each zoom
-        // band hides the tiers below it. Hiding rather than rebuilding the
-        // array keeps node identity and measurements, and the minimap already
-        // skips hidden nodes so it follows the band for free.
-        hidden: !isVisible(n.kind as NodeTier, band),
-      };
-      if (n.kind === "lesson") {
-        return {
-          ...common,
-          initialHeight: n.lesson!.kind === "checkpoint" ? 44 : 30,
-          type: "lesson",
-          data: {
-            title: pick(n.lesson!.title, locale),
-            state: stateOf(n.lesson!.slug, progress),
-            slug: n.lesson!.slug,
-            isCheckpoint: n.lesson!.kind === "checkpoint",
-            checkpointLabel: strings.checkpoint,
-          } satisfies LessonNodeData,
-        };
-      }
-      return {
-        ...common,
-        initialHeight: 20,
-        type: "label",
-        selectable: false,
-        data: {
-          title: pick(n.track?.title ?? n.module?.title ?? { vi: "", en: "" }, locale),
-          kind: n.kind,
-          href: n.track ? `/track/${n.track.id}` : undefined,
-        } satisfies LabelNodeData,
-      };
-    });
-    // The overview draws the sequence between tracks; the detail view draws
-    // prerequisites between lessons. Drawing either at the wrong band leaves
-    // edges hanging off hidden endpoints.
-    const at = new Map(layout.nodes.map((n) => [n.id, n]));
-    const flowEdges: Edge[] =
-      band === "lessons"
-        ? layout.edges.map((e) => ({
-            id: e.id,
-            source: e.from,
-            target: e.to,
-            markerEnd: { type: MarkerType.ArrowClosed },
-            style: { opacity: 0.5 },
-          }))
-        : chainEdges(TRACKS, LESSONS).map((e) => {
-            // Leave from the side facing the next station: a serpentine row
-            // that runs right to left must not loop round to its right edge.
-            const a = at.get(e.from)!;
-            const b = at.get(e.to)!;
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const [out, into] =
-              Math.abs(dx) >= Math.abs(dy)
-                ? dx >= 0 ? ["r", "l"] : ["l", "r"]
-                : dy >= 0 ? ["b", "t"] : ["t", "b"];
-            return {
-              id: e.id,
-              source: e.from,
-              target: e.to,
-              sourceHandle: `s-${out}`,
-              targetHandle: `t-${into}`,
-              markerEnd: { type: MarkerType.ArrowClosed },
-              style: { opacity: 0.6 },
-            };
-          });
-    return { nodes: flowNodes, edges: flowEdges };
-  }, [band, locale, progress, strings.checkpoint, variant]);
+  const { nodes, edges } = useMemo(
+    () =>
+      buildFlow({
+        variant,
+        band,
+        locale,
+        progress,
+        checkpointLabel: strings.checkpoint,
+      }),
+    [band, locale, progress, strings.checkpoint, variant],
+  );
 
   return (
     <div>
@@ -245,6 +147,7 @@ export default function CurriculumMap({
           </span>
         </div>
       )}
+      {variant !== "columns" && <MapLegend />}
       <div className="mt-3 flex flex-wrap gap-1 text-xs">
         {(["serpentine", "vertical", "horizontal", "columns"] as const).map(
           (id) => (

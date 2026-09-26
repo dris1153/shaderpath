@@ -1,3 +1,4 @@
+import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
 // The map view is content, so a guest sees the whole thing; only the progress
@@ -97,3 +98,27 @@ test.describe("every fold draws the chain at the far band", () => {
     });
   }
 });
+
+// a11y.spec.ts visits /vi/roadmap in its default list view, so the map itself
+// was never scanned. Both themes: the card borders and muted text are the
+// parts most likely to lose contrast on one of them.
+for (const colorScheme of ["light", "dark"] as const) {
+  test(`axe finds no serious issue in the map (${colorScheme})`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ colorScheme });
+    await openMap(page);
+    await expect.poll(() => visible(page).count(), { timeout: 15_000 }).toBe(14);
+
+    const { violations } = await new AxeBuilder({ page })
+      .include('[role="region"]')
+      .analyze();
+    const blocking = violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    );
+    expect(
+      blocking.map((v) => `${v.id} x${v.nodes.length}`),
+      "serious/critical axe violations inside the map",
+    ).toEqual([]);
+  });
+}

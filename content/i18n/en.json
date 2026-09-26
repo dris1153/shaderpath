@@ -157,7 +157,12 @@
     "mapLegendLocked": "Not yet unlocked",
     "mapRegion": "Curriculum map: 14 tracks in learning order; open a track for its page",
     "signedOut": "You are browsing as a guest — nothing is being saved.",
-    "signedOutCta": "Sign in to save progress"
+    "signedOutCta": "Sign in to save progress",
+    "mapHours": "{hours}h",
+    "mapCheckpoints": "{count} mini-builds",
+    "mapTerminus": "Destination",
+    "mapLegendDifficulty": "Difficulty",
+    "mapLegendRoad": "Bar length = hours"
   },
   "lesson": {
     "backToTrack": "Back to track",

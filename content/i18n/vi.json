@@ -157,7 +157,12 @@
     "mapLegendLocked": "Chưa mở khoá theo lộ trình",
     "mapRegion": "Sơ đồ lộ trình: 14 track theo thứ tự học, nhấn một track để mở trang của nó",
     "signedOut": "Bạn đang xem với tư cách khách — tiến độ không được lưu.",
-    "signedOutCta": "Đăng nhập để lưu"
+    "signedOutCta": "Đăng nhập để lưu",
+    "mapHours": "{hours} giờ",
+    "mapCheckpoints": "{count} mini-build",
+    "mapTerminus": "Đích đến",
+    "mapLegendDifficulty": "Độ khó",
+    "mapLegendRoad": "Độ dài thanh = số giờ"
   },
   "lesson": {
     "backToTrack": "Về track",
