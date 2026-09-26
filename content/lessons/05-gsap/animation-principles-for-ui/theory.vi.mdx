@@ -30,7 +30,7 @@ Không có con số tuyệt đối đúng cho mọi trường hợp, nhưng Niel
 gsap.matchMedia().add(
   "(prefers-reduced-motion: reduce)",
   () => {
-    gsap.set(".card", { clearProps: "all" }); // bỏ mọi transform, giữ trạng thái cuối tức thì
+    gsap.set(".card", { clearProps: "transform,opacity" }); // chỉ bỏ những gì intro đã set; trạng thái cuối trong CSS hiện ngay
     return () => {}; // cleanup nếu người dùng đổi setting hệ điều hành khi đang chạy
   },
 );

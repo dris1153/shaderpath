@@ -8,7 +8,7 @@ gsap.from(".box", { opacity: 0, y: 40, duration: 0.6 });
 gsap.fromTo(".box", { scale: 0.5 }, { scale: 1, duration: 0.4 });
 ```
 
-Inside the vars object, GSAP doesn't distinguish "properties to animate" from "special configuration" through separate syntax — it just treats any key that isn't on its reserved list (duration, delay, ease, stagger, onComplete, …) as a property to animate. `duration` defaults to $0.5$ seconds if omitted; `delay` pushes the start time back, measured in seconds from when the tween was created (not from when a parent timeline starts — a detail that matters once timelines enter the picture below); `ease` defaults to `"power1.out"` if left unset, and it decides how the animation accelerates and decelerates throughout — the entire subject of the next lesson.
+Inside the vars object, GSAP doesn't distinguish "properties to animate" from "special configuration" through separate syntax — it just treats any key that isn't on its reserved list (duration, delay, ease, stagger, onComplete, …) as a property to animate. `duration` defaults to $0.5$ seconds if omitted; `delay` pushes the start time back, in seconds — from when a standalone tween is created, or, inside a timeline, added on top of the tween's position there (a detail that matters once timelines enter the picture below); `ease` defaults to `"power1.out"` if left unset, and it decides how the animation accelerates and decelerates throughout — the entire subject of the next lesson.
 
 ## Playback Control: A Readable Value Generator, Not "Fire and Forget"
 

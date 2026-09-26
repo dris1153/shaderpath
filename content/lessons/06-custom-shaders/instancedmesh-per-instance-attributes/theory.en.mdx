@@ -16,7 +16,7 @@ for (let i = 0; i < count; i++) {
 mesh.instanceMatrix.needsUpdate = true; // ONCE, after the loop
 ```
 
-`setMatrixAt(i, matrix)` simply does `matrix.toArray(this.instanceMatrix.array, i * 16)` — it writes 16 numbers directly into the right spot in the buffer, entirely on the CPU, and does NOT automatically tell the GPU the buffer changed. `needsUpdate = true` is that signal; forgetting this line is the most common mistake — the code runs with no error, the console is clean, but every copy sits frozen at the origin because the GPU is still reading the original identity buffer.
+`setMatrixAt(i, matrix)` simply does `matrix.toArray(this.instanceMatrix.array, i * 16)` — it writes 16 numbers directly into the right spot in the buffer, entirely on the CPU, and does NOT automatically tell the GPU the buffer changed. `needsUpdate = true` is that signal. The first render uploads whatever the array holds at that moment, so a loop that finishes before it works even without the flag — forgetting it bites once you write after the mesh has already rendered: no error, a clean console, but the copies stay frozen where the GPU's stale buffer puts them (at the origin, if that buffer still holds the initial identity matrices).
 
 ## Coloring Each Copy: instanceColor
 
@@ -38,7 +38,7 @@ mesh.instanceMatrix.needsUpdate = true; // ONCE, after the loop
 
 ## Update Patterns: Set-Once vs. Every Frame, and the CPU Cost
 
-For a static field (positioned once at setup), calling `setMatrixAt` in a loop then `needsUpdate = true` exactly ONCE is enough. For a field that needs transforms changed EVERY FRAME (per-copy physics), a JS loop plus `matrix.toArray()` for thousands of instances costs CPU proportional to `count`, and by default `needsUpdate = true` re-uploads the ENTIRE buffer (`gl.bufferSubData` with the whole array — confirmed in `WebGLAttributes.js`) even when only a handful of instances actually changed. `instanceMatrix.addUpdateRange(start, count)` (available in this version's `BufferAttribute.js`) scopes the re-upload to just the byte range that changed — worth reaching for when the field is large but only a few instances move per frame.
+For a static field (positioned once at setup), calling `setMatrixAt` in a loop then `needsUpdate = true` exactly ONCE is enough. For a field that needs transforms changed EVERY FRAME (per-copy physics), a JS loop plus `matrix.toArray()` for thousands of instances costs CPU proportional to `count`, and by default `needsUpdate = true` re-uploads the ENTIRE buffer (`gl.bufferSubData` with the whole array — confirmed in `WebGLAttributes.js`) even when only a handful of instances actually changed. `instanceMatrix.addUpdateRange(start, count)` (available in this version's `BufferAttribute.js`) scopes the re-upload to just the range that changed — counted in array elements, not bytes (instance `i` is `addUpdateRange(i * 16, 16)`), and `needsUpdate = true` is still what triggers it — worth reaching for when the field is large but only a few instances move per frame.
 
 ## When Instancing Wins, and When It Doesn't
 
@@ -50,7 +50,7 @@ The module's closing checkpoint (Enhanced Standard Material) can combine this le
 
 The three most common InstancedMesh mistakes:
 
-1. **Forgetting `instanceMatrix.needsUpdate = true` after the `setMatrixAt` loop.** The mesh compiles cleanly, the console reports nothing, but every copy sits frozen at the origin (identity matrix) because the GPU never received the new buffer.
+1. **Forgetting `instanceMatrix.needsUpdate = true` after a `setMatrixAt` loop that runs once the mesh has already rendered.** The mesh compiles cleanly, the console reports nothing, but the copies stay frozen where the GPU's stale buffer puts them (at the origin, if it still holds the initial identity matrices).
 2. **Flipping `material.vertexColors = true` on "just in case" when only `instanceColor` is used.** That flag defines `USE_COLOR` in the vertex stage, making `color_vertex` read a `color` attribute the geometry doesn't have — an unbound attribute returns the generic default (0,0,0,1), `vColor` gets multiplied to zero before `instanceColor` is applied, and the whole instanced field renders BLACK instead of the colors `setColorAt` wrote. In current three, `instanceColor` alone is sufficient.
 3. **Updating the entire `instanceMatrix` every frame for thousands of instances without considering `addUpdateRange`.** The result is still correct, but every frame re-uploads the whole buffer to the GPU even when most instances didn't change — an easy CPU-to-GPU bottleneck before the GPU itself is even busy.
 

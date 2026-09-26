@@ -22,7 +22,7 @@ The most reliable lookup technique isn't guessing — it's printing exactly what
 
 ## Overriding Globally via THREE.ShaderChunk — and the Restore Discipline
 
-`ShaderChunk` is just a plain JS object — assigning `THREE.ShaderChunk.emissivemap_fragment = "..."` IMMEDIATELY changes that chunk's content for EVERY material that compiles AFTER the assignment, not just the one you're working on. On a page with many demos/canvases sharing one runtime (exactly this platform's setup), a demo that overrides `ShaderChunk` without restoring it breaks whichever demo renders after it on the same page — even if the two demos are otherwise unrelated. If a lesson must demonstrate the global override, the mandatory discipline is to save the original before assigning (`const original = THREE.ShaderChunk.x`) and restore that exact original in a cleanup effect before the component unmounts.
+`ShaderChunk` is just a plain JS object — assigning `THREE.ShaderChunk.emissivemap_fragment = "..."` IMMEDIATELY changes that chunk's content for every program compiled AFTER the assignment, not just the one for the material you're working on. The program cache makes it slipperier: a built-in material's cache key is its `shaderID` plus parameters, never the chunk text, so a material matching an already-compiled program reuses it without the override — and a program compiled WITH the override keeps being reused after you restore the chunk, until every material using it is disposed. On a page with many demos/canvases sharing one runtime (exactly this platform's setup), a demo that overrides `ShaderChunk` without restoring it can break a demo that compiles after it on the same page — even if the two demos are otherwise unrelated. If a lesson must demonstrate the global override, the mandatory discipline is to save the original before assigning (`const original = THREE.ShaderChunk.x`) and restore that exact original in a cleanup effect before the component unmounts.
 
 ## Per-Material or Global: A Decision Table
 
@@ -43,7 +43,7 @@ The checkpoint right after this module (Enhanced Standard Material) reuses this 
 The three most common mistakes when hacking shader chunks:
 
 1. **`.replace()` targeting assembled GLSL instead of the `#include` marker.** As covered above: at `onBeforeCompile` time, `shader.vertexShader` still contains the raw `#include <chunk>` line, unresolved. Replacing the wrong string throws no error — it just silently does nothing, the hardest kind of shader bug to spot.
-2. **Overriding `THREE.ShaderChunk` globally and forgetting to restore it.** It leaks into every material compiled afterward on the same page, including unrelated demos/components — a bug that's hard to reproduce because it depends on component MOUNT ORDER.
+2. **Overriding `THREE.ShaderChunk` globally and forgetting to restore it.** It can leak into any material compiled afterward on the same page, including unrelated demos/components — a bug that's hard to reproduce because it depends on component MOUNT ORDER.
 3. **Trusting chunk names to stay stable across versions.** Plenty of older articles reference an `output_fragment` chunk — that chunk does NOT exist in the `three@0.185.1` installed in this repo (verifiable by listing the `ShaderChunk/` directory); the chunk that writes `gl_FragColor` at the end of the fragment shader in this version is named `opaque_fragment`. Always cross-check chunk names against the installed `node_modules/three`, never copy straight from a tutorial that doesn't state its version.
 
 </Callout>

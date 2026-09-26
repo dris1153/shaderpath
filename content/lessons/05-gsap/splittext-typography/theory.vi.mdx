@@ -26,11 +26,11 @@ Split theo `"words"` giữ nguyên từng từ làm một khối liền — khô
 
 ## revert() là kỷ luật, không phải tuỳ chọn
 
-Vì split là mutation DOM thật, bạn PHẢI gọi `split.revert()` để trả `innerHTML` về nguyên trạng trước khi tạo split mới hoặc khi component unmount — bỏ qua bước này với React (đặc biệt dưới Strict Mode, effect chạy hai lần khi mount) để lại nhiều lớp `<div>` split chồng lên nhau, mỗi lớp bọc trong lớp trước, và lần split thứ hai sẽ tách theo cấu trúc đã hỏng chứ không phải text gốc. Nguyên tắc an toàn: mọi lần bạn gọi `SplitText.create` trong một effect, dòng đầu tiên của effect đó phải `revert()` split trước (nếu có), và cleanup function của effect phải `revert()` lần cuối.
+Vì split là mutation DOM thật, bạn PHẢI gọi `split.revert()` để trả `innerHTML` về nguyên trạng khi component unmount hoặc trước khi split lại. SplitText tự lo một trường hợp: split mới trên cùng element sẽ trả HTML gốc của element đó trước (`overwrite` bật mặc định), nên `<div>` split không bao giờ lồng trong `<div>` split. Điều nó không làm được là cho instance cũ nghỉ hưu — bỏ qua `revert()` với React (đặc biệt dưới Strict Mode, effect chạy hai lần khi mount) thì instance đầu vẫn sống: tween của nó tiếp tục animate những node đã rời trang, và nếu bật `autoSplit` nó còn tách lại đè lên instance mới. Nguyên tắc an toàn: mọi lần bạn gọi `SplitText.create` trong một effect, dòng đầu tiên của effect đó phải `revert()` split trước (nếu có), và cleanup function của effect phải `revert()` lần cuối — hoặc tạo split bên trong `gsap.context()`/`useGSAP()`, vì SplitText tự đăng ký vào context đang hoạt động nên lệnh revert của context bao luôn nó.
 
 ## Responsive: autoSplit và tự split lại khi resize
 
-Line-break phụ thuộc độ rộng container — resize cửa sổ đổi số từ trên một dòng, khiến `split.lines` cũ trỏ vào những dòng không còn đúng nữa. `autoSplit: true` (3.13+) tự theo dõi resize và font load, tự gọi lại `split()` bên trong khi cần — bạn không phải tự viết `ResizeObserver`. Cân nhắc: autoSplit tự tách lại NGẦM, nên nếu bạn đã bắt đầu animate `split.chars` cũ, tham chiếu mảng đó lập tức lỗi thời sau một lần re-split; đăng ký lại animation trong callback `onSplit` thay vì animate một lần rồi quên.
+Line-break phụ thuộc độ rộng container — resize cửa sổ đổi số từ trên một dòng, khiến `split.lines` cũ trỏ vào những dòng không còn đúng nữa. `autoSplit: true` (3.13+, và chỉ khi `type` có `"lines"`) tự theo dõi resize và font load, tự gọi lại `split()` bên trong khi cần — bạn không phải tự viết `ResizeObserver`. Cân nhắc: mỗi lần re-split thay vào các element MỚI. `split.chars` được làm rỗng rồi đổ đầy lại, nhưng tween bạn đã chạy từ trước giữ các element cũ và tiếp tục animate những node không còn nữa. Tạo animation bên trong callback `onSplit` và return nó: SplitText revert nó trước lần re-split kế tiếp và cho animation mới nhảy tới đúng thời điểm cũ.
 
 ## Hiệu năng: hàng trăm div, chỉ animate transform
 
@@ -46,8 +46,8 @@ Bài checkpoint đóng track (Mini-build: Trang scrollytelling) sẽ ghép `spli
 
 Ba lỗi hay gặp nhất với SplitText:
 
-1. **Không gọi `revert()` trước khi split lại.** Split chồng lên split cũ tạo cấu trúc `<div>` lồng nhau sai, animate ra kết quả méo mó khó debug — đặc biệt dễ gặp dưới React Strict Mode vì effect chạy hai lần lúc mount.
-2. **Giữ tham chiếu `split.chars` cũ sau khi `autoSplit` tự split lại lúc resize.** Mảng element cũ đã không còn nằm trong DOM, animate vào nó không có tác dụng gì — phải lấy target mới trong callback `onSplit`, không cache một lần rồi dùng mãi.
+1. **Không gọi `revert()` trong cleanup.** Split mới trên cùng element trả HTML gốc trước, nên không có gì lồng nhau — nhưng instance cũ vẫn sống: tween của nó animate những node đã tách khỏi DOM, và nếu bật `autoSplit` nó tách lại đè lên instance mới. Đặc biệt dễ gặp dưới React Strict Mode vì effect chạy hai lần lúc mount.
+2. **Animate kết quả của `autoSplit` bên ngoài `onSplit`.** Mỗi lần re-split lúc resize thay vào element mới; tween chạy từ trước vẫn giữ các element cũ đã tách khỏi DOM nên không animate được gì thấy được. Tạo tween bên trong `onSplit` và return nó, để SplitText revert nó và chuyển tiến độ sang lần split mới.
 3. **Split cả đoạn văn dài theo `"chars"` vì tưởng càng chi tiết càng đẹp.** Hàng nghìn `<div>` cho một đoạn văn dài không đổi lại được gì về thị giác so với split theo `"lines"`, chỉ tốn bộ nhớ DOM và làm chậm lần split/revert tiếp theo.
 
 </Callout>

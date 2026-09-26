@@ -18,7 +18,7 @@ Một `ScrollTrigger` cần biết đoạn cuộn nào tính là "đang hoạt �
 
 ### Pin: giữ phần tử đứng yên và "lỗ hổng" layout nó tạo ra
 
-`pin: true` giữ trigger đứng yên trên màn hình (với scroller là cửa sổ — mặc định — pin dùng `position: fixed` thật; khi scroller là một phần tử, pin chuyển sang giữ bằng `transform`, như demo bài này) suốt đoạn `start`-`end`. Vấn đề: nếu phần tử pin thoát khỏi luồng layout mà không để lại dấu vết, nội dung phía dưới sẽ nhảy lên lấp khoảng trống ngay khi pin bắt đầu — vì vậy `pinSpacing: true` (mặc định) tự chèn một khoảng đệm đúng bằng chiều cao quãng pin, giữ layout document không đổi trong khi phần tử thực tế đứng yên. Tắt `pinSpacing` xoá khoảng đệm đó — hợp lý khi tự lo layout, nhưng là bẫy nếu tắt mà không hiểu tác dụng phụ.
+`pin: true` giữ trigger đứng yên trên màn hình (với scroller là cửa sổ — mặc định — pin dùng `position: fixed` thật; khi scroller là một phần tử, pin chuyển sang giữ bằng `transform`, như demo bài này) suốt đoạn `start`-`end`. Vấn đề: nếu phần tử pin thoát khỏi luồng layout mà không để lại dấu vết, nội dung phía dưới sẽ nhảy lên lấp khoảng trống ngay khi pin bắt đầu — vì vậy `pinSpacing: true` (mặc định — trừ khi cha của phần tử pin là `display: flex`, lúc đó mặc định là `false`) tự chèn một khoảng đệm đúng bằng chiều cao quãng pin, giữ layout document không đổi trong khi phần tử thực tế đứng yên. Tắt `pinSpacing` xoá khoảng đệm đó — hợp lý khi tự lo layout, nhưng là bẫy nếu tắt mà không hiểu tác dụng phụ.
 
 ## toggleActions: bốn động từ cho trigger không scrub
 

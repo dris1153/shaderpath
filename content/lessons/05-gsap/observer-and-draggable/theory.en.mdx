@@ -65,7 +65,7 @@ Hand-writing `pointerdown/pointermove/pointerup` for a few simple cases isn't ha
 
 ## Pitfalls: Hit-Area and touch-action
 
-The two most common mistakes only show up on a real touch device, not while testing on desktop with a mouse: first, a hit-area that's too small — a 24×24px knob is easy to click with a mouse cursor but nearly impossible to tap precisely with a finger (Apple recommends a minimum 44×44px touch target). Second, and more subtle: forgetting the CSS `touch-action: none` on the draggable element. By default the browser still treats a touch gesture on that element as a candidate for page scrolling/panning, so there's a short delay (or worse, the page actually scrolls) before Draggable manages to `preventDefault` the event — `touch-action: none` tells the browser upfront "don't reserve this touch for scrolling," removing that delay entirely.
+Two problems only show up on a real touch device, not while testing on desktop with a mouse: first, a hit-area that's too small — a 24×24px knob is easy to click with a mouse cursor but nearly impossible to tap precisely with a finger (Apple recommends a minimum 44×44px touch target). Second, and more subtle: `touch-action`. By default the browser treats a touch gesture on an element as a candidate for page scrolling/panning, and calling `preventDefault()` on `pointermove` can't take that back — only CSS `touch-action` tells the browser upfront "don't reserve this touch for scrolling." Draggable handles this for you: when it enables, it writes `touch-action` onto the element itself (`none` for `x,y` and `rotation`, `pan-y`/`pan-x` for a single axis so the other direction still scrolls the page). Hand-written pointer handlers get no such help — there you add `touch-action: none` yourself, or the page scrolls instead of the drag.
 
 ## Combining Them: Observer Detects Intent, a Tween Handles the Response
 
@@ -81,6 +81,6 @@ The three most common mistakes with Observer and Draggable:
 
 1. **Setting Observer's `target` to `window` or `document` alongside `preventDefault: true`.** This blocks scrolling/touch on the ENTIRE page instead of just the widget — the user can no longer scroll the page at all, an easy mistake to miss if you only test by scrolling inside the demo itself.
 2. **Mixing up `snap`'s units across different `type` values.** With `type: "rotation"`, snap is measured in degrees; with `type: "x,y"`, snap is measured in pixels (or a function receiving coordinates). Passing the wrong unit makes snap either do nothing or drag the element to a nonsensical position.
-3. **Forgetting `touch-action: none` on the Draggable element.** On a real touch device, missing this CSS lets the browser "claim" the first gesture for page scrolling before Draggable gets to handle the event — dragging feels delayed or jittery on mobile despite running perfectly smoothly on desktop.
+3. **Forgetting `touch-action: none` on hand-written pointer handlers.** Calling `preventDefault()` on `pointermove` can't stop a real touch device from claiming the gesture for page scrolling — the drag stutters or the page scrolls, despite running perfectly smoothly on desktop. Draggable doesn't need the line: it sets `touch-action` on its element when it enables.
 
 </Callout>

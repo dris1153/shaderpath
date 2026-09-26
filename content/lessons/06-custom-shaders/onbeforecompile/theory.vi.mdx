@@ -53,7 +53,7 @@ Three không compile lại một chương trình WebGL cho mỗi mesh mỗi fram
 
 Ba lỗi hay gặp nhất khi dùng `onBeforeCompile`:
 
-1. **Set `shader.uniforms.uX` mà quên khai báo `uniform` trong source GLSL.** Trình biên dịch báo lỗi biến chưa khai báo (hoặc tệ hơn, một số driver âm thầm bỏ qua uniform không được tham chiếu) — luôn thêm dòng `uniform ...;` cùng lúc với việc gán giá trị.
+1. **Set `shader.uniforms.uX` mà quên khai báo `uniform` trong source GLSL.** Trình biên dịch báo lỗi biến chưa khai báo — luôn thêm dòng `uniform ...;` cùng lúc với việc gán giá trị.
 2. **Quên `customProgramCacheKey` khi code chèn phụ thuộc một biến runtime (không phải hằng số).** Vì default cache key chỉ so văn bản hàm `onBeforeCompile` qua `.toString()`, hai material dùng chung factory nhưng khác biến đóng gói có thể bị Three coi là "cùng chương trình" và âm thầm dùng chung.
 3. **Gõ sai tên chunk trong `replace()`.** Không có lỗi biên dịch nào xuất hiện — chuỗi tìm không khớp, code chèn biến mất trong im lặng, và bạn debug nhầm hướng vì tưởng logic sai chứ không nghĩ tới chuỗi tìm sai.
 

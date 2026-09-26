@@ -53,7 +53,7 @@ Three doesn't recompile a WebGL program for every mesh every frame — far too e
 
 The three most common `onBeforeCompile` mistakes:
 
-1. **Setting `shader.uniforms.uX` while forgetting to declare `uniform` in the GLSL source.** The compiler reports an undeclared identifier (or, worse, some drivers silently drop an unreferenced uniform) — always add the `uniform ...;` line at the same time you assign a value.
+1. **Setting `shader.uniforms.uX` while forgetting to declare `uniform` in the GLSL source.** The compiler reports an undeclared identifier — always add the `uniform ...;` line at the same time you assign a value.
 2. **Forgetting `customProgramCacheKey` when the injected code depends on a runtime variable (not a constant).** Since the default cache key only compares the `onBeforeCompile` function's text via `.toString()`, two materials sharing a factory but differing only in a closed-over value can get treated as "the same program" and silently share one.
 3. **Typo-ing a chunk name inside `replace()`.** No compile error appears — the search string just doesn't match, your injected code vanishes silently, and you end up debugging the wrong thing, assuming broken logic instead of a wrong search string.
 

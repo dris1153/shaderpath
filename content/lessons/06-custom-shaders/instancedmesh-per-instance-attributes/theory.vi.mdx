@@ -16,7 +16,7 @@ for (let i = 0; i < count; i++) {
 mesh.instanceMatrix.needsUpdate = true; // MỘT lần, sau vòng lặp
 ```
 
-`setMatrixAt(i, matrix)` chỉ đơn giản `matrix.toArray(this.instanceMatrix.array, i * 16)` — ghi thẳng 16 số vào đúng vị trí trong buffer, hoàn toàn trên CPU, KHÔNG tự động báo GPU biết buffer đã đổi. `needsUpdate = true` mới là tín hiệu đó; quên dòng này là lỗi phổ biến nhất — code chạy không lỗi, console sạch, nhưng mọi bản sao đứng yên ở gốc toạ độ vì GPU vẫn đang đọc buffer identity ban đầu.
+`setMatrixAt(i, matrix)` chỉ đơn giản `matrix.toArray(this.instanceMatrix.array, i * 16)` — ghi thẳng 16 số vào đúng vị trí trong buffer, hoàn toàn trên CPU, KHÔNG tự động báo GPU biết buffer đã đổi. `needsUpdate = true` mới là tín hiệu đó. Lần render đầu upload đúng những gì mảng đang chứa lúc ấy, nên vòng lặp chạy xong trước đó vẫn đúng dù thiếu cờ — quên dòng này chỉ cắn khi bạn ghi sau khi mesh đã render: không lỗi, console sạch, nhưng các bản sao đứng yên theo buffer cũ trên GPU (ở gốc toạ độ, nếu buffer đó vẫn là các ma trận identity ban đầu).
 
 ## Tô riêng từng bản sao: instanceColor
 
@@ -38,7 +38,7 @@ mesh.instanceMatrix.needsUpdate = true; // MỘT lần, sau vòng lặp
 
 ## Cập nhật: set-once vs mỗi-frame, và chi phí CPU
 
-Với field tĩnh (đặt một lần lúc khởi tạo), gọi `setMatrixAt` trong vòng lặp rồi `needsUpdate = true` đúng MỘT LẦN là đủ. Với field đổi transform MỖI FRAME (mô phỏng vật lý riêng từng bản sao), vòng lặp JS cộng `matrix.toArray()` cho hàng nghìn instance tốn CPU tỉ lệ thuận với `count`, và mặc định `needsUpdate = true` upload LẠI TOÀN BỘ buffer (`gl.bufferSubData` với toàn bộ mảng — xác nhận trong `WebGLAttributes.js`) dù chỉ vài instance thật sự đổi. `instanceMatrix.addUpdateRange(start, count)` (có sẵn trong `BufferAttribute.js` bản này) giới hạn phần upload lại đúng dải byte đã đổi — đáng cân nhắc khi field lớn nhưng mỗi frame chỉ vài instance thật sự động.
+Với field tĩnh (đặt một lần lúc khởi tạo), gọi `setMatrixAt` trong vòng lặp rồi `needsUpdate = true` đúng MỘT LẦN là đủ. Với field đổi transform MỖI FRAME (mô phỏng vật lý riêng từng bản sao), vòng lặp JS cộng `matrix.toArray()` cho hàng nghìn instance tốn CPU tỉ lệ thuận với `count`, và mặc định `needsUpdate = true` upload LẠI TOÀN BỘ buffer (`gl.bufferSubData` với toàn bộ mảng — xác nhận trong `WebGLAttributes.js`) dù chỉ vài instance thật sự đổi. `instanceMatrix.addUpdateRange(start, count)` (có sẵn trong `BufferAttribute.js` bản này) giới hạn phần upload lại đúng dải đã đổi — tính bằng số phần tử của mảng, không phải byte (instance `i` là `addUpdateRange(i * 16, 16)`), và vẫn cần `needsUpdate = true` để kích hoạt — đáng cân nhắc khi field lớn nhưng mỗi frame chỉ vài instance thật sự động.
 
 ## Khi nào instancing thắng, khi nào không
 
@@ -50,7 +50,7 @@ Checkpoint cuối module (MeshStandardMaterial nâng cấp) có thể kết hợ
 
 Ba lỗi hay gặp nhất với InstancedMesh:
 
-1. **Quên `instanceMatrix.needsUpdate = true` sau vòng lặp `setMatrixAt`.** Mesh compile sạch, console không báo lỗi gì, nhưng mọi bản sao đứng yên ở gốc toạ độ (ma trận identity) vì GPU chưa từng nhận buffer mới.
+1. **Quên `instanceMatrix.needsUpdate = true` sau vòng lặp `setMatrixAt` chạy khi mesh đã render.** Mesh compile sạch, console không báo lỗi gì, nhưng các bản sao đứng yên theo buffer cũ trên GPU (ở gốc toạ độ, nếu buffer đó vẫn là các ma trận identity ban đầu).
 2. **Bật `material.vertexColors = true` "cho chắc" khi chỉ dùng `instanceColor`.** Cờ đó định nghĩa `USE_COLOR` ở vertex stage, khiến `color_vertex` đọc attribute `color` mà geometry không hề có — attribute không gắn trả về giá trị generic mặc định (0,0,0,1), `vColor` bị nhân về 0 trước khi nhân `instanceColor`, và cả trường instance render ĐEN thay vì màu `setColorAt` đã ghi. Trong three hiện tại, `instanceColor` một mình là đủ.
 3. **Update toàn bộ `instanceMatrix` mỗi frame cho hàng nghìn instance mà không cân nhắc `addUpdateRange`.** Kết quả vẫn đúng, nhưng mỗi frame re-upload nguyên buffer lên GPU dù phần lớn instance không đổi — dễ thành bottleneck CPU→GPU trước cả khi bản thân GPU bận.
 

@@ -26,11 +26,11 @@ Splitting by `"words"` keeps each word intact as a single unit — no splitting 
 
 ## revert() Is a Discipline, Not an Option
 
-Because a split is a real DOM mutation, you MUST call `split.revert()` to restore the original `innerHTML` before creating a new split or when the component unmounts — skip this in React (especially under Strict Mode, where effects run twice on mount) and you get layers of split `<div>`s stacked on top of each other, each wrapping the previous layer, and the second split tears apart that broken structure instead of the original text. Safe rule: any time an effect calls `SplitText.create`, that effect's first line should `revert()` a previous split if one exists, and its cleanup function should `revert()` one final time.
+Because a split is a real DOM mutation, you MUST call `split.revert()` to restore the original `innerHTML` when the component unmounts or before you split again. SplitText guards one case itself: a new split on the same element first restores that element's original HTML (`overwrite` is on by default), so split `<div>`s never nest inside split `<div>`s. What it can't do is retire the old instance — skip `revert()` in React (especially under Strict Mode, where effects run twice on mount) and the first instance lives on: its tweens keep animating nodes that have left the page, and with `autoSplit` it keeps re-splitting over the new one. Safe rule: any time an effect calls `SplitText.create`, that effect's first line should `revert()` a previous split if one exists, and its cleanup function should `revert()` one final time — or create the split inside `gsap.context()`/`useGSAP()`, which SplitText registers with, so the context's revert covers it.
 
 ## Responsive: autoSplit and Re-Splitting on Resize
 
-Line breaks depend on container width — resizing the window changes how many words fit on one line, leaving an old `split.lines` array pointing at lines that are no longer correct. `autoSplit: true` (3.13+) watches resize events and font loading itself, re-calling `split()` internally when needed — no hand-rolled `ResizeObserver` required. One catch: autoSplit re-splits SILENTLY, so if you've already started animating the old `split.chars`, that array reference goes stale the moment a re-split happens; re-register the animation inside the `onSplit` callback instead of animating once and forgetting about it.
+Line breaks depend on container width — resizing the window changes how many words fit on one line, leaving an old `split.lines` array pointing at lines that are no longer correct. `autoSplit: true` (3.13+, and only when `type` includes `"lines"`) watches resize events and font loading itself, re-calling `split()` internally when needed — no hand-rolled `ResizeObserver` required. One catch: every re-split swaps in NEW elements. `split.chars` is emptied and refilled, but a tween you already started captured the old elements and keeps animating nodes that are gone. Create the animation inside the `onSplit` callback and return it: SplitText reverts it before the next re-split and jumps the new one to the same point in time.
 
 ## Performance: Hundreds of Divs, Animate Only Transforms
 
@@ -46,8 +46,8 @@ The track's closing checkpoint (Mini-build: Scrollytelling Page) pairs `split.li
 
 The three most common SplitText mistakes:
 
-1. **Not calling `revert()` before splitting again.** Splitting on top of an existing split creates incorrectly nested `<div>` structures, animating into distorted, hard-to-debug results — especially easy to hit under React Strict Mode, since effects run twice on mount.
-2. **Holding onto a stale `split.chars` reference after `autoSplit` re-splits on resize.** The old element array is no longer in the DOM; animating it does nothing — grab the new targets inside the `onSplit` callback instead of caching them once and reusing forever.
+1. **Not calling `revert()` on cleanup.** A new split on the same element restores the original HTML first, so nothing nests — but the old instance lives on: its tweens animate detached nodes, and with `autoSplit` it re-splits over the new one. Especially easy to hit under React Strict Mode, since effects run twice on mount.
+2. **Animating an `autoSplit` result outside `onSplit`.** Each re-split on resize swaps in new elements; a tween started earlier still holds the old, detached ones and animates nothing visible. Create the tween inside `onSplit` and return it, so SplitText can revert it and carry its progress over to the new split.
 3. **Splitting a long paragraph by `"chars"` assuming finer-grained always looks better.** Thousands of `<div>`s for a long paragraph buy nothing visually over splitting by `"lines"`, only burning DOM memory and slowing down the next split/revert cycle.
 
 </Callout>

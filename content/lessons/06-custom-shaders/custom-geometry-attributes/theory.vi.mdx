@@ -66,8 +66,8 @@ Bài kế tiếp (`drei-shadermaterial-helper`) quay lại uniform, không phả
 
 Ba lỗi hay gặp nhất khi tự tạo attribute:
 
-1. **Đặt tên attribute JS và attribute GLSL lệch nhau (hoặc lệch hoa/thường).** `geometry.setAttribute("aRandom", ...)` nhưng shader khai báo `attribute float arandom;` — Three không luôn báo lỗi biên dịch rõ ràng, attribute đơn giản đọc toàn số 0, hiệu ứng "biến mất" mà không có thông báo chỉ thẳng nguyên nhân.
-2. **Quên `needsUpdate = true` sau khi ghi lại `Float32Array`.** Mảng JS đã đổi giá trị đúng, nhưng buffer trên GPU vẫn giữ dữ liệu cũ cho tới lần `needsUpdate` tiếp theo — dễ nhầm tưởng logic random/tính toán bị sai, trong khi vấn đề chỉ là quên báo cho Three copy lại.
-3. **`itemSize` không khớp độ dài mảng.** `new THREE.BufferAttribute(data, 3)` nhưng `data.length` không chia hết cho 3 (ví dụ lỡ tạo mảng theo `count` thay vì `count * 3`) khiến Three đọc lệch pha — vertex sau nhận một phần dữ liệu của vertex trước, hiện ra thành hình học méo mó khó truy vết nếu không kiểm tra `data.length === count * itemSize` trước khi gắn.
+1. **Đặt tên attribute JS và attribute GLSL lệch nhau (hoặc lệch hoa/thường).** `geometry.setAttribute("aRandom", ...)` nhưng shader khai báo `attribute float arandom;` — không bao giờ là lỗi biên dịch: `arandom` không được cấp buffer nên đọc toàn số 0, hiệu ứng "biến mất" mà không có thông báo chỉ thẳng nguyên nhân.
+2. **Quên `needsUpdate = true` sau khi ghi lại một `Float32Array` đã được render.** Mảng JS đã đổi giá trị đúng, nhưng buffer trên GPU vẫn giữ dữ liệu cũ cho tới lần `needsUpdate` tiếp theo — dễ nhầm tưởng logic random/tính toán bị sai, trong khi vấn đề chỉ là quên báo cho Three copy lại.
+3. **`itemSize` không khớp độ dài mảng.** `new THREE.BufferAttribute(data, 3)` nhưng mảng lỡ tạo theo `count` thay vì `count * 3` chỉ chứa một phần ba số vertex cần vẽ. Vertex trong buffer vẫn đọc đúng — không lệch pha. Nếu mảng thiếu là `position` trên geometry không có index, Three chỉ vẽ ít vertex hơn và một phần mesh biến mất; còn lại (geometry có index, hoặc attribute khác) mọi vertex vượt quá cuối buffer là truy cập ngoài phạm vi: tuỳ trình duyệt, lệnh vẽ bị từ chối với `INVALID_OPERATION` (không hiện gì) hoặc đọc ra 0 hay giá trị khác trong buffer. Kiểm tra `data.length === count * itemSize` trước khi gắn.
 
 </Callout>

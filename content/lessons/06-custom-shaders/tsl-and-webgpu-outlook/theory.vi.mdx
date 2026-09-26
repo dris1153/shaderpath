@@ -11,12 +11,12 @@ import { uniform, uv, sin, time, mix, color } from "three/tsl";
 import { MeshBasicNodeMaterial, WebGPURenderer } from "three/webgpu";
 ```
 
-Hai điều đáng chú ý ngay từ dòng import: TSL và WebGPU sống ở **subpath export riêng** (`three/tsl`, `three/webgpu`), không nằm trong `three` gốc — gõ `import { uniform } from "three"` cho `undefined` (hoặc lỗi TypeScript), vì `three/package.json` khai `exports` tách ba entry point này. Một `NodeMaterial` (ví dụ `MeshBasicNodeMaterial`) thay thuộc tính string-based quen thuộc bằng thuộc tính node: `material.colorNode` thay `color`/`map`, `material.positionNode` thay việc tự viết `#include <begin_vertex>` như bài `onBeforeCompile`. Gán một node vào đó là xong — không cần biết nó dịch ra GLSL hay WGSL.
+Hai điều đáng chú ý ngay từ dòng import: TSL và WebGPU sống ở **subpath export riêng** (`three/tsl`, `three/webgpu`), không nằm trong `three` gốc — `import { uniform } from "three"` không bao giờ chạy êm: TypeScript báo "no exported member", còn trình duyệt hay bundler báo `three` không có export tên `uniform`, vì `three/package.json` cho `./tsl` và `./webgpu` entry riêng trong `exports`, tách khỏi `.`. Một `NodeMaterial` (ví dụ `MeshBasicNodeMaterial`) thay thuộc tính string-based quen thuộc bằng thuộc tính node: `material.colorNode` thay `color`/`map`, `material.positionNode` thay việc tự viết `#include <begin_vertex>` như bài `onBeforeCompile`. Gán một node vào đó là xong — không cần biết nó dịch ra GLSL hay WGSL.
 
 <Figure
   src="/figures/06-custom-shaders/tsl-node-graph-two-backends/vi.svg"
   alt="Một node graph TSL đi vào WebGPURenderer.init(), rồi rẽ thành WGSLNodeBuilder sinh WGSL cho backend WebGPU và GLSLNodeBuilder sinh GLSL ES 3.00 cho backend WebGL2, với WebGLRenderer cổ điển vẽ nằm ngoài chuỗi"
-  caption="Nhánh rẽ chỉ xảy ra sau init(), nên node graph bạn viết vẫn là bản duy nhất phải bảo trì, còn renderer cổ điển đứng ngoài chuỗi này thì chẳng có gì để đọc."
+  caption="Nhánh rẽ chỉ xảy ra sau init(), nên node graph bạn viết vẫn là bản duy nhất phải bảo trì; WebGLRenderer cổ điển đứng ngoài chuỗi này và chỉ dựng được node material sau khi bật thêm một bước chủ động (setNodesHandler)."
 />
 
 ## Một hiệu ứng, hai ngôn ngữ: GLSL và TSL cạnh nhau
@@ -58,7 +58,7 @@ Cái giá hôm nay (giữa 2026) cũng thật: TSL vẫn đổi API nhanh giữa
 
 ## Khi nào nên bắt đầu dùng TSL
 
-Với dự án mới, thời gian sống dài (maintain nhiều năm, hoặc cần chạy tốt trên cả thiết bị có/không có WebGPU), bắt đầu bằng TSL hợp lý — một node graph phục vụ cả hai backend, không phải viết và đồng bộ hai bản shader tay. Với demo, prototype cần ship nhanh trong vài ngày, hoặc hiệu ứng chỉ cần chạy WebGL2 (baseline vẫn phổ cập hơn), `ShaderMaterial` + GLSL thuần từ Track 2 vẫn thực dụng hơn — ít API tra cứu, docs dày hơn, cộng đồng lớn hơn. Đây không phải lựa chọn một lần: Three.js cho trộn cả hai trong cùng scene (một mesh `ShaderMaterial` cạnh một mesh `NodeMaterial`), nên có thể học TSL dần cho phần mới trong lúc phần cũ vẫn ở GLSL.
+Với dự án mới, thời gian sống dài (maintain nhiều năm, hoặc cần chạy tốt trên cả thiết bị có/không có WebGPU), bắt đầu bằng TSL hợp lý — một node graph phục vụ cả hai backend, không phải viết và đồng bộ hai bản shader tay. Với demo, prototype cần ship nhanh trong vài ngày, hoặc hiệu ứng chỉ cần chạy WebGL2 (baseline vẫn phổ cập hơn), `ShaderMaterial` + GLSL thuần từ Track 2 vẫn thực dụng hơn — ít API tra cứu, docs dày hơn, cộng đồng lớn hơn. Đây cũng không phải lựa chọn một lần, dù trộn cần một bước chủ động: `WebGPURenderer` không vẽ được `ShaderMaterial`, còn `WebGLRenderer` cổ điển vẽ được cả hai loại trong cùng scene khi gọi `renderer.setNodesHandler(new WebGLNodesHandler())` (từ `three/addons/tsl/WebGLNodesHandler.js`, đầu file liệt kê các giới hạn) — nên học TSL dần cho phần mới trong lúc phần cũ vẫn ở GLSL thì xuất phát từ renderer cổ điển.
 
 ## WebGPURenderer: trạng thái và cách fallback
 
@@ -72,8 +72,8 @@ Bài `onBeforeCompile` và `three-shader-chunk-system` (module này) là con đ�
 
 Ba lỗi hay gặp khi bắt đầu với TSL/WebGPURenderer:
 
-1. **Import `uniform`/`WebGPURenderer` từ `"three"` thay vì `"three/tsl"`/`"three/webgpu"`.** Gói `three` khai báo ba entry point tách biệt qua `exports` trong `package.json`; core `three` không re-export bất cứ gì từ hai subpath kia. Kết quả: `undefined` lúc chạy, hoặc lỗi TypeScript "no exported member" lúc biên dịch — không phải lỗi logic, chỉ là sai đường import.
+1. **Import `uniform`/`WebGPURenderer` từ `"three"` thay vì `"three/tsl"`/`"three/webgpu"`.** `three/package.json` cho `./tsl` và `./webgpu` entry riêng trong `exports`; core `three` không re-export bất cứ gì từ hai subpath kia. Lỗi báo rõ — TypeScript báo "no exported member", trình duyệt hay bundler báo `three` không có export tên `uniform` — không phải lỗi logic, chỉ là sai đường import.
 2. **Quên `await renderer.init()` trước lần render đầu.** Vì khởi tạo backend bất đồng bộ, gọi `.render()` ngay sau `new WebGPURenderer(...)` ném thẳng `"THREE.Renderer: .render() called before the backend is initialized. Use \"await renderer.init();\" before rendering."` — thông báo lỗi đã nói rõ cách sửa, chỉ cần đọc.
-3. **Gán `.colorNode` lên một NodeMaterial nhưng vẫn dựng bằng `new THREE.WebGLRenderer()` (renderer cổ điển, không phải `WebGPURenderer`).** Pipeline cổ điển không bao giờ đọc thuộc tính node — nó chỉ hiểu material qua string shader lắp bằng `#include`. `colorNode` bị lặng lẽ bỏ qua, material render như thể chưa từng gán gì, không có lỗi hay cảnh báo nào bật lên để chỉ ra nguyên nhân.
+3. **Render NodeMaterial bằng `new THREE.WebGLRenderer()` trơn (renderer cổ điển, không phải `WebGPURenderer`).** Mặc định pipeline cổ điển chỉ dựng string shader lắp bằng `#include`, mà NodeMaterial không có chuỗi nào — lần render đầu ném TypeError từ sâu trong bước dựng program, chẳng nhắc gì tới node. Render bằng `WebGPURenderer`, hoặc bật cho renderer cổ điển bằng `renderer.setNodesHandler(new WebGLNodesHandler())`.
 
 </Callout>

@@ -8,7 +8,7 @@ gsap.from(".box", { opacity: 0, y: 40, duration: 0.6 });
 gsap.fromTo(".box", { scale: 0.5 }, { scale: 1, duration: 0.4 });
 ```
 
-Bên trong vars object, GSAP không phân biệt "thuộc tính animate" với "cấu hình đặc biệt" bằng cú pháp riêng — nó chỉ coi mọi khoá không nằm trong danh sách từ khoá dành riêng (duration, delay, ease, stagger, onComplete, …) là một thuộc tính cần animate. `duration` mặc định $0.5$ giây nếu bỏ qua; `delay` dời thời điểm bắt đầu ra sau, tính bằng giây kể từ lúc tween được tạo (không phải từ lúc timeline cha bắt đầu — chi tiết quan trọng quay lại ở phần timeline bên dưới); `ease` mặc định `"power1.out"` nếu không khai báo, quyết định cảm giác tăng/giảm tốc trong suốt animation — chủ đề trọn vẹn của bài kế tiếp.
+Bên trong vars object, GSAP không phân biệt "thuộc tính animate" với "cấu hình đặc biệt" bằng cú pháp riêng — nó chỉ coi mọi khoá không nằm trong danh sách từ khoá dành riêng (duration, delay, ease, stagger, onComplete, …) là một thuộc tính cần animate. `duration` mặc định $0.5$ giây nếu bỏ qua; `delay` dời thời điểm bắt đầu ra sau, tính bằng giây — kể từ lúc tạo nếu tween đứng riêng, còn trong timeline thì cộng thêm vào vị trí của tween trên timeline đó (chi tiết quan trọng quay lại ở phần timeline bên dưới); `ease` mặc định `"power1.out"` nếu không khai báo, quyết định cảm giác tăng/giảm tốc trong suốt animation — chủ đề trọn vẹn của bài kế tiếp.
 
 ## Điều khiển playback: tween là bộ sinh giá trị đọc được, không phải "bắn rồi quên"
 

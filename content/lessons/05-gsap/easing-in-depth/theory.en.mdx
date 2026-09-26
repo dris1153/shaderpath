@@ -60,6 +60,6 @@ The three most common ease mistakes:
 
 1. **Reaching for `back`/`elastic` everywhere because "it looks fun."** Both families overshoot — passing the target and settling back — which suits small feedback (buttons, badges, toasts) but makes large layout or page transitions look unprofessional, the oscillation growing more distracting as elements get bigger.
 2. **Using the same ease-`out` for both an entrance and its matching exit.** `power2.out` decelerates INTO the end value — perfect for an entrance since it reads as "landing." Applying it unchanged to an exit makes the element look like it's slowly landing into being gone rather than pushed away; flip to an ease-`in` for exits instead.
-3. **Leaving the default `ease: "power1.out"`, or using linear, on a ScrollTrigger scrub animation.** A scrub tween is already driven directly by scroll position — stacking a non-linear ease on top makes progress visibly lag behind or leap ahead of the real scroll position; `ease: "none"` is what keeps the 1:1 relationship between scroll and animation intact.
+3. **Leaving the default `ease: "power1.out"` (or any other non-linear ease) on a ScrollTrigger scrub animation.** A scrub tween is already driven directly by scroll position — stacking a non-linear ease on top makes progress visibly lag behind or leap ahead of the real scroll position; `ease: "none"` is what keeps the 1:1 relationship between scroll and animation intact.
 
 </Callout>

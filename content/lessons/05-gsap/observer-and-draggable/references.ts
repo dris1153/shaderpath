@@ -41,8 +41,8 @@ export const references: Citation[] = [
     authors: ["MDN Web Docs"],
     url: "https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action",
     note: {
-      vi: "Tài liệu chuẩn về CSS touch-action — nguồn chính xác cho lý do vì sao thiếu touch-action: none làm Draggable bị trễ trên thiết bị cảm ứng thật.",
-      en: "The standard reference for the CSS touch-action property — the authoritative source for why missing touch-action: none delays Draggable on real touch devices.",
+      vi: "Tài liệu chuẩn về CSS touch-action — nguồn chính xác cho lý do vì sao pointer handler tự viết cần touch-action: none trên thiết bị cảm ứng thật (Draggable tự set giá trị này khi enable).",
+      en: "The standard reference for the CSS touch-action property — the authoritative source for why hand-written pointer handlers need touch-action: none on real touch devices (Draggable sets it itself when enabled).",
     },
   },
 ];

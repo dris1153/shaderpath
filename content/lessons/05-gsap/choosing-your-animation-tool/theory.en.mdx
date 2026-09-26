@@ -26,14 +26,14 @@ The limits: `useScroll` covers light parallax fine but has no separate pin/scrub
 
 GSAP runs the opposite direction: fully imperative — call `gsap.to()`, `gsap.timeline()`, decide yourself when to play, pause, reverse, or jump with `.seek()`. That explicitness buys coordination power: a `timeline` sequences tweens by relative position, `stagger` fans delay across hundreds of elements, and ScrollTrigger (now entirely free) gives scrub/pin/snap deeper than anything else available — pin a section, lock its progress to exact scroll position, in a few config lines. GSAP doesn't care whether you're in React, Vue, or plain HTML — same API, fully portable.
 
-The cost shows up elsewhere: the imperative style collides with React's declarative model. A tween created outside a managed lifecycle survives unmount, animating a node already removed from the DOM — or worse, one React reuses for something else. The required discipline: scope every tween inside `gsap.context()`, `.revert()` on unmount (the tweens-timelines-stagger and scrolltrigger-plus-r3f-single-loop lessons already drilled this) — skipping it isn't a syntax error, it's a silent leak that surfaces only after the app runs a while or remounts a few times.
+The cost shows up elsewhere: the imperative style collides with React's declarative model. A tween created outside a managed lifecycle survives unmount and keeps animating a node already removed from the DOM; under Strict Mode, where the effect runs twice on the same DOM, tweens double up — a `from()` created twice ends stuck at its from-values — and ScrollTriggers pile up. The required discipline: scope every tween inside `gsap.context()`, `.revert()` on unmount (the tweens-timelines-stagger and scrolltrigger-plus-r3f-single-loop lessons already drilled this) — skipping it isn't a syntax error, it's a silent leak that surfaces only after the app runs a while or remounts a few times.
 
 ## Four Axes for Choosing
 
 1. **Choreography complexity** — one property, two states → CSS is enough. A component entering/exiting with a gesture → Motion. A five-or-six-element sequence with interdependent timing → a GSAP timeline.
 2. **Scrub/scroll needs** — fires once on trigger → any of the three works. Must track scroll percentage exactly, or pin content → ScrollTrigger is the deepest tool available; Motion's `useScroll` covers light parallax; CSS scroll-driven animations (a newer spec, browser support still uneven at the time of writing — an estimate) suit simple effects with a fallback.
 3. **Team/framework** — a React team doing component-scoped micro-interactions → Motion cuts boilerplate. Framework-agnostic, or animation living outside React's lifecycle → GSAP.
-4. **Bundle cost** (estimated numbers, sourced from Bundlephobia — see references): Motion's trimmed `animate()` build runs ~2.6kB, full build ~18kB; GSAP's core is ~23.5kB. CSS costs 0kB of JS — its cost lives inside the browser engine already loaded.
+4. **Bundle cost** (estimated numbers, sourced from Bundlephobia — see references): Motion's trimmed `animate()` build runs ~2.6kB, full build ~18kB; GSAP's core is ~27kB (3.15). CSS costs 0kB of JS — its cost lives inside the browser engine already loaded.
 
 ## The Real Answer: Use All Three, Each Where It's Strongest
 
@@ -47,7 +47,7 @@ No single project needs all three at once, but plenty are complex enough to bene
 
 ## Case Study: How Shaderpath Uses All Three
 
-This platform illustrates the principle directly. Every Track 5 demo — including this one — uses GSAP deliberately, not because it's objectively "the best" but because the track's content IS GSAP, following the same "teach the real API" philosophy Track 1 applies with raw WebGL2 and Track 3 with vanilla Three.js. The platform's own UI, by contrast — buttons, lesson cards, nav hover effects — sticks to CSS transitions and Tailwind utilities, since those are simple two-state toggles; pulling in GSAP for a hover-lift would mean paying 23.5kB for something CSS already does free. Motion isn't in this project's `package.json` at all — not because it's bad, but because there's no layout-animation or React-gesture need large enough to justify the dependency.
+This platform illustrates the principle directly. Every Track 5 demo — including this one — uses GSAP deliberately, not because it's objectively "the best" but because the track's content IS GSAP, following the same "teach the real API" philosophy Track 1 applies with raw WebGL2 and Track 3 with vanilla Three.js. The platform's own UI, by contrast — buttons, lesson cards, nav hover effects — sticks to CSS transitions and Tailwind utilities, since those are simple two-state toggles; pulling in GSAP for a hover-lift would mean paying ~27kB for something CSS already does free. Motion isn't in this project's `package.json` at all — not because it's bad, but because there's no layout-animation or React-gesture need large enough to justify the dependency.
 
 ## Where This Leads
 
@@ -57,8 +57,8 @@ Starting next lesson, "animation principles for UI" applies equally across all t
 
 The three most common animation-tool mistakes:
 
-1. **Reaching for GSAP just to animate a hover state.** A `gsap.to(el, {y:-4})` on hover does exactly what two lines of CSS transition already do — for 23.5kB with zero real benefit. Default to CSS first; only upgrade to JS once the choreography outgrows what CSS can express.
-2. **Creating a GSAP tween inside a React component without scoping it in `gsap.context()`.** The tween survives unmount and keeps animating a node that's already been removed from the DOM — or worse, one React has reused for different content after a re-render — producing a visual bug that only surfaces after repeated remounts (Strict Mode, route changes), not during a quick dev check.
+1. **Reaching for GSAP just to animate a hover state.** A `gsap.to(el, {y:-4})` on hover does exactly what two lines of CSS transition already do — for ~27kB with zero real benefit. Default to CSS first; only upgrade to JS once the choreography outgrows what CSS can express.
+2. **Creating a GSAP tween inside a React component without scoping it in `gsap.context()`.** The tween survives unmount and keeps animating a node that's already been removed from the DOM; under Strict Mode the effect runs twice on the same DOM, so tweens double up (a `from()` ends stuck at its from-values) and ScrollTriggers pile up — invisible on a single mount, so it only surfaces once the component remounts (Strict Mode in development, route changes).
 3. **Treating Motion's layout animation as "free FLIP magic."** Every element with a `layout` prop gets measured with `getBoundingClientRect` on each layout change — fine for a few dozen elements, but a list of hundreds re-ordering every scroll frame turns that measurement into a real, accumulating cost, not a magic trick that costs nothing.
 
 </Callout>

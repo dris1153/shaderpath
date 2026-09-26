@@ -191,8 +191,8 @@ function DraggableKnob({ L }: { L: Labels }) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 border-t p-4 sm:border-t-0 sm:border-l">
       <p className="text-muted-foreground text-xs">{L.dragPane}</p>
-      {/* touch-none = CSS touch-action: none — without it, mobile browsers
-          fight Draggable for the first touch gesture (spec: touch-action pitfall) */}
+      {/* touch-none = CSS touch-action: none. Draggable also sets it on enable;
+          the class covers touches that land before the effect runs */}
       <div
         ref={knobRef}
         className="bg-muted relative size-20 shrink-0 cursor-grab touch-none rounded-full border-2 active:cursor-grabbing"

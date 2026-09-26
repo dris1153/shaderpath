@@ -22,7 +22,7 @@ Cách tra cứu đáng tin cậy nhất không phải đoán mà là in ra chín
 
 ## Ghi đè toàn cục qua THREE.ShaderChunk — và kỷ luật khôi phục
 
-`ShaderChunk` chỉ là một object JS thường — gán `THREE.ShaderChunk.emissivemap_fragment = "..."` thay đổi NGAY LẬP TỨC nội dung chunk đó cho MỌI material nào compile SAU thời điểm gán, không chỉ material bạn đang thao tác. Trên một trang có nhiều demo/canvas dùng chung runtime (đúng bối cảnh nền tảng này), một demo ghi đè `ShaderChunk` mà không khôi phục sẽ làm hỏng demo khác render sau nó trên cùng trang — dù hai demo không hề liên quan tới nhau. Nếu buộc phải minh hoạ global override, kỷ luật bắt buộc là lưu bản gốc trước khi gán (`const original = THREE.ShaderChunk.x`) và khôi phục đúng bản gốc đó trong cleanup effect trước khi component unmount.
+`ShaderChunk` chỉ là một object JS thường — gán `THREE.ShaderChunk.emissivemap_fragment = "..."` thay đổi NGAY LẬP TỨC nội dung chunk đó cho mọi chương trình compile SAU thời điểm gán, không chỉ chương trình của material bạn đang thao tác. Program cache khiến chuyện rắc rối hơn: cache key của material có sẵn là `shaderID` cộng tham số, không bao giờ gồm nội dung chunk, nên material khớp một chương trình đã compile sẽ dùng lại nó mà không thấy bản ghi đè — còn chương trình compile KÈM bản ghi đè vẫn được dùng lại sau khi bạn khôi phục chunk, cho tới khi mọi material dùng nó bị dispose. Trên một trang có nhiều demo/canvas dùng chung runtime (đúng bối cảnh nền tảng này), một demo ghi đè `ShaderChunk` mà không khôi phục có thể làm hỏng demo khác compile sau nó trên cùng trang — dù hai demo không hề liên quan tới nhau. Nếu buộc phải minh hoạ global override, kỷ luật bắt buộc là lưu bản gốc trước khi gán (`const original = THREE.ShaderChunk.x`) và khôi phục đúng bản gốc đó trong cleanup effect trước khi component unmount.
 
 ## Per-material hay global: bảng quyết định
 
@@ -43,7 +43,7 @@ Checkpoint ngay sau module này (MeshStandardMaterial nâng cấp) dùng lại c
 Ba lỗi hay gặp nhất khi hack shader chunk:
 
 1. **`.replace()` nhắm vào GLSL đã lắp ráp thay vì marker `#include`.** Ở thời điểm `onBeforeCompile`, `shader.vertexShader` vẫn còn nguyên `#include <chunk>`, chưa resolve. Replace nhắm sai chuỗi không ném lỗi — chỉ âm thầm không làm gì, khó phát hiện nhất trong mọi lỗi shader.
-2. **Ghi đè `THREE.ShaderChunk` toàn cục rồi quên khôi phục.** Rò rỉ sang mọi material compile sau đó trên cùng trang, kể cả demo/component khác không liên quan — bug khó tái hiện vì phụ thuộc thứ tự mount các component.
+2. **Ghi đè `THREE.ShaderChunk` toàn cục rồi quên khôi phục.** Có thể rò rỉ sang bất kỳ material nào compile sau đó trên cùng trang, kể cả demo/component khác không liên quan — bug khó tái hiện vì phụ thuộc thứ tự mount các component.
 3. **Tin tên chunk ổn định giữa các phiên bản.** Nhiều bài viết cũ nhắc tới chunk `output_fragment` — chunk đó KHÔNG tồn tại trong `three@0.185.1` cài trong repo này (xác nhận được bằng cách liệt kê thư mục `ShaderChunk/`); chunk ghi `gl_FragColor` cuối fragment ở bản này tên là `opaque_fragment`. Luôn đối chiếu tên chunk với `node_modules/three` đang cài, không copy nguyên từ tutorial không ghi rõ version.
 
 </Callout>

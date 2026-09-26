@@ -19,8 +19,8 @@ export const reviewCards: ReviewCard[] = [
       en: "A React component creates GSAP tweens without wrapping them in `gsap.context()`. What bug appears, and why does it slip past a quick test?",
     },
     a: {
-      vi: "Tween sống qua unmount và tiếp tục chạy. Dưới Strict Mode, effect chạy hai lần trên cùng DOM nên tween bị nhân đôi — một `from()` chạy hai lần làm phần tử kẹt ở trạng thái dở dang — và ScrollTrigger rò rỉ; lỗi chỉ lộ khi app mount lại nhiều lần. `gsap.context()` gom mọi tween để `revert()` một lần trong cleanup.",
-      en: "The tweens outlive the unmount and keep running. Under Strict Mode the effect runs twice on the same DOM, so tweens double up — a `from()` run twice leaves the element stuck halfway — and ScrollTriggers leak; it only shows when the app remounts repeatedly. `gsap.context()` collects every tween so one `revert()` in the cleanup undoes them all.",
+      vi: "Tween sống qua unmount và tiếp tục chạy. Dưới Strict Mode, effect chạy hai lần trên cùng DOM nên tween bị nhân đôi — một `from()` chạy hai lần kẹt ở giá trị from — và ScrollTrigger chồng chất; mount một lần thì không lộ gì, lỗi chỉ hiện khi component mount lại (Strict Mode lúc dev, đổi route). `gsap.context()` gom mọi tween để `revert()` một lần trong cleanup.",
+      en: "The tweens outlive the unmount and keep running. Under Strict Mode the effect runs twice on the same DOM, so tweens double up — a `from()` run twice ends stuck at its from-values — and ScrollTriggers pile up; a single mount shows nothing, so it only appears once the component remounts (Strict Mode in development, route changes). `gsap.context()` collects every tween so one `revert()` in the cleanup undoes them all.",
     },
   },
 ];

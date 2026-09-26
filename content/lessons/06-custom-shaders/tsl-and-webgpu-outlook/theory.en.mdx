@@ -11,12 +11,12 @@ import { uniform, uv, sin, time, mix, color } from "three/tsl";
 import { MeshBasicNodeMaterial, WebGPURenderer } from "three/webgpu";
 ```
 
-Two things stand out from that import line alone: TSL and WebGPU live in **their own subpath exports** (`three/tsl`, `three/webgpu`), not the plain `three` entry point — typing `import { uniform } from "three"` gets you `undefined` (or a TypeScript "no exported member" error), because `three/package.json` declares these as three separate `exports` entries. A `NodeMaterial` (say, `MeshBasicNodeMaterial`) replaces the familiar string-based properties with node properties: `material.colorNode` stands in for juggling `color`/`map`, `material.positionNode` stands in for hand-writing a `#include <begin_vertex>` injection the way the `onBeforeCompile` lesson does. Assign a node to it and you're done — no need to know whether that node ends up as GLSL or WGSL.
+Two things stand out from that import line alone: TSL and WebGPU live in **their own subpath exports** (`three/tsl`, `three/webgpu`), not the plain `three` entry point — `import { uniform } from "three"` never quietly works: TypeScript reports "no exported member", and the browser or bundler reports that `three` has no export named `uniform`, because `three/package.json` gives `./tsl` and `./webgpu` their own `exports` entries, separate from `.`. A `NodeMaterial` (say, `MeshBasicNodeMaterial`) replaces the familiar string-based properties with node properties: `material.colorNode` stands in for juggling `color`/`map`, `material.positionNode` stands in for hand-writing a `#include <begin_vertex>` injection the way the `onBeforeCompile` lesson does. Assign a node to it and you're done — no need to know whether that node ends up as GLSL or WGSL.
 
 <Figure
   src="/figures/06-custom-shaders/tsl-node-graph-two-backends/en.svg"
   alt="One TSL node graph feeding WebGPURenderer.init(), which forks into WGSLNodeBuilder generating WGSL for the WebGPU backend and GLSLNodeBuilder generating GLSL ES 3.00 for the WebGL2 backend, with the classic WebGLRenderer drawn outside the chain"
-  caption="The fork happens after init(), so the graph you wrote stays the only version you maintain, and the classic renderer sitting outside this chain has nothing to read."
+  caption="The fork happens after init(), so the graph you wrote stays the only version you maintain; the classic WebGLRenderer sits outside this chain and builds node materials only after an explicit opt-in (setNodesHandler)."
 />
 
 ## One Effect, Two Languages: GLSL and TSL Side by Side
@@ -58,7 +58,7 @@ Today's cost (mid-2026) is real too: TSL still shifts its API meaningfully betwe
 
 ## When to Reach for TSL
 
-For a new project with a long horizon — something you'll maintain for years, or something that clearly needs to run well on devices with and without WebGPU — starting with TSL makes sense: one node graph serves both backends instead of writing and keeping two shader versions in sync by hand. For a demo, a prototype that needs to ship in days, or an effect that only ever needs to run on WebGL2 (still the more universally supported baseline), plain `ShaderMaterial` + GLSL from Track 2 remains the more pragmatic choice — fewer APIs to look up, thicker docs, a larger community when you need an existing answer. This isn't a one-time, career-long decision either: Three.js lets both coexist in the same scene (one mesh on `ShaderMaterial`, another on `NodeMaterial`), so it's entirely reasonable to adopt TSL gradually for new work while older parts stay in GLSL.
+For a new project with a long horizon — something you'll maintain for years, or something that clearly needs to run well on devices with and without WebGPU — starting with TSL makes sense: one node graph serves both backends instead of writing and keeping two shader versions in sync by hand. For a demo, a prototype that needs to ship in days, or an effect that only ever needs to run on WebGL2 (still the more universally supported baseline), plain `ShaderMaterial` + GLSL from Track 2 remains the more pragmatic choice — fewer APIs to look up, thicker docs, a larger community when you need an existing answer. This isn't a one-time, career-long decision either, though mixing takes a deliberate step: `WebGPURenderer` cannot draw a `ShaderMaterial`, while the classic `WebGLRenderer` draws both kinds in one scene once you call `renderer.setNodesHandler(new WebGLNodesHandler())` (from `three/addons/tsl/WebGLNodesHandler.js`, whose header lists its limits) — so adopting TSL gradually for new work while older parts stay in GLSL starts from the classic renderer.
 
 ## WebGPURenderer: Status and How It Falls Back
 
@@ -72,8 +72,8 @@ The `onBeforeCompile` and `three-shader-chunk-system` lessons in this module are
 
 Three common mistakes when starting with TSL/WebGPURenderer:
 
-1. **Importing `uniform`/`WebGPURenderer` from `"three"` instead of `"three/tsl"`/`"three/webgpu"`.** The `three` package declares three separate entry points through `exports` in `package.json`; the core `three` module re-exports nothing from either subpath. The result: `undefined` at runtime, or a TypeScript "no exported member" error at compile time — not a logic bug, just the wrong import path.
+1. **Importing `uniform`/`WebGPURenderer` from `"three"` instead of `"three/tsl"`/`"three/webgpu"`.** `three/package.json` gives `./tsl` and `./webgpu` their own `exports` entries, and the core `three` module re-exports nothing from either. It fails loudly — TypeScript reports "no exported member", and the browser or bundler reports that `three` has no export named `uniform` — not a logic bug, just the wrong import path.
 2. **Forgetting `await renderer.init()` before the first render.** Because backend setup is async, calling `.render()` right after `new WebGPURenderer(...)` throws exactly `"THREE.Renderer: .render() called before the backend is initialized. Use \"await renderer.init();\" before rendering."` — the error message already tells you the fix, just read it.
-3. **Assigning `.colorNode` on a NodeMaterial while still rendering with `new THREE.WebGLRenderer()` (the classic renderer, not `WebGPURenderer`).** The classic pipeline never reads node properties — it only understands materials through string shaders assembled with `#include`. `colorNode` gets silently ignored, the material renders as if nothing had ever been assigned, with no error or warning pointing at the cause.
+3. **Rendering a NodeMaterial with a plain `new THREE.WebGLRenderer()` (the classic renderer, not `WebGPURenderer`).** Out of the box the classic pipeline only builds string shaders assembled with `#include`, and a NodeMaterial has none — the first render throws a TypeError from deep inside program setup that never mentions nodes. Render it with `WebGPURenderer`, or opt the classic renderer in with `renderer.setNodesHandler(new WebGLNodesHandler())`.
 
 </Callout>

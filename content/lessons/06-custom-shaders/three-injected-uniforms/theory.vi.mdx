@@ -54,17 +54,17 @@ Texture cũng chỉ là một uniform khác — `uniform sampler2D uNoiseMap;` t
 
 ## Luật trùng tên: khai báo lại một built-in là lỗi biên dịch
 
-Nếu bạn khai báo lại một uniform Three đã tự thêm — chẳng hạn viết nhầm `uniform mat4 modelMatrix;` ngay trong fragment shader của một ShaderMaterial — trình biên dịch GLSL báo lỗi redefinition ngay khi build chương trình, đại loại:
+Nếu bạn khai báo lại một uniform Three đã tự thêm — chẳng hạn viết nhầm `uniform mat4 modelMatrix;` ngay trong vertex shader của một ShaderMaterial — trình biên dịch GLSL báo lỗi redefinition ngay khi build chương trình, đại loại:
 
 ```
 ERROR: 0:9: 'modelMatrix' : redefinition
 ```
 
-(số dòng thật phụ thuộc shader của bạn — quan trọng là LOẠI lỗi: `redefinition`, không phải `undeclared identifier`.) Hệ quả trực tiếp của bài trước: prelude Three chèn vào đã có sẵn `modelMatrix`, nên dòng bạn tự thêm là khai báo TRÙNG, không phải MỚI. Luật tránh: chỉ tự khai báo những gì KHÔNG nằm trong sáu uniform + ba attribute built-in (`modelMatrix`, `modelViewMatrix`, `projectionMatrix`, `viewMatrix`, `normalMatrix`, `cameraPosition`, `position`, `normal`, `uv`) — mọi custom uniform trong bài này đều có tiền tố `u` (`uTime`, `uNoiseMap`, `uRim`) chính vì lý do đó.
+(số dòng thật phụ thuộc shader của bạn — quan trọng là LOẠI lỗi: `redefinition`, không phải `undeclared identifier`.) Hệ quả trực tiếp của bài trước: prelude vertex Three chèn vào đã có sẵn `modelMatrix`, nên dòng bạn tự thêm là khai báo TRÙNG, không phải MỚI (trong các built-in trên, prelude fragment chỉ khai `viewMatrix` và `cameraPosition`, nên ở fragment dòng đó vẫn biên dịch). Luật tránh: chỉ tự khai báo những gì KHÔNG nằm trong sáu uniform + ba attribute built-in (`modelMatrix`, `modelViewMatrix`, `projectionMatrix`, `viewMatrix`, `normalMatrix`, `cameraPosition`, `position`, `normal`, `uv`) — mọi custom uniform trong bài này đều có tiền tố `u` (`uTime`, `uNoiseMap`, `uRim`) chính vì lý do đó.
 
 ## Chi phí cập nhật uniform: ghi giá trị rẻ, biên dịch lại material đắt
 
-Ghi `.value` mỗi frame gần như miễn phí: `WebGLUniforms.upload()` tự cache giá trị JS cuối cùng đã gửi cho từng uniform (`setValueV3f` so `cache[0] !== v.x` trước khi gọi `gl.uniform3f`) — uniform không đổi giữa hai frame thậm chí không tốn một lệnh GL nào, chỉ một phép so sánh JS. Ngược lại, buộc Three biên dịch lại chương trình shader — đổi hẳn chuỗi `vertexShader`/`fragmentShader`, remount `<shaderMaterial>` bằng `key` mới, hoặc đổi `customProgramCacheKey` — kích hoạt `gl.compileShader` × 2, `gl.linkProgram`, và dò lại location cho từng uniform (`programCache.acquireProgram` chỉ cache theo `cacheKey`; cache miss là biên dịch thật, một trong những call đồng bộ đắt nhất của một app Three.js thực tế — Track 12 đo và bàn kỹ). Quy tắc thực dụng ngay từ bài này: đổi GIÁ TRỊ một uniform, không đổi SOURCE shader, để cập nhật theo thời gian thực.
+Ghi `.value` mỗi frame gần như miễn phí: `WebGLUniforms.upload()` tự cache giá trị JS cuối cùng đã gửi cho từng uniform (`setValueV3f` so `cache[0] !== v.x` trước khi gọi `gl.uniform3f`) — uniform không đổi giữa hai frame thậm chí không tốn một lệnh GL nào, chỉ một phép so sánh JS. Ngược lại, buộc Three dựng chương trình shader mới — đổi chuỗi `vertexShader`/`fragmentShader` hoặc giá trị `customProgramCacheKey` trả về, rồi set `material.needsUpdate = true` để Three nhận ra — khi cache miss sẽ kích hoạt `gl.compileShader` × 2, `gl.linkProgram`, và dò lại location cho từng uniform (`programCache.acquireProgram` cache theo `cacheKey`, mà với ShaderMaterial key suy ra từ source shader, nên remount bằng `key` mới với cùng source chỉ khỏi biên dịch khi còn material khác đang giữ chương trình đó; biên dịch thật là một trong những call đồng bộ đắt nhất của một app Three.js thực tế — Track 12 đo và bàn kỹ). Quy tắc thực dụng ngay từ bài này: đổi GIÁ TRỊ một uniform, không đổi SOURCE shader, để cập nhật theo thời gian thực.
 
 ## Nền tảng này dẫn tới đâu: attribute tuỳ biến và onBeforeCompile
 

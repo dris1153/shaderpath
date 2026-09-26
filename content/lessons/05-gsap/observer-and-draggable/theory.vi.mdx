@@ -17,7 +17,7 @@ Observer.create({
 });
 ```
 
-`target` là chi tiết dễ bỏ qua nhất nhưng quan trọng nhất: Observer chỉ đăng ký listener trên phần tử đó, không phải toàn `window`. `preventDefault: true` chỉ chặn hành vi mặc định (cuộn trang, pull-to-refresh) của sự kiện xảy ra bên trong `target` — cuộn trang bên ngoài phần tử đó vẫn hoạt động bình thường. Đặt `target` nhầm thành `window` cùng `preventDefault: true` là cách nhanh nhất để "khoá cứng" toàn bộ trang, một lỗi dễ mắc và khó nhận ra khi test nhanh trong lúc chỉ cuộn thử bên trong widget.
+`target` là chi tiết dễ bỏ qua nhất nhưng quan trọng nhất: Observer chỉ đăng ký listener trên phần tử đó, không phải toàn `window`. `preventDefault: true` chỉ chặn hành vi mặc định (cuộn trang, pull-to-refresh) của sự kiện xảy ra bên trong `target` — cuộn trang bên ngoài phần tử đó vẫn hoạt động bình thường. Đặt `target` nhầm thành `window` cùng `preventDefault: true` là cách nhanh nhất để "khoá cứng" toàn bộ trang.
 
 Chiều của callback cũng đáng dừng lại một nhịp: với touch/pointer, delta đo theo chuyển động của ngón tay — vuốt LÊN cho deltaY âm nên bắn `onUp` — trong khi wheel cuộn xuống cho deltaY dương nên bắn `onDown`. Hai cử chỉ "đi tiếp" tự nhiên đó ngược dấu nhau; vì vậy demo chính thức của GSAP (và ví dụ trên) ghép `onUp → next` với `wheelSpeed: -1` để vuốt lên và cuộn xuống cùng rơi về một callback.
 
@@ -65,7 +65,7 @@ Tự viết `pointerdown/pointermove/pointerup` cho vài trường hợp đơn g
 
 ## Cạm bẫy: hit-area và touch-action
 
-Hai lỗi phổ biến nhất khi đưa Draggable/Observer lên thiết bị cảm ứng thật, không phải trên desktop test bằng chuột: thứ nhất, hit-area quá nhỏ — một knob 24×24px dễ bấm bằng con trỏ chuột nhưng gần như không thể chạm chính xác bằng ngón tay (Apple khuyến nghị tối thiểu 44×44px cho vùng chạm). Thứ hai, và tinh vi hơn: quên set CSS `touch-action: none` trên phần tử kéo được. Mặc định trình duyệt vẫn coi cử chỉ chạm trên phần tử đó là ứng viên để cuộn/pan trang, nên có một khoảng trễ ngắn (hoặc tệ hơn, trang bị cuộn theo) trước khi Draggable kịp `preventDefault` sự kiện — `touch-action: none` báo cho trình duyệt biết ngay từ đầu "đừng xử lý touch này cho scroll", loại bỏ độ trễ đó hoàn toàn.
+Hai vấn đề chỉ lộ ra trên thiết bị cảm ứng thật, không phải trên desktop test bằng chuột: thứ nhất, hit-area quá nhỏ — một knob 24×24px dễ bấm bằng con trỏ chuột nhưng gần như không thể chạm chính xác bằng ngón tay (Apple khuyến nghị tối thiểu 44×44px cho vùng chạm). Thứ hai, và tinh vi hơn: `touch-action`. Mặc định trình duyệt coi cử chỉ chạm là ứng viên để cuộn/pan trang, và `preventDefault()` trên `pointermove` không lấy lại được quyền đó — chỉ CSS `touch-action` báo trước cho trình duyệt "đừng dùng touch này để cuộn". Draggable tự lo: khi enable, nó ghi `touch-action` lên phần tử (`none` cho `x,y` và `rotation`, `pan-y`/`pan-x` khi chỉ kéo một trục). Pointer handler tự viết thì không — ở đó bạn phải tự thêm `touch-action: none`, nếu không trang sẽ cuộn thay vì kéo.
 
 ## Kết hợp: Observer phát hiện ý định, tween xử lý phản hồi
 
@@ -81,6 +81,6 @@ Ba lỗi hay gặp nhất với Observer và Draggable:
 
 1. **Gắn `target` của Observer vào `window` hoặc `document` cùng `preventDefault: true`.** Việc này chặn cuộn/chạm trên TOÀN trang thay vì chỉ trong widget — người dùng không cuộn được trang nữa, một lỗi dễ bị bỏ sót nếu chỉ test bằng cách cuộn ngay trong demo.
 2. **Nhầm đơn vị của `snap` giữa các `type` khác nhau.** Với `type: "rotation"`, snap tính bằng độ; với `type: "x,y"`, snap tính bằng pixel (hoặc một hàm nhận toạ độ). Truyền nhầm đơn vị khiến snap hoặc không có tác dụng gì, hoặc kéo phần tử tới vị trí vô lý.
-3. **Quên `touch-action: none` trên phần tử Draggable.** Trên thiết bị cảm ứng thật, thiếu dòng CSS này khiến cử chỉ đầu tiên bị trình duyệt "giành" để cuộn trang trước khi Draggable kịp nhận sự kiện — cảm giác kéo bị trễ hoặc giật trên mobile dù chạy mượt tuyệt đối trên desktop.
+3. **Quên `touch-action: none` khi tự viết pointer handler.** `preventDefault()` trên `pointermove` không ngăn được thiết bị cảm ứng "giành" cử chỉ để cuộn trang — kéo bị giật hoặc trang cuộn theo, dù trên desktop mượt tuyệt đối. Draggable không cần: nó tự set `touch-action` khi enable.
 
 </Callout>

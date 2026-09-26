@@ -26,14 +26,14 @@ Giới hạn: `useScroll` đủ cho parallax nhẹ nhưng không có pin/scrub/s
 
 GSAP đi ngược hướng: mệnh lệnh hoàn toàn — gọi `gsap.to()`, `gsap.timeline()`, tự quyết khi nào chạy/dừng/đảo ngược/tua tới bằng `.seek()`. Đổi lại là sức mạnh phối hợp: `timeline` sắp nhiều tween theo vị trí tương đối, `stagger` nhân delay trên hàng trăm phần tử, ScrollTrigger (miễn phí toàn bộ) cho scrub/pin/snap sâu hơn bất kỳ tool nào khác — pin một section, khoá progress vào đúng vị trí cuộn, vài dòng cấu hình. GSAP không quan tâm React/Vue/HTML thuần — cùng API, portable tuyệt đối.
 
-Cái giá: phong cách mệnh lệnh xung đột mô hình khai báo React. Tween tạo ngoài vòng đời quản lý sống sót qua unmount, animate node đã gỡ khỏi DOM hoặc — tệ hơn — node React tái dùng cho phần tử khác. Kỷ luật bắt buộc: scope mọi tween trong `gsap.context()`, `.revert()` khi unmount (bài tweens-timelines-stagger và scrolltrigger-plus-r3f-single-loop trước đó đã dạy kỹ) — bỏ qua không phải lỗi cú pháp, là leak âm thầm chỉ lộ khi app chạy lâu hoặc remount nhiều lần.
+Cái giá: phong cách mệnh lệnh xung đột mô hình khai báo React. Tween tạo ngoài vòng đời quản lý sống sót qua unmount, tiếp tục animate node đã gỡ khỏi DOM; dưới Strict Mode, effect chạy hai lần trên cùng DOM nên tween bị nhân đôi — một `from()` tạo hai lần kẹt ở giá trị from — và ScrollTrigger chồng chất. Kỷ luật bắt buộc: scope mọi tween trong `gsap.context()`, `.revert()` khi unmount (bài tweens-timelines-stagger và scrolltrigger-plus-r3f-single-loop trước đó đã dạy kỹ) — bỏ qua không phải lỗi cú pháp, là leak âm thầm chỉ lộ khi app chạy lâu hoặc remount nhiều lần.
 
 ## Bốn trục quyết định chọn công cụ
 
 1. **Độ phức tạp biên đạo** — một thuộc tính, hai trạng thái → CSS đủ. Component vào/ra kèm gesture → Motion. Chuỗi năm-sáu phần tử timing phụ thuộc nhau → GSAP timeline.
 2. **Nhu cầu scrub/scroll** — chạy một lần khi trigger → cả ba ổn. Bám chính xác % cuộn hoặc cần pin → ScrollTrigger sâu nhất hiện có; `useScroll` của Motion đủ cho parallax nhẹ; CSS scroll-driven animation (spec mới, hỗ trợ trình duyệt chưa đồng đều tại thời điểm viết — ước lượng) chỉ hợp cho hiệu ứng đơn giản, có dự phòng.
 3. **Team/framework** — team React làm micro-interaction trong component → Motion giảm code thừa. Không ràng buộc framework, hoặc animation sống ngoài vòng đời React → GSAP.
-4. **Bundle** (ước lượng, nguồn Bundlephobia — xem references): Motion `animate()` rút gọn ~2.6kB, bản đầy đủ ~18kB; GSAP core ~23.5kB. CSS tốn 0kB JS — chi phí nằm trong engine trình duyệt đã tải sẵn.
+4. **Bundle** (ước lượng, nguồn Bundlephobia — xem references): Motion `animate()` rút gọn ~2.6kB, bản đầy đủ ~18kB; GSAP core ~27kB (bản 3.15). CSS tốn 0kB JS — chi phí nằm trong engine trình duyệt đã tải sẵn.
 
 ## Thực tế: dùng cả ba, mỗi công cụ ở đúng chỗ mạnh nhất
 
@@ -47,7 +47,7 @@ Không dự án nào cần cả ba cùng lúc, nhưng nhiều dự án đủ ph�
 
 ## Case study: Shaderpath dùng gì, ở đâu
 
-Nền tảng bạn đang học minh hoạ đúng nguyên tắc trên. Mọi demo Track 5 — kể cả demo bài này — dùng GSAP có chủ đích, không vì GSAP "tốt nhất" tuyệt đối mà vì nội dung track LÀ về GSAP, cùng triết lý "dạy API thật" mà Track 1 dùng raw WebGL2, Track 3 dùng vanilla Three.js. Ngược lại, UI của chính nền tảng — nút bấm, thẻ lesson, hover trên navigation — chỉ dùng CSS transition/Tailwind, vì toàn là toggle hai trạng thái; kéo GSAP vào cho hover-nâng là trả 23.5kB cho thứ CSS đã làm miễn phí. Motion không có trong `package.json` — không vì nó tệ, mà vì không có nhu cầu layout-animation/gesture-React đủ lớn để đánh đổi thêm dependency.
+Nền tảng bạn đang học minh hoạ đúng nguyên tắc trên. Mọi demo Track 5 — kể cả demo bài này — dùng GSAP có chủ đích, không vì GSAP "tốt nhất" tuyệt đối mà vì nội dung track LÀ về GSAP, cùng triết lý "dạy API thật" mà Track 1 dùng raw WebGL2, Track 3 dùng vanilla Three.js. Ngược lại, UI của chính nền tảng — nút bấm, thẻ lesson, hover trên navigation — chỉ dùng CSS transition/Tailwind, vì toàn là toggle hai trạng thái; kéo GSAP vào cho hover-nâng là trả ~27kB cho thứ CSS đã làm miễn phí. Motion không có trong `package.json` — không vì nó tệ, mà vì không có nhu cầu layout-animation/gesture-React đủ lớn để đánh đổi thêm dependency.
 
 ## Nơi kiến thức này dẫn tới
 
@@ -57,8 +57,8 @@ Từ bài sau, "nguyên tắc animation cho UI" áp dụng lên cả ba công c�
 
 Ba lỗi hay gặp nhất khi chọn công cụ animation:
 
-1. **Kéo GSAP vào chỉ để animate một hover state.** Một `gsap.to(el, {y:-4})` khi hover làm đúng việc hai dòng CSS transition đã làm — trả giá 23.5kB cho zero lợi ích thực. Mặc định dùng CSS trước, chỉ nâng cấp lên JS khi biên đạo vượt quá thứ CSS biểu đạt được.
-2. **Tạo tween GSAP trong component React mà không scope qua `gsap.context()`.** Tween sống sót qua unmount, tiếp tục animate một node đã gỡ khỏi DOM hoặc — nguy hiểm hơn — một node React tái dùng cho nội dung khác sau re-render, gây bug hình ảnh chỉ lộ ra khi app remount nhiều lần (Strict Mode, route change) mà không xuất hiện lúc dev thử nhanh.
+1. **Kéo GSAP vào chỉ để animate một hover state.** Một `gsap.to(el, {y:-4})` khi hover làm đúng việc hai dòng CSS transition đã làm — trả giá ~27kB cho zero lợi ích thực. Mặc định dùng CSS trước, chỉ nâng cấp lên JS khi biên đạo vượt quá thứ CSS biểu đạt được.
+2. **Tạo tween GSAP trong component React mà không scope qua `gsap.context()`.** Tween sống sót qua unmount, tiếp tục animate một node đã gỡ khỏi DOM; dưới Strict Mode, effect chạy hai lần trên cùng DOM nên tween bị nhân đôi (một `from()` kẹt ở giá trị from) và ScrollTrigger chồng chất — mount một lần thì không lộ gì, bug chỉ hiện khi component mount lại (Strict Mode lúc dev, route change).
 3. **Coi layout animation của Motion là "FLIP miễn phí" không tốn gì.** Mỗi phần tử có `layout` được đo `getBoundingClientRect` mỗi lần layout đổi — vài chục phần tử không vấn đề, danh sách hàng trăm dòng re-order liên tục mỗi frame cuộn thì phép đo đó cộng dồn thành cost thật, không phải phép màu không tính phí.
 
 </Callout>

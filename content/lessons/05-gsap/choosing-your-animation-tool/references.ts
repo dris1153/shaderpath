@@ -40,8 +40,8 @@ export const references: Citation[] = [
     title: "gsap — Bundlephobia",
     url: "https://bundlephobia.com/package/gsap",
     note: {
-      vi: "Số đo kích thước gói thực tế (minified+gzip) của GSAP — nguồn cho số liệu ~23.5kB trong trục 'bundle' của bài, kiểm tra lại được bất cứ lúc nào vì số liệu đổi theo phiên bản.",
-      en: "Real measured package size (minified+gzip) for GSAP — the source for the ~23.5kB figure in this lesson's 'bundle' axis; re-checkable any time since the number shifts across versions.",
+      vi: "Số đo kích thước gói thực tế (minified+gzip) của GSAP — nguồn cho số liệu ~27kB (bản 3.15) trong trục 'bundle' của bài, kiểm tra lại được bất cứ lúc nào vì số liệu đổi theo phiên bản.",
+      en: "Real measured package size (minified+gzip) for GSAP — the source for the ~27kB figure (version 3.15) in this lesson's 'bundle' axis; re-checkable any time since the number shifts across versions.",
     },
   },
   {

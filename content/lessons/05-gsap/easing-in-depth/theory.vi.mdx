@@ -59,6 +59,6 @@ Ba lỗi hay gặp nhất khi chọn và dùng ease:
 
 1. **Dùng `back`/`elastic` cho mọi thứ vì "nhìn vui mắt".** Hai họ ease này có overshoot — vọt qua điểm đích rồi lùi lại — hợp cho phản hồi nhỏ (nút, badge, toast) nhưng dùng cho layout lớn hay chuyển trang khiến giao diện thiếu chuyên nghiệp, càng lớn dao động càng gây khó chịu.
 2. **Dùng chung một ease-`out` cho cả lúc xuất hiện lẫn lúc biến mất.** `power2.out` giảm tốc dần VÀO điểm cuối — hợp cho entrance vì đọc như "đang đáp xuống". Áp dụng y hệt cho exit khiến phần tử trông như đang từ từ đáp xuống chỗ biến mất thay vì bị đẩy đi; nên đảo sang ease-`in` cho exit.
-3. **Bỏ mặc `ease: "power1.out"` hoặc dùng linear cho animation scrub theo ScrollTrigger.** Scrub tween đã được điều khiển trực tiếp bởi vị trí cuộn — chồng thêm ease non-linear khiến progress hiển thị trễ hoặc vọt trước so với vị trí cuộn thật; `ease: "none"` mới giữ đúng quan hệ 1:1 giữa cuộn và animation.
+3. **Bỏ mặc `ease: "power1.out"` (hay bất kỳ ease non-linear nào) cho animation scrub theo ScrollTrigger.** Scrub tween đã được điều khiển trực tiếp bởi vị trí cuộn — chồng thêm ease non-linear khiến progress hiển thị trễ hoặc vọt trước so với vị trí cuộn thật; `ease: "none"` mới giữ đúng quan hệ 1:1 giữa cuộn và animation.
 
 </Callout>

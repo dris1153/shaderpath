@@ -30,7 +30,7 @@ There's no single correct number for every case, but Nielsen Norman Group has co
 gsap.matchMedia().add(
   "(prefers-reduced-motion: reduce)",
   () => {
-    gsap.set(".card", { clearProps: "all" }); // strip all transforms, snap straight to the end state
+    gsap.set(".card", { clearProps: "transform,opacity" }); // drop only what the intro set; the CSS end state shows at once
     return () => {}; // cleanup if the OS setting flips while this is active
   },
 );
