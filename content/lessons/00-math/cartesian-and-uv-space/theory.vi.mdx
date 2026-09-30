@@ -11,7 +11,7 @@ Toán học không quan tâm trục nào "hướng lên" — phần mềm đồ 
 - **Y-up**: trục $y$ chỉ lên trời, mặt đất là mặt phẳng $xz$. Three.js dùng mặc định — camera nhìn dọc trục $-z$, "lên" là $+y$. glTF, định dạng model 3D chuẩn cho web, cũng bắt buộc Y-up.
 - **Z-up**: trục $z$ chỉ lên trời, mặt đất là mặt phẳng $xy$. Blender dùng Z-up nội bộ (bộ export glTF của Blender tự xoay $-90°$ quanh trục $x$ để đổi sang Y-up khi xuất file — $+90°$ sẽ đưa $+z$ xuống $-y$, tức lộn ngược) — CAD và một số phần mềm kỹ thuật cũng quen Z-up vì khớp với bản vẽ 2D nhìn từ trên xuống.
 
-Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị lộn mặt.
+Câu hỏi thứ hai là hệ **thuận tay phải** (right-handed) hay **thuận tay trái** (left-handed). Quy tắc bàn tay phải: ngón tay phải xoè theo $+x$, cuộn về $+y$, ngón cái chỉ $+z$ — đúng vậy là hệ thuận tay phải. Three.js thuận tay phải; DirectX và Unity theo truyền thống thuận tay trái. Không phải chi tiết vụn vặt: cross product — công cụ dựng pháp tuyến mặt phẳng ở bài sau — đảo dấu khi đổi hệ; model import nhầm handedness mà quên convert sẽ bị soi gương, còn nếu chỉ lật một trục để sửa mà không đảo thứ tự đỉnh tam giác thì sẽ bị lộn mặt.
 
 <Figure
   src="/figures/00-math/axis-conventions/vi.svg"
