@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Remotion video package: its own tsconfig and lockfile; typecheck and
+    // tests run inside video/.
+    "video/**",
   ]),
   {
     // False positive: looking up a module-scope Map of lazy() wrappers is not

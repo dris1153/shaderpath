@@ -1,0 +1,15 @@
+{
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "scenes": [
+    { "id": "hello", "from": 0, "durationInFrames": 120 },
+    { "id": "wave", "from": 120, "durationInFrames": 120 }
+  ],
+  "words": [],
+  "audio": "voice.mp3",
+  "cues": {
+    "hello.hello": 15,
+    "wave.wave": 150
+  }
+}

@@ -1,0 +1,4 @@
+# A workspace root of its own: the site's install (and the Vercel build) must
+# never pull Remotion and its compositor binaries.
+allowBuilds:
+  esbuild: true

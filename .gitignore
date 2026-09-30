@@ -29,6 +29,13 @@ plans/
 # local agent state
 /.claude/
 
+# lesson videos: renders, voice/timing output and the TTS cache stay local
+/video/node_modules/
+/video/out/
+/video/.cache/
+/video/public/generated/*
+!/video/public/generated/dummy/
+
 # misc
 .DS_Store
 *.pem
