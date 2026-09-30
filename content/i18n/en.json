@@ -197,7 +197,9 @@
     "openNav": "Track contents",
     "openToc": "On this page",
     "copyCode": "Copy",
-    "copiedCode": "Copied"
+    "copiedCode": "Copied",
+    "playVideo": "Play the lesson video",
+    "videoTitle": "Video: {title}"
   },
   "predict": {
     "label": "Predict",

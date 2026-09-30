@@ -3,6 +3,9 @@ import createMDX from "@next/mdx";
 import createNextIntlPlugin from "next-intl/plugin";
 
 const nextConfig: NextConfig = {
+  // Lesson video thumbnails (components/lesson/lesson-video.tsx), proxied by the
+  // image optimizer so readers make no request to Google before pressing play.
+  images: { remotePatterns: [new URL("https://i.ytimg.com/vi/**")] },
   // Raw shader imports (decision D1)
   turbopack: {
     rules: {

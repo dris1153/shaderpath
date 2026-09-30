@@ -25,6 +25,8 @@ import { ExerciseSection } from "@/components/exercise/exercise-section";
 import { BookmarkToggle } from "@/components/notes/bookmark-toggle";
 import { LessonNotesLayer } from "@/components/notes/lesson-notes-layer";
 import { LessonDemoHost } from "@/components/lesson/lesson-demo-host";
+import { LessonVideo } from "@/components/lesson/lesson-video";
+import { LESSON_VIDEOS } from "@/content/lesson-videos";
 import { LessonMindMap } from "@/components/lesson/lesson-mind-map";
 import { LessonSidebar } from "@/components/lesson/lesson-sidebar";
 import { LearnAnywayNotice } from "@/components/lesson/learn-anyway-notice";
@@ -34,7 +36,7 @@ import { LessonFooterNav } from "@/components/lesson/lesson-footer-nav";
 import { MarkComplete } from "@/components/lesson/mark-complete";
 import { ProgressTracker } from "@/components/lesson/progress-tracker";
 import { References } from "@/components/lesson/references";
-import { DEFAULT_LOCALE } from "@/content/types";
+import { DEFAULT_LOCALE, pick } from "@/content/types";
 
 // 162 lessons per locale. The page reads no user data, so every one of them is
 // the same for every reader and can be built once instead of per request.
@@ -54,6 +56,10 @@ export default async function LessonPage({
   setRequestLocale(localeParam);
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("lesson");
+  const video = LESSON_VIDEOS[lesson.slug];
+  // A locale key is a separate upload in that language. Otherwise the shared
+  // upload plays, and non-English readers get captions in their language.
+  const ownVideo = video && Object.hasOwn(video, locale) ? video[locale] : undefined;
 
   const entry = LESSON_REGISTRY[lesson.slug];
   const availableLocales = entry
@@ -182,6 +188,16 @@ export default async function LessonPage({
           <Alert className="mt-6">
             <AlertDescription>{t("translationFallback")}</AlertDescription>
           </Alert>
+        )}
+
+        {video && (
+          <LessonVideo
+            videoId={ownVideo ?? video.en}
+            locale={locale}
+            captions={!ownVideo && locale !== "en"}
+            label={t("playVideo")}
+            title={t("videoTitle", { title: pick(lesson.title, locale) })}
+          />
         )}
 
         {Theory ? (

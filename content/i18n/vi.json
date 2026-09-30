@@ -197,7 +197,9 @@
     "openNav": "Mục lục track",
     "openToc": "Trong bài",
     "copyCode": "Sao chép",
-    "copiedCode": "Đã sao chép"
+    "copiedCode": "Đã sao chép",
+    "playVideo": "Phát video bài học",
+    "videoTitle": "Video: {title}"
   },
   "predict": {
     "label": "Đoán thử",
