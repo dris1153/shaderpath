@@ -15,7 +15,7 @@ import { fish } from "./tts/fish";
 // pnpm tts <slug> <lang> --fit en [...]
 //   Every language shares the English picture: each scene is voiced, then
 //   sped up (≤ MAX_TEMPO) and padded to the English scene's exact length.
-const USAGE = "pnpm tts <slug> <locale> [--fit en] [--engine elevenlabs|fish] [--voice <id>] [--model <id>]";
+const USAGE = "pnpm tts <slug> <locale> [--fit en] [--engine elevenlabs|fish] [--voice <id>] [--model <id>] [--fresh]";
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -23,6 +23,8 @@ const { values, positionals } = parseArgs({
     voice: { type: "string" },
     model: { type: "string" },
     fit: { type: "string" },
+    // Re-voice every scene and overwrite its cache entry, e.g. to regain rights after a plan change.
+    fresh: { type: "boolean", default: false },
   },
 });
 const [slug, locale] = positionals;
@@ -96,7 +98,7 @@ async function voice(i: number): Promise<{ file: string; marks: Mark[] } | null>
   // The raw response is cached, not its parse, so a parser fix never needs a paid re-call.
   const rawFile = path.join(cacheDir, `${key}.raw`);
   let raw: string;
-  if (fs.existsSync(rawFile)) {
+  if (!values.fresh && fs.existsSync(rawFile)) {
     raw = fs.readFileSync(rawFile, "utf8");
     console.log(`scene ${scene.id}: cached`);
   } else {

@@ -106,11 +106,12 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | Command | Does |
 |---|---|
 | `pnpm video:lint <slug>` | Checks the script syntax and that every language keeps the English scenes, and that the scene code's strings and cues exist |
-| `pnpm tts <slug> en [--engine elevenlabs\|fish] [--voice <id>] [--model <id>]` | Voices the English master: `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` in `public/generated/<slug>/en/` |
+| `pnpm tts <slug> en [--engine elevenlabs\|fish] [--voice <id>] [--model <id>] [--fresh]` | Voices the English master: `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` in `public/generated/<slug>/en/` |
 | `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) and copies the voice, subtitles and timing into `out/<slug>/<lang>/` |
+| `… --fresh` | Ignores the TTS cache and re-voices every scene (for example after an ElevenLabs plan change, so the takes fall under the new plan's terms) |
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
-| `pnpm tts <slug> <lang> --fit en --model <model>` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
+| `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
 | `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
@@ -127,7 +128,7 @@ tracks and captions).
    - Cues are optional and ignored: the picture follows the English cues.
    - Keep it about as long as the English. Each scene may run at most 1.2× faster than natural speech to fit, so aim for roughly the same spoken length per scene.
    - There is no `strings.<lang>.json`: the picture is shared.
-2. **Voice.** Run `pnpm tts <slug> <lang> --fit en --voice <id> --model <model>`. For Vietnamese, lesson 1 uses Giang (`f5q6kePPoQAjCPYG6moa`) on `eleven_v4`.
+2. **Voice.** Run `pnpm tts <slug> <lang> --fit en --voice <id> --model <model>`. Lesson 1's Vietnamese uses the course voice, Jessica (`cgSgspJ2msm6clMCkdW9`), on `eleven_v4`.
    - Each scene is voiced, sped up only if needed (≤ 1.2×), and padded to the English scene's exact length.
    - If a scene is too long, the run stops and says how much to cut. Takes stay cached, so only edited scenes are re-voiced.
    - It also warns when a scene's speech fills less than 85% of it, because the scene's last visuals would then play ahead of the voice.
@@ -155,6 +156,7 @@ tracks and captions).
 | Checkpoints | script (approved as drafted), voice (Jessica), first minute (approved; decided "one picture for all languages"), final (approved) |
 | Review | caught a wrong claim carried over from the lesson ("normals point inward" after a handedness mix-up; the model comes out mirrored). The script and both theory files were fixed, and 2 scenes re-voiced |
 | Not yet proven | Fish Audio: the live call returned 402 (no API credit), so the "re-voice with the other engine, zero scene edits" check is still open |
+| Vietnamese (2026-10-01) | `script.vi.md` fitted to the English picture, voiced by Jessica on `eleven_v4`: 3,257 chars, no speed-up needed, speech fills 84–96% of each scene, −16.6 LUFS. An earlier take with Giang cost 3,248 chars. The English was re-voiced with `--fresh` on the Starter plan for commercial rights (3,314 chars), and the video re-rendered |
 
 **Cost note:** the ElevenLabs free tier gives 10,000 characters a month, which is
 two to three lessons of this length, fewer with voice auditions or re-voicing. It is also non-commercial and requires
