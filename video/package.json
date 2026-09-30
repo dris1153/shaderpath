@@ -8,6 +8,8 @@
     "studio": "remotion studio src/index.ts",
     "render": "tsx scripts/render.ts",
     "stills": "tsx scripts/stills.ts",
+    "tts": "tsx scripts/tts.ts",
+    "video:lint": "tsx scripts/video-lint.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\""
   },

@@ -27,6 +27,19 @@ export function generatedDir(slug: string, locale: string) {
   return path.join(ROOT, "public", "generated", slug, locale);
 }
 
+// A lesson's script and strings live with the lesson in content/; pipeline
+// fixtures (dummy, style) keep theirs next to their scene code.
+export function lessonSource(slug: string) {
+  const lessons = path.join(ROOT, "..", "content", "lessons");
+  for (const track of fs.readdirSync(lessons)) {
+    const dir = path.join(lessons, track, slug, "video");
+    if (fs.existsSync(dir)) return dir;
+  }
+  const fixture = path.join(ROOT, "src", "lessons", slug);
+  if (fs.existsSync(fixture)) return fixture;
+  throw new Error(`no video sources for "${slug}" (content/lessons/*/${slug}/video/)`);
+}
+
 // Remotion ships its own ffmpeg, so a system install is not a prerequisite.
 export function ffmpeg(args: string[]) {
   const cli = path.join(ROOT, "node_modules", "@remotion", "cli", "remotion-cli.js");

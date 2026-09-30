@@ -1,51 +1,35 @@
-import { interpolate, spring, useVideoConfig } from "remotion";
+import { progress } from "../../kit/easing";
+import { Pop, SlideIn } from "../../kit/motion";
+import { Stage } from "../../kit/stage";
+import { Title, useString } from "../../kit/text";
+import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
 import type { LessonModule } from "../../scene/LessonVideo";
 
-// Pipeline fixture: proves cue-driven motion end to end. Not a real lesson.
+// Pipeline fixture: proves cue-driven motion and the word-driven mouth end to
+// end. Not a real lesson.
 function Hello() {
   const t = useCue("hello");
-  const { fps } = useVideoConfig();
-  const scale = spring({ frame: t, fps, config: { damping: 12 } });
   return (
-    <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-      <div
-        style={{
-          width: 240,
-          height: 240,
-          borderRadius: "50%",
-          background: "#ff7a59",
-          border: "8px solid #1d1b2f",
-          transform: `scale(${scale})`,
-        }}
-      />
-    </div>
+    <Stage>
+      <Pop t={t} x={640} y={380}>
+        <Inko x={640} y={380} scale={1.3} pose="idle" lookAt={{ x: 640, y: 600 }} />
+      </Pop>
+    </Stage>
   );
 }
 
 function Wave() {
   const t = useCue("wave");
-  const x = interpolate(t, [0, 20], [-400, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
   return (
-    <div
-      style={{
-        position: "absolute",
-        left: 0,
-        right: 0,
-        top: 300,
-        textAlign: "center",
-        fontSize: 96,
-        fontWeight: 800,
-        fontFamily: "sans-serif",
-        color: "#1d1b2f",
-        transform: `translateX(${x}px)`,
-      }}
-    >
-      Hello, Inko
-    </div>
+    <Stage>
+      <Inko x={380} y={400} scale={1.1} pose="cheer" reach={progress(t, 14)} lookAt={{ x: 900, y: 300 }} />
+      <SlideIn t={t} from="right">
+        <Title x={880} y={320} size={80}>
+          {useString("title")}
+        </Title>
+      </SlideIn>
+    </Stage>
   );
 }
 
