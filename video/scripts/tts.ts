@@ -10,16 +10,34 @@ import { elevenlabs } from "./tts/elevenlabs";
 import { alignWords, type Mark, type TtsEngine } from "./tts/engine";
 import { fish } from "./tts/fish";
 
-// pnpm tts <slug> <locale> [--engine elevenlabs|fish] [--voice <id>] [--model <id>]
-// script.<locale>.md → public/generated/<slug>/<locale>/{voice.mp3, timing.json, strings.json, subs.vtt}
-const USAGE = "pnpm tts <slug> <locale> [--engine elevenlabs|fish] [--voice <id>] [--model <id>]";
+// pnpm tts <slug> en [--engine elevenlabs|fish] [--voice <id>] [--model <id>]
+//   script.en.md → public/generated/<slug>/en/{voice.mp3, timing.json, strings.json, subs.vtt}
+// pnpm tts <slug> <lang> --fit en [...]
+//   Every language shares the English picture: each scene is voiced, then
+//   sped up (≤ MAX_TEMPO) and padded to the English scene's exact length.
+const USAGE = "pnpm tts <slug> <locale> [--fit en] [--engine elevenlabs|fish] [--voice <id>] [--model <id>]";
 const { values, positionals } = parseArgs({
   allowPositionals: true,
-  options: { engine: { type: "string", default: "elevenlabs" }, voice: { type: "string" }, model: { type: "string" } },
+  options: {
+    engine: { type: "string", default: "elevenlabs" },
+    voice: { type: "string" },
+    model: { type: "string" },
+    fit: { type: "string" },
+  },
 });
 const [slug, locale] = positionals;
 if (!slug || !locale) {
   console.error(`usage: ${USAGE}`);
+  process.exit(1);
+}
+if ((locale !== "en") !== (values.fit === "en")) {
+  console.error(`English is voiced plainly; every other language needs --fit en. usage: ${USAGE}`);
+  process.exit(1);
+}
+// ElevenLabs' default model has no Vietnamese (and fewer languages than v4):
+// a missing --model would pay for takes in the wrong language, and cache them.
+if (locale !== "en" && values.engine === "elevenlabs" && !values.model) {
+  console.error(`pass --model for "${locale}" (e.g. eleven_v4); the default model is English-first. usage: ${USAGE}`);
   process.exit(1);
 }
 
@@ -27,6 +45,10 @@ const FORMAT = { fps: 30, width: 1280, height: 720 };
 const DEFAULT_HOLD = 36;
 const RATE = 48000;
 const SAMPLES_PER_FRAME = RATE / FORMAT.fps;
+// Fitted speech keeps half a second of calm before the cut and is never sped up past 1.2×.
+const FIT_TAIL_SEC = 0.5;
+const MAX_TEMPO = 1.2;
+const MIN_FILL = 0.85;
 
 // Keys come from the repo's .env.local into process.env; nothing here reads or prints them.
 const envFile = path.join(ROOT, "..", ".env.local");
@@ -45,7 +67,20 @@ const engine = makeEngine();
 
 const src = lessonSource(slug);
 const script = parseScript(fs.readFileSync(path.join(src, `script.${locale}.md`), "utf8"));
-const strings = validateStrings(JSON.parse(fs.readFileSync(path.join(src, `strings.${locale}.json`), "utf8")));
+const readJson = (file: string) => JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
+const master = values.fit ? (readJson(path.join(generatedDir(slug, values.fit), "timing.json")) as Timing) : null;
+if (master) {
+  validateTiming(master);
+  const ids = script.scenes.map((s) => s.id).join(", ");
+  const masterIds = master.scenes.map((s) => s.id).join(", ");
+  if (ids !== masterIds) throw new Error(`script.${locale}.md scenes [${ids}] differ from ${values.fit} [${masterIds}]`);
+}
+// A fitted language reuses the master's picture, so it also reuses its on-screen strings.
+const strings = validateStrings(
+  master
+    ? readJson(path.join(generatedDir(slug, values.fit!), "strings.json"))
+    : readJson(path.join(src, `strings.${locale}.json`)),
+);
 
 // One entry per scene text and engine setup. Context (previous/next text) is
 // left out on purpose, so editing one scene re-voices only that scene.
@@ -78,33 +113,48 @@ async function voice(i: number): Promise<{ file: string; marks: Mark[] } | null>
   return { file, marks: speech.marks };
 }
 
-const timing: Timing = { ...FORMAT, scenes: [], words: [], cues: {}, audio: "voice.mp3" };
+// A fitted timing keeps the master's scenes and cues; only the words (mouth, subtitles) are this language's.
+const timing: Timing = { ...FORMAT, scenes: [], words: [], cues: master ? { ...master.cues } : {}, audio: "voice.mp3" };
 const subWords: Parameters<typeof buildCues>[0] = [];
-const clips: { file: string | null; frames: number }[] = [];
+const clips: { file: string | null; frames: number; tempo: number }[] = [];
+const tooLong: string[] = [];
 let from = 0;
 let prevTo = 0;
 for (const [i, scene] of script.scenes.entries()) {
   const voiced = await voice(i);
-  const times = voiced ? alignWords(scene.words.map((w) => w.spoken), voiced.marks) : [];
   const speechEnd = voiced ? Math.max(0, ...voiced.marks.map((m) => m.end)) : 0;
-  const frames = Math.ceil(speechEnd * FORMAT.fps) + DEFAULT_HOLD + scene.hold;
+  const frames = master
+    ? master.scenes[i]!.durationInFrames
+    : Math.ceil(speechEnd * FORMAT.fps) + DEFAULT_HOLD + scene.hold;
+  const budget = frames / FORMAT.fps - FIT_TAIL_SEC;
+  const tempo = master && speechEnd > budget ? speechEnd / budget : 1;
+  if (tempo > MAX_TEMPO) {
+    tooLong.push(`${scene.id}: needs ${tempo.toFixed(2)}× (max ${MAX_TEMPO}×); cut about ${Math.ceil((1 - (MAX_TEMPO * budget) / speechEnd) * 100)}% of its words`);
+  }
+  // Speech that ends early leaves the picture's later beats talking to silence.
+  if (master && voiced && speechEnd < MIN_FILL * budget) {
+    console.warn(`scene ${scene.id}: speech fills only ${Math.round((speechEnd / budget) * 100)}% of the scene; its last visuals will run ahead of the voice`);
+  }
+  const times = voiced ? alignWords(scene.words.map((w) => w.spoken), voiced.marks) : [];
   timing.scenes.push({ id: scene.id, from, durationInFrames: frames });
   scene.words.forEach((word, k) => {
     // Rounding can make neighbours touch or a silent word vanish; keep every word ≥ 1 frame, in order.
-    const start = Math.max(from + Math.round(times[k]!.start * FORMAT.fps), prevTo);
-    const end = Math.max(from + Math.round(times[k]!.end * FORMAT.fps), start + 1);
+    const start = Math.max(from + Math.round((times[k]!.start / tempo) * FORMAT.fps), prevTo);
+    const end = Math.max(from + Math.round((times[k]!.end / tempo) * FORMAT.fps), start + 1);
     prevTo = end;
     timing.words.push({ text: word.display, from: start, to: end, scene: scene.id });
     subWords.push({ text: word.display, from: start, to: end, scene: scene.id, breakBefore: word.breakBefore });
-    for (const cue of word.cues) timing.cues[`${scene.id}.${cue}`] = start;
+    if (!master) for (const cue of word.cues) timing.cues[`${scene.id}.${cue}`] = start;
   });
-  clips.push({ file: voiced?.file ?? null, frames });
+  clips.push({ file: voiced?.file ?? null, frames, tempo });
   from += frames;
 }
+// Checked after every scene is voiced (and cached), so one run reports them all.
+if (tooLong.length) throw new Error(`speech too long for the ${values.fit} picture:\n  ${tooLong.join("\n  ")}`);
 validateTiming(timing);
 
-// Each clip is resampled, padded with silence and cut to its scene's exact
-// sample count, so scene boundaries in the voice track land on frame edges.
+// Each clip is resampled, sped up if fitted, padded with silence and cut to its
+// scene's exact sample count, so scene boundaries land on frame edges.
 const out = generatedDir(slug, locale);
 fs.mkdirSync(out, { recursive: true });
 const inputs: string[] = [];
@@ -114,7 +164,8 @@ clips.forEach((clip, i) => {
   if (clip.file) inputs.push("-i", clip.file);
   else inputs.push("-f", "lavfi", "-t", String(seconds), "-i", `anullsrc=r=${RATE}:cl=mono`);
   filters.push(
-    `[${i}:a]aresample=${RATE},aformat=sample_fmts=fltp:channel_layouts=mono,apad,` +
+    `[${i}:a]aresample=${RATE},aformat=sample_fmts=fltp:channel_layouts=mono,` +
+      `${clip.tempo > 1 ? `atempo=${clip.tempo.toFixed(4)},` : ""}apad,` +
       `atrim=end_sample=${clip.frames * SAMPLES_PER_FRAME},asetpts=N/SR/TB[a${i}]`,
   );
 });
@@ -132,7 +183,9 @@ fs.writeFileSync(path.join(out, "timing.json"), `${JSON.stringify(timing, null, 
 fs.writeFileSync(path.join(out, "strings.json"), `${JSON.stringify(strings, null, 2)}\n`);
 fs.writeFileSync(path.join(out, "subs.vtt"), toVtt(cues));
 for (const warning of warnings) console.warn(warning);
+const fitted = script.scenes.flatMap((s, i) => (clips[i]!.tempo > 1 ? [`${s.id} ${clips[i]!.tempo.toFixed(2)}×`] : []));
 console.log(
   `done → ${path.relative(process.cwd(), out)} (${(from / FORMAT.fps).toFixed(1)} s, ` +
-    `${cues.length} subtitle cues, ${sentChars} chars sent to ${engine.id.engine})`,
+    `${cues.length} subtitle cues, ${sentChars} chars sent to ${engine.id.engine}` +
+    `${master ? `, fitted to ${values.fit}; sped up: ${fitted.length ? fitted.join(" ") : "none"}` : ""})`,
 );

@@ -5,9 +5,10 @@ import { lessonSource, parseArgs, ROOT } from "./remotion";
 import { parseScript, type Script } from "./script-parse";
 
 // pnpm video:lint <slug>
-// Every locale must match English: the same scenes in the same order, the same
-// cues per scene, the same strings keys. The scene code's useString / useCue
-// literals must exist in the sources. Runs before any paid TTS call.
+// Every language shares the English picture: other scripts must keep English's
+// scenes in the same order (their cues are ignored), and strings.en.json is the
+// only strings file. The scene code's useString / useCue literals must exist in
+// the English sources. Runs before any paid TTS call.
 const [slug] = parseArgs("pnpm video:lint <slug>", 1) as [string];
 const src = lessonSource(slug);
 const errors: string[] = [];
@@ -26,19 +27,11 @@ for (const file of fs.readdirSync(src)) {
 const base = scripts.get("en");
 if (!base && !errors.length) errors.push("no script.en.md");
 
-const cuesOf = (script: Script) =>
-  script.scenes.map((s) => `${s.id}: ${s.words.flatMap((w) => w.cues).sort().join(", ")}`);
 for (const [locale, script] of scripts) {
   if (!base || script === base) continue;
   const ids = script.scenes.map((s) => s.id).join(", ");
   const baseIds = base.scenes.map((s) => s.id).join(", ");
   if (ids !== baseIds) errors.push(`script.${locale}.md scenes [${ids}] differ from English [${baseIds}]`);
-  else {
-    const [mine, theirs] = [cuesOf(script), cuesOf(base)];
-    mine.forEach((line, i) => {
-      if (line !== theirs[i]) errors.push(`script.${locale}.md cues "${line}" differ from English "${theirs[i]}"`);
-    });
-  }
 }
 
 const codeDir = path.join(ROOT, "src", "lessons", slug);
@@ -50,19 +43,17 @@ const code = fs.existsSync(codeDir)
   : "";
 const literals = (fn: string) => new Set([...code.matchAll(new RegExp(`${fn}\\(\\s*"([^"]+)"`, "g"))].map((m) => m[1]!));
 
-// Every key the code uses must exist in every locale; a key nothing uses is a warning.
+// Every key the code uses must exist; a key nothing uses is a warning.
 const usedKeys = literals("useString");
-for (const locale of scripts.keys()) {
-  const file = `strings.${locale}.json`;
-  let keys: string[];
-  try {
-    keys = Object.keys(validateStrings(JSON.parse(fs.readFileSync(path.join(src, file), "utf8"))));
-  } catch (error) {
-    errors.push(`${file}: ${(error as Error).message}`);
-    continue;
-  }
-  for (const key of usedKeys) if (!keys.includes(key)) errors.push(`${file}: missing "${key}" (used by the scene code)`);
-  for (const key of keys) if (!usedKeys.has(key)) warnings.push(`${file}: "${key}" is not used by the scene code`);
+try {
+  const keys = Object.keys(validateStrings(JSON.parse(fs.readFileSync(path.join(src, "strings.en.json"), "utf8"))));
+  for (const key of usedKeys) if (!keys.includes(key)) errors.push(`strings.en.json: missing "${key}" (used by the scene code)`);
+  for (const key of keys) if (!usedKeys.has(key)) warnings.push(`strings.en.json: "${key}" is not used by the scene code`);
+} catch (error) {
+  errors.push(`strings.en.json: ${(error as Error).message}`);
+}
+for (const file of fs.readdirSync(src)) {
+  if (/^strings\.(?!en\.)[a-zA-Z-]+\.json$/.test(file)) warnings.push(`${file} is unused: every language shows the English picture's strings`);
 }
 
 if (base) {

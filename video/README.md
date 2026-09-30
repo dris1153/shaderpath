@@ -105,11 +105,13 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 
 | Command | Does |
 |---|---|
-| `pnpm video:lint <slug>` | Checks the script syntax, the scenes and cues across languages, and that the scene code's strings and cues exist |
-| `pnpm tts <slug> <lang> [--engine elevenlabs\|fish] [--voice <id>] [--model <id>]` | Writes `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` into `public/generated/<slug>/<lang>/` |
+| `pnpm video:lint <slug>` | Checks the script syntax and that every language keeps the English scenes, and that the scene code's strings and cues exist |
+| `pnpm tts <slug> en [--engine elevenlabs\|fish] [--voice <id>] [--model <id>]` | Voices the English master: `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` in `public/generated/<slug>/en/` |
 | `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) and copies the voice, subtitles and timing into `out/<slug>/<lang>/` |
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
+| `pnpm tts <slug> <lang> --fit en --model <model>` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
+| `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
 
@@ -120,9 +122,26 @@ scene's length and every cue. Another language ships only its own voice file and
 subtitle file, which go next to the same `video.mp4` (for example, as YouTube audio
 tracks and captions).
 
-1. Translate `script.en.md` to `script.<lang>.md`. Keep the same scenes, in the same order, with the same cues; `pnpm video:lint` enforces this. The tools still expect a `strings.<lang>.json` next to each script, so copy `strings.en.json` unchanged. That requirement goes away with `--fit`.
-2. **Not built yet:** `pnpm tts <slug> <lang> --fit en`. It will voice each scene and fit it into the English scene's length (a small speed-up plus silence), warning when a translation is too long. It will write `voice.<lang>.mp3` and `subs.<lang>.vtt`. **Until it exists, do not ship another language:** a plain `pnpm tts <slug> <lang>` times the scenes to that language, which would need its own picture.
-3. Pick a voice and model that speak the language. ElevenLabs' default `eleven_multilingual_v2` does not cover Vietnamese; use `--model eleven_flash_v2_5`.
+1. **Translate.** Write `script.en.md` as `script.<lang>.md`.
+   - Keep the same scenes, in the same order; `pnpm video:lint` enforces this.
+   - Cues are optional and ignored: the picture follows the English cues.
+   - Keep it about as long as the English. Each scene may run at most 1.2× faster than natural speech to fit, so aim for roughly the same spoken length per scene.
+   - There is no `strings.<lang>.json`: the picture is shared.
+2. **Voice.** Run `pnpm tts <slug> <lang> --fit en --voice <id> --model <model>`. For Vietnamese, lesson 1 uses Giang (`f5q6kePPoQAjCPYG6moa`) on `eleven_v4`.
+   - Each scene is voiced, sped up only if needed (≤ 1.2×), and padded to the English scene's exact length.
+   - If a scene is too long, the run stops and says how much to cut. Takes stay cached, so only edited scenes are re-voiced.
+   - It also warns when a scene's speech fills less than 85% of it, because the scene's last visuals would then play ahead of the voice.
+   - `--model` is required for ElevenLabs, because the default model is English-first and has no Vietnamese.
+   - Output: `public/generated/<slug>/<lang>/{voice.mp3, subs.vtt, timing.json, strings.json}`.
+3. **Package.** Run `pnpm youtube <slug>`. It writes `out/<slug>/youtube/`:
+   - `upload.mp4`: the English render. Upload it once.
+   - `audio.<lang>.mp3` for each fitted language: YouTube Studio → Languages → add audio track. It lasts as long as the video to within a few milliseconds; YouTube asks for about the same length.
+   - `subs.<lang>.vtt` for every language: Studio → Languages → add subtitles.
+   - `preview.<lang>.mp4`: the picture with that language's voice, for listening only.
+   - If the channel has no multi-language audio, upload each language separately. Render it with `pnpm render <slug> <lang>`: the fit already wrote that language's timing, so Inko's mouth follows its words. Then run `pnpm qc <slug> <lang>`. In the shared upload, Inko's mouth follows the English.
+4. **Page.** Put the YouTube id in `content/lesson-videos.ts`; a per-locale key overrides it for a separate upload. The lesson page shows a click-to-load player, and non-English pages turn on captions in their language.
+
+**Voices and models:** ElevenLabs' default `eleven_multilingual_v2` has no Vietnamese. Use `eleven_v4`, or `eleven_v4_turbo`, `eleven_flash_v2_5` or `eleven_turbo_v2_5` at half the character cost. Library voices (such as Giang) need a paid ElevenLabs plan.
 
 ## Pilot log: lesson 1, `cartesian-and-uv-space` (2026-09-30)
 
