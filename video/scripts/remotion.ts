@@ -52,8 +52,9 @@ export async function withComposition<T>(
   slug: string,
   locale: string,
   fn: (ctx: Awaited<ReturnType<typeof open>>) => Promise<T>,
+  props: Record<string, unknown> = {},
 ): Promise<T> {
-  const ctx = await open(slug, locale);
+  const ctx = await open(slug, locale, props);
   try {
     return await fn(ctx);
   } finally {
@@ -62,10 +63,10 @@ export async function withComposition<T>(
   }
 }
 
-async function open(slug: string, locale: string) {
+async function open(slug: string, locale: string, props: Record<string, unknown>) {
   const serveUrl = await bundle({ entryPoint: path.join(ROOT, "src", "index.ts") });
   const browser = await openBrowser("chrome", { chromiumOptions: CHROMIUM });
-  const inputProps = { locale };
+  const inputProps = { locale, ...props };
   try {
     const composition = await selectComposition({
       serveUrl,

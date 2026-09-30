@@ -12,6 +12,7 @@
     "video:lint": "tsx scripts/video-lint.ts",
     "qc": "tsx scripts/qc.ts",
     "youtube": "tsx scripts/youtube-package.ts",
+    "thumbnail": "tsx scripts/thumbnail.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\""
   },

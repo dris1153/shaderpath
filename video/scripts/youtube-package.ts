@@ -11,6 +11,7 @@ import { ffmpeg, generatedDir, outDir, parseArgs, ROOT } from "./remotion";
 //   preview.<lang>.mp4  the same picture with that language's voice, to listen to.
 //                     For a separate upload, render the language instead
 //                     (pnpm render <slug> <lang>): Inko's mouth then follows its words.
+// It also writes each language's site dub to ../public/videos/<slug>/audio.<lang>.mp3.
 const [slug] = parseArgs("pnpm youtube <slug>", 1) as [string];
 const master = outDir(slug, "en");
 const upload = path.join(master, "final.mp4");
@@ -44,6 +45,11 @@ for (const lang of langs) {
     "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
     path.join(dest, `preview.${lang}.mp4`),
   ]);
-  console.log(`${lang}: audio, subtitles, preview`);
+  // The site plays this dub in sync with the YouTube embed (components/lesson/lesson-video.tsx);
+  // speech needs no more than mono 64 kbps, which keeps the committed file near 2 MB.
+  const web = path.join(ROOT, "..", "public", "videos", slug, `audio.${lang}.mp3`);
+  fs.mkdirSync(path.dirname(web), { recursive: true });
+  ffmpeg(["-y", "-loglevel", "error", "-i", path.join(dir, "voice.mp3"), "-ac", "1", "-b:a", "64k", "-ar", "44100", web]);
+  console.log(`${lang}: audio, subtitles, preview, site dub (${Math.round(fs.statSync(web).size / 1024)} KB)`);
 }
 console.log(`done → ${path.relative(process.cwd(), dest)}`);

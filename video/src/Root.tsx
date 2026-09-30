@@ -3,6 +3,7 @@ import { Composition } from "remotion";
 import { LESSONS } from "./lessons";
 import { generatedPath, LessonVideo, type LessonProps } from "./scene/LessonVideo";
 import { totalFrames, validateStrings, validateTiming, type Timing } from "./scene/timing";
+import { Thumbnail, type ThumbnailProps } from "./thumbnail/Thumbnail";
 
 // Built once at module load so each composition keeps a stable component.
 const COMPONENTS: Record<string, FC<LessonProps>> = Object.fromEntries(
@@ -15,6 +16,15 @@ const COMPONENTS: Record<string, FC<LessonProps>> = Object.fromEntries(
 export function Root() {
   return (
     <>
+      <Composition
+        id="thumbnail"
+        component={Thumbnail}
+        width={1280}
+        height={720}
+        fps={30}
+        durationInFrames={1}
+        defaultProps={{ lines: ["TITLE"] } as ThumbnailProps}
+      />
       {Object.keys(LESSONS).map((slug) => (
         <Composition
           key={slug}

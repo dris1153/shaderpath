@@ -113,6 +113,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
 | `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/` |
+| `pnpm thumbnail <slug> --lines "A\|B\|C" [--code <text>] [--bg <file under public/>] [--out <name>]` | Renders a 1280×720 thumbnail to `out/<slug>/<name>.png`: Inko points at the stacked title lines, with an optional code chip, over a background (for example one generated with `gpt-image-2`, cropped to 16:9, kept under the gitignored `public/generated/<slug>/`). Keep the words language-neutral, because one thumbnail serves every audio track |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
 
@@ -136,11 +137,15 @@ tracks and captions).
    - Output: `public/generated/<slug>/<lang>/{voice.mp3, subs.vtt, timing.json, strings.json}`.
 3. **Package.** Run `pnpm youtube <slug>`. It writes `out/<slug>/youtube/`:
    - `upload.mp4`: the English render. Upload it once.
-   - `audio.<lang>.mp3` for each fitted language: YouTube Studio → Languages → add audio track. It lasts as long as the video to within a few milliseconds; YouTube asks for about the same length.
-   - `subs.<lang>.vtt` for every language: Studio → Languages → add subtitles.
+   - `subs.<lang>.vtt` for every language: Studio → Languages → add subtitles. Any channel can do this. Upload ours rather than relying on auto-translated captions: ours follow the dub's own timing.
+   - `audio.<lang>.mp3` for each fitted language: Studio → Languages → Dub. This needs multi-language audio, which YouTube opens to channels gradually. It lasts as long as the video to within a few milliseconds.
    - `preview.<lang>.mp4`: the picture with that language's voice, for listening only.
-   - If the channel has no multi-language audio, upload each language separately. Render it with `pnpm render <slug> <lang>`: the fit already wrote that language's timing, so Inko's mouth follows its words. Then run `pnpm qc <slug> <lang>`. In the shared upload, Inko's mouth follows the English.
-4. **Page.** Put the YouTube id in `content/lesson-videos.ts`; a per-locale key overrides it for a separate upload. The lesson page shows a click-to-load player, and non-English pages turn on captions in their language.
+   - It also writes the **site dub**, `public/videos/<slug>/audio.<lang>.mp3` (mono 64 kbps, about 2 MB). Commit that file.
+4. **Page.** Add `"<slug>": { youtube: "<id>", dubs: ["vi"] }` to `content/lesson-videos.ts`.
+   - The lesson page shows a click-to-load player (nothing loads from YouTube before play), with an **Audio: English | Tiếng Việt** switch under it.
+   - A dub plays from the site dub file, following the muted YouTube player: play, pause, seek, speed, volume, and re-sync whenever the drift exceeds 0.25 s.
+   - Each page starts with its own language when a dub exists.
+   - Inko's mouth follows the English, because the picture is shared.
 
 **Voices and models:** ElevenLabs' default `eleven_multilingual_v2` has no Vietnamese. Use `eleven_v4`, or `eleven_v4_turbo`, `eleven_flash_v2_5` or `eleven_turbo_v2_5` at half the character cost. Library voices (such as Giang) need a paid ElevenLabs plan.
 
