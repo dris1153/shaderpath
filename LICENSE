@@ -36,3 +36,11 @@ educational content of this repository:
 That content is Copyright (c) 2026 dris1153. All rights reserved. You may read
 it and link to it, but you may not republish, translate, or reuse it to build
 another course or product without written permission.
+
+--------------------------------------------------------------------------------
+
+Bundled fonts
+
+The fonts in video/public/fonts (Baloo 2, Nunito, JetBrains Mono) are licensed
+under the SIL Open Font License 1.1, not the MIT License. Their copyright
+notices and the full licence text are in video/public/fonts/LICENSES.txt.

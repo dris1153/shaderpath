@@ -47,6 +47,19 @@ export function validateTiming(timing: Timing): void {
     if (dur <= 0) throw new Error(`timing: scene "${scene.id}" has no duration`);
     expected += dur;
   }
+  let lastTo = -1;
+  for (const word of timing.words) {
+    const from = frameInt(word.from, `word "${word.text}" from`);
+    const to = frameInt(word.to, `word "${word.text}" to`);
+    const scene = timing.scenes.find((s) => s.id === word.scene);
+    if (!scene) throw new Error(`timing: word "${word.text}" names an unknown scene`);
+    if (to <= from) throw new Error(`timing: word "${word.text}" ends before it starts`);
+    if (from < lastTo) throw new Error(`timing: word "${word.text}" overlaps the previous word`);
+    if (from < scene.from || to > scene.from + scene.durationInFrames) {
+      throw new Error(`timing: word "${word.text}" spills out of its scene`);
+    }
+    lastTo = to;
+  }
   for (const [key, value] of Object.entries(timing.cues)) {
     const at = frameInt(value, `cue "${key}"`);
     const sceneId = key.slice(0, key.indexOf("."));
@@ -56,6 +69,16 @@ export function validateTiming(timing: Timing): void {
       throw new Error(`timing: cue "${key}" at ${at} falls outside its scene`);
     }
   }
+}
+
+export function validateStrings(value: unknown): Record<string, string> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("strings: expected an object of key → text");
+  }
+  for (const [key, text] of Object.entries(value)) {
+    if (typeof text !== "string") throw new Error(`strings: "${key}" is not a string`);
+  }
+  return value as Record<string, string>;
 }
 
 // Frames since the cue fired, measured in scene-local time; negative before it.

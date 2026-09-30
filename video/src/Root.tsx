@@ -2,7 +2,7 @@ import type { FC } from "react";
 import { Composition } from "remotion";
 import { LESSONS } from "./lessons";
 import { generatedPath, LessonVideo, type LessonProps } from "./scene/LessonVideo";
-import { totalFrames, validateTiming, type Timing } from "./scene/timing";
+import { totalFrames, validateStrings, validateTiming, type Timing } from "./scene/timing";
 
 // Built once at module load so each composition keeps a stable component.
 const COMPONENTS: Record<string, FC<LessonProps>> = Object.fromEntries(
@@ -32,12 +32,20 @@ export function Root() {
             }
             const timing = (await res.json()) as Timing;
             validateTiming(timing);
+            // Always written by the voice step ({} when a lesson shows no words).
+            const stringsRes = await fetch(generatedPath(slug, props.locale, "strings.json"), {
+              signal: abortSignal,
+            });
+            if (!stringsRes.ok) {
+              throw new Error(`${slug}/${props.locale}: strings.json not found — run tts first`);
+            }
+            const strings = validateStrings(await stringsRes.json());
             return {
               durationInFrames: totalFrames(timing),
               fps: timing.fps,
               width: timing.width,
               height: timing.height,
-              props: { ...props, timing },
+              props: { ...props, timing, strings },
             };
           }}
         />

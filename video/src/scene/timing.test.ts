@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { cueOffset, resolveCue, totalFrames, validateTiming, type Timing } from "./timing";
+import { cueOffset, resolveCue, totalFrames, validateStrings, validateTiming, type Timing } from "./timing";
 
 const base = (): Timing => ({
   fps: 30,
@@ -69,4 +69,23 @@ test("resolveCue reads the scene's cue and throws on a missing one", () => {
   const t = base();
   assert.equal(resolveCue(t, { id: "b", from: 90 }, "y", 15), 5);
   assert.throws(() => resolveCue(t, { id: "b", from: 90 }, "nope", 0), /missing cue b.nope/);
+});
+
+test("validateTiming rejects words outside their scene or out of order", () => {
+  const spill = base();
+  spill.words = [{ text: "hi", from: 85, to: 95, scene: "a" }];
+  assert.throws(() => validateTiming(spill), /spills out of its scene/);
+
+  const overlap = base();
+  overlap.words = [
+    { text: "one", from: 10, to: 20, scene: "a" },
+    { text: "two", from: 15, to: 25, scene: "a" },
+  ];
+  assert.throws(() => validateTiming(overlap), /overlaps the previous word/);
+});
+
+test("validateStrings accepts only text values", () => {
+  assert.deepEqual(validateStrings({ a: "x" }), { a: "x" });
+  assert.throws(() => validateStrings({ a: 3 }), /"a" is not a string/);
+  assert.throws(() => validateStrings([]), /expected an object/);
 });

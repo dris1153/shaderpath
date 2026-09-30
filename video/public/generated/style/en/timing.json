@@ -1,0 +1,36 @@
+{
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "scenes": [
+    { "id": "palettes", "from": 0, "durationInFrames": 150 },
+    { "id": "lines", "from": 150, "durationInFrames": 150 },
+    { "id": "poses", "from": 300, "durationInFrames": 180 },
+    { "id": "threads", "from": 480, "durationInFrames": 180 },
+    { "id": "talk", "from": 660, "durationInFrames": 300 }
+  ],
+  "words": [
+    { "text": "Every", "from": 700, "to": 712, "scene": "talk" },
+    { "text": "pixel", "from": 713, "to": 726, "scene": "talk" },
+    { "text": "on", "from": 727, "to": 733, "scene": "talk" },
+    { "text": "your", "from": 734, "to": 742, "scene": "talk" },
+    { "text": "screen", "from": 743, "to": 758, "scene": "talk" },
+    { "text": "has", "from": 760, "to": 768, "scene": "talk" },
+    { "text": "an", "from": 769, "to": 774, "scene": "talk" },
+    { "text": "address.", "from": 775, "to": 796, "scene": "talk" },
+    { "text": "Let's", "from": 830, "to": 840, "scene": "talk" },
+    { "text": "find", "from": 841, "to": 852, "scene": "talk" },
+    { "text": "it", "from": 853, "to": 858, "scene": "talk" },
+    { "text": "together!", "from": 859, "to": 884, "scene": "talk" }
+  ],
+  "cues": {
+    "palettes.in": 5,
+    "lines.in": 155,
+    "poses.in": 305,
+    "threads.in": 490,
+    "threads.paint": 540,
+    "talk.in": 665,
+    "talk.bubble": 700,
+    "talk.out": 910
+  }
+}

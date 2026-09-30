@@ -11,9 +11,16 @@ const [slug, locale = "en"] = parseArgs("pnpm render <slug> [locale]", 1) as [st
 const out = outDir(slug, locale);
 const final = path.join(out, "final.mp4");
 
+// Subfolders owned by other commands survive a re-render.
+const KEEP = new Set(["stills", "qc"]);
+
 await withComposition(slug, locale, async ({ serveUrl, browser, composition, inputProps }) => {
-  fs.rmSync(out, { recursive: true, force: true });
   fs.mkdirSync(out, { recursive: true });
+  // Drop every other output of the last run: a stale voice or subtitle file
+  // (even under an old name) must not survive into this one.
+  for (const entry of fs.readdirSync(out)) {
+    if (!KEEP.has(entry)) fs.rmSync(path.join(out, entry), { recursive: true, force: true });
+  }
   let lastLogged = -1;
   await renderMedia({
     serveUrl,

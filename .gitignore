@@ -35,6 +35,7 @@ plans/
 /video/.cache/
 /video/public/generated/*
 !/video/public/generated/dummy/
+!/video/public/generated/style/
 
 # misc
 .DS_Store
