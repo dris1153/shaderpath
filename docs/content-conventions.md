@@ -14,6 +14,12 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
 - **Cross product follows the right-hand rule** in this system: x̂ × ŷ = ẑ.
   Order matters; a × b = −(b × a). Guard: swapped operands silently flip
   normals.
+- **Importing across a handedness change without conversion mirrors the
+  model**; normals and culling stay consistent, because the front-face
+  winding conventions differ too (DirectX/Unity CW, GL/three.js CCW). It
+  renders **inside out** only when one axis is flipped to undo the mirror
+  without also reversing the triangle winding. Guard: "normals point inward"
+  as the plain-import symptom is wrong (corrected in lesson 1, 2026-10-01).
 - **NDC after the perspective divide is x, y, z ∈ [−1, 1], +Z pointing into
   the screen** — NDC is left-handed even though view space is right-handed,
   because the projection matrix flips Z. Depth then maps to [0, 1] in window
@@ -148,6 +154,17 @@ against. Version arbiters: the installed packages — three `0.185`, gsap
 - Scope note: mind maps postdate the original platform spec (adopted
   2026-08-26, plan `260826-0005-lesson-mind-maps`); audits should treat them
   as in-scope content, judged against the lesson they summarize.
+
+## Lesson videos
+
+- A lesson may ship `video/script.en.md` + `video/strings.en.json` (the
+  narration and on-screen labels of its explainer video; the workflow is in
+  `video/README.md`). The script is lesson content: audit it against the
+  lesson's theory and review cards like any other prose, and fix the lesson
+  too when both repeat an error.
+- One picture serves every language, so on-screen strings stay
+  language-neutral (symbols, formulas, terms like UV/NDC, short English
+  labels); only the narration and subtitles are translated.
 
 ## API era
 
