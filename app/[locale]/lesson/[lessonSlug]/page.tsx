@@ -57,9 +57,7 @@ export default async function LessonPage({
   const locale = (await getLocale()) as Locale;
   const t = await getTranslations("lesson");
   const video = LESSON_VIDEOS[lesson.slug];
-  // A locale key is a separate upload in that language. Otherwise the shared
-  // upload plays, and non-English readers get captions in their language.
-  const ownVideo = video && Object.hasOwn(video, locale) ? video[locale] : undefined;
+  const tl = await getTranslations("localeSwitcher");
 
   const entry = LESSON_REGISTRY[lesson.slug];
   const availableLocales = entry
@@ -192,11 +190,17 @@ export default async function LessonPage({
 
         {video && (
           <LessonVideo
-            videoId={ownVideo ?? video.en}
+            videoId={video.youtube}
+            slug={lesson.slug}
             locale={locale}
-            captions={!ownVideo && locale !== "en"}
-            label={t("playVideo")}
-            title={t("videoTitle", { title: pick(lesson.title, locale) })}
+            dubs={video.dubs ?? []}
+            strings={{
+              play: t("playVideo"),
+              title: t("videoTitle", { title: pick(lesson.title, locale) }),
+              audio: t("videoAudio"),
+              unavailable: t("videoUnavailable"),
+              languages: { en: tl("en"), vi: tl("vi") },
+            }}
           />
         )}
 

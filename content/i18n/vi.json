@@ -199,7 +199,9 @@
     "copyCode": "Sao chép",
     "copiedCode": "Đã sao chép",
     "playVideo": "Phát video bài học",
-    "videoTitle": "Video: {title}"
+    "videoTitle": "Video: {title}",
+    "videoAudio": "Âm thanh",
+    "videoUnavailable": "Không tải được trình phát video ở đây. Xem trên YouTube."
   },
   "predict": {
     "label": "Đoán thử",

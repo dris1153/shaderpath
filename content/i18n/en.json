@@ -199,7 +199,9 @@
     "copyCode": "Copy",
     "copiedCode": "Copied",
     "playVideo": "Play the lesson video",
-    "videoTitle": "Video: {title}"
+    "videoTitle": "Video: {title}",
+    "videoAudio": "Audio",
+    "videoUnavailable": "The video player could not load here. Watch it on YouTube."
   },
   "predict": {
     "label": "Predict",
