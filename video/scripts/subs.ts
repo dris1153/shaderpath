@@ -1,7 +1,7 @@
 // Timed words → WebVTT cues. Budgets: ≤ 42 chars per line, ≤ 2 lines, 1–6 s
 // on screen (up to 1 s past the last word), and a warning above 17 chars/s. A cue always ends at `|`, at a
 // scene change and at the end of a sentence (once it has run 1 s); an over-budget cue splits at its
-// last comma-like pause in the second half, else before the word that overflowed.
+// last comma-like pause (after at least two words), else before the word that overflowed.
 export type SubWord = { text: string; from: number; to: number; scene: string; breakBefore: boolean };
 export type SubCue = { start: number; end: number; lines: string[] };
 
@@ -44,8 +44,8 @@ export function buildCues(words: SubWord[], fps: number): { cues: SubCue[]; warn
     if (last && (word.breakBefore || word.scene !== last.scene || sentenceDone)) close();
     if (cur.length && !fits([...cur, word])) {
       let k = cur.length - 1;
-      while (k >= Math.ceil(cur.length / 2) && !PAUSE.test(cur[k - 1]!.text)) k--;
-      close(k >= Math.ceil(cur.length / 2) && k > 0 ? k : cur.length);
+      while (k >= 2 && !PAUSE.test(cur[k - 1]!.text)) k--;
+      close(k >= 2 ? k : cur.length);
       if (cur.length && !fits([...cur, word])) close();
     }
     cur.push(word);

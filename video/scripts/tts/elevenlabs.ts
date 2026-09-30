@@ -1,7 +1,7 @@
 import { post, requireKey, type Speech, type TtsEngine } from "./engine";
 
-// Premade "Matilda" (educational, upbeat). The voice is picked for real at the pilot's voice checkpoint.
-const DEFAULT_VOICE = "XrExE9yKIg1WjnnlVkGX";
+// Premade "Jessica" (playful, bright, warm), picked for the course at the pilot's voice checkpoint.
+const DEFAULT_VOICE = "cgSgspJ2msm6clMCkdW9";
 const DEFAULT_MODEL = "eleven_multilingual_v2";
 const OUTPUT = "mp3_44100_128";
 // Best-effort determinism on ElevenLabs' side; the cache is what makes re-runs stable.

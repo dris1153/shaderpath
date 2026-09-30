@@ -1,4 +1,5 @@
 import type { LessonModule } from "../scene/LessonVideo";
+import { lesson as cartesianAndUvSpace } from "./cartesian-and-uv-space";
 import { lesson as dummy } from "./dummy";
 import { lesson as style } from "./style";
 
@@ -7,4 +8,5 @@ import { lesson as style } from "./style";
 export const LESSONS: Record<string, LessonModule> = {
   dummy,
   style,
+  "cartesian-and-uv-space": cartesianAndUvSpace,
 };

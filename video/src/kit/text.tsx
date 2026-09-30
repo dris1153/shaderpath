@@ -25,7 +25,7 @@ type TextProps = {
   children: ReactNode;
 };
 
-// Display type: Fredoka, with a paper-coloured halo so it reads over lines.
+// Display type: Baloo 2, with a paper-coloured halo so it reads over lines.
 export function Title({ x, y, size = 64, anchor = "middle", color, weight = 650, halo, children }: TextProps) {
   const pal = usePalette();
   return (

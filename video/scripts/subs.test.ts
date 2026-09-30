@@ -29,7 +29,7 @@ test("a long sentence splits within the line and duration budgets", () => {
   assert.equal(cues.flatMap((c) => c.lines).join(" "), text);
 });
 
-test("a split prefers the last pause in the second half", () => {
+test("a split prefers the last pause", () => {
   const text = "Every pixel has an address on the screen, and the shader reads it, then decides its colour";
   const { cues } = buildCues(words(text), FPS);
   assert.equal(cues[0]!.lines.join(" "), "Every pixel has an address on the screen, and the shader reads it,");
@@ -71,4 +71,14 @@ test("fast speech is flagged", () => {
 test("VTT output", () => {
   const vtt = toVtt([{ start: 61.5, end: 63, lines: ["Every pixel", "has an address."] }]);
   assert.equal(vtt, "WEBVTT\n\n1\n00:01:01.500 --> 00:01:03.000\nEvery pixel\nhas an address.\n");
+});
+
+test("an early pause beats orphaning the overflow word", () => {
+  const text = "That's perfect for textures, but for directions we want a range centered on zero: |minus one to one.";
+  const { cues } = buildCues(words(text), FPS);
+  assert.deepEqual(cues.map((c) => c.lines.join(" ")), [
+    "That's perfect for textures,",
+    "but for directions we want a range centered on zero:",
+    "minus one to one.",
+  ]);
 });
