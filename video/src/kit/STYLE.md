@@ -57,7 +57,7 @@ Everything takes `t` from `useCue`, never an absolute frame.
   - `draw={drawn(t)}` on any kit shape: stroke reveal, with the fill fading in alongside.
 - **Exits:** `FadeOut`.
 - **Groups:** stagger entrances 4–5 frames apart.
-- **Hold:** after the last element of a scene lands, hold 30–45 frames before any exit.
+- **Hold:** after the last element of a scene lands, hold 30–45 frames before any exit. Any exit must finish at least 30 frames before the cut: `pnpm qc` requires every scene's last 30 frames to be calm.
 - **Nothing static for more than 3 s.** Inko's idle motion and one "continuing verb" per scene cover this. Do not add floating motion just to beat a metric.
 - **No nested `<Sequence>` inside a scene.** It shifts `useCurrentFrame`, which breaks `useCue` and Inko's clock. Offset with cue delays instead.
 
@@ -71,4 +71,4 @@ Everything takes `t` from `useCue`, never an absolute frame.
 - **Blinking:** seeded, every 70–160 frames.
 - **Talking:** the mouth flaps only while a word of the current scene is being spoken (`timing.words`).
 - **Motion clock:** ambient motion (bob, wave, blink) runs on the absolute frame, so Inko does not jump at scene cuts.
-- **QC note:** Inko is never fully still, so phase 4's calm-tail check has to mask Inko's bounding box or use a threshold above its ambient motion.
+- **QC note:** Inko is never fully still. `pnpm qc` therefore counts "still" below Inko's ambient motion and "calm" (the tail hold) above it; see `scripts/qc-rules.ts`. A much larger Inko may need the `CALM` threshold re-calibrated.

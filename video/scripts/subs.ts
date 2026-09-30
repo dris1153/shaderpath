@@ -5,10 +5,10 @@
 export type SubWord = { text: string; from: number; to: number; scene: string; breakBefore: boolean };
 export type SubCue = { start: number; end: number; lines: string[] };
 
-const LINE = 42;
-const MIN_SEC = 1;
-const MAX_SEC = 6;
-const MAX_CPS = 17;
+export const LINE = 42;
+export const MIN_SEC = 1;
+export const MAX_SEC = 6;
+export const MAX_CPS = 17;
 const LINGER_SEC = 1;
 
 const SENTENCE_END = /[.?!…]["')\]]*$/;

@@ -10,6 +10,7 @@
     "stills": "tsx scripts/stills.ts",
     "tts": "tsx scripts/tts.ts",
     "video:lint": "tsx scripts/video-lint.ts",
+    "qc": "tsx scripts/qc.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\""
   },

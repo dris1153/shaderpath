@@ -118,7 +118,8 @@ clips.forEach((clip, i) => {
       `atrim=end_sample=${clip.frames * SAMPLES_PER_FRAME},asetpts=N/SR/TB[a${i}]`,
   );
 });
-filters.push(`${clips.map((_, i) => `[a${i}]`).join("")}concat=n=${clips.length}:v=0:a=1[voice]`);
+// Providers deliver around −21 LUFS; the QC target is −16 ±2 with peaks ≤ −1 dBFS.
+filters.push(`${clips.map((_, i) => `[a${i}]`).join("")}concat=n=${clips.length}:v=0:a=1,loudnorm=I=-16:TP=-1.5:LRA=11:dual_mono=true[voice]`);
 ffmpeg([
   "-y", "-loglevel", "error", ...inputs,
   "-filter_complex", filters.join(";"),
