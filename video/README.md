@@ -112,8 +112,9 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
-| `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/` |
-| `pnpm thumbnail <slug> --lines "A\|B\|C" [--code <text>] [--bg <file under public/>] [--out <name>]` | Renders a 1280×720 thumbnail to `out/<slug>/<name>.png`: Inko points at the stacked title lines, with an optional code chip, over a background (for example one generated with `gpt-image-2`, cropped to 16:9, kept under the gitignored `public/generated/<slug>/`). Keep the words language-neutral, because one thumbnail serves every audio track |
+| `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/`, including `metadata.md` generated from the lesson's `video/youtube.json` |
+| `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the existing ones so a chosen background is never overwritten. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
+| `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
 
@@ -148,6 +149,40 @@ tracks and captions).
    - Inko's mouth follows the English, because the picture is shared.
 
 **Voices and models:** ElevenLabs' default `eleven_multilingual_v2` has no Vietnamese. Use `eleven_v4`, or `eleven_v4_turbo`, `eleven_flash_v2_5` or `eleven_turbo_v2_5` at half the character cost. Library voices (such as Giang) need a paid ElevenLabs plan.
+
+## YouTube metadata: `video/youtube.json`
+
+Each lesson keeps its YouTube text next to its script, in
+`content/lessons/<track>/<slug>/video/youtube.json`. `pnpm youtube` turns it into
+`out/<slug>/youtube/metadata.md`, the copy to paste into Studio:
+- the EN and VI titles and descriptions;
+- the chapters, timed from the English timing;
+- per-locale lesson links;
+- tags;
+- one block per quiz, with its Studio time and each field ready to paste.
+
+Edit the json, never the generated file. Re-voicing moves every time automatically.
+
+| Field | Content |
+|---|---|
+| `title`, `summary`, `lessonLink`, `series` | `{ en, vi }` strings (title ≤ 100 chars) |
+| `bullets` | `{ en: [...], vi: [...] }` for the "In this video" list |
+| `tags`, `hashtags` | lists (tags ≤ 500 chars in all) |
+| `chapters` | one `{ en, vi }` title per scene id; every scene needs one, and each must last ≥ 10 s |
+| `quizzes` | `{ at, question (≤ 100), answers (2–4), correct (index), explanation }` |
+| `thumbnail` | `{ lines, code?, background? }` |
+
+**Quiz anchors (`at`):**
+- `"<scene>:end"` is the last second before that scene's cut.
+- `"<scene>.<cue>"` is the cue's second. Put a cue at the start of the sentence after the quiz's topic.
+
+The validator runs before anything is written. It rejects:
+- unknown scenes or cues;
+- missing or empty chapter titles, and fewer than 3 chapters;
+- malformed quizzes and bad answer indices;
+- `<` and `>`, which Studio refuses;
+- text over YouTube's limits. Studio's quiz field reads `minutes:seconds:frames`, so times are emitted as `m:ss:00`.
+
 
 ## Pilot log: lesson 1, `cartesian-and-uv-space` (2026-09-30)
 

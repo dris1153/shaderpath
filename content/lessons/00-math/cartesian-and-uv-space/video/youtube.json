@@ -1,0 +1,112 @@
+{
+  "title": {
+    "en": "Pixel → UV → NDC: Cartesian Coordinates & UV Space Explained",
+    "vi": "Pixel → UV → NDC: Toạ độ Descartes & UV space dễ hiểu"
+  },
+  "summary": {
+    "en": "Every pixel on your screen has an address. In four minutes, Inko the octopus walks through the three ways graphics writes it down: pixel coordinates, UV and NDC.",
+    "vi": "Mỗi pixel trên màn hình đều có một địa chỉ. Trong bốn phút, bạch tuộc Inko dẫn bạn qua ba cách đồ hoạ ghi địa chỉ đó: toạ độ pixel, UV và NDC."
+  },
+  "bullets": {
+    "en": [
+      "why every graphics tool assumes perpendicular, evenly spaced axes",
+      "Y-up vs Z-up, and right- vs left-handed systems (three.js, glTF, Blender, DirectX, Unity)",
+      "why UV always runs from 0 to 1, and why a wrongly flipped texture flips top to bottom, never left to right",
+      "the pixel-centre rule u = (x + 0.5) / W, and why gl_FragCoord needs no +0.5",
+      "UV to NDC: x = 2u − 1 and y = 1 − 2v"
+    ],
+    "vi": [
+      "vì sao mọi công cụ đồ hoạ ngầm giả định các trục vuông góc và chia đều",
+      "Y-up hay Z-up, hệ thuận tay phải hay tay trái (three.js, glTF, Blender, DirectX, Unity)",
+      "vì sao UV luôn chạy từ 0 đến 1, và vì sao texture bị lật sai chỉ lộn theo chiều dọc, không bao giờ lật trái phải",
+      "quy tắc tâm pixel u = (x + 0.5) / W, và vì sao gl_FragCoord không cần +0.5",
+      "đổi UV sang NDC: x = 2u − 1 và y = 1 − 2v"
+    ]
+  },
+  "lessonLink": {
+    "en": "Full lesson, with the interactive UV Space Explorer, exercises and review cards:",
+    "vi": "Bài học đầy đủ, có demo tương tác Khám phá UV space, bài tập và thẻ ôn tập:"
+  },
+  "series": {
+    "en": "Math Foundations for Graphics · lesson 1",
+    "vi": "Nền tảng Toán học cho đồ hoạ · bài 1"
+  },
+  "tags": [
+    "webgl", "three.js", "threejs", "glsl", "shaders", "fragment shader", "uv coordinates", "texture coordinates",
+    "ndc", "normalized device coordinates", "cartesian coordinates", "coordinate systems", "computer graphics",
+    "graphics programming", "gl_FragCoord", "pixel center", "right handed coordinate system", "y up vs z up", "shaderpath"
+  ],
+  "hashtags": ["webgl", "threejs", "shaders"],
+  "chapters": {
+    "hook": { "en": "Every pixel has an address", "vi": "Mỗi pixel có một địa chỉ" },
+    "axes": { "en": "From the number line to 3D", "vi": "Từ đường số đến 3D" },
+    "conventions": { "en": "Y-up vs Z-up, and handedness", "vi": "Y-up hay Z-up, và thuận tay nào" },
+    "uv": { "en": "UV space: always 0 to 1", "vi": "UV space: luôn từ 0 đến 1" },
+    "pixel-to-uv": { "en": "Pixel to UV, and the +0.5", "vi": "Từ pixel sang UV, và +0.5" },
+    "ndc": { "en": "NDC: from [0, 1] to [−1, 1]", "vi": "NDC: từ [0, 1] sang [−1, 1]" },
+    "recap": { "en": "Recap", "vi": "Tóm tắt" }
+  },
+  "quizzes": [
+    {
+      "at": "axes:end",
+      "question": "Graphics tools quietly assume the axes are…",
+      "answers": ["Perpendicular and evenly spaced", "At 45° to each other", "Scaled differently per axis"],
+      "correct": 0,
+      "explanation": "Nothing forces it, but every graphics tool assumes right angles and equal spacing. Breaking that by accident is a classic beginner bug."
+    },
+    {
+      "at": "conventions.hand",
+      "question": "A character stands upright in Blender. Imported into three.js with no conversion, it…",
+      "answers": ["Stays upright", "Lies along z, head toward you", "Turns upside down"],
+      "correct": 1,
+      "explanation": "Blender is Z-up and three.js is Y-up. Blender's up becomes three.js's +z, which points out of the screen."
+    },
+    {
+      "at": "conventions:end",
+      "question": "Which convention does three.js use?",
+      "answers": ["Y-up, right-handed", "Z-up, right-handed", "Y-up, left-handed"],
+      "correct": 0,
+      "explanation": "three.js has +y up, +x right and +z toward the viewer: right-handed. Blender is Z-up; DirectX and Unity are traditionally left-handed."
+    },
+    {
+      "at": "uv.origin",
+      "question": "You swap a 16 px texture for an 8192 px one. What must change in the shader's UV code?",
+      "answers": ["Nothing", "Multiply UVs by 512", "Divide UVs by 8192"],
+      "correct": 0,
+      "explanation": "UV always runs from 0 to 1 whatever the image size, so shader code never needs the pixel count."
+    },
+    {
+      "at": "uv:end",
+      "question": "An image lands in a WebGL texture with the wrong v convention. It shows up…",
+      "answers": ["Mirrored left to right", "Flipped top to bottom", "Rotated 90°"],
+      "correct": 1,
+      "explanation": "Images put v = 0 at the top, classic WebGL textures at the bottom. Only v differs, so the flip is always vertical."
+    },
+    {
+      "at": "pixel-to-uv:end",
+      "question": "A canvas is 4 pixels wide. What is u at the centre of pixel x = 1?",
+      "answers": ["0.25", "0.375", "0.5"],
+      "correct": 1,
+      "explanation": "u = (x + 0.5) / W = 1.5 / 4 = 0.375. Without the +0.5 you get the pixel's left edge, 0.25."
+    },
+    {
+      "at": "ndc.flip",
+      "question": "To map u from [0, 1] to NDC, someone writes x = u − 0.5. The drawing…",
+      "answers": ["Fills only the middle half", "Is upside down", "Is correct"],
+      "correct": 0,
+      "explanation": "u − 0.5 only shifts to [−0.5, 0.5], but NDC spans −1 to 1. Stretch by two, then shift: x = 2u − 1."
+    },
+    {
+      "at": "ndc:end",
+      "question": "Why is y = 1 − 2v rather than 2v − 1?",
+      "answers": ["Image v grows down, NDC y grows up", "To keep y positive", "NDC is centred on 1"],
+      "correct": 0,
+      "explanation": "Images count v down from the top edge; NDC counts y up from the centre, so the sign flips."
+    }
+  ],
+  "thumbnail": {
+    "lines": ["PIXEL", "→ UV", "→ NDC"],
+    "code": "u = (x + 0.5) / W",
+    "background": "a small tilted grid of rounded-square pixels in coral, sunny yellow, sky blue and mint; one square filled with a smooth UV gradient (black at bottom-left, red at bottom-right, green at top-left, yellow at top-right); a few thin dark-navy coordinate axis arrows"
+  }
+}

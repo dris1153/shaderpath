@@ -13,6 +13,7 @@
     "qc": "tsx scripts/qc.ts",
     "youtube": "tsx scripts/youtube-package.ts",
     "thumbnail": "tsx scripts/thumbnail.ts",
+    "thumbnail-bg": "tsx scripts/thumbnail-bg.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\""
   },
