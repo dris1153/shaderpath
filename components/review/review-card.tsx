@@ -17,6 +17,7 @@ import { Link } from "@/i18n/navigation";
 import { getLesson } from "@/lib/curriculum";
 import type { QueueItem } from "@/lib/dashboard-queue";
 import { gradeReview } from "@/lib/review";
+import { useInvalidateGamification } from "@/lib/hooks/use-gamification";
 import { pickReviewPrompt } from "@/lib/review-prompt";
 import type { ReviewQuality } from "@/lib/srs";
 
@@ -55,6 +56,7 @@ export function ReviewCardView({
   const [pending, startTransition] = useTransition();
   const questionRef = useRef<HTMLHeadingElement>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+  const invalidateXp = useInvalidateGamification();
 
   const sources = useQuery({
     queryKey: ["review-source", slug],
@@ -88,6 +90,7 @@ export function ReviewCardView({
     startTransition(async () => {
       try {
         await gradeReview(slug, quality);
+        void invalidateXp();
         onGraded();
       } catch {
         toast.error(t("gradeError"));

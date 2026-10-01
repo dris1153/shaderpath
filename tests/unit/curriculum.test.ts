@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import { LESSON_SLUGS } from "@/content/slugs";
 import {
+  getLessonsOfModule,
   isUnlocked,
+  moduleCoreSlugs,
   overallCompletion,
   trackCompletion,
   type ProgressMap,
@@ -123,5 +125,20 @@ describe("unlock and completion logic", () => {
     const overall = overallCompletion(progress);
     expect(overall.coreCompleted).toBe(mathCore.length);
     expect(overall.percent).toBeLessThan(100);
+  });
+});
+
+describe("moduleCoreSlugs", () => {
+  it("lists the core lessons of a core lesson's module, in module order", () => {
+    const mod = MODULES.find((m) => getLessonsOfModule(m.id).some((l) => l.tier === "core"));
+    const core = mod ? getLessonsOfModule(mod.id).filter((l) => l.tier === "core") : [];
+    const first = core[0];
+    expect(first).toBeDefined();
+    if (first) expect(moduleCoreSlugs(first.slug)).toEqual(core.map((l) => l.slug));
+  });
+
+  it("is empty for an elective, which never completes a module", () => {
+    const elective = LESSONS.find((l) => l.tier !== "core");
+    if (elective) expect(moduleCoreSlugs(elective.slug)).toEqual([]);
   });
 });

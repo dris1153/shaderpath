@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeStreaks, dayKey, weeksGrid } from "@/lib/date-buckets";
+import { computeStreaks, dayKey, weekActivity, weeksGrid } from "@/lib/date-buckets";
 
 const d = (s: string) => {
   const [y, m, day] = s.split("-").map(Number);
@@ -58,6 +58,32 @@ describe("computeStreaks", () => {
     expect(computeStreaks(days, d("2026-03-09")).longest).toBe(3);
   });
 
+  // 2026-08-10 is a Monday; 2026-08-03 the Monday before.
+  it("forgives one missed day in an ISO week", () => {
+    const days = new Set(["2026-08-10", "2026-08-11", "2026-08-13", "2026-08-14"]);
+    expect(computeStreaks(days, d("2026-08-14"))).toEqual({ current: 4, longest: 4 });
+  });
+
+  it("ends the run at a second miss in the same week", () => {
+    const days = new Set(["2026-08-10", "2026-08-12", "2026-08-14"]);
+    expect(computeStreaks(days, d("2026-08-14"))).toEqual({ current: 2, longest: 2 });
+  });
+
+  it("gives each ISO week its own forgiven day across a Monday boundary", () => {
+    // Misses: Wed 08-05 (week of 08-03) and Mon 08-10 (week of 08-10).
+    const days = new Set([
+      "2026-08-03", "2026-08-04", "2026-08-06", "2026-08-07",
+      "2026-08-08", "2026-08-09", "2026-08-11",
+    ]);
+    expect(computeStreaks(days, d("2026-08-11"))).toEqual({ current: 7, longest: 7 });
+  });
+
+  it("keeps a run alive through yesterday's miss until today is over", () => {
+    const days = new Set(["2026-08-10", "2026-08-11"]);
+    expect(computeStreaks(days, d("2026-08-13")).current).toBe(2);
+    expect(computeStreaks(days, d("2026-08-14")).current).toBe(0);
+  });
+
   it("returns zeros for empty history", () => {
     expect(computeStreaks(new Set(), d("2026-08-14"))).toEqual({
       current: 0,
@@ -77,5 +103,12 @@ describe("weeksGrid", () => {
     expect(last?.[6]).toBe("");
     // continuity between columns
     expect(grid[2]?.[6]).toBe("2026-08-09");
+  });
+});
+
+describe("weekActivity", () => {
+  it("flags the active days of the current Monday-first week", () => {
+    const days = new Set(["2026-08-09", "2026-08-10", "2026-08-12"]);
+    expect(weekActivity(days, d("2026-08-14"))).toEqual([true, false, true, false, false, false, false]);
   });
 });

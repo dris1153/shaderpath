@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Inko } from "@/components/mascot/inko";
 import { UserMenu } from "@/components/auth/user-menu";
+import { GamificationChips } from "./gamification-chips";
 import { MainNav } from "./main-nav";
 import { SearchPill } from "./search-pill";
 
@@ -19,6 +20,7 @@ export async function AppHeader() {
         <MainNav label={tA11y("mainNav")} />
         <div className="ml-auto flex items-center gap-1.5">
           <SearchPill />
+          <GamificationChips />
           <UserMenu />
         </div>
       </div>

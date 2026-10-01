@@ -1,6 +1,8 @@
 import katex from "katex";
 import { notFound } from "next/navigation";
 import { Inko, type InkoPose } from "@/components/mascot/inko";
+import { LessonCompleteCard } from "@/components/celebrate/lesson-complete-card";
+import { XpGain } from "@/components/celebrate/xp-gain";
 import { CodeBlock } from "@/components/lesson/code-block";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -209,6 +211,12 @@ export default function StylePage() {
           <div dangerouslySetInnerHTML={{ __html: math }} />
           <CodeBlock language="glsl" tabIndex={0}><code>{"vec3 n = normalize(vNormal);\nfloat light = max(dot(n, lightDir), 0.0);"}</code></CodeBlock>
         </article>
+      </Section>
+
+      <Section title="Celebrations">
+        <XpGain amount={5} />
+        <LessonCompleteCard status="Completed · confidence 4/5" next={{ slug: "dot-and-cross-products", title: "Dot, Cross & Normalize" }} moduleDone={false} />
+        <LessonCompleteCard status="Completed" moduleDone />
       </Section>
 
       <Section title="Inko">

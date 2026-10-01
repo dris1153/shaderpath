@@ -26,6 +26,10 @@ import {
   setExerciseStatus,
 } from "@/lib/exercises";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/hooks/use-auth";
+import { useInvalidateGamification } from "@/lib/hooks/use-gamification";
+import { XpGain } from "@/components/celebrate/xp-gain";
+import { XP_PER_EXERCISE } from "@/lib/xp";
 import { ExerciseCodePane } from "./exercise-code-pane";
 import {
   EMPTY_ATTEMPT,
@@ -72,11 +76,21 @@ export function ExerciseCard({
   const [driftWarned, setDriftWarned] = useState(false);
 
   const fail = () => toast.error(t("saveError"));
+  const { data: auth } = useAuth();
+  const invalidateXp = useInvalidateGamification();
+  // Set by a completion in this visit; XP is account-only.
+  const [earned, setEarned] = useState(false);
 
   function updateStatus(next: AttemptStatus) {
     setStatusLocal(next);
     onStatusChange(exercise.id, next);
-    setExerciseStatus(lessonSlug, exercise.id, next).catch(fail);
+    setExerciseStatus(lessonSlug, exercise.id, next)
+      .then(() => {
+        if (next !== "completed" || !auth?.user) return;
+        setEarned(true);
+        void invalidateXp();
+      })
+      .catch(fail);
   }
 
   function markEngaged() {
@@ -119,6 +133,7 @@ export function ExerciseCard({
             </span>
             <Badge variant="secondary">{t(`kind_${exercise.kind}`)}</Badge>
             <StatusBadge status={status} />
+            {earned && status === "completed" ? <XpGain amount={XP_PER_EXERCISE} /> : null}
             {hintsRevealed > 0 && (
               <span className="text-muted-foreground text-xs">
                 <IconBulb className="inline size-3.5" /> {hintsRevealed}/

@@ -369,5 +369,15 @@
   },
   "states": {
     "keepReading": "Keep reading"
+  },
+  "xp": {
+    "gain": "+{amount} XP",
+    "lessonDone": "Lesson done!",
+    "moduleDone": "Module complete!",
+    "nextLesson": "Next: {title}",
+    "streakLabel": "{count}-day streak, open stats",
+    "streakTooltip": "Days in a row with study. One missed day a week is forgiven.",
+    "xpLabel": "{xp} XP, level {level}, open stats",
+    "levelTooltip": "Level {level} · {left} XP to level {next}"
   }
 }

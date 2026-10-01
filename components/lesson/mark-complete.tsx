@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import dynamic from "next/dynamic";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { IconCircleCheck } from "@tabler/icons-react";
 import { toast } from "sonner";
+import type { LessonSlug } from "@/content/slugs";
+import type { ProgressMap } from "@/lib/curriculum";
 import { markComplete } from "@/lib/progress";
+import { fetchJson } from "@/lib/hooks/fetch-json";
+import { useInvalidateGamification } from "@/lib/hooks/use-gamification";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,11 +20,27 @@ import {
 } from "@/lib/hooks/use-lesson-state";
 import { cn } from "@/lib/utils";
 
-export function MarkComplete({ slug }: { slug: string }) {
+// Loaded on completion only: it carries Inko and the confetti.
+const LessonCompleteCard = dynamic(() =>
+  import("@/components/celebrate/lesson-complete-card").then((m) => m.LessonCompleteCard),
+);
+
+type Props = {
+  slug: string;
+  next?: { slug: string; title: string };
+  /** Core lessons of this lesson's module ([] when this lesson is not core). */
+  moduleSlugs: LessonSlug[];
+};
+
+export function MarkComplete({ slug, next, moduleSlugs }: Props) {
   const t = useTranslations("lesson");
   const [pending, startTransition] = useTransition();
   const { data } = useLessonState(slug);
   const invalidate = useInvalidateLessonState(slug);
+  const invalidateXp = useInvalidateGamification();
+  const queryClient = useQueryClient();
+  // Set only by a completion in this visit, so revisiting a done lesson is quiet.
+  const [celebrate, setCelebrate] = useState<{ moduleDone: boolean } | null>(null);
   // undefined means the reader has not touched the dial, so the stored value
   // still applies; null is a deliberate "no confidence given".
   const [picked, setPicked] = useState<number | null | undefined>(undefined);
@@ -44,15 +66,19 @@ export function MarkComplete({ slug }: { slug: string }) {
   const confidence = data.row?.confidence ?? null;
   const selected = picked === undefined ? confidence : picked;
 
+  const status = confidence
+    ? t("completedWithConfidence", { confidence })
+    : t("completed");
+
+  if (completed && celebrate) {
+    return <LessonCompleteCard status={status} next={next} moduleDone={celebrate.moduleDone} />;
+  }
+
   if (completed) {
     return (
       <div className="mt-10 flex items-center gap-2 rounded-lg border p-4">
         <IconCircleCheck className="text-link size-5" />
-        <span className="font-medium">
-          {confidence
-            ? t("completedWithConfidence", { confidence })
-            : t("completed")}
-        </span>
+        <span className="font-medium">{status}</span>
       </div>
     );
   }
@@ -80,7 +106,7 @@ export function MarkComplete({ slug }: { slug: string }) {
               aria-checked={selected === n}
               className={cn(
                 selected === n &&
-                  "bg-white! text-primary-foreground! hover:bg-primary/90!",
+                  "bg-primary! text-primary-foreground! hover:bg-primary/90!",
               )}
               onClick={() => setPicked(selected === n ? null : n)}
             >
@@ -94,9 +120,19 @@ export function MarkComplete({ slug }: { slug: string }) {
             startTransition(async () => {
               await markComplete(slug, selected ?? undefined);
               toast.success(t("markedToast"));
+              // A failed read only costs the module confetti, never the completion.
+              const { progress } = await fetchJson<{ progress: ProgressMap }>(
+                "/api/progress-map",
+              ).catch(() => ({ progress: {} as ProgressMap }));
+              const moduleDone =
+                moduleSlugs.length > 0 &&
+                moduleSlugs.every((s) => progress[s] === "completed");
+              setCelebrate({ moduleDone });
               // router.refresh() used to repaint this from the server read the
               // page no longer performs; the query is the source of truth now.
               await invalidate();
+              void invalidateXp();
+              void queryClient.invalidateQueries({ queryKey: ["progress-map"] });
             })
           }
         >

@@ -22,8 +22,9 @@ export function addDays(date: Date, n: number): Date {
   return copy;
 }
 
-function isConsecutive(prevKey: string, nextKey: string): boolean {
-  return dayKey(addDays(keyToNoon(prevKey), 1)) === nextKey;
+/** Monday's day key: identifies the ISO week (Mon–Sun) a local date falls in. */
+function weekOf(date: Date): string {
+  return dayKey(addDays(date, -((date.getDay() + 6) % 7)));
 }
 
 export interface Streaks {
@@ -32,27 +33,50 @@ export interface Streaks {
 }
 
 /**
- * current: consecutive days ending today — or ending yesterday (a streak is
- * not broken until today is over). longest: best run anywhere in history.
+ * Streak length counts days with a study session. One missed day per ISO week
+ * is forgiven: it keeps the run alive but adds nothing. A second miss in the
+ * same week ends the run. Today never counts as a miss, because it is not over.
+ * current: the run that reaches today. longest: the best run in history.
  */
 export function computeStreaks(days: Set<string>, today: Date): Streaks {
-  let current = 0;
-  let cursor = days.has(dayKey(today)) ? today : addDays(today, -1);
-  while (days.has(dayKey(cursor))) {
-    current += 1;
-    cursor = addDays(cursor, -1);
+  const sorted = [...days].sort();
+  const first = sorted[0];
+  if (first === undefined) return { current: 0, longest: 0 };
+  const todayKey = dayKey(today);
+
+  let current = days.has(todayKey) ? 1 : 0;
+  const forgivenBack = new Set<string>();
+  for (let cursor = addDays(keyToNoon(todayKey), -1); dayKey(cursor) >= first; cursor = addDays(cursor, -1)) {
+    if (days.has(dayKey(cursor))) {
+      current += 1;
+      continue;
+    }
+    const week = weekOf(cursor);
+    if (forgivenBack.has(week)) break;
+    forgivenBack.add(week);
   }
 
-  const sorted = [...days].sort();
   let longest = 0;
   let run = 0;
-  let prev: string | null = null;
-  for (const key of sorted) {
-    run = prev !== null && isConsecutive(prev, key) ? run + 1 : 1;
-    longest = Math.max(longest, run);
-    prev = key;
+  const forgiven = new Set<string>();
+  for (let cursor = keyToNoon(first); dayKey(cursor) < todayKey; cursor = addDays(cursor, 1)) {
+    if (days.has(dayKey(cursor))) {
+      run += 1;
+      longest = Math.max(longest, run);
+      continue;
+    }
+    if (run === 0) continue;
+    const week = weekOf(cursor);
+    if (forgiven.has(week)) run = 0;
+    else forgiven.add(week);
   }
-  return { current, longest };
+  return { current, longest: Math.max(longest, current) };
+}
+
+/** Monday-first flags for the ISO week containing `today`. */
+export function weekActivity(days: Set<string>, today: Date): boolean[] {
+  const monday = addDays(keyToNoon(dayKey(today)), -((today.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, i) => days.has(dayKey(addDays(monday, i))));
 }
 
 /**

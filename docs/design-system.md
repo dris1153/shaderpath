@@ -93,6 +93,26 @@ Use `<Inko pose size label />` from `components/mascot/inko.tsx`.
 - **Where:** empty states, celebrations, 404/500 and the dashboard greeting.
   Never inside lesson prose.
 
+## Streak and XP
+
+Both are derived on read from rows the app already stores (`lib/xp-read.ts`,
+`GET /api/gamification`); nothing new is persisted. Signed-in readers only:
+guests never request them and see no chips.
+
+- **XP** (`lib/xp.ts`): 10 per completed lesson, 5 per completed exercise,
+  2 per card review (`review_queue.review_count`).
+- **Levels**: level L starts at 50 · (1 + 2 + … + (L − 1)) XP: 0, 50, 150,
+  300, 500, …
+- **Streak** (`computeStreaks` in `lib/date-buckets.ts`, shared with /stats):
+  days with a study session. One missed day per ISO week (Mon–Sun) keeps the
+  run alive but adds nothing; a second miss that week ends it. Today is never
+  a miss.
+- **Celebrations** (`components/celebrate/`):
+  - a "+5 XP" chip on an exercise pass;
+  - the lesson-complete card (Inko `cheer`, a +10 XP count-up, Next);
+  - confetti when the completion finishes a module's core lessons.
+- After anything that earns XP, call `useInvalidateGamification()`.
+
 ## Guard rails
 
 - **The reading column stays calm.** No edges or press styles around prose,

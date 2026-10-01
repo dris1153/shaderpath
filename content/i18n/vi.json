@@ -369,5 +369,15 @@
   },
   "states": {
     "keepReading": "Đọc bài tiếp"
+  },
+  "xp": {
+    "gain": "+{amount} XP",
+    "lessonDone": "Xong bài!",
+    "moduleDone": "Hoàn thành module!",
+    "nextLesson": "Bài tiếp: {title}",
+    "streakLabel": "Chuỗi {count} ngày học, mở thống kê",
+    "streakTooltip": "Số ngày học liên tiếp. Mỗi tuần được nghỉ một ngày mà chuỗi vẫn giữ.",
+    "xpLabel": "{xp} XP, cấp {level}, mở thống kê",
+    "levelTooltip": "Cấp {level} · còn {left} XP để lên cấp {next}"
   }
 }

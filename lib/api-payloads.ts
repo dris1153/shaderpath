@@ -5,6 +5,7 @@ import type { TrackMap } from "@/lib/dashboard-read";
 import type { BookmarkRow, NoteRow } from "@/lib/notes-read";
 import type { Snippet } from "@/lib/playground";
 import type { StatsData } from "@/lib/stats";
+import type { GamificationData } from "@/lib/xp-read";
 
 // Shapes that cross the JSON boundary between a route handler and its hook.
 //
@@ -33,6 +34,8 @@ export interface StatsPayload {
   stats: StatsData;
   now: string;
 }
+
+export type GamificationPayload = GamificationData;
 
 // Nothing here carries a date: buildQueue turns due dates into whole-day counts
 // and getWeeklyPace into a single number before either leaves the server.

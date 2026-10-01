@@ -10,7 +10,7 @@ import {
 } from "@/content/lesson-registry.generated";
 import { LESSON_SLUGS, type LessonSlug } from "@/content/slugs";
 import type { LessonMeta, Locale } from "@/content/types";
-import { getDependents, getLesson } from "@/lib/curriculum";
+import { getDependents, getLesson, getNeighbors, moduleCoreSlugs } from "@/lib/curriculum";
 import { buildLessonMindMap } from "@/lib/mind-map";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -52,6 +52,7 @@ export default async function LessonPage({
   const { locale: localeParam, lessonSlug } = await params;
   const lesson = getLesson(lessonSlug as LessonSlug);
   if (!lesson) notFound();
+  const nextLesson = getNeighbors(lesson.slug).next;
 
   setRequestLocale(localeParam);
   const locale = (await getLocale()) as Locale;
@@ -223,7 +224,11 @@ export default async function LessonPage({
 
         <References references={references} locale={locale} />
 
-        <MarkComplete slug={lesson.slug} />
+        <MarkComplete
+          slug={lesson.slug}
+          next={nextLesson && { slug: nextLesson.slug, title: pick(nextLesson.title, locale) }}
+          moduleSlugs={moduleCoreSlugs(lesson.slug)}
+        />
 
         <LessonFooterNav slug={lesson.slug} locale={locale} />
       </article>

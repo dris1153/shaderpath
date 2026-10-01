@@ -119,6 +119,18 @@ export function moduleCompletion(
   return completionOf(getLessonsOfModule(moduleId), progress);
 }
 
+/**
+ * Core lessons of `slug`'s module when `slug` is itself core, else []. Completing
+ * the last unfinished one of these completes the module.
+ */
+export function moduleCoreSlugs(slug: LessonSlug): LessonSlug[] {
+  const lesson = lessonBySlug.get(slug);
+  if (!lesson || lesson.tier !== "core") return [];
+  return getLessonsOfModule(lesson.moduleId)
+    .filter((l) => l.tier === "core")
+    .map((l) => l.slug);
+}
+
 export function trackCompletion(
   trackId: TrackId,
   progress: ProgressMap,
