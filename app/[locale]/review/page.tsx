@@ -16,7 +16,7 @@ export default async function ReviewPage({
       tabIndex={-1}
       className="mx-auto w-full max-w-2xl flex-1 px-4 py-10"
     >
-      <h1 className="text-3xl font-semibold tracking-tight">
+      <h1 className="text-4xl">
         {t("pageTitle")}
       </h1>
       <ReviewSession />

@@ -79,3 +79,22 @@ test("the lesson video loads nothing from YouTube until the chip and play are pr
   await expect(page.getByRole("button", { name: /Phát video/ })).toBeVisible();
   expect(youtube).toEqual([]);
 });
+
+test.describe("mobile playground", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("switches between code and preview, one pane at a time", async ({ page }) => {
+    await page.goto("/vi/playground");
+    const editor = page.locator(".monaco-editor").first();
+    const canvas = page.getByTestId("shader-canvas");
+    await expect(editor).toBeVisible({ timeout: 30_000 });
+    await expect(canvas).toBeHidden();
+
+    await page.getByRole("button", { name: "Xem trước", exact: true }).click();
+    await expect(canvas).toBeVisible();
+    await expect(editor).toBeHidden();
+
+    await page.getByRole("button", { name: "Code", exact: true }).click();
+    await expect(editor).toBeVisible();
+  });
+});

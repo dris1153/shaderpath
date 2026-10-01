@@ -65,13 +65,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error && (
-        <Alert variant="destructive">
+        <Alert variant="destructive" id="auth-error">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="email" className="text-sm font-medium">
+        <label htmlFor="email" className="text-sm font-bold">
           {t("email")}
         </label>
         <Input
@@ -79,13 +79,15 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           type="email"
           autoComplete="email"
           required
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "auth-error" : undefined}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="password" className="text-sm font-medium">
+        <label htmlFor="password" className="text-sm font-bold">
           {t("password")}
         </label>
         <Input
@@ -95,6 +97,8 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
             mode === "register" ? "new-password" : "current-password"
           }
           required
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? "auth-error" : undefined}
           minLength={mode === "register" ? MIN_PASSWORD : undefined}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
@@ -106,7 +110,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         )}
       </div>
 
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" size="lg" disabled={pending} className="w-full">
         {pending
           ? t("working")
           : mode === "register"

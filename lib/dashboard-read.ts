@@ -123,6 +123,7 @@ export async function buildQueue(now: Date, progress: ProgressMap): Promise<Queu
       lessonSlug: row.lessonSlug as LessonSlug,
       reviewCount: row.reviewCount,
       easeFactor: row.easeFactor,
+      intervalDays: row.intervalDays,
     });
   }
 
@@ -134,6 +135,7 @@ export async function buildQueue(now: Date, progress: ProgressMap): Promise<Queu
       daysLate: late,
       reviewCount: row.reviewCount,
       easeFactor: row.easeFactor,
+      intervalDays: row.intervalDays,
     });
   }
 

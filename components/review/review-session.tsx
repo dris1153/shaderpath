@@ -4,7 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Inko } from "@/components/mascot/inko";
+import { EmptyState } from "@/components/states/empty-state";
+import { IconCards } from "@tabler/icons-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import type { DashboardPayload } from "@/lib/api-payloads";
@@ -59,13 +63,19 @@ export function ReviewSession() {
   );
 }
 
+// ponytail: a flat 2 min per card, same estimate as the dashboard card.
+const MINUTES_PER_REVIEW = 2;
+
 function ReviewDeck({ items }: { items: QueueItem[] }) {
+  const t = useTranslations("review");
   const tDash = useTranslations("dashboard");
   const queryClient = useQueryClient();
   // Snapshot: every grade moves that lesson's due date, and a background
   // refetch would reshuffle the deck under the learner mid-session.
   const [deck] = useState(items);
   const [index, setIndex] = useState(0);
+  // The soonest interval graded this session: when these lessons come back.
+  const [soonest, setSoonest] = useState<number | null>(null);
 
   // Refresh the dashboard on the way out; the cache edit below covers the gap
   // until that refetch lands.
@@ -75,18 +85,37 @@ function ReviewDeck({ items }: { items: QueueItem[] }) {
   );
 
   if (deck.length === 0) {
-    return <p className="text-muted-foreground mt-6">{tDash("queueEmpty")}</p>;
+    return (
+      <EmptyState
+        icon={IconCards}
+        title={tDash("reviewNone")}
+        cue={tDash("queueEmpty")}
+        action={
+          <Link href="/roadmap" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+            {tDash("openRoadmap")}
+          </Link>
+        }
+      />
+    );
   }
-  if (index >= deck.length) return <Summary count={deck.length} />;
+  if (index >= deck.length) return <Summary count={deck.length} nextDays={soonest} />;
 
   const item = deck[index]!;
   return (
+    <>
+    <div className="mt-6 flex flex-col gap-2">
+      <p className="text-muted-foreground text-sm font-semibold">
+        {t("overview", { count: deck.length, minutes: deck.length * MINUTES_PER_REVIEW })}
+      </p>
+      <Progress value={(index / deck.length) * 100} aria-label={t("counter", { current: index + 1, total: deck.length })} />
+    </div>
     <ReviewCardView
       key={item.lessonSlug}
       item={item}
       position={index + 1}
       total={deck.length}
-      onGraded={() => {
+      onGraded={(nextDays) => {
+        setSoonest((s) => (s === null ? nextDays : Math.min(s, nextDays)));
         // Drop the graded lesson from the cached queue now: coming back before
         // the refetch finishes would otherwise rebuild the deck from the old
         // queue and grade the same lesson twice.
@@ -103,23 +132,29 @@ function ReviewDeck({ items }: { items: QueueItem[] }) {
         setIndex((i) => i + 1);
       }}
     />
+    </>
   );
 }
 
-function Summary({ count }: { count: number }) {
+function Summary({ count, nextDays }: { count: number; nextDays: number | null }) {
   const t = useTranslations("review");
+  const tDash = useTranslations("dashboard");
   const ref = useRef<HTMLParagraphElement>(null);
   // The last grade button just unmounted; move focus here so keyboard and
   // screen-reader users land on the result instead of the page body.
   useEffect(() => ref.current?.focus(), []);
   return (
-    <div className="mt-6 space-y-4">
-      <p ref={ref} tabIndex={-1} className="outline-none">
+    <section className="edge-card bg-card mt-6 flex flex-col items-center gap-3 rounded-xl p-6 text-center">
+      <Inko pose="cheer" size={140} />
+      <p ref={ref} tabIndex={-1} className="font-heading text-3xl font-extrabold outline-none">
         {t("done", { count })}
       </p>
-      <Button nativeButton={false} render={<Link href="/" />}>
+      {nextDays !== null ? (
+        <p className="text-muted-foreground">{tDash("reviewNext", { days: nextDays })}</p>
+      ) : null}
+      <Link href="/" className={buttonVariants()}>
         {t("backHome")}
-      </Button>
-    </div>
+      </Link>
+    </section>
   );
 }

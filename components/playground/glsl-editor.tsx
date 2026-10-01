@@ -25,11 +25,14 @@ export function GlslEditor({
   onChange,
   errors,
   handleRef,
+  fontSize = 13,
 }: {
   value: string;
   onChange: (v: string) => void;
   errors: GlslError[];
   handleRef?: RefObject<EditorHandle | null>;
+  /** 16 or more on phones, or iOS zooms the page on focus. */
+  fontSize?: number;
 }) {
   const t = useTranslations("a11y");
   const { resolvedTheme } = useTheme();
@@ -87,7 +90,7 @@ export function GlslEditor({
         }}
         options={{
           minimap: { enabled: false },
-          fontSize: 13,
+          fontSize,
           fontFamily: MONACO_FONT_FAMILY,
           wordWrap: "on",
           scrollBeyondLastLine: false,

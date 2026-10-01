@@ -99,7 +99,13 @@
     "distributionTitle": "Phân bố theo track",
     "noData": "Chưa có dữ liệu — học một bài để bắt đầu.",
     "signedOutTitle": "Chuỗi ngày học và thời gian học nằm trong tài khoản",
-    "signedOutBody": "Đăng nhập để xem chuỗi ngày học, tổng thời gian học và tiến độ theo từng track. Mọi bài học vẫn đọc miễn phí."
+    "signedOutBody": "Đăng nhập để xem chuỗi ngày học, tổng thời gian học và tiến độ theo từng track. Mọi bài học vẫn đọc miễn phí.",
+    "xpLevel": "XP",
+    "xpValue": "{xp} · cấp {level}",
+    "graceNote": "Mỗi tuần được nghỉ một ngày mà chuỗi vẫn giữ.",
+    "freshTitle": "Ngày đầu tiên bắt đầu từ bài 1",
+    "freshBody": "Chuỗi ngày học, thời gian học và tiến độ theo track sẽ hiện dần khi bạn học.",
+    "freshCta": "Mở lộ trình"
   },
   "review": {
     "title": "{count} bài cần ôn hôm nay",
@@ -123,7 +129,10 @@
     "signInCta": "Đăng nhập để ôn",
     "done": "Xong — bạn đã ôn {count} bài.",
     "backHome": "Về trang chính",
-    "signedOutBody": "Bài bạn học xong sẽ quay lại đây theo lịch để bạn nhớ lâu. Đăng nhập để bắt đầu."
+    "signedOutBody": "Bài bạn học xong sẽ quay lại đây theo lịch để bạn nhớ lâu. Đăng nhập để bắt đầu.",
+    "overview": "{count} bài đến hạn · khoảng {minutes} phút",
+    "intervalDays": "{days} ngày",
+    "keysHint": "Space để hiện đáp án · 1–4 để chấm"
   },
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",
@@ -319,7 +328,10 @@
     "deletedToast": "Đã xoá snippet",
     "contextLost": "GPU context bị mất — tải lại trang để tiếp tục.",
     "searchPlaceholder": "Tìm preset hoặc snippet…",
-    "noMatch": "Không có mục nào khớp."
+    "noMatch": "Không có mục nào khớp.",
+    "paneLabel": "Hiển thị",
+    "paneCode": "Code",
+    "panePreview": "Xem trước"
   },
   "demo": {
     "reset": "Đặt lại tham số",

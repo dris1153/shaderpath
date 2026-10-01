@@ -46,6 +46,8 @@ export interface QueueItem {
   daysLate?: number;
   reviewCount?: number;
   easeFactor?: number;
+  /** Current SM-2 interval, so the review card can label each grade with its next one. */
+  intervalDays?: number;
   confidence?: number;
   hintedExercises?: number;
   solutionsRevealed?: number;

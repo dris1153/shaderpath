@@ -99,7 +99,13 @@
     "distributionTitle": "Time by track",
     "noData": "No data yet — study a lesson to get started.",
     "signedOutTitle": "Your streak and study time live in your account",
-    "signedOutBody": "Sign in to see your streak, total study time and progress by track. Every lesson stays free to read."
+    "signedOutBody": "Sign in to see your streak, total study time and progress by track. Every lesson stays free to read.",
+    "xpLevel": "XP",
+    "xpValue": "{xp} · level {level}",
+    "graceNote": "One missed day a week is forgiven.",
+    "freshTitle": "Day 1 starts with lesson 1",
+    "freshBody": "Your streak, study time and progress by track fill in as you read.",
+    "freshCta": "Open the roadmap"
   },
   "review": {
     "title": "{count} lessons due for review",
@@ -123,7 +129,10 @@
     "signInCta": "Sign in to review",
     "done": "Done — you reviewed {count, plural, one {# lesson} other {# lessons}}.",
     "backHome": "Back to home",
-    "signedOutBody": "Lessons you finish come back here on a schedule, so what you learned sticks. Sign in to start one."
+    "signedOutBody": "Lessons you finish come back here on a schedule, so what you learned sticks. Sign in to start one.",
+    "overview": "{count, plural, one {# lesson} other {# lessons}} due · about {minutes} min",
+    "intervalDays": "{days, plural, one {# day} other {# days}}",
+    "keysHint": "Space shows the answer · 1–4 grade it"
   },
   "dashboard": {
     "welcome": "Welcome to Shaderpath",
@@ -319,7 +328,10 @@
     "deletedToast": "Snippet deleted",
     "contextLost": "GPU context lost — reload the page to continue.",
     "searchPlaceholder": "Search presets and snippets…",
-    "noMatch": "Nothing matches."
+    "noMatch": "Nothing matches.",
+    "paneLabel": "Show",
+    "paneCode": "Code",
+    "panePreview": "Preview"
   },
   "demo": {
     "reset": "Reset parameters",

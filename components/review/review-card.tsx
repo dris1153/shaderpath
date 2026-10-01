@@ -19,9 +19,10 @@ import type { QueueItem } from "@/lib/dashboard-queue";
 import { gradeReview } from "@/lib/review";
 import { useInvalidateGamification } from "@/lib/hooks/use-gamification";
 import { pickReviewPrompt } from "@/lib/review-prompt";
-import type { ReviewQuality } from "@/lib/srs";
+import { sm2Update, type ReviewQuality } from "@/lib/srs";
 
 const GRADES: ReviewQuality[] = ["again", "hard", "good", "easy"];
+const GRADE_VARIANT = { again: "coral", hard: "secondary", good: "default", easy: "sun" } as const;
 
 async function loadSources(slug: QueueItem["lessonSlug"]) {
   // Each source fails on its own: a chunk that will not load drops that
@@ -46,7 +47,8 @@ export function ReviewCardView({
   item: QueueItem;
   position: number;
   total: number;
-  onGraded: () => void;
+  /** Receives the interval the grade scheduled, in days. */
+  onGraded: (nextDays: number) => void;
 }) {
   const locale = useLocale() as Locale;
   const t = useTranslations("review");
@@ -74,9 +76,7 @@ export function ReviewCardView({
     if (position > 1) questionRef.current?.focus();
   }, [position]);
 
-  if (!lesson) return null;
-  const href = `/lesson/${slug}`;
-  const prompt = sources.data
+  const prompt = lesson && sources.data
     ? pickReviewPrompt({
         cards: sources.data.cards,
         exercises: sources.data.exercises,
@@ -86,16 +86,44 @@ export function ReviewCardView({
       })
     : null;
 
+  // The same SM-2 step the server applies, so each button can say what it schedules.
+  const nextDays = (quality: ReviewQuality) =>
+    sm2Update(
+      { intervalDays: item.intervalDays ?? 1, easeFactor: item.easeFactor ?? 2.5, reviewCount: item.reviewCount ?? 0 },
+      quality,
+    ).intervalDays;
+
   const grade = (quality: ReviewQuality) =>
     startTransition(async () => {
       try {
         await gradeReview(slug, quality);
         void invalidateXp();
-        onGraded();
+        onGraded(nextDays(quality));
       } catch {
         toast.error(t("gradeError"));
       }
     });
+
+  // Space or Enter shows the answer, 1–4 grade. Keys aimed at a field, link or
+  // button keep their own meaning.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (e.metaKey || e.ctrlKey || e.altKey || target?.closest("input, textarea, select, a, button, [contenteditable]")) return;
+      if (!revealed && prompt && (e.key === " " || e.key === "Enter")) {
+        e.preventDefault();
+        setRevealed(true);
+      } else if (revealed && !pending && /^[1-4]$/.test(e.key)) {
+        e.preventDefault();
+        grade(GRADES[Number(e.key) - 1]!);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
+  if (!lesson) return null;
+  const href = `/lesson/${slug}`;
 
   return (
     <Card className="mt-6 gap-4 px-5 py-5">
@@ -107,7 +135,7 @@ export function ReviewCardView({
       </p>
 
       {item.kind === "leech" && (
-        <p className="text-sm text-amber-800 dark:text-amber-400">
+        <p className="text-foreground rounded-lg bg-[color-mix(in_oklch,var(--sun)_22%,var(--card))] px-3 py-2 text-sm">
           {t("leechNote")}{" "}
           <Link href={href} className="underline underline-offset-4">
             {t("openLesson")}
@@ -176,22 +204,28 @@ export function ReviewCardView({
 
       {/* Rendered from the start and disabled until the answer is shown, so
           grading always follows a real attempt and nothing pops in on reveal. */}
-      <div className="flex flex-wrap gap-2 border-t pt-4">
-        {GRADES.map((q) => (
+      <div className="grid grid-cols-2 gap-2 border-t-2 pt-4 sm:grid-cols-4">
+        {GRADES.map((q, i) => (
           <Button
             key={q}
-            size="sm"
-            variant={q === "good" ? "default" : "outline"}
+            variant={GRADE_VARIANT[q]}
             disabled={!revealed || pending}
             // Keeps focus on the button while a grade is saving; a plain
             // disabled button drops it to <body> and a failed save strands it.
             focusableWhenDisabled
             onClick={() => grade(q)}
+            className="h-auto flex-col gap-0 py-2"
           >
             {t(`grade_${q}`)}
+            {/* aria-hidden keeps the accessible name the grade itself; the
+                interval is a visual hint and the keys are listed below. */}
+            <span aria-hidden className="text-[11px] font-semibold tracking-normal normal-case">
+              <kbd className="font-mono">{i + 1}</kbd> · {t("intervalDays", { days: nextDays(q) })}
+            </span>
           </Button>
         ))}
       </div>
+      <p className="text-muted-foreground hidden text-xs sm:block">{t("keysHint")}</p>
     </Card>
   );
 }

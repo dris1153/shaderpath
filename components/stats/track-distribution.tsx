@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/chart";
 
 const config = {
-  minutes: { label: "min", color: "var(--chart-2)" },
+  minutes: { label: "min", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
 export function TrackDistribution({

@@ -21,7 +21,7 @@ export function ErrorList({
 
   if (errors.length === 0) {
     return (
-      <Badge variant="secondary" className="w-fit" data-testid="compile-ok">
+      <Badge variant="mint" className="w-fit" data-testid="compile-ok">
         <IconCircleCheck data-icon="inline-start" />
         {t("compiledIn", { ms: compileMs })}
       </Badge>
