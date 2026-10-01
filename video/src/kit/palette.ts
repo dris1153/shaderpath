@@ -19,6 +19,8 @@ export type Palette = {
   inkoShade: string;
   inkoLight: string;
   cheek: string;
+  slime: string; // the enemy only
+  slimeShade: string;
 };
 
 export const PAPER: Palette = {
@@ -38,6 +40,8 @@ export const PAPER: Palette = {
   inkoShade: "#7A5BE0",
   inkoLight: "#C7B6FF",
   cheek: "#FF93B5",
+  slime: "#9BE15D",
+  slimeShade: "#6DBA3A",
 };
 
 export const NIGHT: Palette = {
@@ -57,6 +61,8 @@ export const NIGHT: Palette = {
   inkoShade: "#7C5DE6",
   inkoLight: "#CDBEFF",
   cheek: "#FF9CBC",
+  slime: "#A6E86A",
+  slimeShade: "#76C442",
 };
 
 export const ThemeContext = createContext<Palette>(PAPER);

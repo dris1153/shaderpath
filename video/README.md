@@ -201,3 +201,16 @@ The validator runs before anything is written. It rejects:
 **Cost note:** the ElevenLabs free tier gives 10,000 characters a month, which is
 two to three lessons of this length, fewer with voice auditions or re-voicing. It is also non-commercial and requires
 attribution. Fish Audio needs API credit, which is separate from its web credit.
+
+## Pilot log: lesson 2, `vector-basics` (2026-10-01)
+
+| Item | Result |
+|---|---|
+| Length | 5:04, 9 scenes, 738 spoken words; a game through-line (diagonal-speed race, slime chase, NaN poof) |
+| Voice | Jessica: English on `eleven_multilingual_v2`, Vietnamese on `eleven_v4` fitted with `--fit en` |
+| TTS characters | 8,213 in total: 3,967 English, 3,870 Vietnamese, and 376 to re-voice one Vietnamese scene that filled only 84%. Adding cues later cost nothing (cache) |
+| New kit | `kit/grid.tsx` (`GridSpace`, `toStage`, `Grid`, `Vector`) for vector diagrams in world units; the `slime` palette role |
+| QC | passed on every full render; the only warnings are 4 subtitles reading at 17–18 chars/s |
+| Checkpoints | script EN + VI (approved), the first 1:34 (approved), final (approved; thumbnail variant 2) |
+| Review | the on-screen math was right except one arrow label. Three reveals ran 3–5 s ahead of the words, fixed with extra cues before the Vietnamese voicing, because the dub inherits the English cues |
+| Automation | `youtube.json` drove the titles, descriptions, 9 chapters and 8 Studio quizzes with no manual time edits; `pnpm thumbnail-bg` made the backgrounds (first real run) |

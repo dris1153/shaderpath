@@ -26,6 +26,7 @@ Scenes ask for a role, never a hex value.
 | `sky` | cool, neutral data (grids, UV cells) |
 | `outline` / `text` / `textMuted` | lines and type |
 | `inko` / `inkoShade` / `inkoLight` / `cheek` | the mascot only |
+| `slime` / `slimeShade` | the enemy slime only |
 
 `night` stays in `palette.ts` for a possible dark variant, but lessons use `paper`.
 
@@ -46,6 +47,16 @@ Scenes ask for a role, never a hex value.
 - **clean** is the `Shape` default: crisp vector with round joins. Use it for all main shapes and diagrams.
 - **sketch** is rough.js with a fixed, non-zero seed per element, so the lines never boil. Use it only for hand-drawn annotations: circling, a quick arrow, an underline.
 - The outline is 5–7 px `outline`.
+
+## Grids and vectors (`kit/grid.tsx`)
+
+- A diagram in world units (y up) declares one `GridSpace` (`ox`, `oy`, `unit` px) and maps every point with `toStage`. Never convert units by hand.
+- `Grid` draws faint `sky` unit lines; `axes` (a cue offset) grows the x and y axes through the origin.
+- `Vector` is an arrow from tail to tip in world units:
+  - `grow` (0–1) extends the tip out of the tail;
+  - the label sits beside the shaft (`side` picks left or right);
+  - `dashed` is for "the other way round" and ghost copies.
+- The vector under discussion is `hero` and 7 px wide; axes stay 4 px `outline`.
 
 ## Motion (`kit/motion.tsx`, `kit/easing.ts`)
 
