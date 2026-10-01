@@ -82,7 +82,7 @@ export function TrackMap({
                     className={cn(
                       "grid size-6 shrink-0 place-items-center rounded-full border-2 text-[0.65rem]",
                       step.done && "bg-primary border-primary text-primary-foreground",
-                      step.current && "border-primary text-primary",
+                      step.current && "border-primary text-link",
                       !step.done && !step.current && "text-muted-foreground",
                     )}
                   >

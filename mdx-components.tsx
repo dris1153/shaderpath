@@ -101,7 +101,7 @@ const components: MDXComponents = {
   a: ({ className, ...props }) => (
     <a
       className={cn(
-        "text-primary font-medium underline underline-offset-4",
+        "text-link font-medium underline underline-offset-4",
         className,
       )}
       rel={props.href?.startsWith("http") ? "noopener noreferrer" : undefined}

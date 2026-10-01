@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Google_Sans, Google_Sans_Code } from "next/font/google";
+import { Baloo_2, JetBrains_Mono, Nunito } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
@@ -16,14 +16,21 @@ import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
 import "katex/dist/katex.min.css";
 
-const googleSans = Google_Sans({
-  variable: "--font-google-sans",
+const baloo = Baloo_2({
+  variable: "--font-baloo",
   subsets: ["latin", "latin-ext", "vietnamese"],
   display: "swap",
 });
 
-const googleSansCode = Google_Sans_Code({
-  variable: "--font-google-sans-code",
+const nunito = Nunito({
+  variable: "--font-nunito",
+  subsets: ["latin", "latin-ext", "vietnamese"],
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin", "latin-ext", "vietnamese"],
   display: "swap",
 });
@@ -57,7 +64,7 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      className={`${googleSans.variable} ${googleSansCode.variable} h-full antialiased`}
+      className={`${baloo.variable} ${nunito.variable} ${jetbrainsMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">

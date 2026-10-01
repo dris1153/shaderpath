@@ -70,7 +70,7 @@ export function Predict({
             />
             <span>{option}</span>
             {answered && i === answer ? (
-              <IconCheck className="text-primary ml-auto size-4 shrink-0" />
+              <IconCheck className="text-link ml-auto size-4 shrink-0" />
             ) : null}
             {answered && i === picked && !correct ? (
               <IconX className="text-destructive ml-auto size-4 shrink-0" />
@@ -94,7 +94,7 @@ export function Predict({
           role="status"
           className={cn("col-start-1 row-start-1", !answered && "invisible")}
         >
-          <strong className={correct ? "text-primary" : "text-destructive"}>
+          <strong className={correct ? "text-link" : "text-destructive"}>
             {correct ? t("right") : t("wrong")}
           </strong>{" "}
           {reveal}

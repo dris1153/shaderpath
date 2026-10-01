@@ -3,7 +3,7 @@
 // this family, and both must remeasure once the webfont actually swaps in
 // (display: swap) or the cursor sits off by a fraction of a character.
 export const MONACO_FONT_FAMILY =
-  "var(--font-google-sans-code), ui-monospace, monospace";
+  "var(--font-jetbrains-mono), ui-monospace, monospace";
 
 type MonacoRemeasure = { editor: { remeasureFonts: () => void } };
 

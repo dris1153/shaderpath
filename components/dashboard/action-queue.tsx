@@ -26,8 +26,8 @@ const PILL_TONE: Record<QueueKind, string> = {
   due: "text-destructive border-destructive/50",
   leech: // amber-600 measures 3.19:1 on the light card — under AA at this size.
     "text-amber-800 border-amber-800/50 dark:text-amber-400 dark:border-amber-400/50",
-  shaky: "text-primary border-primary/50",
-  hinted: "text-primary border-primary/50",
+  shaky: "text-link border-primary/50",
+  hinted: "text-link border-primary/50",
   continue: "text-muted-foreground border-border",
 };
 

@@ -10,9 +10,20 @@
   /* Point straight at the next/font variables: @theme inline copies these
      values into the utilities, so a token referencing another token here
      resolves to nothing. */
-  --font-sans: var(--font-google-sans);
-  --font-mono: var(--font-google-sans-code);
-  --font-heading: var(--font-google-sans);
+  --font-sans: var(--font-nunito);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-heading: var(--font-baloo);
+  --color-ink: var(--ink);
+  --color-link: var(--link);
+  --color-primary-edge: var(--primary-edge);
+  --color-coral: var(--coral);
+  --color-coral-edge: var(--coral-edge);
+  --color-sun: var(--sun);
+  --color-sun-edge: var(--sun-edge);
+  --color-mint: var(--mint);
+  --color-mint-edge: var(--mint-edge);
+  --color-sky: var(--sky);
+  --shadow-overlay: 0 16px 40px -12px oklch(0.2 0.05 292 / 0.3);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -51,34 +62,73 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Inko's ambient motion; components gate it behind motion-safe:. */
+@theme {
+  --animate-inko-bob: inko-bob 2.6s ease-in-out infinite;
+  --animate-inko-blink: inko-blink 5s ease-in-out infinite;
+  --animate-inko-wave: inko-wave 1.4s ease-in-out infinite;
+  @keyframes inko-bob {
+    50% {
+      translate: 0 -3%;
+    }
+  }
+  @keyframes inko-blink {
+    0%,
+    93%,
+    100% {
+      scale: 1 1;
+    }
+    96% {
+      scale: 1 0.1;
+    }
+  }
+  @keyframes inko-wave {
+    50% {
+      transform: rotate(-12deg);
+    }
+  }
+}
+
+/* Arcade palette. Coral, sun and mint fills always carry --ink text (white
+   fails on them); white text is only for --primary. Ratios are in
+   docs/design-system.md. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --background: oklch(0.963 0.02 298.2);
+  --foreground: oklch(0.266 0.046 292.1);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.266 0.046 292.1);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  /* Darkened from the shadcn default (L 0.577) — at 0.577 the Alert
-     variant="destructive" text (rendered at 90% opacity) fell to ~4.49:1
-     against white, just under WCAG AA's 4.5:1 (axe color-contrast, serious). */
-  --destructive: oklch(0.5 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
+  --popover-foreground: oklch(0.266 0.046 292.1);
+  --primary: oklch(0.573 0.193 289.6);
+  --primary-foreground: oklch(1 0 0);
+  --primary-edge: oklch(0.477 0.191 286.7);
+  --secondary: oklch(0.943 0.031 297.7);
+  --secondary-foreground: oklch(0.266 0.046 292.1);
+  --muted: oklch(0.943 0.031 297.7);
+  --muted-foreground: oklch(0.487 0.048 296.8);
+  --accent: oklch(0.943 0.031 297.7);
+  --accent-foreground: oklch(0.266 0.046 292.1);
+  /* Text-safe coral (5.3:1 on the ground); fills use --coral. The Alert
+     destructive description renders at 90% opacity, so keep the margin. */
+  --destructive: oklch(0.521 0.174 31.5);
+  --border: oklch(0.905 0.044 298.4);
+  --input: oklch(0.905 0.044 298.4);
+  --ring: oklch(0.675 0.188 292.1);
+  --ink: oklch(0.266 0.046 292.1);
+  --link: oklch(0.477 0.191 286.7);
+  --coral: oklch(0.708 0.185 30.1);
+  --coral-edge: oklch(0.592 0.187 30.9);
+  --sun: oklch(0.848 0.156 82.4);
+  --sun-edge: oklch(0.729 0.149 78.7);
+  --mint: oklch(0.772 0.128 177.5);
+  --mint-edge: oklch(0.649 0.114 177.4);
+  --sky: oklch(0.705 0.159 252.4);
+  --chart-1: var(--primary);
+  --chart-2: var(--coral);
+  --chart-3: var(--sun);
+  --chart-4: var(--mint);
+  --chart-5: var(--sky);
+  --radius: 0.875rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -89,34 +139,33 @@
   --sidebar-ring: oklch(0.708 0 0);
   /* Track ladder heat scale: the landing page tints the 14 tracks along this
      range so position encodes rising difficulty. Not a palette token. */
-  --track-cold: oklch(0.62 0.13 245);
-  --track-hot: oklch(0.68 0.16 45);
+  --track-cold: var(--sky);
+  --track-hot: var(--coral);
 }
 
+/* Plum dark theme. The fills (coral/sun/mint/sky) and --ink stay the same:
+   they always sit under ink text, which works on both grounds. */
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --background: oklch(0.223 0.048 289.3);
+  --foreground: oklch(0.958 0.023 299.4);
+  --card: oklch(0.266 0.046 292.1);
+  --card-foreground: oklch(0.958 0.023 299.4);
+  --popover: oklch(0.266 0.046 292.1);
+  --popover-foreground: oklch(0.958 0.023 299.4);
+  --primary: oklch(0.675 0.188 292.1);
+  --primary-foreground: oklch(0.223 0.048 289.3);
+  --primary-edge: oklch(0.573 0.193 289.6);
+  --secondary: oklch(0.288 0.081 288.2);
+  --secondary-foreground: oklch(0.958 0.023 299.4);
+  --muted: oklch(0.288 0.081 288.2);
+  --muted-foreground: oklch(0.72 0.048 296.3);
+  --accent: oklch(0.288 0.081 288.2);
+  --accent-foreground: oklch(0.958 0.023 299.4);
+  --destructive: oklch(0.731 0.166 30.3);
+  --border: oklch(0.346 0.062 291.7);
+  --input: oklch(0.346 0.062 291.7);
+  --ring: oklch(0.816 0.103 294.7);
+  --link: oklch(0.816 0.103 294.7);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -125,8 +174,6 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-  --track-cold: oklch(0.7 0.14 245);
-  --track-hot: oklch(0.76 0.15 55);
 }
 
 @layer base {
@@ -137,12 +184,56 @@
     @apply bg-background text-foreground;
   }
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role="button"]:not(:disabled),
+  label:has(> input[type="checkbox"]),
+  select:not(:disabled) {
     cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
   }
   html {
     @apply font-sans;
   }
+  /* Baloo 2 is a display face: page and section titles only. */
+  h1,
+  h2 {
+    @apply font-heading font-bold;
+  }
+}
+
+/* 3D press: a solid bottom edge that the button sinks into on :active.
+   Set --edge per variant. Composes with ring-* through --tw-shadow. */
+@utility press {
+  --tw-shadow: 0 4px 0 var(--edge, var(--primary-edge));
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
+  transition-property: translate, box-shadow, background-color, color;
+  transition-duration: 120ms;
+  &:active:not(:disabled, [aria-disabled="true"], [aria-haspopup]) {
+    --tw-shadow: 0 0 0 var(--edge, var(--primary-edge));
+    translate: 0 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+/* Cards: 2px line border plus a 4px bottom edge in the same colour. */
+@utility edge-card {
+  border: 2px solid var(--border);
+  --tw-shadow: 0 4px 0 var(--border);
+  box-shadow:
+    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000),
+    var(--tw-shadow);
+}
+
+/* Uppercase is for buttons and nav only, never for headings or prose. */
+@utility chunky-label {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.05em;
 }
 
 /* KaTeX sets `white-space: nowrap` on display math and ships no overflow

@@ -21,7 +21,7 @@ export function RoadmapSummary() {
     return (
       <p className="text-muted-foreground mt-2">
         {t("signedOut")}{" "}
-        <Link href="/login" className="text-primary underline underline-offset-4">
+        <Link href="/login" className="text-link underline underline-offset-4">
           {t("signedOutCta")}
         </Link>
       </p>

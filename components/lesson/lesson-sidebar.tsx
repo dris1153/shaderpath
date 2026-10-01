@@ -56,7 +56,7 @@ function LessonLink({
       )}
     >
       {completed ? (
-        <IconCircleCheck className="text-primary size-4 shrink-0" />
+        <IconCircleCheck className="text-link size-4 shrink-0" />
       ) : locked ? (
         <IconLock className="size-4 shrink-0 opacity-60" />
       ) : lesson.kind === "checkpoint" ? (

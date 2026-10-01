@@ -152,7 +152,7 @@ export function ReviewCardView({
           {prompt.source === "objectives" ? (
             <Link
               href={href}
-              className="text-primary text-sm underline underline-offset-4"
+              className="text-link text-sm underline underline-offset-4"
             >
               {t("openLesson")}
             </Link>

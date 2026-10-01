@@ -118,7 +118,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         {mode === "register" ? t("haveAccount") : t("noAccount")}{" "}
         <Link
           href={mode === "register" ? "/login" : "/register"}
-          className="text-primary underline underline-offset-4"
+          className="text-link underline underline-offset-4"
         >
           {mode === "register" ? t("login") : t("register")}
         </Link>

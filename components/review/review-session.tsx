@@ -28,7 +28,7 @@ export function ReviewSession() {
           {t("signIn")}{" "}
           <Link
             href="/login"
-            className="text-primary underline underline-offset-4"
+            className="text-link underline underline-offset-4"
           >
             {t("signInCta")}
           </Link>

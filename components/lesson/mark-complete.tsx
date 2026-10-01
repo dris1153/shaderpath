@@ -47,7 +47,7 @@ export function MarkComplete({ slug }: { slug: string }) {
   if (completed) {
     return (
       <div className="mt-10 flex items-center gap-2 rounded-lg border p-4">
-        <IconCircleCheck className="text-primary size-5" />
+        <IconCircleCheck className="text-link size-5" />
         <span className="font-medium">
           {confidence
             ? t("completedWithConfidence", { confidence })

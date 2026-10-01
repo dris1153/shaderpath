@@ -97,7 +97,7 @@ export function TrackCardNode({ data }: NodeProps<Node<TrackCardData>>) {
           {t("mapCheckpoints", { count: data.checkpoints })}
         </span>
         {data.isTerminus && (
-          <span className="text-primary font-medium">{t("mapTerminus")}</span>
+          <span className="text-link font-medium">{t("mapTerminus")}</span>
         )}
       </p>
       {/* The road: its length is the track's hours, and progress paints onto
@@ -161,7 +161,7 @@ export function LessonRowNode({ data }: NodeProps<Node<LessonRowData>>) {
       style={{ width: data.w, height: data.h }}
       className={cn(
         "flex items-center gap-2 truncate text-[16px] leading-[24px]",
-        data.state === "completed" && "text-primary",
+        data.state === "completed" && "text-link",
         data.state === "locked" && "opacity-50",
         // Elective reads as optional, or 136 hours looks mandatory.
         data.isElective && "text-muted-foreground italic",
