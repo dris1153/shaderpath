@@ -48,7 +48,7 @@ export default function StylePage() {
   const math = katex.renderToString("\\vec{n} = \\frac{\\vec{v}}{\\lVert \\vec{v} \\rVert}", { displayMode: true });
 
   return (
-    <main id="main" className="container mx-auto flex flex-col gap-12 px-4 py-10">
+    <main id="main-content" tabIndex={-1} className="container mx-auto flex flex-col gap-12 px-4 py-10">
       <header className="flex items-center gap-6">
         <Inko pose="wave" size={120} label="Inko waving" />
         <div>

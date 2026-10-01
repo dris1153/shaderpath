@@ -26,7 +26,7 @@ test("command palette: Ctrl+K opens, arrow selects an option, ESC closes and res
   await page.goto("/vi");
   const roadmapLink = page
     .getByRole("navigation", { name: "Điều hướng chính" })
-    .getByRole("link", { name: "Lộ trình", exact: true });
+    .getByRole("link", { name: "Học", exact: true });
   await roadmapLink.focus();
   await expect(roadmapLink).toBeFocused();
 

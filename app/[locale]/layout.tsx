@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Baloo_2, JetBrains_Mono, Nunito } from "next/font/google";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { setRequestLocale } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { ThemeProvider } from "@/components/providers/theme-provider";
@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { AppHeader } from "@/components/shell/app-header";
 import { SkipLink } from "@/components/shell/skip-link";
+import { BottomTabs } from "@/components/shell/bottom-tabs";
 import { CommandProvider } from "@/components/command/command-provider";
 import "../globals.css";
 // Vendored stylesheet for a mandated dependency — allowed per decision D7
@@ -60,6 +61,7 @@ export default async function LocaleLayout({
   // Without this, next-intl's server APIs read headers() and opt the whole
   // subtree back into dynamic rendering, generateStaticParams or not.
   setRequestLocale(locale);
+  const tA11y = await getTranslations("a11y");
 
   return (
     <html
@@ -78,11 +80,14 @@ export default async function LocaleLayout({
             <QueryProvider>
               <QualityProvider>
                 <TooltipProvider>
-                  <SkipLink />
-                  <AppHeader />
-                  {children}
-                  <Toaster />
-                  <CommandProvider />
+                  <CommandProvider>
+                    <SkipLink />
+                    <AppHeader />
+                    {children}
+                    <BottomTabs label={tA11y("mainNav")} />
+                    {/* Clear the mobile tab bar. */}
+                    <Toaster mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
+                  </CommandProvider>
                 </TooltipProvider>
               </QualityProvider>
             </QueryProvider>

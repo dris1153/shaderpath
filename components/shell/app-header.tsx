@@ -1,65 +1,24 @@
 import { getTranslations } from "next-intl/server";
-import { IconSettings } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
+import { Inko } from "@/components/mascot/inko";
 import { UserMenu } from "@/components/auth/user-menu";
-import { LocaleSwitcher } from "./locale-switcher";
-import { ThemeToggle } from "./theme-toggle";
+import { MainNav } from "./main-nav";
+import { SearchPill } from "./search-pill";
 
 export async function AppHeader() {
   const t = await getTranslations("app");
-  const tNav = await getTranslations("nav");
   const tA11y = await getTranslations("a11y");
 
   return (
-    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex h-14 w-full container items-center justify-between gap-4 px-4">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-semibold tracking-tight">
-            {t("name")}
-          </Link>
-          <nav
-            aria-label={tA11y("mainNav")}
-            className="text-muted-foreground flex items-center gap-4 text-sm"
-          >
-            <Link
-              href="/roadmap"
-              className="hover:text-foreground transition-colors"
-            >
-              {tNav("roadmap")}
-            </Link>
-            <Link
-              href="/playground"
-              className="hover:text-foreground transition-colors"
-            >
-              {tNav("playground")}
-            </Link>
-            <Link
-              href="/notes"
-              className="hover:text-foreground hidden transition-colors sm:inline"
-            >
-              {tNav("notes")}
-            </Link>
-            <Link
-              href="/stats"
-              className="hover:text-foreground hidden transition-colors sm:inline"
-            >
-              {tNav("stats")}
-            </Link>
-          </nav>
-        </div>
-        <div className="flex items-center gap-1">
-          <LocaleSwitcher />
-          <ThemeToggle />
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label={tNav("settings")}
-            nativeButton={false}
-            render={<Link href="/settings" />}
-          >
-            <IconSettings />
-          </Button>
+    <header className="bg-card sticky top-0 z-40 border-b-2">
+      <div className="container mx-auto flex h-16 w-full items-center gap-3 px-4 md:gap-5">
+        <Link href="/" className="font-heading flex shrink-0 items-center gap-1.5 text-2xl font-extrabold tracking-tight">
+          <Inko size={40} className="motion-safe:animate-none" />
+          {t("name")}
+        </Link>
+        <MainNav label={tA11y("mainNav")} />
+        <div className="ml-auto flex items-center gap-1.5">
+          <SearchPill />
           <UserMenu />
         </div>
       </div>

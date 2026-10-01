@@ -8,7 +8,13 @@
     "playground": "Playground",
     "notes": "Ghi chú",
     "stats": "Thống kê",
-    "settings": "Cài đặt"
+    "settings": "Cài đặt",
+    "learn": "Học",
+    "review": "Ôn tập",
+    "you": "Bạn",
+    "search": "Tìm bài học",
+    "preferences": "Ngôn ngữ và giao diện",
+    "dueCount": "{count} bài cần ôn"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -49,7 +55,7 @@
   "notes": {
     "title": "Ghi chú & Bookmark",
     "subtitle": "{notes} ghi chú · {bookmarks} bookmark",
-    "empty": "Chưa có gì — bôi đen văn bản trong bài học để ghi chú hoặc bookmark một mục.",
+    "empty": "Bôi đen chữ trong bài học bất kỳ để ghi chú, hoặc bookmark một mục.",
     "notesHeading": "Ghi chú",
     "bookmarks": "Bookmark",
     "addNote": "Ghi chú",
@@ -65,7 +71,11 @@
     "noteDeleted": "Đã xoá ghi chú",
     "sectionBookmarked": "Đã bookmark mục",
     "bookmarkRemoved": "Đã bỏ bookmark",
-    "saveError": "Không lưu được — thử lại"
+    "saveError": "Không lưu được — thử lại",
+    "signedOutTitle": "Ghi chú được lưu vào tài khoản",
+    "signedOutBody": "Đăng nhập, rồi bôi đen chữ trong bài học bất kỳ để ghi chú hoặc bookmark một mục.",
+    "emptyTitle": "Chưa có ghi chú",
+    "emptyAction": "Mở lộ trình"
   },
   "palette": {
     "placeholder": "Tìm bài học, hành động… (Ctrl+K)",
@@ -90,7 +100,9 @@
     "heatmapTitle": "Hoạt động 26 tuần gần đây",
     "heatmapCell": "{date}: {minutes} phút",
     "distributionTitle": "Phân bố theo track",
-    "noData": "Chưa có dữ liệu — học một bài để bắt đầu."
+    "noData": "Chưa có dữ liệu — học một bài để bắt đầu.",
+    "signedOutTitle": "Chuỗi ngày học và thời gian học nằm trong tài khoản",
+    "signedOutBody": "Đăng nhập để xem chuỗi ngày học, tổng thời gian học và tiến độ theo từng track. Mọi bài học vẫn đọc miễn phí."
   },
   "review": {
     "title": "{count} bài cần ôn hôm nay",
@@ -113,7 +125,8 @@
     "signIn": "Lịch ôn tập gắn với tài khoản của bạn.",
     "signInCta": "Đăng nhập để ôn",
     "done": "Xong — bạn đã ôn {count} bài.",
-    "backHome": "Về trang chính"
+    "backHome": "Về trang chính",
+    "signedOutBody": "Bài bạn học xong sẽ quay lại đây theo lịch để bạn nhớ lâu. Đăng nhập để bắt đầu."
   },
   "dashboard": {
     "welcome": "Chào mừng đến Shaderpath",
@@ -285,7 +298,11 @@
     "retry": "Thử lại",
     "lessonNotFoundTitle": "Không tìm thấy bài học",
     "lessonNotFoundDescription": "Slug không tồn tại trong lộ trình.",
-    "backToRoadmap": "Về trang Lộ trình"
+    "backToRoadmap": "Về trang Lộ trình",
+    "notFoundTitle": "Trang này không tồn tại",
+    "notFoundDescription": "Liên kết có thể đã cũ hoặc gõ sai. Lộ trình có đủ mọi bài học.",
+    "pageErrorDescription": "Trang gặp lỗi khi tải. Thử lại, hoặc về trang chủ.",
+    "goHome": "Về trang chủ"
   },
   "localeSwitcher": {
     "label": "Ngôn ngữ",
@@ -349,5 +366,8 @@
     "deleteAccountConfirmLabel": "Nhập {email} để xác nhận",
     "deleteAccountWorking": "Đang xoá…",
     "deleteAccountError": "Không xoá được — thử lại"
+  },
+  "states": {
+    "keepReading": "Đọc bài tiếp"
   }
 }

@@ -3,7 +3,10 @@
 import { useLocale, useTranslations } from "next-intl";
 import { TRACKS } from "@/content/curriculum";
 import { pick, type Locale } from "@/content/types";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { useStats } from "@/lib/hooks/use-stats";
+import { ErrorState } from "@/components/states/error-state";
+import { SignedOutState } from "@/components/states/signed-out-state";
 import {
   Card,
   CardContent,
@@ -24,7 +27,9 @@ export function StatsView() {
   const locale = useLocale() as Locale;
   const t = useTranslations("stats");
   const tError = useTranslations("errors");
-  const { data, isError } = useStats();
+  const { data: auth, isPending: authPending } = useAuth();
+  const user = auth?.user;
+  const { data, isError, refetch } = useStats(Boolean(user));
 
   const labels = [
     t("currentStreak"),
@@ -52,24 +57,43 @@ export function StatsView() {
       })).filter((d) => d.minutes > 0)
     : [];
 
+  const tiles = (
+    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      {labels.map((label, i) => (
+        <Card key={label}>
+          <CardHeader className="pb-1">
+            <CardDescription>{label}</CardDescription>
+            {values ? (
+              <CardTitle className="text-2xl tabular-nums">
+                {values[i]}
+              </CardTitle>
+            ) : (
+              <Skeleton className="h-8 w-20" />
+            )}
+          </CardHeader>
+        </Card>
+      ))}
+    </div>
+  );
+
+  // Guests never request /api/stats: the page explains instead of failing.
+  if (!authPending && !user) {
+    return (
+      <SignedOutState
+        title={t("signedOutTitle")}
+        description={t("signedOutBody")}
+        preview={tiles}
+      />
+    );
+  }
+
+  if (isError && !data) {
+    return <ErrorState message={tError("description")} onRetry={() => void refetch()} />;
+  }
+
   return (
     <>
-      <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        {labels.map((label, i) => (
-          <Card key={label}>
-            <CardHeader className="pb-1">
-              <CardDescription>{label}</CardDescription>
-              {values ? (
-                <CardTitle className="text-2xl tabular-nums">
-                  {values[i]}
-                </CardTitle>
-              ) : (
-                <Skeleton className="h-8 w-20" />
-              )}
-            </CardHeader>
-          </Card>
-        ))}
-      </div>
+      {tiles}
 
       <Card className="mt-6">
         <CardHeader>

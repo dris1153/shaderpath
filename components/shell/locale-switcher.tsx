@@ -8,11 +8,34 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** Standalone language button (settings page). */
 export function LocaleSwitcher() {
+  const t = useTranslations("localeSwitcher");
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        render={
+          <Button variant="outline" size="icon" aria-label={t("label")}>
+            <IconLanguage />
+          </Button>
+        }
+      />
+      <DropdownMenuContent align="end" className="min-w-44">
+        <LocaleMenuGroup />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Language section for the account and preferences menus. */
+export function LocaleMenuGroup() {
   const t = useTranslations("localeSwitcher");
   const locale = useLocale();
   // ponytail: pathname only; append useSearchParams once routes carry query params
@@ -26,26 +49,15 @@ export function LocaleSwitcher() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button variant="ghost" size="icon" aria-label={t("label")}>
-            <IconLanguage />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="end">
+    <DropdownMenuGroup>
+      <DropdownMenuLabel>{t("label")}</DropdownMenuLabel>
+      <DropdownMenuRadioGroup value={locale} onValueChange={(v) => switchTo(v as AppLocale)}>
         {routing.locales.map((l) => (
-          <DropdownMenuItem
-            key={l}
-            data-active={l === locale}
-            className="data-[active=true]:bg-muted"
-            onClick={() => switchTo(l)}
-          >
+          <DropdownMenuRadioItem key={l} value={l}>
             {t(l)}
-          </DropdownMenuItem>
+          </DropdownMenuRadioItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenuRadioGroup>
+    </DropdownMenuGroup>
   );
 }

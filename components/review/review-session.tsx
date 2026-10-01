@@ -10,31 +10,32 @@ import { Link } from "@/i18n/navigation";
 import type { DashboardPayload } from "@/lib/api-payloads";
 import { getLesson } from "@/lib/curriculum";
 import { REVIEW_KINDS, type QueueItem } from "@/lib/dashboard-queue";
-import { isAuthError } from "@/lib/hooks/fetch-json";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { useDashboard } from "@/lib/hooks/use-dashboard";
+import { SignedOutState } from "@/components/states/signed-out-state";
 import { ReviewCardView } from "./review-card";
 
 export function ReviewSession() {
   const t = useTranslations("review");
   const tDash = useTranslations("dashboard");
-  const { data, isError, error } = useDashboard();
+  const { data: auth, isPending: authPending } = useAuth();
+  const user = auth?.user;
+  const { data, isError } = useDashboard(Boolean(user));
+
+  // Guests have no schedule, so nothing is fetched and nothing can be graded.
+  if (!authPending && !user) {
+    return (
+      <SignedOutState
+        title={t("signIn")}
+        description={t("signedOutBody")}
+        signInLabel={t("signInCta")}
+      />
+    );
+  }
 
   // Data first: a failed background refetch keeps `data` but sets `isError`,
   // and must not tear down a session in progress.
   if (!data) {
-    if (isAuthError(error)) {
-      return (
-        <p className="text-muted-foreground mt-6">
-          {t("signIn")}{" "}
-          <Link
-            href="/login"
-            className="text-link underline underline-offset-4"
-          >
-            {t("signInCta")}
-          </Link>
-        </p>
-      );
-    }
     if (isError) {
       return (
         <Alert className="mt-6">

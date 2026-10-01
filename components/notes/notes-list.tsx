@@ -6,13 +6,18 @@ import { Link } from "@/i18n/navigation";
 import type { LessonSlug } from "@/content/slugs";
 import { pick, type Locale } from "@/content/types";
 import { getLesson } from "@/lib/curriculum";
+import { useAuth } from "@/lib/hooks/use-auth";
 import { useNotes } from "@/lib/hooks/use-notes";
+import { EmptyState } from "@/components/states/empty-state";
+import { ErrorState } from "@/components/states/error-state";
+import { SignedOutState } from "@/components/states/signed-out-state";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookmarkItem, NoteItem } from "./note-item";
@@ -26,10 +31,17 @@ export function NotesList() {
   const locale = useLocale() as Locale;
   const t = useTranslations("notes");
   const tError = useTranslations("errors");
-  const { data, isError } = useNotes();
+  const { data: auth, isPending: authPending } = useAuth();
+  const user = auth?.user;
+  const { data, isError, refetch } = useNotes(Boolean(user));
 
-  if (isError) {
-    return <p className="text-muted-foreground mt-10">{tError("description")}</p>;
+  // Guests never request /api/notes: the page explains instead of failing.
+  if (!authPending && !user) {
+    return <SignedOutState title={t("signedOutTitle")} description={t("signedOutBody")} />;
+  }
+
+  if (isError && !data) {
+    return <ErrorState message={tError("description")} onRetry={() => void refetch()} />;
   }
 
   if (!data) {
@@ -60,7 +72,16 @@ export function NotesList() {
       </p>
 
       {slugs.length === 0 && (
-        <p className="text-muted-foreground mt-10">{t("empty")}</p>
+        <EmptyState
+          icon={IconNote}
+          title={t("emptyTitle")}
+          cue={t("empty")}
+          action={
+            <Link href="/roadmap" className={buttonVariants({ variant: "secondary", size: "sm" })}>
+              {t("emptyAction")}
+            </Link>
+          }
+        />
       )}
 
       <div className="mt-8 space-y-6">

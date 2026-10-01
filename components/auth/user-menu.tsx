@@ -2,37 +2,67 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { IconLogout, IconUser } from "@tabler/icons-react";
+import {
+  IconAdjustmentsHorizontal,
+  IconChartBar,
+  IconLogout,
+  IconNote,
+  IconSettings,
+} from "@tabler/icons-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/lib/hooks/use-auth";
-import { Button } from "@/components/ui/button";
+import { LocaleMenuGroup } from "@/components/shell/locale-switcher";
+import { ThemeMenuGroup } from "@/components/shell/theme-toggle";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+/** Account menu when signed in; a preferences menu plus Sign in for guests. */
 export function UserMenu() {
   const t = useTranslations("auth");
+  const tNav = useTranslations("nav");
   const { data, isPending } = useAuth();
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // Same height as the button so the header does not jump when it resolves.
-  if (isPending) return <Skeleton className="h-8 w-8 rounded-lg" />;
+  // Same size as the avatar so the header does not jump when it resolves.
+  if (isPending) return <Skeleton className="size-9 rounded-full" />;
 
-  if (!data?.user) {
+  const user = data?.user;
+  if (!user) {
     return (
-      <Button
-        variant="outline"
-        size="sm"
-        nativeButton={false}
-        render={<Link href="/login" />}
-      >
-        {t("login")}
-      </Button>
+      <div className="flex items-center gap-1.5">
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="ghost" size="icon" aria-label={tNav("preferences")}>
+                <IconAdjustmentsHorizontal />
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="min-w-48">
+            <LocaleMenuGroup />
+            <DropdownMenuSeparator />
+            <ThemeMenuGroup />
+            <DropdownMenuSeparator />
+            <DropdownMenuItem render={<Link href="/settings" />}>
+              <IconSettings />
+              {tNav("settings")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Link href="/login" className={buttonVariants({ size: "sm" })}>
+          {t("login")}
+        </Link>
+      </div>
     );
   }
 
@@ -44,19 +74,40 @@ export function UserMenu() {
     router.push("/");
   }
 
+  const initial = (user.email ?? "?").charAt(0).toUpperCase();
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="ghost" size="icon" aria-label={t("account")}>
-            <IconUser />
+          <Button variant="ghost" size="icon" aria-label={t("account")} className="rounded-full">
+            <span className="bg-sun text-ink grid size-8 place-items-center rounded-full text-sm font-extrabold shadow-[0_3px_0_var(--sun-edge)]">
+              {initial}
+            </span>
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className="min-w-max">
-        <DropdownMenuItem disabled className="text-muted-foreground text-xs">
-          {data.user.email ?? t("account")}
-        </DropdownMenuItem>
+      <DropdownMenuContent align="end" className="min-w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="truncate">{user.email ?? t("account")}</DropdownMenuLabel>
+          <DropdownMenuItem render={<Link href="/stats" />}>
+            <IconChartBar />
+            {tNav("stats")}
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/notes" />}>
+            <IconNote />
+            {tNav("notes")}
+          </DropdownMenuItem>
+          <DropdownMenuItem render={<Link href="/settings" />}>
+            <IconSettings />
+            {tNav("settings")}
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <LocaleMenuGroup />
+        <DropdownMenuSeparator />
+        <ThemeMenuGroup />
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <IconLogout />
           {t("signOut")}

@@ -19,8 +19,8 @@ test("vi and en shells render translated content", async ({ page }) => {
 
 test("locale switcher swaps locale and keeps the route", async ({ page }) => {
   await page.goto("/vi");
-  await page.getByRole("button", { name: "Ngôn ngữ" }).click();
-  await page.getByRole("menuitem", { name: "English" }).click();
+  await page.getByRole("button", { name: "Ngôn ngữ và giao diện" }).click();
+  await page.getByRole("menuitemradio", { name: "English" }).click();
   await expect(page).toHaveURL(/\/en$/);
   await expect(
     page.getByRole("heading", { name: "Whatever is moving behind this text, you will be able to write it." }),
@@ -29,8 +29,8 @@ test("locale switcher swaps locale and keeps the route", async ({ page }) => {
 
 test("theme toggle applies dark class", async ({ page }) => {
   await page.goto("/vi");
-  await page.getByRole("button", { name: "Giao diện" }).click();
-  await page.getByRole("menuitem", { name: "Tối" }).click();
+  await page.getByRole("button", { name: "Ngôn ngữ và giao diện" }).click();
+  await page.getByRole("menuitemradio", { name: "Tối" }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
 });
 

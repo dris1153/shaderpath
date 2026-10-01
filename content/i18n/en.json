@@ -8,7 +8,13 @@
     "playground": "Playground",
     "notes": "Notes",
     "stats": "Stats",
-    "settings": "Settings"
+    "settings": "Settings",
+    "learn": "Learn",
+    "review": "Review",
+    "you": "You",
+    "search": "Search lessons",
+    "preferences": "Language and theme",
+    "dueCount": "{count, plural, one {# review due} other {# reviews due}}"
   },
   "auth": {
     "login": "Sign in",
@@ -49,7 +55,7 @@
   "notes": {
     "title": "Notes & Bookmarks",
     "subtitle": "{notes} notes · {bookmarks} bookmarks",
-    "empty": "Nothing yet — select text inside a lesson to add a note or bookmark a section.",
+    "empty": "Select text in any lesson to add a note, or bookmark a section.",
     "notesHeading": "Notes",
     "bookmarks": "Bookmarks",
     "addNote": "Add note",
@@ -65,7 +71,11 @@
     "noteDeleted": "Note deleted",
     "sectionBookmarked": "Section bookmarked",
     "bookmarkRemoved": "Bookmark removed",
-    "saveError": "Save failed — try again"
+    "saveError": "Save failed — try again",
+    "signedOutTitle": "Notes are saved to your account",
+    "signedOutBody": "Sign in, then select any text in a lesson to keep a note or bookmark a section.",
+    "emptyTitle": "No notes yet",
+    "emptyAction": "Open the roadmap"
   },
   "palette": {
     "placeholder": "Search lessons, actions… (Ctrl+K)",
@@ -90,7 +100,9 @@
     "heatmapTitle": "Last 26 weeks of activity",
     "heatmapCell": "{date}: {minutes} min",
     "distributionTitle": "Time by track",
-    "noData": "No data yet — study a lesson to get started."
+    "noData": "No data yet — study a lesson to get started.",
+    "signedOutTitle": "Your streak and study time live in your account",
+    "signedOutBody": "Sign in to see your streak, total study time and progress by track. Every lesson stays free to read."
   },
   "review": {
     "title": "{count} lessons due for review",
@@ -113,7 +125,8 @@
     "signIn": "Your review schedule belongs to your account.",
     "signInCta": "Sign in to review",
     "done": "Done — you reviewed {count, plural, one {# lesson} other {# lessons}}.",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "signedOutBody": "Lessons you finish come back here on a schedule, so what you learned sticks. Sign in to start one."
   },
   "dashboard": {
     "welcome": "Welcome to Shaderpath",
@@ -285,7 +298,11 @@
     "retry": "Retry",
     "lessonNotFoundTitle": "Lesson not found",
     "lessonNotFoundDescription": "That slug doesn't exist on the roadmap.",
-    "backToRoadmap": "Back to Roadmap"
+    "backToRoadmap": "Back to Roadmap",
+    "notFoundTitle": "This page doesn't exist",
+    "notFoundDescription": "The link may be old or mistyped. The roadmap has every lesson.",
+    "pageErrorDescription": "This page hit an error while loading. Try again, or head home.",
+    "goHome": "Go home"
   },
   "localeSwitcher": {
     "label": "Language",
@@ -349,5 +366,8 @@
     "deleteAccountConfirmLabel": "Type {email} to confirm",
     "deleteAccountWorking": "Deleting…",
     "deleteAccountError": "Deletion failed — try again"
+  },
+  "states": {
+    "keepReading": "Keep reading"
   }
 }
