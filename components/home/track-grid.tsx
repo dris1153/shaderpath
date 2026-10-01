@@ -4,15 +4,9 @@ import { useLocale, useTranslations } from "next-intl";
 import { LESSONS, TRACKS } from "@/content/curriculum";
 import { pick, type Locale } from "@/content/types";
 import { Link } from "@/i18n/navigation";
-import { trackCompletion, type ProgressMap } from "@/lib/curriculum";
+import { trackCompletion, trackHours, type ProgressMap } from "@/lib/curriculum";
 import { ProgressRing } from "@/components/ui/progress-ring";
 
-const HOURS = Object.fromEntries(
-  TRACKS.map((track) => [
-    track.id,
-    Math.max(1, Math.round(LESSONS.filter((l) => l.trackId === track.id).reduce((s, l) => s + l.estimatedMinutes, 0) / 60)),
-  ]),
-);
 const LESSON_COUNT = Object.fromEntries(
   TRACKS.map((track) => [track.id, LESSONS.filter((l) => l.trackId === track.id).length]),
 );
@@ -43,7 +37,7 @@ export function TrackGrid({ progress }: { progress?: ProgressMap }) {
                     ? t("coreProgress", { completed: stats.coreCompleted, total: stats.coreTotal })
                     : tHome("trackLessons", { count: LESSON_COUNT[track.id] ?? 0 })}
                   {" · "}
-                  {t("mapHours", { hours: HOURS[track.id] ?? 1 })}
+                  {t("mapHours", { hours: trackHours(track.id) })}
                 </span>
               </span>
             </Link>

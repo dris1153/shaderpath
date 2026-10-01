@@ -60,8 +60,8 @@ export function TrackCardNode({ data }: NodeProps<Node<TrackCardData>>) {
     <div
       style={{ width: data.w, height: data.h }}
       className={cn(
-        "bg-card/60 rounded-[28px] border-4 p-6",
-        data.isTerminus && "border-primary bg-primary/5",
+        "bg-card rounded-[28px] border-4 p-6 shadow-[0_10px_0_var(--border)]",
+        data.isTerminus && "border-primary bg-secondary shadow-[0_10px_0_var(--primary-edge)]",
       )}
     >
       <ChainHandles />

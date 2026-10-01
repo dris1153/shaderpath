@@ -3,7 +3,7 @@ import { getLocale, getTranslations, setRequestLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { TRACKS } from "@/content/curriculum";
 import { pick, type Locale, type TrackId } from "@/content/types";
-import { getModulesOfTrack, getTrack } from "@/lib/curriculum";
+import { getModulesOfTrack, getTrack, trackHours } from "@/lib/curriculum";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +13,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { ModuleAccordion } from "@/components/roadmap/module-accordion";
-import { TrackProgress } from "@/components/roadmap/track-progress";
+import { TrackHeader } from "@/components/roadmap/track-header";
 
 // One page per track per locale. The page is curriculum content; the reader's
 // progress arrives afterwards through /api/progress-map, so nothing here reads
@@ -49,11 +49,12 @@ export default async function TrackPage({
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
-      <h1 className="mt-4 text-3xl font-semibold tracking-tight">
-        {pick(track.title, locale)}
-      </h1>
-      <p className="text-muted-foreground mt-2">{pick(track.summary, locale)}</p>
-      <TrackProgress trackId={track.id} title={pick(track.title, locale)} />
+      <TrackHeader
+        trackId={track.id}
+        title={pick(track.title, locale)}
+        summary={pick(track.summary, locale)}
+        hours={trackHours(track.id)}
+      />
       <div className="mt-8">
         <ModuleAccordion modules={modules} locale={locale} />
       </div>

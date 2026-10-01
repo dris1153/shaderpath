@@ -37,7 +37,7 @@ export function DemoStrip() {
                 {pick(lesson.title, locale)}
               </span>
               <span className="text-muted-foreground block text-sm">
-                {t("thumbMeta", { track: track?.order ?? 0, count })}
+                {t("thumbMeta", { track: (track?.order ?? 0) + 1, count })}
               </span>
             </Link>
           </li>

@@ -54,6 +54,12 @@ export function getModulesOfTrack(trackId: TrackId): ModuleDef[] {
   );
 }
 
+/** A track's estimated study time in whole hours (at least 1). */
+export function trackHours(trackId: TrackId): number {
+  const minutes = LESSONS.filter((l) => l.trackId === trackId).reduce((sum, l) => sum + l.estimatedMinutes, 0);
+  return Math.max(1, Math.round(minutes / 60));
+}
+
 export function getLessonsOfModule(moduleId: string): LessonMeta[] {
   const mod = moduleById.get(moduleId);
   if (!mod) return [];
@@ -85,6 +91,54 @@ export function isUnlocked(slug: LessonSlug, progress: ProgressMap): boolean {
     if (!prereq || prereq.tier !== "core") return true;
     return progress[p] === "completed";
   });
+}
+
+export type LessonRowState = "done" | "in_progress" | "next" | "soft_locked" | "not_started";
+
+/**
+ * Display state of every lesson in a track. "next" goes to the first open core
+ * lesson whose prerequisites are met, so a track shows at most one. Soft-locked
+ * lessons stay reachable; the row only says what to read first.
+ */
+export function trackLessonStates(trackId: TrackId, progress: ProgressMap): Map<LessonSlug, LessonRowState> {
+  const lessons = ORDERED_SLUGS.flatMap((slug) => {
+    const lesson = lessonBySlug.get(slug);
+    return lesson && lesson.trackId === trackId ? [lesson] : [];
+  });
+  const next = lessons.find(
+    (l) => l.tier === "core" && progress[l.slug] !== "completed" && isUnlocked(l.slug, progress),
+  );
+  return new Map(
+    lessons.map((l): [LessonSlug, LessonRowState] => [
+      l.slug,
+      progress[l.slug] === "completed"
+        ? "done"
+        : l.slug === next?.slug
+          ? "next"
+          : !isUnlocked(l.slug, progress)
+            ? "soft_locked"
+            : progress[l.slug] === "in_progress"
+              ? "in_progress"
+              : "not_started",
+    ]),
+  );
+}
+
+/** The first core prerequisite still open: what a soft-locked row recommends first. */
+export function blockingPrerequisite(slug: LessonSlug, progress: ProgressMap): LessonMeta | undefined {
+  return lessonBySlug
+    .get(slug)
+    ?.prerequisites.map((p) => lessonBySlug.get(p))
+    .find((p): p is LessonMeta => p !== undefined && p.tier === "core" && progress[p.slug] !== "completed");
+}
+
+/** The track holding the next open core lesson in course order (the "recommended" track). */
+export function currentTrackId(progress: ProgressMap): TrackId | undefined {
+  const slug = ORDERED_SLUGS.find((s) => {
+    const lesson = lessonBySlug.get(s);
+    return lesson?.tier === "core" && progress[s] !== "completed" && isUnlocked(s, progress);
+  });
+  return slug ? lessonBySlug.get(slug)?.trackId : undefined;
 }
 
 export interface CompletionStats {

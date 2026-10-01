@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import { LESSONS, MODULES, TRACKS } from "@/content/curriculum";
 import { LESSON_SLUGS } from "@/content/slugs";
 import {
+  blockingPrerequisite,
+  currentTrackId,
   getLessonsOfModule,
   isUnlocked,
   moduleCoreSlugs,
+  trackLessonStates,
   overallCompletion,
   trackCompletion,
   type ProgressMap,
@@ -140,5 +143,36 @@ describe("moduleCoreSlugs", () => {
   it("is empty for an elective, which never completes a module", () => {
     const elective = LESSONS.find((l) => l.tier !== "core");
     if (elective) expect(moduleCoreSlugs(elective.slug)).toEqual([]);
+  });
+});
+
+describe("trackLessonStates", () => {
+  const track = TRACKS[0]!;
+  const lessons = LESSONS.filter((l) => l.trackId === track.id);
+  const core = lessons.filter((l) => l.tier === "core");
+
+  it("marks exactly one Up next per track, the first open core lesson", () => {
+    const states = trackLessonStates(track.id, {});
+    expect([...states.values()].filter((s) => s === "next")).toHaveLength(1);
+    expect(states.get(core[0]!.slug)).toBe("next");
+  });
+
+  it("moves Up next past done lessons and keeps done ones done", () => {
+    const progress: ProgressMap = { [core[0]!.slug]: "completed" };
+    const states = trackLessonStates(track.id, progress);
+    expect(states.get(core[0]!.slug)).toBe("done");
+    expect([...states.values()].filter((s) => s === "next")).toHaveLength(1);
+  });
+
+  it("soft-locks a lesson whose core prerequisite is open and names that prerequisite", () => {
+    const gated = LESSONS.find((l) =>
+      l.prerequisites.some((p) => LESSONS.find((x) => x.slug === p)?.tier === "core"),
+    )!;
+    expect(trackLessonStates(gated.trackId, {}).get(gated.slug)).toBe("soft_locked");
+    expect(blockingPrerequisite(gated.slug, {})?.tier).toBe("core");
+  });
+
+  it("recommends the first track while nothing is done", () => {
+    expect(currentTrackId({})).toBe(track.id);
   });
 });

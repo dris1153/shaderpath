@@ -195,7 +195,6 @@
     "coreProgress": "{completed}/{total} core",
     "checkpoint": "Mini-build",
     "elective": "Elective",
-    "locked": "Locked",
     "difficulty": "Difficulty {level}/5",
     "minutes": "{minutes} min",
     "viewList": "List",
@@ -210,7 +209,16 @@
     "mapCheckpoints": "{count} mini-builds",
     "mapTerminus": "Destination",
     "mapLegendDifficulty": "Difficulty",
-    "mapLegendRoad": "Bar length = hours"
+    "mapLegendRoad": "Bar length = hours",
+    "stateDone": "Done",
+    "stateInProgress": "In progress",
+    "stateNext": "Up next",
+    "recommendedAfter": "Recommended after {title}",
+    "recommended": "Recommended",
+    "currentTrack": "Now: {title}",
+    "streakDays": "{days}-day streak",
+    "continueTrack": "Continue",
+    "startTrack": "Start the track"
   },
   "lesson": {
     "backToTrack": "Back to track",

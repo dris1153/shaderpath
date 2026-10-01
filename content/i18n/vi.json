@@ -195,7 +195,6 @@
     "coreProgress": "{completed}/{total} core",
     "checkpoint": "Mini-build",
     "elective": "Tự chọn",
-    "locked": "Chưa mở khoá",
     "difficulty": "Độ khó {level}/5",
     "minutes": "{minutes} phút",
     "viewList": "Danh sách",
@@ -210,7 +209,16 @@
     "mapCheckpoints": "{count} mini-build",
     "mapTerminus": "Đích đến",
     "mapLegendDifficulty": "Độ khó",
-    "mapLegendRoad": "Độ dài thanh = số giờ"
+    "mapLegendRoad": "Độ dài thanh = số giờ",
+    "stateDone": "Đã xong",
+    "stateInProgress": "Đang học",
+    "stateNext": "Học tiếp",
+    "recommendedAfter": "Nên học sau {title}",
+    "recommended": "Đề xuất",
+    "currentTrack": "Đang học: {title}",
+    "streakDays": "Chuỗi {days} ngày",
+    "continueTrack": "Học tiếp",
+    "startTrack": "Bắt đầu track"
   },
   "lesson": {
     "backToTrack": "Về track",
