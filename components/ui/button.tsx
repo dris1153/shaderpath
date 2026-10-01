@@ -16,6 +16,7 @@ const buttonVariants = cva(
           "press chunky-label border-border bg-card text-link [--edge:var(--border)] hover:bg-secondary aria-expanded:bg-secondary",
         coral:
           "press chunky-label bg-coral text-ink [--edge:var(--coral-edge)] hover:bg-coral/90",
+        sun: "press chunky-label bg-sun text-ink [--edge:var(--sun-edge)] hover:bg-sun/90",
         outline:
           "border-border bg-card hover:bg-secondary hover:text-foreground aria-expanded:bg-secondary aria-expanded:text-foreground",
         ghost:

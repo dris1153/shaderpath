@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, or } from "drizzle-orm";
+import { and, eq, gt, gte, lte, min, or } from "drizzle-orm";
 import { db } from "@/db/client";
 import { exerciseAttempts, lessonProgress, reviewQueue } from "@/db/schema";
 import type { LessonSlug } from "@/content/slugs";
@@ -77,6 +77,15 @@ export async function getLeanedOnLessons(): Promise<
     byLesson.set(row.lessonSlug, acc);
   }
   return [...byLesson].map(([lessonSlug, v]) => ({ lessonSlug, ...v }));
+}
+
+/** Whole days until the earliest review that is not due yet; undefined when none is scheduled. */
+export async function getNextReviewDays(now: Date): Promise<number | undefined> {
+  const [row] = await db
+    .select({ next: min(reviewQueue.dueAt) })
+    .from(reviewQueue)
+    .where(gt(reviewQueue.dueAt, now));
+  return row?.next ? Math.max(1, Math.ceil((row.next.getTime() - now.getTime()) / DAY_MS)) : undefined;
 }
 
 /** Core lessons finished per week over the last 4 weeks — a pace, not a deadline. */

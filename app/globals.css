@@ -161,10 +161,6 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  /* Track ladder heat scale: the landing page tints the 14 tracks along this
-     range so position encodes rising difficulty. Not a palette token. */
-  --track-cold: var(--sky);
-  --track-hot: var(--coral);
 }
 
 /* Plum dark theme. The fills (coral/sun/mint/sky) and --ink stay the same:

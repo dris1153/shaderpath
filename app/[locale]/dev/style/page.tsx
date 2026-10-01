@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { Inko, type InkoPose } from "@/components/mascot/inko";
 import { LessonCompleteCard } from "@/components/celebrate/lesson-complete-card";
 import { XpGain } from "@/components/celebrate/xp-gain";
+import { Greeting } from "@/components/dashboard/greeting";
+import { ContinueCard, ReviewTodayCard, WeekCard } from "@/components/dashboard/today-cards";
 import { CodeBlock } from "@/components/lesson/code-block";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -211,6 +213,23 @@ export default function StylePage() {
           <div dangerouslySetInnerHTML={{ __html: math }} />
           <CodeBlock language="glsl" tabIndex={0}><code>{"vec3 n = normalize(vNormal);\nfloat light = max(dot(n, lightDir), 0.0);"}</code></CodeBlock>
         </article>
+      </Section>
+
+      <Section title="Dashboard (sample data)">
+        <Greeting streak={4} nextTitle="Dot, Cross & Normalize" />
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+          <ContinueCard
+            lesson={{ slug: "dot-and-cross-products", title: "Dot, Cross & Normalize", track: "Math Foundations", n: 3, m: 14 }}
+            scrollPercent={0.42}
+          />
+          <ReviewTodayCard due={3} />
+          <WeekCard streak={4} week={[true, true, false, true, true, false, false]} />
+        </div>
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+          <ContinueCard />
+          <ReviewTodayCard due={0} nextDays={2} />
+          <ReviewTodayCard due={0} />
+        </div>
       </Section>
 
       <Section title="Celebrations">

@@ -46,4 +46,6 @@ export interface DashboardPayload {
   focus?: LessonSlug;
   map: TrackMap | null;
   pace: number;
+  /** Days until the next review once nothing is due; absent when none is scheduled. */
+  nextReviewDays?: number;
 }

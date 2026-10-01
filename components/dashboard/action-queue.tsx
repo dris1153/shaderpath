@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { GROUP_OF, REVIEW_KINDS, type QueueGroup, type QueueKind } from "@/lib/dashboard-queue";
+import { GROUP_OF, type QueueGroup, type QueueKind } from "@/lib/dashboard-queue";
 import { cn } from "@/lib/utils";
 
 export interface QueueItemVM {
@@ -24,8 +24,7 @@ export interface QueueItemVM {
 const PILL_TONE: Record<QueueKind, string> = {
   overdue: "text-destructive border-destructive/50",
   due: "text-destructive border-destructive/50",
-  leech: // amber-600 measures 3.19:1 on the light card — under AA at this size.
-    "text-amber-800 border-amber-800/50 dark:text-amber-400 dark:border-amber-400/50",
+  leech: "text-foreground border-sun-edge",
   shaky: "text-link border-primary/50",
   hinted: "text-link border-primary/50",
   continue: "text-muted-foreground border-border",
@@ -41,9 +40,7 @@ export function ActionQueue({
   unlocksLesson?: string;
 }) {
   const t = useTranslations("dashboard");
-  const tReview = useTranslations("review");
   const [filter, setFilter] = useState<Filter>("all");
-  const dueReviews = items.filter((i) => REVIEW_KINDS.has(i.kind)).length;
 
   const counts = useMemo(() => {
     const acc: Record<Filter, number> = { all: items.length, review: 0, weak: 0, next: 0 };
@@ -110,18 +107,13 @@ export function ActionQueue({
 
   const CHIPS: { key: Filter; label: string; dot?: string }[] = [
     { key: "all", label: t("queueAll") },
-    { key: "review", label: t("queueReview"), dot: "bg-destructive" },
-    { key: "weak", label: t("queueWeak"), dot: "bg-amber-500" },
+    { key: "review", label: t("queueReview"), dot: "bg-coral" },
+    { key: "weak", label: t("queueWeak"), dot: "bg-sun" },
     { key: "next", label: t("queueNext"), dot: "bg-muted-foreground" },
   ];
 
   return (
     <>
-      {dueReviews > 0 && (
-        <Button className="mt-4" nativeButton={false} render={<Link href="/review" />}>
-          {tReview("startN", { count: dueReviews })}
-        </Button>
-      )}
       <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label={t("queueTitle")}>
         {CHIPS.map((chip) => (
           <Button

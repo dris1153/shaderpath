@@ -25,7 +25,7 @@ whose colours match the video mascot.
 | `coral` / `coral-edge` | #FF6B57 / #D6432F | same | Streak, secondary call to action |
 | `sun` / `sun-edge` | #FFC23D / #D99A10 | same | XP, rewards |
 | `mint` / `mint-edge` | #3CCFB4 / #1FA58E | same | Done, success |
-| `sky` | #4DA3FF | same | Info, the cold end of the track heat scale |
+| `sky` | #4DA3FF | same | Info, charts |
 | `destructive` | #B8321E | #FF7A66 | Error text and tints |
 | `ink` | #26213A | same | Text on coral / sun / mint fills in both themes |
 
@@ -46,8 +46,7 @@ Two pairs fail. **Primary on the ground fails as text (4.3:1)**, which is why
 coloured text uses `text-link`. **White fails on coral, sun and mint**, so
 those fills always carry `text-ink`.
 
-`chart-1..5` are primary, coral, sun, mint and sky, in that order. The track
-heat scale (`--track-cold` / `--track-hot`) runs from sky to coral.
+`chart-1..5` are primary, coral, sun, mint and sky, in that order.
 
 ## Edges and press
 

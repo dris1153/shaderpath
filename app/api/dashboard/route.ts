@@ -3,7 +3,7 @@ import { withUser } from "@/db/client";
 import { getUser } from "@/lib/auth";
 import type { DashboardPayload } from "@/lib/api-payloads";
 import { overallCompletion } from "@/lib/curriculum";
-import { buildQueue, getTrackMap, getWeeklyPace } from "@/lib/dashboard-read";
+import { buildQueue, getNextReviewDays, getTrackMap, getWeeklyPace } from "@/lib/dashboard-read";
 import { getProgressMap } from "@/lib/progress-read";
 
 // Everything the landing page shows below its header. Four reads reach for the
@@ -31,6 +31,7 @@ export async function GET() {
         focus,
         map: await getTrackMap(progress, focus),
         pace: await getWeeklyPace(now),
+        nextReviewDays: await getNextReviewDays(now),
       } satisfies DashboardPayload);
     });
   } catch (err) {
