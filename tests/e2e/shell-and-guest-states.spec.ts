@@ -52,3 +52,30 @@ test.describe("mobile", () => {
     await expect(page.getByRole("navigation", { name: "Điều hướng chính" })).toHaveCount(0);
   });
 });
+
+// The lesson's first paragraph is the point of the page: header, chips and
+// notices must leave it above the fold, and the video must cost nothing until
+// the reader asks for it.
+for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+  test(`the first lesson paragraph is above the fold at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/vi/lesson/vector-basics");
+    const first = page.locator("article #lesson-body p").first();
+    await expect(first).toBeVisible();
+    const box = await first.boundingBox();
+    expect(box?.y ?? Infinity).toBeLessThan(viewport.height);
+  });
+}
+
+test("the lesson video loads nothing from YouTube until the chip and play are pressed", async ({ page }) => {
+  const youtube: string[] = [];
+  page.on("request", (req) => {
+    if (/youtube|ytimg|googlevideo/.test(new URL(req.url()).hostname)) youtube.push(req.url());
+  });
+  await page.goto("/vi/lesson/vector-basics");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  expect(youtube).toEqual([]);
+  await page.getByRole("button", { name: "Xem video" }).click();
+  await expect(page.getByRole("button", { name: /Phát video/ })).toBeVisible();
+  expect(youtube).toEqual([]);
+});

@@ -1,20 +1,15 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import {
-  IconCircleCheck,
-  IconHammer,
-  IconLock,
-  IconStar,
-} from "@tabler/icons-react";
+import { IconStar } from "@tabler/icons-react";
 import { Link } from "@/i18n/navigation";
 import { pick, type LessonMeta, type Locale, type TrackId } from "@/content/types";
-import type { ProgressMap } from "@/lib/curriculum";
 import {
   getLessonsOfModule,
   getModulesOfTrack,
   getTrack,
-  isUnlocked,
+  trackLessonStates,
+  type LessonRowState,
 } from "@/lib/curriculum";
 import {
   Accordion,
@@ -23,6 +18,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { StateMark } from "@/components/roadmap/lesson-row";
 import { useLessonState } from "@/lib/hooks/use-lesson-state";
 import { cn } from "@/lib/utils";
 
@@ -30,44 +26,28 @@ function LessonLink({
   lesson,
   locale,
   active,
-  progress,
+  state,
 }: {
   lesson: LessonMeta;
   locale: Locale;
   active: boolean;
   /** undefined until the read resolves — never treat that as "not done". */
-  progress: ProgressMap | undefined;
+  state: LessonRowState | undefined;
 }) {
-  const completed = progress ? progress[lesson.slug] === "completed" : false;
-  // Rendering a lesson as locked before the answer arrives would tell the
-  // reader they may not go there, which is the worst thing this list can get
-  // wrong. Unknown shows no lock.
-  const locked = progress ? !isUnlocked(lesson.slug, progress) : false;
-
   return (
     <Link
       href={`/lesson/${lesson.slug}`}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "hover:bg-muted flex items-center gap-2 rounded-md px-2 py-1.5 text-sm no-underline! hover:underline!",
-        active
-          ? "bg-muted text-foreground font-medium"
-          : "text-muted-foreground",
+        "hover:bg-secondary flex min-h-9 items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm no-underline!",
+        active ? "bg-secondary text-link ring-primary/30 font-bold ring-2 ring-inset" : "text-foreground",
       )}
     >
-      {completed ? (
-        <IconCircleCheck className="text-link size-4 shrink-0" />
-      ) : locked ? (
-        <IconLock className="size-4 shrink-0 opacity-60" />
-      ) : lesson.kind === "checkpoint" ? (
-        <IconHammer className="size-4 shrink-0 opacity-60" />
-      ) : (
-        <span className="size-4 shrink-0" />
-      )}
-      <span className="truncate">{pick(lesson.title, locale)}</span>
-      {lesson.tier === "elective" && (
-        <IconStar className="size-3 shrink-0 opacity-50" />
-      )}
+      <StateMark state={state} size="sm" />
+      <span className={cn("truncate", state === "done" && !active && "text-muted-foreground")}>
+        {pick(lesson.title, locale)}
+      </span>
+      {lesson.tier === "elective" && <IconStar className="size-3 shrink-0 opacity-50" aria-hidden />}
     </Link>
   );
 }
@@ -90,6 +70,7 @@ export function LessonSidebar({
   const track = getTrack(trackId);
   if (!track) return null;
   const modules = getModulesOfTrack(trackId);
+  const states = data ? trackLessonStates(trackId, data.progress) : undefined;
 
   return (
     <nav aria-label={t("openNav")}>
@@ -97,7 +78,7 @@ export function LessonSidebar({
         <div className="pr-3 pb-8">
           <Link
             href={`/track/${track.id}`}
-            className="text-muted-foreground hover:text-foreground text-xs font-medium tracking-wide uppercase"
+            className="text-muted-foreground hover:text-foreground chunky-label text-xs"
           >
             {t("backToTrack")} · {pick(track.title, locale)}
           </Link>
@@ -115,7 +96,7 @@ export function LessonSidebar({
                         lesson={lesson}
                         locale={locale}
                         active={lesson.slug === currentSlug}
-                        progress={data?.progress}
+                        state={states?.get(lesson.slug)}
                       />
                     ))}
                   </div>

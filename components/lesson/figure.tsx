@@ -18,7 +18,7 @@ export function Figure({
       <img
         src={src}
         alt={alt}
-        className="w-full rounded-lg border p-4"
+        className="bg-card w-full rounded-[1rem] p-4"
         loading="lazy"
       />
       {caption ? (

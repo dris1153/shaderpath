@@ -49,7 +49,7 @@ const components: MDXComponents = {
     />
   ),
   p: ({ className, ...props }) => (
-    <p className={cn("mt-4 leading-7", className)} {...props} />
+    <p className={cn("mt-4", className)} {...props} />
   ),
   ul: ({ className, ...props }) => (
     <ul className={cn("mt-4 ml-6 list-disc space-y-1", className)} {...props} />

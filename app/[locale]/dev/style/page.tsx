@@ -234,8 +234,8 @@ export default function StylePage() {
 
       <Section title="Celebrations">
         <XpGain amount={5} />
-        <LessonCompleteCard status="Completed · confidence 4/5" next={{ slug: "dot-and-cross-products", title: "Dot, Cross & Normalize" }} moduleDone={false} />
-        <LessonCompleteCard status="Completed" moduleDone />
+        <LessonCompleteCard next={{ slug: "dot-and-cross-products", title: "Dot, Cross & Normalize" }} moduleDone={false} />
+        <LessonCompleteCard moduleDone />
       </Section>
 
       <Section title="Inko">

@@ -243,7 +243,12 @@
     "playVideo": "Phát video bài học",
     "videoTitle": "Video: {title}",
     "videoAudio": "Âm thanh",
-    "videoUnavailable": "Không tải được trình phát video ở đây. Xem trên YouTube."
+    "videoUnavailable": "Không tải được trình phát video ở đây. Xem trên YouTube.",
+    "finishLesson": "Hoàn thành bài",
+    "watchVideo": "Xem video",
+    "exerciseCount": "{count} bài tập",
+    "dismissNotice": "Ẩn",
+    "closeCelebration": "Đóng"
   },
   "predict": {
     "label": "Đoán thử",

@@ -19,6 +19,13 @@ const ICONS: Record<CalloutVariant, typeof IconInfoCircle> = {
 // lesson ends with: when everything is red, red stops meaning anything. Keep the
 // signal on the icon and title, hand the body back to the normal text colour, and
 // let the bold mistake names carry the accent so they read as scan anchors.
+// The reading column stays calm: tinted panels, no border or edge.
+const TINT: Record<CalloutVariant, string> = {
+  info: "bg-secondary",
+  tip: "bg-[color-mix(in_oklch,var(--sun)_18%,var(--card))]",
+  mistake: "bg-[color-mix(in_oklch,var(--coral)_12%,var(--card))]",
+};
+
 const MISTAKE_BODY = [
   "px-4 py-3.5",
   "*:data-[slot=alert-description]:text-foreground",
@@ -43,7 +50,7 @@ export function Callout({
   const isMistake = variant === "mistake";
   return (
     <Alert
-      className={cn("mt-6", isMistake && MISTAKE_BODY)}
+      className={cn("mt-6 rounded-[1rem] border-0 px-4 py-3.5", TINT[variant], isMistake && MISTAKE_BODY)}
       variant={isMistake ? "destructive" : "default"}
     >
       <Icon />

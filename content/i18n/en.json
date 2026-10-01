@@ -243,7 +243,12 @@
     "playVideo": "Play the lesson video",
     "videoTitle": "Video: {title}",
     "videoAudio": "Audio",
-    "videoUnavailable": "The video player could not load here. Watch it on YouTube."
+    "videoUnavailable": "The video player could not load here. Watch it on YouTube.",
+    "finishLesson": "Finish lesson",
+    "watchVideo": "Watch the video",
+    "exerciseCount": "{count, plural, one {# exercise} other {# exercises}}",
+    "dismissNotice": "Dismiss",
+    "closeCelebration": "Close"
   },
   "predict": {
     "label": "Predict",

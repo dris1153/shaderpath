@@ -9,20 +9,23 @@ import { Badge } from "@/components/ui/badge";
 import { ProgressRing } from "@/components/ui/progress-ring";
 import { cn } from "@/lib/utils";
 
-function StateMark({ state }: { state: LessonRowState | undefined }) {
+/** The circle that encodes a lesson's state (shared with the lesson course tree). */
+export function StateMark({ state, size = "md" }: { state: LessonRowState | undefined; size?: "sm" | "md" }) {
+  const box = size === "sm" ? "size-5" : "size-6";
   if (state === "done") {
     return (
-      <span className="bg-mint text-ink grid size-6 shrink-0 place-items-center rounded-full">
-        <IconCheck className="size-4" stroke={3} aria-hidden />
+      <span className={cn("bg-mint text-ink grid shrink-0 place-items-center rounded-full", box)}>
+        <IconCheck className="size-3.5" stroke={3} aria-hidden />
       </span>
     );
   }
-  if (state === "in_progress") return <ProgressRing value={50} size={24} stroke={4} />;
+  if (state === "in_progress") return <ProgressRing value={50} size={size === "sm" ? 20 : 24} stroke={4} />;
   return (
     <span
       aria-hidden
       className={cn(
-        "size-6 shrink-0 rounded-full border-2",
+        "shrink-0 rounded-full border-2",
+        box,
         state === "next" && "border-primary motion-safe:animate-pulse-once border-[3px]",
         state === "soft_locked" && "border-muted-foreground/60 border-dashed",
         (state === "not_started" || state === undefined) && "border-border",

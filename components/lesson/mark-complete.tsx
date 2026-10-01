@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { IconCircleCheck } from "@tabler/icons-react";
+import { IconCircleCheckFilled } from "@tabler/icons-react";
 import { toast } from "sonner";
 import type { LessonSlug } from "@/content/slugs";
 import type { ProgressMap } from "@/lib/curriculum";
@@ -12,7 +12,7 @@ import { markComplete } from "@/lib/progress";
 import { fetchJson } from "@/lib/hooks/fetch-json";
 import { useInvalidateGamification } from "@/lib/hooks/use-gamification";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   useInvalidateLessonState,
@@ -32,6 +32,7 @@ type Props = {
   moduleSlugs: LessonSlug[];
 };
 
+/** The centre of the lesson dock: finish the lesson, or say that it is finished. */
 export function MarkComplete({ slug, next, moduleSlugs }: Props) {
   const t = useTranslations("lesson");
   const [pending, startTransition] = useTransition();
@@ -39,6 +40,7 @@ export function MarkComplete({ slug, next, moduleSlugs }: Props) {
   const invalidate = useInvalidateLessonState(slug);
   const invalidateXp = useInvalidateGamification();
   const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
   // Set only by a completion in this visit, so revisiting a done lesson is quiet.
   const [celebrate, setCelebrate] = useState<{ moduleDone: boolean } | null>(null);
   // undefined means the reader has not touched the dial, so the stored value
@@ -46,99 +48,76 @@ export function MarkComplete({ slug, next, moduleSlugs }: Props) {
   const [picked, setPicked] = useState<number | null | undefined>(undefined);
 
   // Both branches below assert something ("you finished this" / "you have not"),
-  // so until the answer arrives neither may render. Same outer Card, so the
-  // page does not jump when it resolves.
-  if (!data) {
-    return (
-      <Card className="mt-10" aria-busy>
-        <CardHeader>
-          <Skeleton className="h-5 w-48" />
-        </CardHeader>
-        <CardContent className="flex flex-wrap items-center gap-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-9 w-32" />
-        </CardContent>
-      </Card>
-    );
-  }
+  // so until the answer arrives neither may render.
+  if (!data) return <Skeleton aria-busy className="h-10 w-44 rounded-lg" />;
 
   const completed = data.row?.status === "completed";
   const confidence = data.row?.confidence ?? null;
   const selected = picked === undefined ? confidence : picked;
 
-  const status = confidence
-    ? t("completedWithConfidence", { confidence })
-    : t("completed");
-
-  if (completed && celebrate) {
-    return <LessonCompleteCard status={status} next={next} moduleDone={celebrate.moduleDone} />;
-  }
-
   if (completed) {
     return (
-      <div className="mt-10 flex items-center gap-2 rounded-lg border p-4">
-        <IconCircleCheck className="text-link size-5" />
-        <span className="font-medium">{status}</span>
-      </div>
+      <>
+        {celebrate ? (
+          <div className="absolute inset-x-0 bottom-full mb-3">
+            <LessonCompleteCard next={next} moduleDone={celebrate.moduleDone} onClose={() => setCelebrate(null)} />
+          </div>
+        ) : null}
+        <p className="flex items-center gap-1.5 text-sm font-bold">
+          <IconCircleCheckFilled className="text-mint-edge size-5 shrink-0" aria-hidden />
+          {confidence ? t("completedWithConfidence", { confidence }) : t("completed")}
+        </p>
+      </>
     );
   }
 
+  const complete = () =>
+    startTransition(async () => {
+      await markComplete(slug, selected ?? undefined);
+      setOpen(false);
+      toast.success(t("markedToast"));
+      // A failed read only costs the module confetti, never the completion.
+      const { progress } = await fetchJson<{ progress: ProgressMap }>(
+        "/api/progress-map",
+      ).catch(() => ({ progress: {} as ProgressMap }));
+      const moduleDone =
+        moduleSlugs.length > 0 &&
+        moduleSlugs.every((s) => progress[s] === "completed");
+      setCelebrate({ moduleDone });
+      // router.refresh() used to repaint this from the server read the
+      // page no longer performs; the query is the source of truth now.
+      await invalidate();
+      void invalidateXp();
+      void queryClient.invalidateQueries({ queryKey: ["progress-map"] });
+    });
+
   return (
-    <Card className="mt-10">
-      <CardHeader>
-        <CardTitle>{t("markCompleteTitle")}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-wrap items-center gap-4">
-        <div
-          role="radiogroup"
-          aria-label={t("confidenceLabel")}
-          className="flex items-center gap-1"
-        >
-          <span className="text-muted-foreground mr-2 text-sm">
-            {t("confidenceLabel")}
-          </span>
-          {[1, 2, 3, 4, 5].map((n) => (
-            <Button
-              key={n}
-              variant="outline"
-              size="icon-sm"
-              role="radio"
-              aria-checked={selected === n}
-              className={cn(
-                selected === n &&
-                  "bg-primary! text-primary-foreground! hover:bg-primary/90!",
-              )}
-              onClick={() => setPicked(selected === n ? null : n)}
-            >
-              {n}
-            </Button>
-          ))}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger render={<Button />}>{t("finishLesson")}</PopoverTrigger>
+      <PopoverContent side="top" className="w-auto gap-3">
+        <p className="font-extrabold">{t("markCompleteTitle")}</p>
+        <div role="radiogroup" aria-label={t("confidenceLabel")} className="flex flex-col gap-2">
+          <span className="text-muted-foreground text-sm">{t("confidenceLabel")}</span>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4, 5].map((n) => (
+              <Button
+                key={n}
+                variant="outline"
+                size="icon-sm"
+                role="radio"
+                aria-checked={selected === n}
+                className={cn(selected === n && "bg-primary! text-primary-foreground! hover:bg-primary/90!")}
+                onClick={() => setPicked(selected === n ? null : n)}
+              >
+                {n}
+              </Button>
+            ))}
+          </div>
         </div>
-        <Button
-          disabled={pending}
-          onClick={() =>
-            startTransition(async () => {
-              await markComplete(slug, selected ?? undefined);
-              toast.success(t("markedToast"));
-              // A failed read only costs the module confetti, never the completion.
-              const { progress } = await fetchJson<{ progress: ProgressMap }>(
-                "/api/progress-map",
-              ).catch(() => ({ progress: {} as ProgressMap }));
-              const moduleDone =
-                moduleSlugs.length > 0 &&
-                moduleSlugs.every((s) => progress[s] === "completed");
-              setCelebrate({ moduleDone });
-              // router.refresh() used to repaint this from the server read the
-              // page no longer performs; the query is the source of truth now.
-              await invalidate();
-              void invalidateXp();
-              void queryClient.invalidateQueries({ queryKey: ["progress-map"] });
-            })
-          }
-        >
+        <Button disabled={pending} onClick={complete}>
           {t("markComplete")}
         </Button>
-      </CardContent>
-    </Card>
+      </PopoverContent>
+    </Popover>
   );
 }

@@ -49,6 +49,8 @@ test("scroll position and reading time persist across reload", async ({
 
 test("mark complete persists with confidence", async ({ page }) => {
   await page.goto(LESSON_URL);
+  // Completion lives in the lesson dock: the button opens the confidence step.
+  await page.getByRole("button", { name: "Hoàn thành bài" }).click();
   await page.getByRole("radio", { name: "4" }).click();
   await page.getByRole("button", { name: "Đánh dấu hoàn thành" }).click();
   await expect(page.getByText("Đã hoàn thành · tự tin 4/5")).toBeVisible();

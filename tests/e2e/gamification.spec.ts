@@ -25,9 +25,10 @@ test.describe("signed in", () => {
     const xpOf = async () => Number((await xpChip.getAttribute("aria-label"))?.match(/^(\d+) XP/)?.[1]);
     const before = await xpOf();
 
-    const complete = page.getByRole("button", { name: "Đánh dấu hoàn thành" });
-    test.skip(!(await complete.isVisible()), "this account already completed the lesson");
-    await complete.click();
+    const finish = page.getByRole("button", { name: "Hoàn thành bài" });
+    test.skip(!(await finish.isVisible()), "this account already completed the lesson");
+    await finish.click();
+    await page.getByRole("button", { name: "Đánh dấu hoàn thành" }).click();
 
     await expect(page.getByText(/Xong bài!|Hoàn thành module!/)).toBeVisible();
     await expect.poll(xpOf).toBe(before + 10);

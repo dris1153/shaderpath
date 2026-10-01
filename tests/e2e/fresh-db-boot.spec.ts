@@ -46,6 +46,8 @@ test("lesson page loads and a progress write round-trips (migrations ran)", asyn
     page.getByRole("heading", { name: "Dot, Cross & Normalize" }),
   ).toBeVisible();
 
+  // Completion lives in the lesson dock: the button opens the confidence step.
+  await page.getByRole("button", { name: "Hoàn thành bài" }).click();
   await page.getByRole("radio", { name: "5" }).click();
   await page.getByRole("button", { name: "Đánh dấu hoàn thành" }).click();
   await expect(page.getByText("Đã hoàn thành · tự tin 5/5")).toBeVisible();

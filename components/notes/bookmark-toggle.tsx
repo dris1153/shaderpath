@@ -10,9 +10,10 @@ import {
   useLessonState,
 } from "@/lib/hooks/use-lesson-state";
 import { toggleBookmark } from "@/lib/notes";
+import { cn } from "@/lib/utils";
 
 /** Lesson-level bookmark toggle (anchorId = null), optimistic. */
-export function BookmarkToggle({ slug }: { slug: string }) {
+export function BookmarkToggle({ slug, className }: { slug: string; className?: string }) {
   const t = useTranslations("notes");
   const { data } = useLessonState(slug);
   const invalidate = useInvalidateLessonState(slug);
@@ -24,7 +25,7 @@ export function BookmarkToggle({ slug }: { slug: string }) {
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="icon"
       aria-label={t("bookmarkLesson")}
       // Omitted rather than false while unknown: aria-pressed="false" would
@@ -32,7 +33,7 @@ export function BookmarkToggle({ slug }: { slug: string }) {
       aria-pressed={known ? on : undefined}
       aria-busy={!known}
       disabled={!known}
-      className={known ? undefined : "opacity-40"}
+      className={cn(className, !known && "opacity-40")}
       onClick={() => {
         const next = !on;
         setOverride(next);

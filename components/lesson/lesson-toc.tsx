@@ -34,16 +34,16 @@ export function LessonToc({ toc }: { toc: TocItem[] }) {
 
   return (
     <nav aria-label={t("onThisPage")} className="text-sm">
-      <p className="text-foreground mb-3 font-medium">{t("onThisPage")}</p>
-      <ul className="space-y-2">
+      <p className="text-muted-foreground chunky-label mb-3 text-xs">{t("onThisPage")}</p>
+      <ul className="space-y-0.5">
         {toc.map((item) => (
           <li key={item.id} style={{ paddingLeft: (item.depth - 2) * 12 }}>
             <a
               href={`#${item.id}`}
               aria-current={activeId === item.id ? "location" : undefined}
               className={cn(
-                "text-muted-foreground hover:text-foreground block transition-colors",
-                activeId === item.id && "text-foreground font-medium",
+                "text-muted-foreground hover:text-foreground block rounded-lg px-2 py-1 transition-colors",
+                activeId === item.id && "bg-card text-link ring-border font-bold ring-2 ring-inset",
               )}
             >
               {item.text}
