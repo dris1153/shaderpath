@@ -114,7 +114,9 @@ function createScene(canvas: HTMLCanvasElement): Scene | null {
 
 function draw(scene: Scene, canvas: HTMLCanvasElement, seconds: number) {
   const { gl } = scene;
-  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  // Decoration under a dark scrim: CSS-pixel resolution is indistinguishable and
+  // costs half the fill of a 1.5x backing store.
+  const dpr = 1;
   const w = Math.max(1, Math.floor(canvas.clientWidth * dpr));
   const h = Math.max(1, Math.floor(canvas.clientHeight * dpr));
   if (canvas.width !== w || canvas.height !== h) {

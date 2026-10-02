@@ -7,11 +7,13 @@ import {
 
 // The four destinations, shared by the desktop header and the mobile tab bar.
 // `match` lists the locale-free path prefixes that light the item up.
+// `prefetch: false` keeps the account pages (recharts, review) from being
+// downloaded on every page view; the first click pays for them instead.
 export const NAV_ITEMS = [
-  { key: "learn", href: "/roadmap", Icon: IconRoute, match: ["/roadmap", "/track", "/lesson"] },
-  { key: "review", href: "/review", Icon: IconCards, match: ["/review"] },
-  { key: "playground", href: "/playground", Icon: IconCode, match: ["/playground"] },
-  { key: "you", href: "/stats", Icon: IconUserCircle, match: ["/stats", "/notes", "/settings"] },
+  { key: "learn", href: "/roadmap", Icon: IconRoute, match: ["/roadmap", "/track", "/lesson"], prefetch: true },
+  { key: "review", href: "/review", Icon: IconCards, match: ["/review"], prefetch: false },
+  { key: "playground", href: "/playground", Icon: IconCode, match: ["/playground"], prefetch: true },
+  { key: "you", href: "/stats", Icon: IconUserCircle, match: ["/stats", "/notes", "/settings"], prefetch: false },
 ] as const;
 
 export type NavKey = (typeof NAV_ITEMS)[number]["key"];

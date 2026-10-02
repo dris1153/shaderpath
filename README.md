@@ -33,9 +33,9 @@ Shaderpath is a bilingual (English / Vietnamese) course for real-time graphics o
     <td width="50%">
       <picture>
         <source media="(prefers-color-scheme: dark)" srcset=".github/assets/lesson-dark.webp">
-        <img alt="A lesson page with its mind map, module navigation and table of contents" src=".github/assets/lesson-light.webp">
+        <img alt="A lesson page with its course tree, table of contents and video and mind-map chips" src=".github/assets/lesson-light.webp">
       </picture>
-      <p align="center"><b>Lessons</b> — one mental model each, with a mind map, objectives and common mistakes</p>
+      <p align="center"><b>Lessons</b> — one mental model each, with a course tree, table of contents and a finish-lesson dock</p>
     </td>
     <td width="50%">
       <picture>
@@ -71,7 +71,7 @@ Shaderpath is a bilingual (English / Vietnamese) course for real-time graphics o
 - **Spaced-repetition review.** Recall cards for 123 theory lessons, scheduled with an SM-2-style algorithm from the grades you give yourself.
 - **GLSL playground.** A Monaco editor with GLSL highlighting, a live WebGL2 preview, exact error lines, 35 presets and saved snippets.
 - **Notes, bookmarks and search.** Notes are anchored to headings, and <kbd>Ctrl</kbd>+<kbd>K</kbd> searches every lesson in the language you're reading.
-- **Stats.** Streaks, a 26-week activity heatmap and time spent per track.
+- **Streak and XP.** A study streak that forgives one missed day a week, XP and levels, a 26-week activity heatmap and time spent per track. For signed-in readers only.
 - **Adaptive quality.** Demos detect a quality tier and cap the canvas DPR and effects to match. A manual choice in Settings always wins.
 - **Your data stays yours.** Progress exports to versioned JSON and imports back with a preview. Replace and merge both run in a single transaction.
 
@@ -99,7 +99,7 @@ Shaderpath is a bilingual (English / Vietnamese) course for real-time graphics o
 | Area | Tools |
 |---|---|
 | App | Next.js 16 (App Router, Turbopack), React 19, TypeScript, next-intl |
-| UI | Tailwind CSS v4, shadcn/ui (Base UI), Google Sans |
+| UI | Tailwind CSS v4, shadcn/ui (Base UI), Baloo 2 + Nunito + JetBrains Mono. See [docs/design-system.md](docs/design-system.md) |
 | Graphics | three.js r185, React Three Fiber 9, drei, @react-three/postprocessing, GSAP 3, raw WebGL2 |
 | Content | MDX, KaTeX, Shiki, a typed content registry generated at build time |
 | Editor | Monaco with a custom GLSL tokenizer |

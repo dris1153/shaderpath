@@ -42,12 +42,12 @@ export function GuestHome() {
             aria-hidden
             className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/75 to-black/60 sm:via-black/60 sm:to-black/25"
           />
-          <div className="relative flex min-h-[22rem] flex-col justify-center px-6 py-12 sm:px-10 sm:py-16">
+          <div className="relative flex min-h-[22rem] flex-col justify-center px-6 py-12 sm:px-10 sm:py-14">
             <span className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-white/70">
               <span aria-hidden className="size-1.5 rounded-full bg-white/40" />
               {t("heroBadge")}
             </span>
-            <h1 className="max-w-3xl text-4xl leading-[1.05] tracking-tight text-balance text-white sm:text-6xl">
+            <h1 className="max-w-3xl text-3xl leading-[1.1] tracking-tight text-balance text-white sm:text-5xl">
               {t("headline")}
             </h1>
             <p className="mt-5 max-w-xl text-base text-white/80 sm:text-lg">

@@ -112,6 +112,22 @@ guests never request them and see no chips.
   - confetti when the completion finishes a module's core lessons.
 - After anything that earns XP, call `useInvalidateGamification()`.
 
+## Performance
+
+Measured with Lighthouse (mobile profile) against the build before the redesign;
+the home page is within run-to-run noise, lessons and the roadmap are better.
+
+- **Fonts:** three families with the `latin`, `latin-ext` and `vietnamese`
+  subsets are about 156KB on a page. The Nunito italic is not loaded (italics
+  are synthesised) and JetBrains Mono is not preloaded.
+- **Prefetch:** header and tab links to `/review` and `/stats` set
+  `prefetch: false` in `nav-items.ts`. Those pages carry recharts and the
+  review deck, and prefetching them added about 180KB to every page view.
+- **Hero canvas:** drawn at 1x. It sits under a dark scrim, so a larger
+  backing store costs fill without being visible.
+- **Layout shift:** loading placeholders match the size of what replaces them
+  (header session controls, the roadmap summary row).
+
 ## Guard rails
 
 - **The reading column stays calm.** No edges or press styles around prose,

@@ -47,29 +47,59 @@ const ROUTES: { name: string; path: string; heading: string }[] = [
   { name: "review", path: "/vi/review", heading: "Ôn tập" },
   { name: "stats", path: "/vi/stats", heading: "Thống kê học tập" },
   { name: "settings", path: "/vi/settings", heading: "Cài đặt" },
+  { name: "login", path: "/vi/login", heading: "Đăng nhập" },
+  { name: "register", path: "/vi/register", heading: "Tạo tài khoản" },
+  { name: "lesson (video, demo, exercises)", path: "/vi/lesson/vector-basics", heading: "Vector cơ bản" },
+  { name: "not found", path: "/vi/khong-co-trang-nay", heading: "Trang này không tồn tại" },
 ];
 
-for (const route of ROUTES) {
-  test(`axe: ${route.name} (${route.path}) has no serious/critical violations`, async ({
-    page,
-  }) => {
-    await page.goto(route.path);
-    await expect(
-      page.getByRole("heading", { name: route.heading, exact: true }).first(),
-    ).toBeVisible();
+// Every route in both themes and at desktop and phone width; the Arcade tokens
+// are checked on the rendered colours, not on paper.
+const MATRIX = [
+  { name: "light desktop", colorScheme: "light", viewport: { width: 1440, height: 900 } },
+  { name: "dark desktop", colorScheme: "dark", viewport: { width: 1440, height: 900 } },
+  { name: "light mobile", colorScheme: "light", viewport: { width: 390, height: 844 } },
+  { name: "dark mobile", colorScheme: "dark", viewport: { width: 390, height: 844 } },
+] as const;
 
-    if (route.path === "/vi/playground") {
-      // Let Monaco fully mount so its own ARIA surface (ariaLabel option) is scanned too.
-      await page
-        .waitForSelector(".monaco-editor", { state: "attached", timeout: 15_000 })
-        .catch(() => {});
+for (const mode of MATRIX) {
+  test.describe(mode.name, () => {
+    test.use({ colorScheme: mode.colorScheme, viewport: mode.viewport });
+
+    for (const route of ROUTES) {
+      test(`axe: ${route.name} (${route.path}) has no serious/critical violations`, async ({
+        page,
+      }) => {
+        await page.goto(route.path);
+        await expect(
+          page.getByRole("heading", { name: route.heading, exact: true }).first(),
+        ).toBeVisible();
+
+        if (route.path === "/vi/playground") {
+          // Let Monaco fully mount so its own ARIA surface (ariaLabel option) is scanned too.
+          await page
+            .waitForSelector(".monaco-editor", { state: "attached", timeout: 15_000 })
+            .catch(() => {});
+        }
+        await page.waitForTimeout(500);
+
+        const blocking = await scanBlocking(page);
+        expect(
+          blocking,
+          blocking.map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`).join("\n"),
+        ).toEqual([]);
+      });
     }
-    await page.waitForTimeout(500);
-
-    const blocking = await scanBlocking(page);
-    expect(
-      blocking,
-      blocking.map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`).join("\n"),
-    ).toEqual([]);
   });
 }
+
+// Reduced motion must not hide anything or break contrast.
+test.describe("reduced motion", () => {
+  test("home has no serious/critical violations", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/vi");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(await scanBlocking(page)).toEqual([]);
+  });
+});

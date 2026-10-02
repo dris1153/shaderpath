@@ -26,10 +26,11 @@ export function MainNav({ label }: { label: string }) {
 
   return (
     <nav aria-label={label} className="hidden items-center gap-1 md:flex">
-      {NAV_ITEMS.map(({ key, href, Icon }) => (
+      {NAV_ITEMS.map(({ key, href, Icon, prefetch }) => (
         <Link
           key={key}
           href={href}
+          prefetch={prefetch}
           aria-current={active === key ? "page" : undefined}
           className={cn(
             "chunky-label text-muted-foreground hover:text-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors",

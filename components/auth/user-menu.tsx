@@ -33,8 +33,9 @@ export function UserMenu() {
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  // Same size as the avatar so the header does not jump when it resolves.
-  if (isPending) return <Skeleton className="size-9 rounded-full" />;
+  // Sized like the guest controls (preferences icon + Sign in), the common case,
+  // so the search pill beside it does not slide when the session resolves.
+  if (isPending) return <Skeleton className="h-9 w-[151px] rounded-lg" />;
 
   const user = data?.user;
   if (!user) {

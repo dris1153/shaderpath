@@ -19,6 +19,7 @@ export function RoadmapSummary() {
   const { data } = useProgressMap();
   const { data: xp } = useGamification();
 
+  // Every state below is min-h-9 like this skeleton, so the page below never shifts.
   // A skeleton rather than "0 of 162": overallCompletion is pure over the map,
   // so an unread map reports zero as confidently as a real one would.
   if (!data) return <Skeleton className="mt-3 h-9 w-80 max-w-full" />;
@@ -27,7 +28,7 @@ export function RoadmapSummary() {
   // would not — "0 of 162 done" implies an account that has done nothing.
   if (!data.authenticated) {
     return (
-      <p className="text-muted-foreground mt-3 flex flex-wrap items-center gap-2 text-sm">
+      <p className="text-muted-foreground mt-3 flex min-h-9 flex-wrap items-center gap-2 text-sm">
         <IconLock className="size-4" aria-hidden />
         {t("signedOut")}
         <Link href="/login" className="text-link font-bold underline-offset-4 hover:underline">
@@ -40,7 +41,7 @@ export function RoadmapSummary() {
   const stats = overallCompletion(data.progress);
   const current = TRACKS.find((tr) => tr.id === currentTrackId(data.progress));
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2">
+    <div className="mt-3 flex min-h-9 flex-wrap items-center gap-2">
       <p className={CHIP}>
         {t("subtitle", { completed: stats.coreCompleted, total: stats.coreTotal, electives: stats.electiveTotal })}
       </p>

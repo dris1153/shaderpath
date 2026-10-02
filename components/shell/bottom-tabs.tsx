@@ -23,10 +23,11 @@ export function BottomTabs({ label }: { label: string }) {
         aria-label={label}
         className="bg-card fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t-2 pb-[env(safe-area-inset-bottom)] md:hidden"
       >
-        {NAV_ITEMS.map(({ key, href, Icon }) => (
+        {NAV_ITEMS.map(({ key, href, Icon, prefetch }) => (
           <Link
             key={key}
             href={href}
+            prefetch={prefetch}
             aria-current={active === key ? "page" : undefined}
             className={cn(
               "chunky-label text-muted-foreground flex min-h-14 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px]",

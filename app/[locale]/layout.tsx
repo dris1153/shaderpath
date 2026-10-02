@@ -26,7 +26,6 @@ const baloo = Baloo_2({
 const nunito = Nunito({
   variable: "--font-nunito",
   subsets: ["latin", "latin-ext", "vietnamese"],
-  style: ["normal", "italic"],
   display: "swap",
 });
 
@@ -34,6 +33,8 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-jetbrains-mono",
   subsets: ["latin", "latin-ext", "vietnamese"],
   display: "swap",
+  // Code and keycaps only: not worth a preload on every page.
+  preload: false,
 });
 
 export const metadata: Metadata = {
