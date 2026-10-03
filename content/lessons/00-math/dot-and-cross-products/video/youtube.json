@@ -1,0 +1,187 @@
+{
+  "title": {
+    "en": "How Does the Guard See You? Dot & Cross Products for Games & Graphics",
+    "vi": "Lính gác thấy bạn bằng cách nào? Dot & cross product cho game & đồ hoạ"
+  },
+  "summary": {
+    "en": "How does a game guard know you're in front of it? In five minutes, Inko the octopus builds the dot product, one number that reads angles and facing, and the cross product, the perpendicular that becomes a triangle's normal, then ends on the formula behind basic lighting.",
+    "vi": "Làm sao lính gác trong game biết bạn đang ở phía trước? Trong năm phút, bạch tuộc Inko dựng dot product, một con số đọc ra góc và hướng nhìn, và cross product, vector vuông góc trở thành pháp tuyến của tam giác, rồi kết thúc bằng công thức đằng sau ánh sáng cơ bản."
+  },
+  "bullets": {
+    "en": [
+      "the dot product: multiply the matching parts and add, giving a number, not a vector",
+      "|a| |b| cos θ: the sign tells front, side or behind",
+      "a guard's vision cone, and why you normalize before comparing",
+      "projection: a's shadow on b's direction",
+      "the cross product, the right-hand rule, and why swapping the order flips it",
+      "triangle normals, winding order, and lighting with max(0, N · L)"
+    ],
+    "vi": [
+      "dot product: nhân từng cặp thành phần rồi cộng, ra một con số chứ không phải vector",
+      "|a| |b| cos θ: dấu cho biết phía trước, bên cạnh hay phía sau",
+      "vùng nhìn của lính gác, và vì sao phải normalize trước khi so",
+      "phép chiếu: bóng của a trên hướng của b",
+      "cross product, quy tắc bàn tay phải, và vì sao đảo thứ tự thì kết quả lật ngược",
+      "pháp tuyến tam giác, thứ tự đỉnh, và chiếu sáng với max(0, N · L)"
+    ]
+  },
+  "lessonLink": {
+    "en": "Full lesson, with the interactive Dot Product & Projection demo, exercises and review cards:",
+    "vi": "Bài học đầy đủ, có demo tương tác Dot product & phép chiếu, bài tập và thẻ ôn tập:"
+  },
+  "series": {
+    "en": "Math Foundations for Graphics · lesson 3",
+    "vi": "Nền tảng Toán học cho đồ hoạ · bài 3"
+  },
+  "tags": [
+    "dot product",
+    "cross product",
+    "vector math",
+    "game math",
+    "webgl",
+    "three.js",
+    "threejs",
+    "glsl",
+    "shaders",
+    "normal vector",
+    "triangle normal",
+    "right hand rule",
+    "lambert lighting",
+    "backface culling",
+    "field of view",
+    "game development",
+    "computer graphics",
+    "graphics programming",
+    "shaderpath"
+  ],
+  "hashtags": [
+    "gamedev",
+    "webgl",
+    "threejs"
+  ],
+  "chapters": {
+    "hook": {
+      "en": "How the guard sees you",
+      "vi": "Lính gác thấy bạn thế nào"
+    },
+    "multiply-add": {
+      "en": "Dot product: multiply and add",
+      "vi": "Dot product: nhân rồi cộng"
+    },
+    "angle": {
+      "en": "The angle and the sign",
+      "vi": "Góc và dấu"
+    },
+    "vision": {
+      "en": "Solving the vision cone",
+      "vi": "Giải bài toán vùng nhìn"
+    },
+    "projection": {
+      "en": "Projection: a's shadow",
+      "vi": "Phép chiếu: bóng của a"
+    },
+    "cross": {
+      "en": "Cross product and the right-hand rule",
+      "vi": "Cross product và quy tắc bàn tay phải"
+    },
+    "normal": {
+      "en": "Triangle normals and winding",
+      "vi": "Pháp tuyến tam giác và thứ tự đỉnh"
+    },
+    "light": {
+      "en": "Lighting with max(0, N · L)",
+      "vi": "Chiếu sáng với max(0, N · L)"
+    },
+    "recap": {
+      "en": "Recap",
+      "vi": "Tóm tắt"
+    }
+  },
+  "quizzes": [
+    {
+      "at": "multiply-add:end",
+      "question": "(2, 3) · (−1, 4) = ?",
+      "answers": [
+        "10",
+        "(−2, 12)",
+        "14"
+      ],
+      "correct": 0,
+      "explanation": "2 · (−1) + 3 · 4 = −2 + 12 = 10. A dot product is a number, not a vector."
+    },
+    {
+      "at": "angle:end",
+      "question": "For two unit vectors, a · b = 0 means they are…",
+      "answers": [
+        "Pointing the same way",
+        "Perpendicular",
+        "Pointing opposite ways"
+      ],
+      "correct": 1,
+      "explanation": "For unit vectors a · b = cos θ, and cos 90° = 0."
+    },
+    {
+      "at": "vision:end",
+      "question": "The guard's code skips normalize. Who gets seen by mistake?",
+      "answers": [
+        "A faraway Inko outside the cone",
+        "Nobody: the result is the same",
+        "Only an Inko standing behind"
+      ],
+      "correct": 0,
+      "explanation": "Without normalizing, the dot grows with distance, so a far Inko beats 0.87 even at a wide angle."
+    },
+    {
+      "at": "projection:end",
+      "question": "Make b twice as long. The shadow of a on b's direction…",
+      "answers": [
+        "Doubles",
+        "Stays the same",
+        "Halves"
+      ],
+      "correct": 1,
+      "explanation": "The shadow a · b̂ uses only b's direction, not its length."
+    },
+    {
+      "at": "cross:end",
+      "question": "a × b = (0, 0, 1). What is b × a?",
+      "answers": [
+        "(0, 0, 1)",
+        "(0, 0, −1)",
+        "(1, 0, 0)"
+      ],
+      "correct": 1,
+      "explanation": "Swapping the order flips the sign: b × a = −(a × b)."
+    },
+    {
+      "at": "normal:end",
+      "question": "Which one gives the normal of triangle ABC?",
+      "answers": [
+        "normalize((B − A) × (C − A))",
+        "(B − A) · (C − A)",
+        "normalize(A + B + C)"
+      ],
+      "correct": 0,
+      "explanation": "Cross two edges from the same corner, then normalize. A dot would give a number, not a direction."
+    },
+    {
+      "at": "light:end",
+      "question": "A surface faces away from the light: N · L = −0.5. Its brightness is…",
+      "answers": [
+        "−0.5",
+        "0",
+        "0.5"
+      ],
+      "correct": 1,
+      "explanation": "max(0, N · L) clamps negative values to 0: light can't be negative."
+    }
+  ],
+  "thumbnail": {
+    "lines": [
+      "DOT & CROSS",
+      "a · b > 0 ?"
+    ],
+    "code": "max(0, dot(N, L))",
+    "background": "a small round guard creature casting a soft translucent cone of vision across a tiled floor; a few colourful arrows; a little triangle with an arrow standing straight out of its face"
+  }
+}

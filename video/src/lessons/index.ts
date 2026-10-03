@@ -1,5 +1,6 @@
 import type { LessonModule } from "../scene/LessonVideo";
 import { lesson as cartesianAndUvSpace } from "./cartesian-and-uv-space";
+import { lesson as dotAndCrossProducts } from "./dot-and-cross-products";
 import { lesson as dummy } from "./dummy";
 import { lesson as style } from "./style";
 import { lesson as vectorBasics } from "./vector-basics";
@@ -11,4 +12,5 @@ export const LESSONS: Record<string, LessonModule> = {
   style,
   "cartesian-and-uv-space": cartesianAndUvSpace,
   "vector-basics": vectorBasics,
+  "dot-and-cross-products": dotAndCrossProducts,
 };

@@ -27,7 +27,7 @@ Scenes ask for a role, never a hex value.
 | `sky` | cool, neutral data (grids, UV cells) |
 | `outline` / `text` / `textMuted` | lines and type |
 | `inko` / `inkoShade` / `inkoLight` / `cheek` | the mascot only |
-| `slime` / `slimeShade` | the enemy slime only |
+| `slime` / `slimeShade` | the slime only (enemy or guard) |
 
 `night` stays in `palette.ts` for a possible dark variant, but lessons use `paper`.
 
@@ -59,6 +59,16 @@ Scenes ask for a role, never a hex value.
   - `dashed` is for "the other way round" and ghost copies.
 - The vector under discussion is `hero` and 7 px wide; axes stay 4 px `outline`.
 
+## Angles and 3D (`kit/angle.tsx`, `kit/iso.tsx`)
+
+- `angle.tsx` works in degrees, counter-clockwise from +x as on a y-up grid; `polar(at, deg, r)` gives the stage point.
+  - `AngleArc`: a tinted wedge plus an arc between two directions, with an optional label (θ). Colour it by meaning (for a sign: `ok` / `textMuted` / `warn`).
+  - `VisionCone`: a translucent sector with dashed edges; `grow` sweeps it out from the eye.
+- `iso.tsx` is one fixed isometric view of a right-handed world: y up, x right-down, z left-down (seen from the +x +y +z side), so x × y = z reads true.
+  - Declare one `IsoSpace` and map with `toStage3`; `cross(a, b)` is the real cross product.
+  - `FloorGrid` (the y = 0 floor, faint fill), `Axis3D`, `Vector3` (the 2D `ArrowPath` between projected points).
+  - Keep vectors off the axes (start them at a floor point) when they would run along one.
+
 ## Motion (`kit/motion.tsx`, `kit/easing.ts`)
 
 Everything takes `t` from `useCue`, never an absolute frame.
@@ -75,6 +85,7 @@ Everything takes `t` from `useCue`, never an absolute frame.
 
 ## Inko (`mascot/`)
 
+- **Cast:** `Inko.tsx`; `Walker.tsx` (`stride` and a small walking Inko); `Slime.tsx` (the slime, enemy or guard, and its `Poof`).
 - **Poses:** `idle`, `point`, `think`, `cheer`, `surprised`, `threads`.
 - **Blending:** `reach` (0–1) blends from idle into the pose. Drive it from a cue with `progress()`; a pose must never snap in one frame.
 - **Tentacles:** 8 procedural tentacles — 4 back in `inkoShade`, 4 front in `inko` with suckers.

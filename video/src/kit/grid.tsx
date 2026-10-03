@@ -26,7 +26,7 @@ export function minus(a: Vec, b: Vec): Vec {
 }
 
 // Plain stage-px arrow: shaft plus a chunky head that shrinks on short arrows.
-function ArrowPath({ a, b, stroke, width, dashed }: {
+export function ArrowPath({ a, b, stroke, width, dashed }: {
   a: Vec; b: Vec; stroke: string; width: number; dashed?: boolean;
 }) {
   const len = Math.hypot(b.x - a.x, b.y - a.y);
