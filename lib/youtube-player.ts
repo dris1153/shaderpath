@@ -58,8 +58,9 @@ export function loadYouTubeApi(): Promise<YouTubeApi> {
 }
 
 // `hl` is the player UI language and `cc_lang_pref` the caption track, both the page's.
-export function youtubePlayerVars(locale: Locale): Record<string, string | number> {
-  return { autoplay: 1, rel: 0, playsinline: 1, hl: locale, cc_lang_pref: locale };
+// `end` (whole seconds) stops playback there.
+export function youtubePlayerVars(locale: Locale, end?: number): Record<string, string | number> {
+  return { autoplay: 1, rel: 0, playsinline: 1, hl: locale, cc_lang_pref: locale, ...(end === undefined ? {} : { end }) };
 }
 
 export function youtubeThumbnailUrl(id: string): string {

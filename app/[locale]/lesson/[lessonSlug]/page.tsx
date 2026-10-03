@@ -187,6 +187,7 @@ export default async function LessonPage({
             video && {
               videoId: video.youtube,
               dubs: video.dubs ?? [],
+              end: video.outroAt,
               strings: {
                 play: t("playVideo"),
                 title: t("videoTitle", { title: pick(lesson.title, locale) }),

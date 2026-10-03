@@ -24,12 +24,15 @@ export function LessonVideo({
   slug,
   locale,
   dubs,
+  end,
   strings,
 }: {
   videoId: string;
   slug: string;
   locale: Locale;
   dubs: Locale[];
+  // Seconds where playback stops: the start of the video's like/subscribe outro.
+  end?: number;
   strings: Strings;
 }) {
   const [started, setStarted] = useState(false);
@@ -72,7 +75,7 @@ export function LessonVideo({
         playerRef.current = new YT.Player(hostRef.current, {
           host: "https://www.youtube-nocookie.com",
           videoId,
-          playerVars: youtubePlayerVars(locale),
+          playerVars: youtubePlayerVars(locale, end),
           events: {
             // The play button is gone; keep keyboard users on the player.
             onReady: (event) => event.target.getIframe().focus(),
@@ -93,7 +96,7 @@ export function LessonVideo({
       for (const audio of dubAudios.values()) audio.pause();
     };
     // sync reads refs only; the player is built once per start.
-  }, [started, videoId, locale]);
+  }, [started, videoId, locale, end]);
 
   const start = () => {
     // Browsers let media start only from a user gesture: prime the dub now.

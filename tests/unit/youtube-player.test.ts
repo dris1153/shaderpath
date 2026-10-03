@@ -27,6 +27,11 @@ describe("youtube helpers", () => {
     expect(youtubePlayerVars("vi")).toMatchObject({ hl: "vi", cc_lang_pref: "vi", playsinline: 1 });
   });
 
+  it("stops at the outro only when the video has one", () => {
+    expect(youtubePlayerVars("en", 72)).toMatchObject({ end: 72 });
+    expect(youtubePlayerVars("en")).not.toHaveProperty("end");
+  });
+
   it("escapes the thumbnail id", () => {
     expect(youtubeThumbnailUrl("a/b")).toBe("https://i.ytimg.com/vi/a%2Fb/hqdefault.jpg");
   });
