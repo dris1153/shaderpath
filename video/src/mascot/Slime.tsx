@@ -1,7 +1,7 @@
 import { useCurrentFrame } from "remotion";
-import { progress } from "../../kit/easing";
-import type { Vec } from "../../kit/grid";
-import { usePalette } from "../../kit/palette";
+import { progress } from "../kit/easing";
+import type { Vec } from "../kit/grid";
+import { usePalette } from "../kit/palette";
 
 // The enemy: a lime blob standing on `at`. `face` runs from 1 (looking right)
 // to −1 (left), so a turn slides the eyes across instead of snapping. `hop`

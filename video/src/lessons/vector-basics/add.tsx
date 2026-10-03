@@ -6,7 +6,7 @@ import { Box } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
 import { useCue } from "../../scene/cue";
-import { stride, Walker } from "./parts";
+import { stride, Walker } from "../../mascot/Walker";
 
 // The theory's example: a = (3, 1), b = (−2, 4), a + b = (1, 5).
 const G: GridSpace = { ox: 560, oy: 500, unit: 64 };

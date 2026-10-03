@@ -8,7 +8,7 @@ import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { stride } from "./parts";
+import { stride } from "../../mascot/Walker";
 
 const G: GridSpace = { ox: 720, oy: 380, unit: 60 };
 const V = { x: 3, y: 2 };

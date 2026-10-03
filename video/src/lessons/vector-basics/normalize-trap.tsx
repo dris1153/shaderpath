@@ -5,8 +5,8 @@ import { usePalette } from "../../kit/palette";
 import { Box } from "../../kit/shapes";
 import { Code, Label, useString } from "../../kit/text";
 import { useCue } from "../../scene/cue";
-import { stride, Walker } from "./parts";
-import { Poof, Slime } from "./slime";
+import { stride, Walker } from "../../mascot/Walker";
+import { Poof, Slime } from "../../mascot/Slime";
 
 // The slime lands on Inko, player − enemy = (0, 0), a hand-written normalize
 // divides by zero and the slime turns into NaN and vanishes. The fix checks

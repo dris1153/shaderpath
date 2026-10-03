@@ -6,7 +6,8 @@ import { Circle } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Title, useString } from "../../kit/text";
 import { useCue } from "../../scene/cue";
-import { KeyCap, stride, Walker } from "./parts";
+import { stride, Walker } from "../../mascot/Walker";
+import { KeyCap } from "./parts";
 
 // Two starts, each with a ring of radius one "speed setting" (one unit). The D
 // walker lands on its ring; the W+D walker moves (1, 1) in the same time and

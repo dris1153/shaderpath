@@ -6,8 +6,8 @@ import { Box } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
 import { useCue } from "../../scene/cue";
-import { stride, Walker } from "./parts";
-import { Slime } from "./slime";
+import { stride, Walker } from "../../mascot/Walker";
+import { Slime } from "../../mascot/Slime";
 
 // player − enemy runs from the slime to Inko. The slime follows it part way,
 // then the swapped order points away from Inko and the slime runs to its tip.

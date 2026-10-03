@@ -7,7 +7,7 @@ import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { Walker } from "./parts";
+import { Walker } from "../../mascot/Walker";
 
 // Three chips for the three roles, one demo each: a point measured from the
 // origin; a box's normal that ignores the slide; a velocity whose length is
