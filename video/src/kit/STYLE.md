@@ -64,6 +64,7 @@ Scenes ask for a role, never a hex value.
 - `angle.tsx` works in degrees, counter-clockwise from +x as on a y-up grid; `polar(at, deg, r)` gives the stage point.
   - `AngleArc`: a tinted wedge plus an arc between two directions, with an optional label (θ). Colour it by meaning (for a sign: `ok` / `textMuted` / `warn`).
   - `VisionCone`: a translucent sector with dashed edges; `grow` sweeps it out from the eye.
+  - `ProjectionDrop`: a dashed perpendicular from a tip onto a line, a right-angle mark, and the shadow segment from the line's origin to the foot (it runs backward for a negative shadow).
 - `iso.tsx` is one fixed isometric view of a right-handed world: y up, x right-down, z left-down (seen from the +x +y +z side), so x × y = z reads true.
   - Declare one `IsoSpace` and map with `toStage3`; `cross(a, b)` is the real cross product.
   - `FloorGrid` (the y = 0 floor, faint fill), `Axis3D`, `Vector3` (the 2D `ArrowPath` between projected points).

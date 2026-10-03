@@ -38,6 +38,38 @@ export function AngleArc({ at, from, to, r = 64, color, label }: {
   );
 }
 
+// a's shadow on the line through `at` along `dir`: a dashed drop from `tip`
+// (grown by `drop`), a right-angle mark at the foot, and the shadow segment
+// from `at` to the foot (grown by `shadow`). Returns nothing until `drop` > 0.
+export function ProjectionDrop({ at, tip, dir, drop, shadow = 0, color }: {
+  at: Vec; tip: Vec; dir: number; drop: number; shadow?: number; color?: string;
+}) {
+  const pal = usePalette();
+  if (drop <= 0) return null;
+  const u = { x: Math.cos((dir * Math.PI) / 180), y: -Math.sin((dir * Math.PI) / 180) };
+  const along = (tip.x - at.x) * u.x + (tip.y - at.y) * u.y;
+  const foot = { x: at.x + u.x * along, y: at.y + u.y * along };
+  const end = { x: tip.x + (foot.x - tip.x) * drop, y: tip.y + (foot.y - tip.y) * drop };
+  // The mark's legs run back along the line (toward `at`) and up toward the tip.
+  const back = { x: -u.x * Math.sign(along || 1) * 16, y: -u.y * Math.sign(along || 1) * 16 };
+  const upLen = Math.hypot(tip.x - foot.x, tip.y - foot.y) || 1;
+  const up = { x: ((tip.x - foot.x) / upLen) * 16, y: ((tip.y - foot.y) / upLen) * 16 };
+  return (
+    <g>
+      {shadow > 0 ? (
+        <line x1={at.x} y1={at.y} x2={at.x + (foot.x - at.x) * shadow} y2={at.y + (foot.y - at.y) * shadow}
+          stroke={color ?? pal.hero} strokeWidth={16} strokeLinecap="round" opacity={0.55} />
+      ) : null}
+      <line x1={tip.x} y1={tip.y} x2={end.x} y2={end.y} stroke={pal.textMuted} strokeWidth={4} strokeDasharray="6 10"
+        strokeLinecap="round" />
+      {drop >= 1 && upLen > 24 ? (
+        <path d={`M ${foot.x + back.x} ${foot.y + back.y} L ${foot.x + back.x + up.x} ${foot.y + back.y + up.y} L ${foot.x + up.x} ${foot.y + up.y}`}
+          fill="none" stroke={pal.outline} strokeWidth={3} />
+      ) : null}
+    </g>
+  );
+}
+
 // What a watcher at `at` sees: a translucent sector `half` degrees either side
 // of `dir`, out to `range` px (`grow` 0–1 sweeps it out from the eye).
 export function VisionCone({ at, dir, half, range, grow = 1, color }: {
