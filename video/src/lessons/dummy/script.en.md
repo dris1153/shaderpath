@@ -1,6 +1,7 @@
 ---
 slug: dummy
 title: Pipeline dummy
+outro: true
 ---
 
 ## scene: hello

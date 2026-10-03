@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Timing } from "../src/scene/timing";
 import { ffmpeg, generatedDir, lessonSource, outDir, parseArgs, ROOT } from "./remotion";
-import { readYoutubeSource, renderMetadata, validateYoutube, type Loc } from "./youtube-meta";
+import { outroAt, readYoutubeSource, renderMetadata, validateYoutube, type Loc } from "./youtube-meta";
 
 // pnpm youtube <slug>
 // out/<slug>/youtube/ — everything one YouTube upload needs:
@@ -22,6 +22,7 @@ if (!fs.existsSync(upload)) throw new Error(`no English render at ${upload}; run
 const readTiming = (dir: string) => JSON.parse(fs.readFileSync(path.join(dir, "timing.json"), "utf8")) as Timing;
 const timing = readTiming(master);
 const scenes = JSON.stringify(timing.scenes);
+const stop = outroAt(timing);
 
 // Everything is checked, and the metadata rendered, before the old upload set is touched.
 const generated = path.join(ROOT, "public", "generated", slug);
@@ -29,10 +30,14 @@ const langs = fs
   .readdirSync(generated)
   .filter((lang) => lang !== "en" && fs.existsSync(path.join(generatedDir(slug, lang), "voice.mp3")));
 for (const lang of langs) {
+  const fitted = readTiming(generatedDir(slug, lang));
   // A language voiced without --fit has its own scene lengths and cannot share the picture.
-  if (JSON.stringify(readTiming(generatedDir(slug, lang)).scenes) !== scenes) {
+  if (JSON.stringify(fitted.scenes) !== scenes) {
     throw new Error(`${lang} is not fitted to the English picture; run pnpm tts ${slug} ${lang} --fit en --model <model>`);
   }
+  // The site stops at the outro's first whole second, up to ~1 s early; a fit keeps only 0.5 s of tail.
+  const cut = stop === undefined ? undefined : fitted.words.find((w) => w.scene !== "outro" && w.to > stop * fitted.fps);
+  if (cut) console.warn(`${lang}: "${cut.text}" (${cut.scene}) runs past outroAt ${stop} s, so the site cuts it; shorten that scene's line`);
 }
 const sourceFile = path.join(lessonSource(slug), "youtube.json");
 const source = fs.existsSync(sourceFile) ? validateYoutube(readYoutubeSource(sourceFile), timing) : null;
@@ -65,4 +70,5 @@ if (source && metadata) {
 } else {
   console.warn(`no ${path.relative(process.cwd(), sourceFile)}: metadata.md skipped`);
 }
+if (stop !== undefined) console.log(`site: set outroAt: ${stop} in content/lesson-videos.ts (the embed stops before the outro)`);
 console.log(`done → ${path.relative(process.cwd(), dest)}`);

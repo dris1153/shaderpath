@@ -25,6 +25,36 @@ export type YoutubeSource = {
 
 const LANGUAGE: L10n = { en: "English", vi: "Tiếng Việt" };
 
+// The shared outro (src/outro/) carries its own chapter title in every lesson.
+const OUTRO_ID = "outro";
+const OUTRO_CHAPTER: L10n = { en: "Thanks for watching", vi: "Cảm ơn bạn đã xem" };
+// YouTube shows end-screen elements over the last 5–20 s of a video.
+const END_SCREEN_SEC = { min: 5, max: 20 };
+
+const chapterTitle = (src: YoutubeSource, id: string, l: Loc) => (id === OUTRO_ID ? OUTRO_CHAPTER[l] : src.chapters[id]![l]);
+
+// Where the site's embed stops (content/lesson-videos.ts `outroAt`): the outro's first whole second.
+export function outroAt(timing: Timing): number | undefined {
+  const outro = timing.scenes.find((s) => s.id === OUTRO_ID);
+  return outro ? Math.floor(outro.from / timing.fps) : undefined;
+}
+
+// Outro.tsx: after {next} the buttons fade and Inko crosses to the right within 26 frames.
+const OUTRO_LEAVE_FRAMES = 26;
+
+// The end screen starts once the outro has cleared its regions, inside YouTube's 5–20 s window.
+export function endScreen(timing: Timing): { start: number; seconds: number } | undefined {
+  const next = timing.cues[`${OUTRO_ID}.next`];
+  if (next === undefined) return undefined;
+  const end = timing.scenes.reduce((n, s) => n + s.durationInFrames, 0) / timing.fps;
+  const start = Math.max(Math.ceil((next + OUTRO_LEAVE_FRAMES) / timing.fps), Math.ceil(end - END_SCREEN_SEC.max));
+  const seconds = Math.floor(end - start);
+  if (seconds < END_SCREEN_SEC.min) {
+    throw new Error(`the outro leaves ${seconds} s for the end screen; YouTube needs ${END_SCREEN_SEC.min} s, so lengthen its # hold`);
+  }
+  return { start, seconds };
+}
+
 // Fixed copy around each lesson's own text.
 const COPY = {
   en: {
@@ -98,11 +128,12 @@ export function validateYoutube(raw: unknown, timing: Timing): YoutubeSource {
   } else if (tagsLength(src.tags) > 500) errors.push("tags: over YouTube's 500 characters");
   if (timing.scenes.length < 3) errors.push("chapters: YouTube needs at least 3");
   for (const scene of timing.scenes) {
-    if (!isL10n(src?.chapters?.[scene.id])) errors.push(`chapters.${scene.id}: needs en and vi titles`);
+    if (scene.id !== OUTRO_ID && !isL10n(src?.chapters?.[scene.id])) errors.push(`chapters.${scene.id}: needs en and vi titles`);
     if (scene.durationInFrames < 10 * timing.fps) errors.push(`chapters.${scene.id}: under YouTube's 10 s minimum`);
   }
   for (const id of Object.keys(src?.chapters ?? {})) {
-    if (!timing.scenes.some((s) => s.id === id)) errors.push(`chapters.${id}: no such scene`);
+    if (id === OUTRO_ID) errors.push(`chapters.${OUTRO_ID}: built in for the shared outro; remove it`);
+    else if (!timing.scenes.some((s) => s.id === id)) errors.push(`chapters.${id}: no such scene`);
   }
   if (!Array.isArray(src?.quizzes)) errors.push("quizzes: needs a list (it may be empty)");
   else {
@@ -139,7 +170,7 @@ export function validateYoutube(raw: unknown, timing: Timing): YoutubeSource {
 
 function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, dubs: Loc[]): string {
   const c = COPY[l];
-  const chapters = timing.scenes.map((s) => `${chapterTime(s.from / timing.fps)} ${src.chapters[s.id]![l]}`);
+  const chapters = timing.scenes.map((s) => `${chapterTime(s.from / timing.fps)} ${chapterTitle(src, s.id, l)}`);
   // Subtitles exist for English and for every dubbed language.
   const subtitled = (["en", ...dubs.filter((d) => d !== "en")] as Loc[]).map((x) => LANGUAGE[x]).join(", ");
   const text = [
@@ -183,6 +214,21 @@ export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string,
       ].join("\n"),
     ),
   ]);
+  const screen = endScreen(timing);
+  const siteStop = outroAt(timing);
+  const outroNotes = screen
+    ? [
+        "## End screen (Studio → End screen)",
+        "",
+        `Template "1 video + subscribe". Start at ${chapterTime(screen.start)}, the last ${screen.seconds} s.`,
+        "Drag the video element over the empty box on the left and the subscribe element over the empty spot in the middle; Inko points at them from the right.",
+        "",
+        "## Site",
+        "",
+        `Set \`outroAt: ${siteStop}\` on this lesson in \`content/lesson-videos.ts\`, so the embed stops before the outro.`,
+        "",
+      ]
+    : [];
   return [
     `# YouTube metadata: ${slug}`,
     "",
@@ -204,6 +250,7 @@ export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string,
     "### Description",
     block(description(src, timing, slug, "vi", dubs)),
     "",
+    ...outroNotes,
     "## Quizzes (Studio → Đố vui / Quizzes)",
     "",
     "The time after each quiz number goes in Studio's time field (minutes:seconds:frames); ✓ marks the correct answer.",

@@ -3,13 +3,264 @@
   "width": 1280,
   "height": 720,
   "scenes": [
-    { "id": "hello", "from": 0, "durationInFrames": 120 },
-    { "id": "wave", "from": 120, "durationInFrames": 120 }
+    {
+      "id": "hello",
+      "from": 0,
+      "durationInFrames": 154
+    },
+    {
+      "id": "wave",
+      "from": 154,
+      "durationInFrames": 148
+    },
+    {
+      "id": "outro",
+      "from": 302,
+      "durationInFrames": 421
+    }
   ],
-  "words": [],
-  "audio": "voice.mp3",
+  "words": [
+    {
+      "text": "Hi!",
+      "from": 0,
+      "to": 10,
+      "scene": "hello"
+    },
+    {
+      "text": "I'm",
+      "from": 13,
+      "to": 18,
+      "scene": "hello"
+    },
+    {
+      "text": "Inko.",
+      "from": 19,
+      "to": 30,
+      "scene": "hello"
+    },
+    {
+      "text": "Every",
+      "from": 43,
+      "to": 51,
+      "scene": "hello"
+    },
+    {
+      "text": "pixel",
+      "from": 53,
+      "to": 61,
+      "scene": "hello"
+    },
+    {
+      "text": "on",
+      "from": 63,
+      "to": 65,
+      "scene": "hello"
+    },
+    {
+      "text": "your",
+      "from": 66,
+      "to": 69,
+      "scene": "hello"
+    },
+    {
+      "text": "screen",
+      "from": 70,
+      "to": 78,
+      "scene": "hello"
+    },
+    {
+      "text": "has",
+      "from": 80,
+      "to": 84,
+      "scene": "hello"
+    },
+    {
+      "text": "an",
+      "from": 85,
+      "to": 87,
+      "scene": "hello"
+    },
+    {
+      "text": "address.",
+      "from": 88,
+      "to": 102,
+      "scene": "hello"
+    },
+    {
+      "text": "Let's",
+      "from": 154,
+      "to": 161,
+      "scene": "wave"
+    },
+    {
+      "text": "find",
+      "from": 162,
+      "to": 168,
+      "scene": "wave"
+    },
+    {
+      "text": "it",
+      "from": 169,
+      "to": 171,
+      "scene": "wave"
+    },
+    {
+      "text": "together,",
+      "from": 172,
+      "to": 184,
+      "scene": "wave"
+    },
+    {
+      "text": "one",
+      "from": 198,
+      "to": 205,
+      "scene": "wave"
+    },
+    {
+      "text": "tentacle",
+      "from": 206,
+      "to": 219,
+      "scene": "wave"
+    },
+    {
+      "text": "at",
+      "from": 220,
+      "to": 222,
+      "scene": "wave"
+    },
+    {
+      "text": "a",
+      "from": 223,
+      "to": 224,
+      "scene": "wave"
+    },
+    {
+      "text": "time!",
+      "from": 225,
+      "to": 238,
+      "scene": "wave"
+    },
+    {
+      "text": "If",
+      "from": 302,
+      "to": 307,
+      "scene": "outro"
+    },
+    {
+      "text": "this",
+      "from": 308,
+      "to": 313,
+      "scene": "outro"
+    },
+    {
+      "text": "clicked,",
+      "from": 315,
+      "to": 324,
+      "scene": "outro"
+    },
+    {
+      "text": "give",
+      "from": 326,
+      "to": 330,
+      "scene": "outro"
+    },
+    {
+      "text": "it",
+      "from": 331,
+      "to": 332,
+      "scene": "outro"
+    },
+    {
+      "text": "a",
+      "from": 333,
+      "to": 334,
+      "scene": "outro"
+    },
+    {
+      "text": "like,",
+      "from": 335,
+      "to": 342,
+      "scene": "outro"
+    },
+    {
+      "text": "and",
+      "from": 344,
+      "to": 347,
+      "scene": "outro"
+    },
+    {
+      "text": "subscribe",
+      "from": 348,
+      "to": 363,
+      "scene": "outro"
+    },
+    {
+      "text": "so",
+      "from": 364,
+      "to": 366,
+      "scene": "outro"
+    },
+    {
+      "text": "you",
+      "from": 367,
+      "to": 370,
+      "scene": "outro"
+    },
+    {
+      "text": "don't",
+      "from": 371,
+      "to": 376,
+      "scene": "outro"
+    },
+    {
+      "text": "miss",
+      "from": 377,
+      "to": 382,
+      "scene": "outro"
+    },
+    {
+      "text": "the",
+      "from": 383,
+      "to": 385,
+      "scene": "outro"
+    },
+    {
+      "text": "next",
+      "from": 386,
+      "to": 392,
+      "scene": "outro"
+    },
+    {
+      "text": "lesson.",
+      "from": 393,
+      "to": 405,
+      "scene": "outro"
+    },
+    {
+      "text": "See",
+      "from": 421,
+      "to": 426,
+      "scene": "outro"
+    },
+    {
+      "text": "you",
+      "from": 427,
+      "to": 429,
+      "scene": "outro"
+    },
+    {
+      "text": "there!",
+      "from": 430,
+      "to": 440,
+      "scene": "outro"
+    }
+  ],
   "cues": {
-    "hello.hello": 15,
-    "wave.wave": 150
-  }
+    "hello.hello": 0,
+    "wave.wave": 172,
+    "outro.like": 302,
+    "outro.sub": 344,
+    "outro.next": 421
+  },
+  "audio": "voice.mp3"
 }

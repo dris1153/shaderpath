@@ -88,6 +88,21 @@ Today we'll meet | {uv}[UV](U V) and [NDC](N D C).
 
 A scene lasts as long as its speech, plus the hold.
 
+## Outro
+
+Add `outro: true` to a script's frontmatter (every language) to end on the shared
+like/subscribe outro, `src/outro/`. It is appended as a last scene, `outro`, from
+`src/outro/script.<lang>.md`, so a lesson must not define its own `outro` scene.
+- Beats: Inko presses like (`{like}`), then subscribe and the bell (`{sub}`); from
+  `{next}` the buttons leave and the last ~10 s stay free for YouTube's end screen.
+- `pnpm youtube` adds a "Thanks for watching" chapter and prints the end-screen
+  window and the site's `outroAt`; a `chapters.outro` override is an error.
+- Studio → End screen: template "1 video + subscribe". Place the video box over
+  the empty left half and the subscribe circle where Inko points (`END_SCREEN`
+  in `src/outro/Outro.tsx`).
+- The lesson page stops the player at `outroAt` (YouTube's `end`), so site viewers
+  skip the outro.
+
 ## Scene rules
 
 These are the short version; `src/kit/STYLE.md` has the full rules.

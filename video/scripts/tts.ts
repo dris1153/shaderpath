@@ -4,7 +4,8 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { validateStrings, validateTiming, type Timing } from "../src/scene/timing";
 import { ffmpeg, generatedDir, lessonSource, ROOT } from "./remotion";
-import { parseScript, spokenText } from "./script-parse";
+import { spokenText } from "./script-parse";
+import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
 import { buildCues, toVtt } from "./subs";
 import { elevenlabs } from "./tts/elevenlabs";
 import { alignWords, type Mark, type TtsEngine } from "./tts/engine";
@@ -68,7 +69,7 @@ if (!makeEngine) {
 const engine = makeEngine();
 
 const src = lessonSource(slug);
-const script = parseScript(fs.readFileSync(path.join(src, `script.${locale}.md`), "utf8"));
+const script = loadScript(src, locale);
 const readJson = (file: string) => JSON.parse(fs.readFileSync(file, "utf8")) as unknown;
 const master = values.fit ? (readJson(path.join(generatedDir(slug, values.fit), "timing.json")) as Timing) : null;
 if (master) {
@@ -78,11 +79,16 @@ if (master) {
   if (ids !== masterIds) throw new Error(`script.${locale}.md scenes [${ids}] differ from ${values.fit} [${masterIds}]`);
 }
 // A fitted language reuses the master's picture, so it also reuses its on-screen strings.
-const strings = validateStrings(
-  master
-    ? readJson(path.join(generatedDir(slug, values.fit!), "strings.json"))
-    : readJson(path.join(src, `strings.${locale}.json`)),
-);
+// The outro's strings join the lesson's (the lesson wins on a clash).
+const readStrings = (file: string) => validateStrings(readJson(file));
+const strings = master
+  ? readStrings(path.join(generatedDir(slug, values.fit!), "strings.json"))
+  : {
+      ...(hasOutro(script) ? readStrings(path.join(OUTRO_DIR, "strings.en.json")) : {}),
+      ...readStrings(path.join(src, `strings.${locale}.json`)),
+    };
+// A `# hold` is silent on purpose; in a fit, the master's holds shaped the picture.
+const masterHolds = master ? loadScript(src, values.fit!).scenes.map((s) => s.hold) : [];
 
 // One entry per scene text and engine setup. Context (previous/next text) is
 // left out on purpose, so editing one scene re-voices only that scene.
@@ -134,8 +140,9 @@ for (const [i, scene] of script.scenes.entries()) {
     tooLong.push(`${scene.id}: needs ${tempo.toFixed(2)}× (max ${MAX_TEMPO}×); cut about ${Math.ceil((1 - (MAX_TEMPO * budget) / speechEnd) * 100)}% of its words`);
   }
   // Speech that ends early leaves the picture's later beats talking to silence.
-  if (master && voiced && speechEnd < MIN_FILL * budget) {
-    console.warn(`scene ${scene.id}: speech fills only ${Math.round((speechEnd / budget) * 100)}% of the scene; its last visuals will run ahead of the voice`);
+  const spoken = budget - (masterHolds[i] ?? 0) / FORMAT.fps;
+  if (master && voiced && speechEnd < MIN_FILL * spoken) {
+    console.warn(`scene ${scene.id}: speech fills only ${Math.round((speechEnd / spoken) * 100)}% of the scene before its hold; its last visuals will run ahead of the voice`);
   }
   const times = voiced ? alignWords(scene.words.map((w) => w.spoken), voiced.marks) : [];
   timing.scenes.push({ id: scene.id, from, durationInFrames: frames });
