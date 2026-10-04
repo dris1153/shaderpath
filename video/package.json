@@ -12,6 +12,7 @@
     "video:lint": "tsx scripts/video-lint.ts",
     "video:restore": "tsx scripts/restore.ts",
     "outro": "tsx scripts/outro.ts",
+    "final": "tsx scripts/final.ts",
     "qc": "tsx scripts/qc.ts",
     "youtube": "tsx scripts/youtube-package.ts",
     "thumbnail": "tsx scripts/thumbnail.ts",

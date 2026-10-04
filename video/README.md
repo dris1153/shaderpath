@@ -48,6 +48,7 @@ content/lessons/<track>/<slug>/youtube/      pushed
     subtitles.vtt, audio.mp3, timing.json, strings.json
     site.mp3                 fitted languages: mono 64 kbps dub the site plays
 media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 + a full copy of the tree above
+  final/video.<lang>.mp4      per language: picture + voice + soft subtitles in one file (pnpm final)
 media/shared/outro/outro.mp4                 gitignored: the shared like/subscribe outro, 14 s, picture only
 content/shared/outro/outro.<lang>.mp3        pushed: the outro's voice per language (one picture, a voice each)
 ```
@@ -161,6 +162,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
 | `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
+| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: that language's render (its picture and voice) with its subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (stream copy, seconds). Needs the system ffmpeg and the language's render (`pnpm render <slug> <lang>`); stops when the render is older than the committed voice. Default languages: en and every voiced one |
 | `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
