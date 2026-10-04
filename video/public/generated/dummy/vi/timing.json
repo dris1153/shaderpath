@@ -1,0 +1,296 @@
+{
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "scenes": [
+    {
+      "id": "hello",
+      "from": 0,
+      "durationInFrames": 154
+    },
+    {
+      "id": "wave",
+      "from": 154,
+      "durationInFrames": 148
+    },
+    {
+      "id": "outro",
+      "from": 302,
+      "durationInFrames": 421
+    }
+  ],
+  "words": [
+    {
+      "text": "Xin",
+      "from": 0,
+      "to": 5,
+      "scene": "hello"
+    },
+    {
+      "text": "chào!",
+      "from": 7,
+      "to": 17,
+      "scene": "hello"
+    },
+    {
+      "text": "Mình",
+      "from": 29,
+      "to": 34,
+      "scene": "hello"
+    },
+    {
+      "text": "là",
+      "from": 36,
+      "to": 38,
+      "scene": "hello"
+    },
+    {
+      "text": "Inko.",
+      "from": 42,
+      "to": 53,
+      "scene": "hello"
+    },
+    {
+      "text": "Mỗi",
+      "from": 70,
+      "to": 72,
+      "scene": "hello"
+    },
+    {
+      "text": "điểm",
+      "from": 74,
+      "to": 79,
+      "scene": "hello"
+    },
+    {
+      "text": "ảnh",
+      "from": 81,
+      "to": 84,
+      "scene": "hello"
+    },
+    {
+      "text": "trên",
+      "from": 85,
+      "to": 89,
+      "scene": "hello"
+    },
+    {
+      "text": "màn",
+      "from": 90,
+      "to": 93,
+      "scene": "hello"
+    },
+    {
+      "text": "hình",
+      "from": 95,
+      "to": 101,
+      "scene": "hello"
+    },
+    {
+      "text": "đều",
+      "from": 103,
+      "to": 110,
+      "scene": "hello"
+    },
+    {
+      "text": "có",
+      "from": 113,
+      "to": 115,
+      "scene": "hello"
+    },
+    {
+      "text": "một",
+      "from": 116,
+      "to": 120,
+      "scene": "hello"
+    },
+    {
+      "text": "địa",
+      "from": 121,
+      "to": 125,
+      "scene": "hello"
+    },
+    {
+      "text": "chỉ.",
+      "from": 127,
+      "to": 134,
+      "scene": "hello"
+    },
+    {
+      "text": "Cùng",
+      "from": 154,
+      "to": 159,
+      "scene": "wave"
+    },
+    {
+      "text": "nhau",
+      "from": 160,
+      "to": 164,
+      "scene": "wave"
+    },
+    {
+      "text": "tìm",
+      "from": 166,
+      "to": 171,
+      "scene": "wave"
+    },
+    {
+      "text": "nó",
+      "from": 172,
+      "to": 176,
+      "scene": "wave"
+    },
+    {
+      "text": "nhé,",
+      "from": 178,
+      "to": 183,
+      "scene": "wave"
+    },
+    {
+      "text": "từng",
+      "from": 194,
+      "to": 197,
+      "scene": "wave"
+    },
+    {
+      "text": "xúc",
+      "from": 200,
+      "to": 204,
+      "scene": "wave"
+    },
+    {
+      "text": "tu",
+      "from": 207,
+      "to": 209,
+      "scene": "wave"
+    },
+    {
+      "text": "một!",
+      "from": 212,
+      "to": 219,
+      "scene": "wave"
+    },
+    {
+      "text": "Nếu",
+      "from": 302,
+      "to": 307,
+      "scene": "outro"
+    },
+    {
+      "text": "thấy",
+      "from": 308,
+      "to": 312,
+      "scene": "outro"
+    },
+    {
+      "text": "dễ",
+      "from": 313,
+      "to": 316,
+      "scene": "outro"
+    },
+    {
+      "text": "hiểu,",
+      "from": 319,
+      "to": 326,
+      "scene": "outro"
+    },
+    {
+      "text": "bấm",
+      "from": 337,
+      "to": 343,
+      "scene": "outro"
+    },
+    {
+      "text": "like",
+      "from": 345,
+      "to": 355,
+      "scene": "outro"
+    },
+    {
+      "text": "rồi",
+      "from": 360,
+      "to": 364,
+      "scene": "outro"
+    },
+    {
+      "text": "đăng",
+      "from": 367,
+      "to": 372,
+      "scene": "outro"
+    },
+    {
+      "text": "ký",
+      "from": 373,
+      "to": 376,
+      "scene": "outro"
+    },
+    {
+      "text": "kênh",
+      "from": 379,
+      "to": 386,
+      "scene": "outro"
+    },
+    {
+      "text": "để",
+      "from": 388,
+      "to": 392,
+      "scene": "outro"
+    },
+    {
+      "text": "không",
+      "from": 393,
+      "to": 398,
+      "scene": "outro"
+    },
+    {
+      "text": "lỡ",
+      "from": 399,
+      "to": 403,
+      "scene": "outro"
+    },
+    {
+      "text": "bài",
+      "from": 404,
+      "to": 408,
+      "scene": "outro"
+    },
+    {
+      "text": "sau",
+      "from": 410,
+      "to": 415,
+      "scene": "outro"
+    },
+    {
+      "text": "nhé.",
+      "from": 417,
+      "to": 422,
+      "scene": "outro"
+    },
+    {
+      "text": "Hẹn",
+      "from": 435,
+      "to": 438,
+      "scene": "outro"
+    },
+    {
+      "text": "gặp",
+      "from": 439,
+      "to": 441,
+      "scene": "outro"
+    },
+    {
+      "text": "lại!",
+      "from": 444,
+      "to": 451,
+      "scene": "outro"
+    }
+  ],
+  "cues": {
+    "hello.hello": 0,
+    "wave.wave": 172,
+    "outro.like": 302,
+    "outro.sub": 344,
+    "outro.next": 421
+  },
+  "audio": "voice.mp3"
+}
