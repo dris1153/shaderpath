@@ -48,7 +48,8 @@ content/lessons/<track>/<slug>/youtube/      pushed
     subtitles.vtt, audio.mp3, timing.json, strings.json
     site.mp3                 fitted languages: mono 64 kbps dub the site plays
 media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 + a full copy of the tree above
-media/shared/outro/outro.<lang>.mp4          gitignored: the shared like/subscribe outro, 14 s
+media/shared/outro/outro.mp4                 gitignored: the shared like/subscribe outro, 14 s, picture only
+content/shared/outro/outro.<lang>.mp3        pushed: the outro's voice per language (one picture, a voice each)
 ```
 
 - **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). The copy is derived and never deleted from; `content/` is the one to edit.
@@ -72,6 +73,9 @@ before money or time is spent.
    - The course voice is ElevenLabs "Jessica", the adapter's default (picked at the pilot).
    - To audition voices, cut the script down to scenes 1–2 for a moment. Then, for each candidate, run `pnpm tts <slug> en --voice <id>` and listen to `public/generated/<slug>/en/voice.mp3`. Restore the full script afterwards. Every take stays cached, so the chosen voice's scenes 1–2 cost nothing in the full run, but each candidate costs its own characters.
    - Scenes are cached by their spoken text, so a re-run with no text change sends 0 characters.
+   - The mix is written to a wav first and `loudnorm` reads that file. Placed right after `concat` in the same ffmpeg graph, Remotion's ffmpeg 7.1 shifted and cut the speech of short, silence-heavy tracks (the dummy fixture's Vietnamese voice).
+   - After encoding, `tts` checks that `voice.mp3` is as long as the picture and that at most 15% of the word spans are silent (real lessons measure 6–8%; a voice moved a second or more against its words measures 13–70%). On failure it stops, removes its temp files and keeps the previous `voice.mp3`.
+   - A re-run rewrites `voice.mp3` with the same timing but slightly different samples than takes made before this change (about 0.4% off, a ~5 MB diff per language in `content/`). Do not re-run `tts` on an uploaded lesson without a reason; `pnpm video:restore <slug> --force` puts the committed audio back.
 3. **Storyboard.** Write `STORYBOARD.md`, one entry per scene:
    - the hero;
    - what appears on which cue;
@@ -156,7 +160,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and `video.mp4` plus a full copy of it into `media/`): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
-| `pnpm outro [lang …]` | Renders the `dummy` fixture and cuts its outro scene into `media/shared/outro/outro.<lang>.mp4` (default: en and vi) |
+| `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
 | `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |

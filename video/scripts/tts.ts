@@ -4,7 +4,8 @@ import path from "node:path";
 import { parseArgs } from "node:util";
 import { validateStrings, validateTiming, type Timing } from "../src/scene/timing";
 import { finalsDir, mirrorLanguage } from "./lesson-assets";
-import { ffmpeg, generatedDir, lessonSource, ROOT } from "./remotion";
+import { audioSeconds, ffmpeg, generatedDir, lessonSource, ROOT } from "./remotion";
+import { MAX_SILENT_IN_WORDS, rmsBins, silentShareInWords, wavSamples } from "./voice-align";
 import { spokenText } from "./script-parse";
 import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
 import { buildCues, toVtt } from "./subs";
@@ -180,14 +181,36 @@ clips.forEach((clip, i) => {
       `atrim=end_sample=${clip.frames * SAMPLES_PER_FRAME},asetpts=N/SR/TB[a${i}]`,
   );
 });
-// Providers deliver around −21 LUFS; the QC target is −16 ±2 with peaks ≤ −1 dBFS.
-filters.push(`${clips.map((_, i) => `[a${i}]`).join("")}concat=n=${clips.length}:v=0:a=1,loudnorm=I=-16:TP=-1.5:LRA=11:dual_mono=true[voice]`);
-ffmpeg([
-  "-y", "-loglevel", "error", ...inputs,
-  "-filter_complex", filters.join(";"),
-  "-map", "[voice]", "-c:a", "libmp3lame", "-b:a", "128k", "-ar", String(RATE),
-  path.join(out, "voice.mp3"),
-]);
+filters.push(`${clips.map((_, i) => `[a${i}]`).join("")}concat=n=${clips.length}:v=0:a=1[mix]`);
+const mixFile = path.join(out, "voice.mix.wav");
+const tmpFile = path.join(out, "voice.tmp.mp3");
+const probeFile = path.join(out, "voice.probe.wav");
+try {
+  ffmpeg(["-y", "-loglevel", "error", ...inputs, "-filter_complex", filters.join(";"), "-map", "[mix]", mixFile]);
+  // Providers deliver around −21 LUFS; the QC target is −16 ±2 with peaks ≤ −1 dBFS. loudnorm reads the
+  // mix from a file: placed right after concat in the same graph, Remotion's ffmpeg 7.1 shifted and cut
+  // the speech of short, silence-heavy tracks (the dummy fixture's Vietnamese voice).
+  ffmpeg([
+    "-y", "-loglevel", "error", "-i", mixFile, "-af", `loudnorm=I=-16:TP=-1.5:LRA=11:dual_mono=true,aresample=${RATE}`,
+    "-c:a", "libmp3lame", "-b:a", "128k", "-ar", String(RATE), tmpFile,
+  ]);
+
+  // The last good voice.mp3 stays in place until the new one has passed both checks.
+  // A voice shorter than the picture would silently desync every later scene...
+  const voiceSec = audioSeconds(tmpFile);
+  if (Math.abs(voiceSec - from / FORMAT.fps) > 0.06) {
+    throw new Error(`voice is ${voiceSec.toFixed(2)} s but the picture is ${(from / FORMAT.fps).toFixed(2)} s`);
+  }
+  // ...and so would one whose speech is not where its words are, even at the right length.
+  ffmpeg(["-y", "-loglevel", "error", "-i", tmpFile, "-ac", "1", "-ar", "8000", probeFile]);
+  const silentShare = silentShareInWords(rmsBins(wavSamples(fs.readFileSync(probeFile)), 8000), timing.words, FORMAT.fps);
+  if (silentShare > MAX_SILENT_IN_WORDS) {
+    throw new Error(`the voice does not line up with its words: ${(silentShare * 100).toFixed(0)}% of the word spans are silent (limit ${MAX_SILENT_IN_WORDS * 100}%)`);
+  }
+  fs.renameSync(tmpFile, path.join(out, "voice.mp3"));
+} finally {
+  for (const file of [mixFile, tmpFile, probeFile]) fs.rmSync(file, { force: true });
+}
 
 const { cues, warnings } = buildCues(subWords, FORMAT.fps);
 fs.writeFileSync(path.join(out, "timing.json"), `${JSON.stringify(timing, null, 2)}\n`);

@@ -71,3 +71,8 @@ content/**/*.mp4
 
 # agent notes under video/
 /video/.claude/
+
+# half-written voice files if a tts run was interrupted
+/video/public/generated/dummy/**/voice.mix.wav
+/video/public/generated/dummy/**/voice.tmp.mp3
+/video/public/generated/dummy/**/voice.probe.wav

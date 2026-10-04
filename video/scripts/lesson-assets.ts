@@ -19,6 +19,8 @@ export function finalsDir(slug: string, lessons = LESSONS): string | undefined {
 // gitignored media/ folder at the repo root, which mirrors content/'s structure.
 const MEDIA = path.resolve(import.meta.dirname, "..", "..", "media");
 export const MEDIA_SHARED = path.join(MEDIA, "shared");
+// Shared voices (small, pushed) sit with the lessons' text outputs.
+export const CONTENT_SHARED = path.resolve(import.meta.dirname, "..", "..", "content", "shared");
 
 export function mediaDir(slug: string, lessons = LESSONS, media = MEDIA): string | undefined {
   for (const track of fs.readdirSync(lessons)) {

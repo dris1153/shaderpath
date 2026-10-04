@@ -46,6 +46,20 @@ export function ffmpeg(args: string[]) {
   execFileSync(process.execPath, [cli, "ffmpeg", ...args], { stdio: "inherit" });
 }
 
+// A file's length in seconds, read from the "Duration:" line ffmpeg prints (it exits 1 with no output).
+export function audioSeconds(file: string): number {
+  const cli = path.join(ROOT, "node_modules", "@remotion", "cli", "remotion-cli.js");
+  let text = "";
+  try {
+    text = execFileSync(process.execPath, [cli, "ffmpeg", "-i", file], { stdio: "pipe" }).toString();
+  } catch (error) {
+    text = String((error as { stderr?: Buffer }).stderr ?? "");
+  }
+  const m = /Duration: (\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
+  if (!m) throw new Error(`cannot read the length of ${file}`);
+  return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);
+}
+
 // One bundle and one browser per command. The bundle is a temp copy of all of
 // public/ (every voice track), so it is always removed afterwards.
 export async function withComposition<T>(
