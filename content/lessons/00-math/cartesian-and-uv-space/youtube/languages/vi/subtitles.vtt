@@ -1,0 +1,300 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:02.067
+Chào bạn, mình là Inko!
+
+2
+00:00:02.067 --> 00:00:06.633
+Nhìn thật kỹ màn hình nào cũng thấy
+một lưới ô vuông nhỏ xíu: pixel.
+
+3
+00:00:06.633 --> 00:00:10.233
+Để tô màu, shader phải
+biết mỗi pixel nằm ở đâu.
+
+4
+00:00:10.233 --> 00:00:12.467
+Nên pixel nào cũng cần một địa chỉ.
+
+5
+00:00:12.467 --> 00:00:15.533
+Hôm nay ta làm quen ba
+cách đồ hoạ ghi địa chỉ đó:
+
+6
+00:00:15.533 --> 00:00:19.733
+toạ độ pixel, UV, và NDC.
+
+7
+00:00:22.867 --> 00:00:26.867
+Bắt đầu với một đường số:
+một trục, một con số.
+
+8
+00:00:26.867 --> 00:00:31.033
+Thêm trục thứ hai vuông góc,
+chọn gốc toạ độ ở chỗ hai trục cắt nhau,
+
+9
+00:00:31.033 --> 00:00:34.033
+và mỗi điểm thành một cặp số x và y.
+
+10
+00:00:34.033 --> 00:00:37.100
+Đi x bước sang ngang, rồi y bước lên trên.
+
+11
+00:00:37.100 --> 00:00:41.667
+Thêm trục thứ ba, z,
+vuông góc với cả hai, là ta có 3D.
+
+12
+00:00:41.667 --> 00:00:44.200
+Không gì bắt các trục phải
+vuông góc và chia đều,
+
+13
+00:00:44.200 --> 00:00:48.033
+nhưng mọi công cụ đồ hoạ
+đều ngầm giả định như vậy.
+
+14
+00:00:51.300 --> 00:00:57.300
+Trục nào hướng lên? Trong three.js
+và định dạng glTF, trục y hướng lên.
+
+15
+00:00:57.767 --> 00:00:59.967
+Blender thì dùng z hướng lên.
+
+16
+00:00:59.967 --> 00:01:03.733
+Đưa một nhân vật từ Blender sang
+three.js mà không chuyển đổi,
+
+17
+00:01:03.733 --> 00:01:06.967
+nó sẽ nằm dọc theo trục z,
+đầu hướng về phía bạn.
+
+18
+00:01:06.967 --> 00:01:09.433
+Câu hỏi thứ hai là hệ thuận tay nào.
+
+19
+00:01:09.433 --> 00:01:13.633
+Với hệ thuận tay phải, cuộn các
+ngón của bàn tay phải từ x sang y,
+
+20
+00:01:13.633 --> 00:01:15.767
+ngón cái sẽ chỉ theo trục z.
+
+21
+00:01:15.767 --> 00:01:21.100
+Three.js thuận tay phải; DirectX và
+Unity theo truyền thống thuận tay trái.
+
+22
+00:01:21.100 --> 00:01:24.867
+Nhầm hai hệ, mô hình sẽ bị
+soi gương, thậm chí lộn mặt.
+
+23
+00:01:24.867 --> 00:01:28.467
+Ngay cả màn hình phẳng cũng khác
+nhau: toán học cho y hướng lên,
+
+24
+00:01:28.467 --> 00:01:34.067
+còn canvas 2D bắt đầu từ góc
+trên bên trái và đếm y đi xuống.
+
+25
+00:01:35.133 --> 00:01:36.767
+Giờ tới texture.
+
+26
+00:01:36.767 --> 00:01:40.800
+Một texture có thể rộng mười
+sáu pixel, hoặc hơn tám nghìn.
+
+27
+00:01:40.800 --> 00:01:43.100
+Không gian UV bỏ qua chuyện đó.
+
+28
+00:01:43.100 --> 00:01:48.567
+Một góc là (0, 0), góc đối diện
+là (1, 1), dù ảnh lớn cỡ nào.
+
+29
+00:01:48.567 --> 00:01:52.000
+u chạy theo chiều ngang,
+v chạy lên hoặc xuống.
+
+30
+00:01:52.000 --> 00:01:56.133
+Vì vậy shader lấy mẫu bằng UV
+mà không cần biết số pixel.
+
+31
+00:01:56.133 --> 00:01:59.833
+Thay texture lớn hơn, không một
+dòng code shader nào phải đổi.
+
+32
+00:01:59.833 --> 00:02:03.367
+Có một điểm cần nhớ:
+ảnh đặt v bằng không ở trên cùng,
+
+33
+00:02:03.367 --> 00:02:06.700
+còn texture WebGL cổ
+điển đặt nó ở dưới cùng.
+
+34
+00:02:06.700 --> 00:02:10.733
+Chỉ v khác nhau, nên texture bị
+lật sai sẽ lộn theo chiều dọc,
+
+35
+00:02:10.733 --> 00:02:13.567
+chứ không bao giờ lật trái phải.
+
+36
+00:02:18.233 --> 00:02:21.033
+Vậy pixel tìm UV của mình thế nào?
+
+37
+00:02:21.033 --> 00:02:25.400
+Lấy một màn hình tí hon,
+rộng bốn pixel, cao hai pixel.
+
+38
+00:02:25.400 --> 00:02:28.167
+Pixel không phải một điểm,
+mà là một ô vuông nhỏ,
+
+39
+00:02:28.167 --> 00:02:31.500
+và chỉ số của nó đánh dấu
+cạnh ô, không phải tâm.
+
+40
+00:02:31.500 --> 00:02:33.800
+Tâm nằm lệch vào trong nửa pixel.
+
+41
+00:02:33.800 --> 00:02:36.967
+Vậy: cộng thêm một nửa,
+rồi chia cho chiều rộng.
+
+42
+00:02:36.967 --> 00:02:40.000
+u = (x + 0.5) / W.
+
+43
+00:02:40.000 --> 00:02:42.467
+v cũng vậy, nhưng chia cho chiều cao.
+
+44
+00:02:42.467 --> 00:02:46.167
+Inko có tám xúc tu,
+nên mỗi xúc tu nhận một pixel,
+
+45
+00:02:46.167 --> 00:02:48.700
+và tất cả cùng chạy một
+công thức nhỏ cùng lúc.
+
+46
+00:02:48.700 --> 00:02:54.033
+Đó chính là cách GPU làm việc: một chương
+trình nhỏ, chạy cho mọi pixel, song song.
+
+47
+00:02:54.033 --> 00:03:00.033
+Trong shader, gl_FragCoord đã nằm sẵn ở
+tâm pixel và bắt đầu từ góc dưới bên trái,
+
+48
+00:03:00.033 --> 00:03:03.467
+nên ở đó bạn chỉ cần
+chia cho độ phân giải.
+
+49
+00:03:07.100 --> 00:03:09.500
+UV chạy từ 0 đến 1.
+
+50
+00:03:09.500 --> 00:03:14.700
+Rất hợp cho texture, nhưng với hướng thì
+ta muốn một khoảng lấy số không làm tâm:
+
+51
+00:03:14.700 --> 00:03:20.700
+−1 đến 1. WebGL gọi nó là NDC,
+toạ độ thiết bị chuẩn hoá.
+
+52
+00:03:20.700 --> 00:03:24.133
+Giờ chỉ riêng dấu cũng cho
+biết bên trái hay bên phải.
+
+53
+00:03:24.133 --> 00:03:29.433
+Để đổi sang, giãn gấp đôi
+rồi dời đi một: x = 2u − 1.
+
+54
+00:03:29.433 --> 00:03:31.433
+Chỉ trừ đi một nửa là chưa đủ.
+
+55
+00:03:31.433 --> 00:03:33.900
+Hình vẽ sẽ chỉ phủ nửa giữa màn hình.
+
+56
+00:03:33.900 --> 00:03:38.533
+Còn y = 1 − 2v, vì trong
+ảnh v tăng dần xuống dưới,
+
+57
+00:03:38.533 --> 00:03:41.867
+còn NDC tăng dần lên trên.
+
+58
+00:03:44.167 --> 00:03:48.800
+Tóm lại: toạ độ pixel đếm ô
+vuông từ góc trên bên trái.
+
+59
+00:03:48.800 --> 00:03:53.700
+UV nén mọi kích thước về khoảng
+0 đến 1, đo tại tâm pixel.
+
+60
+00:03:53.700 --> 00:03:58.767
+NDC giãn khoảng đó thành −1 đến 1,
+lấy giữa màn hình làm tâm.
+
+61
+00:03:58.767 --> 00:04:03.300
+Cẩn thận hai lỗi kinh điển:
+quên nửa pixel, và quên lật y.
+
+62
+00:04:03.300 --> 00:04:06.900
+Giờ hãy mở demo Khám phá UV space
+trong bài học này,
+
+63
+00:04:06.900 --> 00:04:09.233
+và xem góc nào chuyển sang màu vàng.
+
+64
+00:04:09.233 --> 00:04:11.500
+Hẹn gặp lại bạn ở bài sau!

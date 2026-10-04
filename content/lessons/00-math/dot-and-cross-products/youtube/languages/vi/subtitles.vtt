@@ -1,0 +1,400 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:02.400
+Slime lính gác đang canh hành lang.
+
+2
+00:00:02.400 --> 00:00:04.867
+Nó thấy mọi thứ trong vùng hình nón này.
+
+3
+00:00:04.867 --> 00:00:08.567
+Inko rón rén đi sau lưng nó,
+rồi bước ra trước mặt.
+
+4
+00:00:08.567 --> 00:00:12.533
+Bị phát hiện! Nhưng sao code của
+lính gác biết Inko ở phía trước,
+
+5
+00:00:12.533 --> 00:00:13.933
+chứ không phải phía sau?
+
+6
+00:00:13.933 --> 00:00:16.867
+Chỉ một phép tính nhỏ: dot product.
+
+7
+00:00:16.867 --> 00:00:20.767
+Rồi tới người bạn 3D
+của nó, cross product.
+
+8
+00:00:22.433 --> 00:00:27.633
+Dot product nhận vào hai vector và
+trả về một con số, không phải vector.
+
+9
+00:00:27.633 --> 00:00:30.500
+Nhân từng cặp thành phần
+tương ứng, rồi cộng lại.
+
+10
+00:00:30.500 --> 00:00:33.100
+Lấy (3, 1) và (2, 2).
+
+11
+00:00:33.100 --> 00:00:38.367
+Ba nhân hai là sáu, một nhân hai
+là hai, và sáu cộng hai là tám.
+
+12
+00:00:38.367 --> 00:00:42.100
+Trong 3D, thêm một số hạng nữa: z nhân z.
+
+13
+00:00:42.100 --> 00:00:45.400
+Ba phép nhân và hai phép cộng,
+hàm chỉ có vậy thôi.
+
+14
+00:00:45.400 --> 00:00:50.467
+Thứ tự cũng không quan
+trọng: a·b bằng b·a.
+
+15
+00:00:50.967 --> 00:00:53.567
+Vậy con số tám đó nghĩa là gì?
+
+16
+00:00:53.567 --> 00:00:56.000
+Cùng con số ấy còn có công thức thứ hai:
+
+17
+00:00:56.000 --> 00:01:02.000
+|a| |b| cos θ, với theta
+là góc giữa hai vector.
+
+18
+00:01:02.400 --> 00:01:05.733
+Normalize cả hai trước,
+thì hai độ dài đều bằng một,
+
+19
+00:01:05.733 --> 00:01:08.800
+nên dot product chính là cô sin của góc.
+
+20
+00:01:08.800 --> 00:01:10.700
+Giờ xoay b quanh a.
+
+21
+00:01:10.700 --> 00:01:12.633
+Cùng hướng thì dot dương.
+
+22
+00:01:12.633 --> 00:01:15.567
+Ở chín mươi độ thì đúng
+bằng không: vuông góc.
+
+23
+00:01:15.567 --> 00:01:17.633
+Quá chín mươi độ, nó thành âm.
+
+24
+00:01:17.633 --> 00:01:21.300
+Phía trước, bên cạnh hay
+phía sau: chỉ cần đọc dấu.
+
+25
+00:01:21.300 --> 00:01:24.600
+Không cần tính góc,
+cũng chẳng cần hàm arccos.
+
+26
+00:01:29.000 --> 00:01:30.533
+Quay lại với lính gác.
+
+27
+00:01:30.533 --> 00:01:33.167
+Nó nhìn theo một hướng, gọi là f.
+
+28
+00:01:33.167 --> 00:01:37.800
+Mũi tên tới Inko là player −
+guard, lấy thẳng từ bài hai.
+
+29
+00:01:37.800 --> 00:01:39.200
+Normalize cả hai,
+
+30
+00:01:39.200 --> 00:01:44.467
+và dot của chúng là cô sin của góc giữa
+hướng lính gác nhìn và chỗ Inko đứng.
+
+31
+00:01:44.467 --> 00:01:47.533
+Vùng nhìn rộng sáu mươi độ,
+mỗi bên ba mươi độ.
+
+32
+00:01:47.533 --> 00:01:52.833
+Vậy Inko bị thấy khi dot lớn
+hơn cos 30°, khoảng 0.87.
+
+33
+00:01:52.833 --> 00:01:58.533
+Và đây là cái bẫy: bỏ qua normalize,
+thì Inko ở thật xa cho dot rất lớn,
+
+34
+00:01:58.533 --> 00:02:00.800
+nên bị thấy dù đứng ngoài vùng nhìn,
+
+35
+00:02:00.800 --> 00:02:04.133
+còn Inko ở gần,
+ngay trước mặt, lại không tính.
+
+36
+00:02:04.133 --> 00:02:07.667
+Normalize trước,
+để chỉ còn góc là quan trọng.
+
+37
+00:02:10.400 --> 00:02:12.367
+Dot còn một ý nghĩa nữa.
+
+38
+00:02:12.367 --> 00:02:16.233
+Từ đầu mũi tên a, thả một
+đường thẳng xuống hướng của b.
+
+39
+00:02:16.233 --> 00:02:21.200
+Điểm rơi cách gốc bao xa,
+đó là bóng của a: a·b̂,
+
+40
+00:02:21.200 --> 00:02:23.067
+với b đã normalize.
+
+41
+00:02:23.067 --> 00:02:27.133
+Trong game, lấy vận tốc của Inko
+dot với hướng về phía lính gác,
+
+42
+00:02:27.133 --> 00:02:29.833
+là ra Inko đang áp sát nhanh cỡ nào.
+
+43
+00:02:29.833 --> 00:02:31.933
+Âm nghĩa là đang đi xa dần.
+
+44
+00:02:31.933 --> 00:02:37.300
+Kéo b dài ra, cái bóng vẫn đứng yên:
+chỉ hướng của b là quan trọng.
+
+45
+00:02:37.300 --> 00:02:39.300
+Giờ bước sang 3D.
+
+46
+00:02:39.300 --> 00:02:44.733
+Cross product nhận vào hai vector và
+trả về một vector, vuông góc với cả hai.
+
+47
+00:02:44.733 --> 00:02:49.100
+Nhưng có tới hai hướng cùng vuông
+góc với cả hai: lên và xuống.
+
+48
+00:02:49.100 --> 00:02:53.867
+Quy tắc bàn tay phải chọn ra một:
+cong các ngón tay phải từ a về phía b,
+
+49
+00:02:53.867 --> 00:02:56.667
+thì ngón cái chỉ theo a×b.
+
+50
+00:02:56.667 --> 00:03:00.300
+Một phép thử kinh điển: x cross y ra z.
+
+51
+00:03:00.300 --> 00:03:02.533
+Đảo thứ tự, kết quả lật ngược:
+
+52
+00:03:02.533 --> 00:03:05.867
+b×a bằng trừ a×b.
+
+53
+00:03:05.867 --> 00:03:09.967
+Khác với dot product,
+ở đây thứ tự là quan trọng.
+
+54
+00:03:09.967 --> 00:03:11.967
+Đồ hoạ dùng nó ở đâu?
+
+55
+00:03:11.967 --> 00:03:16.333
+Tam giác nào cũng cần một pháp tuyến:
+hướng mà mặt của nó quay về.
+
+56
+00:03:16.333 --> 00:03:19.000
+Lấy ba đỉnh A, B và C.
+
+57
+00:03:19.000 --> 00:03:23.100
+Dựng hai cạnh từ A, B − A và C − A.
+
+58
+00:03:23.100 --> 00:03:27.233
+Cross hai cạnh đó,
+rồi normalize: đó là pháp tuyến.
+
+59
+00:03:27.233 --> 00:03:32.433
+Thêm nữa: độ dài của cross product là diện
+tích hình bình hành do hai cạnh tạo thành,
+
+60
+00:03:32.433 --> 00:03:34.733
+và tam giác là một nửa của nó.
+
+61
+00:03:34.733 --> 00:03:36.533
+Hai cạnh song song thì ra không,
+
+62
+00:03:36.533 --> 00:03:40.167
+và normalize vector không
+là cái bẫy NaN ở bài hai.
+
+63
+00:03:40.167 --> 00:03:41.933
+Thứ tự đỉnh cũng quan trọng.
+
+64
+00:03:41.933 --> 00:03:47.733
+Trong WebGL và three.js, các đỉnh đi
+ngược chiều kim đồng hồ, nhìn từ camera,
+
+65
+00:03:47.733 --> 00:03:48.967
+tạo nên mặt trước.
+
+66
+00:03:48.967 --> 00:03:53.200
+Đổi chỗ hai đỉnh,
+pháp tuyến sẽ quay vào trong mesh.
+
+67
+00:03:55.567 --> 00:03:58.133
+Giờ cả hai phép nhân cùng làm việc.
+
+68
+00:03:58.133 --> 00:04:00.500
+Đây là một quả bóng và một ngọn đèn.
+
+69
+00:04:00.500 --> 00:04:06.167
+Tại mỗi điểm, lấy pháp tuyến N, và hướng
+về phía đèn L, cả hai đã normalize.
+
+70
+00:04:06.167 --> 00:04:09.533
+Độ sáng là max(0, N·L).
+
+71
+00:04:09.533 --> 00:04:12.367
+Quay thẳng về đèn: bằng một, sáng nhất.
+
+72
+00:04:12.367 --> 00:04:14.433
+Nằm nghiêng ngang: bằng không.
+
+73
+00:04:14.433 --> 00:04:16.700
+Quay đi chỗ khác, dot thành âm,
+
+74
+00:04:16.700 --> 00:04:20.033
+và max kẹp nó về không,
+vì ánh sáng không thể âm.
+
+75
+00:04:20.033 --> 00:04:23.633
+Cũng phép kiểm tra dấu ấy,
+nhưng so với camera thay vì đèn,
+
+76
+00:04:23.633 --> 00:04:26.567
+giúp GPU bỏ qua các
+tam giác quay lưng lại.
+
+77
+00:04:26.567 --> 00:04:29.367
+Đó là backface culling.
+
+78
+00:04:31.100 --> 00:04:35.833
+Tóm lại: dot product nhân
+rồi cộng, cho ra một con số.
+
+79
+00:04:35.833 --> 00:04:39.167
+Dấu của nó cho biết phía trước,
+bên cạnh hay phía sau,
+
+80
+00:04:39.167 --> 00:04:42.633
+và với vector đơn vị,
+nó chính là cô sin của góc.
+
+81
+00:04:42.633 --> 00:04:45.967
+Cross product cho ra một
+vector vuông góc với cả hai,
+
+82
+00:04:45.967 --> 00:04:48.633
+và thứ tự quyết định nó chỉ về phía nào.
+
+83
+00:04:48.633 --> 00:04:52.833
+Hai cạnh, cross, normalize:
+pháp tuyến của tam giác.
+
+84
+00:04:52.833 --> 00:04:56.133
+Pháp tuyến dot hướng đèn:
+bề mặt được chiếu sáng.
+
+85
+00:04:56.133 --> 00:05:00.533
+Giờ hãy mở demo Dot product và phép
+chiếu trong bài này, kéo dài b,
+
+86
+00:05:00.533 --> 00:05:04.733
+rồi xem cái bóng đứng yên
+trong khi a·b cứ tăng.
+
+87
+00:05:04.733 --> 00:05:09.167
+Nếu thấy dễ hiểu, bấm like rồi đăng
+ký kênh để không lỡ bài sau nhé.
+
+88
+00:05:09.167 --> 00:05:10.700
+Hẹn gặp lại!

@@ -1,0 +1,5256 @@
+{
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "scenes": [
+    {
+      "id": "hook",
+      "from": 0,
+      "durationInFrames": 656
+    },
+    {
+      "id": "what",
+      "from": 656,
+      "durationInFrames": 1226
+    },
+    {
+      "id": "add",
+      "from": 1882,
+      "durationInFrames": 917
+    },
+    {
+      "id": "subtract",
+      "from": 2799,
+      "durationInFrames": 931
+    },
+    {
+      "id": "scale",
+      "from": 3730,
+      "durationInFrames": 875
+    },
+    {
+      "id": "length",
+      "from": 4605,
+      "durationInFrames": 1066
+    },
+    {
+      "id": "normalize",
+      "from": 5671,
+      "durationInFrames": 1584
+    },
+    {
+      "id": "roles",
+      "from": 7255,
+      "durationInFrames": 992
+    },
+    {
+      "id": "recap",
+      "from": 8247,
+      "durationInFrames": 860
+    }
+  ],
+  "words": [
+    {
+      "text": "Hai",
+      "from": 0,
+      "to": 7,
+      "scene": "hook"
+    },
+    {
+      "text": "Inko,",
+      "from": 10,
+      "to": 19,
+      "scene": "hook"
+    },
+    {
+      "text": "một",
+      "from": 34,
+      "to": 38,
+      "scene": "hook"
+    },
+    {
+      "text": "game,",
+      "from": 41,
+      "to": 48,
+      "scene": "hook"
+    },
+    {
+      "text": "cùng",
+      "from": 59,
+      "to": 62,
+      "scene": "hook"
+    },
+    {
+      "text": "một",
+      "from": 65,
+      "to": 67,
+      "scene": "hook"
+    },
+    {
+      "text": "mức",
+      "from": 70,
+      "to": 72,
+      "scene": "hook"
+    },
+    {
+      "text": "tốc",
+      "from": 74,
+      "to": 79,
+      "scene": "hook"
+    },
+    {
+      "text": "độ.",
+      "from": 80,
+      "to": 86,
+      "scene": "hook"
+    },
+    {
+      "text": "Bạn",
+      "from": 103,
+      "to": 106,
+      "scene": "hook"
+    },
+    {
+      "text": "này",
+      "from": 108,
+      "to": 110,
+      "scene": "hook"
+    },
+    {
+      "text": "giữ",
+      "from": 113,
+      "to": 118,
+      "scene": "hook"
+    },
+    {
+      "text": "phím",
+      "from": 119,
+      "to": 125,
+      "scene": "hook"
+    },
+    {
+      "text": "D",
+      "from": 127,
+      "to": 134,
+      "scene": "hook"
+    },
+    {
+      "text": "và",
+      "from": 137,
+      "to": 139,
+      "scene": "hook"
+    },
+    {
+      "text": "đi",
+      "from": 140,
+      "to": 144,
+      "scene": "hook"
+    },
+    {
+      "text": "sang",
+      "from": 145,
+      "to": 149,
+      "scene": "hook"
+    },
+    {
+      "text": "phải.",
+      "from": 151,
+      "to": 161,
+      "scene": "hook"
+    },
+    {
+      "text": "Bạn",
+      "from": 175,
+      "to": 178,
+      "scene": "hook"
+    },
+    {
+      "text": "kia",
+      "from": 180,
+      "to": 187,
+      "scene": "hook"
+    },
+    {
+      "text": "giữ",
+      "from": 190,
+      "to": 194,
+      "scene": "hook"
+    },
+    {
+      "text": "W",
+      "from": 197,
+      "to": 211,
+      "scene": "hook"
+    },
+    {
+      "text": "và",
+      "from": 214,
+      "to": 216,
+      "scene": "hook"
+    },
+    {
+      "text": "D,",
+      "from": 218,
+      "to": 226,
+      "scene": "hook"
+    },
+    {
+      "text": "đi",
+      "from": 234,
+      "to": 238,
+      "scene": "hook"
+    },
+    {
+      "text": "chéo.",
+      "from": 241,
+      "to": 250,
+      "scene": "hook"
+    },
+    {
+      "text": "Cùng",
+      "from": 266,
+      "to": 271,
+      "scene": "hook"
+    },
+    {
+      "text": "một",
+      "from": 272,
+      "to": 276,
+      "scene": "hook"
+    },
+    {
+      "text": "mức",
+      "from": 277,
+      "to": 281,
+      "scene": "hook"
+    },
+    {
+      "text": "tốc",
+      "from": 282,
+      "to": 286,
+      "scene": "hook"
+    },
+    {
+      "text": "độ,",
+      "from": 287,
+      "to": 293,
+      "scene": "hook"
+    },
+    {
+      "text": "vậy",
+      "from": 304,
+      "to": 310,
+      "scene": "hook"
+    },
+    {
+      "text": "sao",
+      "from": 314,
+      "to": 317,
+      "scene": "hook"
+    },
+    {
+      "text": "bạn",
+      "from": 319,
+      "to": 322,
+      "scene": "hook"
+    },
+    {
+      "text": "đi",
+      "from": 324,
+      "to": 329,
+      "scene": "hook"
+    },
+    {
+      "text": "chéo",
+      "from": 332,
+      "to": 337,
+      "scene": "hook"
+    },
+    {
+      "text": "lại",
+      "from": 338,
+      "to": 341,
+      "scene": "hook"
+    },
+    {
+      "text": "đi",
+      "from": 343,
+      "to": 348,
+      "scene": "hook"
+    },
+    {
+      "text": "xa",
+      "from": 352,
+      "to": 355,
+      "scene": "hook"
+    },
+    {
+      "text": "hơn",
+      "from": 358,
+      "to": 362,
+      "scene": "hook"
+    },
+    {
+      "text": "tới",
+      "from": 365,
+      "to": 370,
+      "scene": "hook"
+    },
+    {
+      "text": "41%?",
+      "from": 372,
+      "to": 396,
+      "scene": "hook"
+    },
+    {
+      "text": "Câu",
+      "from": 418,
+      "to": 420,
+      "scene": "hook"
+    },
+    {
+      "text": "trả",
+      "from": 422,
+      "to": 426,
+      "scene": "hook"
+    },
+    {
+      "text": "lời",
+      "from": 427,
+      "to": 434,
+      "scene": "hook"
+    },
+    {
+      "text": "nằm",
+      "from": 437,
+      "to": 442,
+      "scene": "hook"
+    },
+    {
+      "text": "ở",
+      "from": 444,
+      "to": 446,
+      "scene": "hook"
+    },
+    {
+      "text": "vector.",
+      "from": 451,
+      "to": 466,
+      "scene": "hook"
+    },
+    {
+      "text": "Mình",
+      "from": 480,
+      "to": 485,
+      "scene": "hook"
+    },
+    {
+      "text": "cùng",
+      "from": 486,
+      "to": 490,
+      "scene": "hook"
+    },
+    {
+      "text": "tìm",
+      "from": 491,
+      "to": 494,
+      "scene": "hook"
+    },
+    {
+      "text": "hiểu",
+      "from": 496,
+      "to": 499,
+      "scene": "hook"
+    },
+    {
+      "text": "vector",
+      "from": 502,
+      "to": 514,
+      "scene": "hook"
+    },
+    {
+      "text": "từng",
+      "from": 516,
+      "to": 521,
+      "scene": "hook"
+    },
+    {
+      "text": "bước",
+      "from": 523,
+      "to": 528,
+      "scene": "hook"
+    },
+    {
+      "text": "một",
+      "from": 529,
+      "to": 533,
+      "scene": "hook"
+    },
+    {
+      "text": "nhé.",
+      "from": 535,
+      "to": 540,
+      "scene": "hook"
+    },
+    {
+      "text": "Vector",
+      "from": 656,
+      "to": 670,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 675,
+      "to": 678,
+      "scene": "what"
+    },
+    {
+      "text": "một",
+      "from": 679,
+      "to": 682,
+      "scene": "what"
+    },
+    {
+      "text": "độ",
+      "from": 684,
+      "to": 690,
+      "scene": "what"
+    },
+    {
+      "text": "dời:",
+      "from": 692,
+      "to": 699,
+      "scene": "what"
+    },
+    {
+      "text": "đi",
+      "from": 714,
+      "to": 716,
+      "scene": "what"
+    },
+    {
+      "text": "bao",
+      "from": 718,
+      "to": 723,
+      "scene": "what"
+    },
+    {
+      "text": "xa,",
+      "from": 726,
+      "to": 735,
+      "scene": "what"
+    },
+    {
+      "text": "và",
+      "from": 741,
+      "to": 744,
+      "scene": "what"
+    },
+    {
+      "text": "theo",
+      "from": 745,
+      "to": 752,
+      "scene": "what"
+    },
+    {
+      "text": "hướng",
+      "from": 753,
+      "to": 759,
+      "scene": "what"
+    },
+    {
+      "text": "nào.",
+      "from": 760,
+      "to": 769,
+      "scene": "what"
+    },
+    {
+      "text": "Trên",
+      "from": 788,
+      "to": 793,
+      "scene": "what"
+    },
+    {
+      "text": "giấy,",
+      "from": 795,
+      "to": 802,
+      "scene": "what"
+    },
+    {
+      "text": "ta",
+      "from": 810,
+      "to": 812,
+      "scene": "what"
+    },
+    {
+      "text": "vẽ",
+      "from": 813,
+      "to": 817,
+      "scene": "what"
+    },
+    {
+      "text": "nó",
+      "from": 819,
+      "to": 824,
+      "scene": "what"
+    },
+    {
+      "text": "thành",
+      "from": 826,
+      "to": 829,
+      "scene": "what"
+    },
+    {
+      "text": "mũi",
+      "from": 831,
+      "to": 836,
+      "scene": "what"
+    },
+    {
+      "text": "tên:",
+      "from": 838,
+      "to": 846,
+      "scene": "what"
+    },
+    {
+      "text": "độ",
+      "from": 862,
+      "to": 867,
+      "scene": "what"
+    },
+    {
+      "text": "dài",
+      "from": 870,
+      "to": 877,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 879,
+      "to": 882,
+      "scene": "what"
+    },
+    {
+      "text": "độ",
+      "from": 883,
+      "to": 886,
+      "scene": "what"
+    },
+    {
+      "text": "lớn,",
+      "from": 889,
+      "to": 896,
+      "scene": "what"
+    },
+    {
+      "text": "đầu",
+      "from": 909,
+      "to": 913,
+      "scene": "what"
+    },
+    {
+      "text": "mũi",
+      "from": 915,
+      "to": 920,
+      "scene": "what"
+    },
+    {
+      "text": "tên",
+      "from": 921,
+      "to": 930,
+      "scene": "what"
+    },
+    {
+      "text": "chỉ",
+      "from": 932,
+      "to": 937,
+      "scene": "what"
+    },
+    {
+      "text": "hướng.",
+      "from": 938,
+      "to": 946,
+      "scene": "what"
+    },
+    {
+      "text": "Trượt",
+      "from": 967,
+      "to": 973,
+      "scene": "what"
+    },
+    {
+      "text": "mũi",
+      "from": 974,
+      "to": 978,
+      "scene": "what"
+    },
+    {
+      "text": "tên",
+      "from": 979,
+      "to": 985,
+      "scene": "what"
+    },
+    {
+      "text": "đi",
+      "from": 986,
+      "to": 990,
+      "scene": "what"
+    },
+    {
+      "text": "bất",
+      "from": 991,
+      "to": 994,
+      "scene": "what"
+    },
+    {
+      "text": "cứ",
+      "from": 996,
+      "to": 999,
+      "scene": "what"
+    },
+    {
+      "text": "đâu,",
+      "from": 1000,
+      "to": 1014,
+      "scene": "what"
+    },
+    {
+      "text": "nó",
+      "from": 1016,
+      "to": 1021,
+      "scene": "what"
+    },
+    {
+      "text": "vẫn",
+      "from": 1022,
+      "to": 1026,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 1028,
+      "to": 1033,
+      "scene": "what"
+    },
+    {
+      "text": "cùng",
+      "from": 1034,
+      "to": 1038,
+      "scene": "what"
+    },
+    {
+      "text": "một",
+      "from": 1039,
+      "to": 1042,
+      "scene": "what"
+    },
+    {
+      "text": "vector,",
+      "from": 1053,
+      "to": 1064,
+      "scene": "what"
+    },
+    {
+      "text": "vì",
+      "from": 1066,
+      "to": 1069,
+      "scene": "what"
+    },
+    {
+      "text": "điểm",
+      "from": 1070,
+      "to": 1074,
+      "scene": "what"
+    },
+    {
+      "text": "bắt",
+      "from": 1076,
+      "to": 1078,
+      "scene": "what"
+    },
+    {
+      "text": "đầu",
+      "from": 1081,
+      "to": 1088,
+      "scene": "what"
+    },
+    {
+      "text": "không",
+      "from": 1090,
+      "to": 1095,
+      "scene": "what"
+    },
+    {
+      "text": "phải",
+      "from": 1098,
+      "to": 1102,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 1104,
+      "to": 1105,
+      "scene": "what"
+    },
+    {
+      "text": "một",
+      "from": 1106,
+      "to": 1110,
+      "scene": "what"
+    },
+    {
+      "text": "phần",
+      "from": 1112,
+      "to": 1117,
+      "scene": "what"
+    },
+    {
+      "text": "của",
+      "from": 1118,
+      "to": 1122,
+      "scene": "what"
+    },
+    {
+      "text": "nó.",
+      "from": 1124,
+      "to": 1148,
+      "scene": "what"
+    },
+    {
+      "text": "Trong",
+      "from": 1150,
+      "to": 1158,
+      "scene": "what"
+    },
+    {
+      "text": "code,",
+      "from": 1167,
+      "to": 1177,
+      "scene": "what"
+    },
+    {
+      "text": "vector",
+      "from": 1179,
+      "to": 1191,
+      "scene": "what"
+    },
+    {
+      "text": "chỉ",
+      "from": 1194,
+      "to": 1198,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 1200,
+      "to": 1201,
+      "scene": "what"
+    },
+    {
+      "text": "các",
+      "from": 1203,
+      "to": 1206,
+      "scene": "what"
+    },
+    {
+      "text": "con",
+      "from": 1208,
+      "to": 1213,
+      "scene": "what"
+    },
+    {
+      "text": "số,",
+      "from": 1215,
+      "to": 1232,
+      "scene": "what"
+    },
+    {
+      "text": "x",
+      "from": 1234,
+      "to": 1244,
+      "scene": "what"
+    },
+    {
+      "text": "và",
+      "from": 1245,
+      "to": 1249,
+      "scene": "what"
+    },
+    {
+      "text": "y.",
+      "from": 1254,
+      "to": 1273,
+      "scene": "what"
+    },
+    {
+      "text": "Đặt",
+      "from": 1274,
+      "to": 1280,
+      "scene": "what"
+    },
+    {
+      "text": "đuôi",
+      "from": 1281,
+      "to": 1287,
+      "scene": "what"
+    },
+    {
+      "text": "ở",
+      "from": 1290,
+      "to": 1292,
+      "scene": "what"
+    },
+    {
+      "text": "gốc",
+      "from": 1293,
+      "to": 1297,
+      "scene": "what"
+    },
+    {
+      "text": "toạ",
+      "from": 1299,
+      "to": 1304,
+      "scene": "what"
+    },
+    {
+      "text": "độ,",
+      "from": 1305,
+      "to": 1318,
+      "scene": "what"
+    },
+    {
+      "text": "mũi",
+      "from": 1321,
+      "to": 1326,
+      "scene": "what"
+    },
+    {
+      "text": "tên",
+      "from": 1327,
+      "to": 1335,
+      "scene": "what"
+    },
+    {
+      "text": "chạm",
+      "from": 1336,
+      "to": 1342,
+      "scene": "what"
+    },
+    {
+      "text": "đúng",
+      "from": 1345,
+      "to": 1350,
+      "scene": "what"
+    },
+    {
+      "text": "điểm",
+      "from": 1351,
+      "to": 1359,
+      "scene": "what"
+    },
+    {
+      "text": "x,",
+      "from": 1365,
+      "to": 1371,
+      "scene": "what"
+    },
+    {
+      "text": "y.",
+      "from": 1374,
+      "to": 1395,
+      "scene": "what"
+    },
+    {
+      "text": "Cùng",
+      "from": 1398,
+      "to": 1402,
+      "scene": "what"
+    },
+    {
+      "text": "con",
+      "from": 1406,
+      "to": 1410,
+      "scene": "what"
+    },
+    {
+      "text": "số",
+      "from": 1411,
+      "to": 1419,
+      "scene": "what"
+    },
+    {
+      "text": "nhưng",
+      "from": 1422,
+      "to": 1426,
+      "scene": "what"
+    },
+    {
+      "text": "khác",
+      "from": 1428,
+      "to": 1434,
+      "scene": "what"
+    },
+    {
+      "text": "nghĩa:",
+      "from": 1434,
+      "to": 1455,
+      "scene": "what"
+    },
+    {
+      "text": "điểm",
+      "from": 1458,
+      "to": 1465,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 1466,
+      "to": 1467,
+      "scene": "what"
+    },
+    {
+      "text": "một",
+      "from": 1470,
+      "to": 1472,
+      "scene": "what"
+    },
+    {
+      "text": "chỗ",
+      "from": 1474,
+      "to": 1479,
+      "scene": "what"
+    },
+    {
+      "text": "cố",
+      "from": 1482,
+      "to": 1486,
+      "scene": "what"
+    },
+    {
+      "text": "định,",
+      "from": 1488,
+      "to": 1501,
+      "scene": "what"
+    },
+    {
+      "text": "còn",
+      "from": 1502,
+      "to": 1508,
+      "scene": "what"
+    },
+    {
+      "text": "vector",
+      "from": 1515,
+      "to": 1522,
+      "scene": "what"
+    },
+    {
+      "text": "là",
+      "from": 1525,
+      "to": 1527,
+      "scene": "what"
+    },
+    {
+      "text": "một",
+      "from": 1528,
+      "to": 1532,
+      "scene": "what"
+    },
+    {
+      "text": "độ",
+      "from": 1533,
+      "to": 1539,
+      "scene": "what"
+    },
+    {
+      "text": "dời.",
+      "from": 1542,
+      "to": 1563,
+      "scene": "what"
+    },
+    {
+      "text": "Một",
+      "from": 1567,
+      "to": 1570,
+      "scene": "what"
+    },
+    {
+      "text": "trường",
+      "from": 1572,
+      "to": 1575,
+      "scene": "what"
+    },
+    {
+      "text": "hợp",
+      "from": 1576,
+      "to": 1580,
+      "scene": "what"
+    },
+    {
+      "text": "đặc",
+      "from": 1581,
+      "to": 1587,
+      "scene": "what"
+    },
+    {
+      "text": "biệt:",
+      "from": 1588,
+      "to": 1604,
+      "scene": "what"
+    },
+    {
+      "text": "vector",
+      "from": 1614,
+      "to": 1621,
+      "scene": "what"
+    },
+    {
+      "text": "0",
+      "from": 1622,
+      "to": 1628,
+      "scene": "what"
+    },
+    {
+      "text": "có",
+      "from": 1629,
+      "to": 1630,
+      "scene": "what"
+    },
+    {
+      "text": "độ",
+      "from": 1633,
+      "to": 1638,
+      "scene": "what"
+    },
+    {
+      "text": "dài",
+      "from": 1639,
+      "to": 1642,
+      "scene": "what"
+    },
+    {
+      "text": "bằng",
+      "from": 1645,
+      "to": 1650,
+      "scene": "what"
+    },
+    {
+      "text": "0,",
+      "from": 1652,
+      "to": 1666,
+      "scene": "what"
+    },
+    {
+      "text": "và",
+      "from": 1668,
+      "to": 1671,
+      "scene": "what"
+    },
+    {
+      "text": "chẳng",
+      "from": 1674,
+      "to": 1678,
+      "scene": "what"
+    },
+    {
+      "text": "có",
+      "from": 1681,
+      "to": 1683,
+      "scene": "what"
+    },
+    {
+      "text": "hướng",
+      "from": 1686,
+      "to": 1690,
+      "scene": "what"
+    },
+    {
+      "text": "nào.",
+      "from": 1693,
+      "to": 1712,
+      "scene": "what"
+    },
+    {
+      "text": "Hãy",
+      "from": 1714,
+      "to": 1718,
+      "scene": "what"
+    },
+    {
+      "text": "nhớ",
+      "from": 1719,
+      "to": 1726,
+      "scene": "what"
+    },
+    {
+      "text": "kỹ",
+      "from": 1728,
+      "to": 1731,
+      "scene": "what"
+    },
+    {
+      "text": "nó,",
+      "from": 1734,
+      "to": 1748,
+      "scene": "what"
+    },
+    {
+      "text": "nó",
+      "from": 1750,
+      "to": 1753,
+      "scene": "what"
+    },
+    {
+      "text": "sẽ",
+      "from": 1755,
+      "to": 1758,
+      "scene": "what"
+    },
+    {
+      "text": "quay",
+      "from": 1760,
+      "to": 1765,
+      "scene": "what"
+    },
+    {
+      "text": "lại.",
+      "from": 1766,
+      "to": 1786,
+      "scene": "what"
+    },
+    {
+      "text": "Cộng",
+      "from": 1882,
+      "to": 1889,
+      "scene": "add"
+    },
+    {
+      "text": "vector",
+      "from": 1899,
+      "to": 1908,
+      "scene": "add"
+    },
+    {
+      "text": "là",
+      "from": 1911,
+      "to": 1913,
+      "scene": "add"
+    },
+    {
+      "text": "đi",
+      "from": 1916,
+      "to": 1920,
+      "scene": "add"
+    },
+    {
+      "text": "lần",
+      "from": 1922,
+      "to": 1928,
+      "scene": "add"
+    },
+    {
+      "text": "lượt",
+      "from": 1930,
+      "to": 1937,
+      "scene": "add"
+    },
+    {
+      "text": "từng",
+      "from": 1938,
+      "to": 1942,
+      "scene": "add"
+    },
+    {
+      "text": "vector.",
+      "from": 1944,
+      "to": 1973,
+      "scene": "add"
+    },
+    {
+      "text": "Inko",
+      "from": 1976,
+      "to": 1985,
+      "scene": "add"
+    },
+    {
+      "text": "đi",
+      "from": 1988,
+      "to": 1990,
+      "scene": "add"
+    },
+    {
+      "text": "theo",
+      "from": 1992,
+      "to": 2000,
+      "scene": "add"
+    },
+    {
+      "text": "a,",
+      "from": 2002,
+      "to": 2016,
+      "scene": "add"
+    },
+    {
+      "text": "rồi",
+      "from": 2019,
+      "to": 2024,
+      "scene": "add"
+    },
+    {
+      "text": "đi",
+      "from": 2026,
+      "to": 2028,
+      "scene": "add"
+    },
+    {
+      "text": "tiếp",
+      "from": 2031,
+      "to": 2036,
+      "scene": "add"
+    },
+    {
+      "text": "b",
+      "from": 2038,
+      "to": 2048,
+      "scene": "add"
+    },
+    {
+      "text": "từ",
+      "from": 2049,
+      "to": 2052,
+      "scene": "add"
+    },
+    {
+      "text": "chỗ",
+      "from": 2055,
+      "to": 2060,
+      "scene": "add"
+    },
+    {
+      "text": "a",
+      "from": 2064,
+      "to": 2067,
+      "scene": "add"
+    },
+    {
+      "text": "kết",
+      "from": 2068,
+      "to": 2072,
+      "scene": "add"
+    },
+    {
+      "text": "thúc.",
+      "from": 2073,
+      "to": 2096,
+      "scene": "add"
+    },
+    {
+      "text": "Đặt",
+      "from": 2097,
+      "to": 2103,
+      "scene": "add"
+    },
+    {
+      "text": "nối",
+      "from": 2104,
+      "to": 2110,
+      "scene": "add"
+    },
+    {
+      "text": "đuôi",
+      "from": 2111,
+      "to": 2115,
+      "scene": "add"
+    },
+    {
+      "text": "nhau",
+      "from": 2117,
+      "to": 2122,
+      "scene": "add"
+    },
+    {
+      "text": "như",
+      "from": 2123,
+      "to": 2127,
+      "scene": "add"
+    },
+    {
+      "text": "vậy,",
+      "from": 2128,
+      "to": 2144,
+      "scene": "add"
+    },
+    {
+      "text": "tổng",
+      "from": 2146,
+      "to": 2153,
+      "scene": "add"
+    },
+    {
+      "text": "là",
+      "from": 2156,
+      "to": 2158,
+      "scene": "add"
+    },
+    {
+      "text": "mũi",
+      "from": 2159,
+      "to": 2163,
+      "scene": "add"
+    },
+    {
+      "text": "tên",
+      "from": 2165,
+      "to": 2170,
+      "scene": "add"
+    },
+    {
+      "text": "thẳng",
+      "from": 2172,
+      "to": 2182,
+      "scene": "add"
+    },
+    {
+      "text": "từ",
+      "from": 2183,
+      "to": 2186,
+      "scene": "add"
+    },
+    {
+      "text": "điểm",
+      "from": 2187,
+      "to": 2192,
+      "scene": "add"
+    },
+    {
+      "text": "đầu",
+      "from": 2194,
+      "to": 2201,
+      "scene": "add"
+    },
+    {
+      "text": "tới",
+      "from": 2204,
+      "to": 2206,
+      "scene": "add"
+    },
+    {
+      "text": "điểm",
+      "from": 2207,
+      "to": 2213,
+      "scene": "add"
+    },
+    {
+      "text": "cuối.",
+      "from": 2216,
+      "to": 2240,
+      "scene": "add"
+    },
+    {
+      "text": "Đi",
+      "from": 2241,
+      "to": 2244,
+      "scene": "add"
+    },
+    {
+      "text": "b",
+      "from": 2247,
+      "to": 2252,
+      "scene": "add"
+    },
+    {
+      "text": "trước",
+      "from": 2254,
+      "to": 2266,
+      "scene": "add"
+    },
+    {
+      "text": "rồi",
+      "from": 2267,
+      "to": 2273,
+      "scene": "add"
+    },
+    {
+      "text": "a,",
+      "from": 2276,
+      "to": 2290,
+      "scene": "add"
+    },
+    {
+      "text": "vẫn",
+      "from": 2292,
+      "to": 2297,
+      "scene": "add"
+    },
+    {
+      "text": "tới",
+      "from": 2298,
+      "to": 2302,
+      "scene": "add"
+    },
+    {
+      "text": "đúng",
+      "from": 2303,
+      "to": 2307,
+      "scene": "add"
+    },
+    {
+      "text": "chỗ",
+      "from": 2309,
+      "to": 2313,
+      "scene": "add"
+    },
+    {
+      "text": "đó.",
+      "from": 2314,
+      "to": 2338,
+      "scene": "add"
+    },
+    {
+      "text": "Hai",
+      "from": 2340,
+      "to": 2345,
+      "scene": "add"
+    },
+    {
+      "text": "đường",
+      "from": 2346,
+      "to": 2352,
+      "scene": "add"
+    },
+    {
+      "text": "đi",
+      "from": 2354,
+      "to": 2360,
+      "scene": "add"
+    },
+    {
+      "text": "tạo",
+      "from": 2361,
+      "to": 2364,
+      "scene": "add"
+    },
+    {
+      "text": "thành",
+      "from": 2367,
+      "to": 2372,
+      "scene": "add"
+    },
+    {
+      "text": "hình",
+      "from": 2373,
+      "to": 2376,
+      "scene": "add"
+    },
+    {
+      "text": "bình",
+      "from": 2379,
+      "to": 2384,
+      "scene": "add"
+    },
+    {
+      "text": "hành,",
+      "from": 2385,
+      "to": 2400,
+      "scene": "add"
+    },
+    {
+      "text": "và",
+      "from": 2402,
+      "to": 2408,
+      "scene": "add"
+    },
+    {
+      "text": "tổng",
+      "from": 2409,
+      "to": 2417,
+      "scene": "add"
+    },
+    {
+      "text": "là",
+      "from": 2418,
+      "to": 2420,
+      "scene": "add"
+    },
+    {
+      "text": "đường",
+      "from": 2422,
+      "to": 2427,
+      "scene": "add"
+    },
+    {
+      "text": "chéo",
+      "from": 2429,
+      "to": 2436,
+      "scene": "add"
+    },
+    {
+      "text": "của",
+      "from": 2438,
+      "to": 2441,
+      "scene": "add"
+    },
+    {
+      "text": "nó.",
+      "from": 2444,
+      "to": 2463,
+      "scene": "add"
+    },
+    {
+      "text": "Còn",
+      "from": 2465,
+      "to": 2472,
+      "scene": "add"
+    },
+    {
+      "text": "tính",
+      "from": 2474,
+      "to": 2477,
+      "scene": "add"
+    },
+    {
+      "text": "bằng",
+      "from": 2478,
+      "to": 2484,
+      "scene": "add"
+    },
+    {
+      "text": "số",
+      "from": 2487,
+      "to": 2496,
+      "scene": "add"
+    },
+    {
+      "text": "thì",
+      "from": 2499,
+      "to": 2504,
+      "scene": "add"
+    },
+    {
+      "text": "chỉ",
+      "from": 2505,
+      "to": 2507,
+      "scene": "add"
+    },
+    {
+      "text": "cần",
+      "from": 2508,
+      "to": 2513,
+      "scene": "add"
+    },
+    {
+      "text": "cộng",
+      "from": 2516,
+      "to": 2523,
+      "scene": "add"
+    },
+    {
+      "text": "từng",
+      "from": 2524,
+      "to": 2528,
+      "scene": "add"
+    },
+    {
+      "text": "thành",
+      "from": 2530,
+      "to": 2535,
+      "scene": "add"
+    },
+    {
+      "text": "phần",
+      "from": 2536,
+      "to": 2540,
+      "scene": "add"
+    },
+    {
+      "text": "lại",
+      "from": 2542,
+      "to": 2547,
+      "scene": "add"
+    },
+    {
+      "text": "với",
+      "from": 2548,
+      "to": 2549,
+      "scene": "add"
+    },
+    {
+      "text": "nhau:",
+      "from": 2552,
+      "to": 2573,
+      "scene": "add"
+    },
+    {
+      "text": "(3,",
+      "from": 2576,
+      "to": 2592,
+      "scene": "add"
+    },
+    {
+      "text": "1)",
+      "from": 2595,
+      "to": 2602,
+      "scene": "add"
+    },
+    {
+      "text": "cộng",
+      "from": 2603,
+      "to": 2609,
+      "scene": "add"
+    },
+    {
+      "text": "(−2, 4)",
+      "from": 2612,
+      "to": 2645,
+      "scene": "add"
+    },
+    {
+      "text": "được",
+      "from": 2646,
+      "to": 2652,
+      "scene": "add"
+    },
+    {
+      "text": "(1,",
+      "from": 2654,
+      "to": 2667,
+      "scene": "add"
+    },
+    {
+      "text": "5).",
+      "from": 2669,
+      "to": 2688,
+      "scene": "add"
+    },
+    {
+      "text": "Phép",
+      "from": 2799,
+      "to": 2806,
+      "scene": "subtract"
+    },
+    {
+      "text": "trừ",
+      "from": 2809,
+      "to": 2816,
+      "scene": "subtract"
+    },
+    {
+      "text": "trả",
+      "from": 2818,
+      "to": 2822,
+      "scene": "subtract"
+    },
+    {
+      "text": "lời",
+      "from": 2823,
+      "to": 2828,
+      "scene": "subtract"
+    },
+    {
+      "text": "một",
+      "from": 2829,
+      "to": 2833,
+      "scene": "subtract"
+    },
+    {
+      "text": "câu",
+      "from": 2834,
+      "to": 2837,
+      "scene": "subtract"
+    },
+    {
+      "text": "hỏi",
+      "from": 2840,
+      "to": 2845,
+      "scene": "subtract"
+    },
+    {
+      "text": "trong",
+      "from": 2847,
+      "to": 2852,
+      "scene": "subtract"
+    },
+    {
+      "text": "game:",
+      "from": 2854,
+      "to": 2861,
+      "scene": "subtract"
+    },
+    {
+      "text": "kẻ",
+      "from": 2879,
+      "to": 2883,
+      "scene": "subtract"
+    },
+    {
+      "text": "địch",
+      "from": 2884,
+      "to": 2890,
+      "scene": "subtract"
+    },
+    {
+      "text": "phải",
+      "from": 2891,
+      "to": 2895,
+      "scene": "subtract"
+    },
+    {
+      "text": "đi",
+      "from": 2896,
+      "to": 2899,
+      "scene": "subtract"
+    },
+    {
+      "text": "hướng",
+      "from": 2900,
+      "to": 2905,
+      "scene": "subtract"
+    },
+    {
+      "text": "nào",
+      "from": 2907,
+      "to": 2914,
+      "scene": "subtract"
+    },
+    {
+      "text": "để",
+      "from": 2915,
+      "to": 2919,
+      "scene": "subtract"
+    },
+    {
+      "text": "tới",
+      "from": 2920,
+      "to": 2924,
+      "scene": "subtract"
+    },
+    {
+      "text": "người",
+      "from": 2925,
+      "to": 2931,
+      "scene": "subtract"
+    },
+    {
+      "text": "chơi?",
+      "from": 2933,
+      "to": 2941,
+      "scene": "subtract"
+    },
+    {
+      "text": "Câu",
+      "from": 2961,
+      "to": 2965,
+      "scene": "subtract"
+    },
+    {
+      "text": "trả",
+      "from": 2966,
+      "to": 2969,
+      "scene": "subtract"
+    },
+    {
+      "text": "lời",
+      "from": 2971,
+      "to": 2977,
+      "scene": "subtract"
+    },
+    {
+      "text": "là",
+      "from": 2979,
+      "to": 2981,
+      "scene": "subtract"
+    },
+    {
+      "text": "lấy",
+      "from": 2984,
+      "to": 2991,
+      "scene": "subtract"
+    },
+    {
+      "text": "player",
+      "from": 2993,
+      "to": 3010,
+      "scene": "subtract"
+    },
+    {
+      "text": "−",
+      "from": 3013,
+      "to": 3025,
+      "scene": "subtract"
+    },
+    {
+      "text": "enemy.",
+      "from": 3039,
+      "to": 3053,
+      "scene": "subtract"
+    },
+    {
+      "text": "Đó",
+      "from": 3056,
+      "to": 3061,
+      "scene": "subtract"
+    },
+    {
+      "text": "là",
+      "from": 3063,
+      "to": 3065,
+      "scene": "subtract"
+    },
+    {
+      "text": "vector",
+      "from": 3068,
+      "to": 3080,
+      "scene": "subtract"
+    },
+    {
+      "text": "từ",
+      "from": 3082,
+      "to": 3085,
+      "scene": "subtract"
+    },
+    {
+      "text": "kẻ",
+      "from": 3087,
+      "to": 3089,
+      "scene": "subtract"
+    },
+    {
+      "text": "địch",
+      "from": 3092,
+      "to": 3097,
+      "scene": "subtract"
+    },
+    {
+      "text": "tới",
+      "from": 3099,
+      "to": 3104,
+      "scene": "subtract"
+    },
+    {
+      "text": "người",
+      "from": 3105,
+      "to": 3111,
+      "scene": "subtract"
+    },
+    {
+      "text": "chơi,",
+      "from": 3113,
+      "to": 3130,
+      "scene": "subtract"
+    },
+    {
+      "text": "đuôi",
+      "from": 3133,
+      "to": 3140,
+      "scene": "subtract"
+    },
+    {
+      "text": "ở",
+      "from": 3142,
+      "to": 3143,
+      "scene": "subtract"
+    },
+    {
+      "text": "kẻ",
+      "from": 3145,
+      "to": 3147,
+      "scene": "subtract"
+    },
+    {
+      "text": "địch,",
+      "from": 3149,
+      "to": 3161,
+      "scene": "subtract"
+    },
+    {
+      "text": "mũi",
+      "from": 3164,
+      "to": 3173,
+      "scene": "subtract"
+    },
+    {
+      "text": "chạm",
+      "from": 3176,
+      "to": 3181,
+      "scene": "subtract"
+    },
+    {
+      "text": "người",
+      "from": 3183,
+      "to": 3188,
+      "scene": "subtract"
+    },
+    {
+      "text": "chơi.",
+      "from": 3190,
+      "to": 3212,
+      "scene": "subtract"
+    },
+    {
+      "text": "Đi",
+      "from": 3214,
+      "to": 3217,
+      "scene": "subtract"
+    },
+    {
+      "text": "theo",
+      "from": 3218,
+      "to": 3221,
+      "scene": "subtract"
+    },
+    {
+      "text": "hướng",
+      "from": 3223,
+      "to": 3226,
+      "scene": "subtract"
+    },
+    {
+      "text": "đó,",
+      "from": 3229,
+      "to": 3241,
+      "scene": "subtract"
+    },
+    {
+      "text": "slime",
+      "from": 3243,
+      "to": 3255,
+      "scene": "subtract"
+    },
+    {
+      "text": "áp",
+      "from": 3257,
+      "to": 3262,
+      "scene": "subtract"
+    },
+    {
+      "text": "sát",
+      "from": 3263,
+      "to": 3269,
+      "scene": "subtract"
+    },
+    {
+      "text": "dần.",
+      "from": 3271,
+      "to": 3291,
+      "scene": "subtract"
+    },
+    {
+      "text": "Nhưng",
+      "from": 3293,
+      "to": 3301,
+      "scene": "subtract"
+    },
+    {
+      "text": "nếu",
+      "from": 3302,
+      "to": 3308,
+      "scene": "subtract"
+    },
+    {
+      "text": "đảo",
+      "from": 3309,
+      "to": 3315,
+      "scene": "subtract"
+    },
+    {
+      "text": "thứ",
+      "from": 3316,
+      "to": 3320,
+      "scene": "subtract"
+    },
+    {
+      "text": "tự",
+      "from": 3321,
+      "to": 3327,
+      "scene": "subtract"
+    },
+    {
+      "text": "thành",
+      "from": 3329,
+      "to": 3339,
+      "scene": "subtract"
+    },
+    {
+      "text": "enemy",
+      "from": 3341,
+      "to": 3356,
+      "scene": "subtract"
+    },
+    {
+      "text": "−",
+      "from": 3357,
+      "to": 3363,
+      "scene": "subtract"
+    },
+    {
+      "text": "player,",
+      "from": 3365,
+      "to": 3387,
+      "scene": "subtract"
+    },
+    {
+      "text": "mũi",
+      "from": 3389,
+      "to": 3394,
+      "scene": "subtract"
+    },
+    {
+      "text": "tên",
+      "from": 3395,
+      "to": 3401,
+      "scene": "subtract"
+    },
+    {
+      "text": "quay",
+      "from": 3404,
+      "to": 3409,
+      "scene": "subtract"
+    },
+    {
+      "text": "ngược",
+      "from": 3410,
+      "to": 3416,
+      "scene": "subtract"
+    },
+    {
+      "text": "lại.",
+      "from": 3417,
+      "to": 3433,
+      "scene": "subtract"
+    },
+    {
+      "text": "Slime",
+      "from": 3437,
+      "to": 3447,
+      "scene": "subtract"
+    },
+    {
+      "text": "quay",
+      "from": 3449,
+      "to": 3454,
+      "scene": "subtract"
+    },
+    {
+      "text": "lưng",
+      "from": 3457,
+      "to": 3461,
+      "scene": "subtract"
+    },
+    {
+      "text": "bỏ",
+      "from": 3463,
+      "to": 3469,
+      "scene": "subtract"
+    },
+    {
+      "text": "chạy.",
+      "from": 3470,
+      "to": 3490,
+      "scene": "subtract"
+    },
+    {
+      "text": "Code",
+      "from": 3493,
+      "to": 3500,
+      "scene": "subtract"
+    },
+    {
+      "text": "vẫn",
+      "from": 3502,
+      "to": 3507,
+      "scene": "subtract"
+    },
+    {
+      "text": "chạy,",
+      "from": 3509,
+      "to": 3524,
+      "scene": "subtract"
+    },
+    {
+      "text": "nên",
+      "from": 3526,
+      "to": 3533,
+      "scene": "subtract"
+    },
+    {
+      "text": "lỗi",
+      "from": 3535,
+      "to": 3541,
+      "scene": "subtract"
+    },
+    {
+      "text": "này",
+      "from": 3542,
+      "to": 3548,
+      "scene": "subtract"
+    },
+    {
+      "text": "im",
+      "from": 3550,
+      "to": 3555,
+      "scene": "subtract"
+    },
+    {
+      "text": "lặng.",
+      "from": 3556,
+      "to": 3574,
+      "scene": "subtract"
+    },
+    {
+      "text": "Luôn",
+      "from": 3578,
+      "to": 3584,
+      "scene": "subtract"
+    },
+    {
+      "text": "lấy",
+      "from": 3585,
+      "to": 3591,
+      "scene": "subtract"
+    },
+    {
+      "text": "vị",
+      "from": 3592,
+      "to": 3598,
+      "scene": "subtract"
+    },
+    {
+      "text": "trí",
+      "from": 3599,
+      "to": 3603,
+      "scene": "subtract"
+    },
+    {
+      "text": "mục",
+      "from": 3604,
+      "to": 3610,
+      "scene": "subtract"
+    },
+    {
+      "text": "tiêu",
+      "from": 3613,
+      "to": 3622,
+      "scene": "subtract"
+    },
+    {
+      "text": "trừ",
+      "from": 3625,
+      "to": 3629,
+      "scene": "subtract"
+    },
+    {
+      "text": "đi",
+      "from": 3632,
+      "to": 3634,
+      "scene": "subtract"
+    },
+    {
+      "text": "vị",
+      "from": 3637,
+      "to": 3641,
+      "scene": "subtract"
+    },
+    {
+      "text": "trí",
+      "from": 3643,
+      "to": 3646,
+      "scene": "subtract"
+    },
+    {
+      "text": "của",
+      "from": 3649,
+      "to": 3653,
+      "scene": "subtract"
+    },
+    {
+      "text": "chính",
+      "from": 3655,
+      "to": 3661,
+      "scene": "subtract"
+    },
+    {
+      "text": "mình.",
+      "from": 3662,
+      "to": 3680,
+      "scene": "subtract"
+    },
+    {
+      "text": "Nhân",
+      "from": 3730,
+      "to": 3737,
+      "scene": "scale"
+    },
+    {
+      "text": "với",
+      "from": 3738,
+      "to": 3742,
+      "scene": "scale"
+    },
+    {
+      "text": "một",
+      "from": 3744,
+      "to": 3747,
+      "scene": "scale"
+    },
+    {
+      "text": "con",
+      "from": 3749,
+      "to": 3752,
+      "scene": "scale"
+    },
+    {
+      "text": "số",
+      "from": 3754,
+      "to": 3764,
+      "scene": "scale"
+    },
+    {
+      "text": "là",
+      "from": 3766,
+      "to": 3773,
+      "scene": "scale"
+    },
+    {
+      "text": "co",
+      "from": 3777,
+      "to": 3780,
+      "scene": "scale"
+    },
+    {
+      "text": "giãn",
+      "from": 3782,
+      "to": 3788,
+      "scene": "scale"
+    },
+    {
+      "text": "vector:",
+      "from": 3790,
+      "to": 3802,
+      "scene": "scale"
+    },
+    {
+      "text": "mọi",
+      "from": 3818,
+      "to": 3821,
+      "scene": "scale"
+    },
+    {
+      "text": "thành",
+      "from": 3822,
+      "to": 3826,
+      "scene": "scale"
+    },
+    {
+      "text": "phần",
+      "from": 3828,
+      "to": 3836,
+      "scene": "scale"
+    },
+    {
+      "text": "đều",
+      "from": 3837,
+      "to": 3840,
+      "scene": "scale"
+    },
+    {
+      "text": "được",
+      "from": 3842,
+      "to": 3848,
+      "scene": "scale"
+    },
+    {
+      "text": "nhân",
+      "from": 3849,
+      "to": 3855,
+      "scene": "scale"
+    },
+    {
+      "text": "với",
+      "from": 3856,
+      "to": 3860,
+      "scene": "scale"
+    },
+    {
+      "text": "số",
+      "from": 3861,
+      "to": 3864,
+      "scene": "scale"
+    },
+    {
+      "text": "đó.",
+      "from": 3867,
+      "to": 3888,
+      "scene": "scale"
+    },
+    {
+      "text": "Nhân",
+      "from": 3891,
+      "to": 3898,
+      "scene": "scale"
+    },
+    {
+      "text": "hai",
+      "from": 3905,
+      "to": 3912,
+      "scene": "scale"
+    },
+    {
+      "text": "thì",
+      "from": 3914,
+      "to": 3917,
+      "scene": "scale"
+    },
+    {
+      "text": "kéo",
+      "from": 3918,
+      "to": 3927,
+      "scene": "scale"
+    },
+    {
+      "text": "dài",
+      "from": 3929,
+      "to": 3934,
+      "scene": "scale"
+    },
+    {
+      "text": "trên",
+      "from": 3936,
+      "to": 3941,
+      "scene": "scale"
+    },
+    {
+      "text": "cùng",
+      "from": 3944,
+      "to": 3948,
+      "scene": "scale"
+    },
+    {
+      "text": "đường",
+      "from": 3950,
+      "to": 3953,
+      "scene": "scale"
+    },
+    {
+      "text": "thẳng.",
+      "from": 3954,
+      "to": 3975,
+      "scene": "scale"
+    },
+    {
+      "text": "Nhân",
+      "from": 3977,
+      "to": 3982,
+      "scene": "scale"
+    },
+    {
+      "text": "một",
+      "from": 3984,
+      "to": 3987,
+      "scene": "scale"
+    },
+    {
+      "text": "nửa",
+      "from": 3989,
+      "to": 4001,
+      "scene": "scale"
+    },
+    {
+      "text": "thì",
+      "from": 4002,
+      "to": 4006,
+      "scene": "scale"
+    },
+    {
+      "text": "co",
+      "from": 4010,
+      "to": 4013,
+      "scene": "scale"
+    },
+    {
+      "text": "lại.",
+      "from": 4014,
+      "to": 4035,
+      "scene": "scale"
+    },
+    {
+      "text": "Còn",
+      "from": 4037,
+      "to": 4040,
+      "scene": "scale"
+    },
+    {
+      "text": "số",
+      "from": 4041,
+      "to": 4047,
+      "scene": "scale"
+    },
+    {
+      "text": "âm",
+      "from": 4049,
+      "to": 4056,
+      "scene": "scale"
+    },
+    {
+      "text": "thì",
+      "from": 4059,
+      "to": 4064,
+      "scene": "scale"
+    },
+    {
+      "text": "lật",
+      "from": 4065,
+      "to": 4071,
+      "scene": "scale"
+    },
+    {
+      "text": "hẳn",
+      "from": 4072,
+      "to": 4076,
+      "scene": "scale"
+    },
+    {
+      "text": "180°.",
+      "from": 4078,
+      "to": 4119,
+      "scene": "scale"
+    },
+    {
+      "text": "Ví",
+      "from": 4120,
+      "to": 4122,
+      "scene": "scale"
+    },
+    {
+      "text": "dụ",
+      "from": 4124,
+      "to": 4128,
+      "scene": "scale"
+    },
+    {
+      "text": "(4, −2)",
+      "from": 4131,
+      "to": 4174,
+      "scene": "scale"
+    },
+    {
+      "text": "nhân",
+      "from": 4175,
+      "to": 4184,
+      "scene": "scale"
+    },
+    {
+      "text": "−1.5",
+      "from": 4186,
+      "to": 4212,
+      "scene": "scale"
+    },
+    {
+      "text": "được",
+      "from": 4214,
+      "to": 4217,
+      "scene": "scale"
+    },
+    {
+      "text": "(−6, 3):",
+      "from": 4220,
+      "to": 4270,
+      "scene": "scale"
+    },
+    {
+      "text": "dài",
+      "from": 4274,
+      "to": 4280,
+      "scene": "scale"
+    },
+    {
+      "text": "gấp",
+      "from": 4281,
+      "to": 4284,
+      "scene": "scale"
+    },
+    {
+      "text": "rưỡi,",
+      "from": 4287,
+      "to": 4301,
+      "scene": "scale"
+    },
+    {
+      "text": "và",
+      "from": 4304,
+      "to": 4306,
+      "scene": "scale"
+    },
+    {
+      "text": "quay",
+      "from": 4308,
+      "to": 4311,
+      "scene": "scale"
+    },
+    {
+      "text": "ngược",
+      "from": 4313,
+      "to": 4320,
+      "scene": "scale"
+    },
+    {
+      "text": "chiều.",
+      "from": 4323,
+      "to": 4344,
+      "scene": "scale"
+    },
+    {
+      "text": "Cộng,",
+      "from": 4346,
+      "to": 4359,
+      "scene": "scale"
+    },
+    {
+      "text": "trừ",
+      "from": 4361,
+      "to": 4371,
+      "scene": "scale"
+    },
+    {
+      "text": "và",
+      "from": 4372,
+      "to": 4376,
+      "scene": "scale"
+    },
+    {
+      "text": "co",
+      "from": 4378,
+      "to": 4383,
+      "scene": "scale"
+    },
+    {
+      "text": "giãn:",
+      "from": 4385,
+      "to": 4402,
+      "scene": "scale"
+    },
+    {
+      "text": "ba",
+      "from": 4407,
+      "to": 4409,
+      "scene": "scale"
+    },
+    {
+      "text": "hàm",
+      "from": 4412,
+      "to": 4416,
+      "scene": "scale"
+    },
+    {
+      "text": "nhỏ",
+      "from": 4419,
+      "to": 4426,
+      "scene": "scale"
+    },
+    {
+      "text": "xíu",
+      "from": 4427,
+      "to": 4433,
+      "scene": "scale"
+    },
+    {
+      "text": "này",
+      "from": 4436,
+      "to": 4443,
+      "scene": "scale"
+    },
+    {
+      "text": "là",
+      "from": 4445,
+      "to": 4448,
+      "scene": "scale"
+    },
+    {
+      "text": "nền",
+      "from": 4450,
+      "to": 4457,
+      "scene": "scale"
+    },
+    {
+      "text": "của",
+      "from": 4459,
+      "to": 4462,
+      "scene": "scale"
+    },
+    {
+      "text": "hầu",
+      "from": 4463,
+      "to": 4469,
+      "scene": "scale"
+    },
+    {
+      "text": "hết",
+      "from": 4470,
+      "to": 4474,
+      "scene": "scale"
+    },
+    {
+      "text": "chuyển",
+      "from": 4476,
+      "to": 4481,
+      "scene": "scale"
+    },
+    {
+      "text": "động",
+      "from": 4482,
+      "to": 4486,
+      "scene": "scale"
+    },
+    {
+      "text": "đơn",
+      "from": 4488,
+      "to": 4493,
+      "scene": "scale"
+    },
+    {
+      "text": "giản",
+      "from": 4496,
+      "to": 4500,
+      "scene": "scale"
+    },
+    {
+      "text": "trong",
+      "from": 4503,
+      "to": 4508,
+      "scene": "scale"
+    },
+    {
+      "text": "game.",
+      "from": 4518,
+      "to": 4529,
+      "scene": "scale"
+    },
+    {
+      "text": "Vector",
+      "from": 4605,
+      "to": 4615,
+      "scene": "length"
+    },
+    {
+      "text": "dài",
+      "from": 4617,
+      "to": 4622,
+      "scene": "length"
+    },
+    {
+      "text": "bao",
+      "from": 4624,
+      "to": 4627,
+      "scene": "length"
+    },
+    {
+      "text": "nhiêu?",
+      "from": 4629,
+      "to": 4636,
+      "scene": "length"
+    },
+    {
+      "text": "x",
+      "from": 4655,
+      "to": 4660,
+      "scene": "length"
+    },
+    {
+      "text": "và",
+      "from": 4663,
+      "to": 4665,
+      "scene": "length"
+    },
+    {
+      "text": "y",
+      "from": 4670,
+      "to": 4675,
+      "scene": "length"
+    },
+    {
+      "text": "là",
+      "from": 4677,
+      "to": 4682,
+      "scene": "length"
+    },
+    {
+      "text": "hai",
+      "from": 4684,
+      "to": 4689,
+      "scene": "length"
+    },
+    {
+      "text": "cạnh",
+      "from": 4691,
+      "to": 4696,
+      "scene": "length"
+    },
+    {
+      "text": "góc",
+      "from": 4697,
+      "to": 4701,
+      "scene": "length"
+    },
+    {
+      "text": "vuông",
+      "from": 4703,
+      "to": 4711,
+      "scene": "length"
+    },
+    {
+      "text": "của",
+      "from": 4712,
+      "to": 4715,
+      "scene": "length"
+    },
+    {
+      "text": "một",
+      "from": 4717,
+      "to": 4720,
+      "scene": "length"
+    },
+    {
+      "text": "tam",
+      "from": 4723,
+      "to": 4725,
+      "scene": "length"
+    },
+    {
+      "text": "giác",
+      "from": 4726,
+      "to": 4730,
+      "scene": "length"
+    },
+    {
+      "text": "vuông,",
+      "from": 4732,
+      "to": 4739,
+      "scene": "length"
+    },
+    {
+      "text": "nên",
+      "from": 4751,
+      "to": 4756,
+      "scene": "length"
+    },
+    {
+      "text": "định",
+      "from": 4759,
+      "to": 4763,
+      "scene": "length"
+    },
+    {
+      "text": "lý",
+      "from": 4765,
+      "to": 4768,
+      "scene": "length"
+    },
+    {
+      "text": "Pythagoras",
+      "from": 4771,
+      "to": 4792,
+      "scene": "length"
+    },
+    {
+      "text": "cho",
+      "from": 4795,
+      "to": 4799,
+      "scene": "length"
+    },
+    {
+      "text": "ngay",
+      "from": 4801,
+      "to": 4804,
+      "scene": "length"
+    },
+    {
+      "text": "đáp",
+      "from": 4807,
+      "to": 4811,
+      "scene": "length"
+    },
+    {
+      "text": "án:",
+      "from": 4815,
+      "to": 4819,
+      "scene": "length"
+    },
+    {
+      "text": "|v| = √(x² + y²).",
+      "from": 4835,
+      "to": 4915,
+      "scene": "length"
+    },
+    {
+      "text": "Với",
+      "from": 4931,
+      "to": 4936,
+      "scene": "length"
+    },
+    {
+      "text": "(3,",
+      "from": 4939,
+      "to": 4943,
+      "scene": "length"
+    },
+    {
+      "text": "4),",
+      "from": 4954,
+      "to": 4963,
+      "scene": "length"
+    },
+    {
+      "text": "đó",
+      "from": 4973,
+      "to": 4976,
+      "scene": "length"
+    },
+    {
+      "text": "là",
+      "from": 4977,
+      "to": 4982,
+      "scene": "length"
+    },
+    {
+      "text": "căn",
+      "from": 4983,
+      "to": 4989,
+      "scene": "length"
+    },
+    {
+      "text": "của",
+      "from": 4991,
+      "to": 4996,
+      "scene": "length"
+    },
+    {
+      "text": "chín",
+      "from": 4999,
+      "to": 5003,
+      "scene": "length"
+    },
+    {
+      "text": "cộng",
+      "from": 5008,
+      "to": 5013,
+      "scene": "length"
+    },
+    {
+      "text": "mười",
+      "from": 5015,
+      "to": 5018,
+      "scene": "length"
+    },
+    {
+      "text": "sáu,",
+      "from": 5020,
+      "to": 5025,
+      "scene": "length"
+    },
+    {
+      "text": "căn",
+      "from": 5041,
+      "to": 5044,
+      "scene": "length"
+    },
+    {
+      "text": "hai",
+      "from": 5047,
+      "to": 5049,
+      "scene": "length"
+    },
+    {
+      "text": "mươi",
+      "from": 5051,
+      "to": 5054,
+      "scene": "length"
+    },
+    {
+      "text": "lăm:",
+      "from": 5055,
+      "to": 5059,
+      "scene": "length"
+    },
+    {
+      "text": "năm.",
+      "from": 5075,
+      "to": 5080,
+      "scene": "length"
+    },
+    {
+      "text": "Trong",
+      "from": 5101,
+      "to": 5104,
+      "scene": "length"
+    },
+    {
+      "text": "3D,",
+      "from": 5107,
+      "to": 5116,
+      "scene": "length"
+    },
+    {
+      "text": "thêm",
+      "from": 5129,
+      "to": 5133,
+      "scene": "length"
+    },
+    {
+      "text": "z",
+      "from": 5135,
+      "to": 5143,
+      "scene": "length"
+    },
+    {
+      "text": "bình",
+      "from": 5145,
+      "to": 5150,
+      "scene": "length"
+    },
+    {
+      "text": "vào",
+      "from": 5151,
+      "to": 5153,
+      "scene": "length"
+    },
+    {
+      "text": "trong",
+      "from": 5155,
+      "to": 5159,
+      "scene": "length"
+    },
+    {
+      "text": "căn.",
+      "from": 5161,
+      "to": 5167,
+      "scene": "length"
+    },
+    {
+      "text": "Mẹo",
+      "from": 5186,
+      "to": 5189,
+      "scene": "length"
+    },
+    {
+      "text": "nhỏ:",
+      "from": 5191,
+      "to": 5198,
+      "scene": "length"
+    },
+    {
+      "text": "muốn",
+      "from": 5211,
+      "to": 5217,
+      "scene": "length"
+    },
+    {
+      "text": "so",
+      "from": 5219,
+      "to": 5224,
+      "scene": "length"
+    },
+    {
+      "text": "hai",
+      "from": 5227,
+      "to": 5231,
+      "scene": "length"
+    },
+    {
+      "text": "độ",
+      "from": 5233,
+      "to": 5236,
+      "scene": "length"
+    },
+    {
+      "text": "dài,",
+      "from": 5239,
+      "to": 5246,
+      "scene": "length"
+    },
+    {
+      "text": "hãy",
+      "from": 5254,
+      "to": 5258,
+      "scene": "length"
+    },
+    {
+      "text": "so",
+      "from": 5260,
+      "to": 5267,
+      "scene": "length"
+    },
+    {
+      "text": "bình",
+      "from": 5269,
+      "to": 5275,
+      "scene": "length"
+    },
+    {
+      "text": "phương",
+      "from": 5276,
+      "to": 5279,
+      "scene": "length"
+    },
+    {
+      "text": "độ",
+      "from": 5282,
+      "to": 5284,
+      "scene": "length"
+    },
+    {
+      "text": "dài.",
+      "from": 5287,
+      "to": 5303,
+      "scene": "length"
+    },
+    {
+      "text": "Kết",
+      "from": 5306,
+      "to": 5311,
+      "scene": "length"
+    },
+    {
+      "text": "quả",
+      "from": 5312,
+      "to": 5318,
+      "scene": "length"
+    },
+    {
+      "text": "y",
+      "from": 5320,
+      "to": 5325,
+      "scene": "length"
+    },
+    {
+      "text": "hệt",
+      "from": 5326,
+      "to": 5335,
+      "scene": "length"
+    },
+    {
+      "text": "mà",
+      "from": 5336,
+      "to": 5339,
+      "scene": "length"
+    },
+    {
+      "text": "khỏi",
+      "from": 5341,
+      "to": 5347,
+      "scene": "length"
+    },
+    {
+      "text": "phải",
+      "from": 5348,
+      "to": 5351,
+      "scene": "length"
+    },
+    {
+      "text": "khai",
+      "from": 5353,
+      "to": 5356,
+      "scene": "length"
+    },
+    {
+      "text": "căn,",
+      "from": 5359,
+      "to": 5373,
+      "scene": "length"
+    },
+    {
+      "text": "vốn",
+      "from": 5375,
+      "to": 5380,
+      "scene": "length"
+    },
+    {
+      "text": "là",
+      "from": 5383,
+      "to": 5385,
+      "scene": "length"
+    },
+    {
+      "text": "phép",
+      "from": 5386,
+      "to": 5390,
+      "scene": "length"
+    },
+    {
+      "text": "tính",
+      "from": 5392,
+      "to": 5399,
+      "scene": "length"
+    },
+    {
+      "text": "đắt",
+      "from": 5401,
+      "to": 5404,
+      "scene": "length"
+    },
+    {
+      "text": "hơn",
+      "from": 5407,
+      "to": 5409,
+      "scene": "length"
+    },
+    {
+      "text": "phép",
+      "from": 5411,
+      "to": 5416,
+      "scene": "length"
+    },
+    {
+      "text": "nhân,",
+      "from": 5417,
+      "to": 5431,
+      "scene": "length"
+    },
+    {
+      "text": "cả",
+      "from": 5432,
+      "to": 5438,
+      "scene": "length"
+    },
+    {
+      "text": "trên",
+      "from": 5439,
+      "to": 5445,
+      "scene": "length"
+    },
+    {
+      "text": "CPU",
+      "from": 5447,
+      "to": 5464,
+      "scene": "length"
+    },
+    {
+      "text": "lẫn",
+      "from": 5467,
+      "to": 5474,
+      "scene": "length"
+    },
+    {
+      "text": "GPU.",
+      "from": 5476,
+      "to": 5493,
+      "scene": "length"
+    },
+    {
+      "text": "Normalize",
+      "from": 5671,
+      "to": 5690,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 5695,
+      "to": 5700,
+      "scene": "normalize"
+    },
+    {
+      "text": "chia",
+      "from": 5702,
+      "to": 5707,
+      "scene": "normalize"
+    },
+    {
+      "text": "vector",
+      "from": 5709,
+      "to": 5721,
+      "scene": "normalize"
+    },
+    {
+      "text": "cho",
+      "from": 5724,
+      "to": 5729,
+      "scene": "normalize"
+    },
+    {
+      "text": "chính",
+      "from": 5731,
+      "to": 5736,
+      "scene": "normalize"
+    },
+    {
+      "text": "độ",
+      "from": 5738,
+      "to": 5741,
+      "scene": "normalize"
+    },
+    {
+      "text": "dài",
+      "from": 5743,
+      "to": 5748,
+      "scene": "normalize"
+    },
+    {
+      "text": "của",
+      "from": 5750,
+      "to": 5753,
+      "scene": "normalize"
+    },
+    {
+      "text": "nó.",
+      "from": 5755,
+      "to": 5762,
+      "scene": "normalize"
+    },
+    {
+      "text": "Kết",
+      "from": 5778,
+      "to": 5781,
+      "scene": "normalize"
+    },
+    {
+      "text": "quả",
+      "from": 5784,
+      "to": 5791,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 5793,
+      "to": 5796,
+      "scene": "normalize"
+    },
+    {
+      "text": "một",
+      "from": 5797,
+      "to": 5801,
+      "scene": "normalize"
+    },
+    {
+      "text": "vector",
+      "from": 5807,
+      "to": 5813,
+      "scene": "normalize"
+    },
+    {
+      "text": "đơn",
+      "from": 5815,
+      "to": 5820,
+      "scene": "normalize"
+    },
+    {
+      "text": "vị:",
+      "from": 5821,
+      "to": 5827,
+      "scene": "normalize"
+    },
+    {
+      "text": "cùng",
+      "from": 5841,
+      "to": 5846,
+      "scene": "normalize"
+    },
+    {
+      "text": "hướng,",
+      "from": 5849,
+      "to": 5858,
+      "scene": "normalize"
+    },
+    {
+      "text": "dài",
+      "from": 5868,
+      "to": 5875,
+      "scene": "normalize"
+    },
+    {
+      "text": "đúng",
+      "from": 5876,
+      "to": 5880,
+      "scene": "normalize"
+    },
+    {
+      "text": "bằng",
+      "from": 5882,
+      "to": 5887,
+      "scene": "normalize"
+    },
+    {
+      "text": "một,",
+      "from": 5888,
+      "to": 5894,
+      "scene": "normalize"
+    },
+    {
+      "text": "đầu",
+      "from": 5906,
+      "to": 5909,
+      "scene": "normalize"
+    },
+    {
+      "text": "mũi",
+      "from": 5910,
+      "to": 5913,
+      "scene": "normalize"
+    },
+    {
+      "text": "tên",
+      "from": 5916,
+      "to": 5923,
+      "scene": "normalize"
+    },
+    {
+      "text": "nằm",
+      "from": 5924,
+      "to": 5930,
+      "scene": "normalize"
+    },
+    {
+      "text": "trên",
+      "from": 5933,
+      "to": 5937,
+      "scene": "normalize"
+    },
+    {
+      "text": "đường",
+      "from": 5939,
+      "to": 5942,
+      "scene": "normalize"
+    },
+    {
+      "text": "tròn",
+      "from": 5945,
+      "to": 5952,
+      "scene": "normalize"
+    },
+    {
+      "text": "bán",
+      "from": 5953,
+      "to": 5959,
+      "scene": "normalize"
+    },
+    {
+      "text": "kính",
+      "from": 5960,
+      "to": 5964,
+      "scene": "normalize"
+    },
+    {
+      "text": "một.",
+      "from": 5965,
+      "to": 5971,
+      "scene": "normalize"
+    },
+    {
+      "text": "Quay",
+      "from": 5991,
+      "to": 5995,
+      "scene": "normalize"
+    },
+    {
+      "text": "lại",
+      "from": 5996,
+      "to": 6000,
+      "scene": "normalize"
+    },
+    {
+      "text": "cuộc",
+      "from": 6001,
+      "to": 6005,
+      "scene": "normalize"
+    },
+    {
+      "text": "đua.",
+      "from": 6006,
+      "to": 6012,
+      "scene": "normalize"
+    },
+    {
+      "text": "Giữ",
+      "from": 6031,
+      "to": 6036,
+      "scene": "normalize"
+    },
+    {
+      "text": "W",
+      "from": 6041,
+      "to": 6053,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 6055,
+      "to": 6060,
+      "scene": "normalize"
+    },
+    {
+      "text": "D",
+      "from": 6063,
+      "to": 6067,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6069,
+      "to": 6074,
+      "scene": "normalize"
+    },
+    {
+      "text": "cộng",
+      "from": 6075,
+      "to": 6081,
+      "scene": "normalize"
+    },
+    {
+      "text": "(0,",
+      "from": 6084,
+      "to": 6089,
+      "scene": "normalize"
+    },
+    {
+      "text": "1)",
+      "from": 6103,
+      "to": 6110,
+      "scene": "normalize"
+    },
+    {
+      "text": "với",
+      "from": 6112,
+      "to": 6115,
+      "scene": "normalize"
+    },
+    {
+      "text": "(1,",
+      "from": 6116,
+      "to": 6129,
+      "scene": "normalize"
+    },
+    {
+      "text": "0)",
+      "from": 6131,
+      "to": 6139,
+      "scene": "normalize"
+    },
+    {
+      "text": "thành",
+      "from": 6141,
+      "to": 6146,
+      "scene": "normalize"
+    },
+    {
+      "text": "(1,",
+      "from": 6149,
+      "to": 6153,
+      "scene": "normalize"
+    },
+    {
+      "text": "1),",
+      "from": 6155,
+      "to": 6170,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 6173,
+      "to": 6174,
+      "scene": "normalize"
+    },
+    {
+      "text": "độ",
+      "from": 6175,
+      "to": 6180,
+      "scene": "normalize"
+    },
+    {
+      "text": "dài",
+      "from": 6181,
+      "to": 6187,
+      "scene": "normalize"
+    },
+    {
+      "text": "của",
+      "from": 6189,
+      "to": 6192,
+      "scene": "normalize"
+    },
+    {
+      "text": "nó",
+      "from": 6193,
+      "to": 6199,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6201,
+      "to": 6206,
+      "scene": "normalize"
+    },
+    {
+      "text": "√2,",
+      "from": 6209,
+      "to": 6230,
+      "scene": "normalize"
+    },
+    {
+      "text": "khoảng",
+      "from": 6233,
+      "to": 6242,
+      "scene": "normalize"
+    },
+    {
+      "text": "1.41.",
+      "from": 6243,
+      "to": 6278,
+      "scene": "normalize"
+    },
+    {
+      "text": "Đó",
+      "from": 6282,
+      "to": 6288,
+      "scene": "normalize"
+    },
+    {
+      "text": "chính",
+      "from": 6289,
+      "to": 6295,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6296,
+      "to": 6297,
+      "scene": "normalize"
+    },
+    {
+      "text": "con",
+      "from": 6300,
+      "to": 6305,
+      "scene": "normalize"
+    },
+    {
+      "text": "số",
+      "from": 6306,
+      "to": 6312,
+      "scene": "normalize"
+    },
+    {
+      "text": "bốn",
+      "from": 6314,
+      "to": 6317,
+      "scene": "normalize"
+    },
+    {
+      "text": "mươi",
+      "from": 6319,
+      "to": 6321,
+      "scene": "normalize"
+    },
+    {
+      "text": "mốt",
+      "from": 6323,
+      "to": 6325,
+      "scene": "normalize"
+    },
+    {
+      "text": "phần",
+      "from": 6326,
+      "to": 6331,
+      "scene": "normalize"
+    },
+    {
+      "text": "trăm.",
+      "from": 6333,
+      "to": 6353,
+      "scene": "normalize"
+    },
+    {
+      "text": "Chỉ",
+      "from": 6355,
+      "to": 6359,
+      "scene": "normalize"
+    },
+    {
+      "text": "cần",
+      "from": 6360,
+      "to": 6365,
+      "scene": "normalize"
+    },
+    {
+      "text": "normalize",
+      "from": 6373,
+      "to": 6381,
+      "scene": "normalize"
+    },
+    {
+      "text": "trước",
+      "from": 6384,
+      "to": 6389,
+      "scene": "normalize"
+    },
+    {
+      "text": "khi",
+      "from": 6390,
+      "to": 6393,
+      "scene": "normalize"
+    },
+    {
+      "text": "nhân",
+      "from": 6395,
+      "to": 6401,
+      "scene": "normalize"
+    },
+    {
+      "text": "tốc",
+      "from": 6402,
+      "to": 6405,
+      "scene": "normalize"
+    },
+    {
+      "text": "độ,",
+      "from": 6407,
+      "to": 6420,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6422,
+      "to": 6427,
+      "scene": "normalize"
+    },
+    {
+      "text": "hai",
+      "from": 6429,
+      "to": 6432,
+      "scene": "normalize"
+    },
+    {
+      "text": "bạn",
+      "from": 6434,
+      "to": 6441,
+      "scene": "normalize"
+    },
+    {
+      "text": "đi",
+      "from": 6443,
+      "to": 6446,
+      "scene": "normalize"
+    },
+    {
+      "text": "xa",
+      "from": 6449,
+      "to": 6453,
+      "scene": "normalize"
+    },
+    {
+      "text": "bằng",
+      "from": 6455,
+      "to": 6458,
+      "scene": "normalize"
+    },
+    {
+      "text": "nhau.",
+      "from": 6459,
+      "to": 6485,
+      "scene": "normalize"
+    },
+    {
+      "text": "Một",
+      "from": 6488,
+      "to": 6492,
+      "scene": "normalize"
+    },
+    {
+      "text": "cái",
+      "from": 6493,
+      "to": 6494,
+      "scene": "normalize"
+    },
+    {
+      "text": "bẫy:",
+      "from": 6497,
+      "to": 6516,
+      "scene": "normalize"
+    },
+    {
+      "text": "slime",
+      "from": 6521,
+      "to": 6530,
+      "scene": "normalize"
+    },
+    {
+      "text": "đứng",
+      "from": 6533,
+      "to": 6540,
+      "scene": "normalize"
+    },
+    {
+      "text": "đúng",
+      "from": 6541,
+      "to": 6545,
+      "scene": "normalize"
+    },
+    {
+      "text": "chỗ",
+      "from": 6547,
+      "to": 6552,
+      "scene": "normalize"
+    },
+    {
+      "text": "Inko,",
+      "from": 6554,
+      "to": 6573,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 6575,
+      "to": 6581,
+      "scene": "normalize"
+    },
+    {
+      "text": "player",
+      "from": 6587,
+      "to": 6593,
+      "scene": "normalize"
+    },
+    {
+      "text": "−",
+      "from": 6595,
+      "to": 6600,
+      "scene": "normalize"
+    },
+    {
+      "text": "enemy",
+      "from": 6602,
+      "to": 6614,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6617,
+      "to": 6619,
+      "scene": "normalize"
+    },
+    {
+      "text": "vector",
+      "from": 6621,
+      "to": 6631,
+      "scene": "normalize"
+    },
+    {
+      "text": "0.",
+      "from": 6633,
+      "to": 6655,
+      "scene": "normalize"
+    },
+    {
+      "text": "Hàm",
+      "from": 6657,
+      "to": 6662,
+      "scene": "normalize"
+    },
+    {
+      "text": "normalize",
+      "from": 6671,
+      "to": 6679,
+      "scene": "normalize"
+    },
+    {
+      "text": "tự",
+      "from": 6681,
+      "to": 6686,
+      "scene": "normalize"
+    },
+    {
+      "text": "viết",
+      "from": 6689,
+      "to": 6696,
+      "scene": "normalize"
+    },
+    {
+      "text": "sẽ",
+      "from": 6697,
+      "to": 6703,
+      "scene": "normalize"
+    },
+    {
+      "text": "chia",
+      "from": 6707,
+      "to": 6710,
+      "scene": "normalize"
+    },
+    {
+      "text": "0",
+      "from": 6713,
+      "to": 6720,
+      "scene": "normalize"
+    },
+    {
+      "text": "cho",
+      "from": 6722,
+      "to": 6727,
+      "scene": "normalize"
+    },
+    {
+      "text": "0,",
+      "from": 6728,
+      "to": 6741,
+      "scene": "normalize"
+    },
+    {
+      "text": "ra",
+      "from": 6744,
+      "to": 6749,
+      "scene": "normalize"
+    },
+    {
+      "text": "NaN,",
+      "from": 6757,
+      "to": 6765,
+      "scene": "normalize"
+    },
+    {
+      "text": "nghĩa",
+      "from": 6768,
+      "to": 6773,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6775,
+      "to": 6780,
+      "scene": "normalize"
+    },
+    {
+      "text": "không",
+      "from": 6781,
+      "to": 6787,
+      "scene": "normalize"
+    },
+    {
+      "text": "phải",
+      "from": 6788,
+      "to": 6791,
+      "scene": "normalize"
+    },
+    {
+      "text": "một",
+      "from": 6792,
+      "to": 6797,
+      "scene": "normalize"
+    },
+    {
+      "text": "số.",
+      "from": 6798,
+      "to": 6821,
+      "scene": "normalize"
+    },
+    {
+      "text": "NaN",
+      "from": 6823,
+      "to": 6833,
+      "scene": "normalize"
+    },
+    {
+      "text": "lan",
+      "from": 6836,
+      "to": 6840,
+      "scene": "normalize"
+    },
+    {
+      "text": "qua",
+      "from": 6842,
+      "to": 6845,
+      "scene": "normalize"
+    },
+    {
+      "text": "mọi",
+      "from": 6846,
+      "to": 6852,
+      "scene": "normalize"
+    },
+    {
+      "text": "bước,",
+      "from": 6853,
+      "to": 6866,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 6868,
+      "to": 6871,
+      "scene": "normalize"
+    },
+    {
+      "text": "slime",
+      "from": 6873,
+      "to": 6885,
+      "scene": "normalize"
+    },
+    {
+      "text": "biến",
+      "from": 6887,
+      "to": 6890,
+      "scene": "normalize"
+    },
+    {
+      "text": "mất",
+      "from": 6891,
+      "to": 6895,
+      "scene": "normalize"
+    },
+    {
+      "text": "luôn,",
+      "from": 6897,
+      "to": 6909,
+      "scene": "normalize"
+    },
+    {
+      "text": "mà",
+      "from": 6912,
+      "to": 6914,
+      "scene": "normalize"
+    },
+    {
+      "text": "không",
+      "from": 6915,
+      "to": 6919,
+      "scene": "normalize"
+    },
+    {
+      "text": "hề",
+      "from": 6921,
+      "to": 6924,
+      "scene": "normalize"
+    },
+    {
+      "text": "báo",
+      "from": 6926,
+      "to": 6931,
+      "scene": "normalize"
+    },
+    {
+      "text": "lỗi.",
+      "from": 6932,
+      "to": 6955,
+      "scene": "normalize"
+    },
+    {
+      "text": "Vậy",
+      "from": 6957,
+      "to": 6960,
+      "scene": "normalize"
+    },
+    {
+      "text": "nên",
+      "from": 6961,
+      "to": 6969,
+      "scene": "normalize"
+    },
+    {
+      "text": "hãy",
+      "from": 6971,
+      "to": 6977,
+      "scene": "normalize"
+    },
+    {
+      "text": "luôn",
+      "from": 6978,
+      "to": 6984,
+      "scene": "normalize"
+    },
+    {
+      "text": "kiểm",
+      "from": 6985,
+      "to": 6991,
+      "scene": "normalize"
+    },
+    {
+      "text": "tra",
+      "from": 6993,
+      "to": 6996,
+      "scene": "normalize"
+    },
+    {
+      "text": "độ",
+      "from": 6997,
+      "to": 7001,
+      "scene": "normalize"
+    },
+    {
+      "text": "dài",
+      "from": 7003,
+      "to": 7010,
+      "scene": "normalize"
+    },
+    {
+      "text": "trước",
+      "from": 7011,
+      "to": 7015,
+      "scene": "normalize"
+    },
+    {
+      "text": "khi",
+      "from": 7016,
+      "to": 7022,
+      "scene": "normalize"
+    },
+    {
+      "text": "chia,",
+      "from": 7031,
+      "to": 7039,
+      "scene": "normalize"
+    },
+    {
+      "text": "kể",
+      "from": 7041,
+      "to": 7046,
+      "scene": "normalize"
+    },
+    {
+      "text": "cả",
+      "from": 7047,
+      "to": 7051,
+      "scene": "normalize"
+    },
+    {
+      "text": "với",
+      "from": 7053,
+      "to": 7056,
+      "scene": "normalize"
+    },
+    {
+      "text": "input",
+      "from": 7058,
+      "to": 7070,
+      "scene": "normalize"
+    },
+    {
+      "text": "lúc",
+      "from": 7071,
+      "to": 7077,
+      "scene": "normalize"
+    },
+    {
+      "text": "không",
+      "from": 7079,
+      "to": 7082,
+      "scene": "normalize"
+    },
+    {
+      "text": "nhấn",
+      "from": 7085,
+      "to": 7089,
+      "scene": "normalize"
+    },
+    {
+      "text": "phím",
+      "from": 7091,
+      "to": 7094,
+      "scene": "normalize"
+    },
+    {
+      "text": "nào.",
+      "from": 7097,
+      "to": 7121,
+      "scene": "normalize"
+    },
+    {
+      "text": "Cùng",
+      "from": 7255,
+      "to": 7260,
+      "scene": "roles"
+    },
+    {
+      "text": "một",
+      "from": 7261,
+      "to": 7265,
+      "scene": "roles"
+    },
+    {
+      "text": "bộ",
+      "from": 7266,
+      "to": 7269,
+      "scene": "roles"
+    },
+    {
+      "text": "số",
+      "from": 7272,
+      "to": 7281,
+      "scene": "roles"
+    },
+    {
+      "text": "x,",
+      "from": 7286,
+      "to": 7291,
+      "scene": "roles"
+    },
+    {
+      "text": "y,",
+      "from": 7298,
+      "to": 7303,
+      "scene": "roles"
+    },
+    {
+      "text": "z",
+      "from": 7310,
+      "to": 7320,
+      "scene": "roles"
+    },
+    {
+      "text": "có",
+      "from": 7322,
+      "to": 7325,
+      "scene": "roles"
+    },
+    {
+      "text": "thể",
+      "from": 7326,
+      "to": 7328,
+      "scene": "roles"
+    },
+    {
+      "text": "đóng",
+      "from": 7329,
+      "to": 7334,
+      "scene": "roles"
+    },
+    {
+      "text": "tới",
+      "from": 7337,
+      "to": 7344,
+      "scene": "roles"
+    },
+    {
+      "text": "ba",
+      "from": 7346,
+      "to": 7349,
+      "scene": "roles"
+    },
+    {
+      "text": "vai",
+      "from": 7351,
+      "to": 7356,
+      "scene": "roles"
+    },
+    {
+      "text": "khác",
+      "from": 7357,
+      "to": 7361,
+      "scene": "roles"
+    },
+    {
+      "text": "nhau.",
+      "from": 7363,
+      "to": 7370,
+      "scene": "roles"
+    },
+    {
+      "text": "Vị",
+      "from": 7387,
+      "to": 7392,
+      "scene": "roles"
+    },
+    {
+      "text": "trí",
+      "from": 7394,
+      "to": 7401,
+      "scene": "roles"
+    },
+    {
+      "text": "là",
+      "from": 7404,
+      "to": 7406,
+      "scene": "roles"
+    },
+    {
+      "text": "một",
+      "from": 7407,
+      "to": 7413,
+      "scene": "roles"
+    },
+    {
+      "text": "chỗ,",
+      "from": 7416,
+      "to": 7430,
+      "scene": "roles"
+    },
+    {
+      "text": "đo",
+      "from": 7433,
+      "to": 7437,
+      "scene": "roles"
+    },
+    {
+      "text": "từ",
+      "from": 7440,
+      "to": 7445,
+      "scene": "roles"
+    },
+    {
+      "text": "gốc",
+      "from": 7446,
+      "to": 7449,
+      "scene": "roles"
+    },
+    {
+      "text": "toạ",
+      "from": 7452,
+      "to": 7455,
+      "scene": "roles"
+    },
+    {
+      "text": "độ.",
+      "from": 7457,
+      "to": 7473,
+      "scene": "roles"
+    },
+    {
+      "text": "Hướng",
+      "from": 7476,
+      "to": 7485,
+      "scene": "roles"
+    },
+    {
+      "text": "thì",
+      "from": 7487,
+      "to": 7490,
+      "scene": "roles"
+    },
+    {
+      "text": "chỉ",
+      "from": 7491,
+      "to": 7495,
+      "scene": "roles"
+    },
+    {
+      "text": "nói",
+      "from": 7496,
+      "to": 7500,
+      "scene": "roles"
+    },
+    {
+      "text": "về",
+      "from": 7502,
+      "to": 7509,
+      "scene": "roles"
+    },
+    {
+      "text": "phía",
+      "from": 7511,
+      "to": 7514,
+      "scene": "roles"
+    },
+    {
+      "text": "nào,",
+      "from": 7517,
+      "to": 7531,
+      "scene": "roles"
+    },
+    {
+      "text": "thường",
+      "from": 7533,
+      "to": 7538,
+      "scene": "roles"
+    },
+    {
+      "text": "dài",
+      "from": 7541,
+      "to": 7543,
+      "scene": "roles"
+    },
+    {
+      "text": "bằng",
+      "from": 7545,
+      "to": 7550,
+      "scene": "roles"
+    },
+    {
+      "text": "một,",
+      "from": 7551,
+      "to": 7565,
+      "scene": "roles"
+    },
+    {
+      "text": "và",
+      "from": 7566,
+      "to": 7572,
+      "scene": "roles"
+    },
+    {
+      "text": "không",
+      "from": 7573,
+      "to": 7577,
+      "scene": "roles"
+    },
+    {
+      "text": "có",
+      "from": 7579,
+      "to": 7581,
+      "scene": "roles"
+    },
+    {
+      "text": "vị",
+      "from": 7583,
+      "to": 7586,
+      "scene": "roles"
+    },
+    {
+      "text": "trí:",
+      "from": 7589,
+      "to": 7608,
+      "scene": "roles"
+    },
+    {
+      "text": "dời",
+      "from": 7613,
+      "to": 7617,
+      "scene": "roles"
+    },
+    {
+      "text": "một",
+      "from": 7619,
+      "to": 7622,
+      "scene": "roles"
+    },
+    {
+      "text": "cái",
+      "from": 7623,
+      "to": 7625,
+      "scene": "roles"
+    },
+    {
+      "text": "hộp,",
+      "from": 7627,
+      "to": 7639,
+      "scene": "roles"
+    },
+    {
+      "text": "pháp",
+      "from": 7641,
+      "to": 7646,
+      "scene": "roles"
+    },
+    {
+      "text": "tuyến",
+      "from": 7647,
+      "to": 7651,
+      "scene": "roles"
+    },
+    {
+      "text": "mặt",
+      "from": 7653,
+      "to": 7658,
+      "scene": "roles"
+    },
+    {
+      "text": "trên",
+      "from": 7659,
+      "to": 7663,
+      "scene": "roles"
+    },
+    {
+      "text": "của",
+      "from": 7665,
+      "to": 7668,
+      "scene": "roles"
+    },
+    {
+      "text": "nó",
+      "from": 7670,
+      "to": 7675,
+      "scene": "roles"
+    },
+    {
+      "text": "vẫn",
+      "from": 7677,
+      "to": 7682,
+      "scene": "roles"
+    },
+    {
+      "text": "y",
+      "from": 7685,
+      "to": 7687,
+      "scene": "roles"
+    },
+    {
+      "text": "nguyên.",
+      "from": 7689,
+      "to": 7711,
+      "scene": "roles"
+    },
+    {
+      "text": "Vận",
+      "from": 7713,
+      "to": 7718,
+      "scene": "roles"
+    },
+    {
+      "text": "tốc",
+      "from": 7719,
+      "to": 7728,
+      "scene": "roles"
+    },
+    {
+      "text": "là",
+      "from": 7731,
+      "to": 7735,
+      "scene": "roles"
+    },
+    {
+      "text": "hướng",
+      "from": 7737,
+      "to": 7745,
+      "scene": "roles"
+    },
+    {
+      "text": "và",
+      "from": 7747,
+      "to": 7752,
+      "scene": "roles"
+    },
+    {
+      "text": "tốc",
+      "from": 7753,
+      "to": 7757,
+      "scene": "roles"
+    },
+    {
+      "text": "độ",
+      "from": 7759,
+      "to": 7764,
+      "scene": "roles"
+    },
+    {
+      "text": "gộp",
+      "from": 7765,
+      "to": 7770,
+      "scene": "roles"
+    },
+    {
+      "text": "lại:",
+      "from": 7771,
+      "to": 7785,
+      "scene": "roles"
+    },
+    {
+      "text": "dài",
+      "from": 7788,
+      "to": 7793,
+      "scene": "roles"
+    },
+    {
+      "text": "gấp",
+      "from": 7794,
+      "to": 7797,
+      "scene": "roles"
+    },
+    {
+      "text": "đôi",
+      "from": 7800,
+      "to": 7812,
+      "scene": "roles"
+    },
+    {
+      "text": "là",
+      "from": 7815,
+      "to": 7819,
+      "scene": "roles"
+    },
+    {
+      "text": "nhanh",
+      "from": 7821,
+      "to": 7825,
+      "scene": "roles"
+    },
+    {
+      "text": "gấp",
+      "from": 7826,
+      "to": 7829,
+      "scene": "roles"
+    },
+    {
+      "text": "đôi.",
+      "from": 7831,
+      "to": 7850,
+      "scene": "roles"
+    },
+    {
+      "text": "Và",
+      "from": 7854,
+      "to": 7860,
+      "scene": "roles"
+    },
+    {
+      "text": "đây",
+      "from": 7861,
+      "to": 7865,
+      "scene": "roles"
+    },
+    {
+      "text": "là",
+      "from": 7867,
+      "to": 7872,
+      "scene": "roles"
+    },
+    {
+      "text": "cốt",
+      "from": 7874,
+      "to": 7879,
+      "scene": "roles"
+    },
+    {
+      "text": "lõi",
+      "from": 7880,
+      "to": 7886,
+      "scene": "roles"
+    },
+    {
+      "text": "của",
+      "from": 7887,
+      "to": 7891,
+      "scene": "roles"
+    },
+    {
+      "text": "vòng",
+      "from": 7892,
+      "to": 7896,
+      "scene": "roles"
+    },
+    {
+      "text": "lặp",
+      "from": 7897,
+      "to": 7901,
+      "scene": "roles"
+    },
+    {
+      "text": "game",
+      "from": 7903,
+      "to": 7908,
+      "scene": "roles"
+    },
+    {
+      "text": "đơn",
+      "from": 7910,
+      "to": 7915,
+      "scene": "roles"
+    },
+    {
+      "text": "giản",
+      "from": 7916,
+      "to": 7922,
+      "scene": "roles"
+    },
+    {
+      "text": "nhất:",
+      "from": 7923,
+      "to": 7939,
+      "scene": "roles"
+    },
+    {
+      "text": "mỗi",
+      "from": 7941,
+      "to": 7946,
+      "scene": "roles"
+    },
+    {
+      "text": "khung",
+      "from": 7947,
+      "to": 7951,
+      "scene": "roles"
+    },
+    {
+      "text": "hình,",
+      "from": 7952,
+      "to": 7968,
+      "scene": "roles"
+    },
+    {
+      "text": "position += velocity * dt.",
+      "from": 7982,
+      "to": 8061,
+      "scene": "roles"
+    },
+    {
+      "text": "Chỉ",
+      "from": 8064,
+      "to": 8068,
+      "scene": "roles"
+    },
+    {
+      "text": "là",
+      "from": 8069,
+      "to": 8071,
+      "scene": "roles"
+    },
+    {
+      "text": "phép",
+      "from": 8072,
+      "to": 8079,
+      "scene": "roles"
+    },
+    {
+      "text": "cộng",
+      "from": 8080,
+      "to": 8088,
+      "scene": "roles"
+    },
+    {
+      "text": "và",
+      "from": 8089,
+      "to": 8093,
+      "scene": "roles"
+    },
+    {
+      "text": "phép",
+      "from": 8094,
+      "to": 8099,
+      "scene": "roles"
+    },
+    {
+      "text": "co",
+      "from": 8100,
+      "to": 8105,
+      "scene": "roles"
+    },
+    {
+      "text": "giãn,",
+      "from": 8106,
+      "to": 8119,
+      "scene": "roles"
+    },
+    {
+      "text": "mang",
+      "from": 8121,
+      "to": 8126,
+      "scene": "roles"
+    },
+    {
+      "text": "tên",
+      "from": 8128,
+      "to": 8131,
+      "scene": "roles"
+    },
+    {
+      "text": "mới",
+      "from": 8133,
+      "to": 8138,
+      "scene": "roles"
+    },
+    {
+      "text": "mà",
+      "from": 8139,
+      "to": 8143,
+      "scene": "roles"
+    },
+    {
+      "text": "thôi.",
+      "from": 8145,
+      "to": 8165,
+      "scene": "roles"
+    },
+    {
+      "text": "Tóm",
+      "from": 8247,
+      "to": 8252,
+      "scene": "recap"
+    },
+    {
+      "text": "lại:",
+      "from": 8254,
+      "to": 8261,
+      "scene": "recap"
+    },
+    {
+      "text": "vector",
+      "from": 8276,
+      "to": 8290,
+      "scene": "recap"
+    },
+    {
+      "text": "là",
+      "from": 8293,
+      "to": 8295,
+      "scene": "recap"
+    },
+    {
+      "text": "một",
+      "from": 8297,
+      "to": 8302,
+      "scene": "recap"
+    },
+    {
+      "text": "độ",
+      "from": 8303,
+      "to": 8307,
+      "scene": "recap"
+    },
+    {
+      "text": "dời,",
+      "from": 8309,
+      "to": 8319,
+      "scene": "recap"
+    },
+    {
+      "text": "một",
+      "from": 8327,
+      "to": 8331,
+      "scene": "recap"
+    },
+    {
+      "text": "mũi",
+      "from": 8332,
+      "to": 8338,
+      "scene": "recap"
+    },
+    {
+      "text": "tên",
+      "from": 8339,
+      "to": 8350,
+      "scene": "recap"
+    },
+    {
+      "text": "hay",
+      "from": 8353,
+      "to": 8357,
+      "scene": "recap"
+    },
+    {
+      "text": "một",
+      "from": 8360,
+      "to": 8362,
+      "scene": "recap"
+    },
+    {
+      "text": "bộ",
+      "from": 8365,
+      "to": 8369,
+      "scene": "recap"
+    },
+    {
+      "text": "số.",
+      "from": 8372,
+      "to": 8393,
+      "scene": "recap"
+    },
+    {
+      "text": "Cộng",
+      "from": 8397,
+      "to": 8405,
+      "scene": "recap"
+    },
+    {
+      "text": "thì",
+      "from": 8407,
+      "to": 8410,
+      "scene": "recap"
+    },
+    {
+      "text": "nối",
+      "from": 8413,
+      "to": 8417,
+      "scene": "recap"
+    },
+    {
+      "text": "đuôi",
+      "from": 8419,
+      "to": 8422,
+      "scene": "recap"
+    },
+    {
+      "text": "nhau,",
+      "from": 8425,
+      "to": 8441,
+      "scene": "recap"
+    },
+    {
+      "text": "trừ",
+      "from": 8444,
+      "to": 8453,
+      "scene": "recap"
+    },
+    {
+      "text": "để",
+      "from": 8456,
+      "to": 8458,
+      "scene": "recap"
+    },
+    {
+      "text": "chỉ",
+      "from": 8461,
+      "to": 8465,
+      "scene": "recap"
+    },
+    {
+      "text": "từ",
+      "from": 8468,
+      "to": 8473,
+      "scene": "recap"
+    },
+    {
+      "text": "chỗ",
+      "from": 8474,
+      "to": 8477,
+      "scene": "recap"
+    },
+    {
+      "text": "này",
+      "from": 8480,
+      "to": 8487,
+      "scene": "recap"
+    },
+    {
+      "text": "tới",
+      "from": 8489,
+      "to": 8492,
+      "scene": "recap"
+    },
+    {
+      "text": "chỗ",
+      "from": 8494,
+      "to": 8499,
+      "scene": "recap"
+    },
+    {
+      "text": "kia,",
+      "from": 8500,
+      "to": 8521,
+      "scene": "recap"
+    },
+    {
+      "text": "co",
+      "from": 8523,
+      "to": 8528,
+      "scene": "recap"
+    },
+    {
+      "text": "giãn",
+      "from": 8530,
+      "to": 8537,
+      "scene": "recap"
+    },
+    {
+      "text": "để",
+      "from": 8540,
+      "to": 8545,
+      "scene": "recap"
+    },
+    {
+      "text": "kéo",
+      "from": 8546,
+      "to": 8552,
+      "scene": "recap"
+    },
+    {
+      "text": "dài",
+      "from": 8554,
+      "to": 8561,
+      "scene": "recap"
+    },
+    {
+      "text": "hay",
+      "from": 8564,
+      "to": 8566,
+      "scene": "recap"
+    },
+    {
+      "text": "lật",
+      "from": 8569,
+      "to": 8573,
+      "scene": "recap"
+    },
+    {
+      "text": "chiều,",
+      "from": 8576,
+      "to": 8593,
+      "scene": "recap"
+    },
+    {
+      "text": "Pythagoras",
+      "from": 8596,
+      "to": 8617,
+      "scene": "recap"
+    },
+    {
+      "text": "cho",
+      "from": 8619,
+      "to": 8621,
+      "scene": "recap"
+    },
+    {
+      "text": "độ",
+      "from": 8623,
+      "to": 8629,
+      "scene": "recap"
+    },
+    {
+      "text": "dài,",
+      "from": 8631,
+      "to": 8645,
+      "scene": "recap"
+    },
+    {
+      "text": "và",
+      "from": 8648,
+      "to": 8655,
+      "scene": "recap"
+    },
+    {
+      "text": "normalize",
+      "from": 8657,
+      "to": 8677,
+      "scene": "recap"
+    },
+    {
+      "text": "để",
+      "from": 8679,
+      "to": 8684,
+      "scene": "recap"
+    },
+    {
+      "text": "giữ",
+      "from": 8685,
+      "to": 8689,
+      "scene": "recap"
+    },
+    {
+      "text": "hướng",
+      "from": 8691,
+      "to": 8698,
+      "scene": "recap"
+    },
+    {
+      "text": "thuần",
+      "from": 8699,
+      "to": 8705,
+      "scene": "recap"
+    },
+    {
+      "text": "tuý.",
+      "from": 8708,
+      "to": 8729,
+      "scene": "recap"
+    },
+    {
+      "text": "Coi",
+      "from": 8732,
+      "to": 8737,
+      "scene": "recap"
+    },
+    {
+      "text": "chừng",
+      "from": 8738,
+      "to": 8741,
+      "scene": "recap"
+    },
+    {
+      "text": "các",
+      "from": 8744,
+      "to": 8746,
+      "scene": "recap"
+    },
+    {
+      "text": "cái",
+      "from": 8747,
+      "to": 8751,
+      "scene": "recap"
+    },
+    {
+      "text": "bẫy:",
+      "from": 8752,
+      "to": 8768,
+      "scene": "recap"
+    },
+    {
+      "text": "tốc",
+      "from": 8769,
+      "to": 8773,
+      "scene": "recap"
+    },
+    {
+      "text": "độ",
+      "from": 8775,
+      "to": 8777,
+      "scene": "recap"
+    },
+    {
+      "text": "đi",
+      "from": 8780,
+      "to": 8785,
+      "scene": "recap"
+    },
+    {
+      "text": "chéo,",
+      "from": 8788,
+      "to": 8801,
+      "scene": "recap"
+    },
+    {
+      "text": "thứ",
+      "from": 8804,
+      "to": 8809,
+      "scene": "recap"
+    },
+    {
+      "text": "tự",
+      "from": 8810,
+      "to": 8813,
+      "scene": "recap"
+    },
+    {
+      "text": "phép",
+      "from": 8815,
+      "to": 8821,
+      "scene": "recap"
+    },
+    {
+      "text": "trừ,",
+      "from": 8823,
+      "to": 8835,
+      "scene": "recap"
+    },
+    {
+      "text": "và",
+      "from": 8837,
+      "to": 8847,
+      "scene": "recap"
+    },
+    {
+      "text": "vector",
+      "from": 8849,
+      "to": 8864,
+      "scene": "recap"
+    },
+    {
+      "text": "0.",
+      "from": 8866,
+      "to": 8888,
+      "scene": "recap"
+    },
+    {
+      "text": "Giờ",
+      "from": 8893,
+      "to": 8897,
+      "scene": "recap"
+    },
+    {
+      "text": "hãy",
+      "from": 8900,
+      "to": 8905,
+      "scene": "recap"
+    },
+    {
+      "text": "mở",
+      "from": 8906,
+      "to": 8909,
+      "scene": "recap"
+    },
+    {
+      "text": "demo",
+      "from": 8915,
+      "to": 8921,
+      "scene": "recap"
+    },
+    {
+      "text": "Cộng",
+      "from": 8924,
+      "to": 8929,
+      "scene": "recap"
+    },
+    {
+      "text": "vector",
+      "from": 8931,
+      "to": 8943,
+      "scene": "recap"
+    },
+    {
+      "text": "trong",
+      "from": 8944,
+      "to": 8948,
+      "scene": "recap"
+    },
+    {
+      "text": "bài",
+      "from": 8949,
+      "to": 8950,
+      "scene": "recap"
+    },
+    {
+      "text": "học",
+      "from": 8951,
+      "to": 8955,
+      "scene": "recap"
+    },
+    {
+      "text": "này,",
+      "from": 8957,
+      "to": 8969,
+      "scene": "recap"
+    },
+    {
+      "text": "và",
+      "from": 8972,
+      "to": 8977,
+      "scene": "recap"
+    },
+    {
+      "text": "thử",
+      "from": 8978,
+      "to": 8984,
+      "scene": "recap"
+    },
+    {
+      "text": "thu",
+      "from": 8986,
+      "to": 8991,
+      "scene": "recap"
+    },
+    {
+      "text": "mũi",
+      "from": 8992,
+      "to": 8998,
+      "scene": "recap"
+    },
+    {
+      "text": "tên",
+      "from": 8999,
+      "to": 9005,
+      "scene": "recap"
+    },
+    {
+      "text": "tổng",
+      "from": 9007,
+      "to": 9015,
+      "scene": "recap"
+    },
+    {
+      "text": "về",
+      "from": 9016,
+      "to": 9022,
+      "scene": "recap"
+    },
+    {
+      "text": "gần",
+      "from": 9025,
+      "to": 9029,
+      "scene": "recap"
+    },
+    {
+      "text": "như",
+      "from": 9031,
+      "to": 9034,
+      "scene": "recap"
+    },
+    {
+      "text": "bằng",
+      "from": 9036,
+      "to": 9039,
+      "scene": "recap"
+    },
+    {
+      "text": "không.",
+      "from": 9041,
+      "to": 9058,
+      "scene": "recap"
+    },
+    {
+      "text": "Hẹn",
+      "from": 9061,
+      "to": 9064,
+      "scene": "recap"
+    },
+    {
+      "text": "gặp",
+      "from": 9065,
+      "to": 9068,
+      "scene": "recap"
+    },
+    {
+      "text": "lại!",
+      "from": 9070,
+      "to": 9077,
+      "scene": "recap"
+    }
+  ],
+  "cues": {
+    "hook.in": 0,
+    "hook.straight": 110,
+    "hook.diagonal": 194,
+    "hook.gap": 295,
+    "hook.pct": 394,
+    "hook.answer": 463,
+    "what.arrow": 656,
+    "what.draw": 819,
+    "what.size": 866,
+    "what.head": 912,
+    "what.slide": 977,
+    "what.tuple": 1168,
+    "what.origin": 1295,
+    "what.point": 1449,
+    "what.move": 1572,
+    "what.zero": 1641,
+    "what.remember": 1809,
+    "add.walk": 1882,
+    "add.a": 1988,
+    "add.then": 2032,
+    "add.sum": 2104,
+    "add.swap": 2233,
+    "add.para": 2391,
+    "add.numbers": 2512,
+    "add.first": 2580,
+    "add.second": 2632,
+    "add.result": 2695,
+    "subtract.chase": 2799,
+    "subtract.formula": 2976,
+    "subtract.arrow": 3042,
+    "subtract.follow": 3221,
+    "subtract.flip": 3303,
+    "subtract.runs": 3433,
+    "subtract.silent": 3504,
+    "subtract.always": 3601,
+    "scale.scale": 3730,
+    "scale.stretch": 3871,
+    "scale.shrink": 3959,
+    "scale.flip": 4014,
+    "scale.example": 4122,
+    "scale.gives": 4227,
+    "scale.engine": 4404,
+    "length.triangle": 4605,
+    "length.legs": 4658,
+    "length.formula": 4808,
+    "length.example": 4948,
+    "length.five": 5065,
+    "length.threeD": 5152,
+    "length.compare": 5277,
+    "length.cheap": 5435,
+    "normalize.divide": 5671,
+    "normalize.unit": 5767,
+    "normalize.circle": 5924,
+    "normalize.replay": 6000,
+    "normalize.w": 6098,
+    "normalize.d": 6142,
+    "normalize.sum": 6189,
+    "normalize.root": 6237,
+    "normalize.fix": 6358,
+    "normalize.norm": 6419,
+    "normalize.zero": 6553,
+    "normalize.pz": 6657,
+    "normalize.nan": 6738,
+    "normalize.poof": 6883,
+    "normalize.vanish": 6941,
+    "normalize.noError": 6995,
+    "normalize.check": 7059,
+    "roles.roles": 7255,
+    "roles.position": 7363,
+    "roles.direction": 7456,
+    "roles.box": 7611,
+    "roles.velocity": 7744,
+    "roles.twice": 7838,
+    "roles.loop": 7916,
+    "roles.code": 8024,
+    "roles.names": 8134,
+    "recap.recap": 8247,
+    "recap.add": 8382,
+    "recap.sub": 8424,
+    "recap.scale": 8498,
+    "recap.length": 8557,
+    "recap.unit": 8594,
+    "recap.traps": 8673,
+    "recap.speed": 8723,
+    "recap.order": 8771,
+    "recap.zeroTrap": 8801,
+    "recap.demo": 8861
+  },
+  "audio": "voice.mp3"
+}

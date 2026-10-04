@@ -1,0 +1,351 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:03.433
+Hai Inko, một game, cùng một mức tốc độ.
+
+2
+00:00:03.433 --> 00:00:05.833
+Bạn này giữ phím D và đi sang phải.
+
+3
+00:00:05.833 --> 00:00:08.867
+Bạn kia giữ W và D, đi chéo.
+
+4
+00:00:08.867 --> 00:00:13.933
+Cùng một mức tốc độ, vậy sao bạn
+đi chéo lại đi xa hơn tới 41%?
+
+5
+00:00:13.933 --> 00:00:16.000
+Câu trả lời nằm ở vector.
+
+6
+00:00:16.000 --> 00:00:19.000
+Mình cùng tìm hiểu
+vector từng bước một nhé.
+
+7
+00:00:21.867 --> 00:00:26.267
+Vector là một độ dời:
+đi bao xa, và theo hướng nào.
+
+8
+00:00:26.267 --> 00:00:32.233
+Trên giấy, ta vẽ nó thành mũi tên:
+độ dài là độ lớn, đầu mũi tên chỉ hướng.
+
+9
+00:00:32.233 --> 00:00:35.533
+Trượt mũi tên đi bất cứ đâu,
+nó vẫn là cùng một vector,
+
+10
+00:00:35.533 --> 00:00:38.333
+vì điểm bắt đầu không
+phải là một phần của nó.
+
+11
+00:00:38.333 --> 00:00:42.467
+Trong code, vector chỉ
+là các con số, x và y.
+
+12
+00:00:42.467 --> 00:00:46.600
+Đặt đuôi ở gốc toạ độ,
+mũi tên chạm đúng điểm x, y.
+
+13
+00:00:46.600 --> 00:00:52.233
+Cùng con số nhưng khác nghĩa: điểm là một
+chỗ cố định, còn vector là một độ dời.
+
+14
+00:00:52.233 --> 00:00:57.133
+Một trường hợp đặc biệt: vector 0 có
+độ dài bằng 0, và chẳng có hướng nào.
+
+15
+00:00:57.133 --> 00:01:00.533
+Hãy nhớ kỹ nó, nó sẽ quay lại.
+
+16
+00:01:02.733 --> 00:01:05.867
+Cộng vector là đi lần lượt từng vector.
+
+17
+00:01:05.867 --> 00:01:09.900
+Inko đi theo a, rồi đi
+tiếp b từ chỗ a kết thúc.
+
+18
+00:01:09.900 --> 00:01:14.700
+Đặt nối đuôi nhau như vậy, tổng là mũi
+tên thẳng từ điểm đầu tới điểm cuối.
+
+19
+00:01:14.700 --> 00:01:18.000
+Đi b trước rồi a, vẫn tới đúng chỗ đó.
+
+20
+00:01:18.000 --> 00:01:22.167
+Hai đường đi tạo thành hình bình hành,
+và tổng là đường chéo của nó.
+
+21
+00:01:22.167 --> 00:01:26.500
+Còn tính bằng số thì chỉ cần cộng
+từng thành phần lại với nhau: (3,
+
+22
+00:01:26.500 --> 00:01:30.600
+1) cộng (−2, 4) được (1, 5).
+
+23
+00:01:33.300 --> 00:01:35.967
+Phép trừ trả lời một câu hỏi trong game:
+
+24
+00:01:35.967 --> 00:01:38.700
+kẻ địch phải đi hướng
+nào để tới người chơi?
+
+25
+00:01:38.700 --> 00:01:41.867
+Câu trả lời là lấy player − enemy.
+
+26
+00:01:41.867 --> 00:01:47.133
+Đó là vector từ kẻ địch tới người chơi,
+đuôi ở kẻ địch, mũi chạm người chơi.
+
+27
+00:01:47.133 --> 00:01:49.767
+Đi theo hướng đó, slime áp sát dần.
+
+28
+00:01:49.767 --> 00:01:54.567
+Nhưng nếu đảo thứ tự thành enemy
+− player, mũi tên quay ngược lại.
+
+29
+00:01:54.567 --> 00:01:56.433
+Slime quay lưng bỏ chạy.
+
+30
+00:01:56.433 --> 00:01:59.267
+Code vẫn chạy, nên lỗi này im lặng.
+
+31
+00:01:59.267 --> 00:02:03.667
+Luôn lấy vị trí mục tiêu trừ
+đi vị trí của chính mình.
+
+32
+00:02:04.333 --> 00:02:09.700
+Nhân với một con số là co giãn vector:
+mọi thành phần đều được nhân với số đó.
+
+33
+00:02:09.700 --> 00:02:12.567
+Nhân hai thì kéo dài
+trên cùng đường thẳng.
+
+34
+00:02:12.567 --> 00:02:14.567
+Nhân một nửa thì co lại.
+
+35
+00:02:14.567 --> 00:02:17.333
+Còn số âm thì lật hẳn 180°.
+
+36
+00:02:17.333 --> 00:02:22.467
+Ví dụ (4, −2) nhân −1.5 được (−6, 3):
+
+37
+00:02:22.467 --> 00:02:24.867
+dài gấp rưỡi, và quay ngược chiều.
+
+38
+00:02:24.867 --> 00:02:26.900
+Cộng, trừ và co giãn:
+
+39
+00:02:26.900 --> 00:02:31.967
+ba hàm nhỏ xíu này là nền của hầu
+hết chuyển động đơn giản trong game.
+
+40
+00:02:33.500 --> 00:02:35.167
+Vector dài bao nhiêu?
+
+41
+00:02:35.167 --> 00:02:38.367
+x và y là hai cạnh góc vuông
+của một tam giác vuông,
+
+42
+00:02:38.367 --> 00:02:41.167
+nên định lý Pythagoras cho ngay đáp án:
+
+43
+00:02:41.167 --> 00:02:44.367
+|v| = √(x² + y²).
+
+44
+00:02:44.367 --> 00:02:50.033
+Với (3, 4), đó là căn của chín cộng
+mười sáu, căn hai mươi lăm: năm.
+
+45
+00:02:50.033 --> 00:02:52.867
+Trong 3D, thêm z bình vào trong căn.
+
+46
+00:02:52.867 --> 00:02:56.867
+Mẹo nhỏ: muốn so hai độ dài,
+hãy so bình phương độ dài.
+
+47
+00:02:56.867 --> 00:03:01.067
+Kết quả y hệt mà khỏi phải khai căn,
+vốn là phép tính đắt hơn phép nhân,
+
+48
+00:03:01.067 --> 00:03:04.100
+cả trên CPU lẫn GPU.
+
+49
+00:03:09.033 --> 00:03:12.600
+Normalize là chia vector
+cho chính độ dài của nó.
+
+50
+00:03:12.600 --> 00:03:16.867
+Kết quả là một vector đơn vị:
+cùng hướng, dài đúng bằng một,
+
+51
+00:03:16.867 --> 00:03:19.700
+đầu mũi tên nằm trên
+đường tròn bán kính một.
+
+52
+00:03:19.700 --> 00:03:25.700
+Quay lại cuộc đua. Giữ W và D là cộng (0,
+1) với (1, 0) thành (1, 1),
+
+53
+00:03:25.767 --> 00:03:29.400
+và độ dài của nó là √2, khoảng 1.41.
+
+54
+00:03:29.400 --> 00:03:31.833
+Đó chính là con số bốn mươi mốt phần trăm.
+
+55
+00:03:31.833 --> 00:03:36.267
+Chỉ cần normalize trước khi nhân tốc độ,
+là hai bạn đi xa bằng nhau.
+
+56
+00:03:36.267 --> 00:03:41.900
+Một cái bẫy: slime đứng đúng chỗ Inko,
+và player − enemy là vector 0.
+
+57
+00:03:41.900 --> 00:03:47.433
+Hàm normalize tự viết sẽ chia 0 cho 0,
+ra NaN, nghĩa là không phải một số.
+
+58
+00:03:47.433 --> 00:03:51.900
+NaN lan qua mọi bước, và slime
+biến mất luôn, mà không hề báo lỗi.
+
+59
+00:03:51.900 --> 00:03:54.700
+Vậy nên hãy luôn kiểm tra
+độ dài trước khi chia,
+
+60
+00:03:54.700 --> 00:03:58.367
+kể cả với input lúc không nhấn phím nào.
+
+61
+00:04:01.833 --> 00:04:06.233
+Cùng một bộ số x, y,
+z có thể đóng tới ba vai khác nhau.
+
+62
+00:04:06.233 --> 00:04:09.200
+Vị trí là một chỗ, đo từ gốc toạ độ.
+
+63
+00:04:09.200 --> 00:04:13.767
+Hướng thì chỉ nói về phía nào,
+thường dài bằng một, và không có vị trí:
+
+64
+00:04:13.767 --> 00:04:17.100
+dời một cái hộp, pháp tuyến
+mặt trên của nó vẫn y nguyên.
+
+65
+00:04:17.100 --> 00:04:21.800
+Vận tốc là hướng và tốc độ gộp lại:
+dài gấp đôi là nhanh gấp đôi.
+
+66
+00:04:21.800 --> 00:04:24.700
+Và đây là cốt lõi của vòng
+lặp game đơn giản nhất:
+
+67
+00:04:24.700 --> 00:04:28.800
+mỗi khung hình, position += velocity * dt.
+
+68
+00:04:28.800 --> 00:04:33.167
+Chỉ là phép cộng và phép co
+giãn, mang tên mới mà thôi.
+
+69
+00:04:34.900 --> 00:04:39.900
+Tóm lại: vector là một độ dời,
+một mũi tên hay một bộ số.
+
+70
+00:04:39.900 --> 00:04:44.100
+Cộng thì nối đuôi nhau,
+trừ để chỉ từ chỗ này tới chỗ kia,
+
+71
+00:04:44.100 --> 00:04:48.267
+co giãn để kéo dài hay lật chiều,
+Pythagoras cho độ dài,
+
+72
+00:04:48.267 --> 00:04:51.067
+và normalize để giữ hướng thuần tuý.
+
+73
+00:04:51.067 --> 00:04:56.433
+Coi chừng các cái bẫy: tốc độ đi chéo,
+thứ tự phép trừ, và vector 0.
+
+74
+00:04:56.433 --> 00:04:59.067
+Giờ hãy mở demo Cộng
+vector trong bài học này,
+
+75
+00:04:59.067 --> 00:05:02.033
+và thử thu mũi tên tổng
+về gần như bằng không.
+
+76
+00:05:02.033 --> 00:05:03.567
+Hẹn gặp lại!

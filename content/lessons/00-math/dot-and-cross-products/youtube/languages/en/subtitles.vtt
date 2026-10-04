@@ -1,0 +1,400 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:02.200
+A slime guard watches the hall.
+
+2
+00:00:02.200 --> 00:00:05.333
+It sees everything inside this cone.
+
+3
+00:00:05.333 --> 00:00:08.533
+Inko sneaks past behind it,
+then steps in front.
+
+4
+00:00:08.533 --> 00:00:12.467
+Spotted! But how does the guard's
+code know Inko is in front of it,
+
+5
+00:00:12.467 --> 00:00:14.333
+and not behind?
+
+6
+00:00:14.333 --> 00:00:17.500
+One small operation: the dot product.
+
+7
+00:00:17.500 --> 00:00:21.467
+Then we'll meet its 3D partner,
+the cross product.
+
+8
+00:00:22.433 --> 00:00:27.000
+The dot product takes two vectors and
+gives back one number, not a vector.
+
+9
+00:00:27.000 --> 00:00:29.867
+Multiply the matching parts, then add.
+
+10
+00:00:29.867 --> 00:00:32.467
+Take (3, 1) and (2, 2).
+
+11
+00:00:32.467 --> 00:00:37.167
+Three times two is six, one times two
+is two, and six plus two is eight.
+
+12
+00:00:37.167 --> 00:00:41.733
+In 3D, add one more term: z times z.
+
+13
+00:00:41.733 --> 00:00:45.400
+Three multiplies and two adds,
+that's the whole function.
+
+14
+00:00:45.400 --> 00:00:50.000
+And the order doesn't
+matter: a·b equals b·a.
+
+15
+00:00:50.967 --> 00:00:53.467
+So what does that eight mean?
+
+16
+00:00:53.467 --> 00:00:55.933
+The same number has a second formula:
+
+17
+00:00:55.933 --> 00:01:01.900
+|a| |b| cos θ, where theta is the
+
+18
+00:01:01.900 --> 00:01:07.267
+angle between them. Normalize both
+vectors first, and both lengths are one,
+
+19
+00:01:07.267 --> 00:01:10.867
+so the dot product is just
+the cosine of the angle.
+
+20
+00:01:10.867 --> 00:01:12.767
+Now swing b around a.
+
+21
+00:01:12.767 --> 00:01:15.400
+Pointing the same way,
+the dot is positive.
+
+22
+00:01:15.400 --> 00:01:19.333
+At ninety degrees it's
+exactly zero: perpendicular.
+
+23
+00:01:19.333 --> 00:01:21.700
+Past ninety, it turns negative.
+
+24
+00:01:21.700 --> 00:01:24.800
+Front, side or behind: just read the sign.
+
+25
+00:01:24.800 --> 00:01:27.900
+No angle, and no inverse cosine needed.
+
+26
+00:01:29.000 --> 00:01:33.200
+Back to the guard. It
+faces along a direction, f.
+
+27
+00:01:33.200 --> 00:01:38.067
+The arrow to Inko is player − guard,
+straight from lesson two.
+
+28
+00:01:38.067 --> 00:01:41.267
+Normalize both, and their dot
+is the cosine of the angle
+
+29
+00:01:41.267 --> 00:01:44.233
+between where the guard
+looks and where Inko stands.
+
+30
+00:01:44.233 --> 00:01:47.967
+The cone is sixty degrees wide,
+thirty on each side.
+
+31
+00:01:47.967 --> 00:01:53.967
+So Inko is seen when that dot is
+greater than cos 30°, about 0.87.
+
+32
+00:01:54.367 --> 00:01:59.633
+Now the trap: skip the normalize,
+and a faraway Inko makes a huge dot,
+
+33
+00:01:59.633 --> 00:02:01.733
+so it's seen even outside the cone,
+
+34
+00:02:01.733 --> 00:02:05.567
+while a close Inko,
+right in front, doesn't count.
+
+35
+00:02:05.567 --> 00:02:09.533
+Normalize first,
+and only the angle matters.
+
+36
+00:02:10.400 --> 00:02:12.500
+The dot has one more meaning.
+
+37
+00:02:12.500 --> 00:02:16.000
+Drop a line from the tip of a
+straight onto b's direction.
+
+38
+00:02:16.000 --> 00:02:22.000
+How far along it lands is a's shadow:
+a·b̂, with b normalized.
+
+39
+00:02:22.200 --> 00:02:25.900
+In the game, dot Inko's velocity
+with the direction toward the guard,
+
+40
+00:02:25.900 --> 00:02:28.767
+and you get how fast Inko is closing in.
+
+41
+00:02:28.767 --> 00:02:30.967
+Negative means moving away.
+
+42
+00:02:30.967 --> 00:02:36.300
+Make b longer, and the shadow stays put:
+only its direction counts.
+
+43
+00:02:37.300 --> 00:02:39.200
+Now step into 3D.
+
+44
+00:02:39.200 --> 00:02:42.467
+The cross product takes two
+vectors and gives back a vector,
+
+45
+00:02:42.467 --> 00:02:44.800
+one that's perpendicular to both.
+
+46
+00:02:44.800 --> 00:02:49.500
+But two directions are
+perpendicular to both: up and down.
+
+47
+00:02:49.500 --> 00:02:54.067
+The right-hand rule picks one: curl your
+right hand's fingers from a toward b,
+
+48
+00:02:54.067 --> 00:02:56.533
+and your thumb points along a×b.
+
+49
+00:02:56.533 --> 00:03:00.567
+A classic check: x cross y gives z.
+
+50
+00:03:00.567 --> 00:03:02.867
+Swap the order, and the result flips:
+
+51
+00:03:02.867 --> 00:03:05.933
+b×a is minus a×b.
+
+52
+00:03:05.933 --> 00:03:09.167
+Unlike the dot product,
+order matters here.
+
+53
+00:03:09.967 --> 00:03:11.967
+Where does graphics use it?
+
+54
+00:03:11.967 --> 00:03:16.200
+Every triangle needs a normal:
+the direction its face points.
+
+55
+00:03:16.200 --> 00:03:19.500
+Take its corners, A, B and C.
+
+56
+00:03:19.500 --> 00:03:23.900
+Build two edges from A, B − A and C − A.
+
+57
+00:03:23.900 --> 00:03:28.100
+Cross them, then normalize:
+that's the normal.
+
+58
+00:03:28.367 --> 00:03:30.800
+Bonus: the cross product's length is
+
+59
+00:03:30.800 --> 00:03:33.633
+the area of the parallelogram
+the two edges make,
+
+60
+00:03:33.633 --> 00:03:36.033
+and the triangle is half of it.
+
+61
+00:03:36.033 --> 00:03:41.367
+Parallel edges give zero, and normalizing
+zero is lesson two's NaN trap.
+
+62
+00:03:41.367 --> 00:03:43.600
+The corner order matters too.
+
+63
+00:03:43.600 --> 00:03:47.767
+In WebGL and three.js,
+corners going counter-clockwise,
+
+64
+00:03:47.767 --> 00:03:50.833
+as the camera sees them,
+make the front face.
+
+65
+00:03:50.833 --> 00:03:54.433
+Swap two corners, and the
+normal points into the mesh.
+
+66
+00:03:55.567 --> 00:03:57.867
+Now both products work together.
+
+67
+00:03:57.867 --> 00:03:59.600
+Here's a ball and a light.
+
+68
+00:03:59.600 --> 00:04:04.633
+At each point, take the normal, N,
+and the direction toward the light, L,
+
+69
+00:04:04.633 --> 00:04:09.833
+both normalized. The
+brightness is max(0, N·L).
+
+70
+00:04:09.833 --> 00:04:12.933
+Facing the light: one, fully lit.
+
+71
+00:04:12.933 --> 00:04:15.267
+Edge-on: zero.
+
+72
+00:04:15.267 --> 00:04:16.933
+Turned away, the dot goes negative,
+
+73
+00:04:16.933 --> 00:04:21.167
+and max clamps it to zero,
+because light can't be negative.
+
+74
+00:04:21.167 --> 00:04:24.100
+The same sign check, against
+the camera instead of the light,
+
+75
+00:04:24.100 --> 00:04:27.467
+lets the GPU skip
+triangles that face away.
+
+76
+00:04:27.467 --> 00:04:29.900
+That's backface culling.
+
+77
+00:04:31.100 --> 00:04:35.733
+So: the dot product multiplies
+and adds, giving one number.
+
+78
+00:04:35.733 --> 00:04:38.400
+Its sign says front, side or behind,
+
+79
+00:04:38.400 --> 00:04:41.967
+and for unit vectors,
+it's the cosine of the angle.
+
+80
+00:04:41.967 --> 00:04:44.967
+The cross product gives a
+vector perpendicular to both,
+
+81
+00:04:44.967 --> 00:04:46.900
+and the order sets which way.
+
+82
+00:04:46.900 --> 00:04:51.033
+Edges, cross, normalize:
+a triangle's normal.
+
+83
+00:04:51.033 --> 00:04:54.800
+Normal dot light: a lit surface.
+
+84
+00:04:54.800 --> 00:04:59.533
+Now open the Dot Product and Projection
+demo in this lesson, stretch b,
+
+85
+00:04:59.533 --> 00:05:03.900
+and watch the shadow stay
+still while a·b keeps growing.
+
+86
+00:05:04.733 --> 00:05:06.133
+If this clicked, give it a like,
+
+87
+00:05:06.133 --> 00:05:08.700
+and subscribe so you don't
+miss the next lesson.
+
+88
+00:05:08.700 --> 00:05:10.333
+See you there!

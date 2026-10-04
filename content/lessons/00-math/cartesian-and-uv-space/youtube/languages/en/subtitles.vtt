@@ -1,0 +1,317 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.633
+Hi, I'm Inko! Look closely at any screen
+and you'll find a grid of tiny squares:
+
+2
+00:00:05.633 --> 00:00:10.267
+pixels. To paint a picture,
+a shader has to know where each one sits.
+
+3
+00:00:10.267 --> 00:00:12.867
+So every pixel needs an address.
+
+4
+00:00:12.867 --> 00:00:16.700
+Today we'll meet the three ways
+graphics writes that address down:
+
+5
+00:00:16.700 --> 00:00:21.433
+pixel coordinates, UV, and NDC.
+
+6
+00:00:22.867 --> 00:00:26.633
+Start with a number line:
+one axis, one number.
+
+7
+00:00:26.633 --> 00:00:30.600
+Add a second axis at a right angle,
+pick an origin where they cross,
+
+8
+00:00:30.600 --> 00:00:33.700
+and any point becomes a pair, x and y.
+
+9
+00:00:33.700 --> 00:00:37.433
+Walk x steps across, then y steps up.
+
+10
+00:00:37.433 --> 00:00:43.000
+Add a third axis, z, at right
+angles to both, and you're in 3D.
+
+11
+00:00:43.067 --> 00:00:46.667
+Nothing forces the axes to be
+perpendicular and evenly spaced,
+
+12
+00:00:46.667 --> 00:00:50.267
+but every graphics tool
+quietly assumes they are.
+
+13
+00:00:51.300 --> 00:00:53.133
+Which axis points up?
+
+14
+00:00:53.133 --> 00:00:58.067
+In three.js, and in the
+glTF format, y points up.
+
+15
+00:00:58.067 --> 00:01:00.533
+Blender uses z-up instead.
+
+16
+00:01:00.533 --> 00:01:03.567
+Bring a Blender character into
+three.js without converting,
+
+17
+00:01:03.567 --> 00:01:06.933
+and it lies along z, head toward you.
+
+18
+00:01:06.933 --> 00:01:09.167
+The second question is handedness.
+
+19
+00:01:09.167 --> 00:01:13.967
+In a right-handed system, curl your
+right hand's fingers from x toward y,
+
+20
+00:01:13.967 --> 00:01:16.467
+and your thumb points along z.
+
+21
+00:01:16.467 --> 00:01:22.067
+Three.js is right-handed; DirectX and
+Unity are traditionally left-handed.
+
+22
+00:01:22.067 --> 00:01:26.433
+Mix them up, and your model comes
+out mirrored, or even inside out.
+
+23
+00:01:26.433 --> 00:01:29.767
+Even flat screens disagree:
+math puts y up,
+
+24
+00:01:29.767 --> 00:01:34.200
+but a 2D canvas starts at the
+top left and counts y downward.
+
+25
+00:01:35.133 --> 00:01:36.967
+Now, textures.
+
+26
+00:01:36.967 --> 00:01:41.033
+A texture might be sixteen pixels
+wide, or over eight thousand.
+
+27
+00:01:41.033 --> 00:01:42.967
+UV space ignores that.
+
+28
+00:01:42.967 --> 00:01:48.267
+One corner is (0, 0),
+the opposite corner is (1, 1),
+
+29
+00:01:48.267 --> 00:01:50.467
+whatever the image size.
+
+30
+00:01:50.467 --> 00:01:53.533
+u runs across, v runs up or down.
+
+31
+00:01:53.533 --> 00:01:57.900
+So a shader samples by UV and
+never needs the pixel count.
+
+32
+00:01:57.900 --> 00:02:02.133
+Swap in a bigger texture, and not
+one line of shader code changes.
+
+33
+00:02:02.133 --> 00:02:06.433
+One catch: images put v
+equals zero at the top,
+
+34
+00:02:06.433 --> 00:02:10.133
+but classic WebGL textures
+put it at the bottom.
+
+35
+00:02:10.133 --> 00:02:11.567
+Only v differs,
+
+36
+00:02:11.567 --> 00:02:15.033
+so a wrongly flipped texture
+comes out flipped top to bottom,
+
+37
+00:02:15.033 --> 00:02:16.933
+never left to right.
+
+38
+00:02:18.233 --> 00:02:20.733
+So how does a pixel find its UV?
+
+39
+00:02:20.733 --> 00:02:24.267
+Take a tiny screen,
+four pixels wide and two tall.
+
+40
+00:02:24.267 --> 00:02:26.300
+A pixel isn't a point.
+
+41
+00:02:26.300 --> 00:02:31.167
+It's a little square, and its index
+marks the square's edge, not its center.
+
+42
+00:02:31.167 --> 00:02:33.933
+The center sits half a pixel further in.
+
+43
+00:02:33.933 --> 00:02:37.433
+So: add a half, then divide by the width.
+
+44
+00:02:37.433 --> 00:02:40.700
+u = (x + 0.5) / W.
+
+45
+00:02:40.700 --> 00:02:43.700
+v works the same way, with the height.
+
+46
+00:02:43.800 --> 00:02:47.133
+Inko has eight tentacles,
+so each one takes a pixel,
+
+47
+00:02:47.133 --> 00:02:50.133
+and they all run the same
+little formula at once.
+
+48
+00:02:50.133 --> 00:02:56.133
+That's how a GPU works: one tiny program,
+run for every pixel, in parallel.
+
+49
+00:02:56.700 --> 00:02:57.833
+Inside a shader,
+
+50
+00:02:57.833 --> 00:03:03.067
+gl_FragCoord already sits at the pixel
+center and starts at the bottom left,
+
+51
+00:03:03.067 --> 00:03:06.267
+so there you simply
+divide by the resolution.
+
+52
+00:03:07.100 --> 00:03:09.700
+UV runs from 0 to 1.
+
+53
+00:03:09.700 --> 00:03:11.400
+That's perfect for textures,
+
+54
+00:03:11.400 --> 00:03:14.600
+but for directions we want
+a range centered on zero:
+
+55
+00:03:14.600 --> 00:03:16.667
+−1 to 1.
+
+56
+00:03:16.733 --> 00:03:21.800
+WebGL calls it NDC,
+normalized device coordinates.
+
+57
+00:03:21.800 --> 00:03:24.267
+Now the sign alone
+tells you left or right.
+
+58
+00:03:24.267 --> 00:03:30.267
+To get there, stretch by two,
+then shift by one: x = 2u − 1.
+
+59
+00:03:30.433 --> 00:03:32.633
+Just subtracting a half isn't enough.
+
+60
+00:03:32.633 --> 00:03:35.600
+Your drawing would fill only
+the middle half of the screen.
+
+61
+00:03:35.600 --> 00:03:40.100
+And y = 1 − 2v, because v
+grows downward in images,
+
+62
+00:03:40.100 --> 00:03:43.433
+while NDC grows upward.
+
+63
+00:03:44.167 --> 00:03:48.733
+So: pixel coordinates count
+squares from the top left.
+
+64
+00:03:48.733 --> 00:03:53.667
+UV squeezes any size into 0 to 1,
+measured at pixel centers.
+
+65
+00:03:53.667 --> 00:03:58.600
+NDC stretches that to −1 to 1,
+centered on the screen.
+
+66
+00:03:58.600 --> 00:04:02.533
+Watch for the two classic slips:
+forgetting the half pixel,
+
+67
+00:04:02.533 --> 00:04:04.533
+and forgetting to flip y.
+
+68
+00:04:04.533 --> 00:04:09.300
+Now open the UV explorer in this lesson,
+and see which corner turns yellow.
+
+69
+00:04:09.300 --> 00:04:11.433
+See you in the next lesson!
