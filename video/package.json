@@ -10,6 +10,8 @@
     "stills": "tsx scripts/stills.ts",
     "tts": "tsx scripts/tts.ts",
     "video:lint": "tsx scripts/video-lint.ts",
+    "video:restore": "tsx scripts/restore.ts",
+    "outro": "tsx scripts/outro.ts",
     "qc": "tsx scripts/qc.ts",
     "youtube": "tsx scripts/youtube-package.ts",
     "thumbnail": "tsx scripts/thumbnail.ts",

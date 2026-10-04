@@ -37,6 +37,9 @@ plans/
 !/video/public/generated/dummy/
 !/video/public/generated/style/
 
+# site dubs: generated from content/lessons/*/*/youtube/languages/*/site.mp3 by `pnpm sync:dubs`
+/public/videos/
+
 # misc
 .DS_Store
 *.pem
@@ -60,3 +63,6 @@ next-env.d.ts
 
 # scratch dir for gen:shots:three
 .tmp-three-shots/
+
+# finished videos and the full upload kit (not pushed; mirrors content/)
+/media/

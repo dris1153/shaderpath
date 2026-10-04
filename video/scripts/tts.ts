@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import { validateStrings, validateTiming, type Timing } from "../src/scene/timing";
+import { finalsDir, mirrorLanguage } from "./lesson-assets";
 import { ffmpeg, generatedDir, lessonSource, ROOT } from "./remotion";
 import { spokenText } from "./script-parse";
 import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
@@ -12,7 +13,8 @@ import { alignWords, type Mark, type TtsEngine } from "./tts/engine";
 import { fish } from "./tts/fish";
 
 // pnpm tts <slug> en [--engine elevenlabs|fish] [--voice <id>] [--model <id>]
-//   script.en.md → public/generated/<slug>/en/{voice.mp3, timing.json, strings.json, subs.vtt}
+//   script.en.md → public/generated/<slug>/en/{voice.mp3, timing.json, strings.json, subs.vtt},
+//   mirrored into the lesson's content/.../youtube/languages/en/ (audio.mp3, subtitles.vtt, …)
 // pnpm tts <slug> <lang> --fit en [...]
 //   Every language shares the English picture: each scene is voiced, then
 //   sped up (≤ MAX_TEMPO) and padded to the English scene's exact length.
@@ -191,6 +193,12 @@ const { cues, warnings } = buildCues(subWords, FORMAT.fps);
 fs.writeFileSync(path.join(out, "timing.json"), `${JSON.stringify(timing, null, 2)}\n`);
 fs.writeFileSync(path.join(out, "strings.json"), `${JSON.stringify(strings, null, 2)}\n`);
 fs.writeFileSync(path.join(out, "subs.vtt"), toVtt(cues));
+// The paid output is kept in the repo, not only in the gitignored working cache.
+const finals = finalsDir(slug);
+if (finals) {
+  mirrorLanguage(out, path.join(finals, "languages", locale));
+  console.log(`mirrored into ${path.relative(process.cwd(), finals)}; run pnpm youtube ${slug} to refresh site.mp3 and metadata`);
+}
 for (const warning of warnings) console.warn(warning);
 const fitted = script.scenes.flatMap((s, i) => (clips[i]!.tempo > 1 ? [`${s.id} ${clips[i]!.tempo.toFixed(2)}×`] : []));
 console.log(

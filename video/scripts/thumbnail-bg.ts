@@ -2,13 +2,15 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { parseArgs, parseEnv } from "node:util";
+import { finalsDir, mirrorThumbnails, nextThumbnailNumber } from "./lesson-assets";
 import { ffmpeg, lessonSource, ROOT } from "./remotion";
 import { readYoutubeSource, type YoutubeSource } from "./youtube-meta";
 
 // pnpm thumbnail-bg <slug> [--variants 2]
 // Generates thumbnail backgrounds with gpt-image-2: the lesson's
 // video/youtube.json `thumbnail.background` motif inside the house style, cropped
-// to 1280×720 as public/generated/<slug>/thumbnail-bg-<n>.png (gitignored).
+// to 1280×720 as public/generated/<slug>/thumbnail-bg-<n>.png (a gitignored cache),
+// mirrored into the lesson's content/.../youtube/thumbnail-src/.
 // New variants are numbered after the existing ones, so a chosen background is
 // never overwritten. Then run pnpm thumbnail <slug>.
 const { values, positionals } = parseArgs({
@@ -69,8 +71,8 @@ if (!res.ok || !json.data) {
 
 const dir = path.join(ROOT, "public", "generated", slug);
 fs.mkdirSync(dir, { recursive: true });
-const taken = fs.readdirSync(dir).map((f) => Number(/^thumbnail-bg-(\d+)\.png$/.exec(f)?.[1] ?? 0));
-const first = Math.max(0, ...taken) + 1;
+const finals = finalsDir(slug);
+const first = nextThumbnailNumber(dir, finals && path.join(finals, "thumbnail-src"));
 json.data.forEach((image, i) => {
   const n = first + i;
   const raw = path.join(dir, `thumbnail-bg-raw-${n}.png`);
@@ -80,3 +82,5 @@ json.data.forEach((image, i) => {
   ffmpeg(["-y", "-loglevel", "error", "-i", raw, "-vf", "crop=1536:864:0:80,scale=1280:720:flags=lanczos", out]);
   console.log(path.relative(process.cwd(), out));
 });
+// The backgrounds are paid for: keep them in the repo next to the lesson, not only in the gitignored cache.
+if (finals) mirrorThumbnails(dir, path.join(finals, "thumbnail-src"));

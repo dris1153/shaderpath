@@ -3,8 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "predev": "tsx scripts/sync-video-dubs.ts",
     "dev": "next dev",
-    "build": "tsx scripts/gen-lesson-registry.ts && tsx scripts/gen-search-index.ts && next build",
+    "build": "tsx scripts/sync-video-dubs.ts && tsx scripts/gen-lesson-registry.ts && tsx scripts/gen-search-index.ts && next build",
+    "sync:dubs": "tsx scripts/sync-video-dubs.ts",
     "gen:search": "tsx scripts/gen-search-index.ts",
     "start": "next start",
     "lint": "eslint",

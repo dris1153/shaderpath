@@ -6,6 +6,7 @@ import {
   endScreen,
   outroAt,
   renderMetadata,
+  renderUploadNotes,
   resolveAnchor,
   studioTime,
   tagsLength,
@@ -105,20 +106,25 @@ test("chapters: at least 3, each at least 10 s", () => {
 });
 
 test("metadata carries chapters, per-locale links, dub notes and quiz blocks", () => {
-  const md = renderMetadata(validateYoutube(source(), timing), timing, "vector-basics", ["vi"]);
+  const checked = validateYoutube(source(), timing);
+  const md = renderMetadata(checked, timing, "vector-basics", "en", ["vi"]);
+  const vi = renderMetadata(checked, timing, "vector-basics", "vi", ["vi"]);
   assert.match(md, /0:00 Hook\n0:22 Axes\n0:52 Recap/);
   assert.match(md, /https:\/\/shaderpath\.drisdev\.io\/en\/lesson\/vector-basics/);
-  assert.match(md, /https:\/\/shaderpath\.drisdev\.io\/vi\/lesson\/vector-basics/);
+  assert.match(vi, /https:\/\/shaderpath\.drisdev\.io\/vi\/lesson\/vector-basics/);
   assert.match(md, /Subtitles: English, Tiếng Việt/);
-  assert.match(md, /Bản lồng tiếng Việt/);
+  assert.match(vi, /Bản lồng tiếng Việt/);
+  // Quizzes and tags belong to the original language only; each file holds one language.
+  assert.doesNotMatch(vi, /Quiz 1|## Tags/);
+  assert.doesNotMatch(md, /Bản lồng tiếng Việt/);
   assert.match(md, /### Quiz 1 · 0:34:00\n```\nQuestion: Is \|v\| long\?\n  Answer 1: a\n✓ Answer 2: b\nExplanation: Because\./);
   assert.match(md, /#webgl #threejs/);
 });
 
 test("without a dub, no Vietnamese subtitles or dub note are promised", () => {
-  const md = renderMetadata(validateYoutube(source(), timing), timing, "vector-basics", []);
-  assert.match(md, /Subtitles: English\n/);
-  assert.doesNotMatch(md, /Bản lồng tiếng Việt/);
+  const checked = validateYoutube(source(), timing);
+  assert.match(renderMetadata(checked, timing, "vector-basics", "en", []), /Subtitles: English\n/);
+  assert.doesNotMatch(renderMetadata(checked, timing, "vector-basics", "vi", []), /Bản lồng tiếng Việt/);
 });
 
 // A lesson with the shared outro appended: 72 s of lesson, then a 14 s outro
@@ -131,9 +137,9 @@ const withOutro: Timing = {
 
 test("the outro brings its own chapter title, and a lesson may not override it", () => {
   assert.equal(errorsOf(source(), withOutro), "");
-  const md = renderMetadata(validateYoutube(source(), withOutro), withOutro, "x", []);
-  assert.match(md, /1:12 Thanks for watching/);
-  assert.match(md, /1:12 Cảm ơn bạn đã xem/);
+  const checked = validateYoutube(source(), withOutro);
+  assert.match(renderMetadata(checked, withOutro, "x", "en", []), /1:12 Thanks for watching/);
+  assert.match(renderMetadata(checked, withOutro, "x", "vi", []), /1:12 Cảm ơn bạn đã xem/);
   const own = { ...source(), chapters: { ...source().chapters, outro: both("Bye") } };
   assert.match(errorsOf(own, withOutro), /chapters\.outro: built in/);
 });
@@ -142,9 +148,14 @@ test("end screen covers the outro after its buttons leave; the site stops at the
   // {next} at 76.0 s, plus 26 frames of leaving → 77 s; the video ends at 86 s.
   assert.deepEqual(endScreen(withOutro), { start: 77, seconds: 9 });
   assert.equal(outroAt(withOutro), 72);
-  const md = renderMetadata(validateYoutube(source(), withOutro), withOutro, "x", []);
-  assert.match(md, /Start at 1:17, the last 9 s/);
-  assert.match(md, /outroAt: 72/);
+  const notes = renderUploadNotes(withOutro, "x")!;
+  assert.match(notes, /Start at 1:17, the last 9 s/);
+  assert.match(notes, /outroAt: 72/);
+  // Language-neutral steps live in the notes, not in either language's metadata.
+  const checked = validateYoutube(source(), withOutro);
+  for (const lang of ["en", "vi"] as const) {
+    assert.doesNotMatch(renderMetadata(checked, withOutro, "x", lang, []), /End screen|outroAt/);
+  }
 });
 
 test("the end screen stays inside YouTube's 5–20 s window", () => {
@@ -160,6 +171,5 @@ test("the end screen stays inside YouTube's 5–20 s window", () => {
 test("lessons without the outro get no end-screen or site notes", () => {
   assert.equal(outroAt(timing), undefined);
   assert.equal(endScreen(timing), undefined);
-  const md = renderMetadata(validateYoutube(source(), timing), timing, "x", []);
-  assert.doesNotMatch(md, /End screen|outroAt/);
+  assert.equal(renderUploadNotes(timing, "x"), null);
 });
