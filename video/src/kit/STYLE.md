@@ -70,6 +70,22 @@ Scenes ask for a role, never a hex value.
   - `FloorGrid` (the y = 0 floor, faint fill), `Axis3D`, `Vector3` (the 2D `ArrowPath` between projected points).
   - Keep vectors off the axes (start them at a floor point) when they would run along one.
 
+## Math symbols
+
+Each symbol keeps one meaning on screen, because viewers cannot tell two meanings apart at a glance. `pnpm video:lint` warns when a string breaks this.
+
+| Symbol | Means | Never |
+|---|---|---|
+| `·` | the dot product, between two vectors: `a · b`, `N · L` | plain multiplication |
+| `×` | the cross product, between two vectors: `a × b` | plain multiplication |
+| `*` | every other multiplication, spaced, in `Code`: `3 * 2 = 6`, `a.x * b.x`, `k * v` | a vector product |
+| `.` | member access inside a name: `a.x`, `a.lengthSq()` | next to a multiplication dot |
+
+- Named quantities and functions in a standard formula stay implicit: `|a| |b| cos θ`, `2v`, `0.5v`.
+- Decorative separators between words are fine in labels (`top-left · squares`), but prefer `/` in new videos.
+- The spoken script says "times" for plain multiplication, so the script never changes with this.
+- Lessons 1–2 predate the rule and keep their uploaded text.
+
 ## Motion (`kit/motion.tsx`, `kit/easing.ts`)
 
 Everything takes `t` from `useCue`, never an absolute frame.

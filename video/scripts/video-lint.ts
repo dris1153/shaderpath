@@ -4,6 +4,7 @@ import { validateStrings } from "../src/scene/timing";
 import { lessonSource, parseArgs, ROOT } from "./remotion";
 import type { Script } from "./script-parse";
 import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
+import { symbolWarnings } from "./video-lint-symbols";
 
 // pnpm video:lint <slug>
 // Every language shares the English picture: other scripts must keep English's
@@ -50,8 +51,10 @@ const literals = (fn: string) => new Set([...code.matchAll(new RegExp(`${fn}\\(\
 // Every key the code uses must exist; a key nothing uses is a warning.
 const usedKeys = literals("useString");
 try {
-  const readKeys = (dir: string) => Object.keys(validateStrings(JSON.parse(fs.readFileSync(path.join(dir, "strings.en.json"), "utf8"))));
-  const keys = [...readKeys(src), ...(withOutro ? readKeys(OUTRO_DIR) : [])];
+  const readStrings = (dir: string) => validateStrings(JSON.parse(fs.readFileSync(path.join(dir, "strings.en.json"), "utf8")));
+  const lessonStrings = readStrings(src);
+  const keys = [...Object.keys(lessonStrings), ...(withOutro ? Object.keys(readStrings(OUTRO_DIR)) : [])];
+  warnings.push(...symbolWarnings(lessonStrings));
   for (const key of usedKeys) if (!keys.includes(key)) errors.push(`strings.en.json: missing "${key}" (used by the scene code)`);
   for (const key of keys) if (!usedKeys.has(key)) warnings.push(`strings.en.json: "${key}" is not used by the scene code`);
 } catch (error) {

@@ -18,6 +18,9 @@ const COL = 760;
 const ROWS = [320, 390];
 const SUM_Y = 480;
 const HOST = { x: 1130, y: 400 };
+// JetBrains Mono advances 0.6 em per character; the formula line is placed from its length.
+const MONO = 0.6;
+const ALG = { x: 560, size: 26 };
 
 export function MultiplyAdd() {
   const pal = usePalette();
@@ -37,6 +40,7 @@ export function MultiplyAdd() {
     code: useString("dotCode"), commutes: useString("dotCommutes"),
   };
 
+  const [codeHead = "", codeBody = ""] = s.code.split(" = ");
   const at = (p: { x: number; y: number }) => toStage(G, p);
   // A leg is a thick tinted segment under the arrow: the part being multiplied.
   const leg = (from: { x: number; y: number }, to: { x: number; y: number }, color: string, t: number, key: string) => {
@@ -72,10 +76,11 @@ export function MultiplyAdd() {
         <Title x={900} y={150} size={64}>{s.dot}</Title>
       </Pop>
       <Pop t={pairs} x={810} y={210}>
-        <Code x={600} y={220} size={28}>{s.algebra}</Code>
+        <Code x={ALG.x} y={220} size={ALG.size}>{s.algebra}</Code>
       </Pop>
+      {/* The 3D term continues the same line, so it starts where the 2D formula ends. */}
       <Pop t={threeD} x={1100} y={210}>
-        <Code x={1032} y={220} size={28} color={pal.textMuted}>{s.z}</Code>
+        <Code x={ALG.x + s.algebra.length * ALG.size * MONO + 14} y={220} size={ALG.size} color={pal.textMuted}>{s.z}</Code>
       </Pop>
 
       {[xs, ys].map((t, i) => (
@@ -93,8 +98,9 @@ export function MultiplyAdd() {
       </Pop>
 
       <Pop t={code} x={920} y={560}>
-        <Box x={620} y={528} w={600} h={60} r={18} fill={pal.panel} />
-        <Code x={920} y={567} size={24} anchor="middle">{s.code}</Code>
+        <Box x={620} y={514} w={600} h={92} r={18} fill={pal.panel} />
+        <Code x={920} y={552} size={26} anchor="middle">{`${codeHead} =`}</Code>
+        <Code x={920} y={588} size={26} anchor="middle">{codeBody}</Code>
       </Pop>
       <Pop t={order} x={320} y={170}>
         <Box x={190} y={138} w={260} h={64} r={20} fill={pal.panel} stroke={pal.ok} strokeWidth={5} />

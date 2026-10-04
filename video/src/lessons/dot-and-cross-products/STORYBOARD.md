@@ -4,6 +4,8 @@ The voice is Jessica on ElevenLabs, and the lesson runs 5:05 before the shared
 outro (14 s). Cues come from
 `content/lessons/00-math/dot-and-cross-products/video/script.en.md`.
 
+Symbols follow STYLE.md "Math symbols": `·` is dot and `×` is cross only; plain multiplication is `*`.
+
 Every scene keeps Inko on stage for ambient motion. On-screen text comes from
 `strings.en.json` and stays language-neutral (symbols, formulas, short English
 labels). Colours: `sky` for a, `accent` for b and the guard's facing, `hero` for
@@ -22,11 +24,11 @@ A top-down hallway (faint floor grid). The slime guard faces right.
 
 ## 2. multiply-add
 a = (3, 1) in `sky`, b = (2, 2) in `accent` on a grid with axes (left); the column on the right.
-- `number`: the grid and the arrows; "a · b" pops. `pairs`: `a · b = a.x·b.x + a.y·b.y`.
+- `number`: the grid and the arrows; "a · b" pops. `pairs`: `a · b = a.x * b.x + a.y * b.y`.
 - `example`: the tuples pop at the tips.
-- `xs`: the x legs light up under the axis; row `3 · 2 = 6`. `ys`: the y legs; row `1 · 2 = 2`.
+- `xs`: the x legs light up under the axis; row `3 * 2 = 6`. `ys`: the y legs; row `1 * 2 = 2`.
 - `sum`: a rule draws; `6 + 2 = 8` in `hero`.
-- `threeD`: `+ a.z·b.z` (muted) joins the formula. `code`: the card `dot(a, b) = …`.
+- `threeD`: `+ a.z * b.z` (muted) joins the same line. `code`: the two-line card `dot(a, b) =` / `a.x * b.x + …`.
 - `order`: the chip `a · b = b · a` (`ok` border); Inko cheers.
 
 ## 3. angle
@@ -79,5 +81,5 @@ A ball lit by a far light in the picture plane: `max(0, N · L)` gives straight 
 
 ## 9. recap
 Inko on the left; pills on the right.
-- `dot` `a · b = a.x·b.x + a.y·b.y`; `sign` the three sign pills; `cos` `a · b = cos θ`; `cross` `a × b`; `order` `b × a = −(a × b)`; `normal` `normalize((B − A) × (C − A))`; `light` `max(0, N · L)`.
+- `dot` `a · b = a.x * b.x + a.y * b.y`; `sign` the three sign pills; `cos` `a · b = cos θ`; `cross` `a × b`; `order` `b × a = −(a × b)`; `normal` `normalize((B − A) × (C − A))`; `light` `max(0, N · L)`.
 - `demo`: the pills fade; the card "Dot Product & Projection"; Inko cheers.
