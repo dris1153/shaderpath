@@ -1,4 +1,5 @@
 import { progress } from "../../kit/easing";
+import { polar } from "../../kit/angle";
 import { lerp, type Vec } from "../../kit/grid";
 import { cross, FloorGrid, toStage3, Vector3, type IsoSpace, type Vec3 } from "../../kit/iso";
 import { drawn, FadeOut, Pop } from "../../kit/motion";
@@ -36,6 +37,29 @@ function Chip({ t, y, text, border, w = 400 }: { t: number; y: number; text: str
 }
 
 // Arrows just inside each edge, in corner order, so the winding reads at a glance.
+// ↺ drawn from geometry (the fonts carry no such glyph): a counter-clockwise arc of 270° around `at`,
+// ending in a solid arrowhead on the tangent, so the icon stays round, readable and centred on the chip.
+function CcwIcon({ at, r, color }: { at: Vec; r: number; color: string }) {
+  const START = 30;
+  const END = 300;
+  const end = polar(at, END, r);
+  const rad = (END * Math.PI) / 180;
+  // Direction of travel at the end of the arc (counter-clockwise, y down on screen).
+  const dir = Math.atan2(-Math.cos(rad), -Math.sin(rad));
+  const along = (d: number, side: number) => ({
+    x: end.x + d * Math.cos(dir) - side * Math.sin(dir),
+    y: end.y + d * Math.sin(dir) + side * Math.cos(dir),
+  });
+  const head = [along(9, 0), along(-3, 7), along(-3, -7)];
+  const from = polar(at, START, r);
+  return (
+    <g>
+      <path d={`M ${from.x} ${from.y} A ${r} ${r} 0 1 0 ${end.x} ${end.y}`} fill="none" stroke={color} strokeWidth={4.5} strokeLinecap="round" />
+      <path d={`M ${head.map((q) => `${q.x} ${q.y}`).join(" L ")} Z`} fill={color} stroke={color} strokeWidth={2} strokeLinejoin="round" />
+    </g>
+  );
+}
+
 function Winding({ pts, draw, color }: { pts: Vec[]; draw: number; color: string }) {
   if (draw <= 0) return null;
   const c = { x: (pts[0]!.x + pts[1]!.x + pts[2]!.x) / 3, y: (pts[0]!.y + pts[1]!.y + pts[2]!.y) / 3 };
@@ -149,11 +173,8 @@ export function Normal() {
       <Chip t={zero - 20} y={280} text={s.nan} border={pal.warn} w={160} />
       <Pop t={ccw} x={CHIP_X} y={360}>
         <Box x={CHIP_X - 110} y={330} w={220} h={60} r={20} fill={pal.panel} stroke={pal.ok} strokeWidth={5} />
-        {/* A counter-clockwise arrow icon: the fonts carry no ↺. */}
-        <path d={`M ${CHIP_X - 52} 348 A 14 14 0 1 0 ${CHIP_X - 66} 362`} fill="none" stroke={pal.ok} strokeWidth={5} strokeLinecap="round" />
-        <path d={`M ${CHIP_X - 75} 354 L ${CHIP_X - 66} 362 L ${CHIP_X - 75} 370`} fill="none" stroke={pal.ok} strokeWidth={5}
-          strokeLinecap="round" strokeLinejoin="round" />
-        <Label x={CHIP_X + 20} y={370} size={30} halo={pal.panel}>{s.front}</Label>
+        <CcwIcon at={{ x: CHIP_X - 62, y: 360 }} r={13} color={pal.ok} />
+        <Label x={CHIP_X + 22} y={371} size={30} halo={pal.panel}>{s.front}</Label>
       </Pop>
 
       <Pop t={why} delay={6} x={HOST.x} y={HOST.y}>
