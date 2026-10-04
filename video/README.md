@@ -25,12 +25,38 @@ pnpm install
 | Scene code | `video/src/lessons/<slug>/`, registered in `video/src/lessons/index.ts` |
 | Storyboard | `video/src/lessons/<slug>/STORYBOARD.md` |
 | Kit, style rules, mascot | `video/src/kit/` (read `STYLE.md` first), `video/src/mascot/` |
-| Generated voice, timing, subtitles | `video/public/generated/<slug>/<lang>/` (gitignored) |
-| Renders and QC | `video/out/<slug>/<lang>/` (gitignored) |
+| **Finished files** (committed) | `content/lessons/<track>/<slug>/youtube/` (see below) |
+| **Videos and the upload kit** (not pushed) | `media/` at the repo root, gitignored, same structure as `content/` |
+| Working cache: voice, timing, subtitles | `video/public/generated/<slug>/<lang>/` (gitignored; rebuilt by `pnpm video:restore`) |
+| Working cache: renders and QC | `video/out/<slug>/<lang>/` (gitignored; re-render any time) |
 | TTS cache (raw provider responses) | `video/.cache/tts/` (gitignored) |
 
 The `dummy` and `style` lessons are pipeline fixtures, not lessons. Their scripts
 and strings sit next to their scene code.
+
+## Finished files: `youtube/` and `media/`
+
+What you cannot cheaply re-create is kept in the repo, next to the lesson's `video/` source. **Videos are never pushed**; they live in a gitignored `media/` folder that mirrors `content/`.
+
+```
+content/lessons/<track>/<slug>/youtube/      pushed
+  thumbnail.png              the chosen thumbnail
+  thumbnail-src/             the paid gpt-image backgrounds
+  upload-notes.md            language-neutral steps: end screen, outroAt (lessons with the outro)
+  languages/<lang>/
+    metadata.md              Studio title and description (English also: tags, quizzes)
+    subtitles.vtt, audio.mp3, timing.json, strings.json
+    site.mp3                 fitted languages: mono 64 kbps dub the site plays
+media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 + a full copy of the tree above
+media/shared/outro/outro.<lang>.mp4          gitignored: the shared like/subscribe outro, 14 s
+```
+
+- **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). The copy is derived and never deleted from; `content/` is the one to edit.
+- **Source of truth.** `video/out/` and `video/public/generated/` are caches. Delete them any time; `pnpm video:restore <slug>` rebuilds the voice, subtitles, timing, strings and thumbnail backgrounds from `content/.../youtube/`, and a render recreates the picture and the mp4. It keeps a cache file that differs from `youtube/` unless you pass `--force`. A fresh clone therefore needs no TTS credits, only a render.
+- **Who writes what.** `pnpm tts` mirrors the voice, subtitles, timing and strings; `pnpm thumbnail-bg` mirrors the backgrounds; `pnpm thumbnail <slug> --pick <n>` keeps the chosen thumbnail; `pnpm youtube` writes the rest and fills `media/`.
+- **Not stored:** the TTS raw cache (only edited scenes cost characters again), the picture-only `video.mp4` and the preview renders. The mp4 is only in `media/`, so it is lost with the machine; it can be re-rendered, and YouTube holds the upload.
+- **No Git LFS.** Nothing large is pushed. Audio is about 12.5 MB per lesson (English, Vietnamese and the site dub).
+- **Site dub.** The build (`pnpm build`, and `pnpm dev` on start) runs `pnpm sync:dubs` in the repo root. It copies each `languages/<lang>/site.mp3` to `public/videos/<slug>/audio.<lang>.mp3`, which is gitignored. A host needs no ffmpeg.
 
 ## Workflow for one lesson
 
@@ -62,7 +88,7 @@ before money or time is spent.
    - loudness −16 ±2 LUFS, with peaks ≤ −1 dBFS.
    - Read `qc/sheet.png`, one tile per 3 s. Motion problems print as `m:ss:ff`, where the last field counts frames. Subtitle problems quote their VTT timestamps.
 6. **Final checkpoint.** Share `final.mp4` (the preview mux), `subs.vtt` and `qc/sheet.png`.
-7. **Commit source only:** scene code, storyboard, script and strings. Never commit media.
+7. **Commit:** the scene code, storyboard, script and strings, and the lesson's `content/.../youtube/` folder. Never commit videos, `media/`, `video/out/` or `video/public/generated/`.
 
 ## Script format
 
@@ -127,9 +153,11 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
-| `pnpm youtube <slug>` | Collects the upload set in `out/<slug>/youtube/`, including `metadata.md` generated from the lesson's `video/youtube.json` |
-| `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the existing ones so a chosen background is never overwritten. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
-| `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral |
+| `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and `video.mp4` plus a full copy of it into `media/`): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
+| `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
+| `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
+| `pnpm outro [lang …]` | Renders the `dummy` fixture and cuts its outro scene into `media/shared/outro/outro.<lang>.mp4` (default: en and vi) |
+| `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
 
@@ -151,12 +179,12 @@ tracks and captions).
    - It also warns when a scene's speech fills less than 85% of it, because the scene's last visuals would then play ahead of the voice.
    - `--model` is required for ElevenLabs, because the default model is English-first and has no Vietnamese.
    - Output: `public/generated/<slug>/<lang>/{voice.mp3, subs.vtt, timing.json, strings.json}`.
-3. **Package.** Run `pnpm youtube <slug>`. It writes `out/<slug>/youtube/`:
-   - `upload.mp4`: the English render. Upload it once.
-   - `subs.<lang>.vtt` for every language: Studio → Languages → add subtitles. Any channel can do this. Upload ours rather than relying on auto-translated captions: ours follow the dub's own timing.
-   - `audio.<lang>.mp3` for each fitted language: Studio → Languages → Dub. This needs multi-language audio, which YouTube opens to channels gradually. It lasts as long as the video to within a few milliseconds.
-   - `preview.<lang>.mp4`: the picture with that language's voice, for listening only.
-   - It also writes the **site dub**, `public/videos/<slug>/audio.<lang>.mp3` (mono 64 kbps, about 2 MB). Commit that file.
+3. **Package.** Run `pnpm youtube <slug>`. It writes the lesson's `youtube/` folder and the upload kit in `media/` (see above):
+   - `media/.../video.mp4`: the English render. Upload it once.
+   - `languages/<lang>/subtitles.vtt` for every language: Studio → Languages → add subtitles. Any channel can do this. Upload ours rather than relying on auto-translated captions: ours follow the dub's own timing.
+   - `languages/<lang>/audio.mp3` for each fitted language: Studio → Languages → Dub. This needs multi-language audio, which YouTube opens to channels gradually. It lasts as long as the video to within a few milliseconds.
+   - `languages/<lang>/metadata.md`: that language's title and description, ready to paste.
+   - `languages/<lang>/site.mp3`, the **site dub** (mono 64 kbps, about 2.5 MB). Commit it; the build copies it to `public/videos/`.
 4. **Page.** Add `"<slug>": { youtube: "<id>", dubs: ["vi"] }` to `content/lesson-videos.ts`.
    - The lesson page shows a click-to-load player (nothing loads from YouTube before play), with an **Audio: English | Tiếng Việt** switch under it.
    - A dub plays from the site dub file, following the muted YouTube player: play, pause, seek, speed, volume, and re-sync whenever the drift exceeds 0.25 s.
@@ -168,13 +196,11 @@ tracks and captions).
 ## YouTube metadata: `video/youtube.json`
 
 Each lesson keeps its YouTube text next to its script, in
-`content/lessons/<track>/<slug>/video/youtube.json`. `pnpm youtube` turns it into
-`out/<slug>/youtube/metadata.md`, the copy to paste into Studio:
-- the EN and VI titles and descriptions;
-- the chapters, timed from the English timing;
-- per-locale lesson links;
-- tags;
-- one block per quiz, with its Studio time and each field ready to paste.
+`content/lessons/<track>/<slug>/video/youtube.json`. `pnpm youtube` turns it into one
+`youtube/languages/<lang>/metadata.md` per language, the copy to paste into Studio:
+- the title and description of that language (chapters timed from the English timing, per-locale lesson links);
+- English also holds the tags and one block per quiz, with its Studio time and each field ready to paste;
+- the language-neutral steps (end screen, `outroAt`) go to `youtube/upload-notes.md`.
 
 Edit the json, never the generated file. Re-voicing moves every time automatically.
 

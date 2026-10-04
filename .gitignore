@@ -66,3 +66,8 @@ next-env.d.ts
 
 # finished videos and the full upload kit (not pushed; mirrors content/)
 /media/
+# videos never go to git, even if copied into a lesson folder by hand
+content/**/*.mp4
+
+# agent notes under video/
+/video/.claude/
