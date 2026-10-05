@@ -18,7 +18,7 @@ Một trường hợp đặc biệt: vector 0 có độ dài bằng 0, và chẳ
 Cộng vector là đi lần lượt từng vector. | Inko đi theo a, rồi đi tiếp b từ chỗ a kết thúc.
 Đặt nối đuôi nhau như vậy, tổng là mũi tên thẳng từ điểm đầu tới điểm cuối.
 Đi b trước rồi a, vẫn tới đúng chỗ đó. | Hai đường đi tạo thành hình bình hành, và tổng là đường chéo của nó.
-Còn tính bằng số thì chỉ cần cộng từng thành phần lại với nhau: [(3, 1)](ba, một) cộng [(−2, 4)](âm hai, bốn) được [(1, 5)](một, năm).
+Còn tính bằng số thì chỉ cần cộng từng thành phần lại với nhau. Ở đây a là vector [(3, 1)](ba, một). Còn b là vector [(−2, 4)](âm hai, bốn). Cộng lại được vector [(1, 5)](một, năm).
 
 ## scene: subtract
 Phép trừ trả lời một câu hỏi trong game: kẻ địch phải đi hướng nào để tới người chơi?
@@ -30,7 +30,7 @@ Code vẫn chạy, nên lỗi này im lặng. Luôn lấy vị trí mục tiêu 
 ## scene: scale
 Nhân với một con số là co giãn vector: mọi thành phần đều được nhân với số đó.
 Nhân hai thì kéo dài trên cùng đường thẳng. Nhân một nửa thì co lại. Còn số âm thì lật hẳn [180°](một trăm tám mươi độ).
-Ví dụ [(4, −2)](bốn, âm hai) nhân [−1.5](âm một phẩy năm) được [(−6, 3)](âm sáu, ba): | dài gấp rưỡi, và quay ngược chiều.
+Lấy vector [(4, −2)](bốn, âm hai). Nhân nó với [−1.5](âm một phẩy năm), được vector [(−6, 3)](âm sáu, ba): | dài gấp rưỡi, và quay ngược chiều.
 Cộng, trừ và co giãn: ba hàm nhỏ xíu này là nền của hầu hết chuyển động đơn giản trong game.
 
 ## scene: length
@@ -40,7 +40,7 @@ Mẹo nhỏ: muốn so hai độ dài, hãy so bình phương độ dài. | Kế
 
 ## scene: normalize
 Normalize là chia vector cho chính độ dài của nó. | Kết quả là một vector đơn vị: cùng hướng, dài đúng bằng một, đầu mũi tên nằm trên đường tròn bán kính một.
-Quay lại cuộc đua. Giữ W và D là cộng [(0, 1)](không, một) với [(1, 0)](một, không) thành [(1, 1)](một, một), | và độ dài của nó là [√2](căn hai), khoảng [1.41](một phẩy bốn một). Đó chính là con số bốn mươi mốt phần trăm. Chỉ cần normalize trước khi nhân tốc độ, là hai bạn đi xa bằng nhau.
+Quay lại cuộc đua. Giữ W là cộng vector [(0, 1)](không, một). Giữ D là cộng vector [(1, 0)](một, không). Cả hai thành vector [(1, 1)](một, một), | và độ dài của nó là [√2](căn hai), khoảng [1.41](một phẩy bốn một). Đó chính là con số bốn mươi mốt phần trăm. Chỉ cần normalize trước khi nhân tốc độ, là hai bạn đi xa bằng nhau.
 Một cái bẫy: slime đứng đúng chỗ Inko, và [player − enemy](player trừ enemy) là vector 0.
 Hàm normalize tự viết sẽ chia 0 cho 0, ra [NaN](nan), nghĩa là không phải một số. | [NaN](nan) lan qua mọi bước, và slime biến mất luôn, mà không hề báo lỗi.
 Vậy nên hãy luôn kiểm tra độ dài trước khi chia, kể cả với input lúc không nhấn phím nào.

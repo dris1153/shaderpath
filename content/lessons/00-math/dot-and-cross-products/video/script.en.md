@@ -10,7 +10,7 @@ outro: true
 
 ## scene: multiply-add
 {number}The dot product takes two vectors and gives back one number, not a vector. {pairs}Multiply the matching parts, then add.
-{example}Take [(3, 1)](three, one) and [(2, 2)](two, two). {xs}Three times two is six, {ys}one times two is two, {sum}and six plus two is eight.
+{example}Say a is the vector [(3, 1)](three, one). And b is the vector [(2, 2)](two, two). {xs}Three times two is six, {ys}one times two is two, {sum}and six plus two is eight.
 {threeD}In 3D, add one more term: z times z. {code}Three multiplies and two adds, that's the whole function. | {order}And the order doesn't matter: [a·b](a dot b) equals [b·a](b dot a).
 
 ## scene: angle

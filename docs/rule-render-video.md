@@ -29,6 +29,14 @@ surprises you.
 - **When `cmp` says a still differs, measure it before guessing.** `ffmpeg -i old.png -i new.png -lavfi psnr -f null -` gives the size of the difference (above ~50 dB is sub-pixel). To see where, use `-lavfi "blend=all_mode=difference,format=gray,lut=y='min(255\,val*60)'"`; `eq` does not amplify values near zero and shows a black image.
 - **Look at a frame from the final mp4 too** (`ffmpeg -ss 40 -i final/video.vi.mp4 -frames:v 1 f.png`). It proves the muxed file shows the new picture.
 
+## Narration
+
+- **Read a vector as its own sentence.** Write the spoken text of every tuple as one sentence, with "the vector" in front and commas only inside the tuple: `Here a is the vector three, one. And b is the vector minus two, four.` Spoken as `three, one plus minus two, four`, the pause inside a tuple (0.63 s) was longer than the gap between tuples (none), so the tuples blurred into loose numbers: a listener reported "3 … −6 + 2 … 5" for `(3, −6) + (2, 5)`.
+- **Measure pauses from `public/generated/<slug>/<lang>/timing.json`:** for consecutive `words`, the gap is `(next.from - prev.to) / fps`. Inside a tuple it should be below about 0.25 s and at a full stop clearly longer. Some inner pauses still appear (0.4 to 0.6 s in `(0, 1)` and `(2, 2)`); the fitted Vietnamese reads sentence ends with gaps under 0.25 s. Numbers can only flag a problem, judge by ear.
+- **`pnpm tts` re-voices every scene when `video/.cache/tts/` is missing** (a fresh clone) and rewrites the committed audio, timing and subtitles. Once the cache exists, only edited scenes cost characters again. Count what will be sent with `spokenText()` from `video/scripts/script-parse.ts`, not with `wc` (markup inflates it).
+- **A re-voice moves everything:** scene lengths, cues, chapter times and quiz times in `metadata.md`, and `outroAt` in `upload-notes.md` change for real. Re-render both languages, and keep those file changes.
+- **The ElevenLabs key goes in the repo-root `.env.local`** (gitignored); `scripts/tts.ts` loads no other file (a key already in the process environment also works). Never put it in `.env.example` (tracked) or print it. Before a commit, check `git diff` for any `*_API_KEY=` line.
+
 ## Text on screen
 
 - **Bundled fonts miss many glyphs.** None of Baloo 2, Nunito or JetBrains Mono has the combining arrow U+20D7. Draw it as SVG. `video/scripts/cmap.test.ts` lists what the fonts cover.
@@ -47,7 +55,7 @@ surprises you.
 
 ## After the render
 
-- **`pnpm youtube` and `pnpm outro` rewrite committed files with CRLF-only changes** (`core.autocrlf=true`), typically every `metadata.md` and `upload-notes.md`. Check with `git diff --ignore-space-at-eol --numstat`: an empty list is noise, so `git checkout --` those files. Real changes, such as the four `strings.json`, stay.
+- **`pnpm youtube` and `pnpm outro` rewrite committed files with CRLF-only changes** (`core.autocrlf=true`), typically every `metadata.md` and `upload-notes.md`. Check with `git diff --ignore-space-at-eol --numstat`: an empty list is noise, so `git checkout --` those files. Real changes stay: the `strings.json` files after a strings edit, and the chapter times, quiz times and `outroAt` after a re-voice.
 - **`pnpm final` refuses a render older than the committed voice** (it compares `timing.json`). Render first, then `final`.
 - **Do not re-upload by replacing a file.** YouTube Studio cannot swap the video of an existing upload. A new upload has a new id; update `content/lesson-videos.ts` and unlist the old one. The Vietnamese dub and subtitles stay valid when only the picture's text changed, because timing is unchanged.
 

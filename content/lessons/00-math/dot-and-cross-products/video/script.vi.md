@@ -10,7 +10,7 @@ Nhưng sao code của lính gác biết Inko ở phía trước, chứ không ph
 
 ## scene: multiply-add
 Dot product nhận vào hai vector và trả về một con số, không phải vector. Nhân từng cặp thành phần tương ứng, rồi cộng lại.
-Lấy [(3, 1)](ba, một) và [(2, 2)](hai, hai). Ba nhân hai là sáu, một nhân hai là hai, và sáu cộng hai là tám.
+Cho a là vector [(3, 1)](ba, một). Còn b là vector [(2, 2)](hai, hai). Ba nhân hai là sáu, một nhân hai là hai, và sáu cộng hai là tám.
 Trong [3D](ba đê), thêm một số hạng nữa: z nhân z. Ba phép nhân và hai phép cộng, hàm chỉ có vậy thôi. | Thứ tự cũng không quan trọng: [a·b](a dot b) bằng [b·a](b dot a).
 
 ## scene: angle

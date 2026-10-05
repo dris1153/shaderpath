@@ -18,7 +18,7 @@ title: Vector Basics
 {walk}Adding vectors means walking them one after another. | {a}Inko walks a, {then}then walks b from where a ended.
 {sum}Placed tip to tail, the sum is the straight arrow from start to finish.
 {swap}Walk b first, then a, and you land in the same place. | {para}The two paths make a parallelogram, and the sum is its diagonal.
-{numbers}In numbers, add the parts: {first}[(3, 1)](three, one) plus {second}[(−2, 4)](minus two, four) gives {result}[(1, 5)](one, five).
+{numbers}In numbers, add the parts. Here a is the vector {first}[(3, 1)](three, one). And b is the vector {second}[(−2, 4)](minus two, four). Together they give the vector {result}[(1, 5)](one, five).
 
 ## scene: subtract
 {chase}Subtraction answers a game question: which way should the enemy move to reach the player?
@@ -30,7 +30,7 @@ title: Vector Basics
 ## scene: scale
 {scale}Multiplying by a number scales a vector: every part gets multiplied.
 {stretch}Times two stretches it along the same line. {shrink}Times a half shrinks it. {flip}A negative number flips it a full [180°](one hundred eighty degrees).
-{example}So [(4, −2)](four, minus two) times [−1.5](minus one point five) {gives}gives [(−6, 3)](minus six, three): | one and a half times as long, pointing the other way.
+{example}Take the vector [(4, −2)](four, minus two). Multiply it by [−1.5](minus one point five), {gives}and you get the vector [(−6, 3)](minus six, three): | one and a half times as long, pointing the other way.
 {engine}Add, subtract and scale: three tiny functions behind most simple game motion.
 
 ## scene: length
@@ -40,7 +40,7 @@ title: Vector Basics
 
 ## scene: normalize
 {divide}Normalizing divides a vector by its own length. | {unit}What's left is a unit vector: same direction, length exactly one, {circle}its tip on the circle of radius one.
-{replay}Back to the race. Holding W and D adds {w}[(0, 1)](zero, one) and {d}[(1, 0)](one, zero) into {sum}[(1, 1)](one, one), | {root}and its length is [√2](root two), about [1.41](one point four one). {fix}That's the forty-one percent. {norm}Normalize before multiplying by speed, and both cover the same distance.
+{replay}Back to the race. Holding W adds the vector {w}[(0, 1)](zero, one). Holding D adds the vector {d}[(1, 0)](one, zero). Together: the vector {sum}[(1, 1)](one, one), | {root}and its length is [√2](root two), about [1.41](one point four one). {fix}That's the forty-one percent. {norm}Normalize before multiplying by speed, and both cover the same distance.
 {zero}One trap: the slime lands exactly on Inko, and {pz}[player − enemy](player minus enemy) is the zero vector.
 {nan}A hand-written normalize divides zero by zero, giving [NaN](not a number). | {poof}That NaN spreads through every step, {vanish}and the slime just vanishes, {noError}with no error anywhere.
 {check}So check the length before you divide, and the same goes for the input when no key is held.
