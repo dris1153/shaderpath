@@ -39,6 +39,9 @@ surprises you.
 - **Do not split a marked string into several text nodes.** Rendering `{a} · {b}` as separate string children moved glyphs by sub-pixels (PSNR 50-62 dB against the old render). Keep the text one string and split only where a hidden glyph is needed (the `√` of a radicand).
 - **Leading, trailing and doubled spaces break marked strings.** SVG collapses them, so `getExtentOfChar` indices drift or throw and the render dies with "Target closed". Use single spaces; `pnpm video:lint` warns.
 - **Radicals:** write `√{x² + y²}`, never `√(x² + y²)` or `√25`. The bar spans the braces and the parentheses go away. A bare `√` stays a plain glyph.
+  - `pnpm video:lint` warns on `√(…)`, on `√25`, and on any `√` followed by something other than a space or `{`.
+  - A radicand cannot contain another marker: `√{{a} · {a}}` throws. No lesson needs it yet.
+  - The `√` stays in the text inside an invisible `<tspan>` so the line keeps its width and the drawn radical sits in that box. Place anything that follows the string with `vecPlain()`, which keeps the `√`: `length.tsx` puts `= √{25} = 5` after `√{9 + 16}` this way.
 - **`·` and `×` are only for vectors.** A scalar times something is `*` (`k * v`, `(4, −2) * −1.5`). `pnpm video:lint` flags numbers around `·` or `×`.
 - **Vector arrows follow one rule:** an arrow is math notation for a vector, code stays plain (`a.x`, `dot(a, b)`). Details in `video/src/kit/STYLE.md`.
 
