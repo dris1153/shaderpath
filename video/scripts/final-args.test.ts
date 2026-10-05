@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { finalArgs, languageTag } from "./final-args";
+import { finalArgs, finalLanguages, languageTag } from "./final-args";
 
 test("language tags are ISO 639-2; an unknown language is an error", () => {
   assert.equal(languageTag("en"), "eng");
@@ -20,4 +20,17 @@ test("the mux copies picture and voice, adds the subtitles as a default soft tra
   assert.equal(at("-disposition:s:0"), "default");
   assert.equal(args.at(-1), "out.mp4");
   assert.throws(() => finalArgs("a", "b", "c", "xx"), /no language tag/);
+});
+
+test("without languages, final takes English plus the voiced ones that have a render", () => {
+  assert.deepEqual(finalLanguages(["vi"], () => true), { langs: ["en", "vi"], skipped: [] });
+});
+
+test("a voiced language without a render is skipped, not an error", () => {
+  assert.deepEqual(finalLanguages(["vi"], (l) => l === "en"), { langs: ["en"], skipped: ["vi"] });
+  assert.deepEqual(finalLanguages([], () => false), { langs: [], skipped: ["en"] });
+});
+
+test("English listed among the voiced languages is not doubled", () => {
+  assert.deepEqual(finalLanguages(["en", "vi"], () => true), { langs: ["en", "vi"], skipped: [] });
 });

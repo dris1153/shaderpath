@@ -11,7 +11,7 @@ surprises you.
 - **Two installs.** `pnpm install` in the repo root and again in `video/` (its own workspace and lockfile).
 - **`pnpm final` and `pnpm qc` need a full ffmpeg on `PATH`** with `drawtext`, `tile`, `ebur128` and the `mov_text` encoder. Remotion's bundled ffmpeg is not enough. On Windows: `winget install Gyan.FFmpeg`. A shell opened before the install does not see it; open a new one, or in PowerShell reload `PATH` from the Machine and User environment.
 - **Rebuild order per lesson** (from `video/`, one lesson at a time):
-  `pnpm video:restore <slug>` → `pnpm render <slug> en` → `pnpm render <slug> vi` → `pnpm qc <slug>` → `pnpm youtube <slug>` → `pnpm final <slug>`.
+  `pnpm video:restore <slug>` → `pnpm render <slug>` (English, 2560×1440) → `pnpm qc <slug>` → `pnpm youtube <slug>` → `pnpm final <slug>`. Add `pnpm render <slug> vi` before `final` only if `final/video.vi.mp4` is wanted.
   The shared outro is `pnpm outro en`. No TTS credits are needed, the voice is committed under `content/.../youtube/`.
 - **Never run `pnpm tts` on a lesson that already has a voice.** It costs credits, the TTS cache (`video/.cache/tts/`) is gitignored so a fresh clone re-voices every scene, and it rewrites the committed audio with slightly different samples.
 
@@ -19,7 +19,7 @@ surprises you.
 
 - **The render reads `video/public/generated/<slug>/<lang>/strings.json`, not `content/.../video/strings.en.json`.** The cache is written by `pnpm tts` and restored by `pnpm video:restore` from `youtube/`. Edit the content file alone and every still keeps the old text.
 - **A new string key crashes the scene.** `useString` throws on a key the cache lacks, and the render reports only `ProtocolError: Target closed`. The real error is hidden behind it. If a scene dies with "Target closed" after a strings edit, compare the cache with the content file first.
-- **Refresh the cache without TTS:** write `{...outroStrings (only if the script has outro: true), ...lessonStrings}` as `JSON.stringify(strings, null, 2) + "\n"` to the `en` and `vi` folders. Both languages share the English picture, so both files are identical. There is no command for this yet.
+- **Refresh the cache without TTS:** write `{...outroStrings (only if the script has outro: true), ...lessonStrings}` as `JSON.stringify(strings, null, 2) + "\n"` to the `en` and `vi` folders. Both languages' strings files are identical (the strings are language-neutral). There is no command for this yet.
 - After `pnpm youtube`, the four `youtube/languages/<lang>/strings.json` files change for real. Commit them.
 
 ## Check pictures before spending render time
@@ -34,7 +34,7 @@ surprises you.
 - **Read a vector as its own sentence.** Write the spoken text of every tuple as one sentence, with "the vector" in front and commas only inside the tuple: `Here a is the vector three, one. And b is the vector minus two, four.` Spoken as `three, one plus minus two, four`, the pause inside a tuple (0.63 s) was longer than the gap between tuples (none), so the tuples blurred into loose numbers: a listener reported "3 … −6 + 2 … 5" for `(3, −6) + (2, 5)`.
 - **Measure pauses from `public/generated/<slug>/<lang>/timing.json`:** for consecutive `words`, the gap is `(next.from - prev.to) / fps`. Inside a tuple it should be below about 0.25 s and at a full stop clearly longer. Some inner pauses still appear (0.4 to 0.6 s in `(0, 1)` and `(2, 2)`); the fitted Vietnamese reads sentence ends with gaps under 0.25 s. Numbers can only flag a problem, judge by ear.
 - **`pnpm tts` re-voices every scene when `video/.cache/tts/` is missing** (a fresh clone) and rewrites the committed audio, timing and subtitles. Once the cache exists, only edited scenes cost characters again. Count what will be sent with `spokenText()` from `video/scripts/script-parse.ts`, not with `wc` (markup inflates it).
-- **A re-voice moves everything:** scene lengths, cues, chapter times and quiz times in `metadata.md`, and `outroAt` in `upload-notes.md` change for real. Re-render both languages, and keep those file changes.
+- **A re-voice moves everything:** scene lengths, cues, chapter times and quiz times in `metadata.md`, and `outroAt` in `upload-notes.md` change for real. Re-render English (and Vietnamese if you share `final/video.vi.mp4`), and keep those file changes.
 - **The ElevenLabs key goes in the repo-root `.env.local`** (gitignored); `scripts/tts.ts` loads no other file (a key already in the process environment also works). Never put it in `.env.example` (tracked) or print it. Before a commit, check `git diff` for any `*_API_KEY=` line.
 
 ## Text on screen
@@ -52,6 +52,15 @@ surprises you.
   - The `√` stays in the text inside an invisible `<tspan>` so the line keeps its width and the drawn radical sits in that box. Place anything that follows the string with `vecPlain()`, which keeps the `√`: `length.tsx` puts `= √{25} = 5` after `√{9 + 16}` this way.
 - **`·` and `×` are only for vectors.** A scalar times something is `*` (`k * v`, `(4, −2) * −1.5`). `pnpm video:lint` flags numbers around `·` or `×`.
 - **Vector arrows follow one rule:** an arrow is math notation for a vector, code stays plain (`a.x`, `dot(a, b)`). Details in `video/src/kit/STYLE.md`.
+
+## Resolution and render time
+
+- **Renders are 2560×1440** (`RENDER_SCALE = 2` in `video/scripts/remotion.ts`, passed to `renderMedia`). The layout is hard-coded for 1280×720 and `timing.json` still says 1280×720: never change those, change the scale. YouTube serves at most the size of the uploaded file, so a 1280×720 upload tops out at 720p.
+- **Stills stay 1×** and thumbnails stay 1280×720, so the byte-for-byte baselines and the YouTube thumbnail size are unaffected.
+- **Measured on a 150-frame sample** (`vector-basics`, frames 5500 to 5649): 2.0 s at 1×, 4.3 s at 2× (2.1× slower, not 4×), video bitrate 0.52 to 1.21 Mbps, and a downscaled 2× frame matches the 1× still at 36.3 dB PSNR (a 1× video frame against the same still gives 34.7 dB, the cost of compression alone).
+- **Render English only** for YouTube (`pnpm render <slug>`). Inko's mouth uses the locale's own words (`video/src/mascot/Inko.tsx`), so a `vi` render is a different picture; render it only for `final/video.vi.mp4`. `pnpm final <slug>` skips a language that has no render, or whose render is older than the English one (it was made from an older picture); naming such a language explicitly is an error. Delete `final/video.<lang>.mp4` files of a stale language: `final` does not remove them.
+- **`pnpm qc` thresholds were calibrated at 1×.** It scales every frame to 160×90, so a 2× render averages more pixels per sample and reads quieter. A "nothing still > 3 s" failure on a 2× render means the scene really is near-static (the `projection` scene of lesson 3 had 4 s of idle-only motion); give it a little motion rather than lowering `STILL`.
+- `pnpm outro` renders the `dummy` fixture through the same path, so `media/shared/outro/outro.mp4` becomes 1440p when it is run again. Nothing in the repo consumes that file.
 
 ## After the render
 

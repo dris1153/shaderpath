@@ -10,6 +10,9 @@ export const ROOT = path.resolve(import.meta.dirname, "..");
 // scripts need (e.g. gl: "angle" once scenes use WebGL) go here instead.
 export const CHROMIUM: ChromiumOptions = {};
 
+// Remotion renders the 1280×720 layout at this multiple (2 = 2560×1440): YouTube serves at most the size it is given.
+export const RENDER_SCALE = 2;
+
 export function parseArgs(usage: string, required: number) {
   const args = process.argv.slice(2);
   if (args.length < required) {

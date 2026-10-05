@@ -3,7 +3,7 @@
 This package turns a lesson into a 3–5 minute cartoon explainer, hosted by Inko the octopus.
 
 - **Stack:** Remotion 4 with a small kit of flat-cartoon primitives, TTS voices from ElevenLabs or Fish Audio, and cue-driven timing.
-- **Outputs:** every lesson ships as separate files: picture, voice and subtitles. Nothing is burned in, so a language is a new voice file and a new subtitle file.
+- **Outputs:** every lesson ships as separate files: picture (2560×1440), voice and subtitles. Nothing is burned in, so a language is a new voice file and a new subtitle file.
 - **Isolation:** `video/` is its own pnpm workspace (own lockfile). The Next.js app never imports it.
 
 ## Setup
@@ -153,16 +153,16 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 |---|---|
 | `pnpm video:lint <slug>` | Checks the script syntax and that every language keeps the English scenes, and that the scene code's strings and cues exist |
 | `pnpm tts <slug> en [--engine elevenlabs\|fish] [--voice <id>] [--model <id>] [--fresh]` | Voices the English master: `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` in `public/generated/<slug>/en/` |
-| `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) and copies the voice, subtitles and timing into `out/<slug>/<lang>/` |
+| `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) at **2560×1440** (`RENDER_SCALE = 2` in `scripts/remotion.ts`; the layout stays 1280×720) and copies the voice, subtitles and timing into `out/<slug>/<lang>/`. English is what YouTube and the site use. Render `vi` only when `final/video.vi.mp4` is wanted: Inko's mouth follows the locale's own words, so a `vi` render is lip-synced to Vietnamese and costs a second render |
 | `… --fresh` | Ignores the TTS cache and re-voices every scene (for example after an ElevenLabs plan change, so the takes fall under the new plan's terms) |
-| `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` |
+| `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` at 1280×720 (always 1×, so stills stay comparable byte for byte) |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
 | `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and `video.mp4` plus a full copy of it into `media/`): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
 | `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
-| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: that language's render (its picture and voice) with its subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (stream copy, seconds). Needs the system ffmpeg and the language's render (`pnpm render <slug> <lang>`); stops when the render is older than the committed voice. Default languages: en and every voiced one |
+| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: that language's render (its picture and voice) with its subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (stream copy, seconds). Needs the system ffmpeg and the language's render (`pnpm render <slug> <lang>`); stops when the render is older than the committed voice. Default languages: en plus every voiced language whose render exists and is not older than the English one; the others are named and skipped |
 | `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |

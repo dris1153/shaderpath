@@ -19,3 +19,9 @@ export function finalArgs(render: string, subtitles: string, output: string, lan
     "-disposition:s:0", "default", "-movflags", "+faststart", output,
   ];
 }
+
+// `pnpm final <slug>` without languages: English plus every voiced one, minus those with no render yet.
+export function finalLanguages(voiced: string[], hasRender: (lang: string) => boolean): { langs: string[]; skipped: string[] } {
+  const wanted = ["en", ...voiced.filter((l) => l !== "en")];
+  return { langs: wanted.filter(hasRender), skipped: wanted.filter((l) => !hasRender(l)) };
+}

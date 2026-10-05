@@ -66,8 +66,9 @@ export function Projection() {
   return (
     <Stage>
       {/* b's whole line, so a shadow behind the origin still lands on it. */}
+      {/* The dots creep along b, 1 px a frame: only Inko's idle motion moves here for 4 s, which qc reads as still in a 2x render. */}
       <line x1={lineA.x} y1={lineA.y} x2={lineB.x} y2={lineB.y} stroke={pal.sky} strokeWidth={3} strokeDasharray="4 10"
-        opacity={0.6 * progress(drop, 12)} />
+        strokeDashoffset={-Math.max(0, drop)} opacity={0.6 * progress(drop, 12)} />
       {/* Inko sits under the arrows from the start (ambient motion); in the game, v starts at its body. */}
       <Pop t={shadowCue} x={O.x} y={O.y}>
         <Walker at={{ x: O.x, y: O.y + 61 }} scale={0.35} seed={2} lookAt={guard}

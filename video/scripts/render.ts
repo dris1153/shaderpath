@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { renderMedia } from "@remotion/renderer";
 import type { Timing } from "../src/scene/timing";
-import { CHROMIUM, ffmpeg, generatedDir, outDir, parseArgs, withComposition } from "./remotion";
+import { CHROMIUM, ffmpeg, generatedDir, outDir, parseArgs, RENDER_SCALE, withComposition } from "./remotion";
 
 // pnpm render <slug> [locale]
 // final.mp4 = picture + voice (preview); video.mp4 = the same picture with the
@@ -27,6 +27,7 @@ await withComposition(slug, locale, async ({ serveUrl, browser, composition, inp
     composition,
     inputProps,
     codec: "h264",
+    scale: RENDER_SCALE,
     outputLocation: final,
     puppeteerInstance: browser,
     chromiumOptions: CHROMIUM,
