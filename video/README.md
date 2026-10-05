@@ -270,3 +270,4 @@ attribution. Fish Audio needs API credit, which is separate from its web credit.
 | Checkpoints | script EN + VI (approved), the first 1:34 (approved), final (approved; thumbnail variant 2) |
 | Review | the on-screen math was right except one arrow label. Three reveals ran 3–5 s ahead of the words, fixed with extra cues before the Vietnamese voicing, because the dub inherits the English cues |
 | Automation | `youtube.json` drove the titles, descriptions, 9 chapters and 8 Studio quizzes with no manual time edits; `pnpm thumbnail-bg` made the backgrounds (first real run) |
+| Outro (2026-10-06) | The shared outro was appended before the re-upload; the rows above describe the video without it. Now 10 scenes, 10 chapters, 5:25, `outroAt` 310, end screen from 5:16 (last 9 s). All ten scenes, the outro included, came from the TTS cache (0 characters), and every earlier word kept its timing |

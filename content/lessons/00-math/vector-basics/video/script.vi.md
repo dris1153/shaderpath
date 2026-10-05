@@ -1,6 +1,7 @@
 ---
 slug: vector-basics
 title: Vector cơ bản
+outro: true
 ---
 
 ## scene: hook

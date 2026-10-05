@@ -1,6 +1,7 @@
 ---
 slug: vector-basics
 title: Vector Basics
+outro: true
 ---
 
 ## scene: hook
