@@ -42,11 +42,11 @@ surprises you.
 - **Bundled fonts miss many glyphs.** None of Baloo 2, Nunito or JetBrains Mono has the combining arrow U+20D7. Draw it as SVG. `video/scripts/cmap.test.ts` lists what the fonts cover.
 - **`loadFont` resolves late.** It adds a face to `document.fonts` only after the face has loaded, so measuring text early uses a fallback face. Await `FONTS_READY` (from `kit/fonts.ts`) before measuring.
 - **Never guess glyph heights.** A guessed height put arrowheads on top of letters. Measure with `canvas.measureText().actualBoundingBoxAscent` in the real font.
-- **Draw decoration under the text.** A paper-coloured halo around an arrow drawn after the letter covers the letter.
+- **Draw decoration under the text.** A paper-coloured halo around an arrow drawn after the letter covers the letter. The reverse holds for a stroke that touches letters, like a radical: the text's own halo (`Title` size/7, `Label` size/6) cuts a stroke drawn under it, so draw that stroke over the text and keep only its halo underneath.
 - **Do not size things from `string.length` when the string has markup.** `{a}` is 3 characters but 1 on screen. Use `vecPlain()`. Check pill widths, label offsets and anything placed after a string.
 - **Do not split a marked string into several text nodes.** Rendering `{a} · {b}` as separate string children moved glyphs by sub-pixels (PSNR 50-62 dB against the old render). Keep the text one string and split only where a hidden glyph is needed (the `√` of a radicand).
 - **Leading, trailing and doubled spaces break marked strings.** SVG collapses them, so `getExtentOfChar` indices drift or throw and the render dies with "Target closed". Use single spaces; `pnpm video:lint` warns.
-- **Radicals:** write `√{x² + y²}`, never `√(x² + y²)` or `√25`. The bar spans the braces and the parentheses go away. A bare `√` stays a plain glyph.
+- **Radicals:** write `√{x² + y²}`, never `√(x² + y²)` or `√25`. The bar spans the braces and the parentheses go away. A bare `√` is for running text only: at display size the font glyph looks like a check mark, and a crossed-out one reads as "wrong". An icon uses `√{x}`.
   - `pnpm video:lint` warns on `√(…)`, on `√25`, and on any `√` followed by something other than a space or `{`.
   - A radicand cannot contain another marker: `√{{a} · {a}}` throws. No lesson needs it yet.
   - The `√` stays in the text inside an invisible `<tspan>` so the line keeps its width and the drawn radical sits in that box. Place anything that follows the string with `vecPlain()`, which keeps the `√`: `length.tsx` puts `= √{25} = 5` after `√{9 + 16}` this way.

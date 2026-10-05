@@ -35,7 +35,7 @@
   "lengthExample": "√{9 + 16}",
   "length3d": "3D: √{x² + y² + z²}",
   "lengthSq": "a.lengthSq() < b.lengthSq()",
-  "root": "√",
+  "root": "√{x}",
   "vOverLength": "{v} / |{v}|",
   "unitTuple": "= (0.6, 0.8)",
   "tuple01": "(0, 1)",

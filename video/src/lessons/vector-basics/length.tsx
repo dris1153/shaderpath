@@ -16,7 +16,7 @@ const V = { x: 3, y: 4 };
 const HOST = { x: 130, y: 470 };
 const CARD = { x: 650, y: 96, w: 560, h: 230 };
 const SQ = { x: 650, y: 380, w: 440, h: 90 };
-const ROOT = { x: 1160, y: 420 };
+const ROOT = { x: 1180, y: 420 };
 
 export function Length() {
   const pal = usePalette();
@@ -89,7 +89,7 @@ export function Length() {
       </Pop>
       <Pop t={cheap} x={ROOT.x} y={ROOT.y}>
         <Title x={ROOT.x} y={ROOT.y + 32} size={100}>{s.root}</Title>
-        <path d={`M ${ROOT.x - 46} ${ROOT.y + 44} L ${ROOT.x + 46} ${ROOT.y - 44}`} stroke={pal.warn} strokeWidth={8}
+        <path d={`M ${ROOT.x - 70} ${ROOT.y + 50} L ${ROOT.x + 70} ${ROOT.y - 50}`} stroke={pal.warn} strokeWidth={8}
           strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - drawn(cheap, 12, 8)} />
       </Pop>
       <Pop t={triangle} x={HOST.x} y={HOST.y}>

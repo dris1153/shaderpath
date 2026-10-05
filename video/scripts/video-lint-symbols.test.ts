@@ -32,3 +32,7 @@ test("a marked string with a leading, trailing or doubled space is flagged", () 
 test("a radical sign needs braces around its radicand", () => {
   assert.deepEqual(flagged({ a: "√(x² + y²)", b: "√25", c: "√{x² + y²}", d: "√", e: "|{v}| = √{x² + y²}", f: "√π", g: "√−1" }), ["a", "b", "f", "g"]);
 });
+
+test("a bare radical sign in running text is allowed", () => {
+  assert.deepEqual(flagged({ a: "the √ symbol", b: "√ and √{x}", c: "use √ for roots" }), []);
+});

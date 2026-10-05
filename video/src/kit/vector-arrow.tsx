@@ -71,7 +71,8 @@ export function MarkedText({ text, ...props }: RunProps & { text: string }) {
 
   const { fontSize: size, y, fill, stroke } = props;
   const sw = Math.max(2.5, size * 0.07);
-  // Marks go under the text so their halo never covers a letter.
+  // Halos go under the text so they never cover a letter. A radical's stroke goes over it: the text's own halo
+  // would cut the radical where it meets the first letter.
   return (
     <g>
       {marks.map((m, i) => {
@@ -79,13 +80,19 @@ export function MarkedText({ text, ...props }: RunProps & { text: string }) {
         return (
           <g key={i} fill="none" strokeLinecap="round" strokeLinejoin="round">
             {stroke ? <path d={d} stroke={stroke} strokeWidth={sw + size / 6} /> : null}
-            <path d={d} stroke={fill ?? pal.text} strokeWidth={sw} />
+            {m.kind === "arrow" ? <path d={d} stroke={fill ?? pal.text} strokeWidth={sw} /> : null}
           </g>
         );
       })}
       <text ref={ref} {...props}>
         {children}
       </text>
+      {marks.map((m, i) =>
+        m.kind === "root" ? (
+          <path key={i} d={radicalPath(m, y, size, sw)} fill="none" stroke={fill ?? pal.text} strokeWidth={sw}
+            strokeLinecap="round" strokeLinejoin="round" />
+        ) : null,
+      )}
     </g>
   );
 }
