@@ -91,9 +91,18 @@ before money or time is spent.
    - no black or empty stretches;
    - the subtitle budgets (≤ 42 chars × 2 lines, ≤ 6 s);
    - loudness −16 ±2 LUFS, with peaks ≤ −1 dBFS.
+   - The motion limit was calibrated on 1280×720 renders. A 2560×1440 render reads quieter (qc downsizes every frame to 160×90), so a "still" failure now means the scene really is near-static: give it a little motion instead of lowering the limit.
    - Read `qc/sheet.png`, one tile per 3 s. Motion problems print as `m:ss:ff`, where the last field counts frames. Subtitle problems quote their VTT timestamps.
 6. **Final checkpoint.** Share `final.mp4` (the preview mux), `subs.vtt` and `qc/sheet.png`.
 7. **Commit:** the scene code, storyboard, script and strings, and the lesson's `content/.../youtube/` folder. Never commit videos, `media/`, `video/out/` or `video/public/generated/`.
+
+## Picture size
+
+- **The layout is 1280×720 and the render is 2560×1440.** `RENDER_SCALE = 2` in `scripts/remotion.ts` goes to `renderMedia`; `timing.json` and every coordinate stay 1280×720, so change the scale, never the layout. YouTube serves at most the size of the uploaded file, so a 1280×720 upload is capped at 720p.
+- **1× stays for stills and thumbnails** (`pnpm stills`, `pnpm thumbnail`), so baselines compare byte for byte and thumbnails keep YouTube's 1280×720.
+- **English only by default.** Inko's mouth follows the locale's own words, so a Vietnamese render is a different picture; YouTube and the site use the English one (Vietnamese is an audio dub). Render `pnpm render <slug> vi` only to get `final/video.vi.mp4`. `pnpm final` skips a language with no render, or one older than the English render.
+- **Cost (2026-10-05):** a 5-minute lesson renders in about 4 minutes; `video.mp4` is 74–76 MB (the same lessons were about 37 MB at 720p). The sample behind the choice: 2.1× slower than 1×, and a downscaled 2× frame matches the 1× still at 36 dB PSNR.
+- **Which lessons.** Lesson 1 (`cartesian-and-uv-space`) was uploaded at 720p and has not been re-rendered, so it is less sharp than lessons 2 and 3 (`vector-basics`, `dot-and-cross-products`), which are rendered at 1440p. Re-rendering it is a new upload with a new YouTube id.
 
 ## Script format
 
