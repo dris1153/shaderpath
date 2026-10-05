@@ -4,13 +4,14 @@ import { usePalette } from "../../kit/palette";
 import { Arrow, Box, Shape } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
+import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
 
 // One pill per idea as it is named, then the three traps in `warn`, then the
 // pointer to the lesson's demo.
 const CHAR = 18; // JetBrains Mono at 30 px
-const pillW = (text: string) => 40 + text.length * CHAR;
+const pillW = (text: string) => 40 + vecPlain(text).length * CHAR;
 
 function Pill({ t, x, y, text, border }: { t: number; x: number; y: number; text: string; border?: string }) {
   const pal = usePalette();

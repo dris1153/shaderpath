@@ -5,6 +5,7 @@ import { usePalette } from "../../kit/palette";
 import { Box } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, Title, useString } from "../../kit/text";
+import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
 
@@ -80,7 +81,7 @@ export function MultiplyAdd() {
       </Pop>
       {/* The 3D term continues the same line, so it starts where the 2D formula ends. */}
       <Pop t={threeD} x={1100} y={210}>
-        <Code x={ALG.x + s.algebra.length * ALG.size * MONO + 14} y={220} size={ALG.size} color={pal.textMuted}>{s.z}</Code>
+        <Code x={ALG.x + vecPlain(s.algebra).length * ALG.size * MONO + 14} y={220} size={ALG.size} color={pal.textMuted}>{s.z}</Code>
       </Pop>
 
       {[xs, ys].map((t, i) => (

@@ -4,12 +4,13 @@ import { usePalette } from "../../kit/palette";
 import { Box, Shape } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
+import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
 
 // One pill per idea as it is named, then the pointer to the lesson's demo.
 const CHAR = 18; // JetBrains Mono at 30 px
-const pillW = (text: string) => 40 + text.length * CHAR;
+const pillW = (text: string) => 40 + vecPlain(text).length * CHAR;
 const ROWS = [110, 195, 280, 365, 450, 535];
 const MID = 820;
 

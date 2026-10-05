@@ -43,7 +43,7 @@ export function Projection() {
   const toward = useCue("toward");
   const away = useCue("away");
   const longer = useCue("longer");
-  const s = { a: useString("a"), b: useString("b"), v: useString("v"), aDot: useString("aDot") };
+  const s = { a: useString("a"), b: useString("b"), bHat: useString("bHat"), v: useString("v"), aDot: useString("aDot") };
 
   // a's angle: 60°, then toward the guard (25°), then away (140°), where it stays
   // while b stretches, so the shadow visibly holds still.
@@ -84,7 +84,7 @@ export function Projection() {
         </>
       ) : null}
       <Pop t={length} delay={10} x={mid.x} y={mid.y}>
-        <g opacity={1 - game}><HatLabel x={mid.x} y={mid.y + 10} left={s.aDot} letter={s.b} /></g>
+        <g opacity={1 - game}><HatLabel x={mid.x} y={mid.y + 10} left={s.aDot} letter={s.bHat} /></g>
         <g opacity={game}><Title x={mid.x} y={mid.y + 14} size={40} color={tone}>{value.toFixed(1).replace("-", "−")}</Title></g>
       </Pop>
 
