@@ -5,6 +5,7 @@ import { usePalette } from "../../kit/palette";
 import { Box } from "../../kit/shapes";
 import { Stage } from "../../kit/stage";
 import { Code, Label, Title, useString } from "../../kit/text";
+import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
 
@@ -73,7 +74,7 @@ export function Length() {
         {five >= 0 ? (
           <g opacity={progress(five, 10)}>
             {/* Mono advance is 0.6 em: start one space after the first part. */}
-            <Code x={CARD.x + 30 + (s.example.length + 1) * 34 * 0.6} y={CARD.y + 136} size={34}>{s.result}</Code>
+            <Code x={CARD.x + 30 + (vecPlain(s.example).length + 1) * 34 * 0.6} y={CARD.y + 136} size={34}>{s.result}</Code>
           </g>
         ) : null}
         {threeD >= 0 ? (
