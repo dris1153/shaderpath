@@ -3226,7 +3226,7 @@
     },
     {
       "text": "là",
-      "from": 5858,
+      "from": 5856,
       "to": 5861,
       "scene": "normalize"
     },
@@ -3238,14 +3238,14 @@
     },
     {
       "text": "vector",
-      "from": 5878,
+      "from": 5873,
       "to": 5885,
       "scene": "normalize"
     },
     {
       "text": "cho",
       "from": 5887,
-      "to": 5892,
+      "to": 5890,
       "scene": "normalize"
     },
     {
@@ -3287,883 +3287,883 @@
     {
       "text": "quả",
       "from": 5950,
-      "to": 5954,
+      "to": 5957,
       "scene": "normalize"
     },
     {
       "text": "là",
-      "from": 5957,
-      "to": 5959,
+      "from": 5959,
+      "to": 5962,
       "scene": "normalize"
     },
     {
       "text": "một",
-      "from": 5960,
-      "to": 5964,
+      "from": 5963,
+      "to": 5966,
       "scene": "normalize"
     },
     {
       "text": "vector",
-      "from": 5970,
-      "to": 5976,
+      "from": 5972,
+      "to": 5978,
       "scene": "normalize"
     },
     {
       "text": "đơn",
-      "from": 5977,
+      "from": 5980,
       "to": 5983,
       "scene": "normalize"
     },
     {
       "text": "vị:",
-      "from": 5984,
-      "to": 5988,
+      "from": 5986,
+      "to": 5990,
       "scene": "normalize"
     },
     {
       "text": "cùng",
-      "from": 6004,
-      "to": 6010,
+      "from": 6006,
+      "to": 6012,
       "scene": "normalize"
     },
     {
       "text": "hướng,",
-      "from": 6011,
-      "to": 6019,
+      "from": 6013,
+      "to": 6022,
       "scene": "normalize"
     },
     {
       "text": "dài",
-      "from": 6029,
-      "to": 6036,
+      "from": 6031,
+      "to": 6038,
       "scene": "normalize"
     },
     {
       "text": "đúng",
-      "from": 6038,
-      "to": 6041,
+      "from": 6041,
+      "to": 6043,
       "scene": "normalize"
     },
     {
       "text": "bằng",
-      "from": 6043,
-      "to": 6048,
+      "from": 6046,
+      "to": 6050,
       "scene": "normalize"
     },
     {
       "text": "một,",
-      "from": 6049,
-      "to": 6065,
+      "from": 6052,
+      "to": 6058,
       "scene": "normalize"
     },
     {
       "text": "đầu",
-      "from": 6067,
-      "to": 6070,
+      "from": 6070,
+      "to": 6072,
       "scene": "normalize"
     },
     {
       "text": "mũi",
-      "from": 6071,
-      "to": 6074,
+      "from": 6074,
+      "to": 6079,
       "scene": "normalize"
     },
     {
       "text": "tên",
-      "from": 6077,
-      "to": 6082,
+      "from": 6080,
+      "to": 6086,
       "scene": "normalize"
     },
     {
       "text": "nằm",
-      "from": 6084,
-      "to": 6091,
-      "scene": "normalize"
-    },
-    {
-      "text": "trên",
-      "from": 6092,
+      "from": 6089,
       "to": 6096,
       "scene": "normalize"
     },
     {
-      "text": "đường",
+      "text": "trên",
       "from": 6098,
       "to": 6103,
       "scene": "normalize"
     },
     {
-      "text": "tròn",
+      "text": "đường",
       "from": 6104,
-      "to": 6110,
+      "to": 6108,
       "scene": "normalize"
     },
     {
-      "text": "bán",
-      "from": 6112,
+      "text": "tròn",
+      "from": 6110,
       "to": 6115,
       "scene": "normalize"
     },
     {
-      "text": "kính",
+      "text": "bán",
       "from": 6118,
-      "to": 6122,
+      "to": 6120,
+      "scene": "normalize"
+    },
+    {
+      "text": "kính",
+      "from": 6122,
+      "to": 6127,
       "scene": "normalize"
     },
     {
       "text": "một.",
-      "from": 6124,
-      "to": 6144,
+      "from": 6130,
+      "to": 6134,
       "scene": "normalize"
     },
     {
       "text": "Quay",
-      "from": 6146,
-      "to": 6149,
-      "scene": "normalize"
-    },
-    {
-      "text": "lại",
-      "from": 6151,
-      "to": 6154,
-      "scene": "normalize"
-    },
-    {
-      "text": "cuộc",
       "from": 6156,
       "to": 6158,
       "scene": "normalize"
     },
     {
-      "text": "đua.",
+      "text": "lại",
       "from": 6161,
-      "to": 6182,
+      "to": 6163,
+      "scene": "normalize"
+    },
+    {
+      "text": "cuộc",
+      "from": 6164,
+      "to": 6168,
+      "scene": "normalize"
+    },
+    {
+      "text": "đua.",
+      "from": 6170,
+      "to": 6178,
       "scene": "normalize"
     },
     {
       "text": "Giữ",
-      "from": 6187,
-      "to": 6194,
+      "from": 6197,
+      "to": 6204,
       "scene": "normalize"
     },
     {
       "text": "W",
-      "from": 6197,
-      "to": 6211,
+      "from": 6212,
+      "to": 6221,
       "scene": "normalize"
     },
     {
       "text": "là",
-      "from": 6214,
-      "to": 6216,
+      "from": 6223,
+      "to": 6228,
       "scene": "normalize"
     },
     {
       "text": "cộng",
-      "from": 6218,
-      "to": 6223,
-      "scene": "normalize"
-    },
-    {
-      "text": "vector",
       "from": 6229,
       "to": 6235,
       "scene": "normalize"
     },
     {
+      "text": "vector",
+      "from": 6241,
+      "to": 6247,
+      "scene": "normalize"
+    },
+    {
       "text": "(0,",
-      "from": 6238,
-      "to": 6254,
+      "from": 6250,
+      "to": 6264,
       "scene": "normalize"
     },
     {
       "text": "1).",
-      "from": 6257,
-      "to": 6276,
+      "from": 6266,
+      "to": 6286,
       "scene": "normalize"
     },
     {
       "text": "Giữ",
-      "from": 6278,
-      "to": 6283,
+      "from": 6288,
+      "to": 6295,
       "scene": "normalize"
     },
     {
       "text": "D",
-      "from": 6288,
-      "to": 6298,
+      "from": 6300,
+      "to": 6305,
       "scene": "normalize"
     },
     {
       "text": "là",
-      "from": 6300,
-      "to": 6302,
+      "from": 6307,
+      "to": 6312,
       "scene": "normalize"
     },
     {
       "text": "cộng",
-      "from": 6305,
-      "to": 6310,
+      "from": 6313,
+      "to": 6319,
       "scene": "normalize"
     },
     {
       "text": "vector",
-      "from": 6316,
-      "to": 6322,
+      "from": 6324,
+      "to": 6329,
       "scene": "normalize"
     },
     {
       "text": "(1,",
-      "from": 6324,
-      "to": 6338,
+      "from": 6331,
+      "to": 6343,
       "scene": "normalize"
     },
     {
       "text": "0).",
-      "from": 6341,
-      "to": 6362,
+      "from": 6346,
+      "to": 6367,
       "scene": "normalize"
     },
     {
-      "text": "Cả",
-      "from": 6365,
-      "to": 6370,
+      "text": "Cộng",
+      "from": 6370,
+      "to": 6374,
       "scene": "normalize"
     },
     {
-      "text": "hai",
-      "from": 6372,
-      "to": 6377,
+      "text": "lại",
+      "from": 6376,
+      "to": 6382,
       "scene": "normalize"
     },
     {
       "text": "thành",
-      "from": 6379,
-      "to": 6384,
+      "from": 6383,
+      "to": 6389,
       "scene": "normalize"
     },
     {
       "text": "vector",
-      "from": 6386,
-      "to": 6398,
+      "from": 6396,
+      "to": 6403,
       "scene": "normalize"
     },
     {
       "text": "(1,",
-      "from": 6401,
-      "to": 6410,
+      "from": 6404,
+      "to": 6415,
       "scene": "normalize"
     },
     {
       "text": "1),",
-      "from": 6413,
-      "to": 6427,
+      "from": 6417,
+      "to": 6432,
       "scene": "normalize"
     },
     {
       "text": "và",
-      "from": 6428,
-      "to": 6430,
+      "from": 6433,
+      "to": 6434,
       "scene": "normalize"
     },
     {
       "text": "độ",
-      "from": 6432,
-      "to": 6437,
+      "from": 6437,
+      "to": 6442,
       "scene": "normalize"
     },
     {
       "text": "dài",
-      "from": 6438,
-      "to": 6444,
+      "from": 6443,
+      "to": 6449,
       "scene": "normalize"
     },
     {
       "text": "của",
-      "from": 6445,
-      "to": 6446,
+      "from": 6450,
+      "to": 6451,
       "scene": "normalize"
     },
     {
       "text": "nó",
-      "from": 6449,
-      "to": 6456,
+      "from": 6454,
+      "to": 6461,
       "scene": "normalize"
     },
     {
       "text": "là",
-      "from": 6458,
-      "to": 6463,
+      "from": 6463,
+      "to": 6468,
       "scene": "normalize"
     },
     {
       "text": "√2,",
-      "from": 6466,
-      "to": 6487,
+      "from": 6470,
+      "to": 6492,
       "scene": "normalize"
     },
     {
       "text": "khoảng",
-      "from": 6488,
-      "to": 6497,
+      "from": 6493,
+      "to": 6502,
       "scene": "normalize"
     },
     {
       "text": "1.41.",
-      "from": 6498,
-      "to": 6533,
+      "from": 6503,
+      "to": 6538,
       "scene": "normalize"
     },
     {
       "text": "Đó",
-      "from": 6536,
-      "to": 6542,
+      "from": 6541,
+      "to": 6547,
       "scene": "normalize"
     },
     {
       "text": "chính",
-      "from": 6544,
-      "to": 6550,
-      "scene": "normalize"
-    },
-    {
-      "text": "là",
-      "from": 6551,
+      "from": 6548,
       "to": 6552,
       "scene": "normalize"
     },
     {
-      "text": "con",
+      "text": "là",
       "from": 6554,
-      "to": 6559,
+      "to": 6557,
+      "scene": "normalize"
+    },
+    {
+      "text": "con",
+      "from": 6559,
+      "to": 6562,
       "scene": "normalize"
     },
     {
       "text": "số",
-      "from": 6560,
-      "to": 6566,
+      "from": 6564,
+      "to": 6571,
       "scene": "normalize"
     },
     {
       "text": "bốn",
-      "from": 6568,
-      "to": 6570,
+      "from": 6574,
+      "to": 6576,
       "scene": "normalize"
     },
     {
       "text": "mươi",
-      "from": 6571,
-      "to": 6574,
+      "from": 6578,
+      "to": 6581,
       "scene": "normalize"
     },
     {
       "text": "mốt",
-      "from": 6576,
-      "to": 6578,
+      "from": 6582,
+      "to": 6584,
       "scene": "normalize"
     },
     {
       "text": "phần",
-      "from": 6581,
-      "to": 6586,
+      "from": 6586,
+      "to": 6590,
       "scene": "normalize"
     },
     {
       "text": "trăm.",
-      "from": 6587,
-      "to": 6605,
+      "from": 6593,
+      "to": 6614,
       "scene": "normalize"
     },
     {
       "text": "Chỉ",
-      "from": 6608,
-      "to": 6611,
+      "from": 6617,
+      "to": 6620,
       "scene": "normalize"
     },
     {
       "text": "cần",
-      "from": 6612,
-      "to": 6617,
+      "from": 6622,
+      "to": 6626,
       "scene": "normalize"
     },
     {
       "text": "normalize",
-      "from": 6626,
-      "to": 6636,
-      "scene": "normalize"
-    },
-    {
-      "text": "trước",
-      "from": 6638,
-      "to": 6641,
-      "scene": "normalize"
-    },
-    {
-      "text": "khi",
-      "from": 6643,
+      "from": 6636,
       "to": 6646,
       "scene": "normalize"
     },
     {
-      "text": "nhân",
-      "from": 6647,
-      "to": 6650,
-      "scene": "normalize"
-    },
-    {
-      "text": "tốc",
-      "from": 6653,
-      "to": 6658,
-      "scene": "normalize"
-    },
-    {
-      "text": "độ,",
-      "from": 6659,
-      "to": 6670,
-      "scene": "normalize"
-    },
-    {
-      "text": "là",
-      "from": 6672,
-      "to": 6677,
-      "scene": "normalize"
-    },
-    {
-      "text": "hai",
-      "from": 6679,
-      "to": 6682,
-      "scene": "normalize"
-    },
-    {
-      "text": "bạn",
-      "from": 6684,
-      "to": 6689,
-      "scene": "normalize"
-    },
-    {
-      "text": "đi",
-      "from": 6690,
-      "to": 6694,
-      "scene": "normalize"
-    },
-    {
-      "text": "xa",
-      "from": 6696,
-      "to": 6698,
-      "scene": "normalize"
-    },
-    {
-      "text": "bằng",
-      "from": 6701,
-      "to": 6706,
-      "scene": "normalize"
-    },
-    {
-      "text": "nhau.",
-      "from": 6707,
-      "to": 6730,
-      "scene": "normalize"
-    },
-    {
-      "text": "Một",
-      "from": 6731,
-      "to": 6734,
-      "scene": "normalize"
-    },
-    {
-      "text": "cái",
-      "from": 6735,
-      "to": 6737,
-      "scene": "normalize"
-    },
-    {
-      "text": "bẫy:",
-      "from": 6739,
-      "to": 6758,
-      "scene": "normalize"
-    },
-    {
-      "text": "slime",
-      "from": 6763,
-      "to": 6775,
-      "scene": "normalize"
-    },
-    {
-      "text": "đứng",
-      "from": 6778,
-      "to": 6785,
-      "scene": "normalize"
-    },
-    {
-      "text": "đúng",
-      "from": 6786,
-      "to": 6792,
-      "scene": "normalize"
-    },
-    {
-      "text": "chỗ",
-      "from": 6793,
-      "to": 6797,
-      "scene": "normalize"
-    },
-    {
-      "text": "Inko,",
-      "from": 6799,
-      "to": 6818,
-      "scene": "normalize"
-    },
-    {
-      "text": "và",
-      "from": 6821,
-      "to": 6826,
-      "scene": "normalize"
-    },
-    {
-      "text": "player",
-      "from": 6832,
-      "to": 6838,
-      "scene": "normalize"
-    },
-    {
-      "text": "−",
-      "from": 6840,
-      "to": 6845,
-      "scene": "normalize"
-    },
-    {
-      "text": "enemy",
-      "from": 6847,
-      "to": 6859,
-      "scene": "normalize"
-    },
-    {
-      "text": "là",
-      "from": 6860,
-      "to": 6862,
-      "scene": "normalize"
-    },
-    {
-      "text": "vector",
-      "from": 6864,
-      "to": 6874,
-      "scene": "normalize"
-    },
-    {
-      "text": "0.",
-      "from": 6876,
-      "to": 6895,
-      "scene": "normalize"
-    },
-    {
-      "text": "Hàm",
-      "from": 6898,
-      "to": 6902,
-      "scene": "normalize"
-    },
-    {
-      "text": "normalize",
-      "from": 6905,
-      "to": 6919,
-      "scene": "normalize"
-    },
-    {
-      "text": "tự",
-      "from": 6922,
-      "to": 6926,
-      "scene": "normalize"
-    },
-    {
-      "text": "viết",
-      "from": 6929,
-      "to": 6936,
-      "scene": "normalize"
-    },
-    {
-      "text": "sẽ",
-      "from": 6938,
-      "to": 6943,
-      "scene": "normalize"
-    },
-    {
-      "text": "chia",
-      "from": 6948,
-      "to": 6953,
-      "scene": "normalize"
-    },
-    {
-      "text": "0",
-      "from": 6954,
-      "to": 6965,
-      "scene": "normalize"
-    },
-    {
-      "text": "cho",
-      "from": 6967,
-      "to": 6970,
-      "scene": "normalize"
-    },
-    {
-      "text": "0,",
-      "from": 6972,
-      "to": 6986,
-      "scene": "normalize"
-    },
-    {
-      "text": "ra",
-      "from": 6989,
-      "to": 6994,
-      "scene": "normalize"
-    },
-    {
-      "text": "NaN,",
-      "from": 7002,
-      "to": 7010,
-      "scene": "normalize"
-    },
-    {
-      "text": "nghĩa",
-      "from": 7012,
-      "to": 7015,
-      "scene": "normalize"
-    },
-    {
-      "text": "là",
-      "from": 7018,
-      "to": 7022,
-      "scene": "normalize"
-    },
-    {
-      "text": "không",
-      "from": 7025,
-      "to": 7030,
-      "scene": "normalize"
-    },
-    {
-      "text": "phải",
-      "from": 7031,
-      "to": 7034,
-      "scene": "normalize"
-    },
-    {
-      "text": "một",
-      "from": 7036,
-      "to": 7039,
-      "scene": "normalize"
-    },
-    {
-      "text": "số.",
-      "from": 7042,
-      "to": 7063,
-      "scene": "normalize"
-    },
-    {
-      "text": "NaN",
-      "from": 7070,
-      "to": 7075,
-      "scene": "normalize"
-    },
-    {
-      "text": "lan",
-      "from": 7078,
-      "to": 7082,
-      "scene": "normalize"
-    },
-    {
-      "text": "qua",
-      "from": 7085,
-      "to": 7087,
-      "scene": "normalize"
-    },
-    {
-      "text": "mọi",
-      "from": 7090,
-      "to": 7094,
-      "scene": "normalize"
-    },
-    {
-      "text": "bước,",
-      "from": 7096,
-      "to": 7106,
-      "scene": "normalize"
-    },
-    {
-      "text": "và",
-      "from": 7109,
-      "to": 7111,
-      "scene": "normalize"
-    },
-    {
-      "text": "slime",
-      "from": 7114,
-      "to": 7123,
-      "scene": "normalize"
-    },
-    {
-      "text": "biến",
-      "from": 7124,
-      "to": 7128,
-      "scene": "normalize"
-    },
-    {
-      "text": "mất",
-      "from": 7130,
-      "to": 7135,
-      "scene": "normalize"
-    },
-    {
-      "text": "luôn,",
-      "from": 7136,
-      "to": 7147,
-      "scene": "normalize"
-    },
-    {
-      "text": "mà",
-      "from": 7150,
-      "to": 7152,
-      "scene": "normalize"
-    },
-    {
-      "text": "không",
-      "from": 7153,
-      "to": 7157,
-      "scene": "normalize"
-    },
-    {
-      "text": "hề",
-      "from": 7159,
-      "to": 7162,
-      "scene": "normalize"
-    },
-    {
-      "text": "báo",
-      "from": 7164,
-      "to": 7169,
-      "scene": "normalize"
-    },
-    {
-      "text": "lỗi.",
-      "from": 7170,
-      "to": 7190,
-      "scene": "normalize"
-    },
-    {
-      "text": "Vậy",
-      "from": 7193,
-      "to": 7198,
-      "scene": "normalize"
-    },
-    {
-      "text": "nên",
-      "from": 7199,
-      "to": 7207,
-      "scene": "normalize"
-    },
-    {
-      "text": "hãy",
-      "from": 7208,
-      "to": 7214,
-      "scene": "normalize"
-    },
-    {
-      "text": "luôn",
-      "from": 7216,
-      "to": 7222,
-      "scene": "normalize"
-    },
-    {
-      "text": "kiểm",
-      "from": 7223,
-      "to": 7226,
-      "scene": "normalize"
-    },
-    {
-      "text": "tra",
-      "from": 7229,
-      "to": 7231,
-      "scene": "normalize"
-    },
-    {
-      "text": "độ",
-      "from": 7234,
-      "to": 7238,
-      "scene": "normalize"
-    },
-    {
-      "text": "dài",
-      "from": 7240,
-      "to": 7246,
-      "scene": "normalize"
-    },
-    {
       "text": "trước",
-      "from": 7248,
-      "to": 7250,
+      "from": 6648,
+      "to": 6653,
       "scene": "normalize"
     },
     {
       "text": "khi",
-      "from": 7253,
-      "to": 7258,
+      "from": 6654,
+      "to": 6655,
       "scene": "normalize"
     },
     {
-      "text": "chia,",
-      "from": 7266,
-      "to": 7274,
+      "text": "nhân",
+      "from": 6658,
+      "to": 6662,
       "scene": "normalize"
     },
     {
-      "text": "kể",
-      "from": 7277,
-      "to": 7279,
+      "text": "tốc",
+      "from": 6664,
+      "to": 6667,
       "scene": "normalize"
     },
     {
-      "text": "cả",
-      "from": 7282,
-      "to": 7286,
+      "text": "độ,",
+      "from": 6670,
+      "to": 6682,
       "scene": "normalize"
     },
     {
-      "text": "với",
-      "from": 7288,
-      "to": 7291,
+      "text": "là",
+      "from": 6685,
+      "to": 6686,
       "scene": "normalize"
     },
     {
-      "text": "input",
-      "from": 7297,
-      "to": 7303,
+      "text": "hai",
+      "from": 6689,
+      "to": 6691,
       "scene": "normalize"
     },
     {
-      "text": "lúc",
-      "from": 7304,
-      "to": 7310,
+      "text": "bạn",
+      "from": 6694,
+      "to": 6698,
+      "scene": "normalize"
+    },
+    {
+      "text": "đi",
+      "from": 6700,
+      "to": 6703,
+      "scene": "normalize"
+    },
+    {
+      "text": "xa",
+      "from": 6706,
+      "to": 6708,
+      "scene": "normalize"
+    },
+    {
+      "text": "bằng",
+      "from": 6709,
+      "to": 6713,
+      "scene": "normalize"
+    },
+    {
+      "text": "nhau.",
+      "from": 6715,
+      "to": 6739,
+      "scene": "normalize"
+    },
+    {
+      "text": "Một",
+      "from": 6743,
+      "to": 6746,
+      "scene": "normalize"
+    },
+    {
+      "text": "cái",
+      "from": 6747,
+      "to": 6749,
+      "scene": "normalize"
+    },
+    {
+      "text": "bẫy:",
+      "from": 6751,
+      "to": 6770,
+      "scene": "normalize"
+    },
+    {
+      "text": "slime",
+      "from": 6773,
+      "to": 6785,
+      "scene": "normalize"
+    },
+    {
+      "text": "đứng",
+      "from": 6787,
+      "to": 6794,
+      "scene": "normalize"
+    },
+    {
+      "text": "đúng",
+      "from": 6796,
+      "to": 6799,
+      "scene": "normalize"
+    },
+    {
+      "text": "chỗ",
+      "from": 6802,
+      "to": 6806,
+      "scene": "normalize"
+    },
+    {
+      "text": "Inko,",
+      "from": 6809,
+      "to": 6826,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 6828,
+      "to": 6830,
+      "scene": "normalize"
+    },
+    {
+      "text": "player",
+      "from": 6833,
+      "to": 6845,
+      "scene": "normalize"
+    },
+    {
+      "text": "−",
+      "from": 6847,
+      "to": 6852,
+      "scene": "normalize"
+    },
+    {
+      "text": "enemy",
+      "from": 6854,
+      "to": 6866,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 6869,
+      "to": 6871,
+      "scene": "normalize"
+    },
+    {
+      "text": "vector",
+      "from": 6874,
+      "to": 6883,
+      "scene": "normalize"
+    },
+    {
+      "text": "0.",
+      "from": 6884,
+      "to": 6907,
+      "scene": "normalize"
+    },
+    {
+      "text": "Hàm",
+      "from": 6910,
+      "to": 6914,
+      "scene": "normalize"
+    },
+    {
+      "text": "normalize",
+      "from": 6923,
+      "to": 6931,
+      "scene": "normalize"
+    },
+    {
+      "text": "tự",
+      "from": 6934,
+      "to": 6938,
+      "scene": "normalize"
+    },
+    {
+      "text": "viết",
+      "from": 6941,
+      "to": 6948,
+      "scene": "normalize"
+    },
+    {
+      "text": "sẽ",
+      "from": 6949,
+      "to": 6955,
+      "scene": "normalize"
+    },
+    {
+      "text": "chia",
+      "from": 6959,
+      "to": 6962,
+      "scene": "normalize"
+    },
+    {
+      "text": "0",
+      "from": 6965,
+      "to": 6972,
+      "scene": "normalize"
+    },
+    {
+      "text": "cho",
+      "from": 6974,
+      "to": 6979,
+      "scene": "normalize"
+    },
+    {
+      "text": "0,",
+      "from": 6982,
+      "to": 6994,
+      "scene": "normalize"
+    },
+    {
+      "text": "ra",
+      "from": 6996,
+      "to": 7001,
+      "scene": "normalize"
+    },
+    {
+      "text": "NaN,",
+      "from": 7009,
+      "to": 7018,
+      "scene": "normalize"
+    },
+    {
+      "text": "nghĩa",
+      "from": 7019,
+      "to": 7022,
+      "scene": "normalize"
+    },
+    {
+      "text": "là",
+      "from": 7025,
+      "to": 7032,
       "scene": "normalize"
     },
     {
       "text": "không",
-      "from": 7312,
+      "from": 7033,
+      "to": 7037,
+      "scene": "normalize"
+    },
+    {
+      "text": "phải",
+      "from": 7039,
+      "to": 7043,
+      "scene": "normalize"
+    },
+    {
+      "text": "một",
+      "from": 7044,
+      "to": 7049,
+      "scene": "normalize"
+    },
+    {
+      "text": "số.",
+      "from": 7051,
+      "to": 7073,
+      "scene": "normalize"
+    },
+    {
+      "text": "NaN",
+      "from": 7078,
+      "to": 7085,
+      "scene": "normalize"
+    },
+    {
+      "text": "lan",
+      "from": 7087,
+      "to": 7094,
+      "scene": "normalize"
+    },
+    {
+      "text": "qua",
+      "from": 7097,
+      "to": 7099,
+      "scene": "normalize"
+    },
+    {
+      "text": "mọi",
+      "from": 7100,
+      "to": 7106,
+      "scene": "normalize"
+    },
+    {
+      "text": "bước,",
+      "from": 7108,
+      "to": 7118,
+      "scene": "normalize"
+    },
+    {
+      "text": "và",
+      "from": 7121,
+      "to": 7123,
+      "scene": "normalize"
+    },
+    {
+      "text": "slime",
+      "from": 7126,
+      "to": 7135,
+      "scene": "normalize"
+    },
+    {
+      "text": "biến",
+      "from": 7136,
+      "to": 7140,
+      "scene": "normalize"
+    },
+    {
+      "text": "mất",
+      "from": 7141,
+      "to": 7145,
+      "scene": "normalize"
+    },
+    {
+      "text": "luôn,",
+      "from": 7147,
+      "to": 7159,
+      "scene": "normalize"
+    },
+    {
+      "text": "mà",
+      "from": 7162,
+      "to": 7164,
+      "scene": "normalize"
+    },
+    {
+      "text": "không",
+      "from": 7165,
+      "to": 7169,
+      "scene": "normalize"
+    },
+    {
+      "text": "hề",
+      "from": 7171,
+      "to": 7174,
+      "scene": "normalize"
+    },
+    {
+      "text": "báo",
+      "from": 7176,
+      "to": 7178,
+      "scene": "normalize"
+    },
+    {
+      "text": "lỗi.",
+      "from": 7181,
+      "to": 7202,
+      "scene": "normalize"
+    },
+    {
+      "text": "Vậy",
+      "from": 7206,
+      "to": 7210,
+      "scene": "normalize"
+    },
+    {
+      "text": "nên",
+      "from": 7211,
+      "to": 7219,
+      "scene": "normalize"
+    },
+    {
+      "text": "hãy",
+      "from": 7220,
+      "to": 7226,
+      "scene": "normalize"
+    },
+    {
+      "text": "luôn",
+      "from": 7228,
+      "to": 7234,
+      "scene": "normalize"
+    },
+    {
+      "text": "kiểm",
+      "from": 7235,
+      "to": 7238,
+      "scene": "normalize"
+    },
+    {
+      "text": "tra",
+      "from": 7241,
+      "to": 7243,
+      "scene": "normalize"
+    },
+    {
+      "text": "độ",
+      "from": 7246,
+      "to": 7250,
+      "scene": "normalize"
+    },
+    {
+      "text": "dài",
+      "from": 7252,
+      "to": 7258,
+      "scene": "normalize"
+    },
+    {
+      "text": "trước",
+      "from": 7260,
+      "to": 7265,
+      "scene": "normalize"
+    },
+    {
+      "text": "khi",
+      "from": 7266,
+      "to": 7270,
+      "scene": "normalize"
+    },
+    {
+      "text": "chia,",
+      "from": 7272,
+      "to": 7286,
+      "scene": "normalize"
+    },
+    {
+      "text": "kể",
+      "from": 7289,
+      "to": 7294,
+      "scene": "normalize"
+    },
+    {
+      "text": "cả",
+      "from": 7295,
+      "to": 7298,
+      "scene": "normalize"
+    },
+    {
+      "text": "với",
+      "from": 7301,
+      "to": 7303,
+      "scene": "normalize"
+    },
+    {
+      "text": "input",
+      "from": 7309,
       "to": 7315,
       "scene": "normalize"
     },
     {
-      "text": "nhấn",
+      "text": "lúc",
       "from": 7318,
-      "to": 7322,
+      "to": 7325,
+      "scene": "normalize"
+    },
+    {
+      "text": "không",
+      "from": 7326,
+      "to": 7330,
+      "scene": "normalize"
+    },
+    {
+      "text": "nhấn",
+      "from": 7332,
+      "to": 7337,
       "scene": "normalize"
     },
     {
       "text": "phím",
-      "from": 7324,
-      "to": 7327,
+      "from": 7338,
+      "to": 7342,
       "scene": "normalize"
     },
     {
       "text": "nào.",
-      "from": 7328,
-      "to": 7349,
+      "from": 7344,
+      "to": 7368,
       "scene": "normalize"
     },
     {

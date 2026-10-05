@@ -235,140 +235,137 @@ Normalize là chia vector
 cho chính độ dài của nó.
 
 53
-00:03:18.133 --> 00:03:22.233
+00:03:18.133 --> 00:03:22.333
 Kết quả là một vector đơn vị:
 cùng hướng, dài đúng bằng một,
 
 54
-00:03:22.233 --> 00:03:24.867
+00:03:22.333 --> 00:03:25.200
 đầu mũi tên nằm trên
 đường tròn bán kính một.
 
 55
-00:03:24.867 --> 00:03:26.233
-Quay lại cuộc đua.
+00:03:25.200 --> 00:03:29.600
+Quay lại cuộc đua. Giữ
+W là cộng vector (0, 1).
 
 56
-00:03:26.233 --> 00:03:29.267
-Giữ W là cộng vector (0, 1).
-
-57
-00:03:29.267 --> 00:03:32.167
+00:03:29.600 --> 00:03:32.333
 Giữ D là cộng vector (1, 0).
 
-58
-00:03:32.167 --> 00:03:34.267
-Cả hai thành vector (1, 1),
+57
+00:03:32.333 --> 00:03:34.433
+Cộng lại thành vector (1, 1),
 
-59
-00:03:34.267 --> 00:03:37.867
+58
+00:03:34.433 --> 00:03:38.033
 và độ dài của nó là √2, khoảng 1.41.
 
-60
-00:03:37.867 --> 00:03:40.267
+59
+00:03:38.033 --> 00:03:40.567
 Đó chính là con số bốn mươi mốt phần trăm.
 
-61
-00:03:40.267 --> 00:03:44.367
+60
+00:03:40.567 --> 00:03:44.767
 Chỉ cần normalize trước khi nhân tốc độ,
 là hai bạn đi xa bằng nhau.
 
-62
-00:03:44.367 --> 00:03:49.933
+61
+00:03:44.767 --> 00:03:50.333
 Một cái bẫy: slime đứng đúng chỗ Inko,
 và player − enemy là vector 0.
 
-63
-00:03:49.933 --> 00:03:55.667
+62
+00:03:50.333 --> 00:03:55.933
 Hàm normalize tự viết sẽ chia 0 cho 0,
 ra NaN, nghĩa là không phải một số.
 
-64
-00:03:55.667 --> 00:03:59.767
+63
+00:03:55.933 --> 00:04:00.200
 NaN lan qua mọi bước, và slime
 biến mất luôn, mà không hề báo lỗi.
 
-65
-00:03:59.767 --> 00:04:02.567
+64
+00:04:00.200 --> 00:04:02.967
 Vậy nên hãy luôn kiểm tra
 độ dài trước khi chia,
 
-66
-00:04:02.567 --> 00:04:05.967
+65
+00:04:02.967 --> 00:04:06.600
 kể cả với input lúc không nhấn phím nào.
 
-67
+66
 00:04:09.033 --> 00:04:13.267
 Cùng một bộ số x, y,
 z có thể đóng tới ba vai khác nhau.
 
-68
+67
 00:04:13.267 --> 00:04:16.200
 Vị trí là một chỗ, đo từ gốc toạ độ.
 
-69
+68
 00:04:16.200 --> 00:04:20.800
 Hướng thì chỉ nói về phía nào,
 thường dài bằng một, và không có vị trí:
 
-70
+69
 00:04:20.800 --> 00:04:24.200
 dời một cái hộp, pháp tuyến
 mặt trên của nó vẫn y nguyên.
 
-71
+70
 00:04:24.200 --> 00:04:29.000
 Vận tốc là hướng và tốc độ gộp lại:
 dài gấp đôi là nhanh gấp đôi.
 
-72
+71
 00:04:29.000 --> 00:04:32.000
 Và đây là cốt lõi của vòng
 lặp game đơn giản nhất:
 
-73
+72
 00:04:32.000 --> 00:04:36.067
 mỗi khung hình, position += velocity * dt.
 
-74
+73
 00:04:36.067 --> 00:04:40.500
 Chỉ là phép cộng và phép co
 giãn, mang tên mới mà thôi.
 
-75
+74
 00:04:42.100 --> 00:04:47.100
 Tóm lại: vector là một độ dời,
 một mũi tên hay một bộ số.
 
-76
+75
 00:04:47.100 --> 00:04:51.300
 Cộng thì nối đuôi nhau,
 trừ để chỉ từ chỗ này tới chỗ kia,
 
-77
+76
 00:04:51.300 --> 00:04:55.467
 co giãn để kéo dài hay lật chiều,
 Pythagoras cho độ dài,
 
-78
+77
 00:04:55.467 --> 00:04:58.267
 và normalize để giữ hướng thuần tuý.
 
-79
+78
 00:04:58.267 --> 00:05:03.633
 Coi chừng các cái bẫy: tốc độ đi chéo,
 thứ tự phép trừ, và vector 0.
 
-80
+79
 00:05:03.633 --> 00:05:06.267
 Giờ hãy mở demo Cộng
 vector trong bài học này,
 
-81
+80
 00:05:06.267 --> 00:05:09.233
 và thử thu mũi tên tổng
 về gần như bằng không.
 
-82
+81
 00:05:09.233 --> 00:05:10.767
 Hẹn gặp lại!

@@ -40,7 +40,7 @@ Mẹo nhỏ: muốn so hai độ dài, hãy so bình phương độ dài. | Kế
 
 ## scene: normalize
 Normalize là chia vector cho chính độ dài của nó. | Kết quả là một vector đơn vị: cùng hướng, dài đúng bằng một, đầu mũi tên nằm trên đường tròn bán kính một.
-Quay lại cuộc đua. Giữ W là cộng vector [(0, 1)](không, một). Giữ D là cộng vector [(1, 0)](một, không). Cả hai thành vector [(1, 1)](một, một), | và độ dài của nó là [√2](căn hai), khoảng [1.41](một phẩy bốn một). Đó chính là con số bốn mươi mốt phần trăm. Chỉ cần normalize trước khi nhân tốc độ, là hai bạn đi xa bằng nhau.
+Quay lại cuộc đua. Giữ W là cộng vector [(0, 1)](không, một). Giữ D là cộng vector [(1, 0)](một, không). Cộng lại thành vector [(1, 1)](một, một), | và độ dài của nó là [√2](căn hai), khoảng [1.41](một phẩy bốn một). Đó chính là con số bốn mươi mốt phần trăm. Chỉ cần normalize trước khi nhân tốc độ, là hai bạn đi xa bằng nhau.
 Một cái bẫy: slime đứng đúng chỗ Inko, và [player − enemy](player trừ enemy) là vector 0.
 Hàm normalize tự viết sẽ chia 0 cho 0, ra [NaN](nan), nghĩa là không phải một số. | [NaN](nan) lan qua mọi bước, và slime biến mất luôn, mà không hề báo lỗi.
 Vậy nên hãy luôn kiểm tra độ dài trước khi chia, kể cả với input lúc không nhấn phím nào.
