@@ -36,6 +36,7 @@ Chapters
 3:14 Normalize, and two classic bugs
 4:09 Position, direction, velocity
 4:42 Recap
+5:10 Thanks for watching
 
 Subtitles: English, Tiếng Việt
 

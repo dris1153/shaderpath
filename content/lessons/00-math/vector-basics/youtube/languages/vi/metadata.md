@@ -36,6 +36,7 @@ Chương
 3:14 Normalize và hai lỗi kinh điển
 4:09 Vị trí, hướng, vận tốc
 4:42 Tóm tắt
+5:10 Cảm ơn bạn đã xem
 
 Phụ đề: English, Tiếng Việt
 Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.

@@ -47,6 +47,11 @@
       "id": "recap",
       "from": 8463,
       "durationInFrames": 860
+    },
+    {
+      "id": "outro",
+      "from": 9323,
+      "durationInFrames": 434
     }
   ],
   "words": [
@@ -5281,6 +5286,120 @@
       "from": 9286,
       "to": 9293,
       "scene": "recap"
+    },
+    {
+      "text": "Nếu",
+      "from": 9323,
+      "to": 9328,
+      "scene": "outro"
+    },
+    {
+      "text": "thấy",
+      "from": 9329,
+      "to": 9333,
+      "scene": "outro"
+    },
+    {
+      "text": "dễ",
+      "from": 9335,
+      "to": 9339,
+      "scene": "outro"
+    },
+    {
+      "text": "hiểu,",
+      "from": 9340,
+      "to": 9347,
+      "scene": "outro"
+    },
+    {
+      "text": "bấm",
+      "from": 9359,
+      "to": 9364,
+      "scene": "outro"
+    },
+    {
+      "text": "like",
+      "from": 9366,
+      "to": 9376,
+      "scene": "outro"
+    },
+    {
+      "text": "rồi",
+      "from": 9381,
+      "to": 9388,
+      "scene": "outro"
+    },
+    {
+      "text": "đăng",
+      "from": 9389,
+      "to": 9395,
+      "scene": "outro"
+    },
+    {
+      "text": "ký",
+      "from": 9396,
+      "to": 9399,
+      "scene": "outro"
+    },
+    {
+      "text": "kênh",
+      "from": 9400,
+      "to": 9407,
+      "scene": "outro"
+    },
+    {
+      "text": "để",
+      "from": 9412,
+      "to": 9414,
+      "scene": "outro"
+    },
+    {
+      "text": "không",
+      "from": 9415,
+      "to": 9419,
+      "scene": "outro"
+    },
+    {
+      "text": "lỡ",
+      "from": 9421,
+      "to": 9424,
+      "scene": "outro"
+    },
+    {
+      "text": "bài",
+      "from": 9426,
+      "to": 9429,
+      "scene": "outro"
+    },
+    {
+      "text": "sau",
+      "from": 9431,
+      "to": 9436,
+      "scene": "outro"
+    },
+    {
+      "text": "nhé.",
+      "from": 9438,
+      "to": 9443,
+      "scene": "outro"
+    },
+    {
+      "text": "Hẹn",
+      "from": 9455,
+      "to": 9459,
+      "scene": "outro"
+    },
+    {
+      "text": "gặp",
+      "from": 9460,
+      "to": 9462,
+      "scene": "outro"
+    },
+    {
+      "text": "lại!",
+      "from": 9465,
+      "to": 9472,
+      "scene": "outro"
     }
   ],
   "cues": {
@@ -5370,7 +5489,10 @@
     "recap.speed": 8939,
     "recap.order": 8987,
     "recap.zeroTrap": 9017,
-    "recap.demo": 9077
+    "recap.demo": 9077,
+    "outro.like": 9323,
+    "outro.sub": 9370,
+    "outro.next": 9453
   },
   "audio": "voice.mp3"
 }
