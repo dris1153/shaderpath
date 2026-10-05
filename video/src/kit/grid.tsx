@@ -1,6 +1,7 @@
 import { progress } from "./easing";
 import { usePalette } from "./palette";
 import { Label } from "./text";
+import { vecPlain } from "./vec-marker";
 
 export type Vec = { x: number; y: number };
 
@@ -100,7 +101,7 @@ export function Vector({ space, from, to, grow = 1, color, width = 7, dashed, op
   const n = { x: (b.y - a.y) / len, y: -(b.x - a.x) / len };
   const mid = lerp(a, b, 0.5);
   // Clear the shaft by the label's rough half-size along the normal (~15 px per char at 30 px).
-  const off = label ? 30 + Math.abs(n.x) * label.length * 8 + Math.abs(n.y) * 12 : 0;
+  const off = label ? 30 + Math.abs(n.x) * vecPlain(label).length * 8 + Math.abs(n.y) * 12 : 0;
   return (
     <g opacity={opacity}>
       <ArrowPath a={a} b={b} stroke={color ?? pal.hero} width={width} dashed={dashed} />

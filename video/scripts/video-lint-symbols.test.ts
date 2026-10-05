@@ -19,3 +19,12 @@ test("a dot or cross beside a member access is flagged", () => {
 test("decorative separators are not flagged, even beside a number", () => {
   assert.deepEqual(flagged({ a: "top-left · squares", b: "DirectX · Unity", c: "0 → 1 · pixel centers" }), []);
 });
+
+test("vector markers are fine on math, flagged on code and when malformed", () => {
+  assert.deepEqual(flagged({ a: "{a} · {b}", b: "{a} · {b} = a.x * b.x + a.y * b.y", c: "|{v}| = √(x² + y²)", d: "2{v}" }), []);
+  assert.deepEqual(flagged({ a: "{a}.x * {b}.x", b: "{a · {b}", c: "a}" }), ["a", "b", "c"]);
+});
+
+test("a marked string with a leading, trailing or doubled space is flagged", () => {
+  assert.deepEqual(flagged({ a: "{a} ·", b: " {a}", c: "{a}  {b}", d: "{a} {b}", e: "a  b" }), ["b", "c"]);
+});

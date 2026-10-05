@@ -17,6 +17,5 @@ const FILES: [family: string, file: string, weight: string][] = [
   ["JetBrains Mono", "fonts/JetBrainsMono.ttf", "100 800"],
 ];
 
-for (const [family, file, weight] of FILES) {
-  loadFont({ family, url: staticFile(file), weight });
-}
+// Settles once every face is in document.fonts; text measured before that uses a fallback face.
+export const FONTS_READY = Promise.all(FILES.map(([family, file, weight]) => loadFont({ family, url: staticFile(file), weight })));

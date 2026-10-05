@@ -1,6 +1,8 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { FONT } from "./fonts";
 import { usePalette } from "./palette";
+import { MarkedText, type RunProps } from "./vector-arrow";
+import { hasVecMarker } from "./vec-marker";
 
 // On-screen words come from strings.<locale>.json, never from scene code, so a
 // translation swaps this map and nothing else.
@@ -29,7 +31,7 @@ type TextProps = {
 export function Title({ x, y, size = 64, anchor = "middle", color, weight = 650, halo, children }: TextProps) {
   const pal = usePalette();
   return (
-    <text
+    <Run
       x={x}
       y={y}
       fontFamily={FONT.display}
@@ -43,14 +45,14 @@ export function Title({ x, y, size = 64, anchor = "middle", color, weight = 650,
       paintOrder="stroke"
     >
       {children}
-    </text>
+    </Run>
   );
 }
 
 export function Label({ x, y, size = 30, anchor = "middle", color, weight = 800, halo, children }: TextProps) {
   const pal = usePalette();
   return (
-    <text
+    <Run
       x={x}
       y={y}
       fontFamily={FONT.body}
@@ -64,14 +66,14 @@ export function Label({ x, y, size = 30, anchor = "middle", color, weight = 800,
       paintOrder="stroke"
     >
       {children}
-    </text>
+    </Run>
   );
 }
 
 export function Code({ x, y, size = 28, anchor = "start", color, weight = 600, children }: TextProps) {
   const pal = usePalette();
   return (
-    <text
+    <Run
       x={x}
       y={y}
       fontFamily={FONT.mono}
@@ -81,6 +83,12 @@ export function Code({ x, y, size = 28, anchor = "start", color, weight = 600, c
       fill={color ?? pal.text}
     >
       {children}
-    </text>
+    </Run>
   );
+}
+
+// A string with {a} markers draws an arrow over those letters; any other string is a plain <text>.
+function Run({ children, ...props }: RunProps) {
+  if (typeof children === "string" && hasVecMarker(children)) return <MarkedText text={children} {...props} />;
+  return <text {...props}>{children}</text>;
 }
