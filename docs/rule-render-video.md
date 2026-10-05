@@ -1,0 +1,54 @@
+# Rules for rendering lesson videos
+
+Hard-won rules for `video/` (Remotion). Each one cost time once. Commands and the
+pipeline itself are in [video/README.md](../video/README.md); this page is only
+what went wrong and what to do instead. Add a line here whenever a render
+surprises you.
+
+## Setup on a fresh clone
+
+- **`media/` is gitignored and gone after a clone.** Rebuild it by rendering, not by downloading from YouTube: the upload has the voice baked in, is re-encoded, and has no picture-only version.
+- **Two installs.** `pnpm install` in the repo root and again in `video/` (its own workspace and lockfile).
+- **`pnpm final` and `pnpm qc` need a full ffmpeg on `PATH`** with `drawtext`, `tile`, `ebur128` and the `mov_text` encoder. Remotion's bundled ffmpeg is not enough. On Windows: `winget install Gyan.FFmpeg`. A shell opened before the install does not see it; open a new one, or in PowerShell reload `PATH` from the Machine and User environment.
+- **Rebuild order per lesson** (from `video/`, one lesson at a time):
+  `pnpm video:restore <slug>` → `pnpm render <slug> en` → `pnpm render <slug> vi` → `pnpm qc <slug>` → `pnpm youtube <slug>` → `pnpm final <slug>`.
+  The shared outro is `pnpm outro en`. No TTS credits are needed, the voice is committed under `content/.../youtube/`.
+- **Never run `pnpm tts` on a lesson that already has a voice.** It costs credits, the TTS cache (`video/.cache/tts/`) is gitignored so a fresh clone re-voices every scene, and it rewrites the committed audio with slightly different samples.
+
+## The strings cache decides what the render shows
+
+- **The render reads `video/public/generated/<slug>/<lang>/strings.json`, not `content/.../video/strings.en.json`.** The cache is written by `pnpm tts` and restored by `pnpm video:restore` from `youtube/`. Edit the content file alone and every still keeps the old text.
+- **A new string key crashes the scene.** `useString` throws on a key the cache lacks, and the render reports only `ProtocolError: Target closed`. The real error is hidden behind it. If a scene dies with "Target closed" after a strings edit, compare the cache with the content file first.
+- **Refresh the cache without TTS:** write `{...outroStrings (only if the script has outro: true), ...lessonStrings}` as `JSON.stringify(strings, null, 2) + "\n"` to the `en` and `vi` folders. Both languages share the English picture, so both files are identical. There is no command for this yet.
+- After `pnpm youtube`, the four `youtube/languages/<lang>/strings.json` files change for real. Commit them.
+
+## Check pictures before spending render time
+
+- **Look at stills first:** `pnpm stills <slug> en <frame,frame,...>` writes PNGs to `video/out/<slug>/en/stills/`. Frame numbers come from `public/generated/<slug>/en/timing.json` (`scenes` and `cues`, 30 fps).
+- **Capture baseline stills before touching anything in `video/src/kit/`.** The kit is shared by every lesson and by the `dummy` fixture that `pnpm outro` renders into the shared outro. After the change, render the same frames of a lesson you did not touch plus the `dummy` outro and `cmp` them byte for byte. Equal means the change cannot have leaked.
+- **When `cmp` says a still differs, measure it before guessing.** `ffmpeg -i old.png -i new.png -lavfi psnr -f null -` gives the size of the difference (above ~50 dB is sub-pixel). To see where, use `-lavfi "blend=all_mode=difference,format=gray,lut=y='min(255\,val*60)'"`; `eq` does not amplify values near zero and shows a black image.
+- **Look at a frame from the final mp4 too** (`ffmpeg -ss 40 -i final/video.vi.mp4 -frames:v 1 f.png`). It proves the muxed file shows the new picture.
+
+## Text on screen
+
+- **Bundled fonts miss many glyphs.** None of Baloo 2, Nunito or JetBrains Mono has the combining arrow U+20D7. Draw it as SVG. `video/scripts/cmap.test.ts` lists what the fonts cover.
+- **`loadFont` resolves late.** It adds a face to `document.fonts` only after the face has loaded, so measuring text early uses a fallback face. Await `FONTS_READY` (from `kit/fonts.ts`) before measuring.
+- **Never guess glyph heights.** A guessed height put arrowheads on top of letters. Measure with `canvas.measureText().actualBoundingBoxAscent` in the real font.
+- **Draw decoration under the text.** A paper-coloured halo around an arrow drawn after the letter covers the letter.
+- **Do not size things from `string.length` when the string has markup.** `{a}` is 3 characters but 1 on screen. Use `vecPlain()`. Check pill widths, label offsets and anything placed after a string.
+- **Do not split a marked string into several text nodes.** Rendering `{a} · {b}` as separate string children moved glyphs by sub-pixels (PSNR 50-62 dB against the old render). Keep the text one string and split only where a hidden glyph is needed (the `√` of a radicand).
+- **Leading, trailing and doubled spaces break marked strings.** SVG collapses them, so `getExtentOfChar` indices drift or throw and the render dies with "Target closed". Use single spaces; `pnpm video:lint` warns.
+- **Radicals:** write `√{x² + y²}`, never `√(x² + y²)` or `√25`. The bar spans the braces and the parentheses go away. A bare `√` stays a plain glyph.
+- **`·` and `×` are only for vectors.** A scalar times something is `*` (`k * v`, `(4, −2) * −1.5`). `pnpm video:lint` flags numbers around `·` or `×`.
+- **Vector arrows follow one rule:** an arrow is math notation for a vector, code stays plain (`a.x`, `dot(a, b)`). Details in `video/src/kit/STYLE.md`.
+
+## After the render
+
+- **`pnpm youtube` and `pnpm outro` rewrite committed files with CRLF-only changes** (`core.autocrlf=true`), typically every `metadata.md` and `upload-notes.md`. Check with `git diff --ignore-space-at-eol --numstat`: an empty list is noise, so `git checkout --` those files. Real changes, such as the four `strings.json`, stay.
+- **`pnpm final` refuses a render older than the committed voice** (it compares `timing.json`). Render first, then `final`.
+- **Do not re-upload by replacing a file.** YouTube Studio cannot swap the video of an existing upload. A new upload has a new id; update `content/lesson-videos.ts` and unlist the old one. The Vietnamese dub and subtitles stay valid when only the picture's text changed, because timing is unchanged.
+
+## Running it on Windows
+
+- PowerShell shows pnpm's stderr as a red `NativeCommandError` even on success. Trust the exit code (`$LASTEXITCODE`).
+- Chain a long job in one background script and stop at the first non-zero exit, so a failed render is not followed by `youtube` and `final` on stale output.

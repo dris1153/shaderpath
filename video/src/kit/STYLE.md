@@ -82,10 +82,11 @@ Each symbol keeps one meaning on screen, because viewers cannot tell two meaning
 | `.` | member access inside a name: `a.x`, `a.lengthSq()` | next to a multiplication dot |
 
 - **Vector arrow.** An arrow is math notation for a vector; names inside code stay plain. Write `{a}` in a string to draw an arrow over that letter (`{a} · {b} = a.x * b.x`, `|{v}|`, `2{v}`); `{AB}` spans both letters. `Title`, `Label` and `Code` draw it, so the string stays language-neutral. Never put it on code (`a.x`, `dot(a, b)`), on points (`A`, `B`) or on axes, and `b̂` keeps its own hat. Any `{` in a `Title`, `Label` or `Code` string is read as a marker, so code with braces needs another element. `pnpm video:lint` warns on a malformed marker, on `{a}.x`, and on a leading, trailing or doubled space in a marked string.
+- **Radical bar.** Braces right after `√` are the radicand: `√{x² + y²}`, `√{25}`. `Title`, `Label` and `Code` draw the whole radical, its bar spanning the group, so the parentheses of `√(…)` go away. A bare `√` (the big one with no radicand) stays a glyph. `pnpm video:lint` warns on `√(…)`, `√25` and any `√` followed by a letter, digit or parenthesis without braces.
 - Named quantities and functions in a standard formula stay implicit: `|a| |b| cos θ`, `2v`, `0.5v`.
 - Decorative separators between words are fine in labels (`top-left · squares`), but prefer `/` in new videos.
 - The spoken script says "times" for plain multiplication, so the script never changes with this.
-- Lessons 1–2 predate the multiplication rule and keep their uploaded text. Lesson 2 (`vector-basics`) is re-uploaded with the vector arrows.
+- Lessons 1–2 predate the multiplication rule and keep their uploaded text. Lesson 2 (`vector-basics`) is re-uploaded with the vector arrows and the radical bar, and now follows this rule too (`k * v`, `(4, −2) * −1.5`).
 
 ## Motion (`kit/motion.tsx`, `kit/easing.ts`)
 

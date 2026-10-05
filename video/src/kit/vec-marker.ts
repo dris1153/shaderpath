@@ -1,10 +1,10 @@
-export type VecRun = { text: string; arrow: boolean };
+export type VecRun = { text: string; kind: "plain" | "arrow" | "root" };
 
 export function hasVecMarker(text: string): boolean {
   return text.includes("{");
 }
 
-// "{a} · {b}" → [a (arrow)] [" · "] [b (arrow)]. Braces mark vector letters in math; code stays plain.
+// "{a} · {b}" → arrow letters in math; "√{x² + y²}" → braces right after √ are the radicand. Code stays plain.
 export function parseVec(text: string): VecRun[] {
   const runs: VecRun[] = [];
   let plain = "";
@@ -25,12 +25,13 @@ export function parseVec(text: string): VecRun[] {
     const inner = text.slice(i + 1, end);
     if (inner === "") fail("empty {}");
     if (inner.includes("{")) fail("nested {");
-    if (plain) runs.push({ text: plain, arrow: false });
+    const kind = plain.endsWith("√") ? "root" : "arrow";
+    if (plain) runs.push({ text: plain, kind: "plain" });
     plain = "";
-    runs.push({ text: inner, arrow: true });
+    runs.push({ text: inner, kind });
     i = end + 1;
   }
-  if (plain) runs.push({ text: plain, arrow: false });
+  if (plain) runs.push({ text: plain, kind: "plain" });
   return runs;
 }
 

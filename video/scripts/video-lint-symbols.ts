@@ -8,6 +8,8 @@ const NUMBER_SIDES = /[\d)]\s*[·×]\s*[−-]?\d/;
 const MEMBER_SIDE = /\w\.\w+\s*[·×]|[·×]\s*\w+\.\w/;
 // An arrow is math notation for a vector; `{a}.x` would put it on a code member access.
 const ARROW_ON_CODE = /\}\.\w/;
+// A radical sign needs its radicand in braces so the bar spans it: `√{x² + y²}`, not `√(x² + y²)` or `√25`.
+const BARE_RADICAND = /√[^\s{]/;
 // SVG text drops leading and trailing spaces and merges doubled ones, which would shift the measured letter positions.
 const ODD_SPACING = /^\s|\s$|\s{2}/;
 
@@ -20,7 +22,9 @@ export function symbolWarnings(strings: Record<string, string>): string[] {
       warnings.push(`strings.en.json: "${key}": ${(error as Error).message}`);
       continue;
     }
-    if (hasVecMarker(value) && ODD_SPACING.test(value)) {
+    if (BARE_RADICAND.test(value)) {
+      warnings.push(`strings.en.json: "${key}" (${value}) has a radicand without braces; write √{…} so the bar spans it`);
+    } else if (hasVecMarker(value) && ODD_SPACING.test(value)) {
       warnings.push(`strings.en.json: "${key}" (${JSON.stringify(value)}) has a leading, trailing or doubled space; SVG collapses it and the arrows would land on the wrong letter`);
     } else if (ARROW_ON_CODE.test(value)) {
       warnings.push(`strings.en.json: "${key}" (${value}) puts a vector arrow on a member access; code stays plain (a.x, not {a}.x)`);

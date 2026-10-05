@@ -21,10 +21,14 @@ test("decorative separators are not flagged, even beside a number", () => {
 });
 
 test("vector markers are fine on math, flagged on code and when malformed", () => {
-  assert.deepEqual(flagged({ a: "{a} · {b}", b: "{a} · {b} = a.x * b.x + a.y * b.y", c: "|{v}| = √(x² + y²)", d: "2{v}" }), []);
+  assert.deepEqual(flagged({ a: "{a} · {b}", b: "{a} · {b} = a.x * b.x + a.y * b.y", c: "|{v}| = √{x² + y²}", d: "2{v}" }), []);
   assert.deepEqual(flagged({ a: "{a}.x * {b}.x", b: "{a · {b}", c: "a}" }), ["a", "b", "c"]);
 });
 
 test("a marked string with a leading, trailing or doubled space is flagged", () => {
   assert.deepEqual(flagged({ a: "{a} ·", b: " {a}", c: "{a}  {b}", d: "{a} {b}", e: "a  b" }), ["b", "c"]);
+});
+
+test("a radical sign needs braces around its radicand", () => {
+  assert.deepEqual(flagged({ a: "√(x² + y²)", b: "√25", c: "√{x² + y²}", d: "√", e: "|{v}| = √{x² + y²}", f: "√π", g: "√−1" }), ["a", "b", "f", "g"]);
 });
