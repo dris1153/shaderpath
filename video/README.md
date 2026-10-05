@@ -47,16 +47,16 @@ content/lessons/<track>/<slug>/youtube/      pushed
     metadata.md              Studio title and description (English also: tags, quizzes)
     subtitles.vtt, audio.mp3, timing.json, strings.json
     site.mp3                 fitted languages: mono 64 kbps dub the site plays
-media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 + a full copy of the tree above
+media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 (English picture + mono voice, no subtitles) + a full copy of the tree above
   final/video.<lang>.mp4      per language: the English picture + that language's voice + soft subtitles in one file (pnpm final)
 media/shared/outro/outro.mp4                 gitignored: the shared like/subscribe outro, 14 s, picture only
 content/shared/outro/outro.<lang>.mp3        pushed: the outro's voice per language (one picture, a voice each)
 ```
 
-- **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). The copy is derived and never deleted from; `content/` is the one to edit.
+- **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). `video.mp4` is the English picture (`out/<slug>/en/video.mp4`, copied) plus the mono English voice as AAC 128k, so its level (about −16.6 LUFS) matches the dubs; it has no subtitle track, YouTube takes `subtitles.vtt`. The copy is derived and never deleted from; `content/` is the one to edit.
 - **Source of truth.** `video/out/` and `video/public/generated/` are caches. Delete them any time; `pnpm video:restore <slug>` rebuilds the voice, subtitles, timing, strings and thumbnail backgrounds from `content/.../youtube/`, and a render recreates the picture and the mp4. It keeps a cache file that differs from `youtube/` unless you pass `--force`. A fresh clone therefore needs no TTS credits, only a render.
 - **Who writes what.** `pnpm tts` mirrors the voice, subtitles, timing and strings; `pnpm thumbnail-bg` mirrors the backgrounds; `pnpm thumbnail <slug> --pick <n>` keeps the chosen thumbnail; `pnpm youtube` writes the rest and fills `media/`.
-- **Not stored:** the TTS raw cache (only edited scenes cost characters again), the picture-only `video.mp4` and the preview renders. The mp4 is only in `media/`, so it is lost with the machine; it can be re-rendered, and YouTube holds the upload.
+- **Not stored:** the TTS raw cache (only edited scenes cost characters again), the picture-only `out/<slug>/<lang>/video.mp4` and the preview renders. The mp4 is only in `media/`, so it is lost with the machine; it can be re-rendered, and YouTube holds the upload.
 - **No Git LFS.** Nothing large is pushed. Audio is about 12.5 MB per lesson (English, Vietnamese and the site dub).
 - **Site dub.** The build (`pnpm build`, and `pnpm dev` on start) runs `pnpm sync:dubs` in the repo root. It copies each `languages/<lang>/site.mp3` to `public/videos/<slug>/audio.<lang>.mp3`, which is gitignored. A host needs no ffmpeg.
 
@@ -167,7 +167,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` at 1280×720 (always 1×, so stills stay comparable byte for byte) |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
-| `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and `video.mp4` plus a full copy of it into `media/`): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
+| `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and, in `media/`, `video.mp4` built from the English picture and `voice.mp3`, plus a full copy of the tree): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
 | `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
@@ -195,7 +195,7 @@ tracks and captions).
    - `--model` is required for ElevenLabs, because the default model is English-first and has no Vietnamese.
    - Output: `public/generated/<slug>/<lang>/{voice.mp3, subs.vtt, timing.json, strings.json}`.
 3. **Package.** Run `pnpm youtube <slug>`. It writes the lesson's `youtube/` folder and the upload kit in `media/` (see above):
-   - `media/.../video.mp4`: the English render. Upload it once.
+   - `media/.../video.mp4`: the English picture with the mono English voice. Upload it once.
    - `languages/<lang>/subtitles.vtt` for every language: Studio → Languages → add subtitles. Any channel can do this. Upload ours rather than relying on auto-translated captions: ours follow the dub's own timing.
    - `languages/<lang>/audio.mp3` for each fitted language: Studio → Languages → Dub. This needs multi-language audio, which YouTube opens to channels gradually. It lasts as long as the video to within a few milliseconds.
    - `languages/<lang>/metadata.md`: that language's title and description, ready to paste.

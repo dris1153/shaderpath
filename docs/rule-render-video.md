@@ -7,7 +7,7 @@ surprises you.
 
 ## Setup on a fresh clone
 
-- **`media/` is gitignored and gone after a clone.** Rebuild it by rendering, not by downloading from YouTube: the upload has the voice baked in, is re-encoded, and has no picture-only version.
+- **`media/` is gitignored and gone after a clone.** Rebuild it by rendering, not by downloading from YouTube: the upload has the voice baked in, is re-encoded, and has no picture-only version (`out/<slug>/en/video.mp4` is the picture-only render).
 - **Two installs.** `pnpm install` in the repo root and again in `video/` (its own workspace and lockfile).
 - **`pnpm final` and `pnpm qc` need a full ffmpeg on `PATH`** with `drawtext`, `tile`, `ebur128` and the `mov_text` encoder. Remotion's bundled ffmpeg is not enough. On Windows: `winget install Gyan.FFmpeg`. A shell opened before the install does not see it; open a new one, or in PowerShell reload `PATH` from the Machine and User environment.
 - **Rebuild order per lesson** (from `video/`, one lesson at a time):
@@ -60,7 +60,7 @@ surprises you.
 - **Stills stay 1×** and thumbnails stay 1280×720, so the byte-for-byte baselines and the YouTube thumbnail size are unaffected.
 - **Measured on a 150-frame sample** (`vector-basics`, frames 5500 to 5649): 2.0 s at 1×, 4.3 s at 2× (2.1× slower, not 4×), video bitrate 0.52 to 1.21 Mbps, and a downscaled 2× frame matches the 1× still at 36.3 dB PSNR (a 1× video frame against the same still gives 34.7 dB, the cost of compression alone).
 - **Render English only** (`pnpm render <slug>`). `pnpm final <slug>` builds every language's `final/video.<lang>.mp4` from that English picture plus the language's committed `audio.mp3` (encoded to AAC 128k mono) and `subtitles.vtt`, so no per-language render is needed. Inko's mouth therefore follows English in the Vietnamese file; a lip-synced picture would need `pnpm render <slug> vi` (Inko uses the locale's own words, `video/src/mascot/Inko.tsx`), which still works but nothing consumes it. `final` refuses a voice whose length differs from the picture by more than 0.1 s.
-- **Check the loudness of a mux against the voice file, not against an old preview.** Remotion's `final.mp4` carries the mono voice as 2-channel AAC and measures about 3 LU quieter (−19.7 LUFS) than `audio.mp3` (about −16.6 LUFS, the level `qc` approves); the files from `pnpm final` carry the mono voice and measure the same, within 0.2 LU.
+- **Check the loudness of a mux against the voice file, not against an old preview.** Remotion's `final.mp4` carries the mono voice as 2-channel AAC and measures about 3 LU quieter (−19.7 LUFS) than `audio.mp3` (about −16.6 LUFS, the level `qc` approves); the files from `pnpm final` carry the mono voice and measure the same, within 0.2 LU. So does the upload file `media/.../youtube/video.mp4`: `pnpm youtube` builds it from the English picture and `voice.mp3`, not from `final.mp4`, so the English track of the upload is as loud as the Vietnamese dub (YouTube lowers loud audio but never raises quiet audio).
 - **`pnpm qc` thresholds were calibrated at 1×.** It scales every frame to 160×90, so a 2× render averages more pixels per sample and reads quieter. A "nothing still > 3 s" failure on a 2× render means the scene really is near-static (the `projection` scene of lesson 3 had 4 s of idle-only motion); give it a little motion rather than lowering `STILL`.
 - `pnpm outro` renders the `dummy` fixture through the same path, so `media/shared/outro/outro.mp4` becomes 1440p when it is run again. Nothing in the repo consumes that file.
 

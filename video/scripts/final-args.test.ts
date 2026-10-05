@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { finalArgs, languageTag } from "./final-args";
+import { finalArgs, languageTag, uploadArgs } from "./final-args";
 
 test("language tags are ISO 639-2; an unknown language is an error", () => {
   assert.equal(languageTag("en"), "eng");
@@ -25,4 +25,24 @@ test("the mux copies the picture, encodes the voice to AAC, adds the subtitles a
   assert.ok(args.includes("+faststart"));
   assert.equal(args.at(-1), "out.mp4");
   assert.throws(() => finalArgs("a", "b", "c", "d", "xx"), /no language tag/);
+});
+
+test("the upload file is the picture copied plus the voice as AAC, with no subtitle track", () => {
+  const args = uploadArgs("pic.mp4", "voice.mp3", "out.mp4");
+  const at = (flag: string) => args[args.indexOf(flag) + 1];
+  const inputs = args.flatMap((a, i) => (a === "-i" ? [args[i + 1]] : []));
+  assert.deepEqual(inputs, ["pic.mp4", "voice.mp3"]);
+  const maps = args.flatMap((a, i) => (a === "-map" ? [args[i + 1]] : []));
+  assert.deepEqual(maps, ["0:v", "1:a"]);
+  assert.equal(at("-c:v"), "copy");
+  assert.equal(at("-c:a"), "aac");
+  assert.equal(at("-b:a"), "128k");
+  assert.ok(!args.includes("-c:s") && !args.includes("mov_text"));
+  assert.ok(args.includes("+faststart"));
+  assert.equal(args.at(-1), "out.mp4");
+});
+
+test("the upload file and the language finals encode the voice with the same flags", () => {
+  const pick = (args: string[]) => ["-c:v", "-c:a", "-b:a"].map((f) => args[args.indexOf(f) + 1]);
+  assert.deepEqual(pick(uploadArgs("p", "a", "o")), pick(finalArgs("p", "a", "s", "o", "en")));
 });

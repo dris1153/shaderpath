@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Timing } from "../src/scene/timing";
 import { copyKit, finalsDir, mediaDir, mirrorLanguage, mirrorThumbnails } from "./lesson-assets";
+import { uploadArgs } from "./final-args";
 import { ffmpeg, generatedDir, lessonSource, outDir, parseArgs, ROOT } from "./remotion";
 import { outroAt, readYoutubeSource, renderMetadata, renderUploadNotes, validateYoutube, type Loc } from "./youtube-meta";
 
@@ -10,7 +11,7 @@ import { outroAt, readYoutubeSource, renderMetadata, renderUploadNotes, validate
 // content/lessons/<track>/<slug>/youtube/ (everything below except the video), then
 // completes the gitignored upload kit media/lessons/<track>/<slug>/youtube/: the same
 // tree plus
-//   video.mp4                      the English render (picture + English voice): upload this
+//   video.mp4                      the English picture + the mono English voice (languages/en/audio.mp3, AAC): upload this
 // Layout:
 //   thumbnail.png                  chosen with `pnpm thumbnail <slug> --pick <n>`
 //   thumbnail-src/                 the paid thumbnail backgrounds
@@ -23,8 +24,8 @@ const [slug] = parseArgs("pnpm youtube <slug>", 1) as [string];
 const finals = finalsDir(slug);
 if (!finals) throw new Error(`"${slug}" has no lesson folder (content/lessons/*/${slug}/): fixtures cannot be packaged`);
 const master = outDir(slug, "en");
-const upload = path.join(master, "final.mp4");
-if (!fs.existsSync(upload)) throw new Error(`no English render at ${upload}; run pnpm render ${slug} en`);
+const picture = path.join(master, "video.mp4");
+if (!fs.existsSync(picture)) throw new Error(`no English render at ${picture}; run pnpm render ${slug} en`);
 const readTiming = (dir: string) => JSON.parse(fs.readFileSync(path.join(dir, "timing.json"), "utf8")) as Timing;
 const timing = readTiming(master);
 const scenes = JSON.stringify(timing.scenes);
@@ -63,7 +64,8 @@ const notes = renderUploadNotes(timing, slug);
 fs.mkdirSync(finals, { recursive: true });
 const kit = mediaDir(slug)!;
 fs.mkdirSync(kit, { recursive: true });
-fs.copyFileSync(upload, path.join(kit, "video.mp4"));
+// Not Remotion's final.mp4: its 2-channel mix of the voice is about 3 LU quieter than the voice file the dubs use.
+ffmpeg(uploadArgs(picture, path.join(generatedDir(slug, "en"), "voice.mp3"), path.join(kit, "video.mp4")));
 mirrorThumbnails(generated, path.join(finals, "thumbnail-src"));
 for (const lang of ["en", ...langs]) {
   const dir = path.join(finals, "languages", lang);
