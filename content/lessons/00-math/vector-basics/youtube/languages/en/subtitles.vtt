@@ -85,271 +85,288 @@ Placed tip to tail, the sum is the
 straight arrow from start to finish.
 
 19
-00:01:14.433 --> 00:01:19.700
+00:01:14.433 --> 00:01:19.633
 Walk b first, then a,
 and you land in the same place.
 
 20
-00:01:19.700 --> 00:01:23.733
+00:01:19.633 --> 00:01:23.600
 The two paths make a parallelogram,
 and the sum is its diagonal.
 
 21
-00:01:23.733 --> 00:01:27.100
-In numbers, add the parts: (3,
+00:01:23.600 --> 00:01:26.000
+In numbers, add the parts.
 
 22
-00:01:27.100 --> 00:01:32.167
-1) plus (−2, 4) gives (1, 5).
+00:01:26.000 --> 00:01:29.033
+Here a is the vector (3, 1).
 
 23
-00:01:33.300 --> 00:01:36.067
-Subtraction answers a game question:
+00:01:29.033 --> 00:01:32.200
+And b is the vector (−2, 4).
 
 24
-00:01:36.067 --> 00:01:39.200
+00:01:32.200 --> 00:01:35.633
+Together they give the vector (1, 5).
+
+25
+00:01:36.833 --> 00:01:39.300
+Subtraction answers a game question:
+
+26
+00:01:39.300 --> 00:01:42.333
 which way should the enemy
 move to reach the player?
 
-25
-00:01:39.200 --> 00:01:41.400
+27
+00:01:42.333 --> 00:01:44.567
 Take player − enemy.
 
-26
-00:01:41.400 --> 00:01:45.400
+28
+00:01:44.567 --> 00:01:48.533
 It's the vector from the enemy
 to the player, tail at the enemy,
 
-27
-00:01:45.400 --> 00:01:50.100
+29
+00:01:48.533 --> 00:01:52.967
 tip on the player. Move along it,
 and the slime closes in.
 
-28
-00:01:50.100 --> 00:01:54.400
+30
+00:01:52.967 --> 00:01:57.300
 Swap the order, enemy − player,
 and the arrow points away.
 
-29
-00:01:54.433 --> 00:01:56.800
+31
+00:01:57.333 --> 00:01:59.667
 The slime turns its back and runs.
 
-30
-00:01:56.800 --> 00:02:00.033
+32
+00:01:59.667 --> 00:02:02.933
 The code still runs, so the bug is silent.
 
-31
-00:02:00.033 --> 00:02:03.233
+33
+00:02:02.933 --> 00:02:06.100
 Always take the target
 minus your own position.
 
-32
-00:02:04.333 --> 00:02:09.033
+34
+00:02:07.133 --> 00:02:11.833
 Multiplying by a number scales a vector:
 every part gets multiplied.
 
-33
-00:02:09.033 --> 00:02:11.967
+35
+00:02:11.833 --> 00:02:14.733
 Times two stretches it
 along the same line.
 
-34
-00:02:11.967 --> 00:02:13.800
+36
+00:02:14.733 --> 00:02:16.600
 Times a half shrinks it.
 
-35
-00:02:13.800 --> 00:02:17.400
+37
+00:02:16.600 --> 00:02:20.200
 A negative number flips it a full 180°.
 
-36
-00:02:17.400 --> 00:02:23.233
-So (4, −2) times −1.5 gives (−6, 3):
+38
+00:02:20.200 --> 00:02:23.133
+Take the vector (4, −2).
 
-37
-00:02:23.233 --> 00:02:26.800
+39
+00:02:23.167 --> 00:02:28.167
+Multiply it by −1.5,
+and you get the vector (−6, 3):
+
+40
+00:02:28.167 --> 00:02:31.433
 one and a half times as long,
 pointing the other way.
 
-38
-00:02:26.800 --> 00:02:32.600
+41
+00:02:31.433 --> 00:02:37.433
 Add, subtract and scale: three tiny
 functions behind most simple game motion.
 
-39
-00:02:33.500 --> 00:02:35.267
+42
+00:02:38.867 --> 00:02:40.633
 How long is a vector?
 
-40
-00:02:35.267 --> 00:02:40.267
+43
+00:02:40.633 --> 00:02:45.633
 Its x and y are the legs of a right
 triangle, so Pythagoras answers:
 
-41
-00:02:40.267 --> 00:02:44.933
+44
+00:02:45.633 --> 00:02:50.300
 |v| = √(x² + y²).
 
-42
-00:02:44.933 --> 00:02:48.833
+45
+00:02:50.300 --> 00:02:54.200
 For (3, 4), that's the
 root of nine plus sixteen,
 
-43
-00:02:48.833 --> 00:02:51.733
+46
+00:02:54.200 --> 00:02:57.100
 root twenty-five: five.
 
-44
-00:02:51.733 --> 00:02:55.900
+47
+00:02:57.100 --> 00:03:01.267
 In 3D, add z squared under the root.
 
-45
-00:02:55.900 --> 00:03:01.167
+48
+00:03:01.267 --> 00:03:06.533
 A handy trick: to compare two lengths,
 compare the squared lengths instead.
 
-46
-00:03:01.167 --> 00:03:03.533
+49
+00:03:06.533 --> 00:03:08.900
 Same answer, with no square root,
 
-47
-00:03:03.533 --> 00:03:08.100
+50
+00:03:08.900 --> 00:03:13.467
 which costs more than a
 multiply on the CPU and the GPU.
 
-48
-00:03:09.033 --> 00:03:12.233
+51
+00:03:14.400 --> 00:03:17.567
 Normalizing divides a
 vector by its own length.
 
-49
-00:03:12.233 --> 00:03:17.467
+52
+00:03:17.567 --> 00:03:22.667
 What's left is a unit vector:
 same direction, length exactly one,
 
-50
-00:03:17.467 --> 00:03:20.000
+53
+00:03:22.667 --> 00:03:25.167
 its tip on the circle of radius one.
 
-51
-00:03:20.000 --> 00:03:25.567
-Back to the race. Holding
-W and D adds (0, 1) and (1,
-
-52
-00:03:25.567 --> 00:03:27.900
-0) into (1, 1),
-
-53
-00:03:27.900 --> 00:03:31.933
-and its length is √2, about 1.41.
-
 54
-00:03:31.933 --> 00:03:33.967
-That's the forty-one percent.
+00:03:25.167 --> 00:03:30.233
+Back to the race. Holding
+W adds the vector (0, 1).
 
 55
-00:03:33.967 --> 00:03:38.433
+00:03:30.233 --> 00:03:33.400
+Holding D adds the vector (1, 0).
+
+56
+00:03:33.400 --> 00:03:35.600
+Together: the vector (1, 1),
+
+57
+00:03:35.600 --> 00:03:39.033
+and its length is √2, about 1.41.
+
+58
+00:03:39.033 --> 00:03:40.933
+That's the forty-one percent.
+
+59
+00:03:40.933 --> 00:03:45.167
 Normalize before multiplying by speed,
 and both cover the same distance.
 
-56
-00:03:38.433 --> 00:03:44.433
+60
+00:03:45.167 --> 00:03:51.167
 One trap: the slime lands exactly on Inko,
 and player − enemy is the zero vector.
 
-57
-00:03:44.600 --> 00:03:49.433
+61
+00:03:51.533 --> 00:03:56.400
 A hand-written normalize divides
 zero by zero, giving NaN.
 
-58
-00:03:49.433 --> 00:03:53.167
+62
+00:03:56.400 --> 00:04:00.233
 That NaN spreads through every step,
 and the slime just vanishes,
 
-59
-00:03:53.167 --> 00:03:55.300
+63
+00:04:00.233 --> 00:04:02.300
 with no error anywhere.
 
-60
-00:03:55.300 --> 00:03:57.467
+64
+00:04:02.300 --> 00:04:04.433
 So check the length before you divide,
 
-61
-00:03:57.467 --> 00:04:01.000
+65
+00:04:04.433 --> 00:04:07.833
 and the same goes for the
 input when no key is held.
 
-62
-00:04:01.833 --> 00:04:05.433
+66
+00:04:09.033 --> 00:04:12.633
 The same x, y, z can play three roles.
 
-63
-00:04:05.433 --> 00:04:08.533
+67
+00:04:12.633 --> 00:04:15.733
 A position is a place,
 measured from the origin.
 
-64
-00:04:08.533 --> 00:04:13.700
+68
+00:04:15.733 --> 00:04:20.900
 A direction only says which way, usually
 with length one, and it has no position:
 
-65
-00:04:13.700 --> 00:04:18.133
+69
+00:04:20.900 --> 00:04:25.333
 slide a box, and its top
 face's normal stays the same.
 
-66
-00:04:18.133 --> 00:04:21.267
+70
+00:04:25.333 --> 00:04:28.467
 A velocity is direction
 and speed together:
 
-67
-00:04:21.267 --> 00:04:23.867
+71
+00:04:28.467 --> 00:04:31.067
 twice as long means twice as fast.
 
-68
-00:04:23.867 --> 00:04:26.467
+72
+00:04:31.067 --> 00:04:33.667
 And here's the heart of
 the simplest game loop:
 
-69
-00:04:26.467 --> 00:04:31.133
+73
+00:04:33.667 --> 00:04:38.333
 every frame, position += velocity * dt.
 
-70
-00:04:31.133 --> 00:04:34.367
+74
+00:04:38.333 --> 00:04:41.567
 Just addition and scaling, with new names.
 
-71
-00:04:34.900 --> 00:04:39.400
+75
+00:04:42.100 --> 00:04:46.600
 So: a vector is a move,
 an arrow or a tuple.
 
-72
-00:04:39.400 --> 00:04:43.267
+76
+00:04:46.600 --> 00:04:50.467
 Add tip to tail, subtract to
 point from one place to another,
 
-73
-00:04:43.267 --> 00:04:49.100
+77
+00:04:50.467 --> 00:04:56.300
 scale to stretch or flip, Pythagoras for
 length, and normalize for pure direction.
 
-74
-00:04:49.100 --> 00:04:55.100
+78
+00:04:56.300 --> 00:05:02.300
 Watch for the traps: diagonal speed,
 subtraction order, and the zero vector.
 
-75
-00:04:55.367 --> 00:04:58.033
+79
+00:05:02.567 --> 00:05:05.233
 Now open the Vector Addition
 demo in this lesson,
 
-76
-00:04:58.033 --> 00:05:01.200
+80
+00:05:05.233 --> 00:05:08.400
 and try to shrink the sum
 arrow to almost nothing.
 
-77
-00:05:01.200 --> 00:05:03.067
+81
+00:05:08.400 --> 00:05:10.267
 See you next time!

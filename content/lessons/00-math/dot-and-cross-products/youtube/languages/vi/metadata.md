@@ -29,14 +29,14 @@ https://shaderpath.drisdev.io/vi
 Chương
 0:00 Lính gác thấy bạn thế nào
 0:22 Dot product: nhân rồi cộng
-0:50 Góc và dấu
-1:29 Giải bài toán vùng nhìn
-2:10 Phép chiếu: bóng của a
-2:37 Cross product và quy tắc bàn tay phải
-3:09 Pháp tuyến tam giác và thứ tự đỉnh
-3:55 Chiếu sáng với max(0, N · L)
-4:31 Tóm tắt
-5:04 Cảm ơn bạn đã xem
+0:57 Góc và dấu
+1:35 Giải bài toán vùng nhìn
+2:16 Phép chiếu: bóng của a
+2:43 Cross product và quy tắc bàn tay phải
+3:16 Pháp tuyến tam giác và thứ tự đỉnh
+4:01 Chiếu sáng với max(0, N · L)
+4:37 Tóm tắt
+5:10 Cảm ơn bạn đã xem
 
 Phụ đề: English, Tiếng Việt
 Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.

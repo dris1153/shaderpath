@@ -29,14 +29,14 @@ https://shaderpath.drisdev.io/en
 Chapters
 0:00 How the guard sees you
 0:22 Dot product: multiply and add
-0:50 The angle and the sign
-1:29 Solving the vision cone
-2:10 Projection: a's shadow
-2:37 Cross product and the right-hand rule
-3:09 Triangle normals and winding
-3:55 Lighting with max(0, N · L)
-4:31 Recap
-5:04 Thanks for watching
+0:57 The angle and the sign
+1:35 Solving the vision cone
+2:16 Projection: a's shadow
+2:43 Cross product and the right-hand rule
+3:16 Triangle normals and winding
+4:01 Lighting with max(0, N · L)
+4:37 Recap
+5:10 Thanks for watching
 
 Subtitles: English, Tiếng Việt
 
@@ -54,7 +54,7 @@ dot product, cross product, vector math, game math, webgl, three.js, threejs, gl
 
 The time after each quiz number goes in Studio's time field (minutes:seconds:frames); ✓ marks the correct answer.
 
-### Quiz 1 · 0:49:00
+### Quiz 1 · 0:56:00
 ```
 Question: (2, 3) · (−1, 4) = ?
 ✓ Answer 1: 10
@@ -62,7 +62,7 @@ Question: (2, 3) · (−1, 4) = ?
   Answer 3: 14
 Explanation: 2 · (−1) + 3 · 4 = −2 + 12 = 10. A dot product is a number, not a vector.
 ```
-### Quiz 2 · 1:28:00
+### Quiz 2 · 1:34:00
 ```
 Question: For two unit vectors, a · b = 0 means they are…
   Answer 1: Pointing the same way
@@ -70,7 +70,7 @@ Question: For two unit vectors, a · b = 0 means they are…
   Answer 3: Pointing opposite ways
 Explanation: For unit vectors a · b = cos θ, and cos 90° = 0.
 ```
-### Quiz 3 · 2:09:00
+### Quiz 3 · 2:15:00
 ```
 Question: The guard's code skips normalize. Who gets seen by mistake?
 ✓ Answer 1: A faraway Inko outside the cone
@@ -78,7 +78,7 @@ Question: The guard's code skips normalize. Who gets seen by mistake?
   Answer 3: Only an Inko standing behind
 Explanation: Without normalizing, the dot grows with distance, so a far Inko beats 0.87 even at a wide angle.
 ```
-### Quiz 4 · 2:36:00
+### Quiz 4 · 2:42:00
 ```
 Question: Make b twice as long. The shadow of a on b's direction…
   Answer 1: Doubles
@@ -86,7 +86,7 @@ Question: Make b twice as long. The shadow of a on b's direction…
   Answer 3: Halves
 Explanation: The shadow a · b̂ uses only b's direction, not its length.
 ```
-### Quiz 5 · 3:08:00
+### Quiz 5 · 3:15:00
 ```
 Question: a × b = (0, 0, 1). What is b × a?
   Answer 1: (0, 0, 1)
@@ -94,7 +94,7 @@ Question: a × b = (0, 0, 1). What is b × a?
   Answer 3: (1, 0, 0)
 Explanation: Swapping the order flips the sign: b × a = −(a × b).
 ```
-### Quiz 6 · 3:54:00
+### Quiz 6 · 4:00:00
 ```
 Question: Which one gives the normal of triangle ABC?
 ✓ Answer 1: normalize((B − A) × (C − A))
@@ -102,7 +102,7 @@ Question: Which one gives the normal of triangle ABC?
   Answer 3: normalize(A + B + C)
 Explanation: Cross two edges from the same corner, then normalize. A dot would give a number, not a direction.
 ```
-### Quiz 7 · 4:30:00
+### Quiz 7 · 4:36:00
 ```
 Question: A surface faces away from the light: N · L = −0.5. Its brightness is…
   Answer 1: −0.5

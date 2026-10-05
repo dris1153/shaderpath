@@ -30,12 +30,12 @@ Chapters
 0:00 Why the diagonal is faster
 0:21 What a vector is
 1:02 Adding: tip to tail
-1:33 Subtracting: which way to go
-2:04 Scaling: stretch and flip
-2:33 Length and Pythagoras
-3:09 Normalize, and two classic bugs
-4:01 Position, direction, velocity
-4:34 Recap
+1:36 Subtracting: which way to go
+2:07 Scaling: stretch and flip
+2:38 Length and Pythagoras
+3:14 Normalize, and two classic bugs
+4:09 Position, direction, velocity
+4:42 Recap
 
 Subtitles: English, Tiếng Việt
 
@@ -61,7 +61,7 @@ Question: Two arrows with the same length and direction, drawn at different plac
   Answer 3: Opposite vectors
 Explanation: A vector is a displacement: only its length and direction count, not where it starts.
 ```
-### Quiz 2 · 1:32:00
+### Quiz 2 · 1:35:00
 ```
 Question: (2, −1) + (−3, 4) = ?
   Answer 1: (5, −5)
@@ -69,7 +69,7 @@ Question: (2, −1) + (−3, 4) = ?
 ✓ Answer 3: (−1, 3)
 Explanation: Add the parts: 2 + (−3) = −1 and −1 + 4 = 3.
 ```
-### Quiz 3 · 2:03:00
+### Quiz 3 · 2:06:00
 ```
 Question: Which vector points from the enemy to the player?
 ✓ Answer 1: player − enemy
@@ -77,7 +77,7 @@ Question: Which vector points from the enemy to the player?
   Answer 3: player + enemy
 Explanation: a − b runs from b to a. Swap the order and the enemy runs away instead.
 ```
-### Quiz 4 · 2:32:00
+### Quiz 4 · 2:37:00
 ```
 Question: What does multiplying a vector by −1.5 do?
   Answer 1: Shrinks it to length 1.5
@@ -85,7 +85,7 @@ Question: What does multiplying a vector by −1.5 do?
 ✓ Answer 3: Flips it, 1.5× as long
 Explanation: A negative number flips the arrow 180°, and |−1.5| = 1.5 makes it one and a half times as long.
 ```
-### Quiz 5 · 3:08:00
+### Quiz 5 · 3:13:00
 ```
 Question: To check which of two vectors is longer, the cheapest correct way compares…
   Answer 1: Their x parts only
@@ -93,7 +93,7 @@ Question: To check which of two vectors is longer, the cheapest correct way comp
   Answer 3: Their lengths, √(x² + y²)
 Explanation: x² + y² keeps the same order as the lengths, and skips the square root.
 ```
-### Quiz 6 · 3:38:00
+### Quiz 6 · 3:45:00
 ```
 Question: W gives (0, 1) and D gives (1, 0). Without normalizing, diagonal movement is…
 ✓ Answer 1: About 1.41× as fast
@@ -101,7 +101,7 @@ Question: W gives (0, 1) and D gives (1, 0). Without normalizing, diagonal movem
   Answer 3: Just as fast
 Explanation: (1, 1) has length √2 ≈ 1.41. Normalize the sum before multiplying by the speed (and skip it when no key is held).
 ```
-### Quiz 7 · 4:00:00
+### Quiz 7 · 4:08:00
 ```
 Question: An enemy stands exactly on the player. Dividing player − enemy by its length gives…
   Answer 1: An error message
@@ -109,7 +109,7 @@ Question: An enemy stands exactly on the player. Dividing player − enemy by it
 ✓ Answer 3: NaN, and the enemy silently vanishes
 Explanation: The length is 0, so it divides 0 by 0: NaN. NaN spreads with no error, so check the length first.
 ```
-### Quiz 8 · 4:18:00
+### Quiz 8 · 4:25:00
 ```
 Question: A box slides from the origin to (10, 0, 0). Its top normal was (0, 1, 0). Now it is…
   Answer 1: (10, 1, 0)

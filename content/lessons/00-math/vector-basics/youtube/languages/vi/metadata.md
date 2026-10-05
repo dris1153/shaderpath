@@ -30,12 +30,12 @@ Chương
 0:00 Vì sao đi chéo nhanh hơn
 0:21 Vector là gì
 1:02 Cộng: nối đuôi nhau
-1:33 Trừ: đi hướng nào
-2:04 Nhân vô hướng: co giãn và lật chiều
-2:33 Độ dài và Pythagoras
-3:09 Normalize và hai lỗi kinh điển
-4:01 Vị trí, hướng, vận tốc
-4:34 Tóm tắt
+1:36 Trừ: đi hướng nào
+2:07 Nhân vô hướng: co giãn và lật chiều
+2:38 Độ dài và Pythagoras
+3:14 Normalize và hai lỗi kinh điển
+4:09 Vị trí, hướng, vận tốc
+4:42 Tóm tắt
 
 Phụ đề: English, Tiếng Việt
 Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.
