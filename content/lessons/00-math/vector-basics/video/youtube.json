@@ -189,7 +189,7 @@
   "thumbnail": {
     "lines": [
       "VECTORS",
-      "√2 ≈ 1.41"
+      "√{2} ≈ 1.41"
     ],
     "code": "normalize(v)",
     "background": "a few colourful vector arrows of different lengths placed tip to tail; a small square grid; a little dashed parallelogram; rounded keyboard keys with no letters on them"
