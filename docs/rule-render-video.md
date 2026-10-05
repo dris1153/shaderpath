@@ -11,7 +11,7 @@ surprises you.
 - **Two installs.** `pnpm install` in the repo root and again in `video/` (its own workspace and lockfile).
 - **`pnpm final` and `pnpm qc` need a full ffmpeg on `PATH`** with `drawtext`, `tile`, `ebur128` and the `mov_text` encoder. Remotion's bundled ffmpeg is not enough. On Windows: `winget install Gyan.FFmpeg`. A shell opened before the install does not see it; open a new one, or in PowerShell reload `PATH` from the Machine and User environment.
 - **Rebuild order per lesson** (from `video/`, one lesson at a time):
-  `pnpm video:restore <slug>` → `pnpm render <slug>` (English, 2560×1440) → `pnpm qc <slug>` → `pnpm youtube <slug>` → `pnpm final <slug>`. Add `pnpm render <slug> vi` before `final` only if `final/video.vi.mp4` is wanted.
+  `pnpm video:restore <slug>` → `pnpm render <slug>` (English, 2560×1440) → `pnpm qc <slug>` → `pnpm youtube <slug>` → `pnpm final <slug>`.
   The shared outro is `pnpm outro en`. No TTS credits are needed, the voice is committed under `content/.../youtube/`.
 - **Never run `pnpm tts` on a lesson that already has a voice.** It costs credits, the TTS cache (`video/.cache/tts/`) is gitignored so a fresh clone re-voices every scene, and it rewrites the committed audio with slightly different samples.
 
@@ -34,7 +34,7 @@ surprises you.
 - **Read a vector as its own sentence.** Write the spoken text of every tuple as one sentence, with "the vector" in front and commas only inside the tuple: `Here a is the vector three, one. And b is the vector minus two, four.` Spoken as `three, one plus minus two, four`, the pause inside a tuple (0.63 s) was longer than the gap between tuples (none), so the tuples blurred into loose numbers: a listener reported "3 … −6 + 2 … 5" for `(3, −6) + (2, 5)`.
 - **Measure pauses from `public/generated/<slug>/<lang>/timing.json`:** for consecutive `words`, the gap is `(next.from - prev.to) / fps`. Inside a tuple it should be below about 0.25 s and at a full stop clearly longer. Some inner pauses still appear (0.4 to 0.6 s in `(0, 1)` and `(2, 2)`); the fitted Vietnamese reads sentence ends with gaps under 0.25 s. Numbers can only flag a problem, judge by ear.
 - **`pnpm tts` re-voices every scene when `video/.cache/tts/` is missing** (a fresh clone) and rewrites the committed audio, timing and subtitles. Once the cache exists, only edited scenes cost characters again. Count what will be sent with `spokenText()` from `video/scripts/script-parse.ts`, not with `wc` (markup inflates it).
-- **A re-voice moves everything:** scene lengths, cues, chapter times and quiz times in `metadata.md`, and `outroAt` in `upload-notes.md` change for real. Re-render English (and Vietnamese if you share `final/video.vi.mp4`), and keep those file changes.
+- **A re-voice moves everything:** scene lengths, cues, chapter times and quiz times in `metadata.md`, and `outroAt` in `upload-notes.md` change for real. Re-render English, run `pnpm youtube` and `pnpm final` again, and keep those file changes.
 - **The ElevenLabs key goes in the repo-root `.env.local`** (gitignored); `scripts/tts.ts` loads no other file (a key already in the process environment also works). Never put it in `.env.example` (tracked) or print it. Before a commit, check `git diff` for any `*_API_KEY=` line.
 
 ## Text on screen
@@ -58,14 +58,15 @@ surprises you.
 - **Renders are 2560×1440** (`RENDER_SCALE = 2` in `video/scripts/remotion.ts`, passed to `renderMedia`). The layout is hard-coded for 1280×720 and `timing.json` still says 1280×720: never change those, change the scale. YouTube serves at most the size of the uploaded file, so a 1280×720 upload tops out at 720p.
 - **Stills stay 1×** and thumbnails stay 1280×720, so the byte-for-byte baselines and the YouTube thumbnail size are unaffected.
 - **Measured on a 150-frame sample** (`vector-basics`, frames 5500 to 5649): 2.0 s at 1×, 4.3 s at 2× (2.1× slower, not 4×), video bitrate 0.52 to 1.21 Mbps, and a downscaled 2× frame matches the 1× still at 36.3 dB PSNR (a 1× video frame against the same still gives 34.7 dB, the cost of compression alone).
-- **Render English only** for YouTube (`pnpm render <slug>`). Inko's mouth uses the locale's own words (`video/src/mascot/Inko.tsx`), so a `vi` render is a different picture; render it only for `final/video.vi.mp4`. `pnpm final <slug>` skips a language that has no render, or whose render is older than the English one (it was made from an older picture); naming such a language explicitly is an error. Delete `final/video.<lang>.mp4` files of a stale language: `final` does not remove them.
+- **Render English only** (`pnpm render <slug>`). `pnpm final <slug>` builds every language's `final/video.<lang>.mp4` from that English picture plus the language's committed `audio.mp3` (encoded to AAC 128k mono) and `subtitles.vtt`, so no per-language render is needed. Inko's mouth therefore follows English in the Vietnamese file; a lip-synced picture would need `pnpm render <slug> vi` (Inko uses the locale's own words, `video/src/mascot/Inko.tsx`), which still works but nothing consumes it. `final` refuses a voice whose length differs from the picture by more than 0.1 s.
+- **Check the loudness of a mux against the voice file, not against an old preview.** Remotion's `final.mp4` carries the mono voice as 2-channel AAC and measures about 3 LU quieter (−19.7 LUFS) than `audio.mp3` (about −16.6 LUFS, the level `qc` approves); the files from `pnpm final` carry the mono voice and measure the same, within 0.2 LU.
 - **`pnpm qc` thresholds were calibrated at 1×.** It scales every frame to 160×90, so a 2× render averages more pixels per sample and reads quieter. A "nothing still > 3 s" failure on a 2× render means the scene really is near-static (the `projection` scene of lesson 3 had 4 s of idle-only motion); give it a little motion rather than lowering `STILL`.
 - `pnpm outro` renders the `dummy` fixture through the same path, so `media/shared/outro/outro.mp4` becomes 1440p when it is run again. Nothing in the repo consumes that file.
 
 ## After the render
 
 - **`pnpm youtube` and `pnpm outro` rewrite committed files with CRLF-only changes** (`core.autocrlf=true`), typically every `metadata.md` and `upload-notes.md`. Check with `git diff --ignore-space-at-eol --numstat`: an empty list is noise, so `git checkout --` those files. Real changes stay: the `strings.json` files after a strings edit, and the chapter times, quiz times and `outroAt` after a re-voice.
-- **`pnpm final` refuses a render older than the committed voice** (it compares `timing.json`). Render first, then `final`.
+- **`pnpm final` refuses an English render older than the committed voice** (it compares `timing.json`). Render first, then `final`.
 - **Do not re-upload by replacing a file.** YouTube Studio cannot swap the video of an existing upload. A new upload has a new id; update `content/lesson-videos.ts` and unlist the old one. The Vietnamese dub and subtitles stay valid when only the picture's text changed, because timing is unchanged.
 
 ## Running it on Windows

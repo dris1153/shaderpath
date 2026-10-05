@@ -48,7 +48,7 @@ content/lessons/<track>/<slug>/youtube/      pushed
     subtitles.vtt, audio.mp3, timing.json, strings.json
     site.mp3                 fitted languages: mono 64 kbps dub the site plays
 media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 + a full copy of the tree above
-  final/video.<lang>.mp4      per language: picture + voice + soft subtitles in one file (pnpm final)
+  final/video.<lang>.mp4      per language: the English picture + that language's voice + soft subtitles in one file (pnpm final)
 media/shared/outro/outro.mp4                 gitignored: the shared like/subscribe outro, 14 s, picture only
 content/shared/outro/outro.<lang>.mp3        pushed: the outro's voice per language (one picture, a voice each)
 ```
@@ -100,7 +100,7 @@ before money or time is spent.
 
 - **The layout is 1280×720 and the render is 2560×1440.** `RENDER_SCALE = 2` in `scripts/remotion.ts` goes to `renderMedia`; `timing.json` and every coordinate stay 1280×720, so change the scale, never the layout. YouTube serves at most the size of the uploaded file, so a 1280×720 upload is capped at 720p.
 - **1× stays for stills and thumbnails** (`pnpm stills`, `pnpm thumbnail`), so baselines compare byte for byte and thumbnails keep YouTube's 1280×720.
-- **English only by default.** Inko's mouth follows the locale's own words, so a Vietnamese render is a different picture; YouTube and the site use the English one (Vietnamese is an audio dub). Render `pnpm render <slug> vi` only to get `final/video.vi.mp4`. `pnpm final` skips a language with no render, or one older than the English render.
+- **English only.** YouTube and the site use the English picture (Vietnamese is an audio dub), and `pnpm final` builds `final/video.vi.mp4` from that same picture with the Vietnamese voice and subtitles, so Inko's mouth follows English in it. `pnpm render <slug> vi` (a picture lip-synced to Vietnamese) still works, but nothing consumes it.
 - **Cost (2026-10-05):** a 5-minute lesson renders in about 4 minutes; `video.mp4` is 74–76 MB (the same lessons were about 37 MB at 720p). The sample behind the choice: 2.1× slower than 1×, and a downscaled 2× frame matches the 1× still at 36 dB PSNR.
 - **Which lessons.** Lesson 1 (`cartesian-and-uv-space`) was uploaded at 720p and has not been re-rendered, so it is less sharp than lessons 2 and 3 (`vector-basics`, `dot-and-cross-products`), which are rendered at 1440p. Re-rendering it is a new upload with a new YouTube id.
 
@@ -162,7 +162,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 |---|---|
 | `pnpm video:lint <slug>` | Checks the script syntax and that every language keeps the English scenes, and that the scene code's strings and cues exist |
 | `pnpm tts <slug> en [--engine elevenlabs\|fish] [--voice <id>] [--model <id>] [--fresh]` | Voices the English master: `voice.mp3`, `timing.json`, `strings.json` and `subs.vtt` in `public/generated/<slug>/en/` |
-| `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) at **2560×1440** (`RENDER_SCALE = 2` in `scripts/remotion.ts`; the layout stays 1280×720) and copies the voice, subtitles and timing into `out/<slug>/<lang>/`. English is what YouTube and the site use. Render `vi` only when `final/video.vi.mp4` is wanted: Inko's mouth follows the locale's own words, so a `vi` render is lip-synced to Vietnamese and costs a second render |
+| `pnpm render <slug> [lang]` | Writes `final.mp4` (picture + voice) and `video.mp4` (picture only) at **2560×1440** (`RENDER_SCALE = 2` in `scripts/remotion.ts`; the layout stays 1280×720) and copies the voice, subtitles and timing into `out/<slug>/<lang>/`. English is what YouTube, the site and `pnpm final` use; a `vi` render is lip-synced to Vietnamese (Inko's mouth follows the locale's own words) and is only needed for a Vietnamese-lip-synced picture |
 | `… --fresh` | Ignores the TTS cache and re-voices every scene (for example after an ElevenLabs plan change, so the takes fall under the new plan's terms) |
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` at 1280×720 (always 1×, so stills stay comparable byte for byte) |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
@@ -171,7 +171,7 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
 | `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
-| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: that language's render (its picture and voice) with its subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (stream copy, seconds). Needs the system ffmpeg and the language's render (`pnpm render <slug> <lang>`); stops when the render is older than the committed voice. Default languages: en plus every voiced language whose render exists and is not older than the English one; the others are named and skipped |
+| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: the English picture (`out/<slug>/en/video.mp4`, copied) with that language's committed voice (`audio.mp3`, encoded to AAC 128k) and subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (seconds). Needs the system ffmpeg and the English render (`pnpm render <slug>`); stops when that render is older than the committed voice or when a voice and the picture differ by more than 0.1 s. Default languages: en plus every folder under `youtube/languages` that has an `audio.mp3` and a `subtitles.vtt` |
 | `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
