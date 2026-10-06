@@ -68,6 +68,8 @@ next-env.d.ts
 /media/
 # videos never go to git, even if copied into a lesson folder by hand
 content/**/*.mp4
+# the one exception: the shared outro clip every lesson is joined with
+!content/shared/outro/outro.mp4
 
 # agent notes under video/
 /video/.claude/
