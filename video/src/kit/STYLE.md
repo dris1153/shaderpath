@@ -13,7 +13,7 @@ Re-render `pnpm render style en` after any change to the kit or the mascot.
 **Safe areas** (`kit/stage.tsx` `SAFE`):
 - Key content stays between x 60–1220 and y 40–610.
 - The bottom 110 px belong to the player's subtitles.
-- In the outro's last seconds, the end-screen regions (`END_SCREEN` in `outro/Outro.tsx`) stay empty: Studio places its elements there.
+- In the outro's last seconds, the end-screen regions (`END_SCREEN` in `lessons/outro/Outro.tsx`) stay empty: Studio places its elements there.
 
 ## Colour roles (`kit/palette.ts`)
 

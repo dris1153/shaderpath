@@ -31,12 +31,12 @@ pnpm install
 | Working cache: renders and QC | `video/out/<slug>/<lang>/` (gitignored; re-render any time) |
 | TTS cache (raw provider responses) | `video/.cache/tts/` (gitignored) |
 
-The `dummy` and `style` lessons are pipeline fixtures, not lessons. Their scripts
+The `dummy`, `outro` and `style` lessons are pipeline fixtures, not lessons. Their scripts
 and strings sit next to their scene code.
 
 ## Finished files: `youtube/` and `media/`
 
-What you cannot cheaply re-create is kept in the repo, next to the lesson's `video/` source. **Videos are never pushed**; they live in a gitignored `media/` folder that mirrors `content/`.
+What you cannot cheaply re-create is kept in the repo, next to the lesson's `video/` source. **Videos are never pushed** (one exception: the shared outro clip, below); they live in a gitignored `media/` folder that mirrors `content/`.
 
 ```
 content/lessons/<track>/<slug>/youtube/      pushed
@@ -45,15 +45,18 @@ content/lessons/<track>/<slug>/youtube/      pushed
   upload-notes.md            language-neutral steps: end screen, outroAt (lessons with the outro)
   languages/<lang>/
     metadata.md              Studio title and description (English also: tags, quizzes)
-    subtitles.vtt, audio.mp3, timing.json, strings.json
+    subtitles.vtt, audio.mp3  with `outro: true`: the lesson plus the shared outro, joined
+    timing.json, strings.json  the lesson alone, never the outro
     site.mp3                 fitted languages: mono 64 kbps dub the site plays
 media/lessons/<track>/<slug>/youtube/        gitignored: video.mp4 (English picture + mono voice, no subtitles) + a full copy of the tree above
   final/video.<lang>.mp4      per language: the English picture + that language's voice + soft subtitles in one file (pnpm final)
-media/shared/outro/outro.mp4                 gitignored: the shared like/subscribe outro, 14 s, picture only
-content/shared/outro/outro.<lang>.mp3        pushed: the outro's voice per language (one picture, a voice each)
+content/shared/outro/                        pushed: the shared like/subscribe outro clip, 14.5 s
+  outro.mp4                  the silent 2560x1440 picture (4.5 MB, the only video in git)
+  outro.<lang>.mp3, .vtt     its voice and subtitles per language, times from 0
+  outro.json                 frames, fps and cue frames: the source of outroAt, the chapter and the end screen
 ```
 
-- **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). `video.mp4` is the English picture (`out/<slug>/en/video.mp4`, copied) plus the mono English voice as AAC 128k, so its level (about −16.6 LUFS) matches the dubs; it has no subtitle track, YouTube takes `subtitles.vtt`. The copy is derived and never deleted from; `content/` is the one to edit.
+- **Upload kit.** `pnpm youtube` writes `video.mp4` and a full copy of the tree into `media/`, so one folder holds everything to upload (video, audio, subtitles, metadata, thumbnail, notes). `video.mp4` is the English picture (`out/<slug>/en/video.mp4`, or `video+outro.mp4` with the outro joined) plus the mono English voice as AAC 128k, so its level (about −16.6 LUFS) matches the dubs; it has no subtitle track, YouTube takes `subtitles.vtt`. The copy is derived and never deleted from; `content/` is the one to edit.
 - **Source of truth.** `video/out/` and `video/public/generated/` are caches. Delete them any time; `pnpm video:restore <slug>` rebuilds the voice, subtitles, timing, strings and thumbnail backgrounds from `content/.../youtube/`, and a render recreates the picture and the mp4. It keeps a cache file that differs from `youtube/` unless you pass `--force`. A fresh clone therefore needs no TTS credits, only a render.
 - **Who writes what.** `pnpm tts` mirrors the voice, subtitles, timing and strings; `pnpm thumbnail-bg` mirrors the backgrounds; `pnpm thumbnail <slug> --pick <n>` keeps the chosen thumbnail; `pnpm youtube` writes the rest and fills `media/`.
 - **Not stored:** the TTS raw cache (only edited scenes cost characters again), the picture-only `out/<slug>/<lang>/video.mp4` and the preview renders. The mp4 is only in `media/`, so it is lost with the machine; it can be re-rendered, and YouTube holds the upload.
@@ -130,18 +133,34 @@ A scene lasts as long as its speech, plus the hold.
 
 ## Outro
 
-Add `outro: true` to a script's frontmatter (every language) to end on the shared
-like/subscribe outro, `src/outro/`. It is appended as a last scene, `outro`, from
-`src/outro/script.<lang>.md`, so a lesson must not define its own `outro` scene.
+The like/subscribe outro is one clip, rendered, voiced and subtitled once, kept in
+`content/shared/outro/` and joined after a lesson when it is packaged. A lesson never
+renders, voices or subtitles it again.
+
+Add `outro: true` to a script's frontmatter (every language) to join it. The flag is
+all a lesson does: its scenes, timing and `strings.json` stay the lesson alone.
+- `pnpm youtube` joins the picture by stream copy (`out/<slug>/en/video+outro.mp4`, no
+  re-encode, so the lesson render and the clip must be encoded alike), each language's voice
+  (lesson voice plus `outro.<lang>.mp3`, joined losslessly, normalised and encoded once) and
+  subtitles (the clip's cues shifted by the lesson's length). The committed `audio.mp3` and
+  `subtitles.vtt` are the joined files; `timing.json` is the lesson only.
+- It also adds a "Thanks for watching" chapter and writes the end-screen window and the
+  site's `outroAt` (the lesson's last whole second) into `upload-notes.md`, all computed from
+  `outro.json`; a `chapters.outro` override is an error. `pnpm final` joins the picture the same way.
 - Beats: Inko presses like (`{like}`), then subscribe and the bell (`{sub}`); from
   `{next}` the buttons leave and the last ~10 s stay free for YouTube's end screen.
-- `pnpm youtube` adds a "Thanks for watching" chapter and prints the end-screen
-  window and the site's `outroAt`; a `chapters.outro` override is an error.
 - Studio → End screen: template "1 video + subscribe". Place the video box over
   the empty left half and the subscribe circle where Inko points (`END_SCREEN`
-  in `src/outro/Outro.tsx`).
+  in `src/lessons/outro/Outro.tsx`).
 - The lesson page stops the player at `outroAt` (YouTube's `end`), so site viewers
   skip the outro.
+- **Changing the outro** is deliberate, each new take adds a few MB to git history: edit
+  `src/lessons/outro/` (the `outro` fixture lesson), then `pnpm tts outro en`,
+  `pnpm tts outro vi --fit en --voice <id> --model eleven_v4`, `pnpm render outro`, `pnpm outro`,
+  and run `pnpm youtube` and `pnpm final` again for every lesson with `outro: true`.
+- `pnpm video:restore` cuts a committed joined voice back to the lesson's length (mp3 stream
+  copy) and drops the outro cues from the cache; packaging again from such a cache encodes the
+  voice once more, so prefer `pnpm tts` (from the TTS cache) when you have it.
 
 ## Scene rules
 
@@ -167,11 +186,11 @@ These are the short version; `src/kit/STYLE.md` has the full rules.
 | `pnpm stills <slug> <lang> <f1,f2,…>` | Renders single frames to `out/<slug>/<lang>/stills/` at 1280×720 (always 1×, so stills stay comparable byte for byte) |
 | `pnpm qc <slug> [lang]` | Writes `qc/report.md` and `qc/sheet.png`, and exits 1 on failure |
 | `pnpm tts <slug> <lang> --fit en --model <model> [--fresh]` | Voices another language into the English picture: `voice.mp3`, `subs.vtt`, `timing.json` and `strings.json` in `public/generated/<slug>/<lang>/` |
-| `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and, in `media/`, `video.mp4` built from the English picture and `voice.mp3`, plus a full copy of the tree): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
+| `pnpm youtube <slug>` | Writes the lesson's `youtube/` folder (and, in `media/`, `video.mp4` built from the English picture and `voice.mp3`, plus a full copy of the tree): per-language `metadata.md` (from the lesson's `video/youtube.json`), `subtitles.vtt`, `audio.mp3`, `timing.json`, `strings.json`, the site dub `site.mp3`, the thumbnail backgrounds, and `upload-notes.md`. With `outro: true` the shared outro clip is joined first (see Outro). It stops when English was re-voiced after the last render, or when a committed language is missing from the cache |
 | `pnpm thumbnail-bg <slug> [--variants 2]` | Generates thumbnail backgrounds with `gpt-image-2` from `youtube.json` `thumbnail.background` (the motif; the house style is added), cropped to 1280×720 as `public/generated/<slug>/thumbnail-bg-<n>.png`, numbered after the cache and `youtube/thumbnail-src/` together, so a chosen background is never overwritten, and mirrored into `thumbnail-src/`. Reads only `OPENAI_API_KEY`, from the environment, the repo `.env.local` or `~/.claude/.env` |
 | `pnpm video:restore <slug> [--force]` | Rebuilds `public/generated/<slug>/` from the lesson's `youtube/` folder (a fresh clone, or a wiped cache) |
-| `pnpm outro [lang …]` | Renders the `dummy` fixture once (English) and cuts the outro scene's frames into the silent picture `media/shared/outro/outro.mp4`, and each language's voice over the same range (from `public/generated/dummy/<lang>/voice.mp3`) into `content/shared/outro/outro.<lang>.mp3` (default: en and vi) |
-| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: the English picture (`out/<slug>/en/video.mp4`, copied) with that language's committed voice (`audio.mp3`, encoded to AAC 128k) and subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (seconds). Needs the system ffmpeg and the English render (`pnpm render <slug>`); stops when that render is older than the committed voice or when a voice and the picture differ by more than 0.1 s. Default languages: en plus every folder under `youtube/languages` that has an `audio.mp3` and a `subtitles.vtt` |
+| `pnpm outro [lang …]` | Collects the `outro` fixture lesson (after `pnpm tts outro <lang>` and `pnpm render outro`) into `content/shared/outro/`: the silent picture `outro.mp4` (byte copy of the render), `outro.<lang>.mp3` and `.vtt`, and `outro.json` (default: en and vi; English always goes along). It checks that every language is fitted to the English picture and that the render is not older than the voice |
+| `pnpm final <slug> [lang …]` | Writes `media/.../youtube/final/video.<lang>.mp4`: the English picture (`out/<slug>/en/video.mp4`, copied; `video+outro.mp4` with the outro joined when the script has `outro: true`) with that language's committed voice (`audio.mp3`, encoded to AAC 128k) and subtitles as a soft, toggleable `mov_text` track, for sharing outside YouTube (seconds). Needs the system ffmpeg and the English render (`pnpm render <slug>`); stops when that render is older than the committed voice or when a voice and the picture differ by more than 0.1 s. Default languages: en plus every folder under `youtube/languages` that has an `audio.mp3` and a `subtitles.vtt` |
 | `pnpm thumbnail <slug> [--lines "A\|B\|C"] [--code <text>] [--bg <file>] [--out <name>] [--pick <n>]` | Renders a 1280×720 thumbnail per background to `out/<slug>/thumbnail-<n>.png` (or `thumbnail.png` over plain paper when there is none; `--bg` is a path under `public/`): Inko points at the stacked title lines (from `thumbnail.lines`), with an optional code chip. Keep the words language-neutral. `--pick <n>` also keeps variant n as `youtube/thumbnail.png` |
 | `pnpm studio` | Opens Remotion Studio for live scene work |
 | `pnpm test` / `pnpm typecheck` | Runs the unit tests and tsc |
@@ -270,4 +289,4 @@ attribution. Fish Audio needs API credit, which is separate from its web credit.
 | Checkpoints | script EN + VI (approved), the first 1:34 (approved), final (approved; thumbnail variant 2) |
 | Review | the on-screen math was right except one arrow label. Three reveals ran 3–5 s ahead of the words, fixed with extra cues before the Vietnamese voicing, because the dub inherits the English cues |
 | Automation | `youtube.json` drove the titles, descriptions, 9 chapters and 8 Studio quizzes with no manual time edits; `pnpm thumbnail-bg` made the backgrounds (first real run) |
-| Outro (2026-10-06) | The shared outro was appended before the re-upload; the rows above describe the video without it. Now 10 scenes, 10 chapters, 5:25, `outroAt` 310, end screen from 5:16 (last 9 s). All ten scenes, the outro included, came from the TTS cache (0 characters), and every earlier word kept its timing |
+| Outro (2026-10-06) | The shared outro was appended before the re-upload; the rows above describe the video without it. Now 10 scenes, 10 chapters, 5:25, `outroAt` 310, end screen from 5:16 (last 9 s). All ten scenes, the outro included, came from the TTS cache (0 characters), and every earlier word kept its timing. Later the baked-in scene became the shared clip joined at packaging: the same 10 chapters, `outroAt` 310 and end screen, 9757 frames, subtitles within 1 ms, joined voice within 0.3 LU |
