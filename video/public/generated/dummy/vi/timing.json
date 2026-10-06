@@ -12,11 +12,6 @@
       "id": "wave",
       "from": 154,
       "durationInFrames": 148
-    },
-    {
-      "id": "outro",
-      "from": 302,
-      "durationInFrames": 421
     }
   ],
   "words": [
@@ -169,128 +164,11 @@
       "from": 212,
       "to": 219,
       "scene": "wave"
-    },
-    {
-      "text": "Nếu",
-      "from": 302,
-      "to": 307,
-      "scene": "outro"
-    },
-    {
-      "text": "thấy",
-      "from": 308,
-      "to": 312,
-      "scene": "outro"
-    },
-    {
-      "text": "dễ",
-      "from": 313,
-      "to": 316,
-      "scene": "outro"
-    },
-    {
-      "text": "hiểu,",
-      "from": 319,
-      "to": 326,
-      "scene": "outro"
-    },
-    {
-      "text": "bấm",
-      "from": 337,
-      "to": 343,
-      "scene": "outro"
-    },
-    {
-      "text": "like",
-      "from": 345,
-      "to": 355,
-      "scene": "outro"
-    },
-    {
-      "text": "rồi",
-      "from": 360,
-      "to": 364,
-      "scene": "outro"
-    },
-    {
-      "text": "đăng",
-      "from": 367,
-      "to": 372,
-      "scene": "outro"
-    },
-    {
-      "text": "ký",
-      "from": 373,
-      "to": 376,
-      "scene": "outro"
-    },
-    {
-      "text": "kênh",
-      "from": 379,
-      "to": 386,
-      "scene": "outro"
-    },
-    {
-      "text": "để",
-      "from": 388,
-      "to": 392,
-      "scene": "outro"
-    },
-    {
-      "text": "không",
-      "from": 393,
-      "to": 398,
-      "scene": "outro"
-    },
-    {
-      "text": "lỡ",
-      "from": 399,
-      "to": 403,
-      "scene": "outro"
-    },
-    {
-      "text": "bài",
-      "from": 404,
-      "to": 408,
-      "scene": "outro"
-    },
-    {
-      "text": "sau",
-      "from": 410,
-      "to": 415,
-      "scene": "outro"
-    },
-    {
-      "text": "nhé.",
-      "from": 417,
-      "to": 422,
-      "scene": "outro"
-    },
-    {
-      "text": "Hẹn",
-      "from": 435,
-      "to": 438,
-      "scene": "outro"
-    },
-    {
-      "text": "gặp",
-      "from": 439,
-      "to": 441,
-      "scene": "outro"
-    },
-    {
-      "text": "lại!",
-      "from": 444,
-      "to": 451,
-      "scene": "outro"
     }
   ],
   "cues": {
     "hello.hello": 0,
-    "wave.wave": 172,
-    "outro.like": 302,
-    "outro.sub": 344,
-    "outro.next": 421
+    "wave.wave": 172
   },
   "audio": "voice.mp3"
 }

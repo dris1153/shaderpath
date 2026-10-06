@@ -47,11 +47,6 @@
       "id": "recap",
       "from": 8463,
       "durationInFrames": 860
-    },
-    {
-      "id": "outro",
-      "from": 9323,
-      "durationInFrames": 434
     }
   ],
   "words": [
@@ -4434,120 +4429,6 @@
       "from": 9268,
       "to": 9278,
       "scene": "recap"
-    },
-    {
-      "text": "If",
-      "from": 9323,
-      "to": 9328,
-      "scene": "outro"
-    },
-    {
-      "text": "this",
-      "from": 9329,
-      "to": 9333,
-      "scene": "outro"
-    },
-    {
-      "text": "clicked,",
-      "from": 9335,
-      "to": 9346,
-      "scene": "outro"
-    },
-    {
-      "text": "give",
-      "from": 9350,
-      "to": 9355,
-      "scene": "outro"
-    },
-    {
-      "text": "it",
-      "from": 9356,
-      "to": 9358,
-      "scene": "outro"
-    },
-    {
-      "text": "a",
-      "from": 9359,
-      "to": 9360,
-      "scene": "outro"
-    },
-    {
-      "text": "like,",
-      "from": 9361,
-      "to": 9369,
-      "scene": "outro"
-    },
-    {
-      "text": "and",
-      "from": 9370,
-      "to": 9373,
-      "scene": "outro"
-    },
-    {
-      "text": "subscribe",
-      "from": 9375,
-      "to": 9391,
-      "scene": "outro"
-    },
-    {
-      "text": "so",
-      "from": 9392,
-      "to": 9395,
-      "scene": "outro"
-    },
-    {
-      "text": "you",
-      "from": 9397,
-      "to": 9399,
-      "scene": "outro"
-    },
-    {
-      "text": "don't",
-      "from": 9400,
-      "to": 9405,
-      "scene": "outro"
-    },
-    {
-      "text": "miss",
-      "from": 9406,
-      "to": 9411,
-      "scene": "outro"
-    },
-    {
-      "text": "the",
-      "from": 9412,
-      "to": 9414,
-      "scene": "outro"
-    },
-    {
-      "text": "next",
-      "from": 9415,
-      "to": 9421,
-      "scene": "outro"
-    },
-    {
-      "text": "lesson.",
-      "from": 9422,
-      "to": 9434,
-      "scene": "outro"
-    },
-    {
-      "text": "See",
-      "from": 9453,
-      "to": 9458,
-      "scene": "outro"
-    },
-    {
-      "text": "you",
-      "from": 9459,
-      "to": 9461,
-      "scene": "outro"
-    },
-    {
-      "text": "there!",
-      "from": 9462,
-      "to": 9472,
-      "scene": "outro"
     }
   ],
   "cues": {
@@ -4637,10 +4518,7 @@
     "recap.speed": 8939,
     "recap.order": 8987,
     "recap.zeroTrap": 9017,
-    "recap.demo": 9077,
-    "outro.like": 9323,
-    "outro.sub": 9370,
-    "outro.next": 9453
+    "recap.demo": 9077
   },
   "audio": "voice.mp3"
 }

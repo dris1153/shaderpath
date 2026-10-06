@@ -12,11 +12,6 @@
       "id": "wave",
       "from": 154,
       "durationInFrames": 148
-    },
-    {
-      "id": "outro",
-      "from": 302,
-      "durationInFrames": 421
     }
   ],
   "words": [
@@ -139,128 +134,11 @@
       "from": 225,
       "to": 238,
       "scene": "wave"
-    },
-    {
-      "text": "If",
-      "from": 302,
-      "to": 307,
-      "scene": "outro"
-    },
-    {
-      "text": "this",
-      "from": 308,
-      "to": 313,
-      "scene": "outro"
-    },
-    {
-      "text": "clicked,",
-      "from": 315,
-      "to": 324,
-      "scene": "outro"
-    },
-    {
-      "text": "give",
-      "from": 326,
-      "to": 330,
-      "scene": "outro"
-    },
-    {
-      "text": "it",
-      "from": 331,
-      "to": 332,
-      "scene": "outro"
-    },
-    {
-      "text": "a",
-      "from": 333,
-      "to": 334,
-      "scene": "outro"
-    },
-    {
-      "text": "like,",
-      "from": 335,
-      "to": 342,
-      "scene": "outro"
-    },
-    {
-      "text": "and",
-      "from": 344,
-      "to": 347,
-      "scene": "outro"
-    },
-    {
-      "text": "subscribe",
-      "from": 348,
-      "to": 363,
-      "scene": "outro"
-    },
-    {
-      "text": "so",
-      "from": 364,
-      "to": 366,
-      "scene": "outro"
-    },
-    {
-      "text": "you",
-      "from": 367,
-      "to": 370,
-      "scene": "outro"
-    },
-    {
-      "text": "don't",
-      "from": 371,
-      "to": 376,
-      "scene": "outro"
-    },
-    {
-      "text": "miss",
-      "from": 377,
-      "to": 382,
-      "scene": "outro"
-    },
-    {
-      "text": "the",
-      "from": 383,
-      "to": 385,
-      "scene": "outro"
-    },
-    {
-      "text": "next",
-      "from": 386,
-      "to": 392,
-      "scene": "outro"
-    },
-    {
-      "text": "lesson.",
-      "from": 393,
-      "to": 405,
-      "scene": "outro"
-    },
-    {
-      "text": "See",
-      "from": 421,
-      "to": 426,
-      "scene": "outro"
-    },
-    {
-      "text": "you",
-      "from": 427,
-      "to": 429,
-      "scene": "outro"
-    },
-    {
-      "text": "there!",
-      "from": 430,
-      "to": 440,
-      "scene": "outro"
     }
   ],
   "cues": {
     "hello.hello": 0,
-    "wave.wave": 172,
-    "outro.like": 302,
-    "outro.sub": 344,
-    "outro.next": 421
+    "wave.wave": 172
   },
   "audio": "voice.mp3"
 }
