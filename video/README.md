@@ -232,7 +232,7 @@ tracks and captions).
 Each lesson keeps its YouTube text next to its script, in
 `content/lessons/<track>/<slug>/video/youtube.json`. `pnpm youtube` turns it into one
 `youtube/languages/<lang>/metadata.md` per language, the copy to paste into Studio:
-- the title and description of that language (chapters timed from the English timing, per-locale lesson links);
+- the title and description of that language (chapters timed from the English timing, per-locale lesson links; no subtitle list, dub note, AI-voice credit or lesson count);
 - English also holds the tags and one block per quiz, with its Studio time and each field ready to paste;
 - the language-neutral steps (end screen, `outroAt`) go to `youtube/upload-notes.md`.
 

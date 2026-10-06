@@ -106,26 +106,25 @@ test("chapters: at least 3, each at least 10 s", () => {
   assert.match(errorsOf(source(), short), /chapters\.hook: under YouTube's 10 s minimum/);
 });
 
-test("metadata carries chapters, per-locale links, dub notes and quiz blocks", () => {
+test("metadata carries chapters, per-locale links and quiz blocks", () => {
   const checked = validateYoutube(source(), timing);
-  const md = renderMetadata(checked, timing, "vector-basics", "en", ["vi"]);
-  const vi = renderMetadata(checked, timing, "vector-basics", "vi", ["vi"]);
+  const md = renderMetadata(checked, timing, "vector-basics", "en");
+  const vi = renderMetadata(checked, timing, "vector-basics", "vi");
   assert.match(md, /0:00 Hook\n0:22 Axes\n0:52 Recap/);
   assert.match(md, /https:\/\/shaderpath\.drisdev\.io\/en\/lesson\/vector-basics/);
   assert.match(vi, /https:\/\/shaderpath\.drisdev\.io\/vi\/lesson\/vector-basics/);
-  assert.match(md, /Subtitles: English, Tiếng Việt/);
-  assert.match(vi, /Bản lồng tiếng Việt/);
   // Quizzes and tags belong to the original language only; each file holds one language.
   assert.doesNotMatch(vi, /Quiz 1|## Tags/);
-  assert.doesNotMatch(md, /Bản lồng tiếng Việt/);
   assert.match(md, /### Quiz 1 · 0:34:00\n```\nQuestion: Is \|v\| long\?\n  Answer 1: a\n✓ Answer 2: b\nExplanation: Because\./);
   assert.match(md, /#webgl #threejs/);
 });
 
-test("without a dub, no Vietnamese subtitles or dub note are promised", () => {
+test("the description has no subtitle list, dub note, AI-voice credit or lesson count", () => {
   const checked = validateYoutube(source(), timing);
-  assert.match(renderMetadata(checked, timing, "vector-basics", "en", []), /Subtitles: English\n/);
-  assert.doesNotMatch(renderMetadata(checked, timing, "vector-basics", "vi", []), /Bản lồng tiếng Việt/);
+  for (const lang of ["en", "vi"] as const) {
+    assert.doesNotMatch(renderMetadata(checked, timing, "vector-basics", lang), /Subtitles|Phụ đề|Narration|Lời dẫn|ElevenLabs|Bản lồng tiếng|162/);
+  }
+  assert.match(renderMetadata(checked, timing, "vector-basics", "en"), /\n\nSeries · lesson 2\n\n#webgl/);
 });
 
 // A lesson with the shared clip joined after it: 72 s of lesson, then a 14 s outro
@@ -135,8 +134,8 @@ const clip: OutroClip = { fps: 30, frames: 420, cues: { like: 0, sub: 40, next: 
 test("the outro brings its own chapter title, and a lesson may not override it", () => {
   assert.equal(errorsOf(source(), timing, clip), "");
   const checked = validateYoutube(source(), timing, clip);
-  assert.match(renderMetadata(checked, timing, "x", "en", [], clip), /1:12 Thanks for watching/);
-  assert.match(renderMetadata(checked, timing, "x", "vi", [], clip), /1:12 Cảm ơn bạn đã xem/);
+  assert.match(renderMetadata(checked, timing, "x", "en", clip), /1:12 Thanks for watching/);
+  assert.match(renderMetadata(checked, timing, "x", "vi", clip), /1:12 Cảm ơn bạn đã xem/);
   const own = { ...source(), chapters: { ...source().chapters, outro: both("Bye") } };
   assert.match(errorsOf(own, timing, clip), /chapters\.outro: built in/);
 });
@@ -156,7 +155,7 @@ test("end screen covers the outro after its buttons leave; the site stops at the
   // Language-neutral steps live in the notes, not in either language's metadata.
   const checked = validateYoutube(source(), timing, clip);
   for (const lang of ["en", "vi"] as const) {
-    assert.doesNotMatch(renderMetadata(checked, timing, "x", lang, [], clip), /End screen|outroAt/);
+    assert.doesNotMatch(renderMetadata(checked, timing, "x", lang, clip), /End screen|outroAt/);
   }
 });
 
@@ -174,5 +173,5 @@ test("lessons without the outro get no end-screen, outro chapter or site notes",
   assert.equal(endScreen(timing), undefined);
   assert.equal(renderUploadNotes(timing, "x"), null);
   const checked = validateYoutube(source(), timing);
-  assert.doesNotMatch(renderMetadata(checked, timing, "x", "en", []), /Thanks for watching/);
+  assert.doesNotMatch(renderMetadata(checked, timing, "x", "en"), /Thanks for watching/);
 });

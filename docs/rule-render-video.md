@@ -79,6 +79,7 @@ surprises you.
 
 - **`pnpm youtube` and `pnpm outro` rewrite committed files with CRLF-only changes** (`core.autocrlf=true`), typically every `metadata.md` and `upload-notes.md`. Check with `git diff --ignore-space-at-eol --numstat`: an empty list is noise, so `git checkout --` those files. Real changes stay: the `strings.json` files after a strings edit, and the chapter times, quiz times and `outroAt` after a re-voice.
 - **`pnpm final` refuses an English render older than the committed voice** (it compares `timing.json`). Render first, then `final`.
+- **Edit the description in the generator, not in `media/`.** `media/.../metadata.md` is a copy that `pnpm youtube` overwrites. The description carries no subtitle list, dub note, AI-voice credit or lesson count (removed on purpose 2026-10-06); change `COPY` and `description()` in `video/scripts/youtube-meta.ts`, then run `pnpm youtube` for every lesson.
 - **Do not re-upload by replacing a file.** YouTube Studio cannot swap the video of an existing upload. A new upload has a new id; update `content/lesson-videos.ts` and unlist the old one. The Vietnamese dub and subtitles stay valid when only the picture's text changed, because timing is unchanged.
 
 ## Running it on Windows

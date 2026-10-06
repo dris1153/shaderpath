@@ -52,19 +52,13 @@ export function endScreen(timing: Timing, clip?: OutroClip): { start: number; se
 const COPY = {
   en: {
     inVideo: "In this video:",
-    promo: "Shaderpath teaches WebGL, three.js and GLSL from the math up, in 162 lessons in English and Vietnamese:",
+    promo: "Shaderpath teaches WebGL, three.js and GLSL from the math up:",
     chapters: "Chapters",
-    subtitles: "Subtitles",
-    dub: "",
-    narration: "Narration: AI voice (ElevenLabs)",
   },
   vi: {
     inVideo: "Trong video:",
-    promo: "Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán, 162 bài bằng tiếng Việt và tiếng Anh:",
+    promo: "Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán:",
     chapters: "Chương",
-    subtitles: "Phụ đề",
-    dub: "Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.",
-    narration: "Lời dẫn: giọng AI (ElevenLabs)",
   },
 } satisfies Record<Loc, Record<string, string>>;
 
@@ -161,12 +155,10 @@ export function validateYoutube(raw: unknown, timing: Timing, clip?: OutroClip):
   return src;
 }
 
-function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, dubs: Loc[], clip?: OutroClip): string {
+function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, clip?: OutroClip): string {
   const c = COPY[l];
   const chapters = timing.scenes.map((s) => `${chapterTime(s.from / timing.fps)} ${src.chapters[s.id]![l]}`);
   if (clip) chapters.push(`${chapterTime(totalFrames(timing) / timing.fps)} ${OUTRO_CHAPTER[l]}`);
-  // Subtitles exist for English and for every dubbed language.
-  const subtitled = (["en", ...dubs.filter((d) => d !== "en")] as Loc[]).map((x) => LANGUAGE[x]).join(", ");
   const text = [
     src.summary[l],
     "",
@@ -182,11 +174,7 @@ function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, d
     c.chapters,
     ...chapters,
     "",
-    `${c.subtitles}: ${subtitled}`,
-    ...(dubs.includes(l) && c.dub ? [c.dub] : []),
-    "",
     src.series[l],
-    c.narration,
     "",
     src.hashtags.map((h) => `#${h}`).join(" "),
   ].join("\n");
@@ -198,7 +186,7 @@ const block = (s: string) => ["```", s, "```"].join("\n");
 
 // One language's Studio copy: title and description (the original language also
 // holds the tags and the timed quizzes). Throws when a description is too long.
-export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string, lang: Loc, dubs: Loc[], clip?: OutroClip): string {
+export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string, lang: Loc, clip?: OutroClip): string {
   const original = lang === "en";
   const head = [
     `# YouTube metadata, ${LANGUAGE[lang]}: ${slug}`,
@@ -210,7 +198,7 @@ export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string,
     "## Title",
     block(src.title[lang]),
     "## Description",
-    block(description(src, timing, slug, lang, dubs, clip)),
+    block(description(src, timing, slug, lang, clip)),
   ];
   if (!original) return [...head, ""].join("\n");
   // One block per quiz, each line ready to paste into its Studio field.

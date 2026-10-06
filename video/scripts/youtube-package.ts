@@ -64,7 +64,7 @@ for (const lang of langs) {
 const sourceFile = path.join(lessonSource(slug), "youtube.json");
 const source = fs.existsSync(sourceFile) ? validateYoutube(readYoutubeSource(sourceFile), timing, clip) : null;
 const metadata = source
-  ? Object.fromEntries((["en", ...langs] as Loc[]).map((lang) => [lang, renderMetadata(source, timing, slug, lang, langs as Loc[], clip)]))
+  ? Object.fromEntries((["en", ...langs] as Loc[]).map((lang) => [lang, renderMetadata(source, timing, slug, lang, clip)]))
   : null;
 const notes = renderUploadNotes(timing, slug, clip);
 
