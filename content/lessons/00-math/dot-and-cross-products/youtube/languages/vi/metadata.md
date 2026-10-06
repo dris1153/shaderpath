@@ -23,7 +23,7 @@ Trong video:
 Bài học đầy đủ, có demo tương tác Dot product & phép chiếu, bài tập và thẻ ôn tập:
 https://shaderpath.drisdev.io/vi/lesson/dot-and-cross-products
 
-Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán, 162 bài bằng tiếng Việt và tiếng Anh:
+Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán:
 https://shaderpath.drisdev.io/vi
 
 Chương
@@ -38,11 +38,7 @@ Chương
 4:37 Tóm tắt
 5:10 Cảm ơn bạn đã xem
 
-Phụ đề: English, Tiếng Việt
-Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.
-
 Nền tảng Toán học cho đồ hoạ · bài 3
-Lời dẫn: giọng AI (ElevenLabs)
 
 #gamedev #webgl #threejs
 ```

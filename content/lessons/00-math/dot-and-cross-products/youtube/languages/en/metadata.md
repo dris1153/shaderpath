@@ -23,7 +23,7 @@ In this video:
 Full lesson, with the interactive Dot Product & Projection demo, exercises and review cards:
 https://shaderpath.drisdev.io/en/lesson/dot-and-cross-products
 
-Shaderpath teaches WebGL, three.js and GLSL from the math up, in 162 lessons in English and Vietnamese:
+Shaderpath teaches WebGL, three.js and GLSL from the math up:
 https://shaderpath.drisdev.io/en
 
 Chapters
@@ -38,10 +38,7 @@ Chapters
 4:37 Recap
 5:10 Thanks for watching
 
-Subtitles: English, Tiếng Việt
-
 Math Foundations for Graphics · lesson 3
-Narration: AI voice (ElevenLabs)
 
 #gamedev #webgl #threejs
 ```

@@ -22,7 +22,7 @@ In this video:
 Full lesson, with the interactive UV Space Explorer, exercises and review cards:
 https://shaderpath.drisdev.io/en/lesson/cartesian-and-uv-space
 
-Shaderpath teaches WebGL, three.js and GLSL from the math up, in 162 lessons in English and Vietnamese:
+Shaderpath teaches WebGL, three.js and GLSL from the math up:
 https://shaderpath.drisdev.io/en
 
 Chapters
@@ -34,10 +34,7 @@ Chapters
 3:07 NDC: from [0, 1] to [−1, 1]
 3:44 Recap
 
-Subtitles: English, Tiếng Việt
-
 Math Foundations for Graphics · lesson 1
-Narration: AI voice (ElevenLabs)
 
 #webgl #threejs #shaders
 ```

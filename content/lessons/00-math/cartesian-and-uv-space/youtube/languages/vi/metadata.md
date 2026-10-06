@@ -22,7 +22,7 @@ Trong video:
 Bài học đầy đủ, có demo tương tác Khám phá UV space, bài tập và thẻ ôn tập:
 https://shaderpath.drisdev.io/vi/lesson/cartesian-and-uv-space
 
-Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán, 162 bài bằng tiếng Việt và tiếng Anh:
+Shaderpath: học WebGL, three.js và GLSL từ nền tảng toán:
 https://shaderpath.drisdev.io/vi
 
 Chương
@@ -34,11 +34,7 @@ Chương
 3:07 NDC: từ [0, 1] sang [−1, 1]
 3:44 Tóm tắt
 
-Phụ đề: English, Tiếng Việt
-Bản lồng tiếng Việt: xem ngay trên trang bài học ở trên.
-
 Nền tảng Toán học cho đồ hoạ · bài 1
-Lời dẫn: giọng AI (ElevenLabs)
 
 #webgl #threejs #shaders
 ```
