@@ -5,9 +5,10 @@ import { parseArgs } from "node:util";
 import { validateStrings, validateTiming, type Timing } from "../src/scene/timing";
 import { finalsDir, mirrorLanguage } from "./lesson-assets";
 import { audioSeconds, ffmpeg, generatedDir, lessonSource, ROOT } from "./remotion";
+import { VOICE_MP3, VOICE_NORMALIZE, VOICE_RATE } from "./voice-args";
 import { MAX_SILENT_IN_WORDS, rmsBins, silentShareInWords, wavSamples } from "./voice-align";
 import { spokenText } from "./script-parse";
-import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
+import { loadScript } from "./script-load";
 import { buildCues, toVtt } from "./subs";
 import { elevenlabs } from "./tts/elevenlabs";
 import { alignWords, type Mark, type TtsEngine } from "./tts/engine";
@@ -49,8 +50,7 @@ if (locale !== "en" && values.engine === "elevenlabs" && !values.model) {
 
 const FORMAT = { fps: 30, width: 1280, height: 720 };
 const DEFAULT_HOLD = 36;
-const RATE = 48000;
-const SAMPLES_PER_FRAME = RATE / FORMAT.fps;
+const SAMPLES_PER_FRAME = VOICE_RATE / FORMAT.fps;
 // Fitted speech keeps half a second of calm before the cut and is never sped up past 1.2×.
 const FIT_TAIL_SEC = 0.5;
 const MAX_TEMPO = 1.2;
@@ -82,14 +82,8 @@ if (master) {
   if (ids !== masterIds) throw new Error(`script.${locale}.md scenes [${ids}] differ from ${values.fit} [${masterIds}]`);
 }
 // A fitted language reuses the master's picture, so it also reuses its on-screen strings.
-// The outro's strings join the lesson's (the lesson wins on a clash).
 const readStrings = (file: string) => validateStrings(readJson(file));
-const strings = master
-  ? readStrings(path.join(generatedDir(slug, values.fit!), "strings.json"))
-  : {
-      ...(hasOutro(script) ? readStrings(path.join(OUTRO_DIR, "strings.en.json")) : {}),
-      ...readStrings(path.join(src, `strings.${locale}.json`)),
-    };
+const strings = readStrings(master ? path.join(generatedDir(slug, values.fit!), "strings.json") : path.join(src, `strings.${locale}.json`));
 // A `# hold` is silent on purpose; in a fit, the master's holds shaped the picture.
 const masterHolds = master ? loadScript(src, values.fit!).scenes.map((s) => s.hold) : [];
 
@@ -174,9 +168,9 @@ const filters: string[] = [];
 clips.forEach((clip, i) => {
   const seconds = clip.frames / FORMAT.fps;
   if (clip.file) inputs.push("-i", clip.file);
-  else inputs.push("-f", "lavfi", "-t", String(seconds), "-i", `anullsrc=r=${RATE}:cl=mono`);
+  else inputs.push("-f", "lavfi", "-t", String(seconds), "-i", `anullsrc=r=${VOICE_RATE}:cl=mono`);
   filters.push(
-    `[${i}:a]aresample=${RATE},aformat=sample_fmts=fltp:channel_layouts=mono,` +
+    `[${i}:a]aresample=${VOICE_RATE},aformat=sample_fmts=fltp:channel_layouts=mono,` +
       `${clip.tempo > 1 ? `atempo=${clip.tempo.toFixed(4)},` : ""}apad,` +
       `atrim=end_sample=${clip.frames * SAMPLES_PER_FRAME},asetpts=N/SR/TB[a${i}]`,
   );
@@ -191,8 +185,7 @@ try {
   // mix from a file: placed right after concat in the same graph, Remotion's ffmpeg 7.1 shifted and cut
   // the speech of short, silence-heavy tracks (the dummy fixture's Vietnamese voice).
   ffmpeg([
-    "-y", "-loglevel", "error", "-i", mixFile, "-af", `loudnorm=I=-16:TP=-1.5:LRA=11:dual_mono=true,aresample=${RATE}`,
-    "-c:a", "libmp3lame", "-b:a", "128k", "-ar", String(RATE), tmpFile,
+    "-y", "-loglevel", "error", "-i", mixFile, "-af", VOICE_NORMALIZE, ...VOICE_MP3, tmpFile,
   ]);
 
   // The last good voice.mp3 stays in place until the new one has passed both checks.

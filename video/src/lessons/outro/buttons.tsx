@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { interpolate } from "remotion";
-import { usePalette } from "../kit/palette";
-import { Box, Shape } from "../kit/shapes";
-import { Label } from "../kit/text";
+import { usePalette } from "../../kit/palette";
+import { Box, Shape } from "../../kit/shapes";
+import { Label } from "../../kit/text";
 
 const DEPTH = 9;
 

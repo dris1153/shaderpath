@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import type { Timing } from "../src/scene/timing";
+import type { OutroClip } from "./outro-clip";
 import {
   chapterTime,
   endScreen,
@@ -40,9 +41,9 @@ const source = (): YoutubeSource => ({
   quizzes: [{ at: "axes.walk", question: "Is |v| long?", answers: ["a", "b"], correct: 1, explanation: "Because." }],
   thumbnail: { lines: ["A"] },
 });
-const errorsOf = (src: unknown, t = timing) => {
+const errorsOf = (src: unknown, t = timing, c?: OutroClip) => {
   try {
-    validateYoutube(src, t);
+    validateYoutube(src, t, c);
     return "";
   } catch (error) {
     return (error as Error).message;
@@ -127,49 +128,51 @@ test("without a dub, no Vietnamese subtitles or dub note are promised", () => {
   assert.doesNotMatch(renderMetadata(checked, timing, "vector-basics", "vi", []), /Bản lồng tiếng Việt/);
 });
 
-// A lesson with the shared outro appended: 72 s of lesson, then a 14 s outro
+// A lesson with the shared clip joined after it: 72 s of lesson, then a 14 s outro
 // whose {next} cue (buttons gone) lands 4 s in.
-const withOutro: Timing = {
-  ...timing,
-  scenes: [...timing.scenes, { id: "outro", from: 2160, durationInFrames: 420 }],
-  cues: { ...timing.cues, "outro.next": 2280 },
-};
+const clip: OutroClip = { fps: 30, frames: 420, cues: { like: 0, sub: 40, next: 120 }, leaveFrames: 26 };
 
 test("the outro brings its own chapter title, and a lesson may not override it", () => {
-  assert.equal(errorsOf(source(), withOutro), "");
-  const checked = validateYoutube(source(), withOutro);
-  assert.match(renderMetadata(checked, withOutro, "x", "en", []), /1:12 Thanks for watching/);
-  assert.match(renderMetadata(checked, withOutro, "x", "vi", []), /1:12 Cảm ơn bạn đã xem/);
+  assert.equal(errorsOf(source(), timing, clip), "");
+  const checked = validateYoutube(source(), timing, clip);
+  assert.match(renderMetadata(checked, timing, "x", "en", [], clip), /1:12 Thanks for watching/);
+  assert.match(renderMetadata(checked, timing, "x", "vi", [], clip), /1:12 Cảm ơn bạn đã xem/);
   const own = { ...source(), chapters: { ...source().chapters, outro: both("Bye") } };
-  assert.match(errorsOf(own, withOutro), /chapters\.outro: built in/);
+  assert.match(errorsOf(own, timing, clip), /chapters\.outro: built in/);
+});
+
+test("the outro counts as a chapter", () => {
+  const two = { ...timing, scenes: timing.scenes.slice(0, 2) };
+  assert.equal(errorsOf({ ...source(), chapters: { hook: both("Hook"), axes: both("Axes") } }, two, clip), "");
 });
 
 test("end screen covers the outro after its buttons leave; the site stops at the outro", () => {
   // {next} at 76.0 s, plus 26 frames of leaving → 77 s; the video ends at 86 s.
-  assert.deepEqual(endScreen(withOutro), { start: 77, seconds: 9 });
-  assert.equal(outroAt(withOutro), 72);
-  const notes = renderUploadNotes(withOutro, "x")!;
+  assert.deepEqual(endScreen(timing, clip), { start: 77, seconds: 9 });
+  assert.equal(outroAt(timing), 72);
+  const notes = renderUploadNotes(timing, "x", clip)!;
   assert.match(notes, /Start at 1:17, the last 9 s/);
   assert.match(notes, /outroAt: 72/);
   // Language-neutral steps live in the notes, not in either language's metadata.
-  const checked = validateYoutube(source(), withOutro);
+  const checked = validateYoutube(source(), timing, clip);
   for (const lang of ["en", "vi"] as const) {
-    assert.doesNotMatch(renderMetadata(checked, withOutro, "x", lang, []), /End screen|outroAt/);
+    assert.doesNotMatch(renderMetadata(checked, timing, "x", lang, [], clip), /End screen|outroAt/);
   }
 });
 
 test("the end screen stays inside YouTube's 5–20 s window", () => {
-  const long: Timing = { ...withOutro, cues: { ...withOutro.cues, "outro.next": 2160 - 30 * 20 } };
-  assert.deepEqual(endScreen(long), { start: 66, seconds: 20 });
+  const long: OutroClip = { ...clip, cues: { ...clip.cues, next: -30 * 20 } };
+  assert.deepEqual(endScreen(timing, long), { start: 66, seconds: 20 });
   // A fractional end never stretches the window past 20 s.
-  const odd: Timing = { ...long, scenes: [...timing.scenes, { id: "outro", from: 2160, durationInFrames: 425 }] };
-  assert.ok(86 + 5 / 30 - endScreen(odd)!.start <= 20);
-  const short: Timing = { ...withOutro, cues: { ...withOutro.cues, "outro.next": 2160 + 420 - 30 } };
-  assert.throws(() => endScreen(short), /lengthen its # hold/);
+  const odd: OutroClip = { ...long, frames: 425 };
+  assert.ok(86 + 5 / 30 - endScreen(timing, odd)!.start <= 20);
+  const short: OutroClip = { ...clip, cues: { ...clip.cues, next: clip.frames - 30 } };
+  assert.throws(() => endScreen(timing, short), /lengthen its # hold/);
 });
 
-test("lessons without the outro get no end-screen or site notes", () => {
-  assert.equal(outroAt(timing), undefined);
+test("lessons without the outro get no end-screen, outro chapter or site notes", () => {
   assert.equal(endScreen(timing), undefined);
   assert.equal(renderUploadNotes(timing, "x"), null);
+  const checked = validateYoutube(source(), timing);
+  assert.doesNotMatch(renderMetadata(checked, timing, "x", "en", []), /Thanks for watching/);
 });

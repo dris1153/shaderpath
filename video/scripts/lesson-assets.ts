@@ -7,7 +7,7 @@ import path from "node:path";
 // keep in step with it (mirror after voicing/packaging, restore on a fresh clone).
 const LESSONS = path.resolve(import.meta.dirname, "..", "..", "content", "lessons");
 
-// Pipeline fixtures (dummy, style) have no lesson folder, so no finals.
+// Pipeline fixtures (dummy, outro, style) have no lesson folder, so no finals.
 export function finalsDir(slug: string, lessons = LESSONS): string | undefined {
   for (const track of fs.readdirSync(lessons)) {
     if (fs.existsSync(path.join(lessons, track, slug, "video"))) return path.join(lessons, track, slug, "youtube");

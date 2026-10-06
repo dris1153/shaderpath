@@ -1,9 +1,9 @@
-import { progress } from "../kit/easing";
-import { FadeOut, Pop } from "../kit/motion";
-import { Stage } from "../kit/stage";
-import { useString } from "../kit/text";
-import { Inko } from "../mascot/Inko";
-import { useCue } from "../scene/cue";
+import { progress } from "../../kit/easing";
+import { FadeOut, Pop } from "../../kit/motion";
+import { Stage } from "../../kit/stage";
+import { useString } from "../../kit/text";
+import { Inko } from "../../mascot/Inko";
+import { useCue } from "../../scene/cue";
 import { BellButton, LikeButton, pressAmount, ringAngle, SubscribeButton } from "./buttons";
 
 // Free regions for YouTube's end screen ("1 video + subscribe"), in stage px.
@@ -36,7 +36,7 @@ function aim(t: number): number {
   return t < 0 ? 1 : t < 8 ? 1 - progress(t, 8) : progress(t - 8, 14);
 }
 
-// Shared like/subscribe outro, appended to lessons whose script sets `outro: true`.
+// Shared like/subscribe outro clip: rendered once as the `outro` fixture, joined after lessons whose script sets `outro: true`.
 // Beats: {like} Inko presses the like button; {sub} the subscribe button and the
 // bell; {next} the buttons leave and Inko points at the end-screen regions.
 export function Outro() {

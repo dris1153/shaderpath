@@ -1,9 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { Timing } from "../src/scene/timing";
+import { totalFrames, type Timing } from "../src/scene/timing";
 import { copyKit, finalsDir, mediaDir, mirrorLanguage, mirrorThumbnails } from "./lesson-assets";
 import { uploadArgs } from "./final-args";
-import { ffmpeg, generatedDir, lessonSource, outDir, parseArgs, ROOT } from "./remotion";
+import { assertJoinable, joinedFrames, joinPicture, joinVoice, joinVtt, lessonHasOutro, loadOutro, CLIP_DIR } from "./outro-join";
+import { audioSeconds, ffmpeg, generatedDir, lessonSource, outDir, parseArgs, ROOT } from "./remotion";
 import { outroAt, readYoutubeSource, renderMetadata, renderUploadNotes, validateYoutube, type Loc } from "./youtube-meta";
 
 // pnpm youtube <slug>
@@ -12,6 +13,9 @@ import { outroAt, readYoutubeSource, renderMetadata, renderUploadNotes, validate
 // completes the gitignored upload kit media/lessons/<track>/<slug>/youtube/: the same
 // tree plus
 //   video.mp4                      the English picture + the mono English voice (languages/en/audio.mp3, AAC): upload this
+// With `outro: true` in the script, content/shared/outro is joined after the lesson first: the picture
+// by stream copy (out/<slug>/en/video+outro.mp4), each voice and subtitle file by the join in outro-join.ts,
+// so languages/<lang>/audio.mp3 and subtitles.vtt are the joined files and timing.json stays lesson-only.
 // Layout:
 //   thumbnail.png                  chosen with `pnpm thumbnail <slug> --pick <n>`
 //   thumbnail-src/                 the paid thumbnail backgrounds
@@ -29,7 +33,10 @@ if (!fs.existsSync(picture)) throw new Error(`no English render at ${picture}; r
 const readTiming = (dir: string) => JSON.parse(fs.readFileSync(path.join(dir, "timing.json"), "utf8")) as Timing;
 const timing = readTiming(master);
 const scenes = JSON.stringify(timing.scenes);
-const stop = outroAt(timing);
+const clip = lessonHasOutro(slug) ? loadOutro() : undefined;
+if (clip) assertJoinable(slug, timing, clip);
+const lessonFrames = totalFrames(timing);
+const stop = clip ? outroAt(timing) : undefined;
 
 // Everything is checked, and the metadata rendered, before any committed file is touched.
 const generated = path.join(ROOT, "public", "generated", slug);
@@ -51,25 +58,55 @@ for (const lang of langs) {
     throw new Error(`${lang} is not fitted to the English picture; run pnpm tts ${slug} ${lang} --fit en --model <model>`);
   }
   // The site stops at the outro's first whole second, up to ~1 s early; a fit keeps only 0.5 s of tail.
-  const cut = stop === undefined ? undefined : fitted.words.find((w) => w.scene !== "outro" && w.to > stop * fitted.fps);
+  const cut = stop === undefined ? undefined : fitted.words.find((w) => w.to > stop * fitted.fps);
   if (cut) console.warn(`${lang}: "${cut.text}" (${cut.scene}) runs past outroAt ${stop} s, so the site cuts it; shorten that scene's line`);
 }
 const sourceFile = path.join(lessonSource(slug), "youtube.json");
-const source = fs.existsSync(sourceFile) ? validateYoutube(readYoutubeSource(sourceFile), timing) : null;
+const source = fs.existsSync(sourceFile) ? validateYoutube(readYoutubeSource(sourceFile), timing, clip) : null;
 const metadata = source
-  ? Object.fromEntries((["en", ...langs] as Loc[]).map((lang) => [lang, renderMetadata(source, timing, slug, lang, langs as Loc[])]))
+  ? Object.fromEntries((["en", ...langs] as Loc[]).map((lang) => [lang, renderMetadata(source, timing, slug, lang, langs as Loc[], clip)]))
   : null;
-const notes = renderUploadNotes(timing, slug);
+const notes = renderUploadNotes(timing, slug, clip);
+
+// The joined files, built in the scratch folder out/ before any committed file is touched.
+const joined = new Map<string, { audio: string; subtitles: string }>();
+let uploadPicture = picture;
+if (clip) {
+  for (const lang of ["en", ...langs]) {
+    const clipVoice = path.join(CLIP_DIR, `outro.${lang}.mp3`);
+    const clipSubs = path.join(CLIP_DIR, `outro.${lang}.vtt`);
+    for (const file of [clipVoice, clipSubs]) if (!fs.existsSync(file)) throw new Error(`no ${path.relative(process.cwd(), file)}; run pnpm outro`);
+    const lessonVoice = path.join(generatedDir(slug, lang), "voice.mp3");
+    const voiceSeconds = audioSeconds(lessonVoice);
+    if (Math.abs(voiceSeconds - lessonFrames / timing.fps) > 0.06) {
+      throw new Error(`${lang} voice is ${voiceSeconds.toFixed(2)} s but the lesson is ${(lessonFrames / timing.fps).toFixed(2)} s; it must be the lesson alone, run pnpm tts ${slug} ${lang}`);
+    }
+    const dir = outDir(slug, lang);
+    fs.mkdirSync(dir, { recursive: true });
+    const audio = path.join(dir, "voice+outro.mp3");
+    joinVoice(lessonVoice, lessonFrames, clipVoice, clip, audio);
+    const subtitles = path.join(dir, "subs+outro.vtt");
+    fs.writeFileSync(subtitles, joinVtt(fs.readFileSync(path.join(generatedDir(slug, lang), "subs.vtt"), "utf8"), fs.readFileSync(clipSubs, "utf8"), lessonFrames, timing.fps));
+    joined.set(lang, { audio, subtitles });
+  }
+  uploadPicture = path.join(master, "video+outro.mp4");
+  joinPicture(picture, path.join(CLIP_DIR, "outro.mp4"), uploadPicture, joinedFrames(timing, clip), timing.fps);
+}
 
 fs.mkdirSync(finals, { recursive: true });
 const kit = mediaDir(slug)!;
 fs.mkdirSync(kit, { recursive: true });
 // Not Remotion's final.mp4: its 2-channel mix of the voice is about 3 LU quieter than the voice file the dubs use.
-ffmpeg(uploadArgs(picture, path.join(generatedDir(slug, "en"), "voice.mp3"), path.join(kit, "video.mp4")));
+ffmpeg(uploadArgs(uploadPicture, joined.get("en")?.audio ?? path.join(generatedDir(slug, "en"), "voice.mp3"), path.join(kit, "video.mp4")));
 mirrorThumbnails(generated, path.join(finals, "thumbnail-src"));
 for (const lang of ["en", ...langs]) {
   const dir = path.join(finals, "languages", lang);
   mirrorLanguage(generatedDir(slug, lang), dir);
+  const join = joined.get(lang);
+  if (join) {
+    fs.copyFileSync(join.audio, path.join(dir, "audio.mp3"));
+    fs.copyFileSync(join.subtitles, path.join(dir, "subtitles.vtt"));
+  }
   if (metadata) fs.writeFileSync(path.join(dir, "metadata.md"), metadata[lang]!);
   if (lang === "en") continue;
   // Speech needs no more than mono 64 kbps, which keeps the committed file near 2.5 MB.

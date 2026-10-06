@@ -3,7 +3,7 @@ import path from "node:path";
 import { validateStrings } from "../src/scene/timing";
 import { lessonSource, parseArgs, ROOT } from "./remotion";
 import type { Script } from "./script-parse";
-import { hasOutro, loadScript, OUTRO_DIR } from "./script-load";
+import { loadScript } from "./script-load";
 import { symbolWarnings } from "./video-lint-symbols";
 
 // pnpm video:lint <slug>
@@ -43,17 +43,14 @@ const readCode = (dir: string) =>
         .map((f) => fs.readFileSync(path.join(dir, f), "utf8"))
         .join("\n")
     : "";
-// With the shared outro appended, its code and strings are checked with the lesson's.
-const withOutro = base ? hasOutro(base) : false;
-const code = readCode(path.join(ROOT, "src", "lessons", slug)) + (withOutro ? `\n${readCode(OUTRO_DIR)}` : "");
+const code = readCode(path.join(ROOT, "src", "lessons", slug));
 const literals = (fn: string) => new Set([...code.matchAll(new RegExp(`${fn}\\(\\s*"([^"]+)"`, "g"))].map((m) => m[1]!));
 
 // Every key the code uses must exist; a key nothing uses is a warning.
 const usedKeys = literals("useString");
 try {
-  const readStrings = (dir: string) => validateStrings(JSON.parse(fs.readFileSync(path.join(dir, "strings.en.json"), "utf8")));
-  const lessonStrings = readStrings(src);
-  const keys = [...Object.keys(lessonStrings), ...(withOutro ? Object.keys(readStrings(OUTRO_DIR)) : [])];
+  const lessonStrings = validateStrings(JSON.parse(fs.readFileSync(path.join(src, "strings.en.json"), "utf8")));
+  const keys = Object.keys(lessonStrings);
   warnings.push(...symbolWarnings(lessonStrings));
   for (const key of usedKeys) if (!keys.includes(key)) errors.push(`strings.en.json: missing "${key}" (used by the scene code)`);
   for (const key of keys) if (!usedKeys.has(key)) warnings.push(`strings.en.json: "${key}" is not used by the scene code`);

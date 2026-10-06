@@ -1,5 +1,6 @@
 import fs from "node:fs";
-import type { Timing } from "../src/scene/timing";
+import { totalFrames, type Timing } from "../src/scene/timing";
+import { OUTRO_SCENE, type OutroClip } from "./outro-clip";
 
 // One committed source per lesson (content/lessons/<track>/<slug>/video/youtube.json)
 // → the text of a YouTube upload. Times come from the English timing, so a
@@ -25,29 +26,21 @@ export type YoutubeSource = {
 
 const LANGUAGE: L10n = { en: "English", vi: "Tiếng Việt" };
 
-// The shared outro (src/outro/) carries its own chapter title in every lesson.
-const OUTRO_ID = "outro";
+// The shared outro clip (content/shared/outro) carries its own chapter title in every lesson.
 const OUTRO_CHAPTER: L10n = { en: "Thanks for watching", vi: "Cảm ơn bạn đã xem" };
 // YouTube shows end-screen elements over the last 5–20 s of a video.
 const END_SCREEN_SEC = { min: 5, max: 20 };
 
-const chapterTitle = (src: YoutubeSource, id: string, l: Loc) => (id === OUTRO_ID ? OUTRO_CHAPTER[l] : src.chapters[id]![l]);
-
-// Where the site's embed stops (content/lesson-videos.ts `outroAt`): the outro's first whole second.
-export function outroAt(timing: Timing): number | undefined {
-  const outro = timing.scenes.find((s) => s.id === OUTRO_ID);
-  return outro ? Math.floor(outro.from / timing.fps) : undefined;
-}
-
-// Outro.tsx: after {next} the buttons fade and Inko crosses to the right within 26 frames.
-const OUTRO_LEAVE_FRAMES = 26;
+// Where the site's embed stops (content/lesson-videos.ts `outroAt`): the outro's first whole second,
+// which is the end of the lesson timing (the clip is joined after it).
+export const outroAt = (timing: Timing) => Math.floor(totalFrames(timing) / timing.fps);
 
 // The end screen starts once the outro has cleared its regions, inside YouTube's 5–20 s window.
-export function endScreen(timing: Timing): { start: number; seconds: number } | undefined {
-  const next = timing.cues[`${OUTRO_ID}.next`];
-  if (next === undefined) return undefined;
-  const end = timing.scenes.reduce((n, s) => n + s.durationInFrames, 0) / timing.fps;
-  const start = Math.max(Math.ceil((next + OUTRO_LEAVE_FRAMES) / timing.fps), Math.ceil(end - END_SCREEN_SEC.max));
+export function endScreen(timing: Timing, clip?: OutroClip): { start: number; seconds: number } | undefined {
+  if (!clip) return undefined;
+  const lesson = totalFrames(timing);
+  const end = (lesson + clip.frames) / timing.fps;
+  const start = Math.max(Math.ceil((lesson + clip.cues.next + clip.leaveFrames) / timing.fps), Math.ceil(end - END_SCREEN_SEC.max));
   const seconds = Math.floor(end - start);
   if (seconds < END_SCREEN_SEC.min) {
     throw new Error(`the outro leaves ${seconds} s for the end screen; YouTube needs ${END_SCREEN_SEC.min} s, so lengthen its # hold`);
@@ -113,7 +106,7 @@ const isL10n = (v: unknown): v is L10n =>
   typeof v === "object" && v !== null && LOCALES.every((l) => isText((v as Record<string, unknown>)[l]));
 
 // Checks the source against the timing; every problem is reported at once.
-export function validateYoutube(raw: unknown, timing: Timing): YoutubeSource {
+export function validateYoutube(raw: unknown, timing: Timing, clip?: OutroClip): YoutubeSource {
   const errors: string[] = [];
   const src = raw as YoutubeSource;
   for (const key of ["title", "summary", "lessonLink", "series"] as const) {
@@ -126,13 +119,13 @@ export function validateYoutube(raw: unknown, timing: Timing): YoutubeSource {
   if (!Array.isArray(src?.tags) || !src.tags.every(isText) || !Array.isArray(src?.hashtags) || !src.hashtags.every(isText)) {
     errors.push("tags and hashtags: need lists of text");
   } else if (tagsLength(src.tags) > 500) errors.push("tags: over YouTube's 500 characters");
-  if (timing.scenes.length < 3) errors.push("chapters: YouTube needs at least 3");
+  if (timing.scenes.length + (clip ? 1 : 0) < 3) errors.push("chapters: YouTube needs at least 3");
   for (const scene of timing.scenes) {
-    if (scene.id !== OUTRO_ID && !isL10n(src?.chapters?.[scene.id])) errors.push(`chapters.${scene.id}: needs en and vi titles`);
+    if (!isL10n(src?.chapters?.[scene.id])) errors.push(`chapters.${scene.id}: needs en and vi titles`);
     if (scene.durationInFrames < 10 * timing.fps) errors.push(`chapters.${scene.id}: under YouTube's 10 s minimum`);
   }
   for (const id of Object.keys(src?.chapters ?? {})) {
-    if (id === OUTRO_ID) errors.push(`chapters.${OUTRO_ID}: built in for the shared outro; remove it`);
+    if (id === OUTRO_SCENE) errors.push(`chapters.${OUTRO_SCENE}: built in for the shared outro; remove it`);
     else if (!timing.scenes.some((s) => s.id === id)) errors.push(`chapters.${id}: no such scene`);
   }
   if (!Array.isArray(src?.quizzes)) errors.push("quizzes: needs a list (it may be empty)");
@@ -168,9 +161,10 @@ export function validateYoutube(raw: unknown, timing: Timing): YoutubeSource {
   return src;
 }
 
-function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, dubs: Loc[]): string {
+function description(src: YoutubeSource, timing: Timing, slug: string, l: Loc, dubs: Loc[], clip?: OutroClip): string {
   const c = COPY[l];
-  const chapters = timing.scenes.map((s) => `${chapterTime(s.from / timing.fps)} ${chapterTitle(src, s.id, l)}`);
+  const chapters = timing.scenes.map((s) => `${chapterTime(s.from / timing.fps)} ${src.chapters[s.id]![l]}`);
+  if (clip) chapters.push(`${chapterTime(totalFrames(timing) / timing.fps)} ${OUTRO_CHAPTER[l]}`);
   // Subtitles exist for English and for every dubbed language.
   const subtitled = (["en", ...dubs.filter((d) => d !== "en")] as Loc[]).map((x) => LANGUAGE[x]).join(", ");
   const text = [
@@ -204,7 +198,7 @@ const block = (s: string) => ["```", s, "```"].join("\n");
 
 // One language's Studio copy: title and description (the original language also
 // holds the tags and the timed quizzes). Throws when a description is too long.
-export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string, lang: Loc, dubs: Loc[]): string {
+export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string, lang: Loc, dubs: Loc[], clip?: OutroClip): string {
   const original = lang === "en";
   const head = [
     `# YouTube metadata, ${LANGUAGE[lang]}: ${slug}`,
@@ -216,7 +210,7 @@ export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string,
     "## Title",
     block(src.title[lang]),
     "## Description",
-    block(description(src, timing, slug, lang, dubs)),
+    block(description(src, timing, slug, lang, dubs, clip)),
   ];
   if (!original) return [...head, ""].join("\n");
   // One block per quiz, each line ready to paste into its Studio field.
@@ -245,8 +239,8 @@ export function renderMetadata(src: YoutubeSource, timing: Timing, slug: string,
 }
 
 // Language-neutral upload steps; null for a lesson without the shared outro.
-export function renderUploadNotes(timing: Timing, slug: string): string | null {
-  const screen = endScreen(timing);
+export function renderUploadNotes(timing: Timing, slug: string, clip?: OutroClip): string | null {
+  const screen = endScreen(timing, clip);
   if (!screen) return null;
   return [
     `# Upload notes: ${slug}`,

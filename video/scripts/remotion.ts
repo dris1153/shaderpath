@@ -31,7 +31,7 @@ export function generatedDir(slug: string, locale: string) {
 }
 
 // A lesson's script and strings live with the lesson in content/; pipeline
-// fixtures (dummy, style) keep theirs next to their scene code.
+// fixtures (dummy, outro, style) keep theirs next to their scene code.
 export function lessonSource(slug: string) {
   const lessons = path.join(ROOT, "..", "content", "lessons");
   for (const track of fs.readdirSync(lessons)) {
@@ -49,15 +49,19 @@ export function ffmpeg(args: string[]) {
   execFileSync(process.execPath, [cli, "ffmpeg", ...args], { stdio: "inherit" });
 }
 
-// A file's length in seconds, read from the "Duration:" line ffmpeg prints (it exits 1 with no output).
-export function audioSeconds(file: string): number {
+// What `ffmpeg -i` prints about a file (it exits 1 with no output, so the text comes from stderr).
+export function ffmpegInfo(file: string): string {
   const cli = path.join(ROOT, "node_modules", "@remotion", "cli", "remotion-cli.js");
-  let text = "";
   try {
-    text = execFileSync(process.execPath, [cli, "ffmpeg", "-i", file], { stdio: "pipe" }).toString();
+    return execFileSync(process.execPath, [cli, "ffmpeg", "-i", file], { stdio: "pipe" }).toString();
   } catch (error) {
-    text = String((error as { stderr?: Buffer }).stderr ?? "");
+    return String((error as { stderr?: Buffer }).stderr ?? "");
   }
+}
+
+// A file's length in seconds, read from the "Duration:" line.
+export function audioSeconds(file: string): number {
+  const text = ffmpegInfo(file);
   const m = /Duration: (\d+):(\d+):(\d+(?:\.\d+)?)/.exec(text);
   if (!m) throw new Error(`cannot read the length of ${file}`);
   return Number(m[1]) * 3600 + Number(m[2]) * 60 + Number(m[3]);

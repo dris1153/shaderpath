@@ -2,7 +2,6 @@ import type { FC } from "react";
 import { AbsoluteFill, Html5Audio, Series, staticFile } from "remotion";
 import { NIGHT, PAPER, ThemeContext } from "../kit/palette";
 import { StringsContext } from "../kit/text";
-import { Outro } from "../outro/Outro";
 import { SceneContext, TimingContext } from "./cue";
 import type { Timing } from "./timing";
 
@@ -38,8 +37,7 @@ export function LessonVideo({
           <AbsoluteFill style={{ backgroundColor: palette.bg }}>
             <Series>
               {timing.scenes.map((scene) => {
-                // The shared outro is appended by the script loader, never registered per lesson.
-                const Scene = lesson.scenes[scene.id] ?? (scene.id === "outro" ? Outro : undefined);
+                const Scene = lesson.scenes[scene.id];
                 if (!Scene) throw new Error(`${slug}: no component for scene "${scene.id}"`);
                 return (
                   <Series.Sequence
