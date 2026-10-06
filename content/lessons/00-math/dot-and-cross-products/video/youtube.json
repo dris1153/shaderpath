@@ -179,7 +179,7 @@
   "thumbnail": {
     "lines": [
       "DOT & CROSS",
-      "a · b > 0 ?"
+      "{a} · {b} > 0 ?"
     ],
     "code": "max(0, dot(N, L))",
     "background": "a small round guard creature casting a soft translucent cone of vision across a tiled floor; a few colourful arrows; a little triangle with an arrow standing straight out of its face"
