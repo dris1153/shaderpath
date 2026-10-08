@@ -26,8 +26,9 @@ plans/
 # production
 /build
 
-# local agent state
-/.claude/
+# local agent state (the project skills are shared)
+/.claude/*
+!/.claude/skills/
 
 # lesson videos: renders, voice/timing output and the TTS cache stay local
 /video/node_modules/
