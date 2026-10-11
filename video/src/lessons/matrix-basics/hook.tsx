@@ -7,8 +7,9 @@ import { Stage } from "../../kit/stage";
 import { Code, Title, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { mul, rotation, scaling, type Mat } from "./mat";
-import { MatrixCard, SlimeSprite } from "./parts";
+import { mul, rotation, scaling, type Mat } from "../../kit/mat";
+import { MatrixCard } from "../../kit/matrix";
+import { SlimeSprite } from "../../mascot/Slime";
 
 // One slime, two orders of the same two steps: stretch ×2 along x (S) and a
 // quarter turn (R). Stretch-then-turn (R * S) stands tall; turn-then-stretch (S * R) lies wide.

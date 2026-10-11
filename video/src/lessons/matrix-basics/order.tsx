@@ -8,8 +8,9 @@ import { Code, Label, useString } from "../../kit/text";
 import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { apply, IDENTITY, mix, mul, rotation, scaling } from "./mat";
-import { Cross, MatGrid, MONO, SlimeSprite, UnitSquare } from "./parts";
+import { apply, IDENTITY, mix, mul, rotation, scaling } from "../../kit/mat";
+import { Cross, MatGrid, MONO, UnitSquare } from "../../kit/matrix";
+import { SlimeSprite } from "../../mascot/Slime";
 
 // A chain runs right to left: R * S * v stretches first, then turns. Then î on two grids:
 // R * S takes it to (2, 0), then (0, 2); S * R turns it to (0, 1), where the x stretch cannot touch it.

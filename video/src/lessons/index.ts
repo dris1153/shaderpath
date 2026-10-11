@@ -2,6 +2,7 @@ import type { LessonModule } from "../scene/LessonVideo";
 import { lesson as cartesianAndUvSpace } from "./cartesian-and-uv-space";
 import { lesson as dotAndCrossProducts } from "./dot-and-cross-products";
 import { lesson as dummy } from "./dummy";
+import { lesson as homogeneousCoordinates4x4 } from "./homogeneous-coordinates-4x4";
 import { lesson as matrixBasics } from "./matrix-basics";
 import { lesson as outro } from "./outro";
 import { lesson as style } from "./style";
@@ -17,4 +18,5 @@ export const LESSONS: Record<string, LessonModule> = {
   "vector-basics": vectorBasics,
   "dot-and-cross-products": dotAndCrossProducts,
   "matrix-basics": matrixBasics,
+  "homogeneous-coordinates-4x4": homogeneousCoordinates4x4,
 };

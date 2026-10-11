@@ -1,4 +1,4 @@
-import type { Vec } from "../../kit/grid";
+import type { Vec } from "./grid";
 
 // A 2×2 matrix as the theory writes it, [[a, b], [c, d]]: column 1 (a, c) is where
 // î lands, column 2 (b, d) is where ĵ lands.
@@ -41,4 +41,21 @@ export function svgMatrix(m: Mat, pivot: Vec): string {
 // "a, b; c, d" → rows of entries.
 export function parseMatrix(text: string): string[][] {
   return text.split(";").map((row) => row.split(",").map((e) => e.trim()));
+}
+
+// JetBrains Mono advance per font-size, for laying out Code strings.
+export const MONO = 0.6;
+
+// Geometry of a bracketed matrix of any size, relative to its centre: column centres and
+// widths, row baselines, total size. A 2-row card is 2.9 font sizes tall, 1.4 per extra row.
+export function matrixLayout(text: string, size: number) {
+  const rows = parseMatrix(text);
+  const nc = rows[0]!.length;
+  const colW = Array.from({ length: nc }, (_, c) => Math.max(...rows.map((r) => r[c]!.length)) * MONO * size + size * 0.9);
+  const w = colW.reduce((a, b) => a + b, 0) + size * 0.9;
+  const h = size * 1.45 * 2 + size * 1.4 * (rows.length - 2);
+  const left = -w / 2 + size * 0.45;
+  const centres = colW.map((cw, c) => left + colW.slice(0, c).reduce((a, b) => a + b, 0) + cw / 2);
+  const rowY = rows.map((_, r) => -h / 2 + size * 1.45 * 2 / 2 - size * 0.45 + size * 1.4 * r);
+  return { rows, colW, w, h, centres, rowY };
 }

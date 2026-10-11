@@ -7,8 +7,8 @@ import { Stage } from "../../kit/stage";
 import { Code, Label, Title, useString } from "../../kit/text";
 import { Inko, type Pose } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { apply, IDENTITY, mix, type Mat } from "./mat";
-import { Cross, curvePath, MatGrid, UnitSquare } from "./parts";
+import { apply, IDENTITY, mix, type Mat } from "../../kit/mat";
+import { Cross, curvePath, MatGrid, UnitSquare } from "../../kit/matrix";
 
 // The machine M, then the whole plane carried through it. The plane breathes between
 // identity and M while the three rules are named, settles on "linear", then breaks the

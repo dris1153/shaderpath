@@ -1,6 +1,7 @@
 import { useCurrentFrame } from "remotion";
 import { progress } from "../kit/easing";
 import type { Vec } from "../kit/grid";
+import { svgMatrix, type Mat } from "../kit/mat";
 import { usePalette } from "../kit/palette";
 
 // The enemy: a lime blob standing on `at`. `face` runs from 1 (looking right)
@@ -35,6 +36,17 @@ export function Slime({ at, face = 1, scale = 0.7, hop = 0, scared = false }: {
       ) : (
         <path d={`M ${ex - 9} -20 Q ${ex} -27 ${ex + 9} -20`} fill="none" stroke={pal.outline} strokeWidth={5} strokeLinecap="round" />
       )}
+    </g>
+  );
+}
+
+// The slime as a sprite under a y-up matrix, pivoting on its body centre, or on its feet
+// when it stands on a point the matrix must keep (the origin).
+export function SlimeSprite({ at, m, scale = 1, pivot = "body" }: { at: Vec; m: Mat; scale?: number; pivot?: "body" | "feet" }) {
+  const p = pivot === "feet" ? at : { x: at.x, y: at.y - 46 * scale };
+  return (
+    <g transform={svgMatrix(m, p)}>
+      <Slime at={at} scale={scale} />
     </g>
   );
 }

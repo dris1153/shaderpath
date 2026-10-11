@@ -8,7 +8,7 @@ import { Code, Label, useString } from "../../kit/text";
 import { vecPlain } from "../../kit/vec-marker";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { MatrixCard, MONO } from "./parts";
+import { MatrixCard, MONO } from "../../kit/matrix";
 
 // One pill per idea as it is named, then the pointer to the lesson's demo.
 const CHAR = 30 * MONO; // Code at 30 px

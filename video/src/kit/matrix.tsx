@@ -1,14 +1,12 @@
 import { useId } from "react";
-import { progress } from "../../kit/easing";
-import { lerp, toStage, type GridSpace, type Vec } from "../../kit/grid";
-import { usePalette } from "../../kit/palette";
-import { Box, Shape } from "../../kit/shapes";
-import { Code } from "../../kit/text";
-import { Slime } from "../../mascot/Slime";
-import { apply, parseMatrix, svgMatrix, type Mat } from "./mat";
+import { progress } from "./easing";
+import { lerp, toStage, type GridSpace, type Vec } from "./grid";
+import { apply, matrixLayout, type Mat } from "./mat";
+import { usePalette } from "./palette";
+import { Box, Shape } from "./shapes";
+import { Code } from "./text";
 
-// JetBrains Mono advance per font-size, for laying out Code strings.
-export const MONO = 0.6;
+export { MONO, matrixLayout } from "./mat";
 
 // A world segment carried through any world → stage map, sampled so a curved map draws a curve.
 export function curvePath(map: (p: Vec) => Vec, from: Vec, to: Vec, n = 24): string {
@@ -69,26 +67,15 @@ export function UnitSquare({ space, m, t, opacity = 0.3, map }: {
   return <path d={d} fill={pal.accent} opacity={opacity * p} stroke={pal.outline} strokeWidth={3} strokeOpacity={0.5} />;
 }
 
-export function matrixLayout(text: string, size: number) {
-  const rows = parseMatrix(text);
-  const colW = [0, 1].map((c) => Math.max(...rows.map((r) => r[c]!.length)) * MONO * size + size * 0.9);
-  const w = colW[0]! + colW[1]! + size * 0.9;
-  const h = size * 2.9;
-  const left = -w / 2 + size * 0.45;
-  const centres = [left + colW[0]! / 2, left + colW[0]! + colW[1]! / 2];
-  return { rows, colW, w, h, centres };
-}
-
-// A bracketed 2×2 matrix centred on (x, y). `tint` (0–1 per column) washes column 1
-// in `hero` (î) and column 2 in `sky` (ĵ); `show` (0–1 per column) fades the entries in.
-export function MatrixCard({ x, y, text, size = 30, tint = [0, 0], show = [1, 1], panel = true }: {
-  x: number; y: number; text: string; size?: number; tint?: [number, number]; show?: [number, number]; panel?: boolean;
+// A bracketed matrix centred on (x, y). `tint` (0–1 per column) washes a column in its colour
+// (default: column 1 `hero` for î, column 2 `sky` for ĵ); `show` (0–1 per column) fades entries in.
+export function MatrixCard({ x, y, text, size = 30, tint, show, colors, panel = true }: {
+  x: number; y: number; text: string; size?: number; tint?: number[]; show?: number[]; colors?: string[]; panel?: boolean;
 }) {
   const pal = usePalette();
-  const { rows, colW, w, h, centres } = matrixLayout(text, size);
-  const cols = [pal.hero, pal.sky];
+  const { rows, colW, w, h, centres, rowY } = matrixLayout(text, size);
+  const cols = colors ?? [pal.hero, pal.sky];
   const top = y - h / 2;
-  const rowY = [y - size * 0.45, y + size * 0.95];
   const lip = size * 0.35;
   const bx = [x - w / 2 + size * 0.15, x + w / 2 - size * 0.15];
   const bracket = (bxv: number, dir: 1 | -1) =>
@@ -96,31 +83,21 @@ export function MatrixCard({ x, y, text, size = 30, tint = [0, 0], show = [1, 1]
   return (
     <g>
       {panel ? <Box x={x - w / 2 - 18} y={top - 12} w={w + 36} h={h + 24} r={22} fill={pal.panel} /> : null}
-      {[0, 1].map((c) =>
-        tint[c]! > 0 ? (
-          <rect key={`t${c}`} x={x + centres[c]! - colW[c]! / 2 + 4} y={top + size * 0.25} width={colW[c]! - 8}
-            height={h - size * 0.5} rx={size * 0.3} fill={cols[c]} opacity={0.28 * tint[c]!} />
+      {colW.map((cw, c) =>
+        (tint?.[c] ?? 0) > 0 && cols[c] ? (
+          <rect key={`t${c}`} x={x + centres[c]! - cw / 2 + 4} y={top + size * 0.25} width={cw - 8}
+            height={h - size * 0.5} rx={size * 0.3} fill={cols[c]} opacity={0.28 * tint![c]!} />
         ) : null,
       )}
       <Shape d={bracket(bx[0]!, 1)} strokeWidth={5} />
       <Shape d={bracket(bx[1]!, -1)} strokeWidth={5} />
       {rows.map((row, r) =>
         row.map((entry, c) => (
-          <g key={`${r}${c}`} opacity={show[c]}>
-            <Code x={x + centres[c]!} y={rowY[r]!} size={size} anchor="middle">{entry}</Code>
+          <g key={`${r}${c}`} opacity={show?.[c] ?? 1}>
+            <Code x={x + centres[c]!} y={y + rowY[r]!} size={size} anchor="middle">{entry}</Code>
           </g>
         )),
       )}
-    </g>
-  );
-}
-
-// The slime as a sprite under a matrix, pivoting on its body centre.
-export function SlimeSprite({ at, m, scale = 1 }: { at: Vec; m: Mat; scale?: number }) {
-  const pivot = { x: at.x, y: at.y - 46 * scale };
-  return (
-    <g transform={svgMatrix(m, pivot)}>
-      <Slime at={at} scale={scale} />
     </g>
   );
 }

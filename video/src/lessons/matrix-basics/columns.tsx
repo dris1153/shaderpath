@@ -7,8 +7,8 @@ import { Stage } from "../../kit/stage";
 import { Code, Label, Title, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { apply, IDENTITY, mix, scaling, type Mat } from "./mat";
-import { Cross, MatGrid, matrixLayout, MatrixCard, Tick, UnitSquare } from "./parts";
+import { apply, IDENTITY, mix, scaling, type Mat } from "../../kit/mat";
+import { Cross, MatGrid, matrixLayout, MatrixCard, Tick, UnitSquare } from "../../kit/matrix";
 
 // î and ĵ decide the whole grid; the card stores where they land, one per column.
 // The theory's example: columns (2, 0) and (0, 1), a horizontal stretch.

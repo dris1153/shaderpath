@@ -7,8 +7,8 @@ import { Stage } from "../../kit/stage";
 import { Code, useString } from "../../kit/text";
 import { useCue } from "../../scene/cue";
 import { stride, Walker } from "../../mascot/Walker";
-import { apply, IDENTITY, mix, scaling } from "./mat";
-import { MatGrid, MatrixCard } from "./parts";
+import { apply, IDENTITY, mix, scaling } from "../../kit/mat";
+import { MatGrid, MatrixCard } from "../../kit/matrix";
 
 // v = (3, 4) is three î plus four ĵ. The matrix keeps the weights and swaps in its
 // columns (2, 0) and (0, 1): M v = 3 * (2, 0) + 4 * (0, 1) = (6, 4), the theory's example.

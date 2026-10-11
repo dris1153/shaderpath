@@ -6,8 +6,8 @@ import { Stage } from "../../kit/stage";
 import { Label, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { apply, mix, rotation, scaling, type Mat } from "./mat";
-import { MatGrid, MatrixCard, UnitSquare } from "./parts";
+import { apply, mix, rotation, scaling, type Mat } from "../../kit/mat";
+import { MatGrid, MatrixCard, UnitSquare } from "../../kit/matrix";
 
 // Scale: each column touches one axis. Shear: î stays, ĵ slides to (k, 1); the square
 // leans like a rotation, but its sheared edge grows to √(k² + 1) where a rotation keeps 1.

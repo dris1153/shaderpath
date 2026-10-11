@@ -1,0 +1,166 @@
+{
+  "title": {
+    "en": "Why Games Use 4x4 Matrices: Homogeneous Coordinates for Games & Graphics",
+    "vi": "Vì sao game dùng ma trận 4x4? Toạ độ đồng nhất cho game & đồ hoạ"
+  },
+  "summary": {
+    "en": "A matrix can stretch, turn and shear a slime, but it can't slide it five steps to the right. In under five minutes, Inko the octopus adds one extra number, w: see how the 4x4 matrix keeps the move in its last column, why w = 1 is a point and w = 0 a direction, the normals trap, the T * R * S order, and the divide by w that makes far things small.",
+    "vi": "Ma trận kéo giãn, xoay và shear được con slime, nhưng không dời nó sang phải năm bước được. Trong chưa đầy năm phút, bạch tuộc Inko thêm đúng một con số, w: xem ma trận 4x4 giữ phép dời ở cột cuối, vì sao w = 1 là điểm còn w = 0 là hướng, cái bẫy của pháp tuyến, thứ tự T * R * S, và phép chia cho w làm vật ở xa nhỏ lại."
+  },
+  "bullets": {
+    "en": [
+      "why no 3x3 matrix can move an object: M * 0 = 0 keeps the origin put",
+      "homogeneous coordinates: (x, y, z) becomes (x, y, z, 1)",
+      "the 4x4 layout: rotation and scale in the corner, the move t in the last column, 0 0 0 1 below",
+      "why it works: a translation is a shear one dimension up",
+      "w = 1 is a point and gets moved; w = 0 is a direction and doesn't",
+      "transforming normals with the inverse transpose",
+      "model matrices as T * R * S, and what R * T does instead",
+      "the divide by w: x / w makes far things small"
+    ],
+    "vi": [
+      "vì sao không ma trận 3x3 nào dời được vật: M * 0 = 0 giữ gốc toạ độ đứng yên",
+      "toạ độ đồng nhất: (x, y, z) thành (x, y, z, 1)",
+      "bố cục ma trận 4x4: xoay và scale ở góc, phép dời t ở cột cuối, 0 0 0 1 ở hàng dưới",
+      "vì sao được: phép dời là một phép shear ở cao hơn một chiều",
+      "w = 1 là điểm và bị dời; w = 0 là hướng và đứng yên",
+      "biến đổi pháp tuyến bằng nghịch đảo chuyển vị",
+      "dựng model matrix theo T * R * S, và R * T thì làm gì",
+      "phép chia cho w: x / w làm vật ở xa nhỏ lại"
+    ]
+  },
+  "lessonLink": {
+    "en": "Full lesson, with the interactive \"w=1 Is a Point, w=0 Is a Direction\" demo, exercises and review cards:",
+    "vi": "Bài học đầy đủ, có demo tương tác \"w=1 là điểm, w=0 là hướng\", bài tập và thẻ ôn tập:"
+  },
+  "series": {
+    "en": "Math Foundations for Graphics · lesson 5",
+    "vi": "Nền tảng Toán học cho đồ hoạ · bài 5"
+  },
+  "tags": [
+    "homogeneous coordinates",
+    "4x4 matrix",
+    "transformation matrix",
+    "translation matrix",
+    "model matrix",
+    "TRS matrix",
+    "affine transformation",
+    "normal matrix",
+    "inverse transpose",
+    "perspective divide",
+    "w coordinate",
+    "game math",
+    "webgl",
+    "three.js",
+    "threejs",
+    "glsl",
+    "shaders",
+    "computer graphics",
+    "graphics programming",
+    "shaderpath"
+  ],
+  "hashtags": [
+    "gamedev",
+    "webgl",
+    "threejs"
+  ],
+  "chapters": {
+    "hook": {
+      "en": "Why a matrix can't move the slime",
+      "vi": "Vì sao ma trận không dời được slime"
+    },
+    "extra": {
+      "en": "One extra number: w",
+      "vi": "Thêm một con số: w"
+    },
+    "lift": {
+      "en": "Why it works, one dimension down",
+      "vi": "Vì sao được: nhìn ở thấp hơn một chiều"
+    },
+    "switch": {
+      "en": "w = 1 is a point, w = 0 a direction",
+      "vi": "w = 1 là điểm, w = 0 là hướng"
+    },
+    "normals": {
+      "en": "The normals trap",
+      "vi": "Cái bẫy của pháp tuyến"
+    },
+    "trs": {
+      "en": "Building T * R * S",
+      "vi": "Dựng T * R * S"
+    },
+    "divide": {
+      "en": "The divide by w",
+      "vi": "Phép chia cho w"
+    },
+    "recap": {
+      "en": "Recap",
+      "vi": "Tóm tắt"
+    }
+  },
+  "quizzes": [
+    {
+      "at": "extra:end",
+      "question": "T moves by t = (5, −2, 0). Where does the point (2, 0, 3, 1) land?",
+      "answers": [
+        "(7, −2, 3, 1)",
+        "(2, 0, 3, 1)",
+        "(10, 0, 0, 1)"
+      ],
+      "correct": 0,
+      "explanation": "w = 1 weights the last column by 1, so t is added: (2 + 5, 0 − 2, 3 + 0, 1)."
+    },
+    {
+      "at": "switch:end",
+      "question": "The same T multiplies the direction (0, 1, 0, 0). What comes out?",
+      "answers": [
+        "(0, 1, 0, 0)",
+        "(5, −1, 0, 0)",
+        "(5, −1, 0, 1)"
+      ],
+      "correct": 0,
+      "explanation": "w = 0 multiplies the move column by zero: a direction ignores the translation."
+    },
+    {
+      "at": "normals:end",
+      "question": "A model is stretched 3x along x. How should its normals be transformed?",
+      "answers": [
+        "With M itself",
+        "With transpose(inverse(M))",
+        "They never change"
+      ],
+      "correct": 1,
+      "explanation": "M tilts normals with the stretch; the inverse transpose keeps them perpendicular to the surface."
+    },
+    {
+      "at": "trs:end",
+      "question": "Which matrix scales and turns an object in place, then moves it out?",
+      "answers": [
+        "T * R * S",
+        "R * T * S",
+        "S * R * T"
+      ],
+      "correct": 0,
+      "explanation": "Read right to left: S runs first, then R, then T."
+    },
+    {
+      "at": "divide:end",
+      "question": "After projection a point has x = 3 and w = 6. Where does it land on screen?",
+      "answers": [
+        "0.5",
+        "18",
+        "2"
+      ],
+      "correct": 0,
+      "explanation": "The GPU divides by w: 3 / 6 = 0.5. Twice as far means half as far from the center."
+    }
+  ],
+  "thumbnail": {
+    "lines": [
+      "WHY 4x4?",
+      "x, y, z, w"
+    ],
+    "code": "vec4(position, 1.0)",
+    "background": "a flat square grid floor with a second tilted grid plane floating above it, joined by a few dashed vertical posts; a big square bracket matrix with its last column highlighted; a small arrow sliding along the upper plane"
+  }
+}

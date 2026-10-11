@@ -8,8 +8,8 @@ import { Stage } from "../../kit/stage";
 import { Code, Label, useString } from "../../kit/text";
 import { Inko } from "../../mascot/Inko";
 import { useCue } from "../../scene/cue";
-import { apply, mix, rotation, type Mat } from "./mat";
-import { Cross, MatGrid, MatrixCard, MONO } from "./parts";
+import { apply, mix, rotation, type Mat } from "../../kit/mat";
+import { Cross, MatGrid, MatrixCard, MONO } from "../../kit/matrix";
 import { vecPlain } from "../../kit/vec-marker";
 
 // Build R(θ) from where î and ĵ land on the unit circle (θ = 30° for the general case),
