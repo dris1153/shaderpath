@@ -23,7 +23,7 @@ Scenes ask for a role, never a hex value.
 |---|---|
 | `hero` | the one thing to look at — at most one hero per frame |
 | `accent` | a supporting emphasis |
-| `ok` / `warn` | right / wrong |
+| `ok` / `warn` | right / wrong (in `paper`, `warn` is the same red as `hero`: mark "wrong" with a ✗ path or a dashed line, not by colour alone) |
 | `sky` | cool, neutral data (grids, UV cells) |
 | `outline` / `text` / `textMuted` | lines and type |
 | `inko` / `inkoShade` / `inkoLight` / `cheek` | the mascot only |

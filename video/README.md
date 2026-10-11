@@ -240,7 +240,7 @@ Edit the json, never the generated file. Re-voicing moves every time automatical
 
 | Field | Content |
 |---|---|
-| `title`, `summary`, `lessonLink`, `series` | `{ en, vi }` strings (title ≤ 100 chars) |
+| `title`, `summary`, `lessonLink`, `series` | `{ en, vi }` strings (title ≤ 100 chars). `series` ends in the video's number in its track, counted over lessons that have a video, not the lesson order (mini-build checkpoints have none: `matrix-basics` is lesson 5 of the course and "lesson 4" on YouTube). Written by hand, so count the track's existing `youtube.json` files |
 | `bullets` | `{ en: [...], vi: [...] }` for the "In this video" list |
 | `tags`, `hashtags` | lists (tags ≤ 500 chars in all) |
 | `chapters` | one `{ en, vi }` title per scene id; every scene needs one, and each must last ≥ 10 s |
