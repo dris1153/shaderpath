@@ -1,0 +1,345 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:05.200
+Lần trước, ma trận kéo giãn,
+xoay và shear được cả mặt phẳng.
+
+2
+00:00:05.200 --> 00:00:10.000
+Giờ thử việc đơn giản nhất trong mọi game:
+dời con slime này sang phải năm bước.
+
+3
+00:00:10.000 --> 00:00:13.533
+Ma trận đẩy mạnh, mà con
+slime vẫn không hề nhúc nhích.
+
+4
+00:00:13.533 --> 00:00:16.833
+Ma trận nào nhân với vector
+không cũng ra vector không,
+
+5
+00:00:16.833 --> 00:00:18.867
+nên gốc toạ độ luôn đứng yên.
+
+6
+00:00:18.867 --> 00:00:22.967
+Nhưng dời mọi điểm thêm một
+vector t thì gốc phải tới t.
+
+7
+00:00:22.967 --> 00:00:27.933
+Nên không ma trận 3x3 nào dời được
+một vật 3D, đặt số vào đâu cũng vậy.
+
+8
+00:00:27.933 --> 00:00:30.667
+Cách sửa chỉ là thêm một con số.
+
+9
+00:00:32.733 --> 00:00:37.300
+Cho mỗi điểm thêm con số thứ tư,
+w, và đặt nó bằng một.
+
+10
+00:00:37.300 --> 00:00:41.733
+Vậy x, y, z thành x, y, z, một.
+
+11
+00:00:41.733 --> 00:00:44.333
+Cách viết đó gọi là toạ độ đồng nhất.
+
+12
+00:00:44.333 --> 00:00:46.900
+Ma trận lớn lên thành 4x4.
+
+13
+00:00:46.900 --> 00:00:51.300
+Xoay và scale nằm trong khối
+3x3 ở góc trên bên trái.
+
+14
+00:00:51.300 --> 00:00:53.767
+Cột cuối cùng chứa phép dời, t.
+
+15
+00:00:53.767 --> 00:00:56.767
+Hàng cuối là không, không, không, một.
+
+16
+00:00:56.767 --> 00:00:59.600
+Nhân giống hệt như bài trước:
+trộn các cột lại,
+
+17
+00:00:59.600 --> 00:01:02.167
+với trọng số chính là các số của điểm.
+
+18
+00:01:02.167 --> 00:01:07.933
+Cột cuối có trọng số là w, nên khi w
+bằng một, t được cộng thẳng vào kết quả.
+
+19
+00:01:07.933 --> 00:01:11.433
+Giả sử t là vector (5, −2, 0).
+
+20
+00:01:11.433 --> 00:01:13.200
+Lấy điểm (1, 1, 1).
+
+21
+00:01:13.200 --> 00:01:16.400
+Sau phép nhân, nó tới (6, −1, 1).
+
+22
+00:01:16.400 --> 00:01:21.967
+Giờ thì dời, xoay và scale đều là
+cùng một việc: phép nhân ma trận.
+
+23
+00:01:24.933 --> 00:01:27.233
+Vì sao thêm một con số lại được?
+
+24
+00:01:27.233 --> 00:01:28.933
+Ta không vẽ được bốn chiều,
+
+25
+00:01:28.933 --> 00:01:32.333
+nên hãy xem cùng mẹo đó
+ở thấp hơn một chiều.
+
+26
+00:01:32.333 --> 00:01:38.067
+Một thế giới 2D có thêm số thứ ba, w,
+và nằm trên mặt phẳng ở độ cao một.
+
+27
+00:01:38.067 --> 00:01:42.367
+Ma trận 3x3 có t ở cột
+cuối sẽ shear không gian:
+
+28
+00:01:42.367 --> 00:01:45.167
+mặt phẳng ở độ cao một
+trượt đi một đoạn t,
+
+29
+00:01:45.167 --> 00:01:48.267
+còn sàn ở độ cao không
+thì đứng yên hoàn toàn.
+
+30
+00:01:48.267 --> 00:01:51.533
+Vậy bên trong mặt phẳng,
+cả thế giới đã dời đi.
+
+31
+00:01:51.533 --> 00:01:54.833
+Một ma trận bình thường
+đã tạo ra phép dời.
+
+32
+00:01:54.833 --> 00:01:58.900
+Cái sàn đứng yên đó là
+món quà thứ hai của w.
+
+33
+00:01:58.900 --> 00:02:02.600
+w bằng một đánh dấu
+một điểm, và nó bị dời.
+
+34
+00:02:02.600 --> 00:02:07.833
+w bằng không đánh dấu một hướng:
+phép dời bị nhân với không, nên biến mất.
+
+35
+00:02:07.833 --> 00:02:11.667
+Thử chính ma trận đó
+với vector (1, 1, 1, 0).
+
+36
+00:02:11.667 --> 00:02:14.100
+Kết quả vẫn y nguyên, không đổi.
+
+37
+00:02:14.100 --> 00:02:16.200
+Con slime trượt đi khắp bản đồ,
+
+38
+00:02:16.200 --> 00:02:19.600
+nhưng vận tốc và hướng nhìn
+của nó vẫn giữ nguyên như cũ.
+
+39
+00:02:19.600 --> 00:02:23.467
+Quên số không ở vận tốc,
+là nó sẽ bị dời đi như một điểm.
+
+40
+00:02:23.467 --> 00:02:28.967
+Slime càng đi xa, nó càng chỉ sai
+hướng, mà chẳng có gì báo lỗi cả.
+
+41
+00:02:31.633 --> 00:02:35.433
+Pháp tuyến cũng là hướng,
+nhưng còn một cái bẫy nữa.
+
+42
+00:02:35.433 --> 00:02:37.167
+Kéo quả bóng rộng gấp đôi,
+
+43
+00:02:37.167 --> 00:02:41.967
+rồi biến đổi pháp tuyến bằng chính ma
+trận đó: chúng nghiêng theo chiều kéo,
+
+44
+00:02:41.967 --> 00:02:44.033
+và không còn vuông góc với bề mặt.
+
+45
+00:02:44.033 --> 00:02:46.267
+Thế là ánh sáng sẽ tính sai.
+
+46
+00:02:46.267 --> 00:02:50.433
+Với pháp tuyến, hãy dùng nghịch
+đảo chuyển vị của khối 3x3.
+
+47
+00:02:50.433 --> 00:02:56.433
+Nếu chỉ có xoay, hoặc scale đều mọi trục,
+bạn sẽ không bao giờ thấy lỗi này.
+
+48
+00:02:56.967 --> 00:02:59.567
+Để dựng model matrix cho một vật thể,
+
+49
+00:02:59.567 --> 00:03:05.567
+hãy đặt phép xoay và scale vào
+góc đó, rồi nhân lại: T * R * S.
+
+50
+00:03:05.833 --> 00:03:10.700
+Đọc từ phải sang trái: scale tại chỗ
+trước, xoay quanh tâm của chính nó,
+
+51
+00:03:10.700 --> 00:03:12.800
+rồi mới dời nó ra thế giới.
+
+52
+00:03:12.800 --> 00:03:16.400
+Đổi thành R * T, phép dời sẽ chạy trước.
+
+53
+00:03:16.400 --> 00:03:19.633
+Rồi phép xoay quay cả con
+slime quanh gốc thế giới:
+
+54
+00:03:19.633 --> 00:03:22.833
+nó bay vòng tròn thay vì tự xoay tại chỗ.
+
+55
+00:03:24.700 --> 00:03:27.333
+Còn một việc cuối nằm trong w.
+
+56
+00:03:27.333 --> 00:03:32.367
+Dời, xoay và scale không bao giờ
+đổi nó: điểm luôn giữ số một,
+
+57
+00:03:32.367 --> 00:03:34.367
+còn hướng luôn giữ số không.
+
+58
+00:03:34.367 --> 00:03:38.667
+Ma trận chiếu, mà ta sẽ học
+ở bài sau, ghi vào một w mới:
+
+59
+00:03:38.667 --> 00:03:41.433
+chính là độ sâu của
+điểm phía trước camera.
+
+60
+00:03:41.433 --> 00:03:46.033
+Rồi GPU tự động chia x, y và z cho w.
+
+61
+00:03:46.033 --> 00:03:51.033
+Một điểm có x bằng hai và
+w bằng năm sẽ ở vị trí 0.4.
+
+62
+00:03:51.033 --> 00:03:56.333
+Xa gấp đôi, w bằng mười, nó ở 0.2:
+cách tâm chỉ còn một nửa.
+
+63
+00:03:56.333 --> 00:04:00.900
+Vật ở xa trông nhỏ hơn,
+và đó chỉ là một phép chia.
+
+64
+00:04:01.033 --> 00:04:04.267
+Tóm lại: ma trận luôn
+giữ nguyên gốc toạ độ,
+
+65
+00:04:04.267 --> 00:04:07.767
+nên muốn dời thì phải
+thêm con số thứ tư, w.
+
+66
+00:04:07.767 --> 00:04:13.200
+Ma trận 4x4 giữ xoay và scale
+ở góc, và phép dời ở cột cuối.
+
+67
+00:04:13.200 --> 00:04:16.000
+w bằng một là điểm, và nó bị dời.
+
+68
+00:04:16.000 --> 00:04:18.767
+w bằng không là hướng, và nó đứng yên.
+
+69
+00:04:18.767 --> 00:04:21.367
+Pháp tuyến thì dùng nghịch đảo chuyển vị.
+
+70
+00:04:21.367 --> 00:04:27.300
+Dựng model theo T * R * S,
+và phép chia cho w làm vật ở xa nhỏ lại.
+
+71
+00:04:27.300 --> 00:04:30.700
+Bài sau: model, view và projection.
+
+72
+00:04:30.700 --> 00:04:34.367
+Giờ hãy mở demo trong bài học này,
+kéo phép dời hết cỡ,
+
+73
+00:04:34.367 --> 00:04:37.467
+và xem hai mũi tên màu xanh vẫn đứng yên.
+
+74
+00:04:37.967 --> 00:04:42.367
+Nếu thấy dễ hiểu, bấm like rồi đăng
+ký kênh để không lỡ bài sau nhé.
+
+75
+00:04:42.367 --> 00:04:43.934
+Hẹn gặp lại!

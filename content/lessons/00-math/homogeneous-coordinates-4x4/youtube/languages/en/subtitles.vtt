@@ -1,0 +1,347 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.800
+Last time, a matrix could stretch,
+turn and shear the whole plane.
+
+2
+00:00:04.800 --> 00:00:09.867
+Now try the simplest move in a game:
+slide this slime five steps to the right.
+
+3
+00:00:09.867 --> 00:00:13.167
+The matrix pushes,
+and the slime doesn't budge.
+
+4
+00:00:13.167 --> 00:00:16.467
+Any matrix times the zero
+vector gives the zero vector,
+
+5
+00:00:16.467 --> 00:00:19.167
+so the origin always stays put.
+
+6
+00:00:19.167 --> 00:00:24.433
+But sliding every point by a vector,
+t, would send the origin to t.
+
+7
+00:00:24.433 --> 00:00:29.500
+So no 3x3 matrix can move a 3D object,
+wherever you put its numbers.
+
+8
+00:00:29.500 --> 00:00:31.933
+The fix is one extra number.
+
+9
+00:00:32.733 --> 00:00:36.533
+Give every point a fourth number,
+w, and set it to one.
+
+10
+00:00:36.533 --> 00:00:40.967
+So x, y, z becomes x, y, z, one.
+
+11
+00:00:40.967 --> 00:00:43.000
+That's homogeneous coordinates.
+
+12
+00:00:43.000 --> 00:00:45.367
+The matrix grows to 4x4.
+
+13
+00:00:45.367 --> 00:00:49.067
+Rotation and scale live
+in the top-left 3x3 block.
+
+14
+00:00:49.067 --> 00:00:51.933
+The last column holds the move, t.
+
+15
+00:00:51.933 --> 00:00:57.200
+The bottom row is zero, zero, zero, one.
+
+16
+00:00:57.400 --> 00:01:02.767
+Multiply as in the last lesson: mix the
+columns, weighted by the point's numbers.
+
+17
+00:01:02.767 --> 00:01:08.367
+The last column is weighted by w,
+so with w equal to one, t gets added in.
+
+18
+00:01:08.367 --> 00:01:12.200
+Say t is the vector (5, −2, 0).
+
+19
+00:01:12.200 --> 00:01:14.600
+Take the point (1, 1, 1).
+
+20
+00:01:14.600 --> 00:01:18.100
+It lands at (6, −1, 1).
+
+21
+00:01:18.100 --> 00:01:24.033
+Now moving, turning and scaling are all
+the same thing: matrix multiplication.
+
+22
+00:01:24.933 --> 00:01:27.200
+Why does one extra number work?
+
+23
+00:01:27.200 --> 00:01:28.800
+We can't draw four dimensions,
+
+24
+00:01:28.800 --> 00:01:32.167
+so let's watch the same
+trick one dimension down.
+
+25
+00:01:32.167 --> 00:01:37.967
+A flat 2D world gets a third number, w,
+and floats on the plane at height one.
+
+26
+00:01:37.967 --> 00:01:42.733
+A 3x3 matrix with t in its
+last column shears space:
+
+27
+00:01:42.733 --> 00:01:45.100
+the plane at height one slides by t,
+
+28
+00:01:45.100 --> 00:01:47.900
+while the floor at height
+zero doesn't move at all.
+
+29
+00:01:47.900 --> 00:01:50.733
+So inside the plane,
+the whole world moved.
+
+30
+00:01:50.733 --> 00:01:53.600
+A plain matrix made a translation.
+
+31
+00:01:54.833 --> 00:01:57.133
+That still floor is the second gift of w.
+
+32
+00:01:57.133 --> 00:02:01.033
+w equal to one marks a point,
+and it gets moved.
+
+33
+00:02:01.033 --> 00:02:05.867
+w equal to zero marks a direction:
+the move is multiplied by zero,
+
+34
+00:02:05.867 --> 00:02:10.833
+so it vanishes. Try the same
+matrix on the vector (1, 1,
+
+35
+00:02:10.833 --> 00:02:13.200
+1, 0).
+
+36
+00:02:13.267 --> 00:02:15.433
+It comes out unchanged.
+
+37
+00:02:15.433 --> 00:02:17.100
+The slime slides across the map,
+
+38
+00:02:17.100 --> 00:02:21.800
+but its velocity and the way
+it faces stay exactly the same.
+
+39
+00:02:21.833 --> 00:02:26.167
+Forget the zero on a velocity,
+and it gets moved like a point.
+
+40
+00:02:26.167 --> 00:02:30.767
+The farther the slime goes, the more
+wrong it points, and nothing crashes.
+
+41
+00:02:31.633 --> 00:02:35.100
+Normals are directions too,
+with one more catch.
+
+42
+00:02:35.100 --> 00:02:36.567
+Stretch a ball twice as wide,
+
+43
+00:02:36.567 --> 00:02:40.000
+and move its normals with the same
+matrix: they lean with the stretch,
+
+44
+00:02:40.000 --> 00:02:43.000
+and stop being perpendicular
+to the surface.
+
+45
+00:02:43.000 --> 00:02:45.300
+So the lighting comes out wrong.
+
+46
+00:02:45.333 --> 00:02:50.267
+For normals, use the inverse
+transpose of the 3x3 block instead.
+
+47
+00:02:50.267 --> 00:02:55.867
+With only rotation, or the same scale
+on every axis, you'd never notice.
+
+48
+00:02:56.967 --> 00:02:58.867
+To build an object's model matrix,
+
+49
+00:02:58.867 --> 00:03:04.867
+put its rotation and scale in that
+corner, and multiply: T * R * S.
+
+50
+00:03:05.300 --> 00:03:10.667
+Read it right to left: scale in place,
+rotate around its own center,
+
+51
+00:03:10.667 --> 00:03:13.133
+then move it out into the world.
+
+52
+00:03:13.200 --> 00:03:18.000
+Swap it to R * T,
+and the move happens first.
+
+53
+00:03:18.000 --> 00:03:21.233
+Then the turn swings the
+slime around the world origin:
+
+54
+00:03:21.233 --> 00:03:23.800
+it orbits instead of spinning.
+
+55
+00:03:24.700 --> 00:03:26.767
+One last job hides in w.
+
+56
+00:03:26.767 --> 00:03:31.267
+Translate, rotate and scale
+never change it: points keep one,
+
+57
+00:03:31.267 --> 00:03:33.667
+and directions keep zero.
+
+58
+00:03:33.700 --> 00:03:37.467
+The projection matrix,
+next lesson, writes a new w:
+
+59
+00:03:37.467 --> 00:03:39.967
+the point's depth in front of the camera.
+
+60
+00:03:39.967 --> 00:03:44.300
+Then the GPU divides x, y and z by w.
+
+61
+00:03:44.300 --> 00:03:50.100
+A point with x equal to two and
+w equal to five lands at 0.4.
+
+62
+00:03:50.100 --> 00:03:56.100
+Twice as far, w is ten, and it lands
+at 0.2: half as far from the center.
+
+63
+00:03:56.867 --> 00:04:00.200
+Far things look small,
+and it's just a division.
+
+64
+00:04:01.033 --> 00:04:07.033
+So: a matrix always keeps the origin,
+so moving needs a fourth number, w.
+
+65
+00:04:07.067 --> 00:04:10.467
+A 4x4 matrix keeps rotation
+and scale in its corner,
+
+66
+00:04:10.467 --> 00:04:12.933
+and the move in its last column.
+
+67
+00:04:12.933 --> 00:04:15.600
+w equal to one is a point, and it moves.
+
+68
+00:04:15.600 --> 00:04:19.133
+w equal to zero is a direction,
+and it doesn't.
+
+69
+00:04:19.133 --> 00:04:21.600
+Normals take the inverse transpose.
+
+70
+00:04:21.600 --> 00:04:27.533
+Build models as T * R * S,
+and dividing by w makes far things small.
+
+71
+00:04:27.533 --> 00:04:31.033
+Next time: model, view and projection.
+
+72
+00:04:31.033 --> 00:04:34.567
+Now open the demo in this lesson,
+drag the move all the way,
+
+73
+00:04:34.567 --> 00:04:37.367
+and watch the blue arrows stay still.
+
+74
+00:04:37.967 --> 00:04:39.534
+If this clicked, give it a like,
+
+75
+00:04:39.534 --> 00:04:42.300
+and subscribe so you don't
+miss the next lesson.
+
+76
+00:04:42.300 --> 00:04:43.934
+See you there!

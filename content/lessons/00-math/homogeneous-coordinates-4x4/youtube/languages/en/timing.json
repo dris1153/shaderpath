@@ -1,0 +1,4259 @@
+{
+  "fps": 30,
+  "width": 1280,
+  "height": 720,
+  "scenes": [
+    {
+      "id": "hook",
+      "from": 0,
+      "durationInFrames": 982
+    },
+    {
+      "id": "extra",
+      "from": 982,
+      "durationInFrames": 1566
+    },
+    {
+      "id": "lift",
+      "from": 2548,
+      "durationInFrames": 897
+    },
+    {
+      "id": "switch",
+      "from": 3445,
+      "durationInFrames": 1104
+    },
+    {
+      "id": "normals",
+      "from": 4549,
+      "durationInFrames": 760
+    },
+    {
+      "id": "trs",
+      "from": 5309,
+      "durationInFrames": 832
+    },
+    {
+      "id": "divide",
+      "from": 6141,
+      "durationInFrames": 1090
+    },
+    {
+      "id": "recap",
+      "from": 7231,
+      "durationInFrames": 1108
+    }
+  ],
+  "words": [
+    {
+      "text": "Last",
+      "from": 0,
+      "to": 9,
+      "scene": "hook"
+    },
+    {
+      "text": "time,",
+      "from": 10,
+      "to": 23,
+      "scene": "hook"
+    },
+    {
+      "text": "a",
+      "from": 30,
+      "to": 32,
+      "scene": "hook"
+    },
+    {
+      "text": "matrix",
+      "from": 34,
+      "to": 45,
+      "scene": "hook"
+    },
+    {
+      "text": "could",
+      "from": 46,
+      "to": 51,
+      "scene": "hook"
+    },
+    {
+      "text": "stretch,",
+      "from": 52,
+      "to": 64,
+      "scene": "hook"
+    },
+    {
+      "text": "turn",
+      "from": 69,
+      "to": 80,
+      "scene": "hook"
+    },
+    {
+      "text": "and",
+      "from": 83,
+      "to": 86,
+      "scene": "hook"
+    },
+    {
+      "text": "shear",
+      "from": 88,
+      "to": 95,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 97,
+      "to": 99,
+      "scene": "hook"
+    },
+    {
+      "text": "whole",
+      "from": 100,
+      "to": 107,
+      "scene": "hook"
+    },
+    {
+      "text": "plane.",
+      "from": 108,
+      "to": 123,
+      "scene": "hook"
+    },
+    {
+      "text": "Now",
+      "from": 144,
+      "to": 149,
+      "scene": "hook"
+    },
+    {
+      "text": "try",
+      "from": 150,
+      "to": 155,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 157,
+      "to": 159,
+      "scene": "hook"
+    },
+    {
+      "text": "simplest",
+      "from": 162,
+      "to": 174,
+      "scene": "hook"
+    },
+    {
+      "text": "move",
+      "from": 176,
+      "to": 182,
+      "scene": "hook"
+    },
+    {
+      "text": "in",
+      "from": 183,
+      "to": 185,
+      "scene": "hook"
+    },
+    {
+      "text": "a",
+      "from": 186,
+      "to": 187,
+      "scene": "hook"
+    },
+    {
+      "text": "game:",
+      "from": 188,
+      "to": 201,
+      "scene": "hook"
+    },
+    {
+      "text": "slide",
+      "from": 215,
+      "to": 225,
+      "scene": "hook"
+    },
+    {
+      "text": "this",
+      "from": 226,
+      "to": 229,
+      "scene": "hook"
+    },
+    {
+      "text": "slime",
+      "from": 230,
+      "to": 239,
+      "scene": "hook"
+    },
+    {
+      "text": "five",
+      "from": 241,
+      "to": 248,
+      "scene": "hook"
+    },
+    {
+      "text": "steps",
+      "from": 249,
+      "to": 257,
+      "scene": "hook"
+    },
+    {
+      "text": "to",
+      "from": 258,
+      "to": 260,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 262,
+      "to": 264,
+      "scene": "hook"
+    },
+    {
+      "text": "right.",
+      "from": 265,
+      "to": 273,
+      "scene": "hook"
+    },
+    {
+      "text": "The",
+      "from": 296,
+      "to": 300,
+      "scene": "hook"
+    },
+    {
+      "text": "matrix",
+      "from": 301,
+      "to": 312,
+      "scene": "hook"
+    },
+    {
+      "text": "pushes,",
+      "from": 314,
+      "to": 329,
+      "scene": "hook"
+    },
+    {
+      "text": "and",
+      "from": 330,
+      "to": 334,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 335,
+      "to": 337,
+      "scene": "hook"
+    },
+    {
+      "text": "slime",
+      "from": 338,
+      "to": 348,
+      "scene": "hook"
+    },
+    {
+      "text": "doesn't",
+      "from": 349,
+      "to": 356,
+      "scene": "hook"
+    },
+    {
+      "text": "budge.",
+      "from": 357,
+      "to": 369,
+      "scene": "hook"
+    },
+    {
+      "text": "Any",
+      "from": 395,
+      "to": 401,
+      "scene": "hook"
+    },
+    {
+      "text": "matrix",
+      "from": 403,
+      "to": 413,
+      "scene": "hook"
+    },
+    {
+      "text": "times",
+      "from": 415,
+      "to": 425,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 426,
+      "to": 428,
+      "scene": "hook"
+    },
+    {
+      "text": "zero",
+      "from": 429,
+      "to": 436,
+      "scene": "hook"
+    },
+    {
+      "text": "vector",
+      "from": 439,
+      "to": 448,
+      "scene": "hook"
+    },
+    {
+      "text": "gives",
+      "from": 451,
+      "to": 456,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 457,
+      "to": 459,
+      "scene": "hook"
+    },
+    {
+      "text": "zero",
+      "from": 461,
+      "to": 467,
+      "scene": "hook"
+    },
+    {
+      "text": "vector,",
+      "from": 469,
+      "to": 480,
+      "scene": "hook"
+    },
+    {
+      "text": "so",
+      "from": 494,
+      "to": 497,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 498,
+      "to": 501,
+      "scene": "hook"
+    },
+    {
+      "text": "origin",
+      "from": 503,
+      "to": 515,
+      "scene": "hook"
+    },
+    {
+      "text": "always",
+      "from": 517,
+      "to": 527,
+      "scene": "hook"
+    },
+    {
+      "text": "stays",
+      "from": 528,
+      "to": 536,
+      "scene": "hook"
+    },
+    {
+      "text": "put.",
+      "from": 538,
+      "to": 546,
+      "scene": "hook"
+    },
+    {
+      "text": "But",
+      "from": 575,
+      "to": 580,
+      "scene": "hook"
+    },
+    {
+      "text": "sliding",
+      "from": 581,
+      "to": 592,
+      "scene": "hook"
+    },
+    {
+      "text": "every",
+      "from": 594,
+      "to": 600,
+      "scene": "hook"
+    },
+    {
+      "text": "point",
+      "from": 602,
+      "to": 608,
+      "scene": "hook"
+    },
+    {
+      "text": "by",
+      "from": 610,
+      "to": 613,
+      "scene": "hook"
+    },
+    {
+      "text": "a",
+      "from": 614,
+      "to": 615,
+      "scene": "hook"
+    },
+    {
+      "text": "vector,",
+      "from": 617,
+      "to": 629,
+      "scene": "hook"
+    },
+    {
+      "text": "t,",
+      "from": 642,
+      "to": 653,
+      "scene": "hook"
+    },
+    {
+      "text": "would",
+      "from": 661,
+      "to": 667,
+      "scene": "hook"
+    },
+    {
+      "text": "send",
+      "from": 668,
+      "to": 672,
+      "scene": "hook"
+    },
+    {
+      "text": "the",
+      "from": 673,
+      "to": 675,
+      "scene": "hook"
+    },
+    {
+      "text": "origin",
+      "from": 677,
+      "to": 689,
+      "scene": "hook"
+    },
+    {
+      "text": "to",
+      "from": 690,
+      "to": 692,
+      "scene": "hook"
+    },
+    {
+      "text": "t.",
+      "from": 694,
+      "to": 704,
+      "scene": "hook"
+    },
+    {
+      "text": "So",
+      "from": 733,
+      "to": 737,
+      "scene": "hook"
+    },
+    {
+      "text": "no",
+      "from": 739,
+      "to": 743,
+      "scene": "hook"
+    },
+    {
+      "text": "3x3",
+      "from": 745,
+      "to": 762,
+      "scene": "hook"
+    },
+    {
+      "text": "matrix",
+      "from": 763,
+      "to": 776,
+      "scene": "hook"
+    },
+    {
+      "text": "can",
+      "from": 778,
+      "to": 782,
+      "scene": "hook"
+    },
+    {
+      "text": "move",
+      "from": 784,
+      "to": 790,
+      "scene": "hook"
+    },
+    {
+      "text": "a",
+      "from": 791,
+      "to": 792,
+      "scene": "hook"
+    },
+    {
+      "text": "3D",
+      "from": 795,
+      "to": 801,
+      "scene": "hook"
+    },
+    {
+      "text": "object,",
+      "from": 804,
+      "to": 820,
+      "scene": "hook"
+    },
+    {
+      "text": "wherever",
+      "from": 829,
+      "to": 841,
+      "scene": "hook"
+    },
+    {
+      "text": "you",
+      "from": 842,
+      "to": 845,
+      "scene": "hook"
+    },
+    {
+      "text": "put",
+      "from": 846,
+      "to": 850,
+      "scene": "hook"
+    },
+    {
+      "text": "its",
+      "from": 851,
+      "to": 854,
+      "scene": "hook"
+    },
+    {
+      "text": "numbers.",
+      "from": 855,
+      "to": 869,
+      "scene": "hook"
+    },
+    {
+      "text": "The",
+      "from": 885,
+      "to": 888,
+      "scene": "hook"
+    },
+    {
+      "text": "fix",
+      "from": 890,
+      "to": 897,
+      "scene": "hook"
+    },
+    {
+      "text": "is",
+      "from": 899,
+      "to": 901,
+      "scene": "hook"
+    },
+    {
+      "text": "one",
+      "from": 904,
+      "to": 907,
+      "scene": "hook"
+    },
+    {
+      "text": "extra",
+      "from": 908,
+      "to": 916,
+      "scene": "hook"
+    },
+    {
+      "text": "number.",
+      "from": 917,
+      "to": 928,
+      "scene": "hook"
+    },
+    {
+      "text": "Give",
+      "from": 982,
+      "to": 989,
+      "scene": "extra"
+    },
+    {
+      "text": "every",
+      "from": 990,
+      "to": 996,
+      "scene": "extra"
+    },
+    {
+      "text": "point",
+      "from": 997,
+      "to": 1005,
+      "scene": "extra"
+    },
+    {
+      "text": "a",
+      "from": 1006,
+      "to": 1007,
+      "scene": "extra"
+    },
+    {
+      "text": "fourth",
+      "from": 1009,
+      "to": 1017,
+      "scene": "extra"
+    },
+    {
+      "text": "number,",
+      "from": 1019,
+      "to": 1027,
+      "scene": "extra"
+    },
+    {
+      "text": "w,",
+      "from": 1030,
+      "to": 1041,
+      "scene": "extra"
+    },
+    {
+      "text": "and",
+      "from": 1044,
+      "to": 1046,
+      "scene": "extra"
+    },
+    {
+      "text": "set",
+      "from": 1048,
+      "to": 1053,
+      "scene": "extra"
+    },
+    {
+      "text": "it",
+      "from": 1054,
+      "to": 1056,
+      "scene": "extra"
+    },
+    {
+      "text": "to",
+      "from": 1057,
+      "to": 1059,
+      "scene": "extra"
+    },
+    {
+      "text": "one.",
+      "from": 1061,
+      "to": 1072,
+      "scene": "extra"
+    },
+    {
+      "text": "So",
+      "from": 1096,
+      "to": 1103,
+      "scene": "extra"
+    },
+    {
+      "text": "x,",
+      "from": 1107,
+      "to": 1114,
+      "scene": "extra"
+    },
+    {
+      "text": "y,",
+      "from": 1115,
+      "to": 1123,
+      "scene": "extra"
+    },
+    {
+      "text": "z",
+      "from": 1125,
+      "to": 1135,
+      "scene": "extra"
+    },
+    {
+      "text": "becomes",
+      "from": 1138,
+      "to": 1153,
+      "scene": "extra"
+    },
+    {
+      "text": "x,",
+      "from": 1158,
+      "to": 1163,
+      "scene": "extra"
+    },
+    {
+      "text": "y,",
+      "from": 1165,
+      "to": 1171,
+      "scene": "extra"
+    },
+    {
+      "text": "z,",
+      "from": 1174,
+      "to": 1182,
+      "scene": "extra"
+    },
+    {
+      "text": "one.",
+      "from": 1193,
+      "to": 1205,
+      "scene": "extra"
+    },
+    {
+      "text": "That's",
+      "from": 1229,
+      "to": 1236,
+      "scene": "extra"
+    },
+    {
+      "text": "homogeneous",
+      "from": 1237,
+      "to": 1255,
+      "scene": "extra"
+    },
+    {
+      "text": "coordinates.",
+      "from": 1256,
+      "to": 1275,
+      "scene": "extra"
+    },
+    {
+      "text": "The",
+      "from": 1290,
+      "to": 1293,
+      "scene": "extra"
+    },
+    {
+      "text": "matrix",
+      "from": 1294,
+      "to": 1305,
+      "scene": "extra"
+    },
+    {
+      "text": "grows",
+      "from": 1307,
+      "to": 1316,
+      "scene": "extra"
+    },
+    {
+      "text": "to",
+      "from": 1318,
+      "to": 1320,
+      "scene": "extra"
+    },
+    {
+      "text": "4x4.",
+      "from": 1322,
+      "to": 1343,
+      "scene": "extra"
+    },
+    {
+      "text": "Rotation",
+      "from": 1361,
+      "to": 1377,
+      "scene": "extra"
+    },
+    {
+      "text": "and",
+      "from": 1379,
+      "to": 1381,
+      "scene": "extra"
+    },
+    {
+      "text": "scale",
+      "from": 1383,
+      "to": 1393,
+      "scene": "extra"
+    },
+    {
+      "text": "live",
+      "from": 1395,
+      "to": 1399,
+      "scene": "extra"
+    },
+    {
+      "text": "in",
+      "from": 1400,
+      "to": 1401,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 1402,
+      "to": 1404,
+      "scene": "extra"
+    },
+    {
+      "text": "top-left",
+      "from": 1406,
+      "to": 1424,
+      "scene": "extra"
+    },
+    {
+      "text": "3x3",
+      "from": 1427,
+      "to": 1445,
+      "scene": "extra"
+    },
+    {
+      "text": "block.",
+      "from": 1446,
+      "to": 1456,
+      "scene": "extra"
+    },
+    {
+      "text": "The",
+      "from": 1472,
+      "to": 1476,
+      "scene": "extra"
+    },
+    {
+      "text": "last",
+      "from": 1478,
+      "to": 1484,
+      "scene": "extra"
+    },
+    {
+      "text": "column",
+      "from": 1486,
+      "to": 1495,
+      "scene": "extra"
+    },
+    {
+      "text": "holds",
+      "from": 1497,
+      "to": 1504,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 1506,
+      "to": 1508,
+      "scene": "extra"
+    },
+    {
+      "text": "move,",
+      "from": 1509,
+      "to": 1522,
+      "scene": "extra"
+    },
+    {
+      "text": "t.",
+      "from": 1532,
+      "to": 1545,
+      "scene": "extra"
+    },
+    {
+      "text": "The",
+      "from": 1558,
+      "to": 1562,
+      "scene": "extra"
+    },
+    {
+      "text": "bottom",
+      "from": 1563,
+      "to": 1571,
+      "scene": "extra"
+    },
+    {
+      "text": "row",
+      "from": 1572,
+      "to": 1579,
+      "scene": "extra"
+    },
+    {
+      "text": "is",
+      "from": 1582,
+      "to": 1585,
+      "scene": "extra"
+    },
+    {
+      "text": "zero,",
+      "from": 1586,
+      "to": 1597,
+      "scene": "extra"
+    },
+    {
+      "text": "zero,",
+      "from": 1615,
+      "to": 1627,
+      "scene": "extra"
+    },
+    {
+      "text": "zero,",
+      "from": 1643,
+      "to": 1656,
+      "scene": "extra"
+    },
+    {
+      "text": "one.",
+      "from": 1675,
+      "to": 1686,
+      "scene": "extra"
+    },
+    {
+      "text": "Multiply",
+      "from": 1722,
+      "to": 1740,
+      "scene": "extra"
+    },
+    {
+      "text": "as",
+      "from": 1742,
+      "to": 1745,
+      "scene": "extra"
+    },
+    {
+      "text": "in",
+      "from": 1746,
+      "to": 1748,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 1749,
+      "to": 1751,
+      "scene": "extra"
+    },
+    {
+      "text": "last",
+      "from": 1752,
+      "to": 1759,
+      "scene": "extra"
+    },
+    {
+      "text": "lesson:",
+      "from": 1761,
+      "to": 1773,
+      "scene": "extra"
+    },
+    {
+      "text": "mix",
+      "from": 1790,
+      "to": 1796,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 1798,
+      "to": 1800,
+      "scene": "extra"
+    },
+    {
+      "text": "columns,",
+      "from": 1801,
+      "to": 1817,
+      "scene": "extra"
+    },
+    {
+      "text": "weighted",
+      "from": 1824,
+      "to": 1833,
+      "scene": "extra"
+    },
+    {
+      "text": "by",
+      "from": 1834,
+      "to": 1836,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 1837,
+      "to": 1840,
+      "scene": "extra"
+    },
+    {
+      "text": "point's",
+      "from": 1841,
+      "to": 1849,
+      "scene": "extra"
+    },
+    {
+      "text": "numbers.",
+      "from": 1851,
+      "to": 1865,
+      "scene": "extra"
+    },
+    {
+      "text": "The",
+      "from": 1883,
+      "to": 1887,
+      "scene": "extra"
+    },
+    {
+      "text": "last",
+      "from": 1889,
+      "to": 1895,
+      "scene": "extra"
+    },
+    {
+      "text": "column",
+      "from": 1897,
+      "to": 1906,
+      "scene": "extra"
+    },
+    {
+      "text": "is",
+      "from": 1907,
+      "to": 1909,
+      "scene": "extra"
+    },
+    {
+      "text": "weighted",
+      "from": 1911,
+      "to": 1918,
+      "scene": "extra"
+    },
+    {
+      "text": "by",
+      "from": 1919,
+      "to": 1922,
+      "scene": "extra"
+    },
+    {
+      "text": "w,",
+      "from": 1925,
+      "to": 1938,
+      "scene": "extra"
+    },
+    {
+      "text": "so",
+      "from": 1955,
+      "to": 1959,
+      "scene": "extra"
+    },
+    {
+      "text": "with",
+      "from": 1960,
+      "to": 1964,
+      "scene": "extra"
+    },
+    {
+      "text": "w",
+      "from": 1966,
+      "to": 1976,
+      "scene": "extra"
+    },
+    {
+      "text": "equal",
+      "from": 1978,
+      "to": 1986,
+      "scene": "extra"
+    },
+    {
+      "text": "to",
+      "from": 1988,
+      "to": 1989,
+      "scene": "extra"
+    },
+    {
+      "text": "one,",
+      "from": 1992,
+      "to": 2003,
+      "scene": "extra"
+    },
+    {
+      "text": "t",
+      "from": 2007,
+      "to": 2011,
+      "scene": "extra"
+    },
+    {
+      "text": "gets",
+      "from": 2013,
+      "to": 2018,
+      "scene": "extra"
+    },
+    {
+      "text": "added",
+      "from": 2019,
+      "to": 2027,
+      "scene": "extra"
+    },
+    {
+      "text": "in.",
+      "from": 2028,
+      "to": 2034,
+      "scene": "extra"
+    },
+    {
+      "text": "Say",
+      "from": 2051,
+      "to": 2057,
+      "scene": "extra"
+    },
+    {
+      "text": "t",
+      "from": 2059,
+      "to": 2064,
+      "scene": "extra"
+    },
+    {
+      "text": "is",
+      "from": 2068,
+      "to": 2071,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 2072,
+      "to": 2074,
+      "scene": "extra"
+    },
+    {
+      "text": "vector",
+      "from": 2076,
+      "to": 2084,
+      "scene": "extra"
+    },
+    {
+      "text": "(5, −2, 0).",
+      "from": 2086,
+      "to": 2150,
+      "scene": "extra"
+    },
+    {
+      "text": "Take",
+      "from": 2166,
+      "to": 2171,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 2172,
+      "to": 2174,
+      "scene": "extra"
+    },
+    {
+      "text": "point",
+      "from": 2175,
+      "to": 2182,
+      "scene": "extra"
+    },
+    {
+      "text": "(1,",
+      "from": 2184,
+      "to": 2196,
+      "scene": "extra"
+    },
+    {
+      "text": "1,",
+      "from": 2201,
+      "to": 2208,
+      "scene": "extra"
+    },
+    {
+      "text": "1).",
+      "from": 2210,
+      "to": 2221,
+      "scene": "extra"
+    },
+    {
+      "text": "It",
+      "from": 2238,
+      "to": 2242,
+      "scene": "extra"
+    },
+    {
+      "text": "lands",
+      "from": 2244,
+      "to": 2252,
+      "scene": "extra"
+    },
+    {
+      "text": "at",
+      "from": 2253,
+      "to": 2255,
+      "scene": "extra"
+    },
+    {
+      "text": "(6, −1, 1).",
+      "from": 2257,
+      "to": 2315,
+      "scene": "extra"
+    },
+    {
+      "text": "Now",
+      "from": 2343,
+      "to": 2348,
+      "scene": "extra"
+    },
+    {
+      "text": "moving,",
+      "from": 2350,
+      "to": 2363,
+      "scene": "extra"
+    },
+    {
+      "text": "turning",
+      "from": 2367,
+      "to": 2379,
+      "scene": "extra"
+    },
+    {
+      "text": "and",
+      "from": 2381,
+      "to": 2384,
+      "scene": "extra"
+    },
+    {
+      "text": "scaling",
+      "from": 2385,
+      "to": 2400,
+      "scene": "extra"
+    },
+    {
+      "text": "are",
+      "from": 2402,
+      "to": 2406,
+      "scene": "extra"
+    },
+    {
+      "text": "all",
+      "from": 2407,
+      "to": 2411,
+      "scene": "extra"
+    },
+    {
+      "text": "the",
+      "from": 2412,
+      "to": 2415,
+      "scene": "extra"
+    },
+    {
+      "text": "same",
+      "from": 2416,
+      "to": 2422,
+      "scene": "extra"
+    },
+    {
+      "text": "thing:",
+      "from": 2423,
+      "to": 2432,
+      "scene": "extra"
+    },
+    {
+      "text": "matrix",
+      "from": 2450,
+      "to": 2463,
+      "scene": "extra"
+    },
+    {
+      "text": "multiplication.",
+      "from": 2465,
+      "to": 2491,
+      "scene": "extra"
+    },
+    {
+      "text": "Why",
+      "from": 2548,
+      "to": 2554,
+      "scene": "lift"
+    },
+    {
+      "text": "does",
+      "from": 2555,
+      "to": 2559,
+      "scene": "lift"
+    },
+    {
+      "text": "one",
+      "from": 2561,
+      "to": 2566,
+      "scene": "lift"
+    },
+    {
+      "text": "extra",
+      "from": 2567,
+      "to": 2575,
+      "scene": "lift"
+    },
+    {
+      "text": "number",
+      "from": 2576,
+      "to": 2583,
+      "scene": "lift"
+    },
+    {
+      "text": "work?",
+      "from": 2584,
+      "to": 2592,
+      "scene": "lift"
+    },
+    {
+      "text": "We",
+      "from": 2616,
+      "to": 2619,
+      "scene": "lift"
+    },
+    {
+      "text": "can't",
+      "from": 2621,
+      "to": 2628,
+      "scene": "lift"
+    },
+    {
+      "text": "draw",
+      "from": 2629,
+      "to": 2634,
+      "scene": "lift"
+    },
+    {
+      "text": "four",
+      "from": 2636,
+      "to": 2641,
+      "scene": "lift"
+    },
+    {
+      "text": "dimensions,",
+      "from": 2642,
+      "to": 2661,
+      "scene": "lift"
+    },
+    {
+      "text": "so",
+      "from": 2664,
+      "to": 2668,
+      "scene": "lift"
+    },
+    {
+      "text": "let's",
+      "from": 2670,
+      "to": 2675,
+      "scene": "lift"
+    },
+    {
+      "text": "watch",
+      "from": 2677,
+      "to": 2683,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 2685,
+      "to": 2687,
+      "scene": "lift"
+    },
+    {
+      "text": "same",
+      "from": 2689,
+      "to": 2695,
+      "scene": "lift"
+    },
+    {
+      "text": "trick",
+      "from": 2696,
+      "to": 2703,
+      "scene": "lift"
+    },
+    {
+      "text": "one",
+      "from": 2706,
+      "to": 2711,
+      "scene": "lift"
+    },
+    {
+      "text": "dimension",
+      "from": 2712,
+      "to": 2724,
+      "scene": "lift"
+    },
+    {
+      "text": "down.",
+      "from": 2725,
+      "to": 2735,
+      "scene": "lift"
+    },
+    {
+      "text": "A",
+      "from": 2765,
+      "to": 2767,
+      "scene": "lift"
+    },
+    {
+      "text": "flat",
+      "from": 2770,
+      "to": 2779,
+      "scene": "lift"
+    },
+    {
+      "text": "2D",
+      "from": 2783,
+      "to": 2789,
+      "scene": "lift"
+    },
+    {
+      "text": "world",
+      "from": 2793,
+      "to": 2803,
+      "scene": "lift"
+    },
+    {
+      "text": "gets",
+      "from": 2805,
+      "to": 2811,
+      "scene": "lift"
+    },
+    {
+      "text": "a",
+      "from": 2812,
+      "to": 2813,
+      "scene": "lift"
+    },
+    {
+      "text": "third",
+      "from": 2814,
+      "to": 2821,
+      "scene": "lift"
+    },
+    {
+      "text": "number,",
+      "from": 2822,
+      "to": 2832,
+      "scene": "lift"
+    },
+    {
+      "text": "w,",
+      "from": 2847,
+      "to": 2858,
+      "scene": "lift"
+    },
+    {
+      "text": "and",
+      "from": 2860,
+      "to": 2863,
+      "scene": "lift"
+    },
+    {
+      "text": "floats",
+      "from": 2864,
+      "to": 2872,
+      "scene": "lift"
+    },
+    {
+      "text": "on",
+      "from": 2873,
+      "to": 2875,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 2876,
+      "to": 2878,
+      "scene": "lift"
+    },
+    {
+      "text": "plane",
+      "from": 2879,
+      "to": 2889,
+      "scene": "lift"
+    },
+    {
+      "text": "at",
+      "from": 2890,
+      "to": 2892,
+      "scene": "lift"
+    },
+    {
+      "text": "height",
+      "from": 2894,
+      "to": 2900,
+      "scene": "lift"
+    },
+    {
+      "text": "one.",
+      "from": 2903,
+      "to": 2914,
+      "scene": "lift"
+    },
+    {
+      "text": "A",
+      "from": 2939,
+      "to": 2942,
+      "scene": "lift"
+    },
+    {
+      "text": "3x3",
+      "from": 2945,
+      "to": 2963,
+      "scene": "lift"
+    },
+    {
+      "text": "matrix",
+      "from": 2964,
+      "to": 2977,
+      "scene": "lift"
+    },
+    {
+      "text": "with",
+      "from": 2979,
+      "to": 2984,
+      "scene": "lift"
+    },
+    {
+      "text": "t",
+      "from": 2986,
+      "to": 2997,
+      "scene": "lift"
+    },
+    {
+      "text": "in",
+      "from": 2999,
+      "to": 3003,
+      "scene": "lift"
+    },
+    {
+      "text": "its",
+      "from": 3004,
+      "to": 3008,
+      "scene": "lift"
+    },
+    {
+      "text": "last",
+      "from": 3009,
+      "to": 3017,
+      "scene": "lift"
+    },
+    {
+      "text": "column",
+      "from": 3019,
+      "to": 3031,
+      "scene": "lift"
+    },
+    {
+      "text": "shears",
+      "from": 3032,
+      "to": 3043,
+      "scene": "lift"
+    },
+    {
+      "text": "space:",
+      "from": 3043,
+      "to": 3062,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 3082,
+      "to": 3085,
+      "scene": "lift"
+    },
+    {
+      "text": "plane",
+      "from": 3086,
+      "to": 3093,
+      "scene": "lift"
+    },
+    {
+      "text": "at",
+      "from": 3094,
+      "to": 3096,
+      "scene": "lift"
+    },
+    {
+      "text": "height",
+      "from": 3098,
+      "to": 3104,
+      "scene": "lift"
+    },
+    {
+      "text": "one",
+      "from": 3106,
+      "to": 3114,
+      "scene": "lift"
+    },
+    {
+      "text": "slides",
+      "from": 3115,
+      "to": 3125,
+      "scene": "lift"
+    },
+    {
+      "text": "by",
+      "from": 3127,
+      "to": 3130,
+      "scene": "lift"
+    },
+    {
+      "text": "t,",
+      "from": 3132,
+      "to": 3144,
+      "scene": "lift"
+    },
+    {
+      "text": "while",
+      "from": 3153,
+      "to": 3159,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 3160,
+      "to": 3162,
+      "scene": "lift"
+    },
+    {
+      "text": "floor",
+      "from": 3163,
+      "to": 3170,
+      "scene": "lift"
+    },
+    {
+      "text": "at",
+      "from": 3171,
+      "to": 3173,
+      "scene": "lift"
+    },
+    {
+      "text": "height",
+      "from": 3175,
+      "to": 3181,
+      "scene": "lift"
+    },
+    {
+      "text": "zero",
+      "from": 3182,
+      "to": 3192,
+      "scene": "lift"
+    },
+    {
+      "text": "doesn't",
+      "from": 3194,
+      "to": 3201,
+      "scene": "lift"
+    },
+    {
+      "text": "move",
+      "from": 3202,
+      "to": 3208,
+      "scene": "lift"
+    },
+    {
+      "text": "at",
+      "from": 3209,
+      "to": 3210,
+      "scene": "lift"
+    },
+    {
+      "text": "all.",
+      "from": 3212,
+      "to": 3218,
+      "scene": "lift"
+    },
+    {
+      "text": "So",
+      "from": 3237,
+      "to": 3241,
+      "scene": "lift"
+    },
+    {
+      "text": "inside",
+      "from": 3243,
+      "to": 3253,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 3254,
+      "to": 3256,
+      "scene": "lift"
+    },
+    {
+      "text": "plane,",
+      "from": 3257,
+      "to": 3268,
+      "scene": "lift"
+    },
+    {
+      "text": "the",
+      "from": 3270,
+      "to": 3273,
+      "scene": "lift"
+    },
+    {
+      "text": "whole",
+      "from": 3274,
+      "to": 3280,
+      "scene": "lift"
+    },
+    {
+      "text": "world",
+      "from": 3282,
+      "to": 3290,
+      "scene": "lift"
+    },
+    {
+      "text": "moved.",
+      "from": 3292,
+      "to": 3304,
+      "scene": "lift"
+    },
+    {
+      "text": "A",
+      "from": 3322,
+      "to": 3325,
+      "scene": "lift"
+    },
+    {
+      "text": "plain",
+      "from": 3326,
+      "to": 3333,
+      "scene": "lift"
+    },
+    {
+      "text": "matrix",
+      "from": 3335,
+      "to": 3348,
+      "scene": "lift"
+    },
+    {
+      "text": "made",
+      "from": 3350,
+      "to": 3355,
+      "scene": "lift"
+    },
+    {
+      "text": "a",
+      "from": 3356,
+      "to": 3357,
+      "scene": "lift"
+    },
+    {
+      "text": "translation.",
+      "from": 3358,
+      "to": 3378,
+      "scene": "lift"
+    },
+    {
+      "text": "That",
+      "from": 3445,
+      "to": 3452,
+      "scene": "switch"
+    },
+    {
+      "text": "still",
+      "from": 3454,
+      "to": 3460,
+      "scene": "switch"
+    },
+    {
+      "text": "floor",
+      "from": 3462,
+      "to": 3472,
+      "scene": "switch"
+    },
+    {
+      "text": "is",
+      "from": 3474,
+      "to": 3477,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 3478,
+      "to": 3480,
+      "scene": "switch"
+    },
+    {
+      "text": "second",
+      "from": 3482,
+      "to": 3490,
+      "scene": "switch"
+    },
+    {
+      "text": "gift",
+      "from": 3491,
+      "to": 3498,
+      "scene": "switch"
+    },
+    {
+      "text": "of",
+      "from": 3499,
+      "to": 3501,
+      "scene": "switch"
+    },
+    {
+      "text": "w.",
+      "from": 3503,
+      "to": 3513,
+      "scene": "switch"
+    },
+    {
+      "text": "w",
+      "from": 3514,
+      "to": 3524,
+      "scene": "switch"
+    },
+    {
+      "text": "equal",
+      "from": 3526,
+      "to": 3534,
+      "scene": "switch"
+    },
+    {
+      "text": "to",
+      "from": 3536,
+      "to": 3538,
+      "scene": "switch"
+    },
+    {
+      "text": "one",
+      "from": 3540,
+      "to": 3546,
+      "scene": "switch"
+    },
+    {
+      "text": "marks",
+      "from": 3546,
+      "to": 3553,
+      "scene": "switch"
+    },
+    {
+      "text": "a",
+      "from": 3554,
+      "to": 3555,
+      "scene": "switch"
+    },
+    {
+      "text": "point,",
+      "from": 3557,
+      "to": 3567,
+      "scene": "switch"
+    },
+    {
+      "text": "and",
+      "from": 3581,
+      "to": 3586,
+      "scene": "switch"
+    },
+    {
+      "text": "it",
+      "from": 3587,
+      "to": 3589,
+      "scene": "switch"
+    },
+    {
+      "text": "gets",
+      "from": 3590,
+      "to": 3594,
+      "scene": "switch"
+    },
+    {
+      "text": "moved.",
+      "from": 3597,
+      "to": 3608,
+      "scene": "switch"
+    },
+    {
+      "text": "w",
+      "from": 3631,
+      "to": 3633,
+      "scene": "switch"
+    },
+    {
+      "text": "equal",
+      "from": 3636,
+      "to": 3644,
+      "scene": "switch"
+    },
+    {
+      "text": "to",
+      "from": 3646,
+      "to": 3648,
+      "scene": "switch"
+    },
+    {
+      "text": "zero",
+      "from": 3649,
+      "to": 3657,
+      "scene": "switch"
+    },
+    {
+      "text": "marks",
+      "from": 3659,
+      "to": 3668,
+      "scene": "switch"
+    },
+    {
+      "text": "a",
+      "from": 3669,
+      "to": 3670,
+      "scene": "switch"
+    },
+    {
+      "text": "direction:",
+      "from": 3672,
+      "to": 3687,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 3710,
+      "to": 3714,
+      "scene": "switch"
+    },
+    {
+      "text": "move",
+      "from": 3716,
+      "to": 3724,
+      "scene": "switch"
+    },
+    {
+      "text": "is",
+      "from": 3725,
+      "to": 3727,
+      "scene": "switch"
+    },
+    {
+      "text": "multiplied",
+      "from": 3729,
+      "to": 3742,
+      "scene": "switch"
+    },
+    {
+      "text": "by",
+      "from": 3743,
+      "to": 3746,
+      "scene": "switch"
+    },
+    {
+      "text": "zero,",
+      "from": 3748,
+      "to": 3759,
+      "scene": "switch"
+    },
+    {
+      "text": "so",
+      "from": 3776,
+      "to": 3779,
+      "scene": "switch"
+    },
+    {
+      "text": "it",
+      "from": 3781,
+      "to": 3783,
+      "scene": "switch"
+    },
+    {
+      "text": "vanishes.",
+      "from": 3784,
+      "to": 3800,
+      "scene": "switch"
+    },
+    {
+      "text": "Try",
+      "from": 3829,
+      "to": 3835,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 3838,
+      "to": 3840,
+      "scene": "switch"
+    },
+    {
+      "text": "same",
+      "from": 3841,
+      "to": 3847,
+      "scene": "switch"
+    },
+    {
+      "text": "matrix",
+      "from": 3848,
+      "to": 3860,
+      "scene": "switch"
+    },
+    {
+      "text": "on",
+      "from": 3862,
+      "to": 3864,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 3865,
+      "to": 3867,
+      "scene": "switch"
+    },
+    {
+      "text": "vector",
+      "from": 3868,
+      "to": 3877,
+      "scene": "switch"
+    },
+    {
+      "text": "(1,",
+      "from": 3879,
+      "to": 3891,
+      "scene": "switch"
+    },
+    {
+      "text": "1,",
+      "from": 3905,
+      "to": 3918,
+      "scene": "switch"
+    },
+    {
+      "text": "1,",
+      "from": 3925,
+      "to": 3938,
+      "scene": "switch"
+    },
+    {
+      "text": "0).",
+      "from": 3953,
+      "to": 3966,
+      "scene": "switch"
+    },
+    {
+      "text": "It",
+      "from": 3998,
+      "to": 4002,
+      "scene": "switch"
+    },
+    {
+      "text": "comes",
+      "from": 4003,
+      "to": 4011,
+      "scene": "switch"
+    },
+    {
+      "text": "out",
+      "from": 4012,
+      "to": 4018,
+      "scene": "switch"
+    },
+    {
+      "text": "unchanged.",
+      "from": 4020,
+      "to": 4045,
+      "scene": "switch"
+    },
+    {
+      "text": "The",
+      "from": 4063,
+      "to": 4067,
+      "scene": "switch"
+    },
+    {
+      "text": "slime",
+      "from": 4068,
+      "to": 4078,
+      "scene": "switch"
+    },
+    {
+      "text": "slides",
+      "from": 4079,
+      "to": 4088,
+      "scene": "switch"
+    },
+    {
+      "text": "across",
+      "from": 4089,
+      "to": 4098,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4099,
+      "to": 4101,
+      "scene": "switch"
+    },
+    {
+      "text": "map,",
+      "from": 4103,
+      "to": 4111,
+      "scene": "switch"
+    },
+    {
+      "text": "but",
+      "from": 4113,
+      "to": 4117,
+      "scene": "switch"
+    },
+    {
+      "text": "its",
+      "from": 4118,
+      "to": 4121,
+      "scene": "switch"
+    },
+    {
+      "text": "velocity",
+      "from": 4123,
+      "to": 4141,
+      "scene": "switch"
+    },
+    {
+      "text": "and",
+      "from": 4143,
+      "to": 4146,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4147,
+      "to": 4149,
+      "scene": "switch"
+    },
+    {
+      "text": "way",
+      "from": 4150,
+      "to": 4154,
+      "scene": "switch"
+    },
+    {
+      "text": "it",
+      "from": 4156,
+      "to": 4158,
+      "scene": "switch"
+    },
+    {
+      "text": "faces",
+      "from": 4159,
+      "to": 4176,
+      "scene": "switch"
+    },
+    {
+      "text": "stay",
+      "from": 4180,
+      "to": 4188,
+      "scene": "switch"
+    },
+    {
+      "text": "exactly",
+      "from": 4191,
+      "to": 4206,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4208,
+      "to": 4210,
+      "scene": "switch"
+    },
+    {
+      "text": "same.",
+      "from": 4212,
+      "to": 4224,
+      "scene": "switch"
+    },
+    {
+      "text": "Forget",
+      "from": 4255,
+      "to": 4264,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4265,
+      "to": 4267,
+      "scene": "switch"
+    },
+    {
+      "text": "zero",
+      "from": 4268,
+      "to": 4277,
+      "scene": "switch"
+    },
+    {
+      "text": "on",
+      "from": 4280,
+      "to": 4282,
+      "scene": "switch"
+    },
+    {
+      "text": "a",
+      "from": 4283,
+      "to": 4284,
+      "scene": "switch"
+    },
+    {
+      "text": "velocity,",
+      "from": 4284,
+      "to": 4304,
+      "scene": "switch"
+    },
+    {
+      "text": "and",
+      "from": 4315,
+      "to": 4320,
+      "scene": "switch"
+    },
+    {
+      "text": "it",
+      "from": 4321,
+      "to": 4323,
+      "scene": "switch"
+    },
+    {
+      "text": "gets",
+      "from": 4324,
+      "to": 4329,
+      "scene": "switch"
+    },
+    {
+      "text": "moved",
+      "from": 4330,
+      "to": 4338,
+      "scene": "switch"
+    },
+    {
+      "text": "like",
+      "from": 4339,
+      "to": 4343,
+      "scene": "switch"
+    },
+    {
+      "text": "a",
+      "from": 4343,
+      "to": 4344,
+      "scene": "switch"
+    },
+    {
+      "text": "point.",
+      "from": 4346,
+      "to": 4355,
+      "scene": "switch"
+    },
+    {
+      "text": "The",
+      "from": 4385,
+      "to": 4389,
+      "scene": "switch"
+    },
+    {
+      "text": "farther",
+      "from": 4391,
+      "to": 4400,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4401,
+      "to": 4404,
+      "scene": "switch"
+    },
+    {
+      "text": "slime",
+      "from": 4405,
+      "to": 4413,
+      "scene": "switch"
+    },
+    {
+      "text": "goes,",
+      "from": 4414,
+      "to": 4424,
+      "scene": "switch"
+    },
+    {
+      "text": "the",
+      "from": 4426,
+      "to": 4428,
+      "scene": "switch"
+    },
+    {
+      "text": "more",
+      "from": 4429,
+      "to": 4434,
+      "scene": "switch"
+    },
+    {
+      "text": "wrong",
+      "from": 4435,
+      "to": 4442,
+      "scene": "switch"
+    },
+    {
+      "text": "it",
+      "from": 4444,
+      "to": 4446,
+      "scene": "switch"
+    },
+    {
+      "text": "points,",
+      "from": 4447,
+      "to": 4459,
+      "scene": "switch"
+    },
+    {
+      "text": "and",
+      "from": 4461,
+      "to": 4464,
+      "scene": "switch"
+    },
+    {
+      "text": "nothing",
+      "from": 4467,
+      "to": 4475,
+      "scene": "switch"
+    },
+    {
+      "text": "crashes.",
+      "from": 4476,
+      "to": 4493,
+      "scene": "switch"
+    },
+    {
+      "text": "Normals",
+      "from": 4549,
+      "to": 4563,
+      "scene": "normals"
+    },
+    {
+      "text": "are",
+      "from": 4564,
+      "to": 4566,
+      "scene": "normals"
+    },
+    {
+      "text": "directions",
+      "from": 4567,
+      "to": 4583,
+      "scene": "normals"
+    },
+    {
+      "text": "too,",
+      "from": 4585,
+      "to": 4594,
+      "scene": "normals"
+    },
+    {
+      "text": "with",
+      "from": 4597,
+      "to": 4602,
+      "scene": "normals"
+    },
+    {
+      "text": "one",
+      "from": 4604,
+      "to": 4609,
+      "scene": "normals"
+    },
+    {
+      "text": "more",
+      "from": 4610,
+      "to": 4615,
+      "scene": "normals"
+    },
+    {
+      "text": "catch.",
+      "from": 4616,
+      "to": 4628,
+      "scene": "normals"
+    },
+    {
+      "text": "Stretch",
+      "from": 4653,
+      "to": 4662,
+      "scene": "normals"
+    },
+    {
+      "text": "a",
+      "from": 4663,
+      "to": 4664,
+      "scene": "normals"
+    },
+    {
+      "text": "ball",
+      "from": 4665,
+      "to": 4671,
+      "scene": "normals"
+    },
+    {
+      "text": "twice",
+      "from": 4672,
+      "to": 4681,
+      "scene": "normals"
+    },
+    {
+      "text": "as",
+      "from": 4682,
+      "to": 4684,
+      "scene": "normals"
+    },
+    {
+      "text": "wide,",
+      "from": 4686,
+      "to": 4696,
+      "scene": "normals"
+    },
+    {
+      "text": "and",
+      "from": 4697,
+      "to": 4699,
+      "scene": "normals"
+    },
+    {
+      "text": "move",
+      "from": 4701,
+      "to": 4706,
+      "scene": "normals"
+    },
+    {
+      "text": "its",
+      "from": 4707,
+      "to": 4710,
+      "scene": "normals"
+    },
+    {
+      "text": "normals",
+      "from": 4712,
+      "to": 4724,
+      "scene": "normals"
+    },
+    {
+      "text": "with",
+      "from": 4725,
+      "to": 4729,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 4730,
+      "to": 4732,
+      "scene": "normals"
+    },
+    {
+      "text": "same",
+      "from": 4734,
+      "to": 4742,
+      "scene": "normals"
+    },
+    {
+      "text": "matrix:",
+      "from": 4743,
+      "to": 4758,
+      "scene": "normals"
+    },
+    {
+      "text": "they",
+      "from": 4766,
+      "to": 4770,
+      "scene": "normals"
+    },
+    {
+      "text": "lean",
+      "from": 4773,
+      "to": 4779,
+      "scene": "normals"
+    },
+    {
+      "text": "with",
+      "from": 4780,
+      "to": 4784,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 4785,
+      "to": 4787,
+      "scene": "normals"
+    },
+    {
+      "text": "stretch,",
+      "from": 4788,
+      "to": 4798,
+      "scene": "normals"
+    },
+    {
+      "text": "and",
+      "from": 4800,
+      "to": 4803,
+      "scene": "normals"
+    },
+    {
+      "text": "stop",
+      "from": 4804,
+      "to": 4812,
+      "scene": "normals"
+    },
+    {
+      "text": "being",
+      "from": 4813,
+      "to": 4818,
+      "scene": "normals"
+    },
+    {
+      "text": "perpendicular",
+      "from": 4820,
+      "to": 4839,
+      "scene": "normals"
+    },
+    {
+      "text": "to",
+      "from": 4841,
+      "to": 4843,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 4844,
+      "to": 4846,
+      "scene": "normals"
+    },
+    {
+      "text": "surface.",
+      "from": 4848,
+      "to": 4867,
+      "scene": "normals"
+    },
+    {
+      "text": "So",
+      "from": 4890,
+      "to": 4893,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 4895,
+      "to": 4897,
+      "scene": "normals"
+    },
+    {
+      "text": "lighting",
+      "from": 4899,
+      "to": 4907,
+      "scene": "normals"
+    },
+    {
+      "text": "comes",
+      "from": 4908,
+      "to": 4913,
+      "scene": "normals"
+    },
+    {
+      "text": "out",
+      "from": 4915,
+      "to": 4919,
+      "scene": "normals"
+    },
+    {
+      "text": "wrong.",
+      "from": 4920,
+      "to": 4929,
+      "scene": "normals"
+    },
+    {
+      "text": "For",
+      "from": 4960,
+      "to": 4964,
+      "scene": "normals"
+    },
+    {
+      "text": "normals,",
+      "from": 4966,
+      "to": 4980,
+      "scene": "normals"
+    },
+    {
+      "text": "use",
+      "from": 4983,
+      "to": 4990,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 4991,
+      "to": 4993,
+      "scene": "normals"
+    },
+    {
+      "text": "inverse",
+      "from": 4994,
+      "to": 5006,
+      "scene": "normals"
+    },
+    {
+      "text": "transpose",
+      "from": 5007,
+      "to": 5027,
+      "scene": "normals"
+    },
+    {
+      "text": "of",
+      "from": 5028,
+      "to": 5030,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 5032,
+      "to": 5034,
+      "scene": "normals"
+    },
+    {
+      "text": "3x3",
+      "from": 5036,
+      "to": 5056,
+      "scene": "normals"
+    },
+    {
+      "text": "block",
+      "from": 5058,
+      "to": 5066,
+      "scene": "normals"
+    },
+    {
+      "text": "instead.",
+      "from": 5068,
+      "to": 5084,
+      "scene": "normals"
+    },
+    {
+      "text": "With",
+      "from": 5108,
+      "to": 5113,
+      "scene": "normals"
+    },
+    {
+      "text": "only",
+      "from": 5115,
+      "to": 5121,
+      "scene": "normals"
+    },
+    {
+      "text": "rotation,",
+      "from": 5123,
+      "to": 5142,
+      "scene": "normals"
+    },
+    {
+      "text": "or",
+      "from": 5144,
+      "to": 5148,
+      "scene": "normals"
+    },
+    {
+      "text": "the",
+      "from": 5150,
+      "to": 5152,
+      "scene": "normals"
+    },
+    {
+      "text": "same",
+      "from": 5154,
+      "to": 5160,
+      "scene": "normals"
+    },
+    {
+      "text": "scale",
+      "from": 5161,
+      "to": 5173,
+      "scene": "normals"
+    },
+    {
+      "text": "on",
+      "from": 5174,
+      "to": 5177,
+      "scene": "normals"
+    },
+    {
+      "text": "every",
+      "from": 5179,
+      "to": 5185,
+      "scene": "normals"
+    },
+    {
+      "text": "axis,",
+      "from": 5187,
+      "to": 5201,
+      "scene": "normals"
+    },
+    {
+      "text": "you'd",
+      "from": 5214,
+      "to": 5220,
+      "scene": "normals"
+    },
+    {
+      "text": "never",
+      "from": 5221,
+      "to": 5226,
+      "scene": "normals"
+    },
+    {
+      "text": "notice.",
+      "from": 5228,
+      "to": 5246,
+      "scene": "normals"
+    },
+    {
+      "text": "To",
+      "from": 5309,
+      "to": 5313,
+      "scene": "trs"
+    },
+    {
+      "text": "build",
+      "from": 5315,
+      "to": 5321,
+      "scene": "trs"
+    },
+    {
+      "text": "an",
+      "from": 5322,
+      "to": 5324,
+      "scene": "trs"
+    },
+    {
+      "text": "object's",
+      "from": 5326,
+      "to": 5337,
+      "scene": "trs"
+    },
+    {
+      "text": "model",
+      "from": 5339,
+      "to": 5346,
+      "scene": "trs"
+    },
+    {
+      "text": "matrix,",
+      "from": 5348,
+      "to": 5363,
+      "scene": "trs"
+    },
+    {
+      "text": "put",
+      "from": 5366,
+      "to": 5372,
+      "scene": "trs"
+    },
+    {
+      "text": "its",
+      "from": 5373,
+      "to": 5376,
+      "scene": "trs"
+    },
+    {
+      "text": "rotation",
+      "from": 5377,
+      "to": 5392,
+      "scene": "trs"
+    },
+    {
+      "text": "and",
+      "from": 5394,
+      "to": 5396,
+      "scene": "trs"
+    },
+    {
+      "text": "scale",
+      "from": 5397,
+      "to": 5408,
+      "scene": "trs"
+    },
+    {
+      "text": "in",
+      "from": 5409,
+      "to": 5411,
+      "scene": "trs"
+    },
+    {
+      "text": "that",
+      "from": 5412,
+      "to": 5416,
+      "scene": "trs"
+    },
+    {
+      "text": "corner,",
+      "from": 5418,
+      "to": 5428,
+      "scene": "trs"
+    },
+    {
+      "text": "and",
+      "from": 5430,
+      "to": 5433,
+      "scene": "trs"
+    },
+    {
+      "text": "multiply:",
+      "from": 5435,
+      "to": 5453,
+      "scene": "trs"
+    },
+    {
+      "text": "T",
+      "from": 5473,
+      "to": 5477,
+      "scene": "trs"
+    },
+    {
+      "text": "*",
+      "from": 5482,
+      "to": 5493,
+      "scene": "trs"
+    },
+    {
+      "text": "R",
+      "from": 5497,
+      "to": 5505,
+      "scene": "trs"
+    },
+    {
+      "text": "*",
+      "from": 5509,
+      "to": 5519,
+      "scene": "trs"
+    },
+    {
+      "text": "S.",
+      "from": 5521,
+      "to": 5529,
+      "scene": "trs"
+    },
+    {
+      "text": "Read",
+      "from": 5559,
+      "to": 5565,
+      "scene": "trs"
+    },
+    {
+      "text": "it",
+      "from": 5566,
+      "to": 5567,
+      "scene": "trs"
+    },
+    {
+      "text": "right",
+      "from": 5569,
+      "to": 5574,
+      "scene": "trs"
+    },
+    {
+      "text": "to",
+      "from": 5575,
+      "to": 5576,
+      "scene": "trs"
+    },
+    {
+      "text": "left:",
+      "from": 5579,
+      "to": 5590,
+      "scene": "trs"
+    },
+    {
+      "text": "scale",
+      "from": 5624,
+      "to": 5635,
+      "scene": "trs"
+    },
+    {
+      "text": "in",
+      "from": 5636,
+      "to": 5637,
+      "scene": "trs"
+    },
+    {
+      "text": "place,",
+      "from": 5639,
+      "to": 5656,
+      "scene": "trs"
+    },
+    {
+      "text": "rotate",
+      "from": 5662,
+      "to": 5673,
+      "scene": "trs"
+    },
+    {
+      "text": "around",
+      "from": 5673,
+      "to": 5680,
+      "scene": "trs"
+    },
+    {
+      "text": "its",
+      "from": 5682,
+      "to": 5685,
+      "scene": "trs"
+    },
+    {
+      "text": "own",
+      "from": 5686,
+      "to": 5690,
+      "scene": "trs"
+    },
+    {
+      "text": "center,",
+      "from": 5692,
+      "to": 5704,
+      "scene": "trs"
+    },
+    {
+      "text": "then",
+      "from": 5720,
+      "to": 5726,
+      "scene": "trs"
+    },
+    {
+      "text": "move",
+      "from": 5728,
+      "to": 5733,
+      "scene": "trs"
+    },
+    {
+      "text": "it",
+      "from": 5734,
+      "to": 5736,
+      "scene": "trs"
+    },
+    {
+      "text": "out",
+      "from": 5737,
+      "to": 5742,
+      "scene": "trs"
+    },
+    {
+      "text": "into",
+      "from": 5743,
+      "to": 5748,
+      "scene": "trs"
+    },
+    {
+      "text": "the",
+      "from": 5750,
+      "to": 5752,
+      "scene": "trs"
+    },
+    {
+      "text": "world.",
+      "from": 5753,
+      "to": 5764,
+      "scene": "trs"
+    },
+    {
+      "text": "Swap",
+      "from": 5796,
+      "to": 5805,
+      "scene": "trs"
+    },
+    {
+      "text": "it",
+      "from": 5807,
+      "to": 5810,
+      "scene": "trs"
+    },
+    {
+      "text": "to",
+      "from": 5811,
+      "to": 5814,
+      "scene": "trs"
+    },
+    {
+      "text": "R",
+      "from": 5816,
+      "to": 5823,
+      "scene": "trs"
+    },
+    {
+      "text": "*",
+      "from": 5825,
+      "to": 5836,
+      "scene": "trs"
+    },
+    {
+      "text": "T,",
+      "from": 5838,
+      "to": 5841,
+      "scene": "trs"
+    },
+    {
+      "text": "and",
+      "from": 5868,
+      "to": 5873,
+      "scene": "trs"
+    },
+    {
+      "text": "the",
+      "from": 5874,
+      "to": 5876,
+      "scene": "trs"
+    },
+    {
+      "text": "move",
+      "from": 5878,
+      "to": 5885,
+      "scene": "trs"
+    },
+    {
+      "text": "happens",
+      "from": 5886,
+      "to": 5896,
+      "scene": "trs"
+    },
+    {
+      "text": "first.",
+      "from": 5897,
+      "to": 5911,
+      "scene": "trs"
+    },
+    {
+      "text": "Then",
+      "from": 5940,
+      "to": 5946,
+      "scene": "trs"
+    },
+    {
+      "text": "the",
+      "from": 5947,
+      "to": 5950,
+      "scene": "trs"
+    },
+    {
+      "text": "turn",
+      "from": 5951,
+      "to": 5958,
+      "scene": "trs"
+    },
+    {
+      "text": "swings",
+      "from": 5960,
+      "to": 5968,
+      "scene": "trs"
+    },
+    {
+      "text": "the",
+      "from": 5970,
+      "to": 5972,
+      "scene": "trs"
+    },
+    {
+      "text": "slime",
+      "from": 5973,
+      "to": 5983,
+      "scene": "trs"
+    },
+    {
+      "text": "around",
+      "from": 5984,
+      "to": 5990,
+      "scene": "trs"
+    },
+    {
+      "text": "the",
+      "from": 5991,
+      "to": 5993,
+      "scene": "trs"
+    },
+    {
+      "text": "world",
+      "from": 5994,
+      "to": 6001,
+      "scene": "trs"
+    },
+    {
+      "text": "origin:",
+      "from": 6003,
+      "to": 6017,
+      "scene": "trs"
+    },
+    {
+      "text": "it",
+      "from": 6037,
+      "to": 6041,
+      "scene": "trs"
+    },
+    {
+      "text": "orbits",
+      "from": 6043,
+      "to": 6056,
+      "scene": "trs"
+    },
+    {
+      "text": "instead",
+      "from": 6058,
+      "to": 6068,
+      "scene": "trs"
+    },
+    {
+      "text": "of",
+      "from": 6069,
+      "to": 6070,
+      "scene": "trs"
+    },
+    {
+      "text": "spinning.",
+      "from": 6072,
+      "to": 6084,
+      "scene": "trs"
+    },
+    {
+      "text": "One",
+      "from": 6141,
+      "to": 6149,
+      "scene": "divide"
+    },
+    {
+      "text": "last",
+      "from": 6150,
+      "to": 6158,
+      "scene": "divide"
+    },
+    {
+      "text": "job",
+      "from": 6159,
+      "to": 6168,
+      "scene": "divide"
+    },
+    {
+      "text": "hides",
+      "from": 6170,
+      "to": 6179,
+      "scene": "divide"
+    },
+    {
+      "text": "in",
+      "from": 6181,
+      "to": 6183,
+      "scene": "divide"
+    },
+    {
+      "text": "w.",
+      "from": 6185,
+      "to": 6196,
+      "scene": "divide"
+    },
+    {
+      "text": "Translate,",
+      "from": 6203,
+      "to": 6224,
+      "scene": "divide"
+    },
+    {
+      "text": "rotate",
+      "from": 6229,
+      "to": 6242,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 6243,
+      "to": 6246,
+      "scene": "divide"
+    },
+    {
+      "text": "scale",
+      "from": 6248,
+      "to": 6260,
+      "scene": "divide"
+    },
+    {
+      "text": "never",
+      "from": 6262,
+      "to": 6267,
+      "scene": "divide"
+    },
+    {
+      "text": "change",
+      "from": 6269,
+      "to": 6278,
+      "scene": "divide"
+    },
+    {
+      "text": "it:",
+      "from": 6279,
+      "to": 6283,
+      "scene": "divide"
+    },
+    {
+      "text": "points",
+      "from": 6303,
+      "to": 6312,
+      "scene": "divide"
+    },
+    {
+      "text": "keep",
+      "from": 6313,
+      "to": 6318,
+      "scene": "divide"
+    },
+    {
+      "text": "one,",
+      "from": 6321,
+      "to": 6332,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 6338,
+      "to": 6342,
+      "scene": "divide"
+    },
+    {
+      "text": "directions",
+      "from": 6344,
+      "to": 6359,
+      "scene": "divide"
+    },
+    {
+      "text": "keep",
+      "from": 6361,
+      "to": 6366,
+      "scene": "divide"
+    },
+    {
+      "text": "zero.",
+      "from": 6368,
+      "to": 6380,
+      "scene": "divide"
+    },
+    {
+      "text": "The",
+      "from": 6411,
+      "to": 6414,
+      "scene": "divide"
+    },
+    {
+      "text": "projection",
+      "from": 6415,
+      "to": 6427,
+      "scene": "divide"
+    },
+    {
+      "text": "matrix,",
+      "from": 6429,
+      "to": 6442,
+      "scene": "divide"
+    },
+    {
+      "text": "next",
+      "from": 6444,
+      "to": 6450,
+      "scene": "divide"
+    },
+    {
+      "text": "lesson,",
+      "from": 6452,
+      "to": 6463,
+      "scene": "divide"
+    },
+    {
+      "text": "writes",
+      "from": 6471,
+      "to": 6479,
+      "scene": "divide"
+    },
+    {
+      "text": "a",
+      "from": 6481,
+      "to": 6482,
+      "scene": "divide"
+    },
+    {
+      "text": "new",
+      "from": 6483,
+      "to": 6489,
+      "scene": "divide"
+    },
+    {
+      "text": "w:",
+      "from": 6492,
+      "to": 6503,
+      "scene": "divide"
+    },
+    {
+      "text": "the",
+      "from": 6524,
+      "to": 6527,
+      "scene": "divide"
+    },
+    {
+      "text": "point's",
+      "from": 6528,
+      "to": 6536,
+      "scene": "divide"
+    },
+    {
+      "text": "depth",
+      "from": 6538,
+      "to": 6547,
+      "scene": "divide"
+    },
+    {
+      "text": "in",
+      "from": 6549,
+      "to": 6551,
+      "scene": "divide"
+    },
+    {
+      "text": "front",
+      "from": 6553,
+      "to": 6559,
+      "scene": "divide"
+    },
+    {
+      "text": "of",
+      "from": 6560,
+      "to": 6561,
+      "scene": "divide"
+    },
+    {
+      "text": "the",
+      "from": 6562,
+      "to": 6564,
+      "scene": "divide"
+    },
+    {
+      "text": "camera.",
+      "from": 6565,
+      "to": 6578,
+      "scene": "divide"
+    },
+    {
+      "text": "Then",
+      "from": 6599,
+      "to": 6604,
+      "scene": "divide"
+    },
+    {
+      "text": "the",
+      "from": 6606,
+      "to": 6608,
+      "scene": "divide"
+    },
+    {
+      "text": "GPU",
+      "from": 6609,
+      "to": 6627,
+      "scene": "divide"
+    },
+    {
+      "text": "divides",
+      "from": 6629,
+      "to": 6643,
+      "scene": "divide"
+    },
+    {
+      "text": "x,",
+      "from": 6649,
+      "to": 6655,
+      "scene": "divide"
+    },
+    {
+      "text": "y",
+      "from": 6658,
+      "to": 6668,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 6671,
+      "to": 6674,
+      "scene": "divide"
+    },
+    {
+      "text": "z",
+      "from": 6677,
+      "to": 6686,
+      "scene": "divide"
+    },
+    {
+      "text": "by",
+      "from": 6690,
+      "to": 6697,
+      "scene": "divide"
+    },
+    {
+      "text": "w.",
+      "from": 6698,
+      "to": 6712,
+      "scene": "divide"
+    },
+    {
+      "text": "A",
+      "from": 6729,
+      "to": 6731,
+      "scene": "divide"
+    },
+    {
+      "text": "point",
+      "from": 6734,
+      "to": 6741,
+      "scene": "divide"
+    },
+    {
+      "text": "with",
+      "from": 6742,
+      "to": 6747,
+      "scene": "divide"
+    },
+    {
+      "text": "x",
+      "from": 6752,
+      "to": 6757,
+      "scene": "divide"
+    },
+    {
+      "text": "equal",
+      "from": 6760,
+      "to": 6768,
+      "scene": "divide"
+    },
+    {
+      "text": "to",
+      "from": 6769,
+      "to": 6771,
+      "scene": "divide"
+    },
+    {
+      "text": "two",
+      "from": 6773,
+      "to": 6781,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 6791,
+      "to": 6797,
+      "scene": "divide"
+    },
+    {
+      "text": "w",
+      "from": 6799,
+      "to": 6808,
+      "scene": "divide"
+    },
+    {
+      "text": "equal",
+      "from": 6810,
+      "to": 6819,
+      "scene": "divide"
+    },
+    {
+      "text": "to",
+      "from": 6821,
+      "to": 6822,
+      "scene": "divide"
+    },
+    {
+      "text": "five",
+      "from": 6825,
+      "to": 6834,
+      "scene": "divide"
+    },
+    {
+      "text": "lands",
+      "from": 6836,
+      "to": 6847,
+      "scene": "divide"
+    },
+    {
+      "text": "at",
+      "from": 6849,
+      "to": 6851,
+      "scene": "divide"
+    },
+    {
+      "text": "0.4.",
+      "from": 6853,
+      "to": 6879,
+      "scene": "divide"
+    },
+    {
+      "text": "Twice",
+      "from": 6903,
+      "to": 6912,
+      "scene": "divide"
+    },
+    {
+      "text": "as",
+      "from": 6914,
+      "to": 6916,
+      "scene": "divide"
+    },
+    {
+      "text": "far,",
+      "from": 6918,
+      "to": 6927,
+      "scene": "divide"
+    },
+    {
+      "text": "w",
+      "from": 6934,
+      "to": 6944,
+      "scene": "divide"
+    },
+    {
+      "text": "is",
+      "from": 6946,
+      "to": 6949,
+      "scene": "divide"
+    },
+    {
+      "text": "ten,",
+      "from": 6951,
+      "to": 6963,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 6966,
+      "to": 6971,
+      "scene": "divide"
+    },
+    {
+      "text": "it",
+      "from": 6972,
+      "to": 6974,
+      "scene": "divide"
+    },
+    {
+      "text": "lands",
+      "from": 6975,
+      "to": 6983,
+      "scene": "divide"
+    },
+    {
+      "text": "at",
+      "from": 6984,
+      "to": 6986,
+      "scene": "divide"
+    },
+    {
+      "text": "0.2:",
+      "from": 6988,
+      "to": 7011,
+      "scene": "divide"
+    },
+    {
+      "text": "half",
+      "from": 7032,
+      "to": 7038,
+      "scene": "divide"
+    },
+    {
+      "text": "as",
+      "from": 7039,
+      "to": 7041,
+      "scene": "divide"
+    },
+    {
+      "text": "far",
+      "from": 7043,
+      "to": 7048,
+      "scene": "divide"
+    },
+    {
+      "text": "from",
+      "from": 7050,
+      "to": 7054,
+      "scene": "divide"
+    },
+    {
+      "text": "the",
+      "from": 7055,
+      "to": 7057,
+      "scene": "divide"
+    },
+    {
+      "text": "center.",
+      "from": 7058,
+      "to": 7067,
+      "scene": "divide"
+    },
+    {
+      "text": "Far",
+      "from": 7106,
+      "to": 7113,
+      "scene": "divide"
+    },
+    {
+      "text": "things",
+      "from": 7115,
+      "to": 7122,
+      "scene": "divide"
+    },
+    {
+      "text": "look",
+      "from": 7123,
+      "to": 7128,
+      "scene": "divide"
+    },
+    {
+      "text": "small,",
+      "from": 7130,
+      "to": 7140,
+      "scene": "divide"
+    },
+    {
+      "text": "and",
+      "from": 7143,
+      "to": 7145,
+      "scene": "divide"
+    },
+    {
+      "text": "it's",
+      "from": 7147,
+      "to": 7151,
+      "scene": "divide"
+    },
+    {
+      "text": "just",
+      "from": 7152,
+      "to": 7158,
+      "scene": "divide"
+    },
+    {
+      "text": "a",
+      "from": 7160,
+      "to": 7161,
+      "scene": "divide"
+    },
+    {
+      "text": "division.",
+      "from": 7162,
+      "to": 7176,
+      "scene": "divide"
+    },
+    {
+      "text": "So:",
+      "from": 7231,
+      "to": 7239,
+      "scene": "recap"
+    },
+    {
+      "text": "a",
+      "from": 7259,
+      "to": 7260,
+      "scene": "recap"
+    },
+    {
+      "text": "matrix",
+      "from": 7263,
+      "to": 7275,
+      "scene": "recap"
+    },
+    {
+      "text": "always",
+      "from": 7277,
+      "to": 7287,
+      "scene": "recap"
+    },
+    {
+      "text": "keeps",
+      "from": 7289,
+      "to": 7296,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 7297,
+      "to": 7299,
+      "scene": "recap"
+    },
+    {
+      "text": "origin,",
+      "from": 7301,
+      "to": 7315,
+      "scene": "recap"
+    },
+    {
+      "text": "so",
+      "from": 7326,
+      "to": 7330,
+      "scene": "recap"
+    },
+    {
+      "text": "moving",
+      "from": 7332,
+      "to": 7340,
+      "scene": "recap"
+    },
+    {
+      "text": "needs",
+      "from": 7342,
+      "to": 7348,
+      "scene": "recap"
+    },
+    {
+      "text": "a",
+      "from": 7349,
+      "to": 7350,
+      "scene": "recap"
+    },
+    {
+      "text": "fourth",
+      "from": 7352,
+      "to": 7360,
+      "scene": "recap"
+    },
+    {
+      "text": "number,",
+      "from": 7362,
+      "to": 7372,
+      "scene": "recap"
+    },
+    {
+      "text": "w.",
+      "from": 7385,
+      "to": 7396,
+      "scene": "recap"
+    },
+    {
+      "text": "A",
+      "from": 7412,
+      "to": 7414,
+      "scene": "recap"
+    },
+    {
+      "text": "4x4",
+      "from": 7416,
+      "to": 7432,
+      "scene": "recap"
+    },
+    {
+      "text": "matrix",
+      "from": 7434,
+      "to": 7446,
+      "scene": "recap"
+    },
+    {
+      "text": "keeps",
+      "from": 7448,
+      "to": 7455,
+      "scene": "recap"
+    },
+    {
+      "text": "rotation",
+      "from": 7456,
+      "to": 7473,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 7476,
+      "to": 7478,
+      "scene": "recap"
+    },
+    {
+      "text": "scale",
+      "from": 7481,
+      "to": 7491,
+      "scene": "recap"
+    },
+    {
+      "text": "in",
+      "from": 7492,
+      "to": 7494,
+      "scene": "recap"
+    },
+    {
+      "text": "its",
+      "from": 7495,
+      "to": 7498,
+      "scene": "recap"
+    },
+    {
+      "text": "corner,",
+      "from": 7500,
+      "to": 7512,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 7514,
+      "to": 7517,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 7519,
+      "to": 7521,
+      "scene": "recap"
+    },
+    {
+      "text": "move",
+      "from": 7523,
+      "to": 7530,
+      "scene": "recap"
+    },
+    {
+      "text": "in",
+      "from": 7531,
+      "to": 7532,
+      "scene": "recap"
+    },
+    {
+      "text": "its",
+      "from": 7533,
+      "to": 7537,
+      "scene": "recap"
+    },
+    {
+      "text": "last",
+      "from": 7538,
+      "to": 7545,
+      "scene": "recap"
+    },
+    {
+      "text": "column.",
+      "from": 7547,
+      "to": 7559,
+      "scene": "recap"
+    },
+    {
+      "text": "w",
+      "from": 7588,
+      "to": 7589,
+      "scene": "recap"
+    },
+    {
+      "text": "equal",
+      "from": 7591,
+      "to": 7598,
+      "scene": "recap"
+    },
+    {
+      "text": "to",
+      "from": 7600,
+      "to": 7602,
+      "scene": "recap"
+    },
+    {
+      "text": "one",
+      "from": 7604,
+      "to": 7611,
+      "scene": "recap"
+    },
+    {
+      "text": "is",
+      "from": 7612,
+      "to": 7614,
+      "scene": "recap"
+    },
+    {
+      "text": "a",
+      "from": 7616,
+      "to": 7617,
+      "scene": "recap"
+    },
+    {
+      "text": "point,",
+      "from": 7619,
+      "to": 7629,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 7631,
+      "to": 7635,
+      "scene": "recap"
+    },
+    {
+      "text": "it",
+      "from": 7637,
+      "to": 7638,
+      "scene": "recap"
+    },
+    {
+      "text": "moves.",
+      "from": 7639,
+      "to": 7651,
+      "scene": "recap"
+    },
+    {
+      "text": "w",
+      "from": 7668,
+      "to": 7678,
+      "scene": "recap"
+    },
+    {
+      "text": "equal",
+      "from": 7680,
+      "to": 7687,
+      "scene": "recap"
+    },
+    {
+      "text": "to",
+      "from": 7688,
+      "to": 7690,
+      "scene": "recap"
+    },
+    {
+      "text": "zero",
+      "from": 7692,
+      "to": 7704,
+      "scene": "recap"
+    },
+    {
+      "text": "is",
+      "from": 7707,
+      "to": 7711,
+      "scene": "recap"
+    },
+    {
+      "text": "a",
+      "from": 7712,
+      "to": 7713,
+      "scene": "recap"
+    },
+    {
+      "text": "direction,",
+      "from": 7715,
+      "to": 7732,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 7734,
+      "to": 7738,
+      "scene": "recap"
+    },
+    {
+      "text": "it",
+      "from": 7740,
+      "to": 7741,
+      "scene": "recap"
+    },
+    {
+      "text": "doesn't.",
+      "from": 7742,
+      "to": 7755,
+      "scene": "recap"
+    },
+    {
+      "text": "Normals",
+      "from": 7774,
+      "to": 7787,
+      "scene": "recap"
+    },
+    {
+      "text": "take",
+      "from": 7788,
+      "to": 7794,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 7794,
+      "to": 7796,
+      "scene": "recap"
+    },
+    {
+      "text": "inverse",
+      "from": 7798,
+      "to": 7810,
+      "scene": "recap"
+    },
+    {
+      "text": "transpose.",
+      "from": 7811,
+      "to": 7835,
+      "scene": "recap"
+    },
+    {
+      "text": "Build",
+      "from": 7848,
+      "to": 7856,
+      "scene": "recap"
+    },
+    {
+      "text": "models",
+      "from": 7857,
+      "to": 7868,
+      "scene": "recap"
+    },
+    {
+      "text": "as",
+      "from": 7870,
+      "to": 7873,
+      "scene": "recap"
+    },
+    {
+      "text": "T",
+      "from": 7876,
+      "to": 7880,
+      "scene": "recap"
+    },
+    {
+      "text": "*",
+      "from": 7885,
+      "to": 7895,
+      "scene": "recap"
+    },
+    {
+      "text": "R",
+      "from": 7897,
+      "to": 7905,
+      "scene": "recap"
+    },
+    {
+      "text": "*",
+      "from": 7907,
+      "to": 7916,
+      "scene": "recap"
+    },
+    {
+      "text": "S,",
+      "from": 7918,
+      "to": 7928,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 7931,
+      "to": 7935,
+      "scene": "recap"
+    },
+    {
+      "text": "dividing",
+      "from": 7937,
+      "to": 7949,
+      "scene": "recap"
+    },
+    {
+      "text": "by",
+      "from": 7951,
+      "to": 7955,
+      "scene": "recap"
+    },
+    {
+      "text": "w",
+      "from": 7957,
+      "to": 7969,
+      "scene": "recap"
+    },
+    {
+      "text": "makes",
+      "from": 7971,
+      "to": 7976,
+      "scene": "recap"
+    },
+    {
+      "text": "far",
+      "from": 7978,
+      "to": 7985,
+      "scene": "recap"
+    },
+    {
+      "text": "things",
+      "from": 7987,
+      "to": 7995,
+      "scene": "recap"
+    },
+    {
+      "text": "small.",
+      "from": 7996,
+      "to": 8007,
+      "scene": "recap"
+    },
+    {
+      "text": "Next",
+      "from": 8026,
+      "to": 8033,
+      "scene": "recap"
+    },
+    {
+      "text": "time:",
+      "from": 8034,
+      "to": 8045,
+      "scene": "recap"
+    },
+    {
+      "text": "model,",
+      "from": 8053,
+      "to": 8065,
+      "scene": "recap"
+    },
+    {
+      "text": "view",
+      "from": 8069,
+      "to": 8077,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 8080,
+      "to": 8083,
+      "scene": "recap"
+    },
+    {
+      "text": "projection.",
+      "from": 8084,
+      "to": 8102,
+      "scene": "recap"
+    },
+    {
+      "text": "Now",
+      "from": 8131,
+      "to": 8136,
+      "scene": "recap"
+    },
+    {
+      "text": "open",
+      "from": 8139,
+      "to": 8147,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 8148,
+      "to": 8151,
+      "scene": "recap"
+    },
+    {
+      "text": "demo",
+      "from": 8152,
+      "to": 8159,
+      "scene": "recap"
+    },
+    {
+      "text": "in",
+      "from": 8160,
+      "to": 8162,
+      "scene": "recap"
+    },
+    {
+      "text": "this",
+      "from": 8163,
+      "to": 8167,
+      "scene": "recap"
+    },
+    {
+      "text": "lesson,",
+      "from": 8169,
+      "to": 8180,
+      "scene": "recap"
+    },
+    {
+      "text": "drag",
+      "from": 8193,
+      "to": 8202,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 8203,
+      "to": 8205,
+      "scene": "recap"
+    },
+    {
+      "text": "move",
+      "from": 8207,
+      "to": 8214,
+      "scene": "recap"
+    },
+    {
+      "text": "all",
+      "from": 8215,
+      "to": 8222,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 8223,
+      "to": 8225,
+      "scene": "recap"
+    },
+    {
+      "text": "way,",
+      "from": 8226,
+      "to": 8235,
+      "scene": "recap"
+    },
+    {
+      "text": "and",
+      "from": 8237,
+      "to": 8241,
+      "scene": "recap"
+    },
+    {
+      "text": "watch",
+      "from": 8243,
+      "to": 8250,
+      "scene": "recap"
+    },
+    {
+      "text": "the",
+      "from": 8252,
+      "to": 8254,
+      "scene": "recap"
+    },
+    {
+      "text": "blue",
+      "from": 8255,
+      "to": 8261,
+      "scene": "recap"
+    },
+    {
+      "text": "arrows",
+      "from": 8263,
+      "to": 8271,
+      "scene": "recap"
+    },
+    {
+      "text": "stay",
+      "from": 8272,
+      "to": 8278,
+      "scene": "recap"
+    },
+    {
+      "text": "still.",
+      "from": 8280,
+      "to": 8291,
+      "scene": "recap"
+    }
+  ],
+  "cues": {
+    "hook.in": 0,
+    "hook.try": 144,
+    "hook.push": 296,
+    "hook.stuck": 330,
+    "hook.why": 395,
+    "hook.needs": 575,
+    "hook.none": 733,
+    "hook.fix": 885,
+    "extra.add": 982,
+    "extra.tuple": 1096,
+    "extra.name": 1229,
+    "extra.grow": 1290,
+    "extra.block": 1361,
+    "extra.column": 1472,
+    "extra.row": 1558,
+    "extra.mix": 1722,
+    "extra.weight": 1883,
+    "extra.example": 2051,
+    "extra.point": 2166,
+    "extra.lands": 2238,
+    "extra.chain": 2343,
+    "lift.see": 2548,
+    "lift.down": 2664,
+    "lift.plane": 2765,
+    "lift.shear": 2939,
+    "lift.top": 3082,
+    "lift.floor": 3153,
+    "lift.moves": 3237,
+    "switch.switch": 3445,
+    "switch.point": 3514,
+    "switch.direction": 3631,
+    "switch.same": 3829,
+    "switch.unchanged": 3998,
+    "switch.game": 4063,
+    "switch.arrows": 4113,
+    "switch.bug": 4255,
+    "switch.drift": 4385,
+    "normals.catch": 4549,
+    "normals.stretch": 4653,
+    "normals.wrong": 4697,
+    "normals.light": 4890,
+    "normals.fix": 4960,
+    "normals.hide": 5108,
+    "trs.build": 5309,
+    "trs.blocks": 5366,
+    "trs.read": 5559,
+    "trs.scale": 5624,
+    "trs.rotate": 5662,
+    "trs.move": 5720,
+    "trs.swap": 5796,
+    "trs.orbit": 5940,
+    "divide.last": 6141,
+    "divide.never": 6203,
+    "divide.projection": 6411,
+    "divide.divide": 6599,
+    "divide.near": 6729,
+    "divide.far": 6903,
+    "divide.smaller": 7106,
+    "recap.recap": 7231,
+    "recap.layout": 7412,
+    "recap.points": 7588,
+    "recap.dirs": 7668,
+    "recap.normals": 7774,
+    "recap.order": 7848,
+    "recap.div": 7931,
+    "recap.next": 8026,
+    "recap.demo": 8131
+  },
+  "audio": "voice.mp3"
+}
