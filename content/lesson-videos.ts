@@ -10,4 +10,6 @@ import type { Locale } from "./types";
 export const LESSON_VIDEOS: Partial<Record<LessonSlug, { youtube: string; dubs?: Locale[]; outroAt?: number }>> = {
   "cartesian-and-uv-space": { youtube: "3b5tImERLhU", dubs: ["vi"] },
   "vector-basics": { youtube: "_ZF9_d9zycQ", dubs: ["vi"], outroAt: 310 },
+  "dot-and-cross-products": { youtube: "ewGsD4VVu6E", dubs: ["vi"], outroAt: 310 },
+  "matrix-basics": { youtube: "RrsIpOp5bx0", dubs: ["vi"], outroAt: 297 },
 };
