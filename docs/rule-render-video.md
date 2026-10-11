@@ -31,6 +31,8 @@ surprises you.
 - **A qc PASS does not prove a scene moves.** An Inko-only stand-in scene (Inko at scale 0.8 on bare paper) passed "nothing still > 3 s" in `matrix-basics`, while a full scene with a 0.3 walker failed it. Judge motion on `qc/sheet.png` and the stills, not on the PASS alone.
 - **`progress(cue - n, d)` starts n frames after the cue; `cue + n` starts n frames before it.** `useCue` counts frames since the cue, so `+` reaches back in time. Writing `slidex + 70` for "70 frames after" sent a slide home before its note appeared (`matrix-basics`, caught on stills).
 - **Animate a rotation by its angle, never by mixing two matrices.** Entry-wise `mix(I, R(90°), 0.5)` is a 45° turn scaled by 0.71, so the grid shrinks mid-turn and "a rotation keeps every length" is false on screen (caught in review, `matrix-basics`). Mix matrices only between non-rotations (scale, shear, a deliberate collapse like the axis swap).
+- **Check drawn geometry with numbers, not only stills.** In `homogeneous-coordinates-4x4` two beats looked fine on stills and were wrong: rays started at a camera lens 28 px off the axis while their hit dots assumed an eye on the axis (the claimed 2:1 showed as 1.45), and a "drifts further wrong" arrow turned only 2° because both walk targets lay on one ray from the origin. Compute the claim (ratio, angle) from the same constants the scene draws with.
+- **Pure layout and math helpers live in `kit/mat.ts`, not in a `.tsx`.** The kit's `.tsx` files load fonts at import and cannot be imported by a Node test (`matrixLayout` and `MONO` moved to `mat.ts` for this); re-export them from the component file.
 
 ## Narration
 
