@@ -1,0 +1,388 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:04.000
+Inko đang làm game, và con
+slime này cần đổi hai chỗ.
+
+2
+00:00:04.000 --> 00:00:07.367
+Kéo nó rộng gấp đôi,
+rồi xoay một phần tư vòng.
+
+3
+00:00:07.367 --> 00:00:10.700
+Kéo giãn trước rồi mới xoay,
+slime đứng cao lên.
+
+4
+00:00:10.700 --> 00:00:13.900
+Xoay trước rồi mới kéo giãn,
+nó lại nằm bè ra.
+
+5
+00:00:13.900 --> 00:00:16.833
+Cùng hai bước,
+mà ra hai con slime khác nhau.
+
+6
+00:00:16.833 --> 00:00:18.767
+Mỗi bước là một ma trận.
+
+7
+00:00:18.767 --> 00:00:24.333
+Hôm nay mình sẽ mở một ma trận ra xem, và
+hiểu vì sao thứ tự lại quan trọng đến vậy.
+
+8
+00:00:24.333 --> 00:00:27.333
+Ma trận là một cỗ máy biến đổi không gian.
+
+9
+00:00:27.333 --> 00:00:30.600
+Đưa vào một vector,
+nó trả ra một vector khác.
+
+10
+00:00:30.600 --> 00:00:33.767
+Chỉ một quy tắc dời mọi
+điểm của mặt phẳng cùng lúc,
+
+11
+00:00:33.767 --> 00:00:38.967
+và quy tắc đó rất nghiêm: đường thẳng
+vẫn thẳng, đường song song vẫn song song,
+
+12
+00:00:38.967 --> 00:00:41.467
+và gốc toạ độ không bao giờ xê dịch.
+
+13
+00:00:41.467 --> 00:00:44.000
+Đó chính là nghĩa của chữ tuyến tính.
+
+14
+00:00:44.000 --> 00:00:47.667
+Bẻ cong các đường, như ống
+kính mắt cá, là hết tuyến tính:
+
+15
+00:00:47.667 --> 00:00:49.367
+không ma trận nào làm được.
+
+16
+00:00:49.367 --> 00:00:54.800
+Trượt cả mặt phẳng đi, gốc toạ độ sẽ dời
+chỗ: ma trận 2x2 cũng không làm được,
+
+17
+00:00:54.800 --> 00:00:57.267
+phải đợi tới bài sau.
+
+18
+00:00:59.300 --> 00:01:03.700
+Vì lưới vẫn cách đều, nên chỉ
+hai mũi tên quyết định tất cả.
+
+19
+00:01:03.700 --> 00:01:06.167
+î là vector (1, 0).
+
+20
+00:01:06.167 --> 00:01:09.200
+Còn ĵ là vector (0, 1).
+
+21
+00:01:09.200 --> 00:01:13.167
+Biết hai mũi tên này đi về đâu,
+là biết toàn bộ phép biến đổi.
+
+22
+00:01:13.167 --> 00:01:17.133
+Ma trận 2x2 lưu đúng điều đó,
+trong các cột của nó.
+
+23
+00:01:17.133 --> 00:01:19.633
+Cột thứ nhất là chỗ î rơi vào.
+
+24
+00:01:19.633 --> 00:01:22.333
+Cột thứ hai là chỗ ĵ rơi vào.
+
+25
+00:01:22.333 --> 00:01:25.533
+Ở đây, cột thứ nhất là vector (2, 0).
+
+26
+00:01:25.533 --> 00:01:28.433
+Vậy î dài gấp đôi theo trục x.
+
+27
+00:01:28.433 --> 00:01:30.933
+Cột thứ hai là vector (0, 1).
+
+28
+00:01:30.933 --> 00:01:32.767
+Vậy ĵ đứng yên.
+
+29
+00:01:32.767 --> 00:01:36.667
+Đó là phép kéo giãn ngang,
+đọc ra mà chẳng cần nhân gì cả.
+
+30
+00:01:36.667 --> 00:01:41.100
+Đọc theo cột, đừng theo hàng:
+đây là chỗ hay nhầm nhất.
+
+31
+00:01:46.267 --> 00:01:49.533
+Vậy ma trận dời một vector bất kỳ thế nào?
+
+32
+00:01:49.533 --> 00:01:53.633
+Mọi vector vốn đã là
+một tổ hợp của î và ĵ.
+
+33
+00:01:53.633 --> 00:01:58.267
+Vector (3, 4) chính là ba î cộng bốn ĵ.
+
+34
+00:01:58.267 --> 00:02:02.333
+Ma trận giữ nguyên các trọng số đó,
+và thay vào những mũi tên mới.
+
+35
+00:02:02.333 --> 00:02:04.833
+Cột thứ nhất là vector (2, 0).
+
+36
+00:02:04.833 --> 00:02:08.633
+Lấy ba lần. Cột thứ hai là vector (0, 1).
+
+37
+00:02:08.633 --> 00:02:12.500
+Lấy bốn lần. Cộng lại được vector (6, 4).
+
+38
+00:02:12.500 --> 00:02:15.033
+Nhân hàng với cột cũng
+ra đúng kết quả này,
+
+39
+00:02:15.033 --> 00:02:18.133
+nhưng đọc theo cột thì
+bạn thấy được vì sao.
+
+40
+00:02:21.933 --> 00:02:24.800
+Giờ mình tự dựng một ma trận xoay từ đầu.
+
+41
+00:02:24.800 --> 00:02:28.267
+Xoay mặt phẳng một góc θ,
+ngược chiều kim đồng hồ.
+
+42
+00:02:28.267 --> 00:02:31.933
+î bắt đầu trên đường tròn
+bán kính một, ở góc không.
+
+43
+00:02:31.933 --> 00:02:36.167
+Xoay đi θ, nó tới vector (cos θ, sin θ).
+
+44
+00:02:36.167 --> 00:02:37.533
+Đó là cột một.
+
+45
+00:02:37.533 --> 00:02:42.167
+ĵ bắt đầu ở 90°, nên nó dừng ở 90° + θ.
+
+46
+00:02:42.167 --> 00:02:45.467
+Tức là vector (−sin θ, cos θ).
+
+47
+00:02:45.467 --> 00:02:46.867
+Đó là cột hai.
+
+48
+00:02:46.867 --> 00:02:48.400
+Thử lại với 90°.
+
+49
+00:02:48.400 --> 00:02:51.300
+î quay lên thành vector (0, 1).
+
+50
+00:02:51.300 --> 00:02:54.900
+ĵ quay sang trái thành vector (−1, 0).
+
+51
+00:02:54.900 --> 00:02:57.867
+Lỡ quên dấu trừ đó,
+hai trục sẽ đổi chỗ cho nhau.
+
+52
+00:02:57.867 --> 00:03:02.467
+Hình bị lật như soi gương,
+và không phép xoay nào làm được vậy.
+
+53
+00:03:04.167 --> 00:03:06.700
+Ma trận scale còn đơn giản hơn.
+
+54
+00:03:06.700 --> 00:03:11.967
+Hệ số scale theo trục x nằm ở cột thứ
+nhất, hệ số theo trục y nằm ở cột thứ hai,
+
+55
+00:03:11.967 --> 00:03:15.700
+và mỗi trục tự co giãn riêng,
+không dính tới trục kia.
+
+56
+00:03:15.700 --> 00:03:17.600
+Shear thì khác hẳn.
+
+57
+00:03:17.600 --> 00:03:22.833
+î vẫn đứng yên, còn ĵ trượt sang
+một bên, thành vector (k, 1).
+
+58
+00:03:22.833 --> 00:03:26.300
+Hình vuông nghiêng hẳn đi,
+nhưng cạnh đáy không hề nhúc nhích.
+
+59
+00:03:26.300 --> 00:03:29.500
+Trông giống một phép xoay nhẹ,
+nhưng thật ra không phải.
+
+60
+00:03:29.500 --> 00:03:32.067
+Phép xoay giữ mọi cạnh dài đúng như cũ.
+
+61
+00:03:32.067 --> 00:03:36.767
+Còn cạnh bị shear thì dài ra,
+thành √(k² + 1).
+
+62
+00:03:37.100 --> 00:03:39.067
+Quay lại với hai con slime.
+
+63
+00:03:39.067 --> 00:03:41.733
+Một chuỗi ma trận chạy từ phải sang trái:
+
+64
+00:03:41.733 --> 00:03:44.233
+ma trận nằm sát vector chạy trước.
+
+65
+00:03:44.233 --> 00:03:49.333
+Nên kéo giãn trước rồi mới xoay,
+phải viết là R * S * v.
+
+66
+00:03:49.333 --> 00:03:53.633
+Đọc từ trái sang phải như đọc một
+câu văn, là bạn hiểu ngược thứ tự.
+
+67
+00:03:53.633 --> 00:03:55.167
+Để ý î nhé.
+
+68
+00:03:55.167 --> 00:03:59.267
+R * S kéo giãn nó trước,
+thành vector (2, 0).
+
+69
+00:03:59.267 --> 00:04:02.467
+Rồi xoay nó, thành vector (0, 2).
+
+70
+00:04:02.467 --> 00:04:05.967
+S * R xoay nó trước, thành vector (0, 1).
+
+71
+00:04:05.967 --> 00:04:09.700
+Sau đó phép kéo giãn theo
+trục x chẳng chạm được vào nó.
+
+72
+00:04:09.700 --> 00:04:13.567
+Cùng hai ma trận, hai kết quả
+khác nhau, mà không có lỗi nào cả.
+
+73
+00:04:13.567 --> 00:04:14.933
+Hình bị kéo sai trục?
+
+74
+00:04:14.933 --> 00:04:17.767
+Hãy kiểm tra thứ tự trước tiên.
+
+75
+00:04:22.067 --> 00:04:24.733
+Tóm lại: ma trận dời cả mặt phẳng,
+
+76
+00:04:24.733 --> 00:04:28.033
+mà vẫn giữ đường thẳng thẳng
+và gốc toạ độ đứng yên.
+
+77
+00:04:28.033 --> 00:04:33.200
+Các cột của nó là chỗ î và ĵ rơi vào,
+và khi nhân với một vector,
+
+78
+00:04:33.200 --> 00:04:35.033
+nó trộn các cột đó lại.
+
+79
+00:04:35.033 --> 00:04:38.700
+Xoay, scale hay shear chỉ
+là những cột khác nhau,
+
+80
+00:04:38.700 --> 00:04:42.000
+và trong một chuỗi,
+ma trận sát vector chạy trước.
+
+81
+00:04:42.000 --> 00:04:46.033
+Ma trận 3x3 và 4x4 cũng
+theo đúng những luật này.
+
+82
+00:04:46.033 --> 00:04:50.300
+Bài sau, thêm một chiều nữa sẽ
+cho ma trận dời được cả vị trí.
+
+83
+00:04:50.300 --> 00:04:54.800
+Giờ hãy mở demo ma trận 2x2 trong
+bài học này, chỉ kéo thanh b thôi,
+
+84
+00:04:54.800 --> 00:04:57.200
+và xem mũi tên nào di chuyển.
+
+85
+00:04:57.200 --> 00:05:01.600
+Nếu thấy dễ hiểu, bấm like rồi đăng
+ký kênh để không lỡ bài sau nhé.
+
+86
+00:05:01.600 --> 00:05:03.167
+Hẹn gặp lại!
