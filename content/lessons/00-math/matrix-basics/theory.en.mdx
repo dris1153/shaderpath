@@ -61,8 +61,7 @@ A concrete numeric example makes the order visible: take $R = R(90°) = \begin{p
 - **Rotate then scale** ($S \cdot R \cdot \vec v$): rotate first gives $(0,1)$; scaling afterward leaves it unchanged since its $x$ component is already $0$ — result $(0, 1)$.
 - **Scale then rotate** ($R \cdot S \cdot \vec v$): scale first gives $(2,0)$; rotating that afterward turns it into $(0, 2)$ — result $(0, 2)$.
 
-The two outcomes are completely different despite using the exact same two matrices, only in reversed order. Visually: "rotate then scale" stretches along the **world's** $x$-axis, while "scale then rotate" stretches along the $x$-axis **as it was before rotating**, then rotates the already-distorted result — the two operations don't commute except in special cases (two scales always commute with each other, but a non-uniform scale — $s_x 
-eq s_y$ — and a rotation do not; a uniform scale always commutes with any rotation).
+The two outcomes are completely different despite using the exact same two matrices, only in reversed order. Visually: "rotate then scale" stretches along the **world's** $x$-axis, while "scale then rotate" stretches along the $x$-axis **as it was before rotating**, then rotates the already-distorted result — the two operations don't commute except in special cases (two scales always commute with each other, but a non-uniform scale — $s_x \neq s_y$ — and a rotation do not; a uniform scale always commutes with any rotation).
 
 ## Looking Ahead: Matrices in the 3D Pipeline
 
